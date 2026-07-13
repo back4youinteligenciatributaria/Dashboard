@@ -78,6 +78,21 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .stat .v{font-size:21px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
 .stat .s{font-size:12px;color:var(--muted);margin-top:3px}
 
+.guias-card{padding:20px 24px;margin-bottom:16px}
+.guias-card .relacao-head{margin-bottom:10px}
+.guia-row{border-top:1px solid var(--line);padding:11px 0}
+.guia-row:first-of-type{border-top:none}
+.guia-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.guia-status{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:10px;flex-shrink:0}
+.status-fechada{background:var(--receita-soft);color:var(--receita)}
+.status-estimativa{background:#DCF3E9;color:#3FA680}
+.status-aberto{background:var(--sinal-soft);color:var(--sinal)}
+.guia-nome{flex:1;font-size:13.5px;font-weight:600;min-width:120px}
+.guia-valor{font-size:14px}
+.guia-detalhe{display:none;margin:8px 0 0 0;padding:8px 12px;background:var(--surface-warm);border-radius:8px}
+.guia-detalhe.aberto{display:block}
+.guia-detalhe-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0}
+
 .outras{padding:14px 18px;margin-bottom:20px}
 .outras h4{font-size:12.5px;font-weight:700;color:var(--ink-2);margin-bottom:8px}
 .outras-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:5px 0;border-top:1px solid var(--line)}
@@ -148,6 +163,13 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 @media(max-width:900px){.charts{grid-template-columns:1fr}.charts3{grid-template-columns:1fr}}
 .chart{padding:20px 22px 16px}
 .chart h3{font-size:14px;font-weight:700;margin-bottom:2px;text-transform:capitalize}
+.comp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.comp-head h3{margin-bottom:0}
+.mini-select{
+  font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-2);
+  background:var(--surface-warm);border:1px solid var(--line-2);border-radius:12px;
+  padding:4px 9px;cursor:pointer;
+}
 .chart .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
 .legend{display:flex;flex-wrap:wrap;gap:11px;margin-bottom:10px;font-size:11.5px;color:var(--ink-2)}
 .legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
@@ -276,13 +298,13 @@ const TRIB = [
   {k:'CSLL a pagar (R$)',   n:'CSLL',   c:PAL.csll},
   {k:'IR a pagar (R$)',     n:'IRPJ',   c:PAL.irpj},
 ];
-// INSS e FGTS são departamento pessoal — outra área, outro painel. Aqui só ficam
-// visíveis no Calendário (sem valor); não entram mais no card "Outras guias do mês".
 const OUTRAS = [
   {n:'IRRF sobre dividendos', k:'IRRF Dividendos (R$)', c:PAL.irpj},
+  {n:'INSS — DARF',           k:'INSS a Pagar (R$)',    c:PAL.inss},
+  {n:'FGTS',                  k:'FGTS a Pagar (R$)',    c:PAL.fgts},
 ];
-// Regras cujo valor não deve ser exibido neste painel (aparecem no calendário só como lembrete de data).
-const REGRAS_SEM_VALOR_EXIBIDO = new Set(['R17', 'R18']);
+// Nenhuma regra tem o valor escondido no momento — todas mostram seu valor normalmente.
+const REGRAS_SEM_VALOR_EXIBIDO = new Set();
 const CENTRO_PAL = [PAL.iss, PAL.pis, PAL.inss, PAL.csll, PAL.musgo, PAL.cofins, PAL.fgts, PAL.petroleo];
 /** [nome, coluna devido, coluna retido, coluna a pagar] — usado na relação do topo e no detalhe do rateio. */
 const TRIB_ROWS = [
@@ -409,27 +431,125 @@ function preparar(raw){
 }
 
 /** Provisão trimestral do IRPJ+CSLL — só existe quando o regime apura por trimestre. */
-/** Nivela uma coluna (ex.: IRPJ) dentro do trimestre de 'comp': meses já apurados mantêm
-    o valor real; os que ainda não fecharam recebem a média dos apurados do mesmo trimestre.
-    Sem isso, IRPJ/CSLL apareceriam quase zerados em 2 dos 3 meses e concentrados só no mês
-    de fechamento — o que não é uma estimativa útil para os meses ainda não vencidos. */
+/** Nivela uma coluna (ex.: IRPJ) para o trimestre de 'comp'.
+    Se o trimestre de 'comp' já está TOTALMENTE fechado (os 3 meses existem em Empresa),
+    usa o valor real do próprio mês — sem inventar nada.
+    Se está em aberto (mês atual ou futuro), NÃO usa os meses reais desse mesmo trimestre
+    como base: numa contabilidade real, o valor do trimestre só é lançado no mês de
+    fechamento, então os outros dois meses estariam genuinamente zerados — usá-los como
+    base de média dá quase zero. Em vez disso, busca o ÚLTIMO trimestre TOTALMENTE fechado
+    (pode ser 1, 2 ou mais trimestres atrás) e usa o total dele ÷ 3. */
 function nivelarTrimestre(M, comp, coluna){
   const [a,m] = comp.split('-').map(Number);
   const tri = Math.ceil(m/3);
-  const inicio = (tri-1)*3 + 1;
-  const valores = [];
-  for (let i=0;i<3;i++){
-    const c = a+'-'+String(inicio+i).padStart(2,'0');
-    const r = M.porComp[c];
-    valores.push({comp:c, apurado:!!r, v: r ? num(getM(r,coluna)) : 0});
+
+  const mesesDoTrimestre = (ano, t) => {
+    const inicio = (t-1)*3 + 1;
+    return [0,1,2].map(i => ano+'-'+String(inicio+i).padStart(2,'0'));
+  };
+  const totalmenteFechado = meses => meses.every(c => !!M.porComp[c]);
+
+  const mesesAlvo = mesesDoTrimestre(a, tri);
+  if (totalmenteFechado(mesesAlvo)){
+    const r = M.porComp[comp];
+    return r ? num(getM(r, coluna)) : 0;
   }
-  const apurados = valores.filter(x=>x.apurado);
-  // Se NENHUM mês do trimestre foi apurado ainda (trimestre inteiro no futuro),
-  // não há o que nivelar — cai na média geral dos últimos 3 meses fechados.
-  const medio = apurados.length ? apurados.reduce((s,x)=>s+x.v,0)/apurados.length : M.media(coluna);
-  valores.forEach(x=>{ if(!x.apurado) x.v = medio; });
-  const alvo = valores.find(x=>x.comp===comp);
-  return alvo ? alvo.v : 0;
+
+  // Anda para trás, trimestre a trimestre, até achar um totalmente fechado.
+  let ano = a, t = tri;
+  for (let tentativas = 0; tentativas < 8; tentativas++){
+    t--; if (t === 0){ t = 4; ano--; }
+    const meses = mesesDoTrimestre(ano, t);
+    if (totalmenteFechado(meses)){
+      const soma = meses.reduce((s,c) => s + num(getM(M.porComp[c], coluna)), 0);
+      return soma / 3;
+    }
+  }
+  return M.media(coluna); // não achou nenhum trimestre fechado — cai na média geral
+}
+
+const JANELAS_COMPARATIVO = [
+  {v:1,  n:'mês anterior'},
+  {v:3,  n:'trimestre anterior'},
+  {v:6,  n:'semestre anterior'},
+  {v:12, n:'últimos 12 meses'},
+];
+
+/** Devolve só as janelas de comparação com histórico suficiente ANTES do mês selecionado. */
+function janelasDisponiveis(M, comp){
+  const i = M.empresa.findIndex(x=>x.competencia===comp);
+  return JANELAS_COMPARATIVO.filter(j => i >= j.v);
+}
+
+/** Média mensal do bloco de 'janela' meses imediatamente antes de 'comp'. */
+function comparativoBase(M, comp, janela){
+  const i = M.empresa.findIndex(x=>x.competencia===comp);
+  if (i < janela) return null;
+  const bloco = M.empresa.slice(i-janela, i);
+  const tot = bloco.reduce((s,r)=>s+num(getM(r,'Total (R$)')),0)/janela;
+  const imp = bloco.reduce((s,r)=>s+M.impostos(r),0)/janela;
+  const liq = bloco.reduce((s,r)=>s+num(getM(r,'Resultado Líquido (R$)')),0)/janela;
+  const label = janela===1 ? mesLongo(bloco[0].competencia) : `média · últimos ${janela} meses`;
+  return {tot, imp, liq, label};
+}
+
+/** Quebra o valor de uma guia (linha do Calendário) por centro de custo, somando os
+    mesmos meses que valorDe() usaria (respeita acumula_meses, p.ex. o trimestre do IRPJ). */
+function detalheGuiaPorCentro(M, item){
+  const reg = M.regraDe[item.id_regra] || {};
+  const fonte = String(reg.metrica_fonte||'').trim();
+  if (!fonte) return [];
+  const chaves = fonte.split('|').map(s=>s.trim()).filter(Boolean);
+  const n = Math.max(1, num(reg.acumula_meses)||1);
+  const ref = String(item.competencia_ref||'');
+  if (!/^\d{4}-\d{2}$/.test(ref)) return [];
+  const [a,m] = ref.split('-').map(Number);
+
+  const porCentro = {};
+  for (let i=0;i<n;i++){
+    const d = new Date(a, m-1-i, 1);
+    const c = compDe(d);
+    M.rateio.filter(x=>x.competencia===c).forEach(x=>{
+      const v = chaves.reduce((s,k)=>s+num(getM(x,k)),0);
+      porCentro[x.centro] = (porCentro[x.centro]||0) + v;
+    });
+  }
+  return Object.entries(porCentro)
+    .map(([centro,v])=>({centro, v:Math.round(v*100)/100}))
+    .filter(x=>x.v > 0.004)
+    .sort((a,b)=>b.v-a.v);
+}
+
+/** Lista clara das guias geradas pela competência selecionada: fechada (já apurada),
+    estimativa (projetada) ou em aberto (zerada — nada foi lançado, ex.: sem folha no mês). */
+function desenharGuiasDoMes(M, comp){
+  const itens = M.cal
+    .filter(c => c.competencia_ref === comp)
+    .map(c => ({...c, ...M.valorDe(c)}))
+    .sort((a,b) => b.v - a.v);
+
+  const box = document.getElementById('guias-mes');
+  if (!itens.length){ box.innerHTML = ''; return; }
+
+  box.innerHTML = `<div class="card guias-card">
+    <div class="relacao-head"><h2>Guias do mês</h2><span class="lbl">o que vence a partir desta competência</span></div>
+    ${itens.map((it,idx)=>{
+      const status = it.v <= 0 ? 'aberto' : (it.est ? 'estimativa' : 'fechada');
+      const rotulo = {fechada:'Fechada', estimativa:'Estimativa', aberto:'Em aberto'}[status];
+      const detalhe = it.v > 0 ? detalheGuiaPorCentro(M, it) : [];
+      return `<div class="guia-row">
+        <div class="guia-main">
+          <span class="guia-status status-${status}">${rotulo}</span>
+          <span class="guia-nome">${it.descricao}</span>
+          <b class="guia-valor num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (estimativa)':''}</b>
+          ${detalhe.length ? `<button class="btn-detalhe" onclick="this.closest('.guia-row').querySelector('.guia-detalhe').classList.toggle('aberto'); this.textContent=this.closest('.guia-row').querySelector('.guia-detalhe').classList.contains('aberto')?'Ocultar':'Detalhes'">Detalhes</button>` : ''}
+        </div>
+        ${detalhe.length ? `<div class="guia-detalhe">
+          ${detalhe.map(d=>`<div class="guia-detalhe-row"><span>${d.centro}</span><b class="num">${brl(d.v)}</b></div>`).join('')}
+        </div>` : ''}
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function provisaoDoMes(M, comp){
@@ -444,11 +564,11 @@ function provisaoDoMes(M, comp){
   for (let i=0;i<3;i++){
     const c = a+'-'+String(inicio+i).padStart(2,'0');
     const r = M.porComp[c];
-    meses.push({comp:c, apurado:!!r, v: r ? num(getM(r,'IR a pagar (R$)'))+num(getM(r,'CSLL a pagar (R$)')) : 0});
+    const v = r
+      ? num(getM(r,'IR a pagar (R$)'))+num(getM(r,'CSLL a pagar (R$)'))
+      : nivelarTrimestre(M, c, 'IR a pagar (R$)') + nivelarTrimestre(M, c, 'CSLL a pagar (R$)');
+    meses.push({comp:c, apurado:!!r, v});
   }
-  const apurados = meses.filter(x=>x.apurado);
-  const medio = apurados.length ? apurados.reduce((s,x)=>s+x.v,0)/apurados.length : 0;
-  meses.forEach(x=>{ if(!x.apurado) x.v = medio; });
   const total = meses.reduce((s,x)=>s+x.v,0);
   const fimTri = a+'-'+String(inicio+2).padStart(2,'0');
   const guia = M.cal.find(c => c.id_regra==='R07' && c.competencia_ref===fimTri);
@@ -521,6 +641,7 @@ function render(M){
   app.appendChild(wrap);
 
   wrap.appendChild(el('<div id="hero"></div>'));
+  wrap.appendChild(el('<div id="guias-mes"></div>'));
   wrap.appendChild(el('<div id="alerta"></div>'));
   wrap.appendChild(el('<div id="slim"></div>'));
   wrap.appendChild(el('<div id="prov"></div>'));
@@ -583,9 +704,12 @@ function render(M){
         <div class="pie-legend" id="c3-lg"></div>
       </div>
       <div class="card chart">
-        <h3>Comparativo</h3>
-        <div class="sub">Mês selecionado contra o mês anterior.</div>
-        <div class="cbox"><canvas id="c4" role="img" aria-label="Comparativo entre o mês selecionado e o mês anterior"></canvas></div>
+        <div class="comp-head">
+          <h3>Comparativo</h3>
+          <select id="comp-base" class="mini-select"></select>
+        </div>
+        <div class="sub" id="c4sub"></div>
+        <div class="cbox"><canvas id="c4" role="img" aria-label="Comparativo entre o mês selecionado e o período de referência"></canvas></div>
       </div>
     </div>`);
 
@@ -679,6 +803,8 @@ function pintarMes(M, comp, charts){
   const totAnt = ant ? num(getM(ant,'Total (R$)')) : null;
   const dif = (ant && totAnt) ? (tot/totAnt - 1) : null;
   const nfs = num(getM(r,'Nº NFs'));
+
+  desenharGuiasDoMes(M, comp);
 
   document.getElementById('hero').innerHTML = `
     <div class="hero">
@@ -795,12 +921,7 @@ function pintarMes(M, comp, charts){
     ).join('');
     charts.c3.update();
 
-    charts.c4.data.datasets[0].data = [tot, imp, liq];
-    charts.c4.data.datasets[1].data = ant ? [totAnt, M.impostos(ant), num(getM(ant,'Resultado Líquido (R$)'))] : [0,0,0];
-    charts.c4.data.labels = ['Faturamento','Impostos','Líquido'];
-    charts.c4.data.datasets[0].label = mesLongo(comp);
-    charts.c4.data.datasets[1].label = ant ? mesLongo(ant.competencia) : 'sem mês anterior';
-    charts.c4.update();
+    atualizarComparativo(M, comp, tot, imp, liq, charts);
 
     const pal = CENTRO_PAL.slice();
     const nidIdx = linhas.findIndex(x=>x.centro==='Não identificado');
@@ -816,6 +937,32 @@ function pintarMes(M, comp, charts){
 }
 
 /** Próximos 3 meses após a última competência apurada, cada um com seu próprio gráfico de pizza. */
+/** Popula o seletor de período (só com janelas que têm histórico suficiente) e redesenha o c4. */
+function atualizarComparativo(M, comp, tot, imp, liq, charts){
+  const sel = document.getElementById('comp-base');
+  const disponiveis = janelasDisponiveis(M, comp);
+  const atualValor = sel.value;
+  sel.innerHTML = disponiveis.map(j=>`<option value="${j.v}">${j.n}</option>`).join('');
+  const valido = disponiveis.some(j=>String(j.v)===atualValor);
+  sel.value = valido ? atualValor : (disponiveis[0] ? String(disponiveis[0].v) : '');
+
+  function redraw(){
+    const janela = Number(sel.value) || (disponiveis[0] && disponiveis[0].v);
+    const base = janela ? comparativoBase(M, comp, janela) : null;
+    charts.c4.data.labels = ['Faturamento','Impostos','Líquido'];
+    charts.c4.data.datasets[0].data = [tot, imp, liq];
+    charts.c4.data.datasets[0].label = mesLongo(comp);
+    charts.c4.data.datasets[1].data = base ? [base.tot, base.imp, base.liq] : [0,0,0];
+    charts.c4.data.datasets[1].label = base ? base.label : 'sem histórico suficiente';
+    document.getElementById('c4sub').textContent = base
+      ? `${mesLongo(comp)} contra ${base.label}.`
+      : 'Sem histórico suficiente para comparar ainda.';
+    charts.c4.update();
+  }
+  sel.onchange = redraw;
+  redraw();
+}
+
 function desenharEstimativas(M){
   const ultimo = M.empresa[M.empresa.length-1].competencia;
   const [a,m] = ultimo.split('-').map(Number);
