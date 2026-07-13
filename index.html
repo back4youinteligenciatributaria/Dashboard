@@ -197,6 +197,12 @@ const dParse = s => { const [a,m,d]=String(s).split('-').map(Number); return new
 const addM = (d,n) => new Date(d.getFullYear(), d.getMonth()+n, d.getDate());
 const compDe = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 const el = h => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
+/** Alguns blocos têm 2+ elementos-irmãos no mesmo template (título da seção + o container de dados).
+    el() só devolveria o primeiro e descartaria o resto — appendAll anexa todos. */
+function appendAll(parent, h){
+  const t = document.createElement('template'); t.innerHTML = h.trim();
+  Array.from(t.content.children).forEach(n => parent.appendChild(n));
+}
 
 /* ---------------- carga ---------------- */
 function getId(){
@@ -336,19 +342,19 @@ function render(M){
   const heroBox = el('<div id="hero"></div>'); wrap.appendChild(heroBox);
   const alertBox = el('<div id="alerta"></div>'); wrap.appendChild(alertBox);
   wrap.appendChild(el('<div id="prov"></div>'));
-  wrap.appendChild(el(`
+  appendAll(wrap, `
     <div class="sec-head">
       <div><h2>Próximos 6 meses</h2>
       <p>Datas já ajustadas por fim de semana e feriado. Valores variáveis são estimados pela média dos 3 últimos meses.</p></div>
     </div>
-    <div class="months" id="venc"></div>`));
-  wrap.appendChild(el(`
+    <div class="months" id="venc"></div>`);
+  appendAll(wrap, `
     <div class="sec-head">
       <div><h2>Obrigações anuais</h2>
       <p>Só o último vencimento cumprido e o próximo — nunca mais que isso por obrigação.</p></div>
     </div>
-    <div class="months" id="anuais"></div>`));
-  wrap.appendChild(el(`
+    <div class="months" id="anuais"></div>`);
+  appendAll(wrap, `
     <div class="sec-head"><div><h2>Histórico</h2><p>Últimos 12 meses.</p></div></div>
     <div class="charts">
       <div class="card chart">
@@ -361,15 +367,15 @@ function render(M){
         <div class="legend" id="lg2"></div>
         <div class="cbox"><canvas id="c2" role="img" aria-label="Impostos por tributo nos últimos 12 meses"></canvas></div>
       </div>
-    </div>`));
-  wrap.appendChild(el(`
+    </div>`);
+  appendAll(wrap, `
     <div class="sec-head" id="rat-head"><div><h2>Rateio por centro de custo</h2><p id="rat-sub"></p></div></div>
     <div class="card" style="padding:18px 20px"><table id="rat">
       <thead><tr>
         <th>Centro</th><th class="r">NFs</th><th class="r">Faturamento</th>
         <th class="r">Impostos</th><th class="r">Retido</th><th class="r">Líquido</th>
       </tr></thead><tbody></tbody>
-    </table></div>`));
+    </table></div>`);
   wrap.appendChild(el(`<footer>
       <span>Fonte: planilha fiscal do cliente ${M.id}. Números conferidos contra o consolidado da empresa.</span>
       <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
