@@ -80,8 +80,22 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 
 .outras{padding:14px 18px;margin-bottom:20px}
 .outras h4{font-size:12.5px;font-weight:700;color:var(--ink-2);margin-bottom:8px}
-.outras-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-top:1px solid var(--line)}
+.outras-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:5px 0;border-top:1px solid var(--line)}
 .outras-row:first-of-type{border-top:none}
+.outras-row i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:8px}
+.outras-row span{flex:1;display:flex;align-items:center}
+
+.prov-compact{padding:16px 20px;margin-bottom:20px}
+.prov-compact-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.prov-compact-venc{font-size:12px;color:var(--muted);font-weight:600}
+.prov-compact-meses{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+@media(max-width:600px){.prov-compact-meses{grid-template-columns:1fr}}
+.pmes{background:var(--surface-warm);border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:3px}
+.pmes.futuro{background:repeating-linear-gradient(135deg,var(--provisao-soft),var(--provisao-soft) 6px,#EDE4D6 6px,#EDE4D6 12px)}
+.pmes-label{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:capitalize}
+.pmes-v{font-size:15px;font-weight:800;color:var(--provisao)}
+.prov-compact-total{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--line);font-size:13px}
+.prov-compact-total b{font-size:17px;color:var(--provisao)}
 
 .alert{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;border-radius:var(--radius);
   background:var(--alerta-soft);border:1px solid #E3C4BE;color:var(--alerta);font-size:13.5px;margin-bottom:20px}
@@ -125,7 +139,8 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .due .body{min-width:0;flex:1}
 .due .nm{display:block;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .due .vl{font-size:12px;color:var(--ink-2);font-weight:600}
-.due .vl.est::after{content:' est.';font-weight:400;font-size:10px;color:var(--muted)}
+.estimativa, .vl.est{color:#3FA680!important; font-weight:800!important}
+.due .vl.est::after{content:' (estimado)';font-weight:600;font-size:10px;color:#3FA680}
 .due .adj{font-size:10.5px;color:var(--sinal)}
 
 .charts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
@@ -137,6 +152,12 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .legend{display:flex;flex-wrap:wrap;gap:11px;margin-bottom:10px;font-size:11.5px;color:var(--ink-2)}
 .legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
 .cbox{position:relative;height:210px}
+.charts3 .cbox{height:160px}
+.pie-legend{margin-top:10px}
+.pie-legend-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:12.5px}
+.pie-legend-row:first-child{border-top:none}
+.pie-legend-row i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.pie-legend-row span{flex:1;color:var(--ink-2)}
 
 #rateio{scroll-margin-top:80px}
 .rateio-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px}
@@ -175,23 +196,30 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 
 const PAL = {
-  teal:'#0F8C85', eucalipto:'#649C8A', eucalipto2:'#3FA680', bege:'#CBA88F',
-  couro:'#A7715D', terracota:'#8F5A4A', vinho:'#731007', musgo:'#1D3B37', petroleo:'#113D39',
-  muted:'#8A7D70', line:'#E4D9C9'
+  // Paleta padronizada por família de tributo (item pedido pelo cliente):
+  iss:'#3FA680',        // ISS (e DAS, se houver Simples) — verdinho
+  pis:'#A7715D',        // PIS — marrom claro
+  cofins:'#C79873',     // COFINS — marrom claro (tom irmão do PIS)
+  csll:'#8F5A4A',       // CSLL — marrom mais escuro
+  irpj:'#6B4236',       // IRPJ — marrom mais escuro (tom irmão da CSLL)
+  inss:'#CBA88F',       // INSS — bege
+  fgts:'#B89572',       // FGTS — bege (tom irmão do INSS)
+  estimativa:'#3FA680', // valor estimado: verde mais claro, sempre em negrito
+  musgo:'#1D3B37', petroleo:'#113D39', vinho:'#731007', muted:'#8A7D70', line:'#E4D9C9'
 };
 const TRIB = [
-  {k:'ISS a Pagar (R$)',    n:'ISS',    c:PAL.teal},
-  {k:'PIS a pagar (R$)',    n:'PIS',    c:PAL.eucalipto},
-  {k:'COFINS a pagar (R$)', n:'COFINS', c:PAL.bege},
-  {k:'CSLL a pagar (R$)',   n:'CSLL',   c:PAL.couro},
-  {k:'IR a pagar (R$)',     n:'IRPJ',   c:PAL.vinho},
+  {k:'ISS a Pagar (R$)',    n:'ISS',    c:PAL.iss},
+  {k:'PIS a pagar (R$)',    n:'PIS',    c:PAL.pis},
+  {k:'COFINS a pagar (R$)', n:'COFINS', c:PAL.cofins},
+  {k:'CSLL a pagar (R$)',   n:'CSLL',   c:PAL.csll},
+  {k:'IR a pagar (R$)',     n:'IRPJ',   c:PAL.irpj},
 ];
 const OUTRAS = [
-  {n:'IRRF sobre dividendos', k:'IRRF Dividendos (R$)'},
-  {n:'INSS — GPS',            k:'INSS a Pagar (R$)'},
-  {n:'FGTS',                  k:'FGTS a Pagar (R$)'},
+  {n:'IRRF sobre dividendos', k:'IRRF Dividendos (R$)', c:PAL.irpj},
+  {n:'INSS — DARF',           k:'INSS a Pagar (R$)',    c:PAL.inss},
+  {n:'FGTS',                  k:'FGTS a Pagar (R$)',    c:PAL.fgts},
 ];
-const CENTRO_PAL = [PAL.teal, PAL.eucalipto2, PAL.couro, PAL.bege, PAL.musgo, PAL.eucalipto, PAL.terracota, PAL.petroleo];
+const CENTRO_PAL = [PAL.iss, PAL.pis, PAL.inss, PAL.csll, PAL.musgo, PAL.cofins, PAL.fgts, PAL.petroleo];
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const DOW = ['dom','seg','ter','qua','qui','sex','sáb'];
 
@@ -330,7 +358,7 @@ function provisaoDoMes(M, comp){
   const fimTri = a+'-'+String(inicio+2).padStart(2,'0');
   const guia = M.cal.find(c => c.id_regra==='R07' && c.competencia_ref===fimTri);
 
-  return {tri, ano:a, total, venc: guia ? guia.vencimento : null};
+  return {tri, ano:a, total, meses, venc: guia ? guia.vencimento : null};
 }
 
 function gradeDoMes(ano, mes){
@@ -398,6 +426,7 @@ function render(M){
   wrap.appendChild(el('<div id="hero"></div>'));
   wrap.appendChild(el('<div id="alerta"></div>'));
   wrap.appendChild(el('<div id="slim"></div>'));
+  wrap.appendChild(el('<div id="prov"></div>'));
   wrap.appendChild(el('<div id="outras"></div>'));
 
   appendAll(wrap, `
@@ -426,9 +455,9 @@ function render(M){
       <p>Próximos 3 meses, projeção por tributo com base na média dos últimos apurados.</p></div>
     </div>
     <div class="charts3" id="estim3">
-      <div class="card chart"><h3 id="est-t-0"></h3><div class="sub" id="est-s-0"></div><div class="cbox"><canvas id="est-0"></canvas></div></div>
-      <div class="card chart"><h3 id="est-t-1"></h3><div class="sub" id="est-s-1"></div><div class="cbox"><canvas id="est-1"></canvas></div></div>
-      <div class="card chart"><h3 id="est-t-2"></h3><div class="sub" id="est-s-2"></div><div class="cbox"><canvas id="est-2"></canvas></div></div>
+      <div class="card chart"><h3 id="est-t-0"></h3><div class="sub" id="est-s-0"></div><div class="cbox"><canvas id="est-0"></canvas></div><div class="pie-legend" id="est-lg-0"></div></div>
+      <div class="card chart"><h3 id="est-t-1"></h3><div class="sub" id="est-s-1"></div><div class="cbox"><canvas id="est-1"></canvas></div><div class="pie-legend" id="est-lg-1"></div></div>
+      <div class="card chart"><h3 id="est-t-2"></h3><div class="sub" id="est-s-2"></div><div class="cbox"><canvas id="est-2"></canvas></div><div class="pie-legend" id="est-lg-2"></div></div>
     </div>`);
 
   appendAll(wrap, `
@@ -580,27 +609,37 @@ function pintarMes(M, comp, charts){
     </div>`;
 
   const prov = provisaoDoMes(M, comp);
-  const slimCards = [
-    `<div class="card stat"><span class="lbl">Retido na fonte</span>
-        <div class="v num">${brl(ret)}</div><div class="s">${ret ? 'já pago pelos tomadores' : 'nenhuma retenção no mês'}</div></div>`,
-    `<div class="card stat"><span class="lbl">Carga efetiva</span>
-        <div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>`,
-    `<div class="card stat"><span class="lbl">Resultado líquido</span>
-        <div class="v num" style="color:var(--receita)">${brl(liq)}</div><div class="s">depois dos impostos</div></div>`,
-  ];
-  if (prov){
+  document.getElementById('slim').innerHTML = `<div class="slim">
+    <div class="card stat"><span class="lbl">Retido na fonte</span>
+        <div class="v num">${brl(ret)}</div><div class="s">${ret ? 'já pago pelos tomadores' : 'nenhuma retenção no mês'}</div></div>
+    <div class="card stat"><span class="lbl">Carga efetiva</span>
+        <div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>
+    <div class="card stat"><span class="lbl">Resultado líquido</span>
+        <div class="v num" style="color:var(--receita)">${brl(liq)}</div><div class="s">depois dos impostos</div></div>
+  </div>`;
+
+  document.getElementById('prov').innerHTML = prov ? (() => {
     const dias = prov.venc ? Math.round((dParse(prov.venc)-hoje)/864e5) : null;
-    slimCards.push(`<div class="card stat"><span class="lbl">Provisão IRPJ+CSLL · ${prov.tri}º tri</span>
-        <div class="v num">${brl(prov.total)}</div>
-        <div class="s">${prov.venc ? 'vence '+dParse(prov.venc).toLocaleDateString('pt-BR')+(dias>=0?` · em ${dias}d`:' · vencida') : 'sem guia projetada'}</div></div>`);
-  }
-  document.getElementById('slim').innerHTML = `<div class="slim">${slimCards.join('')}</div>`;
+    return `<div class="card prov-compact">
+      <div class="prov-compact-head">
+        <span class="lbl">Provisão IRPJ+CSLL · ${prov.tri}º trimestre de ${prov.ano}</span>
+        <span class="prov-compact-venc">${prov.venc ? 'vence '+dParse(prov.venc).toLocaleDateString('pt-BR')+(dias!==null?(dias>=0?` · em ${dias}d`:' · vencida'):'') : 'sem guia projetada'}</span>
+      </div>
+      <div class="prov-compact-meses">
+        ${prov.meses.map(x=>`<div class="pmes ${x.apurado?'':'futuro'}">
+          <span class="pmes-label">${mesLabel(x.comp)} · ${x.apurado?'apurado':'estimado'}</span>
+          <span class="pmes-v num ${x.apurado?'':'est'}">${brl(x.v)}</span>
+        </div>`).join('')}
+      </div>
+      <div class="prov-compact-total"><span>Total do trimestre</span><b class="num">${brl(prov.total)}</b></div>
+    </div>`;
+  })() : '';
 
   const outrasComValor = OUTRAS.map(o=>({...o, v:num(getM(r,o.k))})).filter(o=>o.v>0);
   document.getElementById('outras').innerHTML = outrasComValor.length ? `
     <div class="card outras">
       <h4>Outras guias do mês</h4>
-      ${outrasComValor.map(o=>`<div class="outras-row"><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}
+      ${outrasComValor.map(o=>`<div class="outras-row"><i style="background:${o.c}"></i><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}
     </div>` : '';
 
   const linhas = M.rateio.filter(x=>x.competencia===comp)
@@ -631,12 +670,11 @@ function pintarMes(M, comp, charts){
         <path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
         <path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
       </svg>
-      <div><b>${pct(shareNid)} do faturamento de ${mesLongo(comp)} está sem centro de custo.</b>
-      São ${brl(num(getM(nid,'Total (R$)')))} que ninguém reconhece como seus — e os impostos correspondentes vão junto.</div>
+      <div><b>${pct(shareNid)} do faturamento de ${mesLongo(comp)} está sem centro de custo.</b></div>
     </div>` : '';
 
   if (charts){
-    charts.c1.data.datasets[0].backgroundColor = M.empresa.map(r2=>r2.competencia===comp ? PAL.teal : '#D9CDBB');
+    charts.c1.data.datasets[0].backgroundColor = M.empresa.map(r2=>r2.competencia===comp ? PAL.iss : '#D9CDBB');
     charts.c1.update('none');
 
     charts.c3.data.datasets[0].data = TRIB.map(t=>num(getM(r,t.k)));
@@ -665,7 +703,7 @@ function desenharEstimativas(M){
   const ultimo = M.empresa[M.empresa.length-1].competencia;
   const [a,m] = ultimo.split('-').map(Number);
   const donutOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
-    plugins:{legend:{position:'bottom', labels:{color:PAL.muted, font:{family:'Montserrat',size:10.5}, boxWidth:8, padding:8}},
+    plugins:{legend:{display:false},
       tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
         bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
 
@@ -675,7 +713,10 @@ function desenharEstimativas(M){
     const dados = TRIB.map(t=>({n:t.n, c:t.c, v: M.porComp[comp] ? num(getM(M.porComp[comp], t.k)) : M.media(t.k)}));
     const total = dados.reduce((s,x)=>s+x.v,0);
     document.getElementById('est-t-'+i).textContent = mesLongo(comp);
-    document.getElementById('est-s-'+i).textContent = 'total estimado '+brl(total);
+    document.getElementById('est-s-'+i).innerHTML = 'total estimado <span class="estimativa">'+brl(total)+'</span>';
+    document.getElementById('est-lg-'+i).innerHTML = dados.map(x=>
+      `<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}</span><b class="num estimativa">${brl(x.v)}</b></div>`
+    ).join('');
     new Chart(document.getElementById('est-'+i), {
       type:'doughnut',
       data:{labels:dados.map(x=>x.n), datasets:[{data:dados.map(x=>x.v), backgroundColor:dados.map(x=>x.c), borderWidth:0}]},
@@ -767,7 +808,7 @@ function desenharGraficos(M){
   const c4 = new Chart(document.getElementById('c4'), {
     type:'bar',
     data:{labels:['Faturamento','Impostos','Líquido'], datasets:[
-      {label:'', data:[0,0,0], backgroundColor:PAL.teal, borderRadius:4, maxBarThickness:34},
+      {label:'', data:[0,0,0], backgroundColor:PAL.iss, borderRadius:4, maxBarThickness:34},
       {label:'', data:[0,0,0], backgroundColor:'#D9CDBB', borderRadius:4, maxBarThickness:34},
     ]},
     options:{...base, plugins:{...base.plugins, legend:{display:true, position:'bottom',
