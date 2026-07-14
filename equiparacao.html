@@ -201,9 +201,9 @@ function preparar(raw){
     ...p,
     _comp: prepararCompetencia(p.competencia),
     _grupo: (STATUS_INFO[p.status]||{grupo:'neutro'}).grupo,
-    // Número real e positivo = concluído. O Apps Script real devolve célula vazia como
-    // string '' (não null/undefined) — checar só null/undefined deixava passar tudo.
-    _concluido: Number(p.valor_aprovado) > 0,
+    // Critério de verdade: se tem data_pagamento, foi aprovado e será (ou já foi) pago.
+    // Sem data, cai na explicação de "Análise concluída" (ainda não se sabe o resultado).
+    _concluido: !!p.data_pagamento,
   })).sort((a,b) => a._comp.ord - b._comp.ord || a.tributo.localeCompare(b.tributo));
   return { cfg: raw.config||{}, id: raw.id, pedidos, atualizado_em: raw.atualizado_em };
 }
@@ -318,7 +318,7 @@ function render(M){
           <div><span>PER/DCOMP</span>${p.numero_per_dcomp}</div>
           <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
           <div><span>SELIC acumulada</span>${(p.selic_pct||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
-          <div><span>Data de aprovação</span>${dBR(p.data_aprovacao)}</div>
+          <div><span>Data de pagamento</span>${dBR(p.data_pagamento)}</div>
         </div>
         <div class="detalhe-explicacao">${info.txt}</div>
       </div>
