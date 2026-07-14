@@ -75,6 +75,10 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .item a{font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none;white-space:nowrap}
 .item a:hover{color:var(--brand-dark)}
 .item .em-breve{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+.venc{display:inline-block;font-size:11px;font-weight:600;margin-top:3px}
+.venc.venc-ok{color:var(--muted)}
+.venc.venc-atencao{color:var(--andamento)}
+.venc.venc-vencido{color:#8B2E22;font-weight:700}
 
 .vazio{color:var(--muted);font-size:13.5px;padding:16px 0;text-align:center}
 
@@ -234,7 +238,7 @@ function desenharAlteracoes(alteracoes){
           return `<div class="etapa ${cl}">
             <div class="etapa-nome">${e.nome}</div>
             <div class="etapa-meta">
-              <span>${dBR(e.data)}</span>
+              ${e.data ? `<span>${dBR(e.data)}</span>` : ''}
               <span class="etapa-status ${cl}">${e.status}</span>
             </div>
           </div>`;
@@ -244,13 +248,27 @@ function desenharAlteracoes(alteracoes){
   }).join('');
 }
 
+const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+function vencimentoInfo(iso){
+  if (!iso) return '';
+  const [a,m,d] = String(iso).split('-').map(Number);
+  const venc = new Date(a, m-1, d);
+  const dias = Math.round((venc - hoje) / 864e5);
+  let classe = 'venc-ok', texto;
+  if (dias < 0){ classe = 'venc-vencido'; texto = `Venceu há ${-dias}d`; }
+  else if (dias <= 60){ classe = 'venc-atencao'; texto = `Vence em ${dias}d`; }
+  else { texto = `Vence ${dBR(iso)}`; }
+  return `<span class="venc ${classe}">${texto}</span>`;
+}
+
 function desenharDocumentos(documentos){
   const box = document.getElementById('documentos');
   if (!documentos.length){ box.innerHTML = '<div class="vazio">Nenhum documento cadastrado ainda.</div>'; return; }
   box.innerHTML = documentos.map(d=>{
     const link = d.link && String(d.link).trim();
     return `<div class="item" data-busca="${normTxt(d.documento)}">
-      <div class="nome">${d.documento}</div>
+      <div><div class="nome">${d.documento}</div>${vencimentoInfo(d.vencimento)}</div>
       ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
     </div>`;
   }).join('');
