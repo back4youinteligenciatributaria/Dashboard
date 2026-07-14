@@ -197,14 +197,22 @@ function prepararCompetencia(c){
 }
 
 function preparar(raw){
-  const pedidos = (raw.pedidos||[]).map(p => ({
-    ...p,
-    _comp: prepararCompetencia(p.competencia),
-    _grupo: (STATUS_INFO[p.status]||{grupo:'neutro'}).grupo,
-    // Critério de verdade: se tem data_pagamento, foi aprovado e será (ou já foi) pago.
-    // Sem data, cai na explicação de "Análise concluída" (ainda não se sabe o resultado).
-    _concluido: !!p.data_pagamento,
-  })).sort((a,b) => a._comp.ord - b._comp.ord || a.tributo.localeCompare(b.tributo));
+  const pedidos = (raw.pedidos||[]).map(p => {
+    // Critério de verdade: se tem data_pagamento, foi aprovado e será (ou já foi) pago —
+    // isso vale mais que o texto de 'status', que pode dizer só "Análise concluída"
+    // (ambíguo por definição da própria Receita) mesmo quando já se sabe o resultado.
+    const concluido = !!p.data_pagamento;
+    const info = STATUS_INFO[p.status] || {grupo:'neutro', txt:''};
+    return {
+      ...p,
+      _comp: prepararCompetencia(p.competencia),
+      _concluido: concluido,
+      _grupo: concluido ? 'concluido' : info.grupo,
+      _explicacao: concluido
+        ? 'Crédito reconhecido pela Receita Federal — valor aprovado e em pagamento (ou já pago).'
+        : info.txt,
+    };
+  }).sort((a,b) => a._comp.ord - b._comp.ord || a.tributo.localeCompare(b.tributo));
   return { cfg: raw.config||{}, id: raw.id, pedidos, atualizado_em: raw.atualizado_em };
 }
 
@@ -303,13 +311,12 @@ function render(M){
   // --- tabela ---
   const tbody = document.querySelector('#tabela-pedidos tbody');
   tbody.innerHTML = P.map((p,i)=>{
-    const info = STATUS_INFO[p.status] || {grupo:'neutro', txt:''};
     return `<tr class="linha" data-i="${i}">
       <td>${p._comp.label}</td>
       <td>${p.tributo}</td>
       <td class="r num">${brl(p.valor_solicitado)}</td>
       <td class="r num">${brl(p.valor_atualizado)}</td>
-      <td><span class="status-chip status-${info.grupo}">${p.status}</span></td>
+      <td><span class="status-chip status-${p._grupo}">${p.status}</span></td>
       <td class="r num">${p._concluido ? brl(p.valor_aprovado) : '—'}</td>
     </tr>
     <tr class="detalhe-row" id="det-${i}"><td colspan="6">
@@ -320,7 +327,7 @@ function render(M){
           <div><span>SELIC acumulada</span>${(p.selic_pct||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
           <div><span>Data de pagamento</span>${dBR(p.data_pagamento)}</div>
         </div>
-        <div class="detalhe-explicacao">${info.txt}</div>
+        <div class="detalhe-explicacao">${p._explicacao}</div>
       </div>
     </td></tr>`;
   }).join('');
