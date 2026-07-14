@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Societário — back4you</title>
+<title>Societário e Jurídico — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
@@ -75,6 +75,19 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .item a{font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none;white-space:nowrap}
 .item a:hover{color:var(--brand-dark)}
 .item .em-breve{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+
+.grupo-cat{border-top:1px solid var(--line)}
+.grupo-cat:first-child{border-top:none}
+.grupo-cat-btn{
+  width:100%;display:flex;align-items:center;gap:10px;padding:14px 0;
+  background:none;border:none;cursor:pointer;font-family:var(--sans);color:var(--ink);text-align:left;
+}
+.grupo-cat-nome{font-size:14px;font-weight:700;flex:1}
+.grupo-cat-conta{font-size:11px;font-weight:700;color:var(--muted);background:var(--surface-warm);border-radius:10px;padding:2px 9px}
+.grupo-cat-btn .seta{color:var(--muted);font-size:13px;transition:transform .2s}
+.grupo-cat-body{padding:0 0 10px 4px}
+.grupo-cat-body .item{padding:10px 0 10px 10px;border-top:1px solid var(--line)}
+.grupo-cat-body .item:first-child{border-top:none}
 .venc{display:inline-block;font-size:11px;font-weight:600;margin-top:3px}
 .venc.venc-ok{color:var(--muted)}
 .venc.venc-atencao{color:var(--andamento)}
@@ -104,8 +117,11 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 const TIPO = 'societario';
-const TITULO_PAGINA = 'Societário';
-const CATEGORIA_MODELOS = 'Societário';
+const TITULO_PAGINA = 'Societário e Jurídico';
+// Equiparação é a única categoria reservada — aparece só no equiparacao.html.
+// Qualquer outra categoria (Paciente, Alvarás, Contratos, o que o time escrever)
+// é livre e aparece aqui, agrupada.
+const CATEGORIA_EXCLUIDA = 'Equiparação';
 
 function normTxt(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
 
@@ -276,21 +292,66 @@ function desenharDocumentos(documentos){
 
 function desenharModelos(modelos){
   const box = document.getElementById('modelos');
-  const doCategoria = modelos.filter(m => normTxt(m.categoria) === normTxt(CATEGORIA_MODELOS));
-  if (!doCategoria.length){ box.innerHTML = '<div class="vazio">Nenhum modelo cadastrado ainda.</div>'; return; }
-  box.innerHTML = doCategoria.map(m=>{
-    const link = m.link && String(m.link).trim();
-    return `<div class="item" data-busca="${normTxt(m.documento)}">
-      <div><div class="nome">${m.documento}</div><div class="cat">${m.categoria}</div></div>
-      ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
+  const visiveis = modelos.filter(m => normTxt(m.categoria) !== normTxt(CATEGORIA_EXCLUIDA));
+  if (!visiveis.length){ box.innerHTML = '<div class="vazio">Nenhum modelo cadastrado ainda.</div>'; return; }
+
+  // Agrupa preservando a ordem de primeira aparição de cada categoria.
+  const grupos = new Map();
+  visiveis.forEach(m=>{
+    const cat = String(m.categoria||'Outros').trim();
+    if (!grupos.has(cat)) grupos.set(cat, []);
+    grupos.get(cat).push(m);
+  });
+
+  box.innerHTML = Array.from(grupos.entries()).map(([cat, itens], i)=>{
+    const catId = 'cat-' + i;
+    return `<div class="grupo-cat" data-busca="${normTxt(cat)} ${itens.map(m=>normTxt(m.documento)).join(' ')}">
+      <button class="grupo-cat-btn" aria-expanded="false" onclick="
+        const body=document.getElementById('${catId}'); const abrir=body.style.display!=='block';
+        body.style.display = abrir?'block':'none'; this.setAttribute('aria-expanded', abrir);
+        this.querySelector('.seta').style.transform = abrir?'rotate(180deg)':'';
+      ">
+        <span class="grupo-cat-nome">${cat}</span>
+        <span class="grupo-cat-conta">${itens.length}</span>
+        <span class="seta">▾</span>
+      </button>
+      <div class="grupo-cat-body" id="${catId}" style="display:none">
+        ${itens.map(m=>{
+          const link = m.link && String(m.link).trim();
+          return `<div class="item" data-busca="${normTxt(m.documento)}">
+            <div class="nome">${m.documento}</div>
+            ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
+          </div>`;
+        }).join('')}
+      </div>
     </div>`;
   }).join('');
 }
 
 function filtrar(termo){
   const alvo = normTxt(termo);
-  document.querySelectorAll('[data-busca]').forEach(el=>{
+
+  // Documentos e processos societários — comportamento simples de mostrar/esconder.
+  document.querySelectorAll('#documentos [data-busca], #alteracoes [data-busca]').forEach(el=>{
     el.style.display = !alvo || el.dataset.busca.includes(alvo) ? '' : 'none';
+  });
+
+  // Modelos — agrupados: some o grupo inteiro se nada bater, e abre sozinho
+  // o grupo que tiver resultado (fecha de novo se a busca for limpa).
+  document.querySelectorAll('#modelos .grupo-cat').forEach(grupo=>{
+    const bate = !alvo || grupo.dataset.busca.includes(alvo);
+    grupo.style.display = bate ? '' : 'none';
+    const body = grupo.querySelector('.grupo-cat-body');
+    const btn = grupo.querySelector('.grupo-cat-btn');
+    if (bate && alvo){
+      body.style.display = 'block';
+      btn.setAttribute('aria-expanded', 'true');
+      btn.querySelector('.seta').style.transform = 'rotate(180deg)';
+    } else if (!alvo){
+      body.style.display = 'none';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.querySelector('.seta').style.transform = '';
+    }
   });
 }
 
