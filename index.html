@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Painel fiscal — back4you</title>
+<title>Painel do cliente — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
@@ -11,339 +11,79 @@
 :root{
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
   --ink:#113D39; --ink-2:#3F5854; --muted:#8A7D70; --line:#E4D9C9; --line-2:#D6C3AC;
-  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-eucalipto:#649C8A; --brand-eucalipto-2:#3FA680;
-  --bege:#CBA88F; --couro:#A7715D; --terracota:#8F5A4A; --vinho:#731007;
-  --receita:#0F8C85; --receita-soft:#DCEFEC;
-  --imposto:#8F5A4A; --imposto-soft:#F1E1D8;
-  --alerta:#731007; --alerta-soft:#F3DEDB;
-  --provisao:#113D39; --provisao-soft:#DFE8E4;
-  --sinal:#A7715D; --sinal-soft:#F1E4DC;
-  --radius:12px; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-eucalipto2:#3FA680;
+  --bege:#CBA88F; --couro:#A7715D; --terracota:#8F5A4A;
+  --radius:16px; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
-.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+body{
+  background:var(--canvas);color:var(--ink);font-family:var(--sans);
+  min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;
+}
 :focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
-.wrap{max-width:1180px;margin:0 auto;padding:0 24px 72px}
 
-header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:30}
-.bar{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.logo{font-weight:900;font-size:19px;letter-spacing:-.02em;white-space:nowrap;line-height:1}
+.topo{padding:28px 24px 0;text-align:center}
+.logo{font-weight:900;font-size:24px;letter-spacing:-.02em}
 .logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
-.brand-sub{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:1px}
-.spacer{flex:1}
-.picker{display:flex;align-items:center;gap:10px}
-.picker .lbl{color:var(--ink-2)}
-select{
-  font-family:var(--sans);font-size:14px;font-weight:700;color:#fff;
-  background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto-2));
-  border:none;border-radius:24px;padding:9px 16px;cursor:pointer;
-  box-shadow:0 3px 10px rgba(15,140,133,.28);
+
+.miolo{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 56px}
+.saudacao{text-align:center;margin-bottom:36px}
+.saudacao h1{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.saudacao p{font-size:13.5px;color:var(--muted);margin-top:6px}
+
+.grade{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:18px;max-width:680px;width:100%}
+@media(max-width:560px){.grade{grid-template-columns:1fr}}
+
+.opcao{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px 24px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:10px;
+  transition:transform .15s, box-shadow .15s; position:relative; overflow:hidden;
 }
-select:hover{filter:brightness(1.05)}
-option{color:#111;font-weight:500}
-
-.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px;margin:28px 0 14px}
-@media(max-width:920px){.hero{grid-template-columns:1fr}}
-.hero-main{padding:26px 28px;display:flex;flex-direction:column;justify-content:center}
-.comp-title{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
-.comp-note{font-size:12.5px;color:var(--muted);margin-top:6px;max-width:42ch}
-.big{font-size:clamp(32px,4.4vw,46px);font-weight:800;line-height:1;letter-spacing:-.03em;margin-top:16px}
-.delta{margin-top:12px;font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.chip{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px}
-.chip.up{background:var(--receita-soft);color:var(--receita)}
-.chip.down{background:var(--alerta-soft);color:var(--alerta)}
-
-.relacao{padding:20px 24px}
-.relacao-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px;flex-wrap:wrap}
-.relacao-head h2{font-size:15px;font-weight:700}
-table.imp{width:100%;border-collapse:collapse;font-size:13px}
-table.imp th{text-align:right;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 0 6px;border-bottom:1px solid var(--line-2)}
-table.imp th:first-child{text-align:left}
-table.imp td{padding:7px 0;border-bottom:1px solid var(--line);text-align:right}
-table.imp td:first-child{text-align:left;font-weight:600}
-table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:800;padding-top:9px}
-.btn{
-  display:inline-flex;align-items:center;gap:6px;margin-top:14px;
-  font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none;
-  padding:8px 0;border-top:1px dashed var(--line-2);width:100%;justify-content:center;
+.opcao:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(17,61,57,.10)}
+.opcao .icone{
+  width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  background:var(--surface-warm);color:var(--brand-teal);flex-shrink:0;
 }
-.btn:hover{color:var(--brand-dark)}
+.opcao .icone svg{width:22px;height:22px}
+.opcao h2{font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+.opcao p{font-size:12.5px;color:var(--muted);line-height:1.5}
+.opcao .seta{position:absolute;top:24px;right:22px;color:var(--line-2);font-size:16px;transition:transform .15s, color .15s}
+.opcao:hover .seta{transform:translateX(3px);color:var(--brand-teal)}
 
-.slim{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px}
-.stat{padding:16px 18px}
-.stat .v{font-size:21px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
-.stat .s{font-size:12px;color:var(--muted);margin-top:3px}
-
-.guias-card{padding:20px 24px;margin-bottom:16px}
-.guias-card .relacao-head{margin-bottom:10px}
-.guia-row{border-top:1px solid var(--line);padding:11px 0}
-.guia-row:first-of-type{border-top:none}
-.guia-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.guia-status{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:10px;flex-shrink:0}
-.status-fechada{background:var(--receita-soft);color:var(--receita)}
-.status-estimativa{background:#DCF3E9;color:#3FA680}
-.status-aberto{background:var(--sinal-soft);color:var(--sinal)}
-.guia-nome{flex:1;font-size:13.5px;font-weight:600;min-width:120px}
-.guia-valor{font-size:14px}
-.guia-detalhe{display:none;margin:8px 0 0 0;padding:8px 12px;background:var(--surface-warm);border-radius:8px}
-.guia-detalhe.aberto{display:block}
-.guia-detalhe-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0}
-
-.outras{padding:14px 18px;margin-bottom:20px}
-.outras h4{font-size:12.5px;font-weight:700;color:var(--ink-2);margin-bottom:8px}
-.outras-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:5px 0;border-top:1px solid var(--line)}
-.outras-row:first-of-type{border-top:none}
-.outras-row i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:8px}
-.outras-row span{flex:1;display:flex;align-items:center}
-
-.prov-compact{padding:16px 20px;margin-bottom:20px}
-.prov-compact-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.prov-compact-venc{font-size:12px;color:var(--muted);font-weight:600}
-.prov-compact-meses{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
-@media(max-width:600px){.prov-compact-meses{grid-template-columns:1fr}}
-.pmes{background:var(--surface-warm);border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:3px}
-.pmes.futuro{background:repeating-linear-gradient(135deg,var(--provisao-soft),var(--provisao-soft) 6px,#EDE4D6 6px,#EDE4D6 12px)}
-.pmes-label{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:capitalize}
-.pmes-v{font-size:15px;font-weight:800;color:var(--provisao)}
-.prov-compact-total{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--line);font-size:13px}
-.prov-compact-total b{font-size:17px;color:var(--provisao)}
-
-.alert{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;border-radius:var(--radius);
-  background:var(--alerta-soft);border:1px solid #E3C4BE;color:var(--alerta);font-size:13.5px;margin-bottom:20px}
-.alert svg{flex-shrink:0;margin-top:2px}
-
-.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:32px 0 14px}
-.sec-head h2{font-size:16px;font-weight:700;letter-spacing:-.01em}
-.sec-head p{font-size:13px;color:var(--muted)}
-
-/* calendário carrossel */
-.cal-card{padding:20px 22px}
-.cal-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
-.cal-arrow{
-  width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface-warm);
-  color:var(--ink); font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;
+.opcao.bloqueada{cursor:default;background:var(--surface-warm)}
+.opcao.bloqueada:hover{transform:none;box-shadow:none}
+.opcao.bloqueada .icone{background:var(--line);color:var(--muted)}
+.opcao.bloqueada h2{color:var(--ink-2)}
+.opcao.bloqueada .em-breve{
+  position:absolute;top:22px;right:20px;font-size:9.5px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--muted);background:var(--line);padding:3px 8px;border-radius:10px;
 }
-.cal-arrow:hover{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
-.cal-nav h3{font-size:14px;font-weight:700;min-width:180px;text-align:center;text-transform:capitalize}
-.cal-strip{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:16px;align-items:start}
-@media(max-width:700px){.cal-strip{grid-template-columns:1fr}}
-.cal-mini.lateral{opacity:.45}
-.mini-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:3px}
-.mini-dow span{font-size:9px;text-align:center;color:var(--muted);font-weight:700}
-.mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.mini-cel{aspect-ratio:1/1;border-radius:5px;background:var(--surface-warm);display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--ink-2)}
-.mini-cel.blank{background:transparent}
-.mini-cel.due{background:var(--imposto);color:#fff;font-weight:700}
-.mini-cel.due-muted{background:var(--line-2);color:var(--ink-2);font-weight:600}
-.cal-total{text-align:center;font-size:16px;font-weight:800;color:var(--imposto);margin:12px 0 4px}
-.cal-agenda{margin-top:10px}
-.cal-agenda .row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px}
-.empty{color:var(--muted);font-size:13.5px;padding:8px 0;text-align:center}
 
-.months{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px}
-.month{padding:14px 16px 16px}
-.month h4{font-size:13px;font-weight:700;text-transform:capitalize}
-.due{display:flex;gap:9px;padding:7px 6px;border-radius:6px;font-size:12.5px}
-.due.due-pago{background:var(--receita-soft)}
-.due.due-atencao{background:var(--sinal-soft)}
-.due .day{font-size:11px;font-weight:700;color:var(--muted);width:30px;flex-shrink:0;padding-top:1px}
-.due .body{min-width:0;flex:1}
-.due .nm{display:block;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.due .vl{font-size:12px;color:var(--ink-2);font-weight:600}
-.estimativa, .vl.est{color:#3FA680!important; font-weight:800!important}
-.due .vl.est::after{content:' (estimado)';font-weight:600;font-size:10px;color:#3FA680}
-.due .adj{font-size:10.5px;color:var(--sinal)}
+footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 
-.charts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.charts3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-@media(max-width:900px){.charts{grid-template-columns:1fr}.charts3{grid-template-columns:1fr}}
-.chart{padding:20px 22px 16px}
-.chart h3{font-size:14px;font-weight:700;margin-bottom:2px;text-transform:capitalize}
-.comp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
-.comp-head h3{margin-bottom:0}
-.mini-select{
-  font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-2);
-  background:var(--surface-warm);border:1px solid var(--line-2);border-radius:12px;
-  padding:4px 9px;cursor:pointer;
-}
-.chart .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
-.legend{display:flex;flex-wrap:wrap;gap:11px;margin-bottom:10px;font-size:11.5px;color:var(--ink-2)}
-.legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
-.cbox{position:relative;height:210px}
-.charts3 .cbox{height:160px}
-.pie-legend{margin-top:10px}
-.pie-legend-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:12.5px}
-.pie-legend-row:first-child{border-top:none}
-.pie-legend-row i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
-.pie-legend-row span{flex:1;color:var(--ink-2)}
-
-#rateio{scroll-margin-top:80px}
-.rateio-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px}
-@media(max-width:900px){.rateio-grid{grid-template-columns:1fr}}
-table.rat{width:100%;border-collapse:collapse;font-size:13.5px}
-table.rat th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 9px;border-bottom:1px solid var(--line-2)}
-table.rat th.r,table.rat td.r{text-align:right}
-table.rat td{padding:10px;border-bottom:1px solid var(--line)}
-table.rat tbody tr:last-child td{border-bottom:none}
-table.rat tbody tr.nid td{background:var(--alerta-soft)}
-.share{position:relative;height:5px;border-radius:3px;background:var(--surface-warm);margin-top:5px;overflow:hidden}
-.share i{position:absolute;inset:0 auto 0 0;background:var(--receita);border-radius:3px;display:block}
-tr.nid .share i{background:var(--alerta)}
-.btn-detalhe{
-  font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--brand-teal);
-  background:var(--surface-warm);border:1px solid var(--line-2);border-radius:14px;
-  padding:5px 12px;cursor:pointer;white-space:nowrap;
-}
-.btn-detalhe:hover{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
-tr.detail-row{display:none}
-tr.detail-row.aberto{display:table-row}
-tr.detail-row td{padding:0 10px 14px;border-bottom:1px solid var(--line)}
-table.rat-detalhe{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface-warm);border-radius:8px;overflow:hidden}
-table.rat-detalhe th{text-align:right;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 10px 6px}
-table.rat-detalhe th:first-child{text-align:left}
-table.rat-detalhe td{padding:6px 10px;text-align:right}
-table.rat-detalhe td:first-child{text-align:left;display:flex;align-items:center;gap:7px}
-table.rat-detalhe td i{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.rat-detalhe-outras{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-2)}
-.rat-detalhe-outras .outras-row{padding:4px 10px;font-size:12px}
-
-.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px;margin:0 auto}
 .state h1{font-size:19px;font-weight:700}
 .state p{color:var(--muted);font-size:14px;max-width:44ch}
 .state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
-.spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-
-/* Tabelas nunca devem forçar o layout a estourar a largura da tela — rolam por dentro. */
-.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
-.table-scroll table{min-width:420px}
-table.rat{min-width:560px}
-
-@media(max-width:600px){
-  .wrap{padding:0 14px 56px}
-  .bar{padding:12px 14px;gap:10px}
-  .logo{font-size:17px}
-  .brand-sub{font-size:10.5px}
-  select{padding:8px 12px;font-size:13px}
-  .picker .lbl{display:none} /* "Competência" já fica óbvio pelo conteúdo do select */
-
-  .hero{margin:18px 0 12px;gap:12px}
-  .hero-main{padding:18px 18px}
-  .comp-title{font-size:21px}
-  .big{font-size:clamp(26px,8vw,34px)}
-  .relacao{padding:16px 16px}
-
-  .slim{gap:10px}
-  .stat{padding:13px 14px}
-  .stat .v{font-size:18px}
-
-  .prov-compact,.outras{padding:14px 16px}
-  .prov-compact-meses{gap:8px}
-  .pmes{padding:8px 10px}
-
-  .cal-card{padding:14px 14px}
-  .cal-nav{gap:8px}
-  .cal-nav h3{min-width:0;font-size:12.5px}
-  .cal-arrow{width:26px;height:26px;font-size:13px;flex-shrink:0}
-  .cal-strip{gap:10px}
-  .mini-cel{font-size:9.5px}
-  .cal-total{font-size:14px}
-
-  .sec-head{margin:24px 0 10px}
-  .sec-head h2{font-size:14.5px}
-
-  .months{gap:10px}
-  .month{padding:12px 13px 13px}
-
-  .chart{padding:16px 16px 13px}
-  .charts,.charts3{gap:12px}
-
-  footer{flex-direction:column;gap:4px}
-}
 </style>
 </head>
 <body>
 
-<div id="app">
-  <div class="state">
-    <div class="spin" role="status" aria-label="Carregando"></div>
-    <p>Carregando o painel…</p>
-  </div>
+<div class="topo">
+  <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<div class="miolo" id="miolo">
+  <div class="saudacao">
+    <h1>Escolha o que você quer ver</h1>
+    <p id="cliente-sub">Carregando…</p>
+  </div>
+  <div class="grade" id="grade"></div>
+</div>
+
+<footer>Precisando de ajuda? Fale com o seu contador de referência.</footer>
+
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
-
-const PAL = {
-  // Paleta padronizada por família de tributo (item pedido pelo cliente):
-  iss:'#3FA680',        // ISS (e DAS, se houver Simples) — verdinho
-  pis:'#A7715D',        // PIS — marrom claro
-  cofins:'#C79873',     // COFINS — marrom claro (tom irmão do PIS)
-  csll:'#8F5A4A',       // CSLL — marrom mais escuro
-  irpj:'#6B4236',       // IRPJ — marrom mais escuro (tom irmão da CSLL)
-  inss:'#CBA88F',       // INSS — bege
-  fgts:'#B89572',       // FGTS — bege (tom irmão do INSS)
-  estimativa:'#3FA680', // valor estimado: verde mais claro, sempre em negrito
-  musgo:'#1D3B37', petroleo:'#113D39', vinho:'#731007', muted:'#8A7D70', line:'#E4D9C9'
-};
-const TRIB = [
-  {k:'ISS a Pagar (R$)',    n:'ISS',    c:PAL.iss},
-  {k:'PIS a pagar (R$)',    n:'PIS',    c:PAL.pis},
-  {k:'COFINS a pagar (R$)', n:'COFINS', c:PAL.cofins},
-  {k:'CSLL a pagar (R$)',   n:'CSLL',   c:PAL.csll},
-  {k:'IR a pagar (R$)',     n:'IRPJ',   c:PAL.irpj},
-];
-const OUTRAS = [
-  {n:'IRRF sobre dividendos', k:'IRRF Dividendos (R$)', c:PAL.irpj},
-  {n:'INSS — DARF',           k:'INSS a Pagar (R$)',    c:PAL.inss},
-  {n:'FGTS',                  k:'FGTS a Pagar (R$)',    c:PAL.fgts},
-];
-// Nenhuma regra tem o valor escondido no momento — todas mostram seu valor normalmente.
-const REGRAS_SEM_VALOR_EXIBIDO = new Set();
-const CENTRO_PAL = [PAL.iss, PAL.pis, PAL.inss, PAL.csll, PAL.musgo, PAL.cofins, PAL.fgts, PAL.petroleo];
-/** [nome, coluna devido, coluna retido, coluna a pagar] — usado na relação do topo e no detalhe do rateio. */
-const TRIB_ROWS = [
-  ['ISS','ISS Devido (R$)','ISS Retido (R$)','ISS a Pagar (R$)'],
-  ['PIS','PIS Devido (R$)','PIS Retido (R$)','PIS a pagar (R$)'],
-  ['COFINS','COFINS Devido (R$)','COFINS Retido (R$)','COFINS a pagar (R$)'],
-  ['CSLL','CSLL Devida (R$)','CSLL Retida (R$)','CSLL a pagar (R$)'],
-  ['IRPJ','IR Devido (R$)','IR Retido (R$)','IR a pagar (R$)'],
-];
-const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const DOW = ['dom','seg','ter','qua','qui','sex','sáb'];
-
-const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
-const brl2 = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
-const pct = v => (v*100).toFixed(1).replace('.',',')+'%';
-const num = v => Number(v)||0;
-const mesLabel = c => { const [a,m]=c.split('-'); return MESES[+m-1]+'/'+a.slice(2); };
-const mesLongo = c => { const [a,m]=c.split('-'); return MESES[+m-1]+' '+a; };
-const hoje = new Date(); hoje.setHours(0,0,0,0);
-const dParse = s => { const [a,m,d]=String(s).split('-').map(Number); return new Date(a,m-1,d); };
-const addM = (d,n) => new Date(d.getFullYear(), d.getMonth()+n, d.getDate());
-const compDe = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-/** Competência do mês SEGUINTE ao informado — é para lá que os impostos vencem. */
-const mesSeguinteComp = c => { const [a,m]=c.split('-').map(Number); return compDe(new Date(a,m,1)); };
-const el = h => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
-function appendAll(parent, h){
-  const t = document.createElement('template'); t.innerHTML = h.trim();
-  Array.from(t.content.children).forEach(n => parent.appendChild(n));
-}
-const normKey = s => String(s).trim().toLowerCase().replace(/\s+/g,' ');
-function getM(row, key){
-  if (!row) return undefined;
-  if (key in row) return row[key];
-  if (!row.__norm) row.__norm = new Map(Object.keys(row).map(k=>[normKey(k), row[k]]));
-  return row.__norm.get(normKey(key));
-}
-
 function getIdCodigo(){
   const qs = new URLSearchParams(location.search);
   let id = qs.get('id') || '';
@@ -358,808 +98,50 @@ function getIdCodigo(){
   return { id: id.replace(/\D/g,''), codigo: codigo.trim() };
 }
 
-function jsonp(url){
-  return new Promise((ok,fail)=>{
-    const cb = 'cb_'+Math.random().toString(36).slice(2);
-    const s = document.createElement('script');
-    const t = setTimeout(()=>{ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
-    function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
-    window[cb] = d => { limpa(); ok(d); };
-    s.onerror = () => { limpa(); fail(new Error('Não consegui alcançar a API.')); };
-    s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
-    document.body.appendChild(s);
-  });
-}
+const ICONES = {
+  societarios: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-7h6v7"/><path d="M9 12h.01M15 12h.01M9 16h.01M15 16h.01"/></svg>',
+  fiscal:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>',
+  pessoal:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><path d="M16 4.2c1.7.4 3 2 3 3.8s-1.3 3.4-3 3.8M23 20c0-2.8-2.3-5.1-5.4-5.8"/></svg>',
+  equiparacao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>',
+};
 
-async function carregar(){
-  const { id, codigo } = getIdCodigo();
-  if (API_URL){
-    if (!id) throw new Error('Informe o ID do cliente no final do endereço.');
-    if (!codigo) throw new Error('Informe também o código de acesso, no formato #482913-CODIGO.');
-    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo);
-    const d = await jsonp(url);
-    if (d.erro) throw new Error(d.erro);
-    return d;
-  }
-  const r = await fetch('demo.json');
-  if (!r.ok) throw new Error('Sem API configurada e sem demo.json ao lado do index.html.');
-  return r.json();
-}
+function render(id, codigo, razaoSocial){
+  document.getElementById('cliente-sub').textContent = razaoSocial ? `${razaoSocial} · cliente ${id}` : `Cliente ${id}`;
 
-function preparar(raw){
-  const eComp = r => /^\d{4}-\d{2}$/.test(String(r.competencia||''));
-  const empresa = (raw.empresa||[]).filter(eComp).sort((a,b)=>a.competencia.localeCompare(b.competencia));
-  const rateio  = (raw.rateio||[]).filter(eComp);
-  const regras  = (raw.regras||[]).filter(r=>/^R\d+$/.test(String(r.id||'')));
-  const cal     = (raw.calendario||[]).filter(c=>/^R\d+$/.test(String(c.id_regra||'')) && c.vencimento)
-                    .sort((a,b)=>String(a.vencimento).localeCompare(String(b.vencimento)));
-  const regraDe = Object.fromEntries(regras.map(r=>[r.id,r]));
-  const porComp = Object.fromEntries(empresa.map(r=>[r.competencia,r]));
+  const destino = pagina => `${pagina}#${id}-${codigo}`;
 
-  const impostos = r => TRIB.reduce((s,t)=>s+num(getM(r,t.k)),0);
-  const retido = r => num(getM(r,'ISS Retido (R$)'))+num(getM(r,'PIS Retido (R$)'))+num(getM(r,'COFINS Retido (R$)'))
-                    + num(getM(r,'CSLL Retida (R$)'))+num(getM(r,'IR Retido (R$)'));
+  const opcoes = [
+    { chave:'societarios', titulo:'Documentos societários', desc:'Contrato social, alterações e certidões da empresa.', bloqueada:true },
+    { chave:'fiscal',      titulo:'Dashboard Fiscal', desc:'Faturamento, impostos a pagar, rateio por centro de custo e calendário de vencimentos.', href:destino('fiscal.html') },
+    { chave:'pessoal',     titulo:'Departamento Pessoal', desc:'Folha, encargos e obrigações trabalhistas.', bloqueada:true },
+    { chave:'equiparacao', titulo:'Equiparação hospitalar', desc:'Pedidos de restituição, valores atualizados e situação de cada processo.', href:destino('equiparacao.html') },
+  ];
 
-  const ult3 = empresa.slice(-3);
-  const media = k => ult3.length ? ult3.reduce((s,r)=>s+num(getM(r,k)),0)/ult3.length : 0;
-
-  function somaMetricas(comp, chaves){
-    const r = porComp[comp];
-    return chaves.reduce((s,k)=> s + (r ? num(getM(r,k)) : media(k)), 0);
-  }
-
-  function valorDe(item){
-    const reg = regraDe[item.id_regra] || {};
-    if (num(reg.valor_previsto) > 0) return {v:num(reg.valor_previsto), est:false};
-    const fonte = String(reg.metrica_fonte||'').trim();
-    if (!fonte) return {v:0, est:false};
-    const chaves = fonte.split('|').map(s=>s.trim()).filter(Boolean);
-    const n = Math.max(1, num(reg.acumula_meses)||1);
-    const ref = String(item.competencia_ref||'');
-    if (!/^\d{4}-\d{2}$/.test(ref)) return {v:0, est:true};
-    let total = 0, estimado = false;
-    const [a,m] = ref.split('-').map(Number);
-    for (let i=0;i<n;i++){
-      const d = new Date(a, m-1-i, 1);
-      const c = compDe(d);
-      if (!porComp[c]) estimado = true;
-      total += somaMetricas(c, chaves);
-    }
-    return {v: Math.round(total*100)/100, est:estimado};
-  }
-
-  return {cfg:raw.config||{}, id:raw.id, empresa, rateio, regras, cal, regraDe,
-          porComp, impostos, retido, valorDe, media};
-}
-
-/** Provisão trimestral do IRPJ+CSLL — só existe quando o regime apura por trimestre. */
-/** Nivela uma coluna (ex.: IRPJ) para o trimestre de 'comp'.
-    Se o trimestre de 'comp' já está TOTALMENTE fechado (os 3 meses existem em Empresa),
-    usa o valor real do próprio mês — sem inventar nada.
-    Se está em aberto (mês atual ou futuro), NÃO usa os meses reais desse mesmo trimestre
-    como base: numa contabilidade real, o valor do trimestre só é lançado no mês de
-    fechamento, então os outros dois meses estariam genuinamente zerados — usá-los como
-    base de média dá quase zero. Em vez disso, busca o ÚLTIMO trimestre TOTALMENTE fechado
-    (pode ser 1, 2 ou mais trimestres atrás) e usa o total dele ÷ 3. */
-function nivelarTrimestre(M, comp, coluna){
-  const [a,m] = comp.split('-').map(Number);
-  const tri = Math.ceil(m/3);
-
-  const mesesDoTrimestre = (ano, t) => {
-    const inicio = (t-1)*3 + 1;
-    return [0,1,2].map(i => ano+'-'+String(inicio+i).padStart(2,'0'));
-  };
-  const totalmenteFechado = meses => meses.every(c => !!M.porComp[c]);
-
-  const mesesAlvo = mesesDoTrimestre(a, tri);
-  if (totalmenteFechado(mesesAlvo)){
-    const r = M.porComp[comp];
-    return r ? num(getM(r, coluna)) : 0;
-  }
-
-  // Anda para trás, trimestre a trimestre, até achar um totalmente fechado.
-  let ano = a, t = tri;
-  for (let tentativas = 0; tentativas < 8; tentativas++){
-    t--; if (t === 0){ t = 4; ano--; }
-    const meses = mesesDoTrimestre(ano, t);
-    if (totalmenteFechado(meses)){
-      const soma = meses.reduce((s,c) => s + num(getM(M.porComp[c], coluna)), 0);
-      return soma / 3;
-    }
-  }
-  return M.media(coluna); // não achou nenhum trimestre fechado — cai na média geral
-}
-
-const JANELAS_COMPARATIVO = [
-  {v:1,  n:'mês anterior'},
-  {v:3,  n:'trimestre anterior'},
-  {v:6,  n:'semestre anterior'},
-  {v:12, n:'últimos 12 meses'},
-];
-
-/** Devolve só as janelas de comparação com histórico suficiente ANTES do mês selecionado. */
-function janelasDisponiveis(M, comp){
-  const i = M.empresa.findIndex(x=>x.competencia===comp);
-  return JANELAS_COMPARATIVO.filter(j => i >= j.v);
-}
-
-/** Média mensal do bloco de 'janela' meses imediatamente antes de 'comp'. */
-function comparativoBase(M, comp, janela){
-  const i = M.empresa.findIndex(x=>x.competencia===comp);
-  if (i < janela) return null;
-  const bloco = M.empresa.slice(i-janela, i);
-  const tot = bloco.reduce((s,r)=>s+num(getM(r,'Total (R$)')),0)/janela;
-  const imp = bloco.reduce((s,r)=>s+M.impostos(r),0)/janela;
-  const liq = bloco.reduce((s,r)=>s+num(getM(r,'Resultado Líquido (R$)')),0)/janela;
-  const label = janela===1 ? mesLongo(bloco[0].competencia) : `média · últimos ${janela} meses`;
-  return {tot, imp, liq, label};
-}
-
-/** Quebra o valor de uma guia (linha do Calendário) por centro de custo, somando os
-    mesmos meses que valorDe() usaria (respeita acumula_meses, p.ex. o trimestre do IRPJ). */
-function detalheGuiaPorCentro(M, item){
-  const reg = M.regraDe[item.id_regra] || {};
-  const fonte = String(reg.metrica_fonte||'').trim();
-  if (!fonte) return [];
-  const chaves = fonte.split('|').map(s=>s.trim()).filter(Boolean);
-  const n = Math.max(1, num(reg.acumula_meses)||1);
-  const ref = String(item.competencia_ref||'');
-  if (!/^\d{4}-\d{2}$/.test(ref)) return [];
-  const [a,m] = ref.split('-').map(Number);
-
-  const porCentro = {};
-  for (let i=0;i<n;i++){
-    const d = new Date(a, m-1-i, 1);
-    const c = compDe(d);
-    M.rateio.filter(x=>x.competencia===c).forEach(x=>{
-      const v = chaves.reduce((s,k)=>s+num(getM(x,k)),0);
-      porCentro[x.centro] = (porCentro[x.centro]||0) + v;
-    });
-  }
-  return Object.entries(porCentro)
-    .map(([centro,v])=>({centro, v:Math.round(v*100)/100}))
-    .filter(x=>x.v > 0.004)
-    .sort((a,b)=>b.v-a.v);
-}
-
-/** Lista clara das guias geradas pela competência selecionada: fechada (já apurada),
-    estimativa (projetada) ou em aberto (zerada — nada foi lançado, ex.: sem folha no mês). */
-function desenharGuiasDoMes(M, comp){
-  const itens = M.cal
-    .filter(c => c.competencia_ref === comp)
-    .map(c => ({...c, ...M.valorDe(c)}))
-    .sort((a,b) => b.v - a.v);
-
-  const box = document.getElementById('guias-mes');
-  if (!itens.length){ box.innerHTML = ''; return; }
-
-  box.innerHTML = `<div class="card guias-card">
-    <div class="relacao-head"><h2>Guias do mês</h2><span class="lbl">o que vence a partir desta competência</span></div>
-    ${itens.map((it,idx)=>{
-      const status = it.v <= 0 ? 'aberto' : (it.est ? 'estimativa' : 'fechada');
-      const rotulo = {fechada:'Fechada', estimativa:'Estimativa', aberto:'Em aberto'}[status];
-      const detalhe = it.v > 0 ? detalheGuiaPorCentro(M, it) : [];
-      return `<div class="guia-row">
-        <div class="guia-main">
-          <span class="guia-status status-${status}">${rotulo}</span>
-          <span class="guia-nome">${it.descricao}</span>
-          <b class="guia-valor num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (estimativa)':''}</b>
-          ${detalhe.length ? `<button class="btn-detalhe" onclick="this.closest('.guia-row').querySelector('.guia-detalhe').classList.toggle('aberto'); this.textContent=this.closest('.guia-row').querySelector('.guia-detalhe').classList.contains('aberto')?'Ocultar':'Detalhes'">Detalhes</button>` : ''}
-        </div>
-        ${detalhe.length ? `<div class="guia-detalhe">
-          ${detalhe.map(d=>`<div class="guia-detalhe-row"><span>${d.centro}</span><b class="num">${brl(d.v)}</b></div>`).join('')}
-        </div>` : ''}
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
-function provisaoDoMes(M, comp){
-  const periodicidade = String(M.cfg.periodicidade_irpj_csll || 'trimestral').toLowerCase();
-  if (!periodicidade.includes('trim')) return null;
-
-  const [a,m] = comp.split('-').map(Number);
-  const tri = Math.ceil(m/3);
-  const inicio = (tri-1)*3 + 1;
-
-  const meses = [];
-  for (let i=0;i<3;i++){
-    const c = a+'-'+String(inicio+i).padStart(2,'0');
-    const r = M.porComp[c];
-    const v = r
-      ? num(getM(r,'IR a pagar (R$)'))+num(getM(r,'CSLL a pagar (R$)'))
-      : nivelarTrimestre(M, c, 'IR a pagar (R$)') + nivelarTrimestre(M, c, 'CSLL a pagar (R$)');
-    meses.push({comp:c, apurado:!!r, v});
-  }
-  const total = meses.reduce((s,x)=>s+x.v,0);
-  const fimTri = a+'-'+String(inicio+2).padStart(2,'0');
-  const guia = M.cal.find(c => c.id_regra==='R07' && c.competencia_ref===fimTri);
-
-  return {tri, ano:a, total, meses, venc: guia ? guia.vencimento : null};
-}
-
-function gradeDoMes(ano, mes){
-  const primeiro = new Date(ano, mes, 1);
-  const inicioSemana = primeiro.getDay();
-  const dias = new Date(ano, mes+1, 0).getDate();
-  const cel = [];
-  for (let i=0;i<inicioSemana;i++) cel.push(null);
-  for (let d=1; d<=dias; d++) cel.push(d);
-  while (cel.length % 7) cel.push(null);
-  return cel;
-}
-
-function miniGradeHTML(ano, mes, marcados, destaque){
-  const cel = gradeDoMes(ano, mes);
-  const grade = cel.map(d=>{
-    if (d===null) return '<div class="mini-cel blank"></div>';
-    const m = marcados.get(d);
-    const cls = m ? (destaque ? 'due' : 'due-muted') : '';
-    const titulo = m ? m.map(x=>x.descricao+(x.valor===null?'':': '+brl(x.valor)+(x.est?' (estimativa)':''))).join(' · ') : '';
-    return '<div class="mini-cel '+cls+'" '+(titulo?('title="'+titulo+'"'):'')+'>'+d+'</div>';
+  document.getElementById('grade').innerHTML = opcoes.map(o => {
+    const tag = o.href ? 'a' : 'div';
+    const attrs = o.href ? `href="${o.href}"` : 'role="button" aria-disabled="true" tabindex="0"';
+    return `<${tag} class="opcao ${o.bloqueada?'bloqueada':''}" ${attrs}>
+      <div class="icone">${ICONES[o.chave]}</div>
+      <h2>${o.titulo}</h2>
+      <p>${o.desc}</p>
+      ${o.bloqueada ? '<span class="em-breve">Em breve</span>' : '<span class="seta">→</span>'}
+    </${tag}>`;
   }).join('');
-  return '<div class="mini-dow">'+DOW.map(d=>'<span>'+d[0].toUpperCase()+'</span>').join('')+'</div>'
-       + '<div class="mini-grid">'+grade+'</div>';
 }
 
-/** Todas as guias com valor>0 cujo vencimento cai neste ano/mês, agrupadas por dia.
-    INSS e FGTS (departamento pessoal) sempre aparecem — sem o valor, que vive em outro painel. */
-function vencimentosDoMes(M, ano, mes){
-  const marcados = new Map();
-  M.cal.forEach(c=>{
-    const semValor = REGRAS_SEM_VALOR_EXIBIDO.has(c.id_regra);
-    const {v, est} = M.valorDe(c);
-    if (!semValor && v<=0) return;
-    const d = dParse(c.vencimento);
-    if (d.getFullYear()!==ano || d.getMonth()!==mes) return;
-    if (!marcados.has(d.getDate())) marcados.set(d.getDate(), []);
-    marcados.get(d.getDate()).push({descricao:c.descricao, valor: semValor ? null : v, est: semValor ? false : est});
-  });
-  return marcados;
-}
-
-function render(M){
-  const comps = M.empresa.map(r=>r.competencia);
-  const mesAnteriorHoje = compDe(new Date(hoje.getFullYear(), hoje.getMonth()-1, 1));
-  let sel = comps.includes(mesAnteriorHoje) ? mesAnteriorHoje : comps[comps.length-1];
-
-  const app = document.getElementById('app');
-  app.innerHTML = '';
-
-  app.appendChild(el(`
-    <header><div class="bar">
-      <div>
-        <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
-        <div class="brand-sub">${M.cfg.razao_social || 'Painel fiscal'} · cliente ${M.id}</div>
-      </div>
-      <div class="spacer"></div>
-      <div class="picker">
-        <label class="lbl" for="comp">Competência</label>
-        <select id="comp">${comps.slice().reverse().map(c=>`<option value="${c}">${mesLongo(c)}</option>`).join('')}</select>
-      </div>
-    </div></header>`));
-
-  const wrap = el('<div class="wrap"></div>');
-  app.appendChild(wrap);
-
-  wrap.appendChild(el('<div id="hero"></div>'));
-  wrap.appendChild(el('<div id="guias-mes"></div>'));
-  wrap.appendChild(el('<div id="alerta"></div>'));
-  wrap.appendChild(el('<div id="slim"></div>'));
-  wrap.appendChild(el('<div id="prov"></div>'));
-  wrap.appendChild(el('<div id="outras"></div>'));
-
-  appendAll(wrap, `
-    <div class="sec-head">
-      <div><h2>Calendário de vencimentos</h2>
-      <p>Mês em destaque: para onde os impostos da competência selecionada vencem. Use as setas para navegar — isso não muda a competência selecionada.</p></div>
-    </div>
-    <div class="card cal-card">
-      <div class="cal-nav">
-        <button class="cal-arrow" id="cal-btn-prev" aria-label="Mês anterior">‹</button>
-        <h3 id="cal-titulo">—</h3>
-        <button class="cal-arrow" id="cal-btn-next" aria-label="Próximo mês">›</button>
-      </div>
-      <div class="cal-strip">
-        <div class="cal-mini lateral" id="cal-prev"></div>
-        <div class="cal-mini" id="cal-atual"></div>
-        <div class="cal-mini lateral" id="cal-next"></div>
-      </div>
-      <div class="cal-total" id="cal-total"></div>
-      <div class="cal-agenda" id="cal-agenda"></div>
-    </div>`);
-
-  appendAll(wrap, `
-    <div class="sec-head">
-      <div><h2>Estimativa dos impostos</h2>
-      <p>Quanto sai do caixa em cada mês, por tributo — pelo vencimento da guia, não pela competência. IRPJ e CSLL só aparecem no mês em que a guia trimestral realmente vence.</p></div>
-    </div>
-    <div class="charts3" id="estim3">
-      <div class="card chart"><h3 id="est-t-0"></h3><div class="sub" id="est-s-0"></div><div class="cbox"><canvas id="est-0"></canvas></div><div class="pie-legend" id="est-lg-0"></div></div>
-      <div class="card chart"><h3 id="est-t-1"></h3><div class="sub" id="est-s-1"></div><div class="cbox"><canvas id="est-1"></canvas></div><div class="pie-legend" id="est-lg-1"></div></div>
-      <div class="card chart"><h3 id="est-t-2"></h3><div class="sub" id="est-s-2"></div><div class="cbox"><canvas id="est-2"></canvas></div><div class="pie-legend" id="est-lg-2"></div></div>
-    </div>`);
-
-  appendAll(wrap, `
-    <div class="sec-head">
-      <div><h2>Obrigações anuais</h2></div>
-    </div>
-    <div class="months" id="anuais"></div>`);
-
-  appendAll(wrap, `
-    <div class="sec-head"><div><h2>Histórico e composição</h2></div></div>
-    <div class="charts">
-      <div class="card chart">
-        <h3>Faturamento e imposto</h3>
-        <div class="sub">Barras: faturamento. Linha: total de impostos a pagar.</div>
-        <div class="cbox"><canvas id="c1" role="img" aria-label="Faturamento mensal e impostos dos últimos 12 meses"></canvas></div>
-      </div>
-      <div class="card chart">
-        <h3>Impostos por tributo</h3>
-        <div class="legend" id="lg2"></div>
-        <div class="cbox"><canvas id="c2" role="img" aria-label="Impostos por tributo nos últimos 12 meses"></canvas></div>
-      </div>
-      <div class="card chart">
-        <h3>Composição do mês</h3>
-        <div class="sub" id="c3sub"></div>
-        <div class="cbox" style="height:170px"><canvas id="c3" role="img" aria-label="Composição dos impostos do mês selecionado"></canvas></div>
-        <div class="pie-legend" id="c3-lg"></div>
-      </div>
-      <div class="card chart">
-        <div class="comp-head">
-          <h3>Comparativo</h3>
-          <select id="comp-base" class="mini-select"></select>
-        </div>
-        <div class="sub" id="c4sub"></div>
-        <div class="cbox"><canvas id="c4" role="img" aria-label="Comparativo entre o mês selecionado e o período de referência"></canvas></div>
-      </div>
-    </div>`);
-
-  appendAll(wrap, `
-    <div class="sec-head" id="rateio"><div><h2>Rateio por centro de custo</h2><p id="rat-sub"></p></div></div>
-    <div class="rateio-grid">
-      <div class="card" style="padding:18px 20px"><div class="table-scroll"><table class="rat" id="rat">
-        <thead><tr>
-          <th>Centro</th><th class="r">NFs</th><th class="r">Faturamento</th>
-          <th class="r">Impostos</th><th class="r">Retido</th><th class="r">Líquido</th><th class="r"></th>
-        </tr></thead><tbody></tbody>
-      </table></div></div>
-      <div class="card chart">
-        <h3>Participação por centro</h3>
-        <div class="sub">Anel: participação no faturamento. Abaixo: impostos de cada centro.</div>
-        <div class="cbox"><canvas id="c5" role="img" aria-label="Participação de cada centro de custo no faturamento do mês"></canvas></div>
-        <div class="pie-legend" id="c5-lg"></div>
-      </div>
-    </div>`);
-
-  wrap.appendChild(el(`<footer>
-      <span>Fonte: planilha fiscal do cliente ${M.id}.</span>
-      <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
-    </footer>`));
-
-  // --- carrossel do calendário: estado local, independente da competência selecionada nas demais partes ---
-  let calCentro = null;
-  function centerFromComp(comp){
-    const [a,m] = comp.split('-').map(Number);
-    const d = new Date(a, m, 1); // mês seguinte à competência
-    return { ano: d.getFullYear(), mes: d.getMonth() };
+(function(){
+  const { id, codigo } = getIdCodigo();
+  if (!id || !codigo){
+    document.getElementById('miolo').innerHTML = `
+      <div class="state">
+        <h1>Não deu para identificar o cliente</h1>
+        <p>Confira se o endereço termina com o ID e o código de acesso, assim: <code>#482913-AbC123</code></p>
+      </div>`;
+    return;
   }
-  function renderCarrossel(){
-    const { ano, mes } = calCentro;
-    const prevD = new Date(ano, mes-1, 1), nextD = new Date(ano, mes+1, 1);
-    const marcAtual = vencimentosDoMes(M, ano, mes);
-    const totalAtual = Array.from(marcAtual.values()).flat().reduce((s,x)=>s+x.valor,0);
-
-    document.getElementById('cal-titulo').textContent = mesLongo(compDe(new Date(ano,mes,1)));
-    document.getElementById('cal-total').textContent = totalAtual>0 ? brl(totalAtual) : 'sem guias com valor neste mês';
-    document.getElementById('cal-prev').innerHTML = miniGradeHTML(prevD.getFullYear(), prevD.getMonth(), vencimentosDoMes(M, prevD.getFullYear(), prevD.getMonth()), false);
-    document.getElementById('cal-atual').innerHTML = miniGradeHTML(ano, mes, marcAtual, true);
-    document.getElementById('cal-next').innerHTML = miniGradeHTML(nextD.getFullYear(), nextD.getMonth(), vencimentosDoMes(M, nextD.getFullYear(), nextD.getMonth()), false);
-
-    const agenda = Array.from(marcAtual.entries()).sort((a,b)=>a[0]-b[0]).map(([dia,items])=>
-      items.map(it=>{
-        const valorHtml = it.valor===null
-          ? '<span style="color:var(--muted)">—</span>'
-          : `<b class="num${it.est?' estimativa':''}">${brl(it.valor)}${it.est?' (estimativa)':''}</b>`;
-        return '<div class="row"><span>'+String(dia).padStart(2,'0')+' · '+it.descricao+'</span>'+valorHtml+'</div>';
-      }).join('')
-    ).join('');
-    document.getElementById('cal-agenda').innerHTML = agenda || '<div class="empty">Nenhuma guia com valor neste mês.</div>';
-  }
-  document.getElementById('cal-btn-prev').addEventListener('click', ()=>{
-    calCentro = { ano: calCentro.mes===0?calCentro.ano-1:calCentro.ano, mes: (calCentro.mes+11)%12 };
-    renderCarrossel();
-  });
-  document.getElementById('cal-btn-next').addEventListener('click', ()=>{
-    calCentro = { ano: calCentro.mes===11?calCentro.ano+1:calCentro.ano, mes: (calCentro.mes+1)%12 };
-    renderCarrossel();
-  });
-
-  desenharEstimativas(M);
-  desenharAnuais(M);
-  const charts = desenharGraficos(M);
-
-  const pick = document.getElementById('comp');
-  pick.value = sel;
-  pick.addEventListener('change', e => {
-    sel = e.target.value;
-    pintarMes(M, sel, charts);
-    calCentro = centerFromComp(sel);
-    renderCarrossel();
-  });
-  calCentro = centerFromComp(sel);
-  renderCarrossel();
-  pintarMes(M, sel, charts);
-}
-
-function pintarMes(M, comp, charts){
-  const r = M.porComp[comp];
-  const i = M.empresa.findIndex(x=>x.competencia===comp);
-  const ant = i > 0 ? M.empresa[i-1] : null;
-
-  const tot = num(getM(r,'Total (R$)'));
-  const imp = M.impostos(r);
-  const ret = M.retido(r);
-  const liq = num(getM(r,'Resultado Líquido (R$)'));
-  const carga = tot ? imp/tot : 0;
-  const totAnt = ant ? num(getM(ant,'Total (R$)')) : null;
-  const dif = (ant && totAnt) ? (tot/totAnt - 1) : null;
-  const nfs = num(getM(r,'Nº NFs'));
-
-  desenharGuiasDoMes(M, comp);
-
-  document.getElementById('hero').innerHTML = `
-    <div class="hero">
-      <div class="card hero-main">
-        <span class="lbl">Competência</span>
-        <div class="comp-title">${mesLongo(comp)}</div>
-        <p class="comp-note">Os impostos apurados nesta competência vencem em ${mesLongo(mesSeguinteComp(comp))}.</p>
-        <div class="big num">${brl2(tot)}</div>
-        <div class="delta">
-          ${dif===null ? '' : `<span class="chip ${dif>=0?'up':'down'}">${dif>=0?'+':''}${(dif*100).toFixed(1).replace('.',',')}%</span>`}
-          <span>${nfs} notas emitidas no mês · valor total: ${brl(tot)}</span>
-        </div>
-      </div>
-      <div class="card relacao">
-        <div class="relacao-head"><h2>Impostos a pagar</h2></div>
-        <div class="table-scroll"><table class="imp">
-          <thead><tr><th>Tributo</th><th>Devido</th><th>Retido</th><th>A pagar</th></tr></thead>
-          <tbody>
-            ${TRIB_ROWS.map(([n,d,rt,p])=>`<tr><td>${n}</td><td class="num">${brl(num(getM(r,d)))}</td><td class="num">${brl(num(getM(r,rt)))}</td><td class="num">${brl(num(getM(r,p)))}</td></tr>`).join('')}
-          </tbody>
-          <tfoot><tr><td>Total</td><td></td><td class="num">${brl(ret)}</td><td class="num">${brl(imp)}</td></tr></tfoot>
-        </table></div>
-        <a class="btn" href="#rateio">Ver rateio por centro de custo ↓</a>
-      </div>
-    </div>`;
-
-  const prov = provisaoDoMes(M, comp);
-  document.getElementById('slim').innerHTML = `<div class="slim">
-    <div class="card stat"><span class="lbl">Retido na fonte</span>
-        <div class="v num">${brl(ret)}</div><div class="s">${ret ? 'já pago pelos tomadores' : 'nenhuma retenção no mês'}</div></div>
-    <div class="card stat"><span class="lbl">Carga efetiva</span>
-        <div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>
-    <div class="card stat"><span class="lbl">Resultado líquido</span>
-        <div class="v num" style="color:var(--receita)">${brl(liq)}</div><div class="s">depois dos impostos</div></div>
-  </div>`;
-
-  document.getElementById('prov').innerHTML = prov ? (() => {
-    const dias = prov.venc ? Math.round((dParse(prov.venc)-hoje)/864e5) : null;
-    return `<div class="card prov-compact">
-      <div class="prov-compact-head">
-        <span class="lbl">Provisão IRPJ+CSLL · ${prov.tri}º trimestre de ${prov.ano}</span>
-        <span class="prov-compact-venc">${prov.venc ? 'vence '+dParse(prov.venc).toLocaleDateString('pt-BR')+(dias!==null?(dias>=0?` · em ${dias}d`:' · vencida'):'') : 'sem guia projetada'}</span>
-      </div>
-      <div class="prov-compact-meses">
-        ${prov.meses.map(x=>`<div class="pmes ${x.apurado?'':'futuro'}">
-          <span class="pmes-label">${mesLabel(x.comp)} · ${x.apurado?'apurado':'estimado'}</span>
-          <span class="pmes-v num ${x.apurado?'':'est'}">${brl(x.v)}</span>
-        </div>`).join('')}
-      </div>
-      <div class="prov-compact-total"><span>Total do trimestre</span><b class="num">${brl(prov.total)}</b></div>
-    </div>`;
-  })() : '';
-
-  const outrasComValor = OUTRAS.map(o=>({...o, v:num(getM(r,o.k))})).filter(o=>o.v>0);
-  document.getElementById('outras').innerHTML = outrasComValor.length ? `
-    <div class="card outras">
-      <h4>Outras guias do mês</h4>
-      ${outrasComValor.map(o=>`<div class="outras-row"><i style="background:${o.c}"></i><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}
-    </div>` : '';
-
-  // O rateio não pode depender só de % do faturamento: INSS, FGTS e IRRF sobre
-  // dividendos não são proporcionais à receita (retenções e regras diferentes) —
-  // um centro entra na tabela se tiver QUALQUER movimento, mesmo com Total zerado.
-  const temMovimento = x => num(getM(x,'Total (R$)'))>0 || num(getM(x,'Nº NFs'))>0
-    || M.impostos(x)>0 || M.retido(x)>0 || OUTRAS.some(o=>num(getM(x,o.k))>0);
-
-  const linhas = M.rateio.filter(x=>x.competencia===comp)
-                   .filter(temMovimento)
-                   .sort((a,b)=>num(getM(b,'Total (R$)'))-num(getM(a,'Total (R$)')));
-  const tb = document.querySelector('#rat tbody');
-  tb.innerHTML = linhas.map((x,idx)=>{
-    const nid = x.centro === 'Não identificado';
-    const t = num(getM(x,'Total (R$)')), sh = tot ? t/tot : 0;
-    return `<tr class="${nid?'nid':''}">
-      <td><b style="font-weight:${nid?800:600}">${x.centro}</b>
-        <div class="share"><i style="width:${(sh*100).toFixed(1)}%"></i></div></td>
-      <td class="r num">${num(getM(x,'Nº NFs'))}</td>
-      <td class="r num">${brl(t)}<div style="font-size:11px;color:var(--muted)">${pct(sh)}</div></td>
-      <td class="r num">${brl(M.impostos(x))}</td>
-      <td class="r num">${brl(M.retido(x))}</td>
-      <td class="r num">${brl(num(getM(x,'Resultado Líquido (R$)')))}</td>
-      <td class="r"><button class="btn-detalhe" onclick="this.closest('tr').nextElementSibling.classList.toggle('aberto'); this.textContent = this.closest('tr').nextElementSibling.classList.contains('aberto') ? 'Ocultar' : 'Detalhes'">Detalhes</button></td>
-    </tr>
-    <tr class="detail-row"><td colspan="7">
-      <div class="table-scroll"><table class="rat-detalhe">
-        <thead><tr><th>Tributo</th><th class="r">Devido</th><th class="r">Retido</th><th class="r">A pagar</th></tr></thead>
-        <tbody>
-          ${TRIB_ROWS.map(([n,d,rt,p],i)=>`<tr>
-            <td><i style="background:${TRIB[i].c}"></i>${n}</td>
-            <td class="r num">${brl(num(getM(x,d)))}</td>
-            <td class="r num">${brl(num(getM(x,rt)))}</td>
-            <td class="r num">${brl(num(getM(x,p)))}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table></div>
-      ${(() => {
-        // INSS, FGTS e IRRF sobre dividendos não são proporcionais ao faturamento
-        // (não têm devido/retido no mesmo sentido) — por isso ficam à parte, mas
-        // continuam aparecendo no rateio por centro, ainda que tudo caia em "Não identificado".
-        const outrasComValor = OUTRAS.map(o=>({...o, v:num(getM(x,o.k))})).filter(o=>o.v>0);
-        return outrasComValor.length ? `<div class="rat-detalhe-outras">
-          ${outrasComValor.map(o=>`<div class="outras-row"><i style="background:${o.c}"></i><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}
-        </div>` : '';
-      })()}
-    </td></tr>`;
-  }).join('') || '<tr><td colspan="7" style="color:var(--muted)">Sem rateio informado neste mês.</td></tr>';
-
-  const nid = linhas.find(x=>x.centro==='Não identificado');
-  const shareNid = nid && tot ? num(getM(nid,'Total (R$)'))/tot : 0;
-  document.getElementById('rat-sub').textContent = `${linhas.length} centros com movimento em ${mesLongo(comp)}.`;
-
-  document.getElementById('alerta').innerHTML = shareNid > 0.001 ? `
-    <div class="alert" role="status">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-        <path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-      <div><b>${pct(shareNid)} do faturamento de ${mesLongo(comp)} está sem centro de custo.</b></div>
-    </div>` : '';
-
-  if (charts){
-    charts.c1.data.datasets[0].backgroundColor = M.empresa.map(r2=>r2.competencia===comp ? PAL.iss : '#D9CDBB');
-    charts.c1.update('none');
-
-    charts.c3.data.datasets[0].data = TRIB.map(t=>num(getM(r,t.k)));
-    document.getElementById('c3sub').textContent = mesLongo(comp)+' · total '+brl(imp);
-    document.getElementById('c3-lg').innerHTML = TRIB.map(t=>
-      `<div class="pie-legend-row"><i style="background:${t.c}"></i><span>${t.n}</span><b class="num">${brl(num(getM(r,t.k)))}</b></div>`
-    ).join('');
-    charts.c3.update();
-
-    atualizarComparativo(M, comp, tot, imp, liq, charts);
-
-    const pal = CENTRO_PAL.slice();
-    const nidIdx = linhas.findIndex(x=>x.centro==='Não identificado');
-    if (nidIdx>-1) pal[nidIdx] = PAL.vinho;
-    charts.c5.data.labels = linhas.map(x=>x.centro);
-    charts.c5.data.datasets[0].data = linhas.map(x=>num(getM(x,'Total (R$)')));
-    charts.c5.data.datasets[0].backgroundColor = linhas.map((_,i)=>pal[i%pal.length]);
-    charts.c5.update();
-    document.getElementById('c5-lg').innerHTML = linhas.map((x,i)=>
-      `<div class="pie-legend-row"><i style="background:${pal[i%pal.length]}"></i><span>${x.centro}</span><b class="num">${brl(M.impostos(x))}</b></div>`
-    ).join('');
-  }
-}
-
-/** Próximos 3 meses após a última competência apurada, cada um com seu próprio gráfico de pizza. */
-/** Popula o seletor de período (só com janelas que têm histórico suficiente) e redesenha o c4. */
-function atualizarComparativo(M, comp, tot, imp, liq, charts){
-  const sel = document.getElementById('comp-base');
-  const disponiveis = janelasDisponiveis(M, comp);
-  const atualValor = sel.value;
-  sel.innerHTML = disponiveis.map(j=>`<option value="${j.v}">${j.n}</option>`).join('');
-  const valido = disponiveis.some(j=>String(j.v)===atualValor);
-  sel.value = valido ? atualValor : (disponiveis[0] ? String(disponiveis[0].v) : '');
-
-  function redraw(){
-    const janela = Number(sel.value) || (disponiveis[0] && disponiveis[0].v);
-    const base = janela ? comparativoBase(M, comp, janela) : null;
-    charts.c4.data.labels = ['Faturamento','Impostos','Líquido'];
-    charts.c4.data.datasets[0].data = [tot, imp, liq];
-    charts.c4.data.datasets[0].label = mesLongo(comp);
-    charts.c4.data.datasets[1].data = base ? [base.tot, base.imp, base.liq] : [0,0,0];
-    charts.c4.data.datasets[1].label = base ? base.label : 'sem histórico suficiente';
-    document.getElementById('c4sub').textContent = base
-      ? `${mesLongo(comp)} contra ${base.label}.`
-      : 'Sem histórico suficiente para comparar ainda.';
-    charts.c4.update();
-  }
-  sel.onchange = redraw;
-  redraw();
-}
-
-/** Soma uma coluna (ex.: CSLL) ao longo de 'n' meses terminando em 'competenciaRef'.
-    Mês já apurado usa o valor real; mês ainda não fechado usa nivelarTrimestre (último
-    trimestre fechado ÷ 3) como estimativa — mesma lógica robusta usada no resto do painel. */
-function valorAcumuladoColuna(M, competenciaRef, coluna, n){
-  const [a,m] = competenciaRef.split('-').map(Number);
-  let total = 0;
-  for (let i=0;i<n;i++){
-    const d = new Date(a, m-1-i, 1);
-    const c = compDe(d);
-    const r = M.porComp[c];
-    total += r ? num(getM(r, coluna)) : nivelarTrimestre(M, c, coluna);
-  }
-  return Math.round(total*100)/100;
-}
-
-/** Quanto sai do caixa em cada tributo NO MÊS DE VENCIMENTO — não na competência.
-    ISS/PIS/COFINS vencem todo mês; IRPJ/CSLL (trimestral) só vencem no mês de
-    fechamento do trimestre — nos outros dois meses o desembolso desses dois é zero. */
-function desembolsoPorTributoNoMes(M, ano, mes){
-  const acha = idRegra => M.cal.find(c => {
-    if (c.id_regra !== idRegra) return false;
-    const d = dParse(c.vencimento);
-    return d.getFullYear()===ano && d.getMonth()===mes;
-  });
-  const r01 = acha('R01'), r02 = acha('R02'), r07 = acha('R07');
-  return {
-    'ISS a Pagar (R$)':    r01 ? valorAcumuladoColuna(M, r01.competencia_ref, 'ISS a Pagar (R$)', 1) : 0,
-    'PIS a pagar (R$)':    r02 ? valorAcumuladoColuna(M, r02.competencia_ref, 'PIS a pagar (R$)', 1) : 0,
-    'COFINS a pagar (R$)': r02 ? valorAcumuladoColuna(M, r02.competencia_ref, 'COFINS a pagar (R$)', 1) : 0,
-    'CSLL a pagar (R$)':   r07 ? valorAcumuladoColuna(M, r07.competencia_ref, 'CSLL a pagar (R$)', 3) : 0,
-    'IR a pagar (R$)':     r07 ? valorAcumuladoColuna(M, r07.competencia_ref, 'IR a pagar (R$)', 3) : 0,
-  };
-}
-
-function desenharEstimativas(M){
-  const donutOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
-    plugins:{legend:{display:false},
-      tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
-        bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
-
-  // Âncora é HOJE (mês real corrente), não o último mês fechado + 1 — senão a guia
-  // trimestral que já vence este mês fica escondida no meio da sequência.
-  for (let i=0;i<3;i++){
-    const d = new Date(hoje.getFullYear(), hoje.getMonth()+i, 1);
-    const comp = compDe(d);
-    const porTributo = desembolsoPorTributoNoMes(M, d.getFullYear(), d.getMonth());
-    const dados = TRIB.map(t=>({n:t.n, c:t.c, v: porTributo[t.k] || 0}));
-    const total = dados.reduce((s,x)=>s+x.v,0);
-    document.getElementById('est-t-'+i).textContent = mesLongo(comp);
-    document.getElementById('est-s-'+i).innerHTML = 'total estimado <span class="estimativa">'+brl(total)+'</span>';
-    document.getElementById('est-lg-'+i).innerHTML = dados.map(x=>
-      `<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`
-    ).join('');
-    new Chart(document.getElementById('est-'+i), {
-      type:'doughnut',
-      data:{labels:dados.map(x=>x.n), datasets:[{data:dados.map(x=>x.v), backgroundColor:dados.map(x=>x.c), borderWidth:0}]},
-      options:donutOpts
-    });
-  }
-}
-
-function desenharAnuais(M){
-  const anuais = M.regras.filter(r => r.periodicidade === 'Anual' && String(r.ativo) !== 'FALSE');
-
-  const cartoes = anuais.map(reg => {
-    const ocorrencias = M.cal.filter(c => c.id_regra === reg.id)
-      .map(c => ({...c, data: dParse(c.vencimento), ...M.valorDe(c)}))
-      .filter(c => c.v > 0)
-      .sort((a,b) => a.data - b.data);
-
-    const passadas = ocorrencias.filter(o => o.data <= hoje);
-    const futuras  = ocorrencias.filter(o => o.data >  hoje);
-    const linhas = [passadas.length ? passadas[passadas.length-1] : null, futuras.length ? futuras[0] : null].filter(Boolean);
-    if (!linhas.length) return '';
-
-    return `<div class="card month">
-      <h4>${reg.descricao}</h4>
-      <div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:10px">${reg.categoria||''}</div>
-      ${linhas.map(o => {
-        const passado = o.data <= hoje;
-        const diasAteVencer = Math.round((o.data-hoje)/864e5);
-        const classe = passado ? 'due-pago' : (diasAteVencer <= 92 ? 'due-atencao' : '');
-        return `<div class="due ${classe}">
-          <span class="day num">${String(o.vencimento).slice(8)}/${String(o.vencimento).slice(5,7)}</span>
-          <span class="body">
-            <span class="nm">${passado ? 'Último' : 'Próximo'} · ${o.vencimento.slice(0,4)}</span>
-            <span class="vl num ${o.est?'est':''}">${brl(o.v)}</span>
-            ${o.ajuste_aplicado && o.ajuste_aplicado!=='—' ? `<span class="adj"> · ${o.ajuste_aplicado}</span>` : ''}
-          </span>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }).filter(Boolean);
-
-  document.getElementById('anuais').innerHTML = cartoes.join('') ||
-    '<p style="color:var(--muted)">Nenhuma obrigação anual com valor a pagar no momento.</p>';
-}
-
-function desenharGraficos(M){
-  const labels = M.empresa.map(r=>mesLabel(r.competencia));
-  const base = {responsive:true, maintainAspectRatio:false, animation:{duration:550},
-    plugins:{legend:{display:false}, tooltip:{
-      backgroundColor:PAL.petroleo, padding:10, cornerRadius:6, titleFont:{family:'Montserrat',size:12,weight:600},
-      bodyFont:{family:'Montserrat',size:12}, displayColors:true, boxWidth:8, boxHeight:8,
-      callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y ?? c.parsed)}}},
-    scales:{
-      x:{grid:{display:false}, border:{color:PAL.line},
-         ticks:{color:PAL.muted, font:{family:'Montserrat',size:11}}},
-      y:{grid:{color:'#EDE4D6'}, border:{display:false},
-         ticks:{color:PAL.muted, font:{family:'Montserrat',size:11},
-                callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
-
-  const c1 = new Chart(document.getElementById('c1'), {
-    data:{labels, datasets:[
-      {type:'bar', label:'Faturamento', data:M.empresa.map(r=>num(getM(r,'Total (R$)'))),
-       backgroundColor:'#D9CDBB', borderRadius:{topLeft:4,topRight:4}, maxBarThickness:24, order:2},
-      {type:'line', label:'Impostos', data:M.empresa.map(r=>M.impostos(r)),
-       borderColor:PAL.vinho, backgroundColor:PAL.vinho, borderWidth:2, tension:.3,
-       pointRadius:2.5, pointHoverRadius:5, order:1},
-    ]},
-    options:base
-  });
-
-  document.getElementById('lg2').innerHTML = TRIB.map(t=>`<span><i style="background:${t.c}"></i>${t.n}</span>`).join('');
-  const c2 = new Chart(document.getElementById('c2'), {
-    type:'bar',
-    data:{labels, datasets:TRIB.map(t=>({label:t.n, data:M.empresa.map(r=>num(getM(r,t.k))), backgroundColor:t.c,
-      borderRadius:2, maxBarThickness:24, borderWidth:0}))},
-    options:{...base, scales:{x:{...base.scales.x, stacked:true}, y:{...base.scales.y, stacked:true}}}
-  });
-
-  const donutBase = {responsive:true, maintainAspectRatio:false, animation:{duration:550}, cutout:'62%',
-    plugins:{legend:{position:'bottom', labels:{color:PAL.muted, font:{family:'Montserrat',size:11}, boxWidth:9, padding:10}},
-      tooltip:base.plugins.tooltip}};
-
-  const c3 = new Chart(document.getElementById('c3'), {
-    type:'doughnut',
-    data:{labels:TRIB.map(t=>t.n), datasets:[{data:TRIB.map(()=>0), backgroundColor:TRIB.map(t=>t.c), borderWidth:0}]},
-    options:donutBase
-  });
-
-  const c4 = new Chart(document.getElementById('c4'), {
-    type:'bar',
-    data:{labels:['Faturamento','Impostos','Líquido'], datasets:[
-      {label:'', data:[0,0,0], backgroundColor:PAL.iss, borderRadius:4, maxBarThickness:34},
-      {label:'', data:[0,0,0], backgroundColor:'#D9CDBB', borderRadius:4, maxBarThickness:34},
-    ]},
-    options:{...base, plugins:{...base.plugins, legend:{display:true, position:'bottom',
-      labels:{color:PAL.muted, font:{family:'Montserrat',size:11}, boxWidth:9}}}}
-  });
-
-  const c5 = new Chart(document.getElementById('c5'), {
-    type:'doughnut',
-    data:{labels:[], datasets:[{data:[], backgroundColor:[], borderWidth:0}]},
-    options:donutBase
-  });
-
-  return {c1,c2,c3,c4,c5};
-}
-
-function erro(msg){
-  document.getElementById('app').innerHTML = `
-    <div class="state">
-      <h1>Não deu para abrir o painel</h1>
-      <p>${msg}</p>
-      <p>Confira se o endereço termina com o ID e o código de acesso do cliente, assim: <code>#482913-AbC123</code></p>
-      <p>Se você mesmo perdeu o código, ele está na planilha de índice, coluna B.</p>
-    </div>`;
-}
-
-(async function(){
-  try {
-    const raw = await carregar();
-    const M = preparar(raw);
-    M.atualizado_em = raw.atualizado_em;
-    if (!M.empresa.length) return erro('A planilha deste cliente não tem nenhum mês na aba Empresa.');
-    render(M);
-  } catch (e) {
-    erro(e.message || String(e));
-  }
+  // A página inicial não faz chamada à API — é só um menu. O nome do cliente
+  // aparece assim que qualquer um dos dashboards for aberto pela primeira vez.
+  render(id, codigo, null);
 })();
 </script>
 </body>

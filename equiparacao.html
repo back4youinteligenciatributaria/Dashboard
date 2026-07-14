@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equiparação hospitalar — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
+  --ink:#113D39; --ink-2:#3F5854; --muted:#8A7D70; --line:#E4D9C9; --line-2:#D6C3AC;
+  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-eucalipto2:#3FA680;
+  --receita:#0F8C85; --receita-soft:#DCEFEC;
+  --andamento:#A7715D; --andamento-soft:#F1E1D8;
+  --neutro:#649C8A; --neutro-soft:#E1EEE9;
+  --encerrado:#731007; --encerrado-soft:#F3DEDB;
+  --radius:12px; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 72px}
+
+header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:30}
+.bar{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.logo{font-weight:900;font-size:19px;letter-spacing:-.02em;line-height:1}
+.logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
+.brand-sub{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:1px}
+.voltar{display:inline-block;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:4px}
+.voltar:hover{color:var(--brand-teal)}
+.spacer{flex:1}
+.badge-topo{font-size:11px;font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:5px 12px;border-radius:20px}
+
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:28px 0 22px}
+.stat{padding:18px 18px}
+.stat .v{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.stat .s{font-size:11.5px;color:var(--muted);margin-top:4px}
+.stat.destaque{background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto2));border:none}
+.stat.destaque .lbl,.stat.destaque .s{color:rgba(255,255,255,.8)}
+.stat.destaque .v{color:#fff}
+
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:32px 0 14px}
+.sec-head h2{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.sec-head p{font-size:13px;color:var(--muted)}
+
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.charts{grid-template-columns:1fr}}
+.chart{padding:20px 22px 16px}
+.chart h3{font-size:14px;font-weight:700;margin-bottom:2px}
+.chart .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.cbox{position:relative;height:220px}
+.pie-legend{margin-top:10px}
+.pie-legend-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:12.5px}
+.pie-legend-row:first-child{border-top:none}
+.pie-legend-row i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.pie-legend-row span{flex:1;color:var(--ink-2)}
+
+table.ped{width:100%;border-collapse:collapse;font-size:13px}
+table.ped th{text-align:left;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 9px;border-bottom:1px solid var(--line-2)}
+table.ped th.r{text-align:right}
+table.ped td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.ped td.r{text-align:right}
+table.ped tbody tr.linha{cursor:pointer}
+table.ped tbody tr.linha:hover{background:var(--surface-warm)}
+table.ped tbody tr:last-child td{border-bottom:none}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table-scroll table{min-width:640px}
+
+.status-chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.status-andamento{background:var(--andamento-soft);color:var(--andamento)}
+.status-concluido{background:var(--receita-soft);color:var(--receita)}
+.status-neutro{background:var(--neutro-soft);color:var(--neutro)}
+.status-encerrado{background:var(--encerrado-soft);color:var(--encerrado)}
+
+.detalhe-row{display:none}
+.detalhe-row.aberto{display:table-row}
+.detalhe-row td{padding:0 10px 16px;border-bottom:1px solid var(--line)}
+.detalhe-box{background:var(--surface-warm);border-radius:8px;padding:12px 16px;font-size:12.5px}
+.detalhe-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 20px;margin-bottom:8px}
+.detalhe-grid div span{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.detalhe-explicacao{padding-top:8px;border-top:1px dashed var(--line-2);color:var(--ink-2)}
+
+.glossario{padding:8px 24px}
+.gloss-item{border-top:1px solid var(--line)}
+.gloss-item:first-child{border-top:none}
+.gloss-btn{width:100%;text-align:left;background:none;border:none;padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;font-family:var(--sans);color:var(--ink)}
+.gloss-btn b{font-size:13.5px;font-weight:700}
+.gloss-btn .seta{color:var(--muted);font-size:13px;transition:transform .2s}
+.gloss-btn[aria-expanded="true"] .seta{transform:rotate(180deg)}
+.gloss-body{display:none;padding:0 0 16px;font-size:13px;color:var(--ink-2);max-width:70ch}
+.gloss-body.aberto{display:block}
+
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
+.state h1{font-size:19px;font-weight:700}
+.state p{color:var(--muted);font-size:14px;max-width:44ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
+.spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="state">
+    <div class="spin" role="status" aria-label="Carregando"></div>
+    <p>Carregando o painel…</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+
+const PAL = { teal:'#0F8C85', eucalipto2:'#3FA680', couro:'#A7715D', vinho:'#731007',
+  petroleo:'#113D39', muted:'#8A7D70', line:'#E4D9C9', neutro:'#649C8A', bege:'#CBA88F' };
+
+/** Grupo visual de cada situação oficial do PER/DCOMP + explicação (parafraseada da Receita Federal). */
+const STATUS_INFO = {
+  'Em análise': {grupo:'andamento', txt:'O pedido foi recebido pela Receita e a análise ainda está em andamento.'},
+  'Análise preliminar disponibilizada': {grupo:'andamento', txt:'A Receita já disponibilizou uma análise preliminar, e ainda corre o prazo para o contribuinte se autorregularizar, se for o caso.'},
+  'Contribuinte intimado': {grupo:'andamento', txt:'A Receita enviou (ou está enviando) uma intimação pedindo que o contribuinte retifique ou cancele o pedido.'},
+  'Despacho decisório emitido': {grupo:'andamento', txt:'A Receita concluiu a análise e emitiu (ou está emitindo) a decisão formal — deferimento, indeferimento ou reconhecimento parcial.'},
+  'Em discussão administrativa - DRJ': {grupo:'andamento', txt:'O crédito não foi total ou parcialmente reconhecido e o contribuinte recorreu à Delegacia de Julgamento (DRJ).'},
+  'Em discussão administrativa - CARF': {grupo:'andamento', txt:'O recurso está em julgamento (ou já foi julgado) no Conselho Administrativo de Recursos Fiscais (CARF).'},
+  'Em discussão administrativa - CSRF': {grupo:'andamento', txt:'O recurso está em julgamento (ou já foi julgado) na Câmara Superior de Recursos Fiscais (CSRF), última instância administrativa.'},
+  'Análise concluída': {grupo:'neutro', txt:'A análise terminou, mas isso sozinho não diz se o crédito foi reconhecido — é preciso aguardar a comunicação oficial da Receita ou o pagamento.'},
+  'Homologado': {grupo:'concluido', txt:'A compensação foi totalmente aceita pela Receita Federal.'},
+  'PER deferido': {grupo:'concluido', txt:'O pedido de restituição/ressarcimento foi totalmente aceito. Pode já ter sido pago ou estar na fila de pagamento.'},
+  'Pedido de cancelamento deferido': {grupo:'concluido', txt:'O pedido de cancelamento apresentado foi aceito pela Receita.'},
+  'Não admitido': {grupo:'encerrado', txt:'O pedido de retificação ou cancelamento foi rejeitado, por estar em desacordo com a legislação.'},
+  'Cancelado': {grupo:'encerrado', txt:'O PER/DCOMP foi cancelado a pedido do próprio contribuinte.'},
+  'Retificado': {grupo:'encerrado', txt:'O PER/DCOMP foi substituído por outro, retificado a pedido do contribuinte.'},
+};
+const GRUPO_COR = {andamento:PAL.couro, concluido:PAL.teal, neutro:PAL.neutro, encerrado:PAL.vinho};
+const GRUPO_NOME = {andamento:'Em andamento', concluido:'Concluído', neutro:'Concluído (aguardando comunicado)', encerrado:'Encerrado sem crédito'};
+
+const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const brl2 = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
+const pct = v => (v*100).toFixed(1).replace('.',',')+'%';
+const num = v => Number(v)||0;
+const dBR = s => { if(!s) return '—'; const [a,m,d]=String(s).split('-'); return `${d}/${m}/${a}`; };
+const el = h => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
+function appendAll(parent, h){
+  const t = document.createElement('template'); t.innerHTML = h.trim();
+  Array.from(t.content.children).forEach(n => parent.appendChild(n));
+}
+
+function getIdCodigo(){
+  const qs = new URLSearchParams(location.search);
+  let id = qs.get('id') || '';
+  let codigo = qs.get('codigo') || '';
+  if (!id){
+    const h = location.hash.replace('#','').trim();
+    const comCodigo = h.match(/^(\d+)-(.+)$/);
+    const soId = h.match(/^(\d+)$/);
+    if (comCodigo) { id = comCodigo[1]; codigo = comCodigo[2]; }
+    else if (soId) { id = soId[1]; }
+  }
+  return { id: id.replace(/\D/g,''), codigo: codigo.trim() };
+}
+
+function jsonp(url){
+  return new Promise((ok,fail)=>{
+    const cb = 'cb_'+Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    const t = setTimeout(()=>{ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
+    function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
+    window[cb] = d => { limpa(); ok(d); };
+    s.onerror = () => { limpa(); fail(new Error('Não consegui alcançar a API.')); };
+    s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+
+let IDENTIDADE = { id: '', codigo: '' };
+
+async function carregar(){
+  const { id, codigo } = getIdCodigo();
+  IDENTIDADE = { id, codigo };
+  if (API_URL){
+    if (!id) throw new Error('Informe o ID do cliente no final do endereço.');
+    if (!codigo) throw new Error('Informe também o código de acesso, no formato #482913-CODIGO.');
+    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=equiparacao';
+    const d = await jsonp(url);
+    if (d.erro) throw new Error(d.erro);
+    return d;
+  }
+  const r = await fetch('demo_equiparacao.json');
+  if (!r.ok) throw new Error('Sem API configurada e sem demo_equiparacao.json ao lado deste arquivo.');
+  return r.json();
+}
+
+function prepararCompetencia(c){
+  // "1º TRIM/2023" -> {tri:1, ano:2023, ord: 2023*4+1}
+  const m = String(c||'').match(/(\d)º?\s*TRIM\/(\d{4})/i);
+  if (!m) return {tri:0, ano:0, ord:0, label:c||'—'};
+  const tri = Number(m[1]), ano = Number(m[2]);
+  return {tri, ano, ord: ano*4+tri, label:`${tri}º tri/${ano}`};
+}
+
+function preparar(raw){
+  const pedidos = (raw.pedidos||[]).map(p => ({
+    ...p,
+    _comp: prepararCompetencia(p.competencia),
+    _grupo: (STATUS_INFO[p.status]||{grupo:'neutro'}).grupo,
+    _concluido: p.valor_aprovado !== null && p.valor_aprovado !== undefined,
+  })).sort((a,b) => a._comp.ord - b._comp.ord || a.tributo.localeCompare(b.tributo));
+  return { cfg: raw.config||{}, id: raw.id, pedidos, atualizado_em: raw.atualizado_em };
+}
+
+function render(M){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  app.appendChild(el(`
+    <header><div class="bar">
+      <div>
+        <a class="voltar" href="index.html#${M.id}-${IDENTIDADE.codigo}">← Painel do cliente</a>
+        <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
+        <div class="brand-sub">${M.cfg.razao_social || 'Equiparação hospitalar'} · cliente ${M.id}</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="badge-topo">Equiparação hospitalar</span>
+    </div></header>`));
+
+  const wrap = el('<div class="wrap"></div>');
+  app.appendChild(wrap);
+
+  const P = M.pedidos;
+  const totSolicitado = P.reduce((s,p)=>s+num(p.valor_solicitado),0);
+  const totAtualizado = P.reduce((s,p)=>s+num(p.valor_atualizado),0);
+  const concluidos = P.filter(p=>p._concluido);
+  const totAprovado = concluidos.reduce((s,p)=>s+num(p.valor_aprovado),0);
+  const pendentes = P.filter(p=>!p._concluido);
+  const totPendente = pendentes.reduce((s,p)=>s+num(p.valor_atualizado),0);
+
+  wrap.appendChild(el(`
+    <div class="hero">
+      <div class="card stat destaque">
+        <span class="lbl">Pedidos transmitidos</span>
+        <div class="v num">${P.length}</div>
+        <div class="s">${concluidos.length} concluído${concluidos.length===1?'':'s'} · ${pendentes.length} em andamento</div>
+      </div>
+      <div class="card stat">
+        <span class="lbl">Total solicitado</span>
+        <div class="v num">${brl(totSolicitado)}</div>
+        <div class="s">valor original, sem correção</div>
+      </div>
+      <div class="card stat">
+        <span class="lbl">Total atualizado</span>
+        <div class="v num">${brl(totAtualizado)}</div>
+        <div class="s">solicitado + SELIC acumulada</div>
+      </div>
+      <div class="card stat">
+        <span class="lbl">Já aprovado</span>
+        <div class="v num" style="color:var(--receita)">${brl(totAprovado)}</div>
+        <div class="s">valor fechado pela Receita</div>
+      </div>
+      <div class="card stat">
+        <span class="lbl">Ainda em análise</span>
+        <div class="v num">${brl(totPendente)}</div>
+        <div class="s">estimativa, sujeita a confirmação</div>
+      </div>
+    </div>`));
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
+    <div class="charts">
+      <div class="card chart">
+        <h3>Situação dos pedidos</h3>
+        <div class="sub">Quantidade de pedidos por grupo de situação.</div>
+        <div class="cbox"><canvas id="c1"></canvas></div>
+        <div class="pie-legend" id="c1-lg"></div>
+      </div>
+      <div class="card chart">
+        <h3>Valor atualizado por tributo</h3>
+        <div class="sub">IRPJ e CSLL — soma do valor atualizado (com SELIC).</div>
+        <div class="cbox"><canvas id="c2"></canvas></div>
+        <div class="pie-legend" id="c2-lg"></div>
+      </div>
+      <div class="card chart">
+        <h3>Solicitado × Atualizado × Aprovado</h3>
+        <div class="sub">Visão geral dos três totais.</div>
+        <div class="cbox"><canvas id="c3"></canvas></div>
+      </div>
+      <div class="card chart">
+        <h3>Evolução por ano de origem</h3>
+        <div class="sub">Competência do crédito (ano de origem do excesso pago).</div>
+        <div class="cbox"><canvas id="c4"></canvas></div>
+      </div>
+    </div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Pedidos</h2><p>Clique numa linha para ver os detalhes.</p></div></div>
+    <div class="card" style="padding:18px 20px"><div class="table-scroll"><table class="ped" id="tabela-pedidos">
+      <thead><tr>
+        <th>Competência</th><th>Tributo</th><th class="r">Solicitado</th><th class="r">Atualizado</th>
+        <th>Situação</th><th class="r">Aprovado</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table></div></div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>O que significa cada situação</h2><p>Definições da própria Receita Federal — clique para expandir.</p></div></div>
+    <div class="card glossario" id="glossario"></div>`);
+
+  wrap.appendChild(el(`<footer>
+      <span>Fonte: planilha de equiparação hospitalar do cliente ${M.id}.</span>
+      <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
+    </footer>`));
+
+  // --- tabela ---
+  const tbody = document.querySelector('#tabela-pedidos tbody');
+  tbody.innerHTML = P.map((p,i)=>{
+    const info = STATUS_INFO[p.status] || {grupo:'neutro', txt:''};
+    return `<tr class="linha" data-i="${i}">
+      <td>${p._comp.label}</td>
+      <td>${p.tributo}</td>
+      <td class="r num">${brl(p.valor_solicitado)}</td>
+      <td class="r num">${brl(p.valor_atualizado)}</td>
+      <td><span class="status-chip status-${info.grupo}">${p.status}</span></td>
+      <td class="r num">${p._concluido ? brl(p.valor_aprovado) : '—'}</td>
+    </tr>
+    <tr class="detalhe-row" id="det-${i}"><td colspan="6">
+      <div class="detalhe-box">
+        <div class="detalhe-grid">
+          <div><span>PER/DCOMP</span>${p.numero_per_dcomp}</div>
+          <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
+          <div><span>SELIC acumulada</span>${(p.selic_pct||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
+          <div><span>Data de aprovação</span>${dBR(p.data_aprovacao)}</div>
+        </div>
+        <div class="detalhe-explicacao">${info.txt}</div>
+      </div>
+    </td></tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('tr.linha').forEach(tr=>{
+    tr.addEventListener('click', ()=>{
+      document.getElementById('det-'+tr.dataset.i).classList.toggle('aberto');
+    });
+  });
+
+  // --- glossário ---
+  const ordemGlossario = Object.keys(STATUS_INFO);
+  document.getElementById('glossario').innerHTML = ordemGlossario.map((status,i)=>{
+    const info = STATUS_INFO[status];
+    return `<div class="gloss-item">
+      <button class="gloss-btn" aria-expanded="false" onclick="
+        const body=this.nextElementSibling; const abrir=!body.classList.contains('aberto');
+        body.classList.toggle('aberto', abrir); this.setAttribute('aria-expanded', abrir);
+      ">
+        <b><span class="status-chip status-${info.grupo}" style="margin-right:8px">${GRUPO_NOME[info.grupo]}</span>${status}</b>
+        <span class="seta">▾</span>
+      </button>
+      <div class="gloss-body">${info.txt}</div>
+    </div>`;
+  }).join('');
+
+  desenharGraficos(M);
+}
+
+function desenharGraficos(M){
+  const P = M.pedidos;
+  const donutOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
+    plugins:{legend:{display:false},
+      tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
+        bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
+  const barOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500},
+    plugins:{legend:{display:false}, tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
+      bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y)}}},
+    scales:{x:{grid:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11}}},
+      y:{grid:{color:'#EDE4D6'}, border:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11},
+        callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
+
+  // c1: situação (por grupo, em nº de pedidos)
+  const porGrupo = {};
+  P.forEach(p=>{ porGrupo[p._grupo] = (porGrupo[p._grupo]||0)+1; });
+  const gruposUsados = Object.keys(porGrupo);
+  new Chart(document.getElementById('c1'), {
+    type:'doughnut',
+    data:{labels:gruposUsados.map(g=>GRUPO_NOME[g]), datasets:[{data:gruposUsados.map(g=>porGrupo[g]),
+      backgroundColor:gruposUsados.map(g=>GRUPO_COR[g]), borderWidth:0}]},
+    options:{...donutOpts, plugins:{...donutOpts.plugins, tooltip:{...donutOpts.plugins.tooltip,
+      callbacks:{label:c=>' '+c.label+': '+c.parsed+' pedido'+(c.parsed===1?'':'s')}}}}
+  });
+  document.getElementById('c1-lg').innerHTML = gruposUsados.map(g=>
+    `<div class="pie-legend-row"><i style="background:${GRUPO_COR[g]}"></i><span>${GRUPO_NOME[g]}</span><b class="num">${porGrupo[g]}</b></div>`
+  ).join('');
+
+  // c2: valor atualizado por tributo
+  const porTributo = {};
+  P.forEach(p=>{ porTributo[p.tributo] = (porTributo[p.tributo]||0) + num(p.valor_atualizado); });
+  const tributos = Object.keys(porTributo);
+  const coresTrib = [PAL.teal, PAL.couro, PAL.neutro];
+  new Chart(document.getElementById('c2'), {
+    type:'doughnut',
+    data:{labels:tributos, datasets:[{data:tributos.map(t=>porTributo[t]), backgroundColor:tributos.map((_,i)=>coresTrib[i%coresTrib.length]), borderWidth:0}]},
+    options:donutOpts
+  });
+  document.getElementById('c2-lg').innerHTML = tributos.map((t,i)=>
+    `<div class="pie-legend-row"><i style="background:${coresTrib[i%coresTrib.length]}"></i><span>${t}</span><b class="num">${brl(porTributo[t])}</b></div>`
+  ).join('');
+
+  // c3: solicitado x atualizado x aprovado
+  const totSolicitado = P.reduce((s,p)=>s+num(p.valor_solicitado),0);
+  const totAtualizado = P.reduce((s,p)=>s+num(p.valor_atualizado),0);
+  const totAprovado = P.filter(p=>p._concluido).reduce((s,p)=>s+num(p.valor_aprovado),0);
+  new Chart(document.getElementById('c3'), {
+    type:'bar',
+    data:{labels:['Solicitado','Atualizado','Aprovado'], datasets:[{
+      data:[totSolicitado, totAtualizado, totAprovado],
+      backgroundColor:[PAL.bege, PAL.couro, PAL.teal], borderRadius:6, maxBarThickness:56}]},
+    options:barOpts
+  });
+
+  // c4: por ano de origem da competência
+  const porAno = {};
+  P.forEach(p=>{
+    const ano = p._comp.ano || 0;
+    porAno[ano] = porAno[ano] || {solicitado:0, atualizado:0, aprovado:0};
+    porAno[ano].solicitado += num(p.valor_solicitado);
+    porAno[ano].atualizado += num(p.valor_atualizado);
+    if (p._concluido) porAno[ano].aprovado += num(p.valor_aprovado);
+  });
+  const anos = Object.keys(porAno).sort();
+  new Chart(document.getElementById('c4'), {
+    type:'bar',
+    data:{labels:anos, datasets:[
+      {label:'Atualizado', data:anos.map(a=>porAno[a].atualizado), backgroundColor:PAL.bege, borderRadius:4, maxBarThickness:34},
+      {label:'Aprovado', data:anos.map(a=>porAno[a].aprovado), backgroundColor:PAL.teal, borderRadius:4, maxBarThickness:34},
+    ]},
+    options:{...barOpts, plugins:{...barOpts.plugins, legend:{display:true, position:'bottom',
+      labels:{color:PAL.muted, font:{family:'Montserrat',size:11}, boxWidth:9}}}}
+  });
+}
+
+function erro(msg){
+  document.getElementById('app').innerHTML = `
+    <div class="state">
+      <h1>Não deu para abrir o painel</h1>
+      <p>${msg}</p>
+      <p>Confira se o endereço termina com o ID e o código de acesso do cliente, assim: <code>#482913-AbC123</code></p>
+    </div>`;
+}
+
+(async function(){
+  try {
+    const raw = await carregar();
+    const M = preparar(raw);
+    if (!M.pedidos.length) return erro('Nenhum pedido de equiparação encontrado para este cliente.');
+    render(M);
+  } catch (e) {
+    erro(e.message || String(e));
+  }
+})();
+</script>
+</body>
+</html>
