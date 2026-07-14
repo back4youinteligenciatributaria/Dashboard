@@ -86,6 +86,15 @@ table.ped tbody tr:last-child td{border-bottom:none}
 .detalhe-grid div span{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
 .detalhe-explicacao{padding-top:8px;border-top:1px dashed var(--line-2);color:var(--ink-2)}
 
+.lista{padding:8px 24px}
+.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:none}
+.item .nome{font-size:13.5px;font-weight:600}
+.item .cat{font-size:11px;color:var(--muted);margin-top:2px}
+.item a{font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none;white-space:nowrap}
+.item a:hover{color:var(--brand-dark)}
+.item .em-breve{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px;font-weight:700}
 .state p{color:var(--muted);font-size:14px;max-width:44ch}
@@ -213,7 +222,7 @@ function preparar(raw){
         : info.txt,
     };
   }).sort((a,b) => a._comp.ord - b._comp.ord || a.tributo.localeCompare(b.tributo));
-  return { cfg: raw.config||{}, id: raw.id, pedidos, atualizado_em: raw.atualizado_em };
+  return { cfg: raw.config||{}, id: raw.id, pedidos, documentos: raw.documentos||[], atualizado_em: raw.atualizado_em };
 }
 
 function render(M){
@@ -303,6 +312,10 @@ function render(M){
       <tbody></tbody>
     </table></div></div>`);
 
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Documentos</h2><p>Relatórios deste cliente e modelos de referência.</p></div></div>
+    <div class="card lista" id="documentos-equip"></div>`);
+
   wrap.appendChild(el(`<footer>
       <span>Fonte: planilha de equiparação hospitalar do cliente ${M.id}.</span>
       <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
@@ -338,6 +351,7 @@ function render(M){
     });
   });
 
+  desenharDocumentos(M, []);
   desenharGraficos(M);
 }
 
@@ -403,6 +417,39 @@ function desenharGraficos(M){
   });
 }
 
+async function carregarModelos(){
+  if (API_URL){
+    const { id, codigo } = IDENTIDADE;
+    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=modelos';
+    const d = await jsonp(url);
+    return (d && d.modelos) || [];
+  }
+  const r = await fetch('demo_modelos.json');
+  if (!r.ok) return [];
+  const d = await r.json();
+  return d.modelos || [];
+}
+
+function normTxt(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+
+/** Junta os documentos específicos deste cliente (Relatório de Adequação Jurídica etc.)
+    com os modelos genéricos da categoria Equiparação (Modelo de emissão de NF etc.). */
+function desenharDocumentos(M, modelos){
+  const box = document.getElementById('documentos-equip');
+  if (!box) return;
+  const doCategoria = (modelos||[]).filter(m => normTxt(m.categoria) === normTxt('Equiparação'));
+  const todos = [...(M.documentos||[]), ...doCategoria];
+  if (!todos.length){ box.innerHTML = '<div class="vazio" style="padding:16px 0;text-align:center;color:var(--muted)">Nenhum documento cadastrado ainda.</div>'; return; }
+  box.innerHTML = todos.map(d=>{
+    const nome = d.documento;
+    const link = d.link && String(d.link).trim();
+    return `<div class="item">
+      <div><div class="nome">${nome}</div>${d.categoria?`<div class="cat">Modelo padrão</div>`:''}</div>
+      ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
+    </div>`;
+  }).join('');
+}
+
 function erro(msg){
   document.getElementById('app').innerHTML = `
     <div class="state">
@@ -418,6 +465,7 @@ function erro(msg){
     const M = preparar(raw);
     if (!M.pedidos.length) return erro('Nenhum pedido de equiparação encontrado para este cliente.');
     render(M);
+    carregarModelos().then(modelos => desenharDocumentos(M, modelos)).catch(()=>desenharDocumentos(M, []));
   } catch (e) {
     erro(e.message || String(e));
   }

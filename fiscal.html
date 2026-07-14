@@ -165,6 +165,24 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 @media(max-width:900px){.charts{grid-template-columns:1fr}.charts3{grid-template-columns:1fr}}
 .chart{padding:20px 22px 16px}
 .chart h3{font-size:14px;font-weight:700;margin-bottom:2px;text-transform:capitalize}
+
+.campo-texto,.form-nf input,.form-nf textarea{
+  width:100%;font-family:var(--sans);font-size:13px;color:var(--ink);
+  border:1px solid var(--line-2);border-radius:8px;padding:9px 11px;background:var(--surface-warm);
+  margin-top:10px;resize:vertical;
+}
+.campo-texto:focus,.form-nf input:focus,.form-nf textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.form-nf{display:flex;flex-direction:column}
+.btn-acao{
+  margin-top:12px;font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto2));
+  border:none;border-radius:20px;padding:9px 18px;cursor:pointer;align-self:flex-start;
+}
+.btn-acao:hover{filter:brightness(1.05)}
+.msg-status{font-size:12px;margin-top:8px;min-height:16px}
+.msg-status.enviando{color:var(--muted)}
+.msg-status.sucesso{color:var(--receita);font-weight:600}
+.msg-status.erro{color:var(--alerta);font-weight:600}
 .comp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
 .comp-head h3{margin-bottom:0}
 .mini-select{
@@ -738,10 +756,40 @@ function render(M){
       </div>
     </div>`);
 
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Precisa de algo?</h2><p>Chamados e solicitações de nota fiscal são respondidos em até 48h úteis.</p></div></div>
+    <div class="charts">
+      <div class="card chart">
+        <h3>Abrir chamado</h3>
+        <div class="sub">Escreva o que você precisa — dúvida, documento, o que for.</div>
+        <textarea id="ticket-msg" rows="4" placeholder="Descreva o que você precisa..." class="campo-texto"></textarea>
+        <button class="btn-acao" id="ticket-enviar">Enviar chamado</button>
+        <div class="msg-status" id="ticket-status"></div>
+      </div>
+      <div class="card chart">
+        <h3>Solicitar emissão de nota fiscal</h3>
+        <div class="sub">Preencha os dados do tomador e do serviço.</div>
+        <div class="form-nf">
+          <input id="nf-nome" placeholder="Nome / razão social do tomador">
+          <input id="nf-doc" placeholder="CPF ou CNPJ do tomador">
+          <input id="nf-centro" placeholder="Centro de custo / médico responsável">
+          <input id="nf-valor" placeholder="Valor (R$)">
+          <input id="nf-cep" placeholder="CEP">
+          <textarea id="nf-descricao" rows="2" placeholder="Descrição do serviço prestado"></textarea>
+          <input id="nf-data" type="date">
+          <textarea id="nf-obs" rows="2" placeholder="Observações (opcional)"></textarea>
+          <button class="btn-acao" id="nf-enviar">Enviar solicitação</button>
+          <div class="msg-status" id="nf-status"></div>
+        </div>
+      </div>
+    </div>`);
+
   wrap.appendChild(el(`<footer>
       <span>Fonte: planilha fiscal do cliente ${M.id}.</span>
       <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
     </footer>`));
+
+  ligarFormularios(M);
 
   // --- carrossel do calendário: estado local, independente da competência selecionada nas demais partes ---
   let calCentro = null;
@@ -1051,9 +1099,11 @@ function desenharAnuais(M){
   const anuais = M.regras.filter(r => r.periodicidade === 'Anual' && String(r.ativo) !== 'FALSE');
 
   const cartoes = anuais.map(reg => {
+    // Não filtra mais por v>0: algumas anuais (DMED, Receita Saúde, Informe de
+    // Rendimentos) são só entrega/emissão, sem valor a pagar, e ainda assim
+    // precisam aparecer como lembrete de prazo.
     const ocorrencias = M.cal.filter(c => c.id_regra === reg.id)
       .map(c => ({...c, data: dParse(c.vencimento), ...M.valorDe(c)}))
-      .filter(c => c.v > 0)
       .sort((a,b) => a.data - b.data);
 
     const passadas = ocorrencias.filter(o => o.data <= hoje);
@@ -1068,11 +1118,14 @@ function desenharAnuais(M){
         const passado = o.data <= hoje;
         const diasAteVencer = Math.round((o.data-hoje)/864e5);
         const classe = passado ? 'due-pago' : (diasAteVencer <= 92 ? 'due-atencao' : '');
+        const valorHtml = o.v > 0
+          ? `<span class="vl num ${o.est?'est':''}">${brl(o.v)}</span>`
+          : `<span class="vl num" style="color:var(--muted);font-weight:500">só entrega</span>`;
         return `<div class="due ${classe}">
           <span class="day num">${String(o.vencimento).slice(8)}/${String(o.vencimento).slice(5,7)}</span>
           <span class="body">
             <span class="nm">${passado ? 'Último' : 'Próximo'} · ${o.vencimento.slice(0,4)}</span>
-            <span class="vl num ${o.est?'est':''}">${brl(o.v)}</span>
+            ${valorHtml}
             ${o.ajuste_aplicado && o.ajuste_aplicado!=='—' ? `<span class="adj"> · ${o.ajuste_aplicado}</span>` : ''}
           </span>
         </div>`;
@@ -1081,7 +1134,7 @@ function desenharAnuais(M){
   }).filter(Boolean);
 
   document.getElementById('anuais').innerHTML = cartoes.join('') ||
-    '<p style="color:var(--muted)">Nenhuma obrigação anual com valor a pagar no momento.</p>';
+    '<p style="color:var(--muted)">Nenhuma obrigação anual no momento.</p>';
 }
 
 function desenharGraficos(M){
@@ -1144,6 +1197,57 @@ function desenharGraficos(M){
   });
 
   return {c1,c2,c3,c4,c5};
+}
+
+/** Conecta os botões de "Abrir chamado" e "Solicitar NF" à API (GET+JSONP, mesmo
+    esquema usado para ler dados — evita CORS). Mostra sucesso/erro inline. */
+function ligarFormularios(M){
+  const idc = IDENTIDADE;
+
+  async function enviar(acao, params, statusEl, aoSucesso){
+    statusEl.textContent = 'Enviando…';
+    statusEl.className = 'msg-status enviando';
+    try {
+      if (!API_URL) throw new Error('Sem API configurada neste modo de demonstração.');
+      const qs = new URLSearchParams({ id: idc.id, codigo: idc.codigo, acao, ...params });
+      const d = await jsonp(API_URL + '?' + qs.toString());
+      if (d.erro) throw new Error(d.erro);
+      statusEl.textContent = d.mensagem || 'Enviado com sucesso.';
+      statusEl.className = 'msg-status sucesso';
+      if (aoSucesso) aoSucesso();
+    } catch (e) {
+      statusEl.textContent = e.message || String(e);
+      statusEl.className = 'msg-status erro';
+    }
+  }
+
+  const btnTicket = document.getElementById('ticket-enviar');
+  if (btnTicket) btnTicket.onclick = () => {
+    const msg = document.getElementById('ticket-msg').value.trim();
+    const statusEl = document.getElementById('ticket-status');
+    if (!msg) { statusEl.textContent = 'Escreva a mensagem antes de enviar.'; statusEl.className = 'msg-status erro'; return; }
+    enviar('ticket', { mensagem: msg }, statusEl, () => { document.getElementById('ticket-msg').value = ''; });
+  };
+
+  const btnNf = document.getElementById('nf-enviar');
+  if (btnNf) btnNf.onclick = () => {
+    const campos = {
+      tomador_nome: document.getElementById('nf-nome').value.trim(),
+      tomador_documento: document.getElementById('nf-doc').value.trim(),
+      centro_custo: document.getElementById('nf-centro').value.trim(),
+      valor: document.getElementById('nf-valor').value.trim(),
+      descricao_servico: document.getElementById('nf-descricao').value.trim(),
+      data_desejada: document.getElementById('nf-data').value.trim(),
+      observacoes: document.getElementById('nf-obs').value.trim(),
+      cep: document.getElementById('nf-cep').value.trim(),
+    };
+    const statusEl = document.getElementById('nf-status');
+    const faltando = ['tomador_nome','tomador_documento','valor','descricao_servico'].filter(k => !campos[k]);
+    if (faltando.length){ statusEl.textContent = 'Preencha nome, documento, valor e descrição do serviço.'; statusEl.className = 'msg-status erro'; return; }
+    enviar('solicitar_nf', campos, statusEl, () => {
+      ['nf-nome','nf-doc','nf-centro','nf-valor','nf-cep','nf-descricao','nf-data','nf-obs'].forEach(id => { document.getElementById(id).value = ''; });
+    });
+  };
 }
 
 function erro(msg){
