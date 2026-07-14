@@ -1015,15 +1015,15 @@ function desembolsoPorTributoNoMes(M, ano, mes){
 }
 
 function desenharEstimativas(M){
-  const ultimo = M.empresa[M.empresa.length-1].competencia;
-  const [a,m] = ultimo.split('-').map(Number);
   const donutOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
     plugins:{legend:{display:false},
       tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
         bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
 
+  // Âncora é HOJE (mês real corrente), não o último mês fechado + 1 — senão a guia
+  // trimestral que já vence este mês fica escondida no meio da sequência.
   for (let i=0;i<3;i++){
-    const d = new Date(a, m-1+(i+1), 1);
+    const d = new Date(hoje.getFullYear(), hoje.getMonth()+i, 1);
     const comp = compDe(d);
     const porTributo = desembolsoPorTributoNoMes(M, d.getFullYear(), d.getMonth());
     const dados = TRIB.map(t=>({n:t.n, c:t.c, v: porTributo[t.k] || 0}));
