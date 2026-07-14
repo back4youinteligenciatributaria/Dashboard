@@ -208,6 +208,8 @@ table.rat-detalhe th:first-child{text-align:left}
 table.rat-detalhe td{padding:6px 10px;text-align:right}
 table.rat-detalhe td:first-child{text-align:left;display:flex;align-items:center;gap:7px}
 table.rat-detalhe td i{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.rat-detalhe-outras{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-2)}
+.rat-detalhe-outras .outras-row{padding:4px 10px;font-size:12px}
 
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px;font-weight:700}
@@ -670,7 +672,7 @@ function render(M){
   appendAll(wrap, `
     <div class="sec-head">
       <div><h2>Estimativa dos impostos</h2>
-      <p>Próximos 3 meses, projeção por tributo com base na média dos últimos apurados.</p></div>
+      <p>Quanto sai do caixa em cada mês, por tributo — pelo vencimento da guia, não pela competência. IRPJ e CSLL só aparecem no mês em que a guia trimestral realmente vence.</p></div>
     </div>
     <div class="charts3" id="estim3">
       <div class="card chart"><h3 id="est-t-0"></h3><div class="sub" id="est-s-0"></div><div class="cbox"><canvas id="est-0"></canvas></div><div class="pie-legend" id="est-lg-0"></div></div>
@@ -865,8 +867,14 @@ function pintarMes(M, comp, charts){
       ${outrasComValor.map(o=>`<div class="outras-row"><i style="background:${o.c}"></i><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}
     </div>` : '';
 
+  // O rateio não pode depender só de % do faturamento: INSS, FGTS e IRRF sobre
+  // dividendos não são proporcionais à receita (retenções e regras diferentes) —
+  // um centro entra na tabela se tiver QUALQUER movimento, mesmo com Total zerado.
+  const temMovimento = x => num(getM(x,'Total (R$)'))>0 || num(getM(x,'Nº NFs'))>0
+    || M.impostos(x)>0 || M.retido(x)>0 || OUTRAS.some(o=>num(getM(x,o.k))>0);
+
   const linhas = M.rateio.filter(x=>x.competencia===comp)
-                   .filter(x=>num(getM(x,'Total (R$)'))>0 || num(getM(x,'Nº NFs'))>0)
+                   .filter(temMovimento)
                    .sort((a,b)=>num(getM(b,'Total (R$)'))-num(getM(a,'Total (R$)')));
   const tb = document.querySelector('#rat tbody');
   tb.innerHTML = linhas.map((x,idx)=>{
@@ -894,6 +902,15 @@ function pintarMes(M, comp, charts){
           </tr>`).join('')}
         </tbody>
       </table></div>
+      ${(() => {
+        // INSS, FGTS e IRRF sobre dividendos não são proporcionais ao faturamento
+        // (não têm devido/retido no mesmo sentido) — por isso ficam à parte, mas
+        // continuam aparecendo no rateio por centro, ainda que tudo caia em "Não identificado".
+        const outrasComValor = OUTRAS.map(o=>({...o, v:num(getM(x,o.k))})).filter(o=>o.v>0);
+        return outrasComValor.length ? `<div class="rat-detalhe-outras">
+          ${outrasComValor.map(o=>`<div class="outras-row"><i style="background:${o.c}"></i><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}
+        </div>` : '';
+      })()}
     </td></tr>`;
   }).join('') || '<tr><td colspan="7" style="color:var(--muted)">Sem rateio informado neste mês.</td></tr>';
 
@@ -963,6 +980,40 @@ function atualizarComparativo(M, comp, tot, imp, liq, charts){
   redraw();
 }
 
+/** Soma uma coluna (ex.: CSLL) ao longo de 'n' meses terminando em 'competenciaRef'.
+    Mês já apurado usa o valor real; mês ainda não fechado usa nivelarTrimestre (último
+    trimestre fechado ÷ 3) como estimativa — mesma lógica robusta usada no resto do painel. */
+function valorAcumuladoColuna(M, competenciaRef, coluna, n){
+  const [a,m] = competenciaRef.split('-').map(Number);
+  let total = 0;
+  for (let i=0;i<n;i++){
+    const d = new Date(a, m-1-i, 1);
+    const c = compDe(d);
+    const r = M.porComp[c];
+    total += r ? num(getM(r, coluna)) : nivelarTrimestre(M, c, coluna);
+  }
+  return Math.round(total*100)/100;
+}
+
+/** Quanto sai do caixa em cada tributo NO MÊS DE VENCIMENTO — não na competência.
+    ISS/PIS/COFINS vencem todo mês; IRPJ/CSLL (trimestral) só vencem no mês de
+    fechamento do trimestre — nos outros dois meses o desembolso desses dois é zero. */
+function desembolsoPorTributoNoMes(M, ano, mes){
+  const acha = idRegra => M.cal.find(c => {
+    if (c.id_regra !== idRegra) return false;
+    const d = dParse(c.vencimento);
+    return d.getFullYear()===ano && d.getMonth()===mes;
+  });
+  const r01 = acha('R01'), r02 = acha('R02'), r07 = acha('R07');
+  return {
+    'ISS a Pagar (R$)':    r01 ? valorAcumuladoColuna(M, r01.competencia_ref, 'ISS a Pagar (R$)', 1) : 0,
+    'PIS a pagar (R$)':    r02 ? valorAcumuladoColuna(M, r02.competencia_ref, 'PIS a pagar (R$)', 1) : 0,
+    'COFINS a pagar (R$)': r02 ? valorAcumuladoColuna(M, r02.competencia_ref, 'COFINS a pagar (R$)', 1) : 0,
+    'CSLL a pagar (R$)':   r07 ? valorAcumuladoColuna(M, r07.competencia_ref, 'CSLL a pagar (R$)', 3) : 0,
+    'IR a pagar (R$)':     r07 ? valorAcumuladoColuna(M, r07.competencia_ref, 'IR a pagar (R$)', 3) : 0,
+  };
+}
+
 function desenharEstimativas(M){
   const ultimo = M.empresa[M.empresa.length-1].competencia;
   const [a,m] = ultimo.split('-').map(Number);
@@ -971,23 +1022,16 @@ function desenharEstimativas(M){
       tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
         bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
 
-  const trimestral = String(M.cfg.periodicidade_irpj_csll || 'trimestral').toLowerCase().includes('trim');
-
   for (let i=0;i<3;i++){
     const d = new Date(a, m-1+(i+1), 1);
     const comp = compDe(d);
-    const dados = TRIB.map(t=>{
-      const nivelar = trimestral && (t.k === 'IR a pagar (R$)' || t.k === 'CSLL a pagar (R$)');
-      const v = nivelar
-        ? nivelarTrimestre(M, comp, t.k)
-        : (M.porComp[comp] ? num(getM(M.porComp[comp], t.k)) : M.media(t.k));
-      return {n:t.n, c:t.c, v};
-    });
+    const porTributo = desembolsoPorTributoNoMes(M, d.getFullYear(), d.getMonth());
+    const dados = TRIB.map(t=>({n:t.n, c:t.c, v: porTributo[t.k] || 0}));
     const total = dados.reduce((s,x)=>s+x.v,0);
     document.getElementById('est-t-'+i).textContent = mesLongo(comp);
     document.getElementById('est-s-'+i).innerHTML = 'total estimado <span class="estimativa">'+brl(total)+'</span>';
     document.getElementById('est-lg-'+i).innerHTML = dados.map(x=>
-      `<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}</span><b class="num estimativa">${brl(x.v)}</b></div>`
+      `<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`
     ).join('');
     new Chart(document.getElementById('est-'+i), {
       type:'doughnut',
