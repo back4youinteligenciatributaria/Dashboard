@@ -86,16 +86,6 @@ table.ped tbody tr:last-child td{border-bottom:none}
 .detalhe-grid div span{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
 .detalhe-explicacao{padding-top:8px;border-top:1px dashed var(--line-2);color:var(--ink-2)}
 
-.glossario{padding:8px 24px}
-.gloss-item{border-top:1px solid var(--line)}
-.gloss-item:first-child{border-top:none}
-.gloss-btn{width:100%;text-align:left;background:none;border:none;padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;font-family:var(--sans);color:var(--ink)}
-.gloss-btn b{font-size:13.5px;font-weight:700}
-.gloss-btn .seta{color:var(--muted);font-size:13px;transition:transform .2s}
-.gloss-btn[aria-expanded="true"] .seta{transform:rotate(180deg)}
-.gloss-body{display:none;padding:0 0 16px;font-size:13px;color:var(--ink-2);max-width:70ch}
-.gloss-body.aberto{display:block}
-
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px;font-weight:700}
 .state p{color:var(--muted);font-size:14px;max-width:44ch}
@@ -211,7 +201,9 @@ function preparar(raw){
     ...p,
     _comp: prepararCompetencia(p.competencia),
     _grupo: (STATUS_INFO[p.status]||{grupo:'neutro'}).grupo,
-    _concluido: p.valor_aprovado !== null && p.valor_aprovado !== undefined,
+    // Número real e positivo = concluído. O Apps Script real devolve célula vazia como
+    // string '' (não null/undefined) — checar só null/undefined deixava passar tudo.
+    _concluido: Number(p.valor_aprovado) > 0,
   })).sort((a,b) => a._comp.ord - b._comp.ord || a.tributo.localeCompare(b.tributo));
   return { cfg: raw.config||{}, id: raw.id, pedidos, atualizado_em: raw.atualizado_em };
 }
@@ -276,7 +268,7 @@ function render(M){
     <div class="charts">
       <div class="card chart">
         <h3>Situação dos pedidos</h3>
-        <div class="sub">Quantidade de pedidos por grupo de situação.</div>
+        <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação.</div>
         <div class="cbox"><canvas id="c1"></canvas></div>
         <div class="pie-legend" id="c1-lg"></div>
       </div>
@@ -285,11 +277,6 @@ function render(M){
         <div class="sub">IRPJ e CSLL — soma do valor atualizado (com SELIC).</div>
         <div class="cbox"><canvas id="c2"></canvas></div>
         <div class="pie-legend" id="c2-lg"></div>
-      </div>
-      <div class="card chart">
-        <h3>Solicitado × Atualizado × Aprovado</h3>
-        <div class="sub">Visão geral dos três totais.</div>
-        <div class="cbox"><canvas id="c3"></canvas></div>
       </div>
       <div class="card chart">
         <h3>Evolução por ano de origem</h3>
@@ -307,10 +294,6 @@ function render(M){
       </tr></thead>
       <tbody></tbody>
     </table></div></div>`);
-
-  appendAll(wrap, `
-    <div class="sec-head"><div><h2>O que significa cada situação</h2><p>Definições da própria Receita Federal — clique para expandir.</p></div></div>
-    <div class="card glossario" id="glossario"></div>`);
 
   wrap.appendChild(el(`<footer>
       <span>Fonte: planilha de equiparação hospitalar do cliente ${M.id}.</span>
@@ -348,22 +331,6 @@ function render(M){
     });
   });
 
-  // --- glossário ---
-  const ordemGlossario = Object.keys(STATUS_INFO);
-  document.getElementById('glossario').innerHTML = ordemGlossario.map((status,i)=>{
-    const info = STATUS_INFO[status];
-    return `<div class="gloss-item">
-      <button class="gloss-btn" aria-expanded="false" onclick="
-        const body=this.nextElementSibling; const abrir=!body.classList.contains('aberto');
-        body.classList.toggle('aberto', abrir); this.setAttribute('aria-expanded', abrir);
-      ">
-        <b><span class="status-chip status-${info.grupo}" style="margin-right:8px">${GRUPO_NOME[info.grupo]}</span>${status}</b>
-        <span class="seta">▾</span>
-      </button>
-      <div class="gloss-body">${info.txt}</div>
-    </div>`;
-  }).join('');
-
   desenharGraficos(M);
 }
 
@@ -380,19 +347,18 @@ function desenharGraficos(M){
       y:{grid:{color:'#EDE4D6'}, border:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11},
         callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
 
-  // c1: situação (por grupo, em nº de pedidos)
+  // c1: situação — soma do VALOR atualizado por grupo, não quantidade de pedidos
   const porGrupo = {};
-  P.forEach(p=>{ porGrupo[p._grupo] = (porGrupo[p._grupo]||0)+1; });
+  P.forEach(p=>{ porGrupo[p._grupo] = (porGrupo[p._grupo]||0) + num(p.valor_atualizado); });
   const gruposUsados = Object.keys(porGrupo);
   new Chart(document.getElementById('c1'), {
     type:'doughnut',
     data:{labels:gruposUsados.map(g=>GRUPO_NOME[g]), datasets:[{data:gruposUsados.map(g=>porGrupo[g]),
       backgroundColor:gruposUsados.map(g=>GRUPO_COR[g]), borderWidth:0}]},
-    options:{...donutOpts, plugins:{...donutOpts.plugins, tooltip:{...donutOpts.plugins.tooltip,
-      callbacks:{label:c=>' '+c.label+': '+c.parsed+' pedido'+(c.parsed===1?'':'s')}}}}
+    options:donutOpts
   });
   document.getElementById('c1-lg').innerHTML = gruposUsados.map(g=>
-    `<div class="pie-legend-row"><i style="background:${GRUPO_COR[g]}"></i><span>${GRUPO_NOME[g]}</span><b class="num">${porGrupo[g]}</b></div>`
+    `<div class="pie-legend-row"><i style="background:${GRUPO_COR[g]}"></i><span>${GRUPO_NOME[g]}</span><b class="num">${brl(porGrupo[g])}</b></div>`
   ).join('');
 
   // c2: valor atualizado por tributo
@@ -408,18 +374,6 @@ function desenharGraficos(M){
   document.getElementById('c2-lg').innerHTML = tributos.map((t,i)=>
     `<div class="pie-legend-row"><i style="background:${coresTrib[i%coresTrib.length]}"></i><span>${t}</span><b class="num">${brl(porTributo[t])}</b></div>`
   ).join('');
-
-  // c3: solicitado x atualizado x aprovado
-  const totSolicitado = P.reduce((s,p)=>s+num(p.valor_solicitado),0);
-  const totAtualizado = P.reduce((s,p)=>s+num(p.valor_atualizado),0);
-  const totAprovado = P.filter(p=>p._concluido).reduce((s,p)=>s+num(p.valor_aprovado),0);
-  new Chart(document.getElementById('c3'), {
-    type:'bar',
-    data:{labels:['Solicitado','Atualizado','Aprovado'], datasets:[{
-      data:[totSolicitado, totAtualizado, totAprovado],
-      backgroundColor:[PAL.bege, PAL.couro, PAL.teal], borderRadius:6, maxBarThickness:56}]},
-    options:barOpts
-  });
 
   // c4: por ano de origem da competência
   const porAno = {};
