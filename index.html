@@ -117,12 +117,11 @@ const ICONES = {
 };
 
 const DEFINICOES = [
-  { chave:'fiscal',      titulo:'Dashboard Fiscal',        desc:'Faturamento, impostos a pagar, rateio por centro de custo e calendário de vencimentos.' },
-  { chave:'equiparacao', titulo:'Equiparação hospitalar',  desc:'Pedidos de restituição, valores atualizados e situação de cada processo.' },
-  { chave:'societario',  titulo:'Documentos societários',  desc:'Contrato social, alterações, cartão CNPJ e alvarás da empresa.' },
-  { chave:'juridico',    titulo:'Jurídico',                desc:'Processos, teses em andamento e modelos de documentos.' },
-  { chave:'contabil',    titulo:'Dashboard Contábil',      desc:'Balanço, DRE e indicadores contábeis.' },
-  { chave:'pessoal',     titulo:'Departamento Pessoal',    desc:'Folha, encargos e obrigações trabalhistas.' },
+  { chave:'fiscal',      arquivo:'fiscal.html',       titulo:'Dashboard Fiscal',        desc:'Faturamento, impostos a pagar, rateio por centro de custo e calendário de vencimentos.' },
+  { chave:'equiparacao', arquivo:'equiparacao.html',  titulo:'Equiparação hospitalar',  desc:'Pedidos de restituição, valores atualizados e situação de cada processo.' },
+  { chave:'societario',  arquivo:'societario.html',   titulo:'Societário e Jurídico',  desc:'Contrato social, alterações, alvarás, processos e modelos de documentos da empresa.' },
+  { chave:'contabil',    arquivo:'contabil.html',     titulo:'Dashboard Contábil',      desc:'Balanço, DRE e indicadores contábeis.' },
+  { chave:'pessoal',     arquivo:'dptopessoal.html',  titulo:'Departamento Pessoal',    desc:'Folha, encargos e obrigações trabalhistas.' },
 ];
 
 function render(id, codigo, disponiveis){
@@ -138,7 +137,7 @@ function render(id, codigo, disponiveis){
     <div class="grade" id="grade"></div>`;
 
   document.getElementById('grade').innerHTML = visiveis.length
-    ? visiveis.map(d => `<a class="opcao" href="${destino(d.chave+'.html')}">
+    ? visiveis.map(d => `<a class="opcao" href="${destino(d.arquivo)}">
         <div class="icone">${ICONES[d.chave]}</div>
         <h2>${d.titulo}</h2>
         <p>${d.desc}</p>
