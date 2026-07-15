@@ -31,11 +31,19 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .bar{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .logo{font-weight:900;font-size:19px;letter-spacing:-.02em;line-height:1}
 .logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
-.brand-sub{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:1px}
+.brand-sub{font-size:15px;color:var(--brand-teal);font-weight:700;margin-top:2px}
 .voltar{display:inline-block;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:4px}
 .voltar:hover{color:var(--brand-teal)}
 .spacer{flex:1}
 .badge-topo{font-size:11px;font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:5px 12px;border-radius:20px}
+
+.docs-chave{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:28px 0 0}
+.doc-chave-card{display:flex;align-items:center;gap:14px;padding:18px 20px;text-decoration:none;color:inherit;transition:border-color .15s}
+.doc-chave-card:hover{border-color:var(--brand-teal)}
+.doc-chave-icone{flex-shrink:0;width:40px;height:40px;border-radius:10px;background:var(--receita-soft);color:var(--brand-teal);display:flex;align-items:center;justify-content:center}
+.doc-chave-icone svg{width:22px;height:22px}
+.doc-chave-nome{font-size:13px;font-weight:700;line-height:1.3}
+.doc-chave-abrir{font-size:11.5px;font-weight:600;color:var(--brand-teal);margin-top:2px}
 
 .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:28px 0 22px}
 .stat{padding:18px 18px}
@@ -95,7 +103,9 @@ table.ped tbody tr:last-child td{border-bottom:none}
 .item a:hover{color:var(--brand-dark)}
 .item .em-breve{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
 
-.vazio{color:var(--muted);font-size:13.5px;padding:24px 20px;text-align:center}
+.vazio{color:var(--muted);font-size:13.5px;padding:24px 20px;text-align:center;line-height:1.7}
+.vazio a{color:var(--brand-teal);font-weight:700;text-decoration:none}
+.vazio a:hover{text-decoration:underline}
 
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px;font-weight:700}
@@ -242,6 +252,12 @@ function preparar(raw){
   return { cfg: raw.config||{}, id: raw.id, pedidos, documentos: raw.documentos||[], atualizado_em: raw.atualizado_em };
 }
 
+const DOCS_CHAVE = [
+  { nome: 'Relatório de Adequação Jurídica', icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M5 8h14M7 8l-4 8a4 4 0 0 0 8 0l-4-8Zm10 0l-4 8a4 4 0 0 0 8 0l-4-8Z"/></svg>' },
+  { nome: 'Memória de Cálculo Inicial', icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>' },
+  { nome: 'Relatório Executivo', icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 17v-4M12 17V9M16 17v-6"/></svg>' },
+];
+
 function render(M){
   const app = document.getElementById('app');
   app.innerHTML = '';
@@ -251,7 +267,7 @@ function render(M){
       <div>
         <a class="voltar" href="index.html#${M.id}-${IDENTIDADE.codigo}">← Painel do cliente</a>
         <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
-        <div class="brand-sub">${M.cfg.razao_social || 'Equiparação hospitalar'} · cliente ${M.id}</div>
+        <div class="brand-sub">${M.cfg.razao_social || 'Equiparação hospitalar'} · ${M.cfg.cnpj ? 'CNPJ ' + M.cfg.cnpj : 'cliente ' + M.id}</div>
       </div>
       <div class="spacer"></div>
       <span class="badge-topo">Equiparação hospitalar</span>
@@ -259,6 +275,17 @@ function render(M){
 
   const wrap = el('<div class="wrap"></div>');
   app.appendChild(wrap);
+
+  const docsDisponiveis = DOCS_CHAVE
+    .map(d => ({ ...d, link: (M.documentos||[]).find(x => x.documento === d.nome && x.link && String(x.link).trim()) }))
+    .filter(d => d.link);
+  if (docsDisponiveis.length){
+    appendAll(wrap, `<div class="docs-chave">${docsDisponiveis.map(d => `
+      <a class="card doc-chave-card" href="${d.link.link}" target="_blank" rel="noopener">
+        <div class="doc-chave-icone">${d.icone}</div>
+        <div><div class="doc-chave-nome">${d.nome}</div><div class="doc-chave-abrir">Abrir ↗</div></div>
+      </a>`).join('')}</div>`);
+  }
 
   const P = M.pedidos;
   const totSolicitado = P.reduce((s,p)=>s+num(p.valor_solicitado),0);
@@ -327,14 +354,17 @@ function render(M){
         <th>Situação</th><th class="r">Aprovado</th>
       </tr></thead>
       <tbody></tbody>
-    </table></div></div>` : `<div class="card"><div class="vazio">Nenhum pedido de equiparação transmitido ainda para este cliente.</div></div>`}`);
+    </table></div></div>` : `<div class="card"><div class="vazio">
+        Nenhum pedido de equiparação transmitido ainda para este cliente.<br>
+        Se sua empresa estiver passando primeiro por alguma alteração societária, verifique no
+        <a href="societario.html#${M.id}-${IDENTIDADE.codigo}">painel Societário</a>.
+      </div></div>`}`);
 
   appendAll(wrap, `
     <div class="sec-head"><div><h2>Documentos</h2><p>Relatórios deste cliente e modelos de referência.</p></div></div>
     <div class="card lista" id="documentos-equip"></div>`);
 
   wrap.appendChild(el(`<footer>
-      <span>Fonte: planilha de equiparação hospitalar do cliente ${M.id}.</span>
       <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
     </footer>`));
 
@@ -457,14 +487,14 @@ function desenharDocumentos(M, modelos){
   const box = document.getElementById('documentos-equip');
   if (!box) return;
   const doCategoria = (modelos||[]).filter(m => normTxt(m.categoria) === normTxt('Equiparação'));
-  const todos = [...(M.documentos||[]), ...doCategoria];
+  const todos = [...(M.documentos||[]), ...doCategoria].filter(d => d.link && String(d.link).trim());
   if (!todos.length){ box.innerHTML = '<div class="vazio" style="padding:16px 0;text-align:center;color:var(--muted)">Nenhum documento cadastrado ainda.</div>'; return; }
   box.innerHTML = todos.map(d=>{
     const nome = d.documento;
-    const link = d.link && String(d.link).trim();
+    const link = String(d.link).trim();
     return `<div class="item">
       <div><div class="nome">${nome}</div>${d.categoria?`<div class="cat">Modelo padrão</div>`:''}</div>
-      ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
+      <a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>
     </div>`;
   }).join('');
 }
