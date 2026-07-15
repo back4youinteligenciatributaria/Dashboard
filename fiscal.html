@@ -92,7 +92,11 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .status-estimativa{background:#DCF3E9;color:#3FA680}
 .status-aberto{background:var(--sinal-soft);color:var(--sinal)}
 .guia-nome{flex:1;font-size:13.5px;font-weight:600;min-width:120px}
-.guia-detalhe{display:none;margin:8px 0 0 0;padding:8px 12px;background:var(--surface-warm);border-radius:8px}
+.guia-valor{font-size:14px;font-weight:800;white-space:nowrap}
+.guia-toggle{font-family:var(--sans);font-size:11px;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 2px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.guia-toggle:hover{color:var(--brand-teal)}
+.guia-toggle .car{transition:transform .15s} .guia-toggle.on .car{transform:rotate(180deg)}
+.guia-detalhe{display:none;margin:6px 0 2px 0;padding:8px 12px;background:var(--surface-warm);border-radius:8px}
 .guia-detalhe.aberto{display:block}
 .guia-detalhe-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0}
 
@@ -213,6 +217,9 @@ tr.nid .share i{background:var(--alerta)}
 .tab.on{background:var(--brand-teal);color:#fff}
 .nf-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .nf-search{font-family:var(--sans);font-size:12.5px;border:1px solid var(--line-2);border-radius:16px;padding:6px 12px;background:var(--surface-warm);min-width:180px}
+.btn-pend{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--sinal);background:var(--sinal-soft);border:1px solid var(--line-2);border-radius:16px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.btn-pend.on{background:var(--sinal);color:#fff;border-color:var(--sinal)}
+.alert{cursor:default} .alert.clicavel{cursor:pointer} .alert.clicavel:hover{filter:brightness(.99)}
 table.nf{width:100%;border-collapse:collapse;font-size:13px}
 table.nf th{text-align:left;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line-2)}
 table.nf th.r,table.nf td.r{text-align:right}
@@ -302,10 +309,11 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-/* ===== CONFIG ===== */
-// URL da sua implantação do Apps Script (/exec). Vazio = modo demonstração.
-// Confirme que é a URL da implantação ATUAL (Implantar > Gerenciar implantações).
-const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+/* ===== CONFIG =====
+   Vazio = modo demonstração (para revisar a interface sem backend).
+   PARA IR AO AR: troque por  const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+   (confirme que é a URL /exec da implantação ATUAL) */
+const API_URL = '';
 
 const PAL = {
   iss:'#3FA680', das:'#3FA680', pis:'#A7715D', cofins:'#C79873', csll:'#8F5A4A', irpj:'#6B4236',
@@ -362,7 +370,7 @@ function temMetrica(row,key){ const v=getM(row,key); return v!==undefined && v!=
 /* Estrutura idêntica ao que o Apps Script devolve: config, empresa, rateio, regras,
    calendario, nfs (por competência) e links (por competência). */
 const DEMO = (function(){
-  const centros = ['Não identificado','Sharon Admoni','Rafael Sanches Simone','Vladimir Cordeiro de Carvalho','Flavia M Duch Simone','Clínica (rateio geral)'];
+  const centros = ['Não identificado','Sharon Admoni','Rafael Sanches Simone','Vladimir Cordeiro de Carvalho','Flavia M Duch Simone'];
   const config = { cliente_id:'482913', razao_social:'DSCA Serviços Médicos Ltda', cnpj:'54.123.456/0001-00',
     municipio:'São Paulo', estado:'SP', regime:'Lucro Presumido', periodicidade_irpj_csll:'Trimestral',
     centros: centros.map((n,i)=>({centro:n, ordem_exibicao:i})) };
@@ -640,7 +648,7 @@ function vencimentosDoMes(M,ano,mes){ const marc=new Map();
     marc.get(d.getDate()).push({descricao:c.descricao,valor:v,est}); }); return marc; }
 
 /* ===================== RENDER ===================== */
-let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='';
+let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='', NF_PEND=false;
 function render(M){
   M_GLOBAL=M;
   const comps=M.empresa.map(r=>r.competencia);
@@ -704,7 +712,10 @@ function render(M){
     <p>Clique em <b>Editar centro</b> para reatribuir a nota — dividir igual, por % ou por valor. Salvar grava na planilha do mês.</p></div>
     <div class="tabs"><button class="tab on" id="tab-prest" data-tab="prestadas">Prestadas</button><button class="tab" id="tab-tom" data-tab="tomadas">Tomadas</button></div></div>
     <div class="card" style="padding:18px 20px">
-      <div class="nf-toolbar"><span class="lbl" id="nf-resumo"></span><input class="nf-search" id="nf-search" placeholder="buscar por nº ou nome…"></div>
+      <div class="nf-toolbar"><span class="lbl" id="nf-resumo"></span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn-pend" id="nf-pend">Só sem centro</button>
+          <input class="nf-search" id="nf-search" placeholder="buscar por nº ou nome…"></div></div>
       <div class="table-scroll"><table class="nf" id="nf-tabela"><thead></thead><tbody></tbody></table></div>
     </div>`);
 
@@ -743,6 +754,7 @@ function render(M){
   document.getElementById('tab-prest').addEventListener('click',()=>{NF_TAB='prestadas';toggleTabs();desenharNotas(M,SEL);});
   document.getElementById('tab-tom').addEventListener('click',()=>{NF_TAB='tomadas';toggleTabs();desenharNotas(M,SEL);});
   document.getElementById('nf-search').addEventListener('input',e=>{NF_BUSCA=e.target.value.trim().toLowerCase();desenharNotas(M,SEL);});
+  document.getElementById('nf-pend').addEventListener('click',()=>{NF_PEND=!NF_PEND;desenharNotas(M,SEL);});
 
   calCentro=centerFromComp(SEL); if(!dentro(calCentro.ano))calCentro={ano:anoMax,mes:calCentro.mes};
   renderCarrossel(); pintarMes(M,SEL);
@@ -758,13 +770,11 @@ function pintarMes(M,comp){
 
   // tributos visíveis: regime + "vazio some"
   const visiveis=M.tribs.filter(t=>temMetrica(r,t.pag));
-  const linkUrl=(M.links&&(M.links.planilha||M.links[comp]))||'';
   document.getElementById('hero').innerHTML=`<div class="hero">
     <div class="card hero-main"><span class="lbl">Competência</span><div class="comp-title">${mesLongo(comp)}</div>
       <p class="comp-note">Os impostos desta competência vencem em ${mesLongo(mesSeguinteComp(comp))}.</p>
       <div class="big num">${brl2(tot)}</div>
       <div class="delta">${dif===null?'':`<span class="chip ${dif>=0?'up':'down'}">${dif>=0?'+':''}${(dif*100).toFixed(1).replace('.',',')}%</span>`}<span>${nfs} notas emitidas · total: ${brl(tot)}</span></div>
-      ${MODO_DEMO?`<span class="link-planilha" aria-disabled="true">▤ Abrir planilha de notas e rateio — link real na produção</span>`:(linkUrl?`<a class="link-planilha" href="${esc(linkUrl)}" target="_blank" rel="noopener">▤ Abrir planilha de notas e rateio ↗</a>`:`<span class="link-planilha" aria-disabled="true">Sem planilha de rateio vinculada</span>`)}
     </div>
     <div class="card relacao"><div class="relacao-head"><h2>Impostos a pagar</h2></div>
       <div class="table-scroll"><table class="imp"><thead><tr><th>Tributo</th><th>Devido</th>${M.reg.retencao?'<th>Retido</th>':''}<th>A pagar</th></tr></thead>
@@ -829,8 +839,8 @@ function desenharGuiasDoMes(M,comp){
     ${fiscais.map(it=>{ const status=it.v<=0?'aberto':(it.est?'estimativa':'fechada'); const rot={fechada:'Fechada',estimativa:'Estimativa',aberto:'Em aberto'}[status];
       const det=it.v>0?detalheGuiaPorCentro(M,it):[];
       return `<div class="guia-row"><div class="guia-main"><span class="guia-status status-${status}">${rot}</span><span class="guia-nome">${esc(it.descricao)}</span>
-        <b class="num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (estimativa)':''}</b>
-        ${det.length?`<button class="btn-detalhe" onclick="const d=this.closest('.guia-row').querySelector('.guia-detalhe');d.classList.toggle('aberto');this.textContent=d.classList.contains('aberto')?'Ocultar':'Por centro'">Por centro</button>`:''}</div>
+        <span class="guia-valor num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (est.)':''}</span>
+        ${det.length?`<button class="guia-toggle" onclick="const d=this.closest('.guia-row').querySelector('.guia-detalhe');const a=d.classList.toggle('aberto');this.classList.toggle('on',a);this.firstChild.textContent=a?'ocultar':'por centro'"><span>por centro</span><span class="car">▾</span></button>`:''}</div>
         ${det.length?`<div class="guia-detalhe">${det.map(d=>`<div class="guia-detalhe-row"><span>${esc(d.centro)}</span><b class="num">${brl(d.v)}</b></div>`).join('')}</div>`:''}</div>`;}).join('')}</div>`:'';
 
   const ob=document.getElementById('outras');
@@ -850,9 +860,9 @@ function desenharRateio(M,comp,tot){
 
   const nidRow=linhas.find(x=>x.centro==='Não identificado'); const shareNid=nidRow&&tot?num(nidRow['Total (R$)'])/tot:0;
   document.getElementById('rat-sub').textContent=`${linhas.length} centros com movimento em ${mesLongo(comp)}.`;
-  document.getElementById('alerta').innerHTML=shareNid>0.001?`<div class="alert" role="status">
+  document.getElementById('alerta').innerHTML=shareNid>0.001?`<div class="alert clicavel" role="button" tabindex="0" onclick="irParaPendencias()" onkeydown="if(event.key==='Enter')irParaPendencias()">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-    <div><b>${pct(shareNid)} do faturamento de ${mesLongo(comp)} está sem centro de custo.</b></div></div>`:'';
+    <div><b>${pct(shareNid)} do faturamento de ${mesLongo(comp)} está sem centro de custo.</b> <span style="font-weight:600;text-decoration:underline">Identificar pendências ↓</span></div></div>`:'';
 
   if(CHARTS){ const pal=CENTRO_PAL.slice(); const nidIdx=linhas.findIndex(x=>x.centro==='Não identificado'); if(nidIdx>-1)pal[nidIdx]=PAL.vinho;
     CHARTS.c5.data.labels=linhas.map(x=>x.centro); CHARTS.c5.data.datasets[0].data=linhas.map(x=>num(x['Total (R$)']));
@@ -868,22 +878,29 @@ function chipsCentro(M,nf){
   if(!ent.length) return `<span class="chip-c nid">Não identificado</span>`;
   return ent.map(([c,p])=>`<span class="chip-c ${c==='Não identificado'?'nid':''}"><i style="background:${centroCor(M,c)}"></i>${esc(c)} · ${pct(p)}</span>`).join('');
 }
+function semCentro(nf){ const w=pesosNF(nf); return (w['Não identificado']||0)>0.005; }
 function desenharNotas(M,comp){
-  const pack=M.nfs[comp]||{prestadas:[],tomadas:[]}; const lista=(pack[NF_TAB]||[]).filter(nf=>{
-    if(!NF_BUSCA) return true; return (nf.nf+' '+nf.contraparte+' '+(nf.tipo||'')).toLowerCase().includes(NF_BUSCA); });
-  const prest=NF_TAB==='prestadas';
-  const totBruto=(pack[NF_TAB]||[]).reduce((s,nf)=>s+num(nf.valorBruto),0);
-  document.getElementById('nf-resumo').textContent=`${(pack[NF_TAB]||[]).length} notas ${prest?'prestadas':'tomadas'} · ${brl(totBruto)}`;
+  const pack=M.nfs[comp]||{prestadas:[],tomadas:[]}; const prest=NF_TAB==='prestadas';
+  const todas=(pack[NF_TAB]||[]).map((nf,oi)=>({nf,oi}));   // guarda o índice ORIGINAL
+  const nPend=todas.filter(x=>semCentro(x.nf)).length;
+  let lista=todas;
+  if(NF_PEND) lista=lista.filter(x=>semCentro(x.nf));
+  if(NF_BUSCA) lista=lista.filter(x=>(x.nf.nf+' '+x.nf.contraparte+' '+(x.nf.tipo||'')).toLowerCase().includes(NF_BUSCA));
+
+  const totBruto=todas.reduce((s,x)=>s+num(x.nf.valorBruto),0);
+  document.getElementById('nf-resumo').innerHTML=`${todas.length} notas ${prest?'prestadas':'tomadas'} · ${brl(totBruto)}${nPend?` · <b style="color:var(--sinal)">${nPend} sem centro</b>`:''}`;
+  const pb=document.getElementById('nf-pend'); pb.classList.toggle('on',NF_PEND); pb.textContent=NF_PEND?'Mostrar todas':'Só sem centro';
+
   const thead=document.querySelector('#nf-tabela thead');
   thead.innerHTML=`<tr><th>NF</th><th>Data</th><th>${prest?'Tomador':'Prestador'}</th><th class="r">Valor</th><th>Centro de custo</th><th class="r"></th></tr>`;
   const tb=document.querySelector('#nf-tabela tbody');
-  if(!lista.length){ tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">Nenhuma nota ${prest?'prestada':'tomada'} neste mês.</td></tr>`; return; }
-  tb.innerHTML=lista.map((nf,idx)=>{
-    const gid=`${NF_TAB}-${idx}`;
+  if(!lista.length){ tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">${NF_PEND?'Nenhuma nota sem centro neste mês.':('Nenhuma nota '+(prest?'prestada':'tomada')+' neste mês.')}</td></tr>`; return; }
+  tb.innerHTML=lista.map(({nf,oi})=>{
+    const gid=`${NF_TAB}-${oi}`; const pend=semCentro(nf);
     return `<tr id="nfrow-${gid}"><td class="num">${esc(nf.nf)}</td><td class="num">${esc((nf.data||'').slice(8)+'/'+(nf.data||'').slice(5,7))}</td>
       <td><div class="nf-cp">${esc(nf.contraparte)}</div><div class="nf-tipo">${esc(nf.tipo||'')}</div></td>
       <td class="r num">${brl(num(nf.valorBruto))}</td><td><div class="chips" id="chips-${gid}">${chipsCentro(M,nf)}</div></td>
-      <td class="r"><button class="btn-edit" data-gid="${gid}" data-idx="${idx}">Editar centro</button></td></tr>
+      <td class="r"><button class="btn-edit" data-gid="${gid}" data-idx="${oi}">${pend?'Identificar':'Editar centro'}</button></td></tr>
     <tr class="editor-row" id="editor-${gid}"><td colspan="6"></td></tr>`;
   }).join('');
   tb.querySelectorAll('.btn-edit').forEach(b=>b.addEventListener('click',()=>abrirEditor(M,comp,NF_TAB,+b.dataset.idx,b.dataset.gid)));
@@ -900,15 +917,16 @@ function abrirEditor(M,comp,tab,idx,gid){
   const w=pesosNF(nf); const bruto=num(nf.valorBruto);
   const st={ modo: Object.values(nf.centros||{}).some(v=>typeof v==='number')?'valor':'igual',
              sel:{} }; // sel[centro] = {on:bool, valor:number}
-  M.centros.forEach(c=>{ st.sel[c]={on:(w[c]||0)>0.0005, valor: round2((w[c]||0)*bruto)}; });
+  centrosReais(M).forEach(c=>{ st.sel[c]={on:(w[c]||0)>0.0005, valor: round2((w[c]||0)*bruto)}; });
   EDIT_STATE[gid]={nf,comp,tab,idx,bruto,st};
   renderEditor(M,gid);
 }
 function round2(v){ return Math.round(v*100)/100; }
+function centrosReais(M){ return M.centros.filter(c=>c!=='Não identificado'); }
 function renderEditor(M,gid){
   const E=EDIT_STATE[gid]; const {bruto,st}=E; const cell=document.getElementById('editor-'+gid).querySelector('td');
   const modos=[['igual','Dividir igual'],['pct','Por %'],['valor','Por valor (R$)']];
-  const rows=M.centros.map(c=>{ const s=st.sel[c]; const cor=centroCor(M,c);
+  const rows=centrosReais(M).map(c=>{ const s=st.sel[c]; const cor=centroCor(M,c);
     let inputHtml='';
     if(st.modo==='igual') inputHtml=`<span style="font-size:11.5px;color:var(--muted);text-align:right">${s.on?pct(1/Math.max(1,contarOn(st))):'—'}</span>`;
     else if(st.modo==='pct') inputHtml=`<input class="ed-num" type="number" min="0" max="100" step="0.1" data-c="${esc(c)}" data-f="pct" ${s.on?'':'disabled'} value="${s.on?round2(s.valor/bruto*100):''}">`;
@@ -917,14 +935,19 @@ function renderEditor(M,gid){
   }).join('');
   const {somaValor,somaPct,estado,txt}=resumoEditor(M,gid);
   cell.innerHTML=`<div class="editor">
-    <div class="editor-modos">${modos.map(([k,l])=>`<button class="tab ${st.modo===k?'on':''}" data-modo="${k}">${l}</button>`).join('')}</div>
+    <div class="editor-modos">${modos.map(([k,l])=>`<button class="tab ${st.modo===k?'on':''}" data-modo="${k}">${l}</button>`).join('')}
+      <span style="flex:1"></span>
+      <button class="tab" data-act="todos" title="Rateio geral: divide igual entre todos os centros">Todos os centros</button>
+      <button class="tab" data-act="limpar">Limpar</button></div>
     ${rows}
     <div class="ed-foot"><span class="ed-sum ${estado}">${txt}</span>
       <div class="ed-actions"><button class="btn-ghost" data-act="cancel">Cancelar</button><button class="btn-save" data-act="save" ${estado==='err'?'disabled':''}>Salvar</button></div></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:8px">Não marcar nenhum centro = a nota fica em <b>Não identificado</b>.</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px">Não marcar nenhum centro = a nota fica em <b>Não identificado</b>. "Todos os centros" = rateio geral (divide igual entre todos).</div>
   </div>`;
   // listeners
   cell.querySelectorAll('[data-modo]').forEach(b=>b.addEventListener('click',()=>{ st.modo=b.dataset.modo; renderEditor(M,gid); }));
+  cell.querySelector('[data-act="todos"]').addEventListener('click',()=>{ st.modo='igual'; centrosReais(M).forEach(c=>st.sel[c].on=true); renderEditor(M,gid); });
+  cell.querySelector('[data-act="limpar"]').addEventListener('click',()=>{ centrosReais(M).forEach(c=>{st.sel[c].on=false;}); renderEditor(M,gid); });
   cell.querySelectorAll('input[data-f="on"]').forEach(inp=>inp.addEventListener('change',()=>{ st.sel[inp.dataset.c].on=inp.checked; renderEditor(M,gid); }));
   cell.querySelectorAll('input[data-f="pct"]').forEach(inp=>inp.addEventListener('input',()=>{ st.sel[inp.dataset.c].valor=round2((num(inp.value)/100)*bruto); atualizarResumo(M,gid); }));
   cell.querySelectorAll('input[data-f="valor"]').forEach(inp=>inp.addEventListener('input',()=>{ st.sel[inp.dataset.c].valor=round2(num(inp.value)); atualizarResumo(M,gid); }));
@@ -987,9 +1010,22 @@ async function salvarCentros(M,E,map){
   E.nf.centros=map;
   const gid=`${E.tab}-${E.idx}`; const row=document.getElementById('editor-'+gid); if(row){row.classList.remove('aberto');row.querySelector('td').innerHTML='';}
   delete EDIT_STATE[gid];
-  document.getElementById('chips-'+gid).innerHTML=chipsCentro(M,E.nf);
-  // recalcula rateio + gráfico do mês selecionado
-  const r=M.porComp[E.comp]; desenharRateio(M,E.comp,num(getM(r,'Total (R$)')));
+  // atualiza SÓ o que depende do rateio, sem recarregar a página nem re-renderizar o painel todo
+  if(E.comp===SEL){
+    const r=M.porComp[E.comp]; const tot=num(getM(r,'Total (R$)'));
+    desenharRateio(M,E.comp,tot);      // tabela de rateio + gráfico de participação + alerta de pendências
+    desenharGuiasDoMes(M,E.comp);      // quebra "por centro" das guias
+    desenharNotas(M,E.comp);           // chips e contagem de pendências
+  } else {
+    const chips=document.getElementById('chips-'+gid); if(chips) chips.innerHTML=chipsCentro(M,E.nf);
+  }
+}
+
+/** Rola até as notas e liga o filtro de pendências (notas sem centro). */
+function irParaPendencias(){
+  NF_PEND=true;
+  if(M_GLOBAL) desenharNotas(M_GLOBAL,SEL);
+  const n=document.getElementById('notas'); if(n) n.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 /* ---- estimativas / anuais / gráficos ---- */
