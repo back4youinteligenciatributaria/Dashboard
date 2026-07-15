@@ -662,10 +662,10 @@ function render(M){
   const wrap=el('<div class="wrap"></div>'); app.appendChild(wrap);
   wrap.appendChild(el('<div id="hero"></div>'));
   wrap.appendChild(el('<div id="guias-mes"></div>'));
+  wrap.appendChild(el('<div id="outras"></div>'));
   wrap.appendChild(el('<div id="alerta"></div>'));
   wrap.appendChild(el('<div id="slim"></div>'));
   wrap.appendChild(el('<div id="prov"></div>'));
-  wrap.appendChild(el('<div id="outras"></div>'));
 
   appendAll(wrap,`<div class="sec-head"><div><h2>Calendário de vencimentos</h2>
     <p>Ano anterior, vigente e próximo. Use as setas para navegar — isso não muda a competência selecionada.</p></div></div>
@@ -763,7 +763,7 @@ function pintarMes(M,comp){
       <p class="comp-note">Os impostos desta competência vencem em ${mesLongo(mesSeguinteComp(comp))}.</p>
       <div class="big num">${brl2(tot)}</div>
       <div class="delta">${dif===null?'':`<span class="chip ${dif>=0?'up':'down'}">${dif>=0?'+':''}${(dif*100).toFixed(1).replace('.',',')}%</span>`}<span>${nfs} notas emitidas · total: ${brl(tot)}</span></div>
-      ${linkUrl?`<a class="link-planilha" href="${esc(linkUrl)}" target="_blank" rel="noopener">▤ Abrir planilha de notas e rateio ↗</a>`:`<span class="link-planilha" aria-disabled="true">Sem planilha de rateio vinculada</span>`}
+      ${MODO_DEMO?`<span class="link-planilha" aria-disabled="true">▤ Abrir planilha de notas e rateio — link real na produção</span>`:(linkUrl?`<a class="link-planilha" href="${esc(linkUrl)}" target="_blank" rel="noopener">▤ Abrir planilha de notas e rateio ↗</a>`:`<span class="link-planilha" aria-disabled="true">Sem planilha de rateio vinculada</span>`)}
     </div>
     <div class="card relacao"><div class="relacao-head"><h2>Impostos a pagar</h2></div>
       <div class="table-scroll"><table class="imp"><thead><tr><th>Tributo</th><th>Devido</th>${M.reg.retencao?'<th>Retido</th>':''}<th>A pagar</th></tr></thead>
@@ -783,9 +783,6 @@ function pintarMes(M,comp){
       <div class="prov-compact-meses">${prov.meses.map(x=>`<div class="pmes ${x.apurado?'':'futuro'}"><span class="pmes-label">${mesLabel(x.comp)} · ${x.apurado?'apurado':'estimado'}</span><span class="pmes-v num ${x.apurado?'':'est'}">${brl(x.v)}</span></div>`).join('')}</div>
       <div class="prov-compact-total"><span>Total do trimestre</span><b class="num">${brl(prov.total)}</b></div></div>`; })():'';
 
-  const outrasComValor=OUTRAS.map(o=>({...o,v:num(getM(r,o.k))})).filter(o=>temMetrica(r,o.k)&&o.v>0);
-  document.getElementById('outras').innerHTML=outrasComValor.length?`<div class="card outras"><h4>Outras guias do mês</h4>${outrasComValor.map(o=>`<div class="outras-row"><i style="background:${o.c}"></i><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}</div>`:'';
-
   desenharRateio(M,comp,tot);
   desenharNotas(M,comp);
 
@@ -799,13 +796,44 @@ function pintarMes(M,comp){
   }
 }
 
+/* Guias que rateiam por centro (aparecem em "Guias do mês", clicáveis). As demais
+   (INSS, FGTS, IRRF sobre dividendos — não proporcionais à receita) vão para "Outras guias". */
+const GUIA_RATEAVEL=new Set(['ISS a Pagar (R$)','PIS a pagar (R$)','COFINS a pagar (R$)','CSLL a pagar (R$)','IR a pagar (R$)',
+  'TOMADAS: ISS a pagar (R$)','TOMADAS: PIS a pagar (R$)','TOMADAS: COFINS a pagar (R$)','TOMADAS: CSLL a pagar (R$)','TOMADAS: IR a pagar (R$)']);
+function guiaEhRateavel(reg){ const f=String((reg||{}).metrica_fonte||'').trim(); if(!f) return false;
+  return f.split('|').map(s=>s.trim()).filter(Boolean).every(k=>GUIA_RATEAVEL.has(k)); }
+function corDaCategoria(cat){ cat=String(cat||'').toLowerCase();
+  if(cat.indexOf('pessoal')>-1) return PAL.inss; if(cat.indexOf('federal')>-1) return PAL.irpj; return PAL.couro; }
+
+/** Quebra o valor de uma guia por centro, somando os mesmos meses que valorDe usaria
+    (respeita acumula_meses, ex.: o trimestre do IRPJ), a partir do rateio autoritativo. */
+function detalheGuiaPorCentro(M,item){
+  const reg=M.regraDe[item.id_regra]||{}; const fonte=String(reg.metrica_fonte||'').trim(); if(!fonte) return [];
+  const chaves=fonte.split('|').map(s=>s.trim()).filter(Boolean); const n=Math.max(1,num(reg.acumula_meses)||1);
+  const ref=String(item.competencia_ref||''); if(!/^\d{4}-\d{2}$/.test(ref)) return [];
+  const [a,m]=ref.split('-').map(Number); const porCentro={};
+  for(let i=0;i<n;i++){ const c=compDe(new Date(a,m-1-i,1));
+    rateioParaComp(M,c).forEach(x=>{ if(!x.centro) return; const v=chaves.reduce((s,k)=>s+num(x[k]),0); porCentro[x.centro]=(porCentro[x.centro]||0)+v; }); }
+  return Object.entries(porCentro).map(([centro,v])=>({centro,v:Math.round(v*100)/100})).filter(x=>x.v>0.004).sort((a,b)=>b.v-a.v);
+}
+
 function desenharGuiasDoMes(M,comp){
-  const itens=M.cal.filter(c=>c.competencia_ref===comp).map(c=>({...c,...M.valorDe(c)})).sort((a,b)=>b.v-a.v);
-  const box=document.getElementById('guias-mes'); if(!itens.length){box.innerHTML='';return;}
-  box.innerHTML=`<div class="card guias-card"><div class="relacao-head"><h2>Guias do mês</h2><span class="lbl">o que vence a partir desta competência</span></div>
-    ${itens.map(it=>{ const status=it.v<=0?'aberto':(it.est?'estimativa':'fechada'); const rot={fechada:'Fechada',estimativa:'Estimativa',aberto:'Em aberto'}[status];
+  const itens=M.cal.filter(c=>c.competencia_ref===comp).map(c=>({...c,...M.valorDe(c)}));
+  const fiscais=itens.filter(it=>guiaEhRateavel(M.regraDe[it.id_regra])).sort((a,b)=>b.v-a.v);
+  const outras=itens.filter(it=>!guiaEhRateavel(M.regraDe[it.id_regra]) && it.v>0 && String((M.regraDe[it.id_regra]||{}).periodicidade)!=='Anual').sort((a,b)=>b.v-a.v);
+
+  const box=document.getElementById('guias-mes');
+  box.innerHTML=fiscais.length?`<div class="card guias-card"><div class="relacao-head"><h2>Guias do mês</h2><span class="lbl">tributos que vencem a partir desta competência · clique para ver por centro</span></div>
+    ${fiscais.map(it=>{ const status=it.v<=0?'aberto':(it.est?'estimativa':'fechada'); const rot={fechada:'Fechada',estimativa:'Estimativa',aberto:'Em aberto'}[status];
+      const det=it.v>0?detalheGuiaPorCentro(M,it):[];
       return `<div class="guia-row"><div class="guia-main"><span class="guia-status status-${status}">${rot}</span><span class="guia-nome">${esc(it.descricao)}</span>
-        <b class="num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (estimativa)':''}</b></div></div>`; }).join('')}</div>`;
+        <b class="num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (estimativa)':''}</b>
+        ${det.length?`<button class="btn-detalhe" onclick="const d=this.closest('.guia-row').querySelector('.guia-detalhe');d.classList.toggle('aberto');this.textContent=d.classList.contains('aberto')?'Ocultar':'Por centro'">Por centro</button>`:''}</div>
+        ${det.length?`<div class="guia-detalhe">${det.map(d=>`<div class="guia-detalhe-row"><span>${esc(d.centro)}</span><b class="num">${brl(d.v)}</b></div>`).join('')}</div>`:''}</div>`;}).join('')}</div>`:'';
+
+  const ob=document.getElementById('outras');
+  ob.innerHTML=outras.length?`<div class="card outras"><h4>Outras guias do mês</h4><div class="lbl" style="margin:-4px 0 8px;text-transform:none;letter-spacing:0">não rateiam por centro (folha/retenções)</div>
+    ${outras.map(it=>`<div class="outras-row"><i style="background:${corDaCategoria(it.categoria)}"></i><span>${esc(it.descricao)}</span><b class="num">${brl(it.v)}</b></div>`).join('')}</div>`:'';
 }
 
 function desenharRateio(M,comp,tot){
