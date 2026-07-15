@@ -334,7 +334,7 @@ const TRIB_DEFS = {
 const REGIMES = {
   'lucro presumido': {tributos:['ISS','PIS','COFINS','CSLL','IRPJ'], retencao:true,  provisaoTrimestral:true},
   'lucro real':      {tributos:['ISS','PIS','COFINS','CSLL','IRPJ'], retencao:true,  provisaoTrimestral:true},
-  'simples nacional':{tributos:['DAS','ISS'],                        retencao:false, provisaoTrimestral:false},
+  'simples nacional':{tributos:['DAS'],                             retencao:false, provisaoTrimestral:false},
 };
 function regimeDe(cfg){ return REGIMES[String(cfg.regime||'').trim().toLowerCase()] || REGIMES['lucro presumido']; }
 
@@ -826,7 +826,7 @@ function pintarMes(M,comp){
    (INSS, FGTS, IRRF sobre dividendos — não proporcionais à receita) vão para "Outras guias". */
 const GUIA_RATEAVEL=new Set(['ISS a Pagar (R$)','PIS a pagar (R$)','COFINS a pagar (R$)','CSLL a pagar (R$)','IR a pagar (R$)',
   'TOMADAS: ISS a pagar (R$)','TOMADAS: PIS a pagar (R$)','TOMADAS: COFINS a pagar (R$)','TOMADAS: CSLL a pagar (R$)','TOMADAS: IR a pagar (R$)',
-  'IRRF Dividendos (R$)']);   // IRRF sobre dividendos rateia por sócio/centro
+  'IRRF Dividendos (R$)','DAS a Pagar (R$)']);   // IRRF e DAS rateiam por centro
 function guiaEhRateavel(reg){ const f=String((reg||{}).metrica_fonte||'').trim(); if(!f) return false;
   return f.split('|').map(s=>s.trim()).filter(Boolean).every(k=>GUIA_RATEAVEL.has(k)); }
 function corDaCategoria(cat){ cat=String(cat||'').toLowerCase();
@@ -1046,15 +1046,19 @@ function irParaPendencias(){
 /* ---- estimativas / anuais / gráficos ---- */
 function valorAcumuladoColuna(M,ref,coluna,n){ const [a,m]=ref.split('-').map(Number); let total=0;
   for(let i=0;i<n;i++){ const c=compDe(new Date(a,m-1-i,1)); const r=M.porComp[c]; total+=r?num(getM(r,coluna)):nivelarTrimestre(M,c,coluna); } return Math.round(total*100)/100; }
+/* Desembolso por tributo no mês de vencimento — genérico por regime: para cada
+   tributo visível, acha a regra cuja metrica_fonte inclui a coluna "a pagar" dele
+   e a guia que vence neste mês (respeitando acumula_meses). Serve Presumido (ISS/
+   PIS/COFINS/CSLL/IRPJ) e Simples (DAS) sem hard-code de id de regra. */
 function desembolsoPorTributoNoMes(M,ano,mes){
-  const acha=idr=>M.cal.find(c=>{ if(c.id_regra!==idr)return false; const d=dParse(c.vencimento); return d.getFullYear()===ano&&d.getMonth()===mes; });
-  const r01=acha('R01'),r02=acha('R02'),r07=acha('R07');
   const out={}; M.tribs.forEach(t=>out[t.pag]=0);
-  if(r01&&out['ISS a Pagar (R$)']!==undefined) out['ISS a Pagar (R$)']=valorAcumuladoColuna(M,r01.competencia_ref,'ISS a Pagar (R$)',1);
-  if(r02){ if('PIS a pagar (R$)'in out)out['PIS a pagar (R$)']=valorAcumuladoColuna(M,r02.competencia_ref,'PIS a pagar (R$)',1);
-           if('COFINS a pagar (R$)'in out)out['COFINS a pagar (R$)']=valorAcumuladoColuna(M,r02.competencia_ref,'COFINS a pagar (R$)',1); }
-  if(r07){ if('CSLL a pagar (R$)'in out)out['CSLL a pagar (R$)']=valorAcumuladoColuna(M,r07.competencia_ref,'CSLL a pagar (R$)',3);
-           if('IR a pagar (R$)'in out)out['IR a pagar (R$)']=valorAcumuladoColuna(M,r07.competencia_ref,'IR a pagar (R$)',3); }
+  M.tribs.forEach(t=>{
+    const reg=(M.regras||[]).find(r=>String(r.metrica_fonte||'').split('|').map(s=>s.trim()).includes(t.pag));
+    if(!reg) return;
+    const guia=M.cal.find(c=>{ if(c.id_regra!==reg.id)return false; const d=dParse(c.vencimento); return d.getFullYear()===ano&&d.getMonth()===mes; });
+    if(!guia) return;
+    out[t.pag]=valorAcumuladoColuna(M,guia.competencia_ref,t.pag,Math.max(1,num(reg.acumula_meses)||1));
+  });
   return out;
 }
 function desenharEstimativas(M){
