@@ -546,8 +546,10 @@ function preparar(raw){
   const impostos=r=>tribs.reduce((s,t)=>s+num(getM(r,t.pag)),0);
   const retido=r=>reg.retencao ? tribs.reduce((s,t)=>s+(t.ret?num(getM(r,t.ret)):0),0) : 0;
 
-  const ult3=empresa.slice(-3);
-  const media=k=>ult3.length?ult3.reduce((s,r)=>s+num(getM(r,k)),0)/ult3.length:0;
+  // média dos últimos meses COM dados (não as últimas linhas, que num template novo estão zeradas)
+  const comData=empresa.filter(r=>num(getM(r,'Total (R$)'))>0);
+  const baseMedia=(comData.length?comData:empresa).slice(-3);
+  const media=k=>baseMedia.length?baseMedia.reduce((s,r)=>s+num(getM(r,k)),0)/baseMedia.length:0;
   function somaMetricas(comp,chaves){ const r=porComp[comp]; return chaves.reduce((s,k)=>s+(r?num(getM(r,k)):media(k)),0); }
   function valorDe(item){
     const rr=regraDe[item.id_regra]||{};
@@ -642,9 +644,9 @@ function miniGradeHTML(ano,mes,marc,destaque){ const cel=gradeDoMes(ano,mes);
     return '<div class="mini-cel '+cls+'" '+(tit?('title="'+esc(tit)+'"'):'')+'>'+d+'</div>'; }).join('');
   return '<div class="mini-dow">'+DOW.map(d=>'<span>'+d[0].toUpperCase()+'</span>').join('')+'</div><div class="mini-grid">'+grade+'</div>'; }
 function vencimentosDoMes(M,ano,mes){ const marc=new Map();
-  M.cal.forEach(c=>{ const {v,est}=M.valorDe(c); if(v<=0) return; const d=dParse(c.vencimento);
+  M.cal.forEach(c=>{ const {v,est}=M.valorDe(c); const d=dParse(c.vencimento);
     if(d.getFullYear()!==ano||d.getMonth()!==mes) return; if(!marc.has(d.getDate()))marc.set(d.getDate(),[]);
-    marc.get(d.getDate()).push({descricao:c.descricao,valor:v,est}); }); return marc; }
+    marc.get(d.getDate()).push({descricao:c.descricao,valor:v>0?v:null,est}); }); return marc; }
 
 /* ===================== RENDER ===================== */
 let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='', NF_PEND=false;
@@ -733,16 +735,17 @@ function render(M){
   function renderCarrossel(){
     let {ano,mes}=calCentro;
     const prevD=new Date(ano,mes-1,1), nextD=new Date(ano,mes+1,1);
-    const marc=vencimentosDoMes(M,ano,mes); const total=Array.from(marc.values()).flat().reduce((s,x)=>s+x.valor,0);
+    const marc=vencimentosDoMes(M,ano,mes); const itens=Array.from(marc.values()).flat();
+    const total=itens.reduce((s,x)=>s+(x.valor||0),0);
     document.getElementById('cal-titulo').textContent=mesLongo(compDe(new Date(ano,mes,1)));
-    document.getElementById('cal-total').textContent=total>0?brl(total):'sem guias com valor neste mês';
+    document.getElementById('cal-total').textContent=!itens.length?'sem guias neste mês':(total>0?brl(total):'valores a apurar');
     document.getElementById('cal-prev').innerHTML=dentro(prevD.getFullYear())?miniGradeHTML(prevD.getFullYear(),prevD.getMonth(),vencimentosDoMes(M,prevD.getFullYear(),prevD.getMonth()),false):'';
     document.getElementById('cal-atual').innerHTML=miniGradeHTML(ano,mes,marc,true);
     document.getElementById('cal-next').innerHTML=dentro(nextD.getFullYear())?miniGradeHTML(nextD.getFullYear(),nextD.getMonth(),vencimentosDoMes(M,nextD.getFullYear(),nextD.getMonth()),false):'';
     const agenda=Array.from(marc.entries()).sort((a,b)=>a[0]-b[0]).map(([dia,items])=>items.map(it=>{
-      const vh=it.valor===null?'<span style="color:var(--muted)">—</span>':`<b class="num${it.est?' estimativa':''}">${brl(it.valor)}${it.est?' (estimativa)':''}</b>`;
+      const vh=it.valor===null?'<span style="color:var(--muted)">a apurar</span>':`<b class="num${it.est?' estimativa':''}">${brl(it.valor)}${it.est?' (estimativa)':''}</b>`;
       return '<div class="row"><span>'+String(dia).padStart(2,'0')+' · '+esc(it.descricao)+'</span>'+vh+'</div>'; }).join('')).join('');
-    document.getElementById('cal-agenda').innerHTML=agenda||'<div class="empty">Nenhuma guia com valor neste mês.</div>';
+    document.getElementById('cal-agenda').innerHTML=agenda||'<div class="empty">Nenhuma guia neste mês.</div>';
     document.getElementById('cal-prev-btn').disabled = !dentro(new Date(ano,mes-1,1).getFullYear());
     document.getElementById('cal-next-btn').disabled = !dentro(new Date(ano,mes+1,1).getFullYear());
   }
