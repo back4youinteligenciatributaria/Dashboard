@@ -34,6 +34,7 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .logo{font-weight:900;font-size:19px;letter-spacing:-.02em;white-space:nowrap;line-height:1}
 .logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
 .brand-sub{font-size:15px;color:var(--brand-teal);font-weight:700;margin-top:2px}
+.brand-sub .reg{font-size:11px;color:var(--muted);font-weight:600;margin-left:6px}
 .voltar{display:inline-block;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:4px}
 .voltar:hover{color:var(--brand-teal)}
 .spacer{flex:1}
@@ -58,6 +59,10 @@ option{color:#111;font-weight:500}
 .chip{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px}
 .chip.up{background:var(--receita-soft);color:var(--receita)}
 .chip.down{background:var(--alerta-soft);color:var(--alerta)}
+.link-planilha{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-size:12.5px;font-weight:700;
+  color:var(--brand-teal);text-decoration:none;background:var(--receita-soft);padding:8px 14px;border-radius:20px;align-self:flex-start}
+.link-planilha:hover{filter:brightness(1.03)}
+.link-planilha[aria-disabled="true"]{background:var(--surface-warm);color:var(--muted);cursor:default}
 
 .relacao{padding:20px 24px}
 .relacao-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px;flex-wrap:wrap}
@@ -68,11 +73,8 @@ table.imp th:first-child{text-align:left}
 table.imp td{padding:7px 0;border-bottom:1px solid var(--line);text-align:right}
 table.imp td:first-child{text-align:left;font-weight:600}
 table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:800;padding-top:9px}
-.btn{
-  display:inline-flex;align-items:center;gap:6px;margin-top:14px;
-  font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none;
-  padding:8px 0;border-top:1px dashed var(--line-2);width:100%;justify-content:center;
-}
+.btn{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:12.5px;font-weight:700;color:var(--brand-teal);
+  text-decoration:none;padding:8px 0;border-top:1px dashed var(--line-2);width:100%;justify-content:center}
 .btn:hover{color:var(--brand-dark)}
 
 .slim{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px}
@@ -90,7 +92,6 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .status-estimativa{background:#DCF3E9;color:#3FA680}
 .status-aberto{background:var(--sinal-soft);color:var(--sinal)}
 .guia-nome{flex:1;font-size:13.5px;font-weight:600;min-width:120px}
-.guia-valor{font-size:14px}
 .guia-detalhe{display:none;margin:8px 0 0 0;padding:8px 12px;background:var(--surface-warm);border-radius:8px}
 .guia-detalhe.aberto{display:block}
 .guia-detalhe-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0}
@@ -122,14 +123,12 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .sec-head h2{font-size:16px;font-weight:700;letter-spacing:-.01em}
 .sec-head p{font-size:13px;color:var(--muted)}
 
-/* calendário carrossel */
 .cal-card{padding:20px 22px}
 .cal-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
-.cal-arrow{
-  width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface-warm);
-  color:var(--ink); font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;
-}
+.cal-arrow{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface-warm);
+  color:var(--ink);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .cal-arrow:hover{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
+.cal-arrow:disabled{opacity:.35;cursor:default}
 .cal-nav h3{font-size:14px;font-weight:700;min-width:180px;text-align:center;text-transform:capitalize}
 .cal-strip{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:16px;align-items:start}
 @media(max-width:700px){.cal-strip{grid-template-columns:1fr}}
@@ -156,40 +155,14 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .due .body{min-width:0;flex:1}
 .due .nm{display:block;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .due .vl{font-size:12px;color:var(--ink-2);font-weight:600}
-.estimativa, .vl.est{color:#3FA680!important; font-weight:800!important}
+.estimativa,.vl.est{color:#3FA680!important;font-weight:800!important}
 .due .vl.est::after{content:' (estimado)';font-weight:600;font-size:10px;color:#3FA680}
-.due .adj{font-size:10.5px;color:var(--sinal)}
 
 .charts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .charts3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 @media(max-width:900px){.charts{grid-template-columns:1fr}.charts3{grid-template-columns:1fr}}
 .chart{padding:20px 22px 16px}
 .chart h3{font-size:14px;font-weight:700;margin-bottom:2px;text-transform:capitalize}
-
-.campo-texto,.form-nf input,.form-nf textarea{
-  width:100%;font-family:var(--sans);font-size:13px;color:var(--ink);
-  border:1px solid var(--line-2);border-radius:8px;padding:9px 11px;background:var(--surface-warm);
-  margin-top:10px;resize:vertical;
-}
-.campo-texto:focus,.form-nf input:focus,.form-nf textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-.form-nf{display:flex;flex-direction:column}
-.btn-acao{
-  margin-top:12px;font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;
-  background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto2));
-  border:none;border-radius:20px;padding:9px 18px;cursor:pointer;align-self:flex-start;
-}
-.btn-acao:hover{filter:brightness(1.05)}
-.msg-status{font-size:12px;margin-top:8px;min-height:16px}
-.msg-status.enviando{color:var(--muted)}
-.msg-status.sucesso{color:var(--receita);font-weight:600}
-.msg-status.erro{color:var(--alerta);font-weight:600}
-.comp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
-.comp-head h3{margin-bottom:0}
-.mini-select{
-  font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-2);
-  background:var(--surface-warm);border:1px solid var(--line-2);border-radius:12px;
-  padding:4px 9px;cursor:pointer;
-}
 .chart .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
 .legend{display:flex;flex-wrap:wrap;gap:11px;margin-bottom:10px;font-size:11.5px;color:var(--ink-2)}
 .legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
@@ -200,6 +173,24 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .pie-legend-row:first-child{border-top:none}
 .pie-legend-row i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
 .pie-legend-row span{flex:1;color:var(--ink-2)}
+
+.campo-texto,.form-nf input,.form-nf textarea{width:100%;font-family:var(--sans);font-size:13px;color:var(--ink);
+  border:1px solid var(--line-2);border-radius:8px;padding:9px 11px;background:var(--surface-warm);margin-top:10px;resize:vertical}
+.campo-texto:focus,.form-nf input:focus,.form-nf textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.form-nf{display:flex;flex-direction:column}
+.btn-acao{margin-top:12px;font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto-2));
+  border:none;border-radius:20px;padding:9px 18px;cursor:pointer;align-self:flex-start}
+.btn-acao:hover{filter:brightness(1.05)}
+.btn-acao:disabled{opacity:.5;cursor:default}
+.msg-status{font-size:12px;margin-top:8px;min-height:16px}
+.msg-status.enviando{color:var(--muted)}
+.msg-status.sucesso{color:var(--receita);font-weight:600}
+.msg-status.erro{color:var(--alerta);font-weight:600}
+.comp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.comp-head h3{margin-bottom:0}
+.mini-select{font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-2);
+  background:var(--surface-warm);border:1px solid var(--line-2);border-radius:12px;padding:4px 9px;cursor:pointer}
 
 #rateio{scroll-margin-top:80px}
 .rateio-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px}
@@ -213,23 +204,59 @@ table.rat tbody tr.nid td{background:var(--alerta-soft)}
 .share{position:relative;height:5px;border-radius:3px;background:var(--surface-warm);margin-top:5px;overflow:hidden}
 .share i{position:absolute;inset:0 auto 0 0;background:var(--receita);border-radius:3px;display:block}
 tr.nid .share i{background:var(--alerta)}
-.btn-detalhe{
-  font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--brand-teal);
-  background:var(--surface-warm);border:1px solid var(--line-2);border-radius:14px;
-  padding:5px 12px;cursor:pointer;white-space:nowrap;
-}
-.btn-detalhe:hover{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
-tr.detail-row{display:none}
-tr.detail-row.aberto{display:table-row}
-tr.detail-row td{padding:0 10px 14px;border-bottom:1px solid var(--line)}
-table.rat-detalhe{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface-warm);border-radius:8px;overflow:hidden}
-table.rat-detalhe th{text-align:right;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 10px 6px}
-table.rat-detalhe th:first-child{text-align:left}
-table.rat-detalhe td{padding:6px 10px;text-align:right}
-table.rat-detalhe td:first-child{text-align:left;display:flex;align-items:center;gap:7px}
-table.rat-detalhe td i{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.rat-detalhe-outras{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-2)}
-.rat-detalhe-outras .outras-row{padding:4px 10px;font-size:12px}
+
+/* Notas do mês (tomadas / prestadas) + editor de centro */
+#notas{scroll-margin-top:80px}
+.tabs{display:inline-flex;gap:4px;background:var(--surface-warm);border:1px solid var(--line-2);border-radius:20px;padding:3px}
+.tab{font-family:var(--sans);font-size:12.5px;font-weight:700;color:var(--ink-2);background:none;border:none;
+  padding:6px 14px;border-radius:16px;cursor:pointer}
+.tab.on{background:var(--brand-teal);color:#fff}
+.nf-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.nf-search{font-family:var(--sans);font-size:12.5px;border:1px solid var(--line-2);border-radius:16px;padding:6px 12px;background:var(--surface-warm);min-width:180px}
+table.nf{width:100%;border-collapse:collapse;font-size:13px}
+table.nf th{text-align:left;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line-2)}
+table.nf th.r,table.nf td.r{text-align:right}
+table.nf td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.nf tbody tr.nf-open{background:var(--surface-warm)}
+.nf-cp{font-weight:600}
+.nf-tipo{font-size:11px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.chip-c{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--receita-soft);color:var(--brand-dark);display:inline-flex;gap:5px;align-items:center}
+.chip-c.nid{background:var(--alerta-soft);color:var(--alerta)}
+.chip-c i{width:7px;height:7px;border-radius:2px}
+.btn-edit{font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--brand-teal);background:var(--surface-warm);
+  border:1px solid var(--line-2);border-radius:14px;padding:5px 12px;cursor:pointer;white-space:nowrap}
+.btn-edit:hover{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
+tr.editor-row{display:none}
+tr.editor-row.aberto{display:table-row}
+tr.editor-row>td{background:var(--surface-warm);padding:0 10px 14px}
+.editor{padding:14px;background:var(--surface);border:1px solid var(--line-2);border-radius:10px}
+.editor-modos{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.editor-modos .tab{font-size:11.5px;padding:5px 12px}
+.ed-row{display:grid;grid-template-columns:16px 1fr 108px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.ed-row:first-child{border-top:none}
+.ed-row i{width:10px;height:10px;border-radius:2px}
+.ed-row label{font-size:13px;font-weight:600}
+.ed-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand-teal);cursor:pointer}
+.ed-num{width:100%;font-family:var(--sans);font-size:12.5px;text-align:right;border:1px solid var(--line-2);border-radius:8px;padding:6px 8px;background:var(--surface-warm)}
+.ed-num:disabled{opacity:.4;background:transparent;border-color:transparent}
+.ed-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line-2);flex-wrap:wrap}
+.ed-sum{font-size:12px;font-weight:700}
+.ed-sum.ok{color:var(--receita)} .ed-sum.warn{color:var(--sinal)} .ed-sum.err{color:var(--alerta)}
+.ed-actions{display:flex;gap:8px}
+.btn-ghost{font-family:var(--sans);font-size:12.5px;font-weight:700;color:var(--ink-2);background:none;border:1px solid var(--line-2);border-radius:18px;padding:8px 16px;cursor:pointer}
+.btn-save{font-family:var(--sans);font-size:12.5px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto-2));border:none;border-radius:18px;padding:8px 18px;cursor:pointer}
+.btn-save:disabled{opacity:.45;cursor:default}
+
+/* modal de confirmação */
+.modal-bg{position:fixed;inset:0;background:rgba(7,48,52,.42);display:none;align-items:center;justify-content:center;z-index:60;padding:24px}
+.modal-bg.on{display:flex}
+.modal{background:var(--surface);border-radius:14px;max-width:440px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(7,48,52,.3)}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:8px}
+.modal p{font-size:13.5px;color:var(--ink-2);margin-bottom:8px}
+.modal .resumo{background:var(--surface-warm);border-radius:8px;padding:10px 12px;font-size:12.5px;margin:10px 0 4px}
+.modal .resumo div{display:flex;justify-content:space-between;padding:2px 0}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px;font-weight:700}
@@ -237,104 +264,76 @@ table.rat-detalhe td i{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 .state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
 .spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.demo-flag{background:#DCF3E9;color:#2f7d5c;font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px}
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-
-/* Tabelas nunca devem forçar o layout a estourar a largura da tela — rolam por dentro. */
 .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
 .table-scroll table{min-width:420px}
-table.rat{min-width:560px}
-
+table.rat{min-width:560px} table.nf{min-width:620px}
 @media(max-width:600px){
-  .wrap{padding:0 14px 56px}
-  .bar{padding:12px 14px;gap:10px}
-  .logo{font-size:17px}
-  .brand-sub{font-size:10.5px}
-  select{padding:8px 12px;font-size:13px}
-  .picker .lbl{display:none} /* "Competência" já fica óbvio pelo conteúdo do select */
-
-  .hero{margin:18px 0 12px;gap:12px}
-  .hero-main{padding:18px 18px}
-  .comp-title{font-size:21px}
-  .big{font-size:clamp(26px,8vw,34px)}
-  .relacao{padding:16px 16px}
-
-  .slim{gap:10px}
-  .stat{padding:13px 14px}
-  .stat .v{font-size:18px}
-
-  .prov-compact,.outras{padding:14px 16px}
-  .prov-compact-meses{gap:8px}
-  .pmes{padding:8px 10px}
-
-  .cal-card{padding:14px 14px}
-  .cal-nav{gap:8px}
-  .cal-nav h3{min-width:0;font-size:12.5px}
-  .cal-arrow{width:26px;height:26px;font-size:13px;flex-shrink:0}
-  .cal-strip{gap:10px}
-  .mini-cel{font-size:9.5px}
-  .cal-total{font-size:14px}
-
-  .sec-head{margin:24px 0 10px}
-  .sec-head h2{font-size:14.5px}
-
-  .months{gap:10px}
-  .month{padding:12px 13px 13px}
-
-  .chart{padding:16px 16px 13px}
-  .charts,.charts3{gap:12px}
-
+  .wrap{padding:0 14px 56px}.bar{padding:12px 14px;gap:10px}.logo{font-size:17px}.brand-sub{font-size:10.5px}
+  select{padding:8px 12px;font-size:13px}.picker .lbl{display:none}
+  .hero{margin:18px 0 12px;gap:12px}.hero-main{padding:18px 18px}.comp-title{font-size:21px}
+  .big{font-size:clamp(26px,8vw,34px)}.relacao{padding:16px 16px}
+  .slim{gap:10px}.stat{padding:13px 14px}.stat .v{font-size:18px}
+  .cal-card{padding:14px 14px}.cal-nav h3{min-width:0;font-size:12.5px}.cal-arrow{width:26px;height:26px}
+  .sec-head{margin:24px 0 10px}.sec-head h2{font-size:14.5px}
+  .chart{padding:16px 16px 13px}.charts,.charts3{gap:12px}
+  .ed-row{grid-template-columns:16px 1fr 92px}
   footer{flex-direction:column;gap:4px}
 }
 </style>
 </head>
 <body>
+<div id="app"><div class="state"><div class="spin" role="status" aria-label="Carregando"></div><p>Carregando o painel…</p></div></div>
 
-<div id="app">
-  <div class="state">
-    <div class="spin" role="status" aria-label="Carregando"></div>
-    <p>Carregando o painel…</p>
+<div class="modal-bg" id="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+  <div class="modal">
+    <h3 id="modal-titulo">Salvar alteração de rateio?</h3>
+    <p id="modal-texto"></p>
+    <div class="resumo" id="modal-resumo"></div>
+    <p style="font-size:12px;color:var(--muted)">Isso grava por cima da planilha de rateio deste mês e recalcula os números na hora.</p>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="modal-cancelar">Cancelar</button>
+      <button class="btn-save" id="modal-confirmar">Sim, salvar</button>
+    </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+/* ===== CONFIG ===== */
+// Em produção, aponte para o Apps Script. Vazio = modo demonstração (roda sozinho, salva localmente).
+const API_URL = '';
 
 const PAL = {
-  // Paleta padronizada por família de tributo (item pedido pelo cliente):
-  iss:'#3FA680',        // ISS (e DAS, se houver Simples) — verdinho
-  pis:'#A7715D',        // PIS — marrom claro
-  cofins:'#C79873',     // COFINS — marrom claro (tom irmão do PIS)
-  csll:'#8F5A4A',       // CSLL — marrom mais escuro
-  irpj:'#6B4236',       // IRPJ — marrom mais escuro (tom irmão da CSLL)
-  inss:'#CBA88F',       // INSS — bege
-  fgts:'#B89572',       // FGTS — bege (tom irmão do INSS)
-  estimativa:'#3FA680', // valor estimado: verde mais claro, sempre em negrito
+  iss:'#3FA680', das:'#3FA680', pis:'#A7715D', cofins:'#C79873', csll:'#8F5A4A', irpj:'#6B4236',
+  inss:'#CBA88F', fgts:'#B89572', estimativa:'#3FA680',
   musgo:'#1D3B37', petroleo:'#113D39', vinho:'#731007', muted:'#8A7D70', line:'#E4D9C9'
 };
-const TRIB = [
-  {k:'ISS a Pagar (R$)',    n:'ISS',    c:PAL.iss},
-  {k:'PIS a pagar (R$)',    n:'PIS',    c:PAL.pis},
-  {k:'COFINS a pagar (R$)', n:'COFINS', c:PAL.cofins},
-  {k:'CSLL a pagar (R$)',   n:'CSLL',   c:PAL.csll},
-  {k:'IR a pagar (R$)',     n:'IRPJ',   c:PAL.irpj},
-];
+const CENTRO_PAL = ['#3FA680','#A7715D','#0F8C85','#8F5A4A','#649C8A','#C79873','#113D39','#CBA88F','#6B4236','#731007'];
+
+/* Definição de tributos por REGIME. Cada tributo aponta para colunas da aba Empresa/Rateio.
+   O painel só mostra um tributo se o regime o inclui E se o valor não estiver vazio. */
+const TRIB_DEFS = {
+  ISS:    {n:'ISS',    c:PAL.iss,    dev:'ISS Devido (R$)',    ret:'ISS Retido (R$)',    pag:'ISS a Pagar (R$)'},
+  PIS:    {n:'PIS',    c:PAL.pis,    dev:'PIS Devido (R$)',    ret:'PIS Retido (R$)',    pag:'PIS a pagar (R$)'},
+  COFINS: {n:'COFINS', c:PAL.cofins, dev:'COFINS Devido (R$)', ret:'COFINS Retido (R$)', pag:'COFINS a pagar (R$)'},
+  CSLL:   {n:'CSLL',   c:PAL.csll,   dev:'CSLL Devida (R$)',   ret:'CSLL Retida (R$)',   pag:'CSLL a pagar (R$)'},
+  IRPJ:   {n:'IRPJ',   c:PAL.irpj,   dev:'IR Devido (R$)',     ret:'IR Retido (R$)',     pag:'IR a pagar (R$)'},
+  DAS:    {n:'DAS',    c:PAL.das,    dev:'DAS Devido (R$)',    ret:null,                 pag:'DAS a Pagar (R$)'},
+};
+const REGIMES = {
+  'lucro presumido': {tributos:['ISS','PIS','COFINS','CSLL','IRPJ'], retencao:true,  provisaoTrimestral:true},
+  'lucro real':      {tributos:['ISS','PIS','COFINS','CSLL','IRPJ'], retencao:true,  provisaoTrimestral:true},
+  'simples nacional':{tributos:['DAS','ISS'],                        retencao:false, provisaoTrimestral:false},
+};
+function regimeDe(cfg){ return REGIMES[String(cfg.regime||'').trim().toLowerCase()] || REGIMES['lucro presumido']; }
+
 const OUTRAS = [
   {n:'IRRF sobre dividendos', k:'IRRF Dividendos (R$)', c:PAL.irpj},
   {n:'INSS — DARF',           k:'INSS a Pagar (R$)',    c:PAL.inss},
   {n:'FGTS',                  k:'FGTS a Pagar (R$)',    c:PAL.fgts},
-];
-// Nenhuma regra tem o valor escondido no momento — todas mostram seu valor normalmente.
-const REGRAS_SEM_VALOR_EXIBIDO = new Set();
-const CENTRO_PAL = [PAL.iss, PAL.pis, PAL.inss, PAL.csll, PAL.musgo, PAL.cofins, PAL.fgts, PAL.petroleo];
-/** [nome, coluna devido, coluna retido, coluna a pagar] — usado na relação do topo e no detalhe do rateio. */
-const TRIB_ROWS = [
-  ['ISS','ISS Devido (R$)','ISS Retido (R$)','ISS a Pagar (R$)'],
-  ['PIS','PIS Devido (R$)','PIS Retido (R$)','PIS a pagar (R$)'],
-  ['COFINS','COFINS Devido (R$)','COFINS Retido (R$)','COFINS a pagar (R$)'],
-  ['CSLL','CSLL Devida (R$)','CSLL Retida (R$)','CSLL a pagar (R$)'],
-  ['IRPJ','IR Devido (R$)','IR Retido (R$)','IR a pagar (R$)'],
 ];
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const DOW = ['dom','seg','ter','qua','qui','sex','sáb'];
@@ -347,325 +346,320 @@ const mesLabel = c => { const [a,m]=c.split('-'); return MESES[+m-1]+'/'+a.slice
 const mesLongo = c => { const [a,m]=c.split('-'); return MESES[+m-1]+' '+a; };
 const hoje = new Date(); hoje.setHours(0,0,0,0);
 const dParse = s => { const [a,m,d]=String(s).split('-').map(Number); return new Date(a,m-1,d); };
-const addM = (d,n) => new Date(d.getFullYear(), d.getMonth()+n, d.getDate());
 const compDe = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-/** Competência do mês SEGUINTE ao informado — é para lá que os impostos vencem. */
 const mesSeguinteComp = c => { const [a,m]=c.split('-').map(Number); return compDe(new Date(a,m,1)); };
 const el = h => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
-function appendAll(parent, h){
-  const t = document.createElement('template'); t.innerHTML = h.trim();
-  Array.from(t.content.children).forEach(n => parent.appendChild(n));
-}
+function appendAll(parent, h){ const t=document.createElement('template'); t.innerHTML=h.trim(); Array.from(t.content.children).forEach(n=>parent.appendChild(n)); }
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const normKey = s => String(s).trim().toLowerCase().replace(/\s+/g,' ');
-function getM(row, key){
-  if (!row) return undefined;
-  if (key in row) return row[key];
-  if (!row.__norm) row.__norm = new Map(Object.keys(row).map(k=>[normKey(k), row[k]]));
-  return row.__norm.get(normKey(key));
+function getM(row,key){ if(!row) return undefined; if(key in row) return row[key];
+  if(!row.__norm) row.__norm=new Map(Object.keys(row).map(k=>[normKey(k),row[k]])); return row.__norm.get(normKey(key)); }
+/** Uma métrica "existe" (deve aparecer) se a coluna estiver presente e não vazia. Vazio some. */
+function temMetrica(row,key){ const v=getM(row,key); return v!==undefined && v!==null && v!==''; }
+
+/* ===================== DADOS DE DEMONSTRAÇÃO ===================== */
+/* Estrutura idêntica ao que o Apps Script devolve: config, empresa, rateio, regras,
+   calendario, nfs (por competência) e links (por competência). */
+const DEMO = (function(){
+  const centros = ['Não identificado','Sharon Admoni','Rafael Sanches Simone','Vladimir Cordeiro de Carvalho','Flavia M Duch Simone','Clínica (rateio geral)'];
+  const config = { cliente_id:'482913', razao_social:'DSCA Serviços Médicos Ltda', cnpj:'54.123.456/0001-00',
+    municipio:'São Paulo', estado:'SP', regime:'Lucro Presumido', periodicidade_irpj_csll:'Trimestral',
+    centros: centros.map((n,i)=>({centro:n, ordem_exibicao:i})) };
+
+  // Empresa (consolidado) por competência — verdade fiscal
+  const empresa = [
+    {competencia:'2026-01', bruto:218928.47, nfs:22},
+    {competencia:'2026-02', bruto:232583.96, nfs:20},
+    {competencia:'2026-03', bruto:248182.04, nfs:15},
+    {competencia:'2026-04', bruto:187231.39, nfs:24},
+    {competencia:'2026-05', bruto:214870.12, nfs:19},
+    {competencia:'2026-06', bruto:241902.55, nfs:23},
+  ].map(r=>montarEmpresa(r));
+
+  function montarEmpresa(r){
+    const b=r.bruto;
+    const iss=b*0.02, pisD=b*0.0065, pisR=b*0.0026, cofD=b*0.03, cofR=b*0.012,
+      cslD=b*0.32*0.09, cslR=b*0.01, irD=b*0.32*0.15, irR=b*0.015,
+      irAd=Math.max(0,(b*0.32-20000)*0.10);
+    return { competencia:r.competencia, 'Nº NFs':r.nfs, 'Total (R$)':round(b),
+      'ISS Devido (R$)':round(iss),'ISS Retido (R$)':0,'ISS a Pagar (R$)':round(iss),
+      'PIS Devido (R$)':round(pisD),'PIS Retido (R$)':round(pisR),'PIS a pagar (R$)':round(pisD-pisR),
+      'COFINS Devido (R$)':round(cofD),'COFINS Retido (R$)':round(cofR),'COFINS a pagar (R$)':round(cofD-cofR),
+      'CSLL Devida (R$)':round(cslD),'CSLL Retida (R$)':round(cslR),'CSLL a pagar (R$)':round(cslD-cslR),
+      'IR Devido (R$)':round(irD),'IR Retido (R$)':round(irR),'IR adicional (R$)':round(irAd),'IR a pagar (R$)':round(irD+irAd-irR),
+      'TOMADAS: ISS a pagar (R$)':0,'TOMADAS: PIS a pagar (R$)':round(b*0.0004),'TOMADAS: COFINS a pagar (R$)':round(b*0.0018),
+      'TOMADAS: CSLL a pagar (R$)':round(b*0.0006),'TOMADAS: IR a pagar (R$)':round(b*0.0009),
+      'IRRF Dividendos (R$)':'', 'INSS a Pagar (R$)':round(b*0.0033),'FGTS a Pagar (R$)':round(b*0.0013),
+      'Resultado Líquido (R$)':round(b - iss - (pisD-pisR) - (cofD-cofR) - (cslD-cslR) - (irD+irAd-irR)) };
+  }
+  function round(v){ return Math.round(v*100)/100; }
+
+  // NFs por competência (prestadas e tomadas). Cada NF traz seus tributos já calculados
+  // e o mapa de centros: true = entra no rateio igual; número = valor absoluto naquele centro.
+  const nfs = {};
+  const contraTom = ['FD Marketing Digital Ltda','Ritmocordis Serviços Médicos Ltda','MercadoPago Instituição de Pagamento','Primeira Estacionamentos Ltda','Back 4 You Inteligência Tributária Ltda'];
+  const tiposTom = ['Licenciamento de software','Serviços médicos - laudos','Tarifa bancária','Estacionamento','Consultoria contábil'];
+  const nomesPrest = ['Rosemeire K. Matsuda','Convênio Bradesco Saúde','Particular - consulta','Amil Assistência','Unimed Central','SulAmérica Saúde','Particular - exame','Hospital Sírio','Porto Seguro Saúde','Convênio GNDI'];
+  empresa.forEach((e,idx)=>{
+    const comp=e.competencia;
+    const prest=[]; let restante=num(getM(e,'Total (R$)')); const qtd=Math.max(6,Math.round(num(getM(e,'Nº NFs'))/2));
+    for(let i=0;i<qtd;i++){
+      const ult=i===qtd-1;
+      const bruto = ult ? round(restante) : round(restante*(0.10+0.14*fakeRand(idx,i)));
+      restante = round(restante-bruto); if(restante<0) restante=0;
+      const cIdx = 1 + ((idx+i)%(centros.length-1)); // distribui entre centros nomeados
+      const centroMap={};
+      if((idx+i)%7===0) { /* fica em Não identificado (sem marcar) */ }
+      else if((idx+i)%5===0){ centroMap[centros[cIdx]]=true; centroMap[centros[1+((cIdx)%(centros.length-1))]]=true; } // dividido igual entre 2
+      else centroMap[centros[cIdx]]=true;
+      prest.push(nfPrestada(comp, 11000+idx*200+i, nomesPrest[(idx+i)%nomesPrest.length], bruto, (idx+i)%4===0, centroMap));
+      if(restante<=0) break;
+    }
+    const tom=[];
+    const nTom = 3 + (idx%3);
+    for(let i=0;i<nTom;i++){
+      const bruto = round(200 + 3000*fakeRand(idx+9,i));
+      const temRet=(i%2===0);
+      const cIdx = 1 + ((idx+i+2)%(centros.length-1));
+      const centroMap={}; if((idx+i)%4!==0) centroMap[centros[cIdx]]=true;
+      tom.push(nfTomada(comp, 30000+idx*130+i, contraTom[i%contraTom.length], tiposTom[i%tiposTom.length], bruto, temRet, centroMap));
+    }
+    nfs[comp]={prestadas:prest, tomadas:tom};
+  });
+  function fakeRand(a,b){ const x=Math.sin((a+1)*12.9898+(b+1)*78.233)*43758.5453; return x-Math.floor(x); }
+
+  function nfPrestada(comp, n, tomador, bruto, temRet, centros){
+    const aliq=0.02, iss=bruto*aliq, pisD=bruto*0.0065, cofD=bruto*0.03,
+      cslD=bruto*0.32*0.09, irD=bruto*0.32*0.15;
+    const r = temRet?1:0;
+    return { nf:String(n), data:comp+'-'+String((n%26)+1).padStart(2,'0'), contraparte:tomador, tipo:'Serviços médicos',
+      valorBruto:round(bruto), temRetencao:temRet, aliqIss:aliq, centros:centros,
+      trib:{ 'ISS Devido (R$)':round(iss),'ISS Retido (R$)':0,'ISS a Pagar (R$)':round(iss),
+        'PIS Devido (R$)':round(pisD),'PIS Retido (R$)':round(r*bruto*0.0065),'PIS a pagar (R$)':round(pisD-r*bruto*0.0065),
+        'COFINS Devido (R$)':round(cofD),'COFINS Retido (R$)':round(r*bruto*0.03),'COFINS a pagar (R$)':round(cofD-r*bruto*0.03),
+        'CSLL Devida (R$)':round(cslD),'CSLL Retida (R$)':round(r*bruto*0.01),'CSLL a pagar (R$)':round(cslD-r*bruto*0.01),
+        'IR Devido (R$)':round(irD),'IR Retido (R$)':round(r*bruto*0.015),'IR a pagar (R$)':round(irD-r*bruto*0.015) } };
+  }
+  function nfTomada(comp, n, prestador, tipo, bruto, temRet, centros){
+    const r=temRet?1:0;
+    return { nf:String(n), data:comp+'-'+String((n%26)+1).padStart(2,'0'), contraparte:prestador, tipo:tipo,
+      valorBruto:round(bruto), temRetencao:temRet, centros:centros,
+      trib:{ 'TOMADAS: ISS a pagar (R$)':0,'TOMADAS: PIS a pagar (R$)':round(r*bruto*0.0065),
+        'TOMADAS: COFINS a pagar (R$)':round(r*bruto*0.03),'TOMADAS: CSLL a pagar (R$)':round(r*bruto*0.01),
+        'TOMADAS: IR a pagar (R$)':round(r*bruto*0.015) } };
+  }
+
+  const regras = [
+    {id:'R01',descricao:'ISS',categoria:'Tributo municipal',periodicidade:'Mensal',meses_vencimento:'',dia_vencimento:10,defasagem_comp_meses:1,valor_previsto:0,metrica_fonte:'ISS a Pagar (R$)',acumula_meses:1,ativo:'TRUE'},
+    {id:'R02',descricao:'PIS/COFINS',categoria:'Tributo federal',periodicidade:'Mensal',meses_vencimento:'',dia_vencimento:25,defasagem_comp_meses:1,valor_previsto:0,metrica_fonte:'PIS a pagar (R$)|COFINS a pagar (R$)',acumula_meses:1,ativo:'TRUE'},
+    {id:'R07',descricao:'IRPJ + CSLL — trimestral',categoria:'Tributo federal',periodicidade:'Trimestral',meses_vencimento:'1,4,7,10',dia_vencimento:0,defasagem_comp_meses:1,valor_previsto:0,metrica_fonte:'IR a pagar (R$)|CSLL a pagar (R$)',acumula_meses:3,ativo:'TRUE'},
+    {id:'R17',descricao:'INSS — DARF',categoria:'Departamento pessoal',periodicidade:'Mensal',meses_vencimento:'',dia_vencimento:20,defasagem_comp_meses:1,valor_previsto:0,metrica_fonte:'INSS a Pagar (R$)',acumula_meses:1,ativo:'TRUE'},
+    {id:'R18',descricao:'FGTS',categoria:'Departamento pessoal',periodicidade:'Mensal',meses_vencimento:'',dia_vencimento:20,defasagem_comp_meses:1,valor_previsto:0,metrica_fonte:'FGTS a Pagar (R$)',acumula_meses:1,ativo:'TRUE'},
+    {id:'R19',descricao:'DMED',categoria:'Obrigação acessória',periodicidade:'Anual',meses_vencimento:'2',dia_vencimento:0,defasagem_comp_meses:0,valor_previsto:0,metrica_fonte:'',acumula_meses:0,ativo:'TRUE'},
+    {id:'R10',descricao:'Anuidade CRM — PJ',categoria:'Anuidade',periodicidade:'Anual',meses_vencimento:'1',dia_vencimento:31,defasagem_comp_meses:0,valor_previsto:1290,metrica_fonte:'',acumula_meses:0,ativo:'TRUE'},
+  ];
+
+  // Calendário: ANO ANTERIOR + VIGENTE + PRÓXIMO (3 anos-calendário completos).
+  const calendario = gerarCalendario(regras, hoje.getFullYear()-1, hoje.getFullYear()+1);
+
+  // UMA planilha por cliente: abas Prestadas/Tomadas por ano + aba de fechamento por competência×centro.
+  const planilhaUrl = 'https://docs.google.com/spreadsheets/d/DEMO_CLIENTE_482913/edit';
+  const links = {}; empresa.forEach(e=> links[e.competencia] = planilhaUrl);
+
+  return { config, empresa, rateio:[], regras, calendario, nfs, links, atualizado_em: Date.now() };
+})();
+
+/* Gera o calendário de 3 anos a partir das regras (espelha o que a planilha faz). */
+function gerarCalendario(regras, anoIni, anoFim){
+  const out=[];
+  for(const reg of regras){
+    if(String(reg.ativo)==='FALSE') continue;
+    for(let ano=anoIni; ano<=anoFim; ano++){
+      const meses = reg.periodicidade==='Mensal' ? [1,2,3,4,5,6,7,8,9,10,11,12]
+        : reg.periodicidade==='Trimestral' ? (reg.meses_vencimento||'1,4,7,10').split(',').map(Number)
+        : reg.periodicidade==='Anual' ? (reg.meses_vencimento||'1').split(',').map(Number) : [];
+      for(const mv of meses){
+        // mês de vencimento mv; competência de referência = mv - defasagem
+        const def = num(reg.defasagem_comp_meses)||0;
+        const compDate = new Date(ano, mv-1-def, 1);
+        const compRef = compDe(compDate);
+        const dia = num(reg.dia_vencimento)||0;
+        const venc = dia===0 ? new Date(ano, mv, 0) : new Date(ano, mv-1, dia); // 0 => último dia do mês
+        out.push({ id_regra:reg.id, descricao:reg.descricao, categoria:reg.categoria,
+          competencia_ref:compRef, vencimento:compDe(venc)+'-'+String(venc.getDate()).padStart(2,'0'),
+          ajuste_aplicado:'—' });
+      }
+    }
+  }
+  return out.sort((a,b)=>a.vencimento.localeCompare(b.vencimento));
 }
 
+/* ===================== CARGA ===================== */
 function getIdCodigo(){
-  const qs = new URLSearchParams(location.search);
-  let id = qs.get('id') || '';
-  let codigo = qs.get('codigo') || '';
-  if (!id){
-    const h = location.hash.replace('#','').trim();
-    const comCodigo = h.match(/^(\d+)-(.+)$/);
-    const soId = h.match(/^(\d+)$/);
-    if (comCodigo) { id = comCodigo[1]; codigo = comCodigo[2]; }
-    else if (soId) { id = soId[1]; }
-  }
-  return { id: id.replace(/\D/g,''), codigo: codigo.trim() };
+  const qs=new URLSearchParams(location.search); let id=qs.get('id')||'', codigo=qs.get('codigo')||'';
+  if(!id){ const h=location.hash.replace('#','').trim(); const cc=h.match(/^(\d+)-(.+)$/), so=h.match(/^(\d+)$/);
+    if(cc){id=cc[1];codigo=cc[2];} else if(so){id=so[1];} }
+  return { id:id.replace(/\D/g,''), codigo:codigo.trim() };
 }
+function jsonp(url){ return new Promise((ok,fail)=>{ const cb='cb_'+Math.random().toString(36).slice(2);
+  const s=document.createElement('script'); const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},20000);
+  function limpa(){clearTimeout(t);delete window[cb];s.remove();}
+  window[cb]=d=>{limpa();ok(d);}; s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};
+  s.src=url+(url.includes('?')?'&':'?')+'callback='+cb; document.body.appendChild(s); }); }
 
-function jsonp(url){
-  return new Promise((ok,fail)=>{
-    const cb = 'cb_'+Math.random().toString(36).slice(2);
-    const s = document.createElement('script');
-    const t = setTimeout(()=>{ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
-    function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
-    window[cb] = d => { limpa(); ok(d); };
-    s.onerror = () => { limpa(); fail(new Error('Não consegui alcançar a API.')); };
-    s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
-    document.body.appendChild(s);
-  });
-}
-
-let IDENTIDADE = { id: '', codigo: '' };
-
+let IDENTIDADE={id:'',codigo:''}, MODO_DEMO=false;
 async function carregar(){
-  const { id, codigo } = getIdCodigo();
-  IDENTIDADE = { id, codigo };
-  if (API_URL){
-    if (!id) throw new Error('Informe o ID do cliente no final do endereço.');
-    if (!codigo) throw new Error('Informe também o código de acesso, no formato #482913-CODIGO.');
-    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=fiscal';
-    const d = await jsonp(url);
-    if (d.erro) throw new Error(d.erro);
-    return d;
+  const {id,codigo}=getIdCodigo(); IDENTIDADE={id,codigo};
+  if(API_URL){
+    if(!id) throw new Error('Informe o ID do cliente no final do endereço.');
+    if(!codigo) throw new Error('Informe também o código de acesso, no formato #482913-CODIGO.');
+    const url=API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&tipo=fiscal';
+    const d=await jsonp(url); if(d.erro) throw new Error(d.erro); return d;
   }
-  const r = await fetch('demo.json');
-  if (!r.ok) throw new Error('Sem API configurada e sem demo.json ao lado do index.html.');
-  return r.json();
+  MODO_DEMO=true; return JSON.parse(JSON.stringify(DEMO)); // cópia — o "salvar" mexe nela localmente
 }
 
+/* ===================== MODELO ===================== */
 function preparar(raw){
-  const eComp = r => /^\d{4}-\d{2}$/.test(String(r.competencia||''));
-  const empresa = (raw.empresa||[]).filter(eComp).sort((a,b)=>a.competencia.localeCompare(b.competencia));
-  const rateio  = (raw.rateio||[]).filter(eComp);
-  const regras  = (raw.regras||[]).filter(r=>/^R\d+$/.test(String(r.id||'')));
-  const cal     = (raw.calendario||[]).filter(c=>/^R\d+$/.test(String(c.id_regra||'')) && c.vencimento)
-                    .sort((a,b)=>String(a.vencimento).localeCompare(String(b.vencimento)));
-  const regraDe = Object.fromEntries(regras.map(r=>[r.id,r]));
-  const porComp = Object.fromEntries(empresa.map(r=>[r.competencia,r]));
+  const eComp=r=>/^\d{4}-\d{2}$/.test(String(r.competencia||''));
+  const empresa=(raw.empresa||[]).filter(eComp).sort((a,b)=>a.competencia.localeCompare(b.competencia));
+  const regras=(raw.regras||[]).filter(r=>/^R\d+$/.test(String(r.id||'')));
+  const cal=(raw.calendario||[]).filter(c=>/^R\d+$/.test(String(c.id_regra||''))&&c.vencimento)
+              .sort((a,b)=>String(a.vencimento).localeCompare(String(b.vencimento)));
+  const regraDe=Object.fromEntries(regras.map(r=>[r.id,r]));
+  const porComp=Object.fromEntries(empresa.map(r=>[r.competencia,r]));
+  const cfg=raw.config||{}; const reg=regimeDe(cfg);
+  const centros=(cfg.centros||[]).slice().sort((a,b)=>num(a.ordem_exibicao)-num(b.ordem_exibicao)).map(c=>c.centro);
+  const nfs=raw.nfs||{}; const links=raw.links||{};
 
-  const impostos = r => TRIB.reduce((s,t)=>s+num(getM(r,t.k)),0);
-  const retido = r => num(getM(r,'ISS Retido (R$)'))+num(getM(r,'PIS Retido (R$)'))+num(getM(r,'COFINS Retido (R$)'))
-                    + num(getM(r,'CSLL Retida (R$)'))+num(getM(r,'IR Retido (R$)'));
+  // tributos visíveis pelo regime (a checagem de "vazio some" é por competência, na hora de pintar)
+  const tribs = reg.tributos.map(k=>TRIB_DEFS[k]).filter(Boolean);
 
-  const ult3 = empresa.slice(-3);
-  const media = k => ult3.length ? ult3.reduce((s,r)=>s+num(getM(r,k)),0)/ult3.length : 0;
+  const impostos=r=>tribs.reduce((s,t)=>s+num(getM(r,t.pag)),0);
+  const retido=r=>reg.retencao ? tribs.reduce((s,t)=>s+(t.ret?num(getM(r,t.ret)):0),0) : 0;
 
-  function somaMetricas(comp, chaves){
-    const r = porComp[comp];
-    return chaves.reduce((s,k)=> s + (r ? num(getM(r,k)) : media(k)), 0);
-  }
-
+  const ult3=empresa.slice(-3);
+  const media=k=>ult3.length?ult3.reduce((s,r)=>s+num(getM(r,k)),0)/ult3.length:0;
+  function somaMetricas(comp,chaves){ const r=porComp[comp]; return chaves.reduce((s,k)=>s+(r?num(getM(r,k)):media(k)),0); }
   function valorDe(item){
-    const reg = regraDe[item.id_regra] || {};
-    if (num(reg.valor_previsto) > 0) return {v:num(reg.valor_previsto), est:false};
-    const fonte = String(reg.metrica_fonte||'').trim();
-    if (!fonte) return {v:0, est:false};
-    const chaves = fonte.split('|').map(s=>s.trim()).filter(Boolean);
-    const n = Math.max(1, num(reg.acumula_meses)||1);
-    const ref = String(item.competencia_ref||'');
-    if (!/^\d{4}-\d{2}$/.test(ref)) return {v:0, est:true};
-    let total = 0, estimado = false;
-    const [a,m] = ref.split('-').map(Number);
-    for (let i=0;i<n;i++){
-      const d = new Date(a, m-1-i, 1);
-      const c = compDe(d);
-      if (!porComp[c]) estimado = true;
-      total += somaMetricas(c, chaves);
-    }
-    return {v: Math.round(total*100)/100, est:estimado};
+    const rr=regraDe[item.id_regra]||{};
+    if(num(rr.valor_previsto)>0) return {v:num(rr.valor_previsto),est:false};
+    const fonte=String(rr.metrica_fonte||'').trim(); if(!fonte) return {v:0,est:false};
+    const chaves=fonte.split('|').map(s=>s.trim()).filter(Boolean);
+    const n=Math.max(1,num(rr.acumula_meses)||1); const ref=String(item.competencia_ref||'');
+    if(!/^\d{4}-\d{2}$/.test(ref)) return {v:0,est:true};
+    let total=0,estimado=false; const [a,m]=ref.split('-').map(Number);
+    for(let i=0;i<n;i++){ const c=compDe(new Date(a,m-1-i,1)); if(!porComp[c]) estimado=true; total+=somaMetricas(c,chaves); }
+    return {v:Math.round(total*100)/100, est:estimado};
   }
-
-  return {cfg:raw.config||{}, id:raw.id, empresa, rateio, regras, cal, regraDe,
-          porComp, impostos, retido, valorDe, media};
+  return {cfg, reg, tribs, centros, empresa, regras, cal, regraDe, porComp, nfs, links,
+          rateioAPI: raw.rateio||[],
+          impostos, retido, valorDe, media, id:raw.id||cfg.cliente_id, atualizado_em:raw.atualizado_em};
 }
 
-/** Provisão trimestral do IRPJ+CSLL — só existe quando o regime apura por trimestre. */
-/** Nivela uma coluna (ex.: IRPJ) para o trimestre de 'comp'.
-    Se o trimestre de 'comp' já está TOTALMENTE fechado (os 3 meses existem em Empresa),
-    usa o valor real do próprio mês — sem inventar nada.
-    Se está em aberto (mês atual ou futuro), NÃO usa os meses reais desse mesmo trimestre
-    como base: numa contabilidade real, o valor do trimestre só é lançado no mês de
-    fechamento, então os outros dois meses estariam genuinamente zerados — usá-los como
-    base de média dá quase zero. Em vez disso, busca o ÚLTIMO trimestre TOTALMENTE fechado
-    (pode ser 1, 2 ou mais trimestres atrás) e usa o total dele ÷ 3. */
-function nivelarTrimestre(M, comp, coluna){
-  const [a,m] = comp.split('-').map(Number);
-  const tri = Math.ceil(m/3);
-
-  const mesesDoTrimestre = (ano, t) => {
-    const inicio = (t-1)*3 + 1;
-    return [0,1,2].map(i => ano+'-'+String(inicio+i).padStart(2,'0'));
-  };
-  const totalmenteFechado = meses => meses.every(c => !!M.porComp[c]);
-
-  const mesesAlvo = mesesDoTrimestre(a, tri);
-  if (totalmenteFechado(mesesAlvo)){
-    const r = M.porComp[comp];
-    return r ? num(getM(r, coluna)) : 0;
-  }
-
-  // Anda para trás, trimestre a trimestre, até achar um totalmente fechado.
-  let ano = a, t = tri;
-  for (let tentativas = 0; tentativas < 8; tentativas++){
-    t--; if (t === 0){ t = 4; ano--; }
-    const meses = mesesDoTrimestre(ano, t);
-    if (totalmenteFechado(meses)){
-      const soma = meses.reduce((s,c) => s + num(getM(M.porComp[c], coluna)), 0);
-      return soma / 3;
-    }
-  }
-  return M.media(coluna); // não achou nenhum trimestre fechado — cai na média geral
+/* Rateio por centro a partir das NFs do mês (espelha os pesos da planilha).
+   Peso de um centro numa NF: true => 1/N (rateio igual); número => valor/bruto (absoluto);
+   nenhum marcado => tudo em "Não identificado". Devolve linhas {centro, ...métricas}. */
+function pesosNF(nf){
+  const bruto=num(nf.valorBruto); const map=nf.centros||{}; const nomes=Object.keys(map);
+  const marcadosTrue=nomes.filter(k=>map[k]===true);
+  const numericos=nomes.filter(k=>typeof map[k]==='number');
+  const pesos={};
+  if(marcadosTrue.length===0 && numericos.length===0){ pesos['Não identificado']=1; return pesos; }
+  marcadosTrue.forEach(k=>pesos[k]=1/marcadosTrue.length);
+  numericos.forEach(k=>{ pesos[k]=(pesos[k]||0)+(bruto?num(map[k])/bruto:0); });
+  return pesos;
 }
-
-const JANELAS_COMPARATIVO = [
-  {v:1,  n:'mês anterior'},
-  {v:3,  n:'trimestre anterior'},
-  {v:6,  n:'semestre anterior'},
-  {v:12, n:'últimos 12 meses'},
-];
-
-/** Devolve só as janelas de comparação com histórico suficiente ANTES do mês selecionado. */
-function janelasDisponiveis(M, comp){
-  const i = M.empresa.findIndex(x=>x.competencia===comp);
-  return JANELAS_COMPARATIVO.filter(j => i >= j.v);
-}
-
-/** Média mensal do bloco de 'janela' meses imediatamente antes de 'comp'. */
-function comparativoBase(M, comp, janela){
-  const i = M.empresa.findIndex(x=>x.competencia===comp);
-  if (i < janela) return null;
-  const bloco = M.empresa.slice(i-janela, i);
-  const tot = bloco.reduce((s,r)=>s+num(getM(r,'Total (R$)')),0)/janela;
-  const imp = bloco.reduce((s,r)=>s+M.impostos(r),0)/janela;
-  const liq = bloco.reduce((s,r)=>s+num(getM(r,'Resultado Líquido (R$)')),0)/janela;
-  const label = janela===1 ? mesLongo(bloco[0].competencia) : `média · últimos ${janela} meses`;
-  return {tot, imp, liq, label};
-}
-
-/** Quebra o valor de uma guia (linha do Calendário) por centro de custo, somando os
-    mesmos meses que valorDe() usaria (respeita acumula_meses, p.ex. o trimestre do IRPJ). */
-function detalheGuiaPorCentro(M, item){
-  const reg = M.regraDe[item.id_regra] || {};
-  const fonte = String(reg.metrica_fonte||'').trim();
-  if (!fonte) return [];
-  const chaves = fonte.split('|').map(s=>s.trim()).filter(Boolean);
-  const n = Math.max(1, num(reg.acumula_meses)||1);
-  const ref = String(item.competencia_ref||'');
-  if (!/^\d{4}-\d{2}$/.test(ref)) return [];
-  const [a,m] = ref.split('-').map(Number);
-
-  const porCentro = {};
-  for (let i=0;i<n;i++){
-    const d = new Date(a, m-1-i, 1);
-    const c = compDe(d);
-    M.rateio.filter(x=>x.competencia===c).forEach(x=>{
-      const v = chaves.reduce((s,k)=>s+num(getM(x,k)),0);
-      porCentro[x.centro] = (porCentro[x.centro]||0) + v;
-    });
-  }
-  return Object.entries(porCentro)
-    .map(([centro,v])=>({centro, v:Math.round(v*100)/100}))
-    .filter(x=>x.v > 0.004)
-    .sort((a,b)=>b.v-a.v);
-}
-
-/** Lista clara das guias geradas pela competência selecionada: fechada (já apurada),
-    estimativa (projetada) ou em aberto (zerada — nada foi lançado, ex.: sem folha no mês). */
-function desenharGuiasDoMes(M, comp){
-  const itens = M.cal
-    .filter(c => c.competencia_ref === comp)
-    .map(c => ({...c, ...M.valorDe(c)}))
-    .sort((a,b) => b.v - a.v);
-
-  const box = document.getElementById('guias-mes');
-  if (!itens.length){ box.innerHTML = ''; return; }
-
-  box.innerHTML = `<div class="card guias-card">
-    <div class="relacao-head"><h2>Guias do mês</h2><span class="lbl">o que vence a partir desta competência</span></div>
-    ${itens.map((it,idx)=>{
-      const status = it.v <= 0 ? 'aberto' : (it.est ? 'estimativa' : 'fechada');
-      const rotulo = {fechada:'Fechada', estimativa:'Estimativa', aberto:'Em aberto'}[status];
-      const detalhe = it.v > 0 ? detalheGuiaPorCentro(M, it) : [];
-      return `<div class="guia-row">
-        <div class="guia-main">
-          <span class="guia-status status-${status}">${rotulo}</span>
-          <span class="guia-nome">${it.descricao}</span>
-          <b class="guia-valor num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (estimativa)':''}</b>
-          ${detalhe.length ? `<button class="btn-detalhe" onclick="this.closest('.guia-row').querySelector('.guia-detalhe').classList.toggle('aberto'); this.textContent=this.closest('.guia-row').querySelector('.guia-detalhe').classList.contains('aberto')?'Ocultar':'Detalhes'">Detalhes</button>` : ''}
-        </div>
-        ${detalhe.length ? `<div class="guia-detalhe">
-          ${detalhe.map(d=>`<div class="guia-detalhe-row"><span>${d.centro}</span><b class="num">${brl(d.v)}</b></div>`).join('')}
-        </div>` : ''}
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
-function provisaoDoMes(M, comp){
-  const periodicidade = String(M.cfg.periodicidade_irpj_csll || 'trimestral').toLowerCase();
-  if (!periodicidade.includes('trim')) return null;
-
-  const [a,m] = comp.split('-').map(Number);
-  const tri = Math.ceil(m/3);
-  const inicio = (tri-1)*3 + 1;
-
-  const meses = [];
-  for (let i=0;i<3;i++){
-    const c = a+'-'+String(inicio+i).padStart(2,'0');
-    const r = M.porComp[c];
-    const v = r
-      ? num(getM(r,'IR a pagar (R$)'))+num(getM(r,'CSLL a pagar (R$)'))
-      : nivelarTrimestre(M, c, 'IR a pagar (R$)') + nivelarTrimestre(M, c, 'CSLL a pagar (R$)');
-    meses.push({comp:c, apurado:!!r, v});
-  }
-  const total = meses.reduce((s,x)=>s+x.v,0);
-  const fimTri = a+'-'+String(inicio+2).padStart(2,'0');
-  const guia = M.cal.find(c => c.id_regra==='R07' && c.competencia_ref===fimTri);
-
-  return {tri, ano:a, total, meses, venc: guia ? guia.vencimento : null};
-}
-
-function gradeDoMes(ano, mes){
-  const primeiro = new Date(ano, mes, 1);
-  const inicioSemana = primeiro.getDay();
-  const dias = new Date(ano, mes+1, 0).getDate();
-  const cel = [];
-  for (let i=0;i<inicioSemana;i++) cel.push(null);
-  for (let d=1; d<=dias; d++) cel.push(d);
-  while (cel.length % 7) cel.push(null);
-  return cel;
-}
-
-function miniGradeHTML(ano, mes, marcados, destaque){
-  const cel = gradeDoMes(ano, mes);
-  const grade = cel.map(d=>{
-    if (d===null) return '<div class="mini-cel blank"></div>';
-    const m = marcados.get(d);
-    const cls = m ? (destaque ? 'due' : 'due-muted') : '';
-    const titulo = m ? m.map(x=>x.descricao+(x.valor===null?'':': '+brl(x.valor)+(x.est?' (estimativa)':''))).join(' · ') : '';
-    return '<div class="mini-cel '+cls+'" '+(titulo?('title="'+titulo+'"'):'')+'>'+d+'</div>';
-  }).join('');
-  return '<div class="mini-dow">'+DOW.map(d=>'<span>'+d[0].toUpperCase()+'</span>').join('')+'</div>'
-       + '<div class="mini-grid">'+grade+'</div>';
-}
-
-/** Todas as guias com valor>0 cujo vencimento cai neste ano/mês, agrupadas por dia.
-    INSS e FGTS (departamento pessoal) sempre aparecem — sem o valor, que vive em outro painel. */
-function vencimentosDoMes(M, ano, mes){
-  const marcados = new Map();
-  M.cal.forEach(c=>{
-    const semValor = REGRAS_SEM_VALOR_EXIBIDO.has(c.id_regra);
-    const {v, est} = M.valorDe(c);
-    if (!semValor && v<=0) return;
-    const d = dParse(c.vencimento);
-    if (d.getFullYear()!==ano || d.getMonth()!==mes) return;
-    if (!marcados.has(d.getDate())) marcados.set(d.getDate(), []);
-    marcados.get(d.getDate()).push({descricao:c.descricao, valor: semValor ? null : v, est: semValor ? false : est});
+function rateioDoMes(M, comp){
+  const pack=M.nfs[comp]||{prestadas:[],tomadas:[]};
+  const acc={}; // centro -> métricas
+  const garante=c=>{ if(!acc[c]) acc[c]={centro:c,'Nº NFs':0,'Total (R$)':0}; return acc[c]; };
+  M.centros.forEach(c=>garante(c));
+  (pack.prestadas||[]).forEach(nf=>{ const w=pesosNF(nf);
+    for(const [c,peso] of Object.entries(w)){ const row=garante(c);
+      if(peso>0) row['Nº NFs']+=peso>0?1*peso:0;
+      row['Total (R$)']+=num(nf.valorBruto)*peso;
+      for(const [k,v] of Object.entries(nf.trib)) row[k]=(row[k]||0)+num(v)*peso; } });
+  (pack.tomadas||[]).forEach(nf=>{ const w=pesosNF(nf);
+    for(const [c,peso] of Object.entries(w)){ const row=garante(c);
+      for(const [k,v] of Object.entries(nf.trib)) row[k]=(row[k]||0)+num(v)*peso; } });
+  // resultado líquido por centro
+  const rows=Object.values(acc).map(r=>{
+    const imp=M.tribs.reduce((s,t)=>s+num(r[t.pag]),0);
+    const tom=OUTRAS_TOMADAS.reduce((s,k)=>s+num(r[k]),0);
+    r['Nº NFs']=Math.round(r['Nº NFs']);
+    r['Resultado Líquido (R$)']=num(r['Total (R$)'])-imp-tom;
+    return r;
   });
-  return marcados;
+  return rows;
+}
+const OUTRAS_TOMADAS=['TOMADAS: ISS a pagar (R$)','TOMADAS: PIS a pagar (R$)','TOMADAS: COFINS a pagar (R$)','TOMADAS: CSLL a pagar (R$)','TOMADAS: IR a pagar (R$)'];
+
+/* Rateio para exibição: usa os números autoritativos do Fechamento (API) quando houver;
+   na demonstração (ou como prévia instantânea da edição) recalcula a partir das NFs. */
+function rateioParaComp(M, comp){
+  const api=(M.rateioAPI||[]).filter(x=>x.competencia===comp);
+  return api.length ? api : rateioDoMes(M, comp);
 }
 
+/* ===================== PROVISÃO / CALENDÁRIO helpers ===================== */
+function nivelarTrimestre(M,comp,coluna){
+  const [a,m]=comp.split('-').map(Number); const tri=Math.ceil(m/3);
+  const mesesTri=(ano,t)=>{const ini=(t-1)*3+1; return [0,1,2].map(i=>ano+'-'+String(ini+i).padStart(2,'0'));};
+  const fechado=ms=>ms.every(c=>!!M.porComp[c]);
+  if(fechado(mesesTri(a,tri))){ const r=M.porComp[comp]; return r?num(getM(r,coluna)):0; }
+  let ano=a,t=tri;
+  for(let k=0;k<8;k++){ t--; if(t===0){t=4;ano--;} const ms=mesesTri(ano,t);
+    if(fechado(ms)) return ms.reduce((s,c)=>s+num(getM(M.porComp[c],coluna)),0)/3; }
+  return M.media(coluna);
+}
+function provisaoDoMes(M,comp){
+  if(!M.reg.provisaoTrimestral) return null;
+  const per=String(M.cfg.periodicidade_irpj_csll||'trimestral').toLowerCase(); if(!per.includes('trim')) return null;
+  const [a,m]=comp.split('-').map(Number); const tri=Math.ceil(m/3); const ini=(tri-1)*3+1;
+  const meses=[]; for(let i=0;i<3;i++){ const c=a+'-'+String(ini+i).padStart(2,'0'); const r=M.porComp[c];
+    const v=r?num(getM(r,'IR a pagar (R$)'))+num(getM(r,'CSLL a pagar (R$)'))
+           :nivelarTrimestre(M,c,'IR a pagar (R$)')+nivelarTrimestre(M,c,'CSLL a pagar (R$)');
+    meses.push({comp:c,apurado:!!r,v}); }
+  const total=meses.reduce((s,x)=>s+x.v,0); const fimTri=a+'-'+String(ini+2).padStart(2,'0');
+  const guia=M.cal.find(c=>c.id_regra==='R07'&&c.competencia_ref===fimTri);
+  return {tri,ano:a,total,meses,venc:guia?guia.vencimento:null};
+}
+function gradeDoMes(ano,mes){ const p=new Date(ano,mes,1); const ini=p.getDay(); const dias=new Date(ano,mes+1,0).getDate();
+  const cel=[]; for(let i=0;i<ini;i++)cel.push(null); for(let d=1;d<=dias;d++)cel.push(d); while(cel.length%7)cel.push(null); return cel; }
+function miniGradeHTML(ano,mes,marc,destaque){ const cel=gradeDoMes(ano,mes);
+  const grade=cel.map(d=>{ if(d===null) return '<div class="mini-cel blank"></div>';
+    const m=marc.get(d); const cls=m?(destaque?'due':'due-muted'):'';
+    const tit=m?m.map(x=>x.descricao+(x.valor===null?'':': '+brl(x.valor)+(x.est?' (estimativa)':''))).join(' · '):'';
+    return '<div class="mini-cel '+cls+'" '+(tit?('title="'+esc(tit)+'"'):'')+'>'+d+'</div>'; }).join('');
+  return '<div class="mini-dow">'+DOW.map(d=>'<span>'+d[0].toUpperCase()+'</span>').join('')+'</div><div class="mini-grid">'+grade+'</div>'; }
+function vencimentosDoMes(M,ano,mes){ const marc=new Map();
+  M.cal.forEach(c=>{ const {v,est}=M.valorDe(c); if(v<=0) return; const d=dParse(c.vencimento);
+    if(d.getFullYear()!==ano||d.getMonth()!==mes) return; if(!marc.has(d.getDate()))marc.set(d.getDate(),[]);
+    marc.get(d.getDate()).push({descricao:c.descricao,valor:v,est}); }); return marc; }
+
+/* ===================== RENDER ===================== */
+let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='';
 function render(M){
-  const comps = M.empresa.map(r=>r.competencia);
-  const mesAnteriorHoje = compDe(new Date(hoje.getFullYear(), hoje.getMonth()-1, 1));
-  let sel = comps.includes(mesAnteriorHoje) ? mesAnteriorHoje : comps[comps.length-1];
+  M_GLOBAL=M;
+  const comps=M.empresa.map(r=>r.competencia);
+  const mesAnt=compDe(new Date(hoje.getFullYear(),hoje.getMonth()-1,1));
+  SEL=comps.includes(mesAnt)?mesAnt:comps[comps.length-1];
+  const app=document.getElementById('app'); app.innerHTML='';
 
-  const app = document.getElementById('app');
-  app.innerHTML = '';
+  app.appendChild(el(`<header><div class="bar">
+    <div>
+      <a class="voltar" href="index.html#${esc(M.id)}-${esc(IDENTIDADE.codigo)}">← Painel do cliente</a>
+      <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
+      <div class="brand-sub">${esc(M.cfg.razao_social||'Painel fiscal')} · ${M.cfg.cnpj?'CNPJ '+esc(M.cfg.cnpj):'cliente '+esc(M.id)}<span class="reg">${esc(M.cfg.regime||'')}</span></div>
+    </div>
+    <div class="spacer"></div>
+    ${MODO_DEMO?'<span class="demo-flag">modo demonstração</span>':''}
+    <div class="picker"><label class="lbl" for="comp">Competência</label>
+      <select id="comp">${comps.slice().reverse().map(c=>`<option value="${c}">${mesLongo(c)}</option>`).join('')}</select></div>
+  </div></header>`));
 
-  app.appendChild(el(`
-    <header><div class="bar">
-      <div>
-        <a class="voltar" href="index.html#${IDENTIDADE.id}-${IDENTIDADE.codigo}">← Painel do cliente</a>
-        <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
-        <div class="brand-sub">${M.cfg.razao_social || 'Painel fiscal'} · ${M.cfg.cnpj ? 'CNPJ ' + M.cfg.cnpj : 'cliente ' + M.id}</div>
-      </div>
-      <div class="spacer"></div>
-      <div class="picker">
-        <label class="lbl" for="comp">Competência</label>
-        <select id="comp">${comps.slice().reverse().map(c=>`<option value="${c}">${mesLongo(c)}</option>`).join('')}</select>
-      </div>
-    </div></header>`));
-
-  const wrap = el('<div class="wrap"></div>');
-  app.appendChild(wrap);
-
+  const wrap=el('<div class="wrap"></div>'); app.appendChild(wrap);
   wrap.appendChild(el('<div id="hero"></div>'));
   wrap.appendChild(el('<div id="guias-mes"></div>'));
   wrap.appendChild(el('<div id="alerta"></div>'));
@@ -673,603 +667,392 @@ function render(M){
   wrap.appendChild(el('<div id="prov"></div>'));
   wrap.appendChild(el('<div id="outras"></div>'));
 
-  appendAll(wrap, `
-    <div class="sec-head">
-      <div><h2>Calendário de vencimentos</h2>
-      <p>Mês em destaque: para onde os impostos da competência selecionada vencem. Use as setas para navegar — isso não muda a competência selecionada.</p></div>
-    </div>
+  appendAll(wrap,`<div class="sec-head"><div><h2>Calendário de vencimentos</h2>
+    <p>Ano anterior, vigente e próximo. Use as setas para navegar — isso não muda a competência selecionada.</p></div></div>
     <div class="card cal-card">
-      <div class="cal-nav">
-        <button class="cal-arrow" id="cal-btn-prev" aria-label="Mês anterior">‹</button>
-        <h3 id="cal-titulo">—</h3>
-        <button class="cal-arrow" id="cal-btn-next" aria-label="Próximo mês">›</button>
-      </div>
-      <div class="cal-strip">
-        <div class="cal-mini lateral" id="cal-prev"></div>
-        <div class="cal-mini" id="cal-atual"></div>
-        <div class="cal-mini lateral" id="cal-next"></div>
-      </div>
-      <div class="cal-total" id="cal-total"></div>
-      <div class="cal-agenda" id="cal-agenda"></div>
-    </div>`);
+      <div class="cal-nav"><button class="cal-arrow" id="cal-prev-btn" aria-label="Mês anterior">‹</button>
+      <h3 id="cal-titulo">—</h3><button class="cal-arrow" id="cal-next-btn" aria-label="Próximo mês">›</button></div>
+      <div class="cal-strip"><div class="cal-mini lateral" id="cal-prev"></div><div class="cal-mini" id="cal-atual"></div><div class="cal-mini lateral" id="cal-next"></div></div>
+      <div class="cal-total" id="cal-total"></div><div class="cal-agenda" id="cal-agenda"></div></div>`);
 
-  appendAll(wrap, `
-    <div class="sec-head">
-      <div><h2>Estimativa dos impostos</h2>
-      <p>Quanto sai do caixa em cada mês, por tributo — pelo vencimento da guia, não pela competência. IRPJ e CSLL só aparecem no mês em que a guia trimestral realmente vence.</p></div>
-    </div>
+  appendAll(wrap,`<div class="sec-head"><div><h2>Estimativa dos impostos</h2>
+    <p>Quanto sai do caixa em cada mês, por tributo — pelo vencimento da guia.</p></div></div>
     <div class="charts3" id="estim3">
-      <div class="card chart"><h3 id="est-t-0"></h3><div class="sub" id="est-s-0"></div><div class="cbox"><canvas id="est-0"></canvas></div><div class="pie-legend" id="est-lg-0"></div></div>
-      <div class="card chart"><h3 id="est-t-1"></h3><div class="sub" id="est-s-1"></div><div class="cbox"><canvas id="est-1"></canvas></div><div class="pie-legend" id="est-lg-1"></div></div>
-      <div class="card chart"><h3 id="est-t-2"></h3><div class="sub" id="est-s-2"></div><div class="cbox"><canvas id="est-2"></canvas></div><div class="pie-legend" id="est-lg-2"></div></div>
+      ${[0,1,2].map(i=>`<div class="card chart"><h3 id="est-t-${i}"></h3><div class="sub" id="est-s-${i}"></div><div class="cbox"><canvas id="est-${i}"></canvas></div><div class="pie-legend" id="est-lg-${i}"></div></div>`).join('')}
     </div>`);
 
-  appendAll(wrap, `
-    <div class="sec-head">
-      <div><h2>Obrigações anuais</h2></div>
-    </div>
-    <div class="months" id="anuais"></div>`);
+  appendAll(wrap,`<div class="sec-head"><div><h2>Obrigações anuais</h2></div></div><div class="months" id="anuais"></div>`);
 
-  appendAll(wrap, `
-    <div class="sec-head"><div><h2>Histórico e composição</h2></div></div>
+  appendAll(wrap,`<div class="sec-head"><div><h2>Histórico e composição</h2></div></div>
     <div class="charts">
-      <div class="card chart">
-        <h3>Faturamento e imposto</h3>
-        <div class="sub">Barras: faturamento. Linha: total de impostos a pagar.</div>
-        <div class="cbox"><canvas id="c1" role="img" aria-label="Faturamento mensal e impostos dos últimos 12 meses"></canvas></div>
-      </div>
-      <div class="card chart">
-        <h3>Impostos por tributo</h3>
-        <div class="legend" id="lg2"></div>
-        <div class="cbox"><canvas id="c2" role="img" aria-label="Impostos por tributo nos últimos 12 meses"></canvas></div>
-      </div>
-      <div class="card chart">
-        <h3>Composição do mês</h3>
-        <div class="sub" id="c3sub"></div>
-        <div class="cbox" style="height:170px"><canvas id="c3" role="img" aria-label="Composição dos impostos do mês selecionado"></canvas></div>
-        <div class="pie-legend" id="c3-lg"></div>
-      </div>
-      <div class="card chart">
-        <div class="comp-head">
-          <h3>Comparativo</h3>
-          <select id="comp-base" class="mini-select"></select>
-        </div>
-        <div class="sub" id="c4sub"></div>
-        <div class="cbox"><canvas id="c4" role="img" aria-label="Comparativo entre o mês selecionado e o período de referência"></canvas></div>
-      </div>
+      <div class="card chart"><h3>Faturamento e imposto</h3><div class="sub">Barras: faturamento. Linha: total de impostos a pagar.</div><div class="cbox"><canvas id="c1"></canvas></div></div>
+      <div class="card chart"><h3>Impostos por tributo</h3><div class="legend" id="lg2"></div><div class="cbox"><canvas id="c2"></canvas></div></div>
+      <div class="card chart"><h3>Composição do mês</h3><div class="sub" id="c3sub"></div><div class="cbox" style="height:170px"><canvas id="c3"></canvas></div><div class="pie-legend" id="c3-lg"></div></div>
     </div>`);
 
-  appendAll(wrap, `
-    <div class="sec-head" id="rateio"><div><h2>Rateio por centro de custo</h2><p id="rat-sub"></p></div></div>
+  appendAll(wrap,`<div class="sec-head" id="rateio"><div><h2>Rateio por centro de custo</h2><p id="rat-sub"></p></div></div>
     <div class="rateio-grid">
       <div class="card" style="padding:18px 20px"><div class="table-scroll"><table class="rat" id="rat">
-        <thead><tr>
-          <th>Centro</th><th class="r">NFs</th><th class="r">Faturamento</th>
-          <th class="r">Impostos</th><th class="r">Retido</th><th class="r">Líquido</th><th class="r"></th>
-        </tr></thead><tbody></tbody>
-      </table></div></div>
-      <div class="card chart">
-        <h3>Participação por centro</h3>
-        <div class="sub">Anel: participação no faturamento. Abaixo: impostos de cada centro.</div>
-        <div class="cbox"><canvas id="c5" role="img" aria-label="Participação de cada centro de custo no faturamento do mês"></canvas></div>
-        <div class="pie-legend" id="c5-lg"></div>
-      </div>
+        <thead><tr><th>Centro</th><th class="r">NFs</th><th class="r">Faturamento</th><th class="r">Impostos</th>${M.reg.retencao?'<th class="r">Retido</th>':''}<th class="r">Líquido</th></tr></thead>
+        <tbody></tbody></table></div></div>
+      <div class="card chart"><h3>Participação por centro</h3><div class="sub">Anel: participação no faturamento.</div>
+        <div class="cbox"><canvas id="c5"></canvas></div><div class="pie-legend" id="c5-lg"></div></div>
     </div>`);
 
-  appendAll(wrap, `
-    <div class="sec-head"><div><h2>Precisa de algo?</h2><p>Chamados e solicitações de nota fiscal são respondidos em até 48h úteis.</p></div></div>
+  appendAll(wrap,`<div class="sec-head" id="notas"><div><h2>Notas do mês</h2>
+    <p>Clique em <b>Editar centro</b> para reatribuir a nota — dividir igual, por % ou por valor. Salvar grava na planilha do mês.</p></div>
+    <div class="tabs"><button class="tab on" id="tab-prest" data-tab="prestadas">Prestadas</button><button class="tab" id="tab-tom" data-tab="tomadas">Tomadas</button></div></div>
+    <div class="card" style="padding:18px 20px">
+      <div class="nf-toolbar"><span class="lbl" id="nf-resumo"></span><input class="nf-search" id="nf-search" placeholder="buscar por nº ou nome…"></div>
+      <div class="table-scroll"><table class="nf" id="nf-tabela"><thead></thead><tbody></tbody></table></div>
+    </div>`);
+
+  appendAll(wrap,`<div class="sec-head"><div><h2>Precisa de algo?</h2><p>Chamados e solicitações de nota são respondidos em até 48h úteis.</p></div></div>
     <div class="charts">
-      <div class="card chart">
-        <h3>Abrir chamado</h3>
-        <div class="sub">Escreva o que você precisa — dúvida, documento, o que for.</div>
+      <div class="card chart"><h3>Abrir chamado</h3><div class="sub">Escreva o que você precisa.</div>
         <textarea id="ticket-msg" rows="4" placeholder="Descreva o que você precisa..." class="campo-texto"></textarea>
-        <button class="btn-acao" id="ticket-enviar">Enviar chamado</button>
-        <div class="msg-status" id="ticket-status"></div>
-      </div>
-      <div class="card chart">
-        <h3>Solicitar emissão de nota fiscal</h3>
-        <div class="sub">Preencha os dados do tomador e do serviço.</div>
-        <div class="form-nf">
-          <input id="nf-nome" placeholder="Nome / razão social do tomador">
-          <input id="nf-doc" placeholder="CPF ou CNPJ do tomador">
-          <input id="nf-centro" placeholder="Centro de custo / médico responsável">
-          <input id="nf-valor" placeholder="Valor (R$)">
-          <input id="nf-cep" placeholder="CEP">
-          <textarea id="nf-descricao" rows="2" placeholder="Descrição do serviço prestado"></textarea>
-          <input id="nf-data" type="date">
-          <textarea id="nf-obs" rows="2" placeholder="Observações (opcional)"></textarea>
-          <button class="btn-acao" id="nf-enviar">Enviar solicitação</button>
-          <div class="msg-status" id="nf-status"></div>
-        </div>
-      </div>
+        <button class="btn-acao" id="ticket-enviar">Enviar chamado</button><div class="msg-status" id="ticket-status"></div></div>
+      <div class="card chart"><h3>Solicitar emissão de nota fiscal</h3><div class="sub">Dados do tomador e do serviço.</div>
+        <div class="form-nf"><input id="nf-nome" placeholder="Nome / razão social do tomador"><input id="nf-doc" placeholder="CPF ou CNPJ do tomador">
+          <input id="nf-centro" placeholder="Centro de custo"><input id="nf-valor" placeholder="Valor (R$)"><input id="nf-cep" placeholder="CEP">
+          <textarea id="nf-descricao" rows="2" placeholder="Descrição do serviço"></textarea><input id="nf-data" type="date">
+          <button class="btn-acao" id="nf-enviar">Enviar solicitação</button><div class="msg-status" id="nf-status"></div></div></div>
     </div>`);
 
-  wrap.appendChild(el(`<footer>
-      <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
-    </footer>`));
+  wrap.appendChild(el(`<footer><span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span><span>back4you · inteligência tributária</span></footer>`));
 
   ligarFormularios(M);
 
-  // --- carrossel do calendário: estado local, independente da competência selecionada nas demais partes ---
-  let calCentro = null;
-  function centerFromComp(comp){
-    const [a,m] = comp.split('-').map(Number);
-    const d = new Date(a, m, 1); // mês seguinte à competência
-    return { ano: d.getFullYear(), mes: d.getMonth() };
-  }
+  // carrossel calendário, limitado à janela de 3 anos
+  const anoMin=hoje.getFullYear()-1, anoMax=hoje.getFullYear()+1;
+  let calCentro=null;
+  const centerFromComp=comp=>{ const [a,m]=comp.split('-').map(Number); const d=new Date(a,m,1); return {ano:d.getFullYear(),mes:d.getMonth()}; };
+  function dentro(ano){ return ano>=anoMin && ano<=anoMax; }
   function renderCarrossel(){
-    const { ano, mes } = calCentro;
-    const prevD = new Date(ano, mes-1, 1), nextD = new Date(ano, mes+1, 1);
-    const marcAtual = vencimentosDoMes(M, ano, mes);
-    const totalAtual = Array.from(marcAtual.values()).flat().reduce((s,x)=>s+x.valor,0);
-
-    document.getElementById('cal-titulo').textContent = mesLongo(compDe(new Date(ano,mes,1)));
-    document.getElementById('cal-total').textContent = totalAtual>0 ? brl(totalAtual) : 'sem guias com valor neste mês';
-    document.getElementById('cal-prev').innerHTML = miniGradeHTML(prevD.getFullYear(), prevD.getMonth(), vencimentosDoMes(M, prevD.getFullYear(), prevD.getMonth()), false);
-    document.getElementById('cal-atual').innerHTML = miniGradeHTML(ano, mes, marcAtual, true);
-    document.getElementById('cal-next').innerHTML = miniGradeHTML(nextD.getFullYear(), nextD.getMonth(), vencimentosDoMes(M, nextD.getFullYear(), nextD.getMonth()), false);
-
-    const agenda = Array.from(marcAtual.entries()).sort((a,b)=>a[0]-b[0]).map(([dia,items])=>
-      items.map(it=>{
-        const valorHtml = it.valor===null
-          ? '<span style="color:var(--muted)">—</span>'
-          : `<b class="num${it.est?' estimativa':''}">${brl(it.valor)}${it.est?' (estimativa)':''}</b>`;
-        return '<div class="row"><span>'+String(dia).padStart(2,'0')+' · '+it.descricao+'</span>'+valorHtml+'</div>';
-      }).join('')
-    ).join('');
-    document.getElementById('cal-agenda').innerHTML = agenda || '<div class="empty">Nenhuma guia com valor neste mês.</div>';
+    let {ano,mes}=calCentro;
+    const prevD=new Date(ano,mes-1,1), nextD=new Date(ano,mes+1,1);
+    const marc=vencimentosDoMes(M,ano,mes); const total=Array.from(marc.values()).flat().reduce((s,x)=>s+x.valor,0);
+    document.getElementById('cal-titulo').textContent=mesLongo(compDe(new Date(ano,mes,1)));
+    document.getElementById('cal-total').textContent=total>0?brl(total):'sem guias com valor neste mês';
+    document.getElementById('cal-prev').innerHTML=dentro(prevD.getFullYear())?miniGradeHTML(prevD.getFullYear(),prevD.getMonth(),vencimentosDoMes(M,prevD.getFullYear(),prevD.getMonth()),false):'';
+    document.getElementById('cal-atual').innerHTML=miniGradeHTML(ano,mes,marc,true);
+    document.getElementById('cal-next').innerHTML=dentro(nextD.getFullYear())?miniGradeHTML(nextD.getFullYear(),nextD.getMonth(),vencimentosDoMes(M,nextD.getFullYear(),nextD.getMonth()),false):'';
+    const agenda=Array.from(marc.entries()).sort((a,b)=>a[0]-b[0]).map(([dia,items])=>items.map(it=>{
+      const vh=it.valor===null?'<span style="color:var(--muted)">—</span>':`<b class="num${it.est?' estimativa':''}">${brl(it.valor)}${it.est?' (estimativa)':''}</b>`;
+      return '<div class="row"><span>'+String(dia).padStart(2,'0')+' · '+esc(it.descricao)+'</span>'+vh+'</div>'; }).join('')).join('');
+    document.getElementById('cal-agenda').innerHTML=agenda||'<div class="empty">Nenhuma guia com valor neste mês.</div>';
+    document.getElementById('cal-prev-btn').disabled = !dentro(new Date(ano,mes-1,1).getFullYear());
+    document.getElementById('cal-next-btn').disabled = !dentro(new Date(ano,mes+1,1).getFullYear());
   }
-  document.getElementById('cal-btn-prev').addEventListener('click', ()=>{
-    calCentro = { ano: calCentro.mes===0?calCentro.ano-1:calCentro.ano, mes: (calCentro.mes+11)%12 };
-    renderCarrossel();
-  });
-  document.getElementById('cal-btn-next').addEventListener('click', ()=>{
-    calCentro = { ano: calCentro.mes===11?calCentro.ano+1:calCentro.ano, mes: (calCentro.mes+1)%12 };
-    renderCarrossel();
-  });
+  document.getElementById('cal-prev-btn').addEventListener('click',()=>{ const d=new Date(calCentro.ano,calCentro.mes-1,1); if(dentro(d.getFullYear())){calCentro={ano:d.getFullYear(),mes:d.getMonth()};renderCarrossel();} });
+  document.getElementById('cal-next-btn').addEventListener('click',()=>{ const d=new Date(calCentro.ano,calCentro.mes+1,1); if(dentro(d.getFullYear())){calCentro={ano:d.getFullYear(),mes:d.getMonth()};renderCarrossel();} });
 
   desenharEstimativas(M);
   desenharAnuais(M);
-  const charts = desenharGraficos(M);
+  CHARTS=desenharGraficos(M);
 
-  const pick = document.getElementById('comp');
-  pick.value = sel;
-  pick.addEventListener('change', e => {
-    sel = e.target.value;
-    pintarMes(M, sel, charts);
-    calCentro = centerFromComp(sel);
-    renderCarrossel();
-  });
-  calCentro = centerFromComp(sel);
-  renderCarrossel();
-  pintarMes(M, sel, charts);
+  const pick=document.getElementById('comp'); pick.value=SEL;
+  pick.addEventListener('change',e=>{ SEL=e.target.value; pintarMes(M,SEL); calCentro=centerFromComp(SEL); if(!dentro(calCentro.ano))calCentro={ano:Math.min(anoMax,Math.max(anoMin,calCentro.ano)),mes:calCentro.mes}; renderCarrossel(); });
+  document.getElementById('tab-prest').addEventListener('click',()=>{NF_TAB='prestadas';toggleTabs();desenharNotas(M,SEL);});
+  document.getElementById('tab-tom').addEventListener('click',()=>{NF_TAB='tomadas';toggleTabs();desenharNotas(M,SEL);});
+  document.getElementById('nf-search').addEventListener('input',e=>{NF_BUSCA=e.target.value.trim().toLowerCase();desenharNotas(M,SEL);});
+
+  calCentro=centerFromComp(SEL); if(!dentro(calCentro.ano))calCentro={ano:anoMax,mes:calCentro.mes};
+  renderCarrossel(); pintarMes(M,SEL);
+}
+function toggleTabs(){ document.getElementById('tab-prest').classList.toggle('on',NF_TAB==='prestadas'); document.getElementById('tab-tom').classList.toggle('on',NF_TAB==='tomadas'); }
+
+function pintarMes(M,comp){
+  const r=M.porComp[comp]; const i=M.empresa.findIndex(x=>x.competencia===comp); const ant=i>0?M.empresa[i-1]:null;
+  const tot=num(getM(r,'Total (R$)')), imp=M.impostos(r), ret=M.retido(r), liq=num(getM(r,'Resultado Líquido (R$)'));
+  const carga=tot?imp/tot:0; const totAnt=ant?num(getM(ant,'Total (R$)')):null; const dif=(ant&&totAnt)?(tot/totAnt-1):null; const nfs=num(getM(r,'Nº NFs'));
+
+  desenharGuiasDoMes(M,comp);
+
+  // tributos visíveis: regime + "vazio some"
+  const visiveis=M.tribs.filter(t=>temMetrica(r,t.pag));
+  const linkUrl=M.links[comp];
+  document.getElementById('hero').innerHTML=`<div class="hero">
+    <div class="card hero-main"><span class="lbl">Competência</span><div class="comp-title">${mesLongo(comp)}</div>
+      <p class="comp-note">Os impostos desta competência vencem em ${mesLongo(mesSeguinteComp(comp))}.</p>
+      <div class="big num">${brl2(tot)}</div>
+      <div class="delta">${dif===null?'':`<span class="chip ${dif>=0?'up':'down'}">${dif>=0?'+':''}${(dif*100).toFixed(1).replace('.',',')}%</span>`}<span>${nfs} notas emitidas · total: ${brl(tot)}</span></div>
+      ${linkUrl?`<a class="link-planilha" href="${esc(linkUrl)}" target="_blank" rel="noopener">▤ Abrir planilha de notas e rateio ↗</a>`:`<span class="link-planilha" aria-disabled="true">Sem planilha de rateio vinculada</span>`}
+    </div>
+    <div class="card relacao"><div class="relacao-head"><h2>Impostos a pagar</h2></div>
+      <div class="table-scroll"><table class="imp"><thead><tr><th>Tributo</th><th>Devido</th>${M.reg.retencao?'<th>Retido</th>':''}<th>A pagar</th></tr></thead>
+      <tbody>${visiveis.map(t=>`<tr><td>${t.n}</td><td class="num">${brl(num(getM(r,t.dev)))}</td>${M.reg.retencao?`<td class="num">${t.ret?brl(num(getM(r,t.ret))):'—'}</td>`:''}<td class="num">${brl(num(getM(r,t.pag)))}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td>Total</td><td></td>${M.reg.retencao?`<td class="num">${brl(ret)}</td>`:''}<td class="num">${brl(imp)}</td></tr></tfoot></table></div>
+      <a class="btn" href="#rateio">Ver rateio por centro de custo ↓</a></div></div>`;
+
+  const prov=provisaoDoMes(M,comp);
+  document.getElementById('slim').innerHTML=`<div class="slim">
+    ${M.reg.retencao?`<div class="card stat"><span class="lbl">Retido na fonte</span><div class="v num">${brl(ret)}</div><div class="s">${ret?'já pago pelos tomadores':'nenhuma retenção no mês'}</div></div>`:''}
+    <div class="card stat"><span class="lbl">Carga efetiva</span><div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>
+    <div class="card stat"><span class="lbl">Resultado líquido</span><div class="v num" style="color:var(--receita)">${brl(liq)}</div><div class="s">depois dos impostos</div></div></div>`;
+
+  document.getElementById('prov').innerHTML=prov?(()=>{ const dias=prov.venc?Math.round((dParse(prov.venc)-hoje)/864e5):null;
+    return `<div class="card prov-compact"><div class="prov-compact-head"><span class="lbl">Provisão IRPJ+CSLL · ${prov.tri}º trimestre de ${prov.ano}</span>
+      <span class="prov-compact-venc">${prov.venc?'vence '+dParse(prov.venc).toLocaleDateString('pt-BR')+(dias!==null?(dias>=0?` · em ${dias}d`:' · vencida'):''):'sem guia projetada'}</span></div>
+      <div class="prov-compact-meses">${prov.meses.map(x=>`<div class="pmes ${x.apurado?'':'futuro'}"><span class="pmes-label">${mesLabel(x.comp)} · ${x.apurado?'apurado':'estimado'}</span><span class="pmes-v num ${x.apurado?'':'est'}">${brl(x.v)}</span></div>`).join('')}</div>
+      <div class="prov-compact-total"><span>Total do trimestre</span><b class="num">${brl(prov.total)}</b></div></div>`; })():'';
+
+  const outrasComValor=OUTRAS.map(o=>({...o,v:num(getM(r,o.k))})).filter(o=>temMetrica(r,o.k)&&o.v>0);
+  document.getElementById('outras').innerHTML=outrasComValor.length?`<div class="card outras"><h4>Outras guias do mês</h4>${outrasComValor.map(o=>`<div class="outras-row"><i style="background:${o.c}"></i><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}</div>`:'';
+
+  desenharRateio(M,comp,tot);
+  desenharNotas(M,comp);
+
+  if(CHARTS){
+    CHARTS.c1.data.datasets[0].backgroundColor=M.empresa.map(r2=>r2.competencia===comp?PAL.iss:'#D9CDBB'); CHARTS.c1.update('none');
+    CHARTS.c3.data.labels=visiveis.map(t=>t.n); CHARTS.c3.data.datasets[0].data=visiveis.map(t=>num(getM(r,t.pag)));
+    CHARTS.c3.data.datasets[0].backgroundColor=visiveis.map(t=>t.c);
+    document.getElementById('c3sub').textContent=mesLongo(comp)+' · total '+brl(imp);
+    document.getElementById('c3-lg').innerHTML=visiveis.map(t=>`<div class="pie-legend-row"><i style="background:${t.c}"></i><span>${t.n}</span><b class="num">${brl(num(getM(r,t.pag)))}</b></div>`).join('');
+    CHARTS.c3.update();
+  }
 }
 
-function pintarMes(M, comp, charts){
-  const r = M.porComp[comp];
-  const i = M.empresa.findIndex(x=>x.competencia===comp);
-  const ant = i > 0 ? M.empresa[i-1] : null;
+function desenharGuiasDoMes(M,comp){
+  const itens=M.cal.filter(c=>c.competencia_ref===comp).map(c=>({...c,...M.valorDe(c)})).sort((a,b)=>b.v-a.v);
+  const box=document.getElementById('guias-mes'); if(!itens.length){box.innerHTML='';return;}
+  box.innerHTML=`<div class="card guias-card"><div class="relacao-head"><h2>Guias do mês</h2><span class="lbl">o que vence a partir desta competência</span></div>
+    ${itens.map(it=>{ const status=it.v<=0?'aberto':(it.est?'estimativa':'fechada'); const rot={fechada:'Fechada',estimativa:'Estimativa',aberto:'Em aberto'}[status];
+      return `<div class="guia-row"><div class="guia-main"><span class="guia-status status-${status}">${rot}</span><span class="guia-nome">${esc(it.descricao)}</span>
+        <b class="num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (estimativa)':''}</b></div></div>`; }).join('')}</div>`;
+}
 
-  const tot = num(getM(r,'Total (R$)'));
-  const imp = M.impostos(r);
-  const ret = M.retido(r);
-  const liq = num(getM(r,'Resultado Líquido (R$)'));
-  const carga = tot ? imp/tot : 0;
-  const totAnt = ant ? num(getM(ant,'Total (R$)')) : null;
-  const dif = (ant && totAnt) ? (tot/totAnt - 1) : null;
-  const nfs = num(getM(r,'Nº NFs'));
+function desenharRateio(M,comp,tot){
+  const linhas=rateioParaComp(M,comp).filter(x=>num(x['Total (R$)'])>0||num(x['Nº NFs'])>0||M.impostos(x)>0)
+    .sort((a,b)=>num(b['Total (R$)'])-num(a['Total (R$)']));
+  const tb=document.querySelector('#rat tbody');
+  tb.innerHTML=linhas.map(x=>{ const nid=x.centro==='Não identificado'; const t=num(x['Total (R$)']); const sh=tot?t/tot:0;
+    return `<tr class="${nid?'nid':''}"><td><b style="font-weight:${nid?800:600}">${esc(x.centro)}</b><div class="share"><i style="width:${(sh*100).toFixed(1)}%"></i></div></td>
+      <td class="r num">${x['Nº NFs']}</td><td class="r num">${brl(t)}<div style="font-size:11px;color:var(--muted)">${pct(sh)}</div></td>
+      <td class="r num">${brl(M.impostos(x))}</td>${M.reg.retencao?`<td class="r num">${brl(M.retido(x))}</td>`:''}<td class="r num">${brl(num(x['Resultado Líquido (R$)']))}</td></tr>`;
+  }).join('')||`<tr><td colspan="6" style="color:var(--muted)">Sem rateio informado neste mês.</td></tr>`;
 
-  desenharGuiasDoMes(M, comp);
+  const nidRow=linhas.find(x=>x.centro==='Não identificado'); const shareNid=nidRow&&tot?num(nidRow['Total (R$)'])/tot:0;
+  document.getElementById('rat-sub').textContent=`${linhas.length} centros com movimento em ${mesLongo(comp)}.`;
+  document.getElementById('alerta').innerHTML=shareNid>0.001?`<div class="alert" role="status">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    <div><b>${pct(shareNid)} do faturamento de ${mesLongo(comp)} está sem centro de custo.</b></div></div>`:'';
 
-  document.getElementById('hero').innerHTML = `
-    <div class="hero">
-      <div class="card hero-main">
-        <span class="lbl">Competência</span>
-        <div class="comp-title">${mesLongo(comp)}</div>
-        <p class="comp-note">Os impostos apurados nesta competência vencem em ${mesLongo(mesSeguinteComp(comp))}.</p>
-        <div class="big num">${brl2(tot)}</div>
-        <div class="delta">
-          ${dif===null ? '' : `<span class="chip ${dif>=0?'up':'down'}">${dif>=0?'+':''}${(dif*100).toFixed(1).replace('.',',')}%</span>`}
-          <span>${nfs} notas emitidas no mês · valor total: ${brl(tot)}</span>
-        </div>
-      </div>
-      <div class="card relacao">
-        <div class="relacao-head"><h2>Impostos a pagar</h2></div>
-        <div class="table-scroll"><table class="imp">
-          <thead><tr><th>Tributo</th><th>Devido</th><th>Retido</th><th>A pagar</th></tr></thead>
-          <tbody>
-            ${TRIB_ROWS.map(([n,d,rt,p])=>`<tr><td>${n}</td><td class="num">${brl(num(getM(r,d)))}</td><td class="num">${brl(num(getM(r,rt)))}</td><td class="num">${brl(num(getM(r,p)))}</td></tr>`).join('')}
-          </tbody>
-          <tfoot><tr><td>Total</td><td></td><td class="num">${brl(ret)}</td><td class="num">${brl(imp)}</td></tr></tfoot>
-        </table></div>
-        <a class="btn" href="#rateio">Ver rateio por centro de custo ↓</a>
-      </div>
-    </div>`;
+  if(CHARTS){ const pal=CENTRO_PAL.slice(); const nidIdx=linhas.findIndex(x=>x.centro==='Não identificado'); if(nidIdx>-1)pal[nidIdx]=PAL.vinho;
+    CHARTS.c5.data.labels=linhas.map(x=>x.centro); CHARTS.c5.data.datasets[0].data=linhas.map(x=>num(x['Total (R$)']));
+    CHARTS.c5.data.datasets[0].backgroundColor=linhas.map((_,i)=>pal[i%pal.length]); CHARTS.c5.update();
+    document.getElementById('c5-lg').innerHTML=linhas.map((x,i)=>`<div class="pie-legend-row"><i style="background:${pal[i%pal.length]}"></i><span>${esc(x.centro)}</span><b class="num">${brl(M.impostos(x))}</b></div>`).join('');
+  }
+}
 
-  const prov = provisaoDoMes(M, comp);
-  document.getElementById('slim').innerHTML = `<div class="slim">
-    <div class="card stat"><span class="lbl">Retido na fonte</span>
-        <div class="v num">${brl(ret)}</div><div class="s">${ret ? 'já pago pelos tomadores' : 'nenhuma retenção no mês'}</div></div>
-    <div class="card stat"><span class="lbl">Carga efetiva</span>
-        <div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>
-    <div class="card stat"><span class="lbl">Resultado líquido</span>
-        <div class="v num" style="color:var(--receita)">${brl(liq)}</div><div class="s">depois dos impostos</div></div>
+/* ---- Notas do mês + editor de centro ---- */
+function centroCor(M,centro){ const i=M.centros.indexOf(centro); return centro==='Não identificado'?PAL.vinho:CENTRO_PAL[(i<0?0:i)%CENTRO_PAL.length]; }
+function chipsCentro(M,nf){
+  const w=pesosNF(nf); const ent=Object.entries(w).filter(([,p])=>p>0.0005).sort((a,b)=>b[1]-a[1]);
+  if(!ent.length) return `<span class="chip-c nid">Não identificado</span>`;
+  return ent.map(([c,p])=>`<span class="chip-c ${c==='Não identificado'?'nid':''}"><i style="background:${centroCor(M,c)}"></i>${esc(c)} · ${pct(p)}</span>`).join('');
+}
+function desenharNotas(M,comp){
+  const pack=M.nfs[comp]||{prestadas:[],tomadas:[]}; const lista=(pack[NF_TAB]||[]).filter(nf=>{
+    if(!NF_BUSCA) return true; return (nf.nf+' '+nf.contraparte+' '+(nf.tipo||'')).toLowerCase().includes(NF_BUSCA); });
+  const prest=NF_TAB==='prestadas';
+  const totBruto=(pack[NF_TAB]||[]).reduce((s,nf)=>s+num(nf.valorBruto),0);
+  document.getElementById('nf-resumo').textContent=`${(pack[NF_TAB]||[]).length} notas ${prest?'prestadas':'tomadas'} · ${brl(totBruto)}`;
+  const thead=document.querySelector('#nf-tabela thead');
+  thead.innerHTML=`<tr><th>NF</th><th>Data</th><th>${prest?'Tomador':'Prestador'}</th><th class="r">Valor</th><th>Centro de custo</th><th class="r"></th></tr>`;
+  const tb=document.querySelector('#nf-tabela tbody');
+  if(!lista.length){ tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">Nenhuma nota ${prest?'prestada':'tomada'} neste mês.</td></tr>`; return; }
+  tb.innerHTML=lista.map((nf,idx)=>{
+    const gid=`${NF_TAB}-${idx}`;
+    return `<tr id="nfrow-${gid}"><td class="num">${esc(nf.nf)}</td><td class="num">${esc((nf.data||'').slice(8)+'/'+(nf.data||'').slice(5,7))}</td>
+      <td><div class="nf-cp">${esc(nf.contraparte)}</div><div class="nf-tipo">${esc(nf.tipo||'')}</div></td>
+      <td class="r num">${brl(num(nf.valorBruto))}</td><td><div class="chips" id="chips-${gid}">${chipsCentro(M,nf)}</div></td>
+      <td class="r"><button class="btn-edit" data-gid="${gid}" data-idx="${idx}">Editar centro</button></td></tr>
+    <tr class="editor-row" id="editor-${gid}"><td colspan="6"></td></tr>`;
+  }).join('');
+  tb.querySelectorAll('.btn-edit').forEach(b=>b.addEventListener('click',()=>abrirEditor(M,comp,NF_TAB,+b.dataset.idx,b.dataset.gid)));
+}
+
+const EDIT_STATE={};
+function abrirEditor(M,comp,tab,idx,gid){
+  const nf=M.nfs[comp][tab][idx]; const row=document.getElementById('editor-'+gid); const cell=row.querySelector('td');
+  const aberto=row.classList.contains('aberto');
+  document.querySelectorAll('.editor-row.aberto').forEach(r=>{ if(r!==row){r.classList.remove('aberto');r.querySelector('td').innerHTML='';} });
+  if(aberto){ row.classList.remove('aberto'); cell.innerHTML=''; return; }
+  row.classList.add('aberto');
+  // estado de edição: partir do rateio atual da NF
+  const w=pesosNF(nf); const bruto=num(nf.valorBruto);
+  const st={ modo: Object.values(nf.centros||{}).some(v=>typeof v==='number')?'valor':'igual',
+             sel:{} }; // sel[centro] = {on:bool, valor:number}
+  M.centros.forEach(c=>{ st.sel[c]={on:(w[c]||0)>0.0005, valor: round2((w[c]||0)*bruto)}; });
+  EDIT_STATE[gid]={nf,comp,tab,idx,bruto,st};
+  renderEditor(M,gid);
+}
+function round2(v){ return Math.round(v*100)/100; }
+function renderEditor(M,gid){
+  const E=EDIT_STATE[gid]; const {bruto,st}=E; const cell=document.getElementById('editor-'+gid).querySelector('td');
+  const modos=[['igual','Dividir igual'],['pct','Por %'],['valor','Por valor (R$)']];
+  const rows=M.centros.map(c=>{ const s=st.sel[c]; const cor=centroCor(M,c);
+    let inputHtml='';
+    if(st.modo==='igual') inputHtml=`<span style="font-size:11.5px;color:var(--muted);text-align:right">${s.on?pct(1/Math.max(1,contarOn(st))):'—'}</span>`;
+    else if(st.modo==='pct') inputHtml=`<input class="ed-num" type="number" min="0" max="100" step="0.1" data-c="${esc(c)}" data-f="pct" ${s.on?'':'disabled'} value="${s.on?round2(s.valor/bruto*100):''}">`;
+    else inputHtml=`<input class="ed-num" type="number" min="0" step="0.01" data-c="${esc(c)}" data-f="valor" ${s.on?'':'disabled'} value="${s.on?s.valor:''}">`;
+    return `<div class="ed-row"><i style="background:${cor}"></i><label><input type="checkbox" data-c="${esc(c)}" data-f="on" ${s.on?'checked':''}> ${esc(c)}</label>${inputHtml}</div>`;
+  }).join('');
+  const {somaValor,somaPct,estado,txt}=resumoEditor(M,gid);
+  cell.innerHTML=`<div class="editor">
+    <div class="editor-modos">${modos.map(([k,l])=>`<button class="tab ${st.modo===k?'on':''}" data-modo="${k}">${l}</button>`).join('')}</div>
+    ${rows}
+    <div class="ed-foot"><span class="ed-sum ${estado}">${txt}</span>
+      <div class="ed-actions"><button class="btn-ghost" data-act="cancel">Cancelar</button><button class="btn-save" data-act="save" ${estado==='err'?'disabled':''}>Salvar</button></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px">Não marcar nenhum centro = a nota fica em <b>Não identificado</b>.</div>
   </div>`;
-
-  document.getElementById('prov').innerHTML = prov ? (() => {
-    const dias = prov.venc ? Math.round((dParse(prov.venc)-hoje)/864e5) : null;
-    return `<div class="card prov-compact">
-      <div class="prov-compact-head">
-        <span class="lbl">Provisão IRPJ+CSLL · ${prov.tri}º trimestre de ${prov.ano}</span>
-        <span class="prov-compact-venc">${prov.venc ? 'vence '+dParse(prov.venc).toLocaleDateString('pt-BR')+(dias!==null?(dias>=0?` · em ${dias}d`:' · vencida'):'') : 'sem guia projetada'}</span>
-      </div>
-      <div class="prov-compact-meses">
-        ${prov.meses.map(x=>`<div class="pmes ${x.apurado?'':'futuro'}">
-          <span class="pmes-label">${mesLabel(x.comp)} · ${x.apurado?'apurado':'estimado'}</span>
-          <span class="pmes-v num ${x.apurado?'':'est'}">${brl(x.v)}</span>
-        </div>`).join('')}
-      </div>
-      <div class="prov-compact-total"><span>Total do trimestre</span><b class="num">${brl(prov.total)}</b></div>
-    </div>`;
-  })() : '';
-
-  const outrasComValor = OUTRAS.map(o=>({...o, v:num(getM(r,o.k))})).filter(o=>o.v>0);
-  document.getElementById('outras').innerHTML = outrasComValor.length ? `
-    <div class="card outras">
-      <h4>Outras guias do mês</h4>
-      ${outrasComValor.map(o=>`<div class="outras-row"><i style="background:${o.c}"></i><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}
-    </div>` : '';
-
-  // O rateio não pode depender só de % do faturamento: INSS, FGTS e IRRF sobre
-  // dividendos não são proporcionais à receita (retenções e regras diferentes) —
-  // um centro entra na tabela se tiver QUALQUER movimento, mesmo com Total zerado.
-  const temMovimento = x => num(getM(x,'Total (R$)'))>0 || num(getM(x,'Nº NFs'))>0
-    || M.impostos(x)>0 || M.retido(x)>0 || OUTRAS.some(o=>num(getM(x,o.k))>0);
-
-  const linhas = M.rateio.filter(x=>x.competencia===comp)
-                   .filter(temMovimento)
-                   .sort((a,b)=>num(getM(b,'Total (R$)'))-num(getM(a,'Total (R$)')));
-  const tb = document.querySelector('#rat tbody');
-  tb.innerHTML = linhas.map((x,idx)=>{
-    const nid = x.centro === 'Não identificado';
-    const t = num(getM(x,'Total (R$)')), sh = tot ? t/tot : 0;
-    return `<tr class="${nid?'nid':''}">
-      <td><b style="font-weight:${nid?800:600}">${x.centro}</b>
-        <div class="share"><i style="width:${(sh*100).toFixed(1)}%"></i></div></td>
-      <td class="r num">${num(getM(x,'Nº NFs'))}</td>
-      <td class="r num">${brl(t)}<div style="font-size:11px;color:var(--muted)">${pct(sh)}</div></td>
-      <td class="r num">${brl(M.impostos(x))}</td>
-      <td class="r num">${brl(M.retido(x))}</td>
-      <td class="r num">${brl(num(getM(x,'Resultado Líquido (R$)')))}</td>
-      <td class="r"><button class="btn-detalhe" onclick="this.closest('tr').nextElementSibling.classList.toggle('aberto'); this.textContent = this.closest('tr').nextElementSibling.classList.contains('aberto') ? 'Ocultar' : 'Detalhes'">Detalhes</button></td>
-    </tr>
-    <tr class="detail-row"><td colspan="7">
-      <div class="table-scroll"><table class="rat-detalhe">
-        <thead><tr><th>Tributo</th><th class="r">Devido</th><th class="r">Retido</th><th class="r">A pagar</th></tr></thead>
-        <tbody>
-          ${TRIB_ROWS.map(([n,d,rt,p],i)=>`<tr>
-            <td><i style="background:${TRIB[i].c}"></i>${n}</td>
-            <td class="r num">${brl(num(getM(x,d)))}</td>
-            <td class="r num">${brl(num(getM(x,rt)))}</td>
-            <td class="r num">${brl(num(getM(x,p)))}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table></div>
-      ${(() => {
-        // INSS, FGTS e IRRF sobre dividendos não são proporcionais ao faturamento
-        // (não têm devido/retido no mesmo sentido) — por isso ficam à parte, mas
-        // continuam aparecendo no rateio por centro, ainda que tudo caia em "Não identificado".
-        const outrasComValor = OUTRAS.map(o=>({...o, v:num(getM(x,o.k))})).filter(o=>o.v>0);
-        return outrasComValor.length ? `<div class="rat-detalhe-outras">
-          ${outrasComValor.map(o=>`<div class="outras-row"><i style="background:${o.c}"></i><span>${o.n}</span><b class="num">${brl(o.v)}</b></div>`).join('')}
-        </div>` : '';
-      })()}
-    </td></tr>`;
-  }).join('') || '<tr><td colspan="7" style="color:var(--muted)">Sem rateio informado neste mês.</td></tr>';
-
-  const nid = linhas.find(x=>x.centro==='Não identificado');
-  const shareNid = nid && tot ? num(getM(nid,'Total (R$)'))/tot : 0;
-  document.getElementById('rat-sub').textContent = `${linhas.length} centros com movimento em ${mesLongo(comp)}.`;
-
-  document.getElementById('alerta').innerHTML = shareNid > 0.001 ? `
-    <div class="alert" role="status">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-        <path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-      <div><b>${pct(shareNid)} do faturamento de ${mesLongo(comp)} está sem centro de custo.</b></div>
-    </div>` : '';
-
-  if (charts){
-    charts.c1.data.datasets[0].backgroundColor = M.empresa.map(r2=>r2.competencia===comp ? PAL.iss : '#D9CDBB');
-    charts.c1.update('none');
-
-    charts.c3.data.datasets[0].data = TRIB.map(t=>num(getM(r,t.k)));
-    document.getElementById('c3sub').textContent = mesLongo(comp)+' · total '+brl(imp);
-    document.getElementById('c3-lg').innerHTML = TRIB.map(t=>
-      `<div class="pie-legend-row"><i style="background:${t.c}"></i><span>${t.n}</span><b class="num">${brl(num(getM(r,t.k)))}</b></div>`
-    ).join('');
-    charts.c3.update();
-
-    atualizarComparativo(M, comp, tot, imp, liq, charts);
-
-    const pal = CENTRO_PAL.slice();
-    const nidIdx = linhas.findIndex(x=>x.centro==='Não identificado');
-    if (nidIdx>-1) pal[nidIdx] = PAL.vinho;
-    charts.c5.data.labels = linhas.map(x=>x.centro);
-    charts.c5.data.datasets[0].data = linhas.map(x=>num(getM(x,'Total (R$)')));
-    charts.c5.data.datasets[0].backgroundColor = linhas.map((_,i)=>pal[i%pal.length]);
-    charts.c5.update();
-    document.getElementById('c5-lg').innerHTML = linhas.map((x,i)=>
-      `<div class="pie-legend-row"><i style="background:${pal[i%pal.length]}"></i><span>${x.centro}</span><b class="num">${brl(M.impostos(x))}</b></div>`
-    ).join('');
-  }
+  // listeners
+  cell.querySelectorAll('[data-modo]').forEach(b=>b.addEventListener('click',()=>{ st.modo=b.dataset.modo; renderEditor(M,gid); }));
+  cell.querySelectorAll('input[data-f="on"]').forEach(inp=>inp.addEventListener('change',()=>{ st.sel[inp.dataset.c].on=inp.checked; renderEditor(M,gid); }));
+  cell.querySelectorAll('input[data-f="pct"]').forEach(inp=>inp.addEventListener('input',()=>{ st.sel[inp.dataset.c].valor=round2((num(inp.value)/100)*bruto); atualizarResumo(M,gid); }));
+  cell.querySelectorAll('input[data-f="valor"]').forEach(inp=>inp.addEventListener('input',()=>{ st.sel[inp.dataset.c].valor=round2(num(inp.value)); atualizarResumo(M,gid); }));
+  cell.querySelector('[data-act="cancel"]').addEventListener('click',()=>{ document.getElementById('editor-'+gid).classList.remove('aberto'); cell.innerHTML=''; delete EDIT_STATE[gid]; });
+  cell.querySelector('[data-act="save"]').addEventListener('click',()=>confirmarSalvar(M,gid));
 }
-
-/** Próximos 3 meses após a última competência apurada, cada um com seu próprio gráfico de pizza. */
-/** Popula o seletor de período (só com janelas que têm histórico suficiente) e redesenha o c4. */
-function atualizarComparativo(M, comp, tot, imp, liq, charts){
-  const sel = document.getElementById('comp-base');
-  const disponiveis = janelasDisponiveis(M, comp);
-  const atualValor = sel.value;
-  sel.innerHTML = disponiveis.map(j=>`<option value="${j.v}">${j.n}</option>`).join('');
-  const valido = disponiveis.some(j=>String(j.v)===atualValor);
-  sel.value = valido ? atualValor : (disponiveis[0] ? String(disponiveis[0].v) : '');
-
-  function redraw(){
-    const janela = Number(sel.value) || (disponiveis[0] && disponiveis[0].v);
-    const base = janela ? comparativoBase(M, comp, janela) : null;
-    charts.c4.data.labels = ['Faturamento','Impostos','Líquido'];
-    charts.c4.data.datasets[0].data = [tot, imp, liq];
-    charts.c4.data.datasets[0].label = mesLongo(comp);
-    charts.c4.data.datasets[1].data = base ? [base.tot, base.imp, base.liq] : [0,0,0];
-    charts.c4.data.datasets[1].label = base ? base.label : 'sem histórico suficiente';
-    document.getElementById('c4sub').textContent = base
-      ? `${mesLongo(comp)} contra ${base.label}.`
-      : 'Sem histórico suficiente para comparar ainda.';
-    charts.c4.update();
-  }
-  sel.onchange = redraw;
-  redraw();
+function contarOn(st){ return Object.values(st.sel).filter(s=>s.on).length; }
+function resumoEditor(M,gid){
+  const E=EDIT_STATE[gid]; const {bruto,st}=E; const on=Object.entries(st.sel).filter(([,s])=>s.on);
+  if(st.modo==='igual'){ const n=on.length; return {somaValor:bruto,somaPct:n?1:0,estado:n?'ok':'warn',
+    txt:n?`Dividido igual entre ${n} centro(s) · ${pct(1/n)} cada`:'Nenhum centro marcado → vai para Não identificado'}; }
+  const somaValor=on.reduce((s,[,x])=>s+num(x.valor),0); const somaPct=bruto?somaValor/bruto:0; const dif=round2(bruto-somaValor);
+  let estado='ok', txt=`Alocado ${brl(somaValor)} de ${brl(bruto)} · ${pct(somaPct)}`;
+  if(!on.length){ estado='warn'; txt='Nenhum centro marcado → vai para Não identificado'; }
+  else if(somaValor-bruto>0.01){ estado='err'; txt=`Passou do valor da nota em ${brl(somaValor-bruto)}`; }
+  else if(dif>0.01){ estado='warn'; txt=`Faltam ${brl(dif)} (${pct(dif/bruto)}) — o restante fica sem centro`; }
+  return {somaValor,somaPct,estado,txt};
 }
+function atualizarResumo(M,gid){ const cell=document.getElementById('editor-'+gid).querySelector('td'); const {estado,txt}=resumoEditor(M,gid);
+  const sp=cell.querySelector('.ed-sum'); if(sp){ sp.className='ed-sum '+estado; sp.textContent=txt; }
+  const save=cell.querySelector('[data-act="save"]'); if(save) save.disabled=(estado==='err'); }
 
-/** Soma uma coluna (ex.: CSLL) ao longo de 'n' meses terminando em 'competenciaRef'.
-    Mês já apurado usa o valor real; mês ainda não fechado usa nivelarTrimestre (último
-    trimestre fechado ÷ 3) como estimativa — mesma lógica robusta usada no resto do painel. */
-function valorAcumuladoColuna(M, competenciaRef, coluna, n){
-  const [a,m] = competenciaRef.split('-').map(Number);
-  let total = 0;
-  for (let i=0;i<n;i++){
-    const d = new Date(a, m-1-i, 1);
-    const c = compDe(d);
-    const r = M.porComp[c];
-    total += r ? num(getM(r, coluna)) : nivelarTrimestre(M, c, coluna);
-  }
-  return Math.round(total*100)/100;
+/* monta o mapa de centros que será gravado (true = igual; número = valor absoluto) */
+function montarCentrosParaSalvar(gid){
+  const {bruto,st}=EDIT_STATE[gid]; const map={};
+  const on=Object.entries(st.sel).filter(([,s])=>s.on);
+  if(st.modo==='igual'){ on.forEach(([c])=>map[c]=true); }
+  else { on.forEach(([c,s])=>{ if(num(s.valor)>0) map[c]=round2(num(s.valor)); }); }
+  return map;
 }
-
-/** Quanto sai do caixa em cada tributo NO MÊS DE VENCIMENTO — não na competência.
-    ISS/PIS/COFINS vencem todo mês; IRPJ/CSLL (trimestral) só vencem no mês de
-    fechamento do trimestre — nos outros dois meses o desembolso desses dois é zero. */
-function desembolsoPorTributoNoMes(M, ano, mes){
-  const acha = idRegra => M.cal.find(c => {
-    if (c.id_regra !== idRegra) return false;
-    const d = dParse(c.vencimento);
-    return d.getFullYear()===ano && d.getMonth()===mes;
-  });
-  const r01 = acha('R01'), r02 = acha('R02'), r07 = acha('R07');
-  return {
-    'ISS a Pagar (R$)':    r01 ? valorAcumuladoColuna(M, r01.competencia_ref, 'ISS a Pagar (R$)', 1) : 0,
-    'PIS a pagar (R$)':    r02 ? valorAcumuladoColuna(M, r02.competencia_ref, 'PIS a pagar (R$)', 1) : 0,
-    'COFINS a pagar (R$)': r02 ? valorAcumuladoColuna(M, r02.competencia_ref, 'COFINS a pagar (R$)', 1) : 0,
-    'CSLL a pagar (R$)':   r07 ? valorAcumuladoColuna(M, r07.competencia_ref, 'CSLL a pagar (R$)', 3) : 0,
-    'IR a pagar (R$)':     r07 ? valorAcumuladoColuna(M, r07.competencia_ref, 'IR a pagar (R$)', 3) : 0,
+function confirmarSalvar(M,gid){
+  const E=EDIT_STATE[gid]; const map=montarCentrosParaSalvar(gid); const bruto=E.bruto;
+  const w=pesosNFmap(map,bruto); const ent=Object.entries(w).filter(([,p])=>p>0.0005).sort((a,b)=>b[1]-a[1]);
+  const resumo=(ent.length?ent:[['Não identificado',1]]).map(([c,p])=>`<div><span>${esc(c)}</span><b>${pct(p)} · ${brl(p*bruto)}</b></div>`).join('');
+  document.getElementById('modal-texto').innerHTML=`Nota <b>${esc(E.nf.nf)}</b> (${brl(bruto)}) passará a ser rateada assim:`;
+  document.getElementById('modal-resumo').innerHTML=resumo;
+  const bg=document.getElementById('modal-bg'); bg.classList.add('on');
+  const conf=document.getElementById('modal-confirmar'), canc=document.getElementById('modal-cancelar');
+  const fechar=()=>{ bg.classList.remove('on'); conf.onclick=null; canc.onclick=null; };
+  canc.onclick=fechar;
+  conf.onclick=async()=>{ conf.disabled=true; conf.textContent='Salvando…';
+    try{ await salvarCentros(M,E,map); fechar(); }
+    catch(err){ document.getElementById('modal-texto').innerHTML=`<span style="color:var(--alerta)">Não deu para salvar: ${esc(err.message||err)}</span>`; }
+    finally{ conf.disabled=false; conf.textContent='Sim, salvar'; }
   };
 }
+function pesosNFmap(map,bruto){ const nomes=Object.keys(map); const t=nomes.filter(k=>map[k]===true); const nums=nomes.filter(k=>typeof map[k]==='number');
+  const p={}; if(!t.length&&!nums.length){p['Não identificado']=1;return p;} t.forEach(k=>p[k]=1/t.length); nums.forEach(k=>p[k]=(p[k]||0)+(bruto?num(map[k])/bruto:0)); return p; }
 
+async function salvarCentros(M,E,map){
+  if(API_URL){
+    const qs=new URLSearchParams({ id:IDENTIDADE.id, codigo:IDENTIDADE.codigo, acao:'atualizar_centro',
+      competencia:E.comp, tipo_nf:E.tab, nf:E.nf.nf, centros:JSON.stringify(map) });
+    const d=await jsonp(API_URL+'?'+qs.toString()); if(d.erro) throw new Error(d.erro);
+    // substitui os números autoritativos desta competência pelos que o Fechamento recalculou
+    if(d.rateio){ M.rateioAPI=(M.rateioAPI||[]).filter(x=>x.competencia!==E.comp).concat(d.rateio); }
+    if(d.empresa){ Object.assign(M.porComp[E.comp]||{}, d.empresa); }
+  }
+  // aplica localmente (na demonstração é a fonte; em produção é prévia até o backend confirmar)
+  E.nf.centros=map;
+  const gid=`${E.tab}-${E.idx}`; const row=document.getElementById('editor-'+gid); if(row){row.classList.remove('aberto');row.querySelector('td').innerHTML='';}
+  delete EDIT_STATE[gid];
+  document.getElementById('chips-'+gid).innerHTML=chipsCentro(M,E.nf);
+  // recalcula rateio + gráfico do mês selecionado
+  const r=M.porComp[E.comp]; desenharRateio(M,E.comp,num(getM(r,'Total (R$)')));
+}
+
+/* ---- estimativas / anuais / gráficos ---- */
+function valorAcumuladoColuna(M,ref,coluna,n){ const [a,m]=ref.split('-').map(Number); let total=0;
+  for(let i=0;i<n;i++){ const c=compDe(new Date(a,m-1-i,1)); const r=M.porComp[c]; total+=r?num(getM(r,coluna)):nivelarTrimestre(M,c,coluna); } return Math.round(total*100)/100; }
+function desembolsoPorTributoNoMes(M,ano,mes){
+  const acha=idr=>M.cal.find(c=>{ if(c.id_regra!==idr)return false; const d=dParse(c.vencimento); return d.getFullYear()===ano&&d.getMonth()===mes; });
+  const r01=acha('R01'),r02=acha('R02'),r07=acha('R07');
+  const out={}; M.tribs.forEach(t=>out[t.pag]=0);
+  if(r01&&out['ISS a Pagar (R$)']!==undefined) out['ISS a Pagar (R$)']=valorAcumuladoColuna(M,r01.competencia_ref,'ISS a Pagar (R$)',1);
+  if(r02){ if('PIS a pagar (R$)'in out)out['PIS a pagar (R$)']=valorAcumuladoColuna(M,r02.competencia_ref,'PIS a pagar (R$)',1);
+           if('COFINS a pagar (R$)'in out)out['COFINS a pagar (R$)']=valorAcumuladoColuna(M,r02.competencia_ref,'COFINS a pagar (R$)',1); }
+  if(r07){ if('CSLL a pagar (R$)'in out)out['CSLL a pagar (R$)']=valorAcumuladoColuna(M,r07.competencia_ref,'CSLL a pagar (R$)',3);
+           if('IR a pagar (R$)'in out)out['IR a pagar (R$)']=valorAcumuladoColuna(M,r07.competencia_ref,'IR a pagar (R$)',3); }
+  return out;
+}
 function desenharEstimativas(M){
-  const donutOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
-    plugins:{legend:{display:false},
-      tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
-        bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
-
-  // Âncora é HOJE (mês real corrente), não o último mês fechado + 1 — senão a guia
-  // trimestral que já vence este mês fica escondida no meio da sequência.
-  for (let i=0;i<3;i++){
-    const d = new Date(hoje.getFullYear(), hoje.getMonth()+i, 1);
-    const comp = compDe(d);
-    const porTributo = desembolsoPorTributoNoMes(M, d.getFullYear(), d.getMonth());
-    const dados = TRIB.map(t=>({n:t.n, c:t.c, v: porTributo[t.k] || 0}));
-    const total = dados.reduce((s,x)=>s+x.v,0);
-    document.getElementById('est-t-'+i).textContent = mesLongo(comp);
-    document.getElementById('est-s-'+i).innerHTML = 'total estimado <span class="estimativa">'+brl(total)+'</span>';
-    document.getElementById('est-lg-'+i).innerHTML = dados.map(x=>
-      `<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`
-    ).join('');
-    new Chart(document.getElementById('est-'+i), {
-      type:'doughnut',
-      data:{labels:dados.map(x=>x.n), datasets:[{data:dados.map(x=>x.v), backgroundColor:dados.map(x=>x.c), borderWidth:0}]},
-      options:donutOpts
-    });
+  const opts={responsive:true,maintainAspectRatio:false,animation:{duration:500},cutout:'60%',
+    plugins:{legend:{display:false},tooltip:{backgroundColor:PAL.petroleo,padding:10,cornerRadius:6,bodyFont:{family:'Montserrat',size:12},callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
+  for(let i=0;i<3;i++){ const d=new Date(hoje.getFullYear(),hoje.getMonth()+i,1); const comp=compDe(d);
+    const porTrib=desembolsoPorTributoNoMes(M,d.getFullYear(),d.getMonth());
+    const dados=M.tribs.map(t=>({n:t.n,c:t.c,v:porTrib[t.pag]||0})); const total=dados.reduce((s,x)=>s+x.v,0);
+    document.getElementById('est-t-'+i).textContent=mesLongo(comp);
+    document.getElementById('est-s-'+i).innerHTML='total estimado <span class="estimativa">'+brl(total)+'</span>';
+    document.getElementById('est-lg-'+i).innerHTML=dados.map(x=>`<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`).join('');
+    new Chart(document.getElementById('est-'+i),{type:'doughnut',data:{labels:dados.map(x=>x.n),datasets:[{data:dados.map(x=>x.v),backgroundColor:dados.map(x=>x.c),borderWidth:0}]},options:opts});
   }
 }
-
 function desenharAnuais(M){
-  const anuais = M.regras.filter(r => r.periodicidade === 'Anual' && String(r.ativo) !== 'FALSE');
-
-  const cartoes = anuais.map(reg => {
-    // Não filtra mais por v>0: algumas anuais (DMED, Receita Saúde, Informe de
-    // Rendimentos) são só entrega/emissão, sem valor a pagar, e ainda assim
-    // precisam aparecer como lembrete de prazo.
-    const ocorrencias = M.cal.filter(c => c.id_regra === reg.id)
-      .map(c => ({...c, data: dParse(c.vencimento), ...M.valorDe(c)}))
-      .sort((a,b) => a.data - b.data);
-
-    const passadas = ocorrencias.filter(o => o.data <= hoje);
-    const futuras  = ocorrencias.filter(o => o.data >  hoje);
-    const linhas = [passadas.length ? passadas[passadas.length-1] : null, futuras.length ? futuras[0] : null].filter(Boolean);
-    if (!linhas.length) return '';
-
-    return `<div class="card month">
-      <h4>${reg.descricao}</h4>
-      <div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:10px">${reg.categoria||''}</div>
-      ${linhas.map(o => {
-        const passado = o.data <= hoje;
-        const diasAteVencer = Math.round((o.data-hoje)/864e5);
-        const classe = passado ? 'due-pago' : (diasAteVencer <= 92 ? 'due-atencao' : '');
-        const valorHtml = o.v > 0
-          ? `<span class="vl num ${o.est?'est':''}">${brl(o.v)}</span>`
-          : `<span class="vl num" style="color:var(--muted);font-weight:500">só entrega</span>`;
-        return `<div class="due ${classe}">
-          <span class="day num">${String(o.vencimento).slice(8)}/${String(o.vencimento).slice(5,7)}</span>
-          <span class="body">
-            <span class="nm">${passado ? 'Último' : 'Próximo'} · ${o.vencimento.slice(0,4)}</span>
-            ${valorHtml}
-            ${o.ajuste_aplicado && o.ajuste_aplicado!=='—' ? `<span class="adj"> · ${o.ajuste_aplicado}</span>` : ''}
-          </span>
-        </div>`;
-      }).join('')}
-    </div>`;
+  const anuais=M.regras.filter(r=>r.periodicidade==='Anual'&&String(r.ativo)!=='FALSE');
+  const cartoes=anuais.map(reg=>{ const oc=M.cal.filter(c=>c.id_regra===reg.id).map(c=>({...c,data:dParse(c.vencimento),...M.valorDe(c)})).sort((a,b)=>a.data-b.data);
+    const passadas=oc.filter(o=>o.data<=hoje), futuras=oc.filter(o=>o.data>hoje);
+    const linhas=[passadas.length?passadas[passadas.length-1]:null,futuras.length?futuras[0]:null].filter(Boolean); if(!linhas.length)return'';
+    return `<div class="card month"><h4>${esc(reg.descricao)}</h4><div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:10px">${esc(reg.categoria||'')}</div>
+      ${linhas.map(o=>{ const passado=o.data<=hoje; const dias=Math.round((o.data-hoje)/864e5); const classe=passado?'due-pago':(dias<=92?'due-atencao':'');
+        const vh=o.v>0?`<span class="vl num ${o.est?'est':''}">${brl(o.v)}</span>`:`<span class="vl num" style="color:var(--muted);font-weight:500">só entrega</span>`;
+        return `<div class="due ${classe}"><span class="day num">${String(o.vencimento).slice(8)}/${String(o.vencimento).slice(5,7)}</span><span class="body"><span class="nm">${passado?'Último':'Próximo'} · ${o.vencimento.slice(0,4)}</span>${vh}</span></div>`; }).join('')}</div>`;
   }).filter(Boolean);
-
-  document.getElementById('anuais').innerHTML = cartoes.join('') ||
-    '<p style="color:var(--muted)">Nenhuma obrigação anual no momento.</p>';
+  document.getElementById('anuais').innerHTML=cartoes.join('')||'<p style="color:var(--muted)">Nenhuma obrigação anual no momento.</p>';
 }
-
 function desenharGraficos(M){
-  const labels = M.empresa.map(r=>mesLabel(r.competencia));
-  const base = {responsive:true, maintainAspectRatio:false, animation:{duration:550},
-    plugins:{legend:{display:false}, tooltip:{
-      backgroundColor:PAL.petroleo, padding:10, cornerRadius:6, titleFont:{family:'Montserrat',size:12,weight:600},
-      bodyFont:{family:'Montserrat',size:12}, displayColors:true, boxWidth:8, boxHeight:8,
-      callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y ?? c.parsed)}}},
-    scales:{
-      x:{grid:{display:false}, border:{color:PAL.line},
-         ticks:{color:PAL.muted, font:{family:'Montserrat',size:11}}},
-      y:{grid:{color:'#EDE4D6'}, border:{display:false},
-         ticks:{color:PAL.muted, font:{family:'Montserrat',size:11},
-                callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
-
-  const c1 = new Chart(document.getElementById('c1'), {
-    data:{labels, datasets:[
-      {type:'bar', label:'Faturamento', data:M.empresa.map(r=>num(getM(r,'Total (R$)'))),
-       backgroundColor:'#D9CDBB', borderRadius:{topLeft:4,topRight:4}, maxBarThickness:24, order:2},
-      {type:'line', label:'Impostos', data:M.empresa.map(r=>M.impostos(r)),
-       borderColor:PAL.vinho, backgroundColor:PAL.vinho, borderWidth:2, tension:.3,
-       pointRadius:2.5, pointHoverRadius:5, order:1},
-    ]},
-    options:base
-  });
-
-  document.getElementById('lg2').innerHTML = TRIB.map(t=>`<span><i style="background:${t.c}"></i>${t.n}</span>`).join('');
-  const c2 = new Chart(document.getElementById('c2'), {
-    type:'bar',
-    data:{labels, datasets:TRIB.map(t=>({label:t.n, data:M.empresa.map(r=>num(getM(r,t.k))), backgroundColor:t.c,
-      borderRadius:2, maxBarThickness:24, borderWidth:0}))},
-    options:{...base, scales:{x:{...base.scales.x, stacked:true}, y:{...base.scales.y, stacked:true}}}
-  });
-
-  const donutBase = {responsive:true, maintainAspectRatio:false, animation:{duration:550}, cutout:'62%',
-    plugins:{legend:{position:'bottom', labels:{color:PAL.muted, font:{family:'Montserrat',size:11}, boxWidth:9, padding:10}},
-      tooltip:base.plugins.tooltip}};
-
-  const c3 = new Chart(document.getElementById('c3'), {
-    type:'doughnut',
-    data:{labels:TRIB.map(t=>t.n), datasets:[{data:TRIB.map(()=>0), backgroundColor:TRIB.map(t=>t.c), borderWidth:0}]},
-    options:donutBase
-  });
-
-  const c4 = new Chart(document.getElementById('c4'), {
-    type:'bar',
-    data:{labels:['Faturamento','Impostos','Líquido'], datasets:[
-      {label:'', data:[0,0,0], backgroundColor:PAL.iss, borderRadius:4, maxBarThickness:34},
-      {label:'', data:[0,0,0], backgroundColor:'#D9CDBB', borderRadius:4, maxBarThickness:34},
-    ]},
-    options:{...base, plugins:{...base.plugins, legend:{display:true, position:'bottom',
-      labels:{color:PAL.muted, font:{family:'Montserrat',size:11}, boxWidth:9}}}}
-  });
-
-  const c5 = new Chart(document.getElementById('c5'), {
-    type:'doughnut',
-    data:{labels:[], datasets:[{data:[], backgroundColor:[], borderWidth:0}]},
-    options:donutBase
-  });
-
-  return {c1,c2,c3,c4,c5};
+  const labels=M.empresa.map(r=>mesLabel(r.competencia));
+  const base={responsive:true,maintainAspectRatio:false,animation:{duration:550},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:PAL.petroleo,padding:10,cornerRadius:6,titleFont:{family:'Montserrat',size:12,weight:600},bodyFont:{family:'Montserrat',size:12},displayColors:true,boxWidth:8,boxHeight:8,callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y??c.parsed)}}},
+    scales:{x:{grid:{display:false},border:{color:PAL.line},ticks:{color:PAL.muted,font:{family:'Montserrat',size:11}}},y:{grid:{color:'#EDE4D6'},border:{display:false},ticks:{color:PAL.muted,font:{family:'Montserrat',size:11},callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
+  const c1=new Chart(document.getElementById('c1'),{data:{labels,datasets:[
+    {type:'bar',label:'Faturamento',data:M.empresa.map(r=>num(getM(r,'Total (R$)'))),backgroundColor:'#D9CDBB',borderRadius:{topLeft:4,topRight:4},maxBarThickness:24,order:2},
+    {type:'line',label:'Impostos',data:M.empresa.map(r=>M.impostos(r)),borderColor:PAL.vinho,backgroundColor:PAL.vinho,borderWidth:2,tension:.3,pointRadius:2.5,pointHoverRadius:5,order:1}]},options:base});
+  document.getElementById('lg2').innerHTML=M.tribs.map(t=>`<span><i style="background:${t.c}"></i>${t.n}</span>`).join('');
+  const c2=new Chart(document.getElementById('c2'),{type:'bar',data:{labels,datasets:M.tribs.map(t=>({label:t.n,data:M.empresa.map(r=>num(getM(r,t.pag))),backgroundColor:t.c,borderRadius:2,maxBarThickness:24,borderWidth:0}))},options:{...base,scales:{x:{...base.scales.x,stacked:true},y:{...base.scales.y,stacked:true}}}});
+  const donut={responsive:true,maintainAspectRatio:false,animation:{duration:550},cutout:'62%',plugins:{legend:{display:false},tooltip:base.plugins.tooltip}};
+  const c3=new Chart(document.getElementById('c3'),{type:'doughnut',data:{labels:M.tribs.map(t=>t.n),datasets:[{data:M.tribs.map(()=>0),backgroundColor:M.tribs.map(t=>t.c),borderWidth:0}]},options:donut});
+  const c5=new Chart(document.getElementById('c5'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:0}]},options:donut});
+  return {c1,c2,c3,c5};
 }
 
-/** Conecta os botões de "Abrir chamado" e "Solicitar NF" à API (GET+JSONP, mesmo
-    esquema usado para ler dados — evita CORS). Mostra sucesso/erro inline. */
+/* ---- formulários (chamado / NF) ---- */
 function ligarFormularios(M){
-  const idc = IDENTIDADE;
-
-  async function enviar(acao, params, statusEl, aoSucesso){
-    statusEl.textContent = 'Enviando…';
-    statusEl.className = 'msg-status enviando';
-    try {
-      if (!API_URL) throw new Error('Sem API configurada neste modo de demonstração.');
-      const qs = new URLSearchParams({ id: idc.id, codigo: idc.codigo, acao, ...params });
-      const d = await jsonp(API_URL + '?' + qs.toString());
-      if (d.erro) throw new Error(d.erro);
-      statusEl.textContent = d.mensagem || 'Enviado com sucesso.';
-      statusEl.className = 'msg-status sucesso';
-      if (aoSucesso) aoSucesso();
-    } catch (e) {
-      statusEl.textContent = e.message || String(e);
-      statusEl.className = 'msg-status erro';
-    }
-  }
-
-  const btnTicket = document.getElementById('ticket-enviar');
-  if (btnTicket) btnTicket.onclick = () => {
-    const msg = document.getElementById('ticket-msg').value.trim();
-    const statusEl = document.getElementById('ticket-status');
-    if (!msg) { statusEl.textContent = 'Escreva a mensagem antes de enviar.'; statusEl.className = 'msg-status erro'; return; }
-    enviar('ticket', { mensagem: msg }, statusEl, () => { document.getElementById('ticket-msg').value = ''; });
-  };
-
-  const btnNf = document.getElementById('nf-enviar');
-  if (btnNf) btnNf.onclick = () => {
-    const campos = {
-      tomador_nome: document.getElementById('nf-nome').value.trim(),
-      tomador_documento: document.getElementById('nf-doc').value.trim(),
-      centro_custo: document.getElementById('nf-centro').value.trim(),
-      valor: document.getElementById('nf-valor').value.trim(),
-      descricao_servico: document.getElementById('nf-descricao').value.trim(),
-      data_desejada: document.getElementById('nf-data').value.trim(),
-      observacoes: document.getElementById('nf-obs').value.trim(),
-      cep: document.getElementById('nf-cep').value.trim(),
-    };
-    const statusEl = document.getElementById('nf-status');
-    const faltando = ['tomador_nome','tomador_documento','valor','descricao_servico'].filter(k => !campos[k]);
-    if (faltando.length){ statusEl.textContent = 'Preencha nome, documento, valor e descrição do serviço.'; statusEl.className = 'msg-status erro'; return; }
-    enviar('solicitar_nf', campos, statusEl, () => {
-      ['nf-nome','nf-doc','nf-centro','nf-valor','nf-cep','nf-descricao','nf-data','nf-obs'].forEach(id => { document.getElementById(id).value = ''; });
-    });
-  };
+  const idc=IDENTIDADE;
+  async function enviar(acao,params,statusEl,ok){ statusEl.textContent='Enviando…'; statusEl.className='msg-status enviando';
+    try{ if(!API_URL){ statusEl.textContent='(demonstração) enviado — em produção isto vai para a planilha.'; statusEl.className='msg-status sucesso'; if(ok)ok(); return; }
+      const qs=new URLSearchParams({id:idc.id,codigo:idc.codigo,acao,...params}); const d=await jsonp(API_URL+'?'+qs.toString());
+      if(d.erro)throw new Error(d.erro); statusEl.textContent=d.mensagem||'Enviado com sucesso.'; statusEl.className='msg-status sucesso'; if(ok)ok();
+    }catch(e){ statusEl.textContent=e.message||String(e); statusEl.className='msg-status erro'; } }
+  const bt=document.getElementById('ticket-enviar'); if(bt)bt.onclick=()=>{ const msg=document.getElementById('ticket-msg').value.trim(); const s=document.getElementById('ticket-status');
+    if(!msg){s.textContent='Escreva a mensagem antes de enviar.';s.className='msg-status erro';return;} enviar('ticket',{mensagem:msg},s,()=>{document.getElementById('ticket-msg').value='';}); };
+  const bn=document.getElementById('nf-enviar'); if(bn)bn.onclick=()=>{ const campos={tomador_nome:v('nf-nome'),tomador_documento:v('nf-doc'),centro_custo:v('nf-centro'),valor:v('nf-valor'),descricao_servico:v('nf-descricao'),data_desejada:v('nf-data'),cep:v('nf-cep')};
+    const s=document.getElementById('nf-status'); const falta=['tomador_nome','tomador_documento','valor','descricao_servico'].filter(k=>!campos[k]);
+    if(falta.length){s.textContent='Preencha nome, documento, valor e descrição.';s.className='msg-status erro';return;}
+    enviar('solicitar_nf',campos,s,()=>{['nf-nome','nf-doc','nf-centro','nf-valor','nf-cep','nf-descricao','nf-data'].forEach(id=>document.getElementById(id).value='');}); };
+  function v(id){return document.getElementById(id).value.trim();}
 }
 
-function erro(msg){
-  document.getElementById('app').innerHTML = `
-    <div class="state">
-      <h1>Não deu para abrir o painel</h1>
-      <p>${msg}</p>
-      <p>Confira se o endereço termina com o ID e o código de acesso do cliente, assim: <code>#482913-AbC123</code></p>
-      <p>Se você mesmo perdeu o código, ele está na planilha de índice, coluna B.</p>
-    </div>`;
-}
+function erro(msg){ document.getElementById('app').innerHTML=`<div class="state"><h1>Não deu para abrir o painel</h1><p>${esc(msg)}</p>
+  <p>Confira se o endereço termina com o ID e o código de acesso, assim: <code>#482913-AbC123</code></p></div>`; }
 
-(async function(){
-  try {
-    const raw = await carregar();
-    const M = preparar(raw);
-    M.atualizado_em = raw.atualizado_em;
-    if (!M.empresa.length) return erro('A planilha deste cliente não tem nenhum mês na aba Empresa.');
-    render(M);
-  } catch (e) {
-    erro(e.message || String(e));
-  }
-})();
+(async function(){ try{ const raw=await carregar(); const M=preparar(raw); M.atualizado_em=raw.atualizado_em;
+  if(!M.empresa.length) return erro('A planilha deste cliente não tem nenhum mês na aba Empresa.'); render(M);
+} catch(e){ erro(e.message||String(e)); } })();
 </script>
 </body>
 </html>
