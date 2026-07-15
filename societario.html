@@ -170,8 +170,10 @@ async function carregarTipo(tipo){
 
 function dBR(iso){
   if (!iso) return '';
-  const [a,m,d] = String(iso).split('-');
-  return `${d}/${m}/${a}`;
+  const s = String(iso).trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return s; // texto livre (ex.: "set/2025") — mostra exatamente como o colaborador escreveu
+  return `${m[3]}/${m[2]}/${m[1]}`;
 }
 
 function classeStatus(status){
