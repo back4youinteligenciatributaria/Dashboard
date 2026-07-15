@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Departamento Pessoal — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
+  --ink:#113D39; --ink-2:#3F5854; --muted:#8A7D70; --line:#E4D9C9; --line-2:#D6C3AC;
+  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-eucalipto2:#3FA680;
+  --receita:#0F8C85; --receita-soft:#DCEFEC;
+  --andamento:#A7715D; --andamento-soft:#F1E1D8;
+  --aguardando:#8A7D70; --aguardando-soft:#EDE7DD;
+  --radius:12px; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px 72px}
+
+header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:30}
+.bar{max-width:960px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.logo{font-weight:900;font-size:19px;letter-spacing:-.02em;line-height:1}
+.logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
+.brand-sub{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:1px}
+.voltar{display:inline-block;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:4px}
+.voltar:hover{color:var(--brand-teal)}
+.spacer{flex:1}
+.badge-topo{font-size:11px;font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:5px 12px;border-radius:20px}
+
+.busca{margin:28px 0 24px}
+.busca input{
+  width:100%;font-family:var(--sans);font-size:14px;padding:12px 16px;border-radius:24px;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+}
+.busca input::placeholder{color:var(--muted)}
+.busca input:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:30px 0 14px}
+.sec-head h2{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.sec-head p{font-size:13px;color:var(--muted)}
+
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.stat{padding:16px 18px}
+.stat .lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stat .v{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.stat .s{font-size:11.5px;color:var(--muted);margin-top:3px}
+
+.caixinhas{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.caixinha{padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.caixinha h4{font-size:13px;font-weight:700}
+.caixinha textarea{
+  width:100%;min-height:84px;font-family:var(--sans);font-size:13px;color:var(--ink);
+  border:1px solid var(--line-2);border-radius:8px;padding:9px 11px;background:var(--surface-warm);resize:vertical;
+}
+.caixinha textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.caixinha .status{font-size:11px;color:var(--muted);min-height:14px}
+.caixinha .status.salvando{color:var(--andamento)}
+.caixinha .status.salvo{color:var(--receita);font-weight:600}
+.caixinha .status.erro{color:#8B2E22;font-weight:600}
+
+.processo-card{padding:20px 22px;margin-bottom:14px}
+.processo-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.processo-head h3{font-size:14.5px;font-weight:700}
+.status-chip{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.status-concluido{background:var(--receita-soft);color:var(--receita)}
+.status-andamento{background:var(--andamento-soft);color:var(--andamento)}
+.status-vencida{background:#F3DEDB;color:#8B2E22}
+.status-gozada{background:var(--receita-soft);color:var(--receita)}
+.status-aVencer,.status-avencer{background:var(--andamento-soft);color:var(--andamento)}
+
+.timeline{position:relative;padding-left:22px}
+.timeline::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line-2)}
+.etapa{position:relative;padding-bottom:16px}
+.etapa:last-child{padding-bottom:0}
+.etapa::before{content:'';position:absolute;left:-22px;top:3px;width:11px;height:11px;border-radius:50%;background:var(--aguardando);border:2px solid var(--surface)}
+.etapa.concluido::before{background:var(--receita)}
+.etapa.andamento::before{background:var(--andamento);box-shadow:0 0 0 3px var(--andamento-soft)}
+.etapa-nome{font-size:13.5px;font-weight:600}
+.etapa-meta{font-size:11.5px;color:var(--muted);margin-top:2px;display:flex;gap:8px;align-items:center}
+.etapa-status{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px}
+.etapa-status.concluido{background:var(--receita-soft);color:var(--receita)}
+.etapa-status.andamento{background:var(--andamento-soft);color:var(--andamento)}
+.etapa-status.aguardando{background:var(--aguardando-soft);color:var(--aguardando)}
+
+.lista{padding:8px 24px}
+.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:none}
+.item .nome{font-size:13.5px;font-weight:600}
+.item .cat{font-size:11px;color:var(--muted);margin-top:2px}
+.item a{font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none;white-space:nowrap}
+.item a:hover{color:var(--brand-dark)}
+.item .em-breve{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+
+.grupo-cat{border-top:1px solid var(--line)}
+.grupo-cat:first-child{border-top:none}
+.grupo-cat-btn{
+  width:100%;display:flex;align-items:center;gap:10px;padding:14px 0;
+  background:none;border:none;cursor:pointer;font-family:var(--sans);color:var(--ink);text-align:left;
+}
+.grupo-cat-nome{font-size:14px;font-weight:700;flex:1}
+.grupo-cat-conta{font-size:11px;font-weight:700;color:var(--muted);background:var(--surface-warm);border-radius:10px;padding:2px 9px}
+.grupo-cat-btn .seta{color:var(--muted);font-size:13px;transition:transform .2s}
+.grupo-cat-body{padding:0 0 10px 4px}
+.grupo-cat-body .item{padding:10px 0 10px 10px;border-top:1px solid var(--line)}
+.grupo-cat-body .item:first-child{border-top:none}
+.venc{display:inline-block;font-size:11px;font-weight:600;margin-top:3px}
+.venc.venc-ok{color:var(--muted)}
+.venc.venc-atencao{color:var(--andamento)}
+.venc.venc-vencido{color:#8B2E22;font-weight:700}
+
+table.func{width:100%;border-collapse:collapse;font-size:13px}
+table.func th{text-align:left;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 9px;border-bottom:1px solid var(--line-2)}
+table.func td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.func tbody tr:last-child td{border-bottom:none}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table-scroll table{min-width:520px}
+
+.vazio{color:var(--muted);font-size:13.5px;padding:16px 0;text-align:center}
+
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
+.state h1{font-size:19px;font-weight:700}
+.state p{color:var(--muted);font-size:14px;max-width:44ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
+.spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="state">
+    <div class="spin" role="status" aria-label="Carregando"></div>
+    <p>Carregando o painel…</p>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+const TIPO = 'pessoal';
+const TITULO_PAGINA = 'Departamento Pessoal';
+const CATEGORIA_MODELOS = 'Departamento Pessoal';
+
+const CAIXINHAS = [
+  {campo:'controle_ponto',   titulo:'Controle de ponto ou confirmação de jornada'},
+  {campo:'faltas_atrasos',   titulo:'Faltas, atrasos ou afastamentos'},
+  {campo:'vales_beneficios', titulo:'Vales e benefícios já pagos referentes ao mês atual'},
+  {campo:'horas_extras',     titulo:'Horas extras, adicionais e bônus'},
+  {campo:'outros',           titulo:'Outros'},
+];
+
+function normTxt(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+
+function getIdCodigo(){
+  const qs = new URLSearchParams(location.search);
+  let id = qs.get('id') || '';
+  let codigo = qs.get('codigo') || '';
+  if (!id){
+    const h = location.hash.replace('#','').trim();
+    const comCodigo = h.match(/^(\d+)-(.+)$/);
+    const soId = h.match(/^(\d+)$/);
+    if (comCodigo) { id = comCodigo[1]; codigo = comCodigo[2]; }
+    else if (soId) { id = soId[1]; }
+  }
+  return { id: id.replace(/\D/g,''), codigo: codigo.trim() };
+}
+
+function jsonp(url){
+  return new Promise((ok,fail)=>{
+    const cb = 'cb_'+Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    const t = setTimeout(()=>{ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
+    function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
+    window[cb] = d => { limpa(); ok(d); };
+    s.onerror = () => { limpa(); fail(new Error('Não consegui alcançar a API.')); };
+    s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+
+let IDENTIDADE = { id: '', codigo: '' };
+
+async function carregarTipo(tipo){
+  const { id, codigo } = IDENTIDADE;
+  if (API_URL){
+    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=' + tipo;
+    const d = await jsonp(url);
+    if (d.erro) throw new Error(d.erro);
+    return d;
+  }
+  const arq = tipo === 'modelos' ? 'demo_modelos.json' : `demo_${TIPO}.json`;
+  const r = await fetch(arq);
+  if (!r.ok) throw new Error(`Sem API configurada e sem ${arq} ao lado deste arquivo.`);
+  return r.json();
+}
+
+function dBR(iso){
+  if (!iso) return '';
+  const [a,m,d] = String(iso).split('-');
+  return `${d}/${m}/${a}`;
+}
+
+function brl(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+
+function classeStatus(status){
+  const n = normTxt(status);
+  if (n.includes('conclu')) return 'concluido';
+  if (n.includes('andament')) return 'andamento';
+  return 'aguardando';
+}
+
+function classeStatusFerias(status){
+  const n = normTxt(status);
+  if (n.includes('venc') && !n.includes('avenc')) return 'vencida';
+  if (n.includes('goz')) return 'gozada';
+  return 'aVencer';
+}
+
+function mesAtualISO(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+function render(M, modelos){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  app.appendChild(el(`
+    <header><div class="bar">
+      <div>
+        <a class="voltar" href="index.html#${IDENTIDADE.id}-${IDENTIDADE.codigo}">← Painel do cliente</a>
+        <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
+        <div class="brand-sub">${(M.config && M.config.razao_social) || TITULO_PAGINA} · cliente ${M.id}</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="badge-topo">${TITULO_PAGINA}</span>
+    </div></header>`));
+
+  const wrap = el('<div class="wrap"></div>');
+  app.appendChild(wrap);
+
+  const funcionarios = M.funcionarios || [];
+  const ativos = funcionarios.filter(f => normTxt(f.status) !== 'desligado' && !f.data_desligamento);
+  const folha = M.folha || [];
+  const competencias = Array.from(new Set(folha.map(f=>f.competencia))).sort();
+  const ultimaComp = competencias[competencias.length-1];
+  const folhaUltimoMes = folha.filter(f=>f.competencia===ultimaComp);
+  const totalFolha = folhaUltimoMes.reduce((s,f)=>s+Number(f.salario_liquido||0),0);
+
+  appendAll(wrap, `
+    <div class="hero" style="margin:28px 0 24px">
+      <div class="card stat">
+        <span class="lbl">Funcionários ativos</span>
+        <div class="v">${ativos.length}</div>
+        <div class="s">${funcionarios.length} no total cadastrados</div>
+      </div>
+      <div class="card stat">
+        <span class="lbl">Folha do último mês</span>
+        <div class="v">${ultimaComp ? brl(totalFolha) : '—'}</div>
+        <div class="s">${ultimaComp ? 'competência ' + ultimaComp : 'sem lançamento ainda'}</div>
+      </div>
+      <div class="card stat">
+        <span class="lbl">Admissões/desligamentos</span>
+        <div class="v">${(M.admissoes||[]).length}</div>
+        <div class="s">processos com etapas registradas</div>
+      </div>
+    </div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Informe o que aconteceu este mês</h2><p>Salva sozinho, 3 segundos depois de você parar de digitar.</p></div></div>
+    <div class="caixinhas" id="caixinhas"></div>`);
+
+  appendAll(wrap, `
+    <div class="busca">
+      <input type="search" id="busca" placeholder="Buscar funcionário, documento, modelo ou processo…">
+    </div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Admissões e desligamentos</h2><p>O que está em andamento aparece primeiro.</p></div></div>
+    <div id="admissoes"></div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Funcionários</h2></div></div>
+    <div class="card" style="padding:18px 20px"><div class="table-scroll"><table class="func" id="tabela-func">
+      <thead><tr><th>Nome</th><th>Cargo</th><th>Admissão</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table></div></div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Férias</h2></div></div>
+    <div id="ferias"></div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Documentos</h2></div></div>
+    <div class="card lista" id="documentos"></div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Modelos</h2><p>Documentos padrão, iguais para todo cliente.</p></div></div>
+    <div class="card lista" id="modelos"></div>`);
+
+  wrap.appendChild(el(`<footer>
+      <span>Fonte: planilha de departamento pessoal do cliente ${M.id}.</span>
+      <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
+    </footer>`));
+
+  desenharCaixinhas(M.informado || []);
+  desenharAdmissoes(M.admissoes || []);
+  desenharFuncionarios(funcionarios);
+  desenharFerias(M.ferias || []);
+  desenharDocumentos(M.documentos || []);
+  desenharModelos(modelos);
+
+  document.getElementById('busca').addEventListener('input', e => filtrar(e.target.value));
+}
+
+/** As 5 caixinhas editáveis, com salvamento automático 3s após a última digitação. */
+function desenharCaixinhas(informado){
+  const comp = mesAtualISO();
+  const linhaAtual = informado.find(i => i.competencia === comp) || {};
+
+  const box = document.getElementById('caixinhas');
+  box.innerHTML = CAIXINHAS.map(c => `
+    <div class="card caixinha">
+      <h4>${c.titulo}</h4>
+      <textarea id="cx-${c.campo}" placeholder="Escreva aqui...">${linhaAtual[c.campo] || ''}</textarea>
+      <div class="status" id="cx-status-${c.campo}"></div>
+    </div>`).join('');
+
+  CAIXINHAS.forEach(c => {
+    let timer = null;
+    const area = document.getElementById('cx-' + c.campo);
+    const statusEl = document.getElementById('cx-status-' + c.campo);
+    area.addEventListener('input', () => {
+      statusEl.textContent = 'Digitando…';
+      statusEl.className = 'status';
+      clearTimeout(timer);
+      timer = setTimeout(() => salvarCaixinha(c.campo, area.value, statusEl), 3000);
+    });
+  });
+}
+
+async function salvarCaixinha(campo, valor, statusEl){
+  const comp = mesAtualISO();
+  statusEl.textContent = 'Salvando…';
+  statusEl.className = 'status salvando';
+  try {
+    if (!API_URL) throw new Error('Sem API configurada neste modo de demonstração.');
+    const qs = new URLSearchParams({ id: IDENTIDADE.id, codigo: IDENTIDADE.codigo, acao: 'salvar_info_mensal', competencia: comp, campo, valor });
+    const d = await jsonp(API_URL + '?' + qs.toString());
+    if (d.erro) throw new Error(d.erro);
+    const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    statusEl.textContent = 'Salvo às ' + agora;
+    statusEl.className = 'status salvo';
+  } catch (e) {
+    statusEl.textContent = e.message || String(e);
+    statusEl.className = 'status erro';
+  }
+}
+
+function desenharAdmissoes(admissoes){
+  const box = document.getElementById('admissoes');
+  if (!admissoes.length){
+    box.innerHTML = '<div class="card"><div class="vazio">Nenhuma admissão ou desligamento em aberto no momento.</div></div>';
+    return;
+  }
+  const ordenadas = admissoes.slice().sort((a,b)=>{
+    const aConcluido = classeStatus(a.etapas[a.etapas.length-1].status) === 'concluido';
+    const bConcluido = classeStatus(b.etapas[b.etapas.length-1].status) === 'concluido';
+    return (aConcluido === bConcluido) ? 0 : (aConcluido ? 1 : -1);
+  });
+
+  box.innerHTML = ordenadas.map(p=>{
+    const ultima = p.etapas[p.etapas.length-1];
+    const concluido = classeStatus(ultima.status) === 'concluido';
+    return `<div class="card processo-card" data-busca="${normTxt(p.processo)}">
+      <div class="processo-head">
+        <h3>${p.processo}</h3>
+        <span class="status-chip status-${concluido?'concluido':'andamento'}">${concluido?'Concluído':'Em andamento'}</span>
+      </div>
+      <div class="timeline">
+        ${p.etapas.map(e=>{
+          const cl = classeStatus(e.status);
+          return `<div class="etapa ${cl}">
+            <div class="etapa-nome">${e.nome}</div>
+            <div class="etapa-meta">
+              ${e.data ? `<span>${dBR(e.data)}</span>` : ''}
+              <span class="etapa-status ${cl}">${e.status}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function desenharFuncionarios(funcionarios){
+  const tb = document.querySelector('#tabela-func tbody');
+  if (!funcionarios.length){
+    tb.innerHTML = '<tr><td colspan="4" class="vazio">Nenhum funcionário cadastrado ainda.</td></tr>';
+    return;
+  }
+  tb.innerHTML = funcionarios.map(f=>{
+    const desligado = normTxt(f.status) === 'desligado' || f.data_desligamento;
+    return `<tr data-busca="${normTxt(f.nome_completo)} ${normTxt(f.cargo)}">
+      <td>${f.nome_completo||'—'}</td>
+      <td>${f.cargo||'—'}</td>
+      <td>${dBR(f.data_admissao)||'—'}</td>
+      <td><span class="status-chip status-${desligado?'vencida':'concluido'}">${desligado?'Desligado':'Ativo'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+function vencimentoInfo(iso){
+  if (!iso) return '';
+  const [a,m,d] = String(iso).split('-').map(Number);
+  const venc = new Date(a, m-1, d);
+  const dias = Math.round((venc - hoje) / 864e5);
+  let classe = 'venc-ok', texto;
+  if (dias < 0){ classe = 'venc-vencido'; texto = `Venceu há ${-dias}d`; }
+  else if (dias <= 60){ classe = 'venc-atencao'; texto = `Vence em ${dias}d`; }
+  else { texto = `Vence ${dBR(iso)}`; }
+  return `<span class="venc ${classe}">${texto}</span>`;
+}
+
+function desenharFerias(ferias){
+  const box = document.getElementById('ferias');
+  if (!ferias.length){ box.innerHTML = '<div class="card"><div class="vazio">Nenhum período de férias cadastrado ainda.</div></div>'; return; }
+  const ordem = {vencida:0, aVencer:1, gozada:2};
+  const ordenadas = ferias.slice().sort((a,b)=> (ordem[classeStatusFerias(a.status)]??1) - (ordem[classeStatusFerias(b.status)]??1));
+  box.innerHTML = `<div class="card lista">${ordenadas.map(f=>{
+    const cl = classeStatusFerias(f.status);
+    return `<div class="item" data-busca="${normTxt(f.nome)}">
+      <div>
+        <div class="nome">${f.nome||'—'}</div>
+        <div class="cat">Aquisitivo ${dBR(f.periodo_aquisitivo_inicio)}–${dBR(f.periodo_aquisitivo_fim)} · Gozo ${f.periodo_gozo_inicio?dBR(f.periodo_gozo_inicio)+'–'+dBR(f.periodo_gozo_fim):'não marcado'}</div>
+      </div>
+      <span class="status-chip status-${cl}">${f.status||'—'}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function desenharDocumentos(documentos){
+  const box = document.getElementById('documentos');
+  if (!documentos.length){ box.innerHTML = '<div class="vazio">Nenhum documento cadastrado ainda.</div>'; return; }
+  box.innerHTML = documentos.map(d=>{
+    const link = d.link && String(d.link).trim();
+    return `<div class="item" data-busca="${normTxt(d.documento)}">
+      <div><div class="nome">${d.documento}</div>${vencimentoInfo(d.vencimento)}</div>
+      ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
+    </div>`;
+  }).join('');
+}
+
+function desenharModelos(modelos){
+  const box = document.getElementById('modelos');
+  const doCategoria = modelos.filter(m => normTxt(m.categoria) === normTxt(CATEGORIA_MODELOS));
+  if (!doCategoria.length){ box.innerHTML = '<div class="vazio">Nenhum modelo cadastrado ainda.</div>'; return; }
+  box.innerHTML = doCategoria.map(m=>{
+    const link = m.link && String(m.link).trim();
+    return `<div class="item" data-busca="${normTxt(m.documento)}">
+      <div class="nome">${m.documento}</div>
+      ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
+    </div>`;
+  }).join('');
+}
+
+function filtrar(termo){
+  const alvo = normTxt(termo);
+  document.querySelectorAll('#admissoes [data-busca], #tabela-func [data-busca], #ferias [data-busca], #documentos [data-busca]').forEach(el=>{
+    el.style.display = !alvo || el.dataset.busca.includes(alvo) ? '' : 'none';
+  });
+}
+
+function el(h){ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; }
+function appendAll(parent, h){
+  const t = document.createElement('template'); t.innerHTML = h.trim();
+  Array.from(t.content.children).forEach(n => parent.appendChild(n));
+}
+
+function erro(msg){
+  document.getElementById('app').innerHTML = `
+    <div class="state">
+      <h1>Não deu para abrir o painel</h1>
+      <p>${msg}</p>
+      <p>Confira se o endereço termina com o ID e o código de acesso do cliente, assim: <code>#482913-AbC123</code></p>
+    </div>`;
+}
+
+(async function(){
+  const { id, codigo } = getIdCodigo();
+  IDENTIDADE = { id, codigo };
+  if (!id || !codigo) return erro('Informe o ID e o código de acesso no final do endereço.');
+  try {
+    const [dados, modelosResp] = await Promise.all([
+      carregarTipo(TIPO),
+      carregarTipo('modelos').catch(()=>({modelos:[]})),
+    ]);
+    render(dados, modelosResp.modelos || []);
+  } catch (e) {
+    erro(e.message || String(e));
+  }
+})();
+</script>
+</body>
+</html>
