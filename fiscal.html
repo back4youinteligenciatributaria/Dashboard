@@ -303,8 +303,9 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 /* ===== CONFIG ===== */
-// Em produção, aponte para o Apps Script. Vazio = modo demonstração (roda sozinho, salva localmente).
-const API_URL = '';
+// URL da sua implantação do Apps Script (/exec). Vazio = modo demonstração.
+// Confirme que é a URL da implantação ATUAL (Implantar > Gerenciar implantações).
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 
 const PAL = {
   iss:'#3FA680', das:'#3FA680', pis:'#A7715D', cofins:'#C79873', csll:'#8F5A4A', irpj:'#6B4236',
@@ -799,7 +800,8 @@ function pintarMes(M,comp){
 /* Guias que rateiam por centro (aparecem em "Guias do mês", clicáveis). As demais
    (INSS, FGTS, IRRF sobre dividendos — não proporcionais à receita) vão para "Outras guias". */
 const GUIA_RATEAVEL=new Set(['ISS a Pagar (R$)','PIS a pagar (R$)','COFINS a pagar (R$)','CSLL a pagar (R$)','IR a pagar (R$)',
-  'TOMADAS: ISS a pagar (R$)','TOMADAS: PIS a pagar (R$)','TOMADAS: COFINS a pagar (R$)','TOMADAS: CSLL a pagar (R$)','TOMADAS: IR a pagar (R$)']);
+  'TOMADAS: ISS a pagar (R$)','TOMADAS: PIS a pagar (R$)','TOMADAS: COFINS a pagar (R$)','TOMADAS: CSLL a pagar (R$)','TOMADAS: IR a pagar (R$)',
+  'IRRF Dividendos (R$)']);   // IRRF sobre dividendos rateia por sócio/centro
 function guiaEhRateavel(reg){ const f=String((reg||{}).metrica_fonte||'').trim(); if(!f) return false;
   return f.split('|').map(s=>s.trim()).filter(Boolean).every(k=>GUIA_RATEAVEL.has(k)); }
 function corDaCategoria(cat){ cat=String(cat||'').toLowerCase();
