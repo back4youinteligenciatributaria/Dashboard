@@ -344,6 +344,9 @@ const OUTRAS = [
   {n:'FGTS',                  k:'FGTS a Pagar (R$)',    c:PAL.fgts},
 ];
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MESES_L = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+/** "2026-06" → "junho" (com "/25" se o ano da competência diferir do ano exibido). */
+const compRefTexto = (ref,anoExibido)=>{ const [a,m]=String(ref).split('-'); if(!m) return ''; return MESES_L[+m-1]+(+a!==anoExibido?'/'+String(a).slice(2):''); };
 const DOW = ['dom','seg','ter','qua','qui','sex','sáb'];
 
 const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
@@ -640,19 +643,23 @@ function gradeDoMes(ano,mes){ const p=new Date(ano,mes,1); const ini=p.getDay();
 function miniGradeHTML(ano,mes,marc,destaque){ const cel=gradeDoMes(ano,mes);
   const grade=cel.map(d=>{ if(d===null) return '<div class="mini-cel blank"></div>';
     const m=marc.get(d); const cls=m?(destaque?'due':'due-muted'):'';
-    const tit=m?m.map(x=>x.descricao+(x.valor===null?'':': '+brl(x.valor)+(x.est?' (estimativa)':''))).join(' · '):'';
+    const tit=m?m.map(x=>x.descricao+(x.ref?' de '+compRefTexto(x.ref,ano):'')+(x.valor===null?'':': '+brl(x.valor)+(x.est?' (estimativa)':''))).join(' · '):'';
     return '<div class="mini-cel '+cls+'" '+(tit?('title="'+esc(tit)+'"'):'')+'>'+d+'</div>'; }).join('');
   return '<div class="mini-dow">'+DOW.map(d=>'<span>'+d[0].toUpperCase()+'</span>').join('')+'</div><div class="mini-grid">'+grade+'</div>'; }
 function vencimentosDoMes(M,ano,mes){ const marc=new Map();
   M.cal.forEach(c=>{ const {v,est}=M.valorDe(c); const d=dParse(c.vencimento);
     if(d.getFullYear()!==ano||d.getMonth()!==mes) return; if(!marc.has(d.getDate()))marc.set(d.getDate(),[]);
-    marc.get(d.getDate()).push({descricao:c.descricao,valor:v>0?v:null,est}); }); return marc; }
+    marc.get(d.getDate()).push({descricao:c.descricao,valor:v>0?v:null,est,ref:c.competencia_ref}); }); return marc; }
 
 /* ===================== RENDER ===================== */
 let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='', NF_PEND=false;
 function render(M){
   M_GLOBAL=M;
-  const comps=M.empresa.map(r=>r.competencia);
+  // Só competências até a atual — não faz sentido escolher meses futuros (parcial do mês corrente aparece).
+  const compAtual=compDe(hoje);
+  const compsAll=M.empresa.map(r=>r.competencia);
+  const compsPassadas=compsAll.filter(c=>c<=compAtual);
+  const comps=compsPassadas.length?compsPassadas:compsAll;
   const mesAnt=compDe(new Date(hoje.getFullYear(),hoje.getMonth()-1,1));
   SEL=comps.includes(mesAnt)?mesAnt:comps[comps.length-1];
   const app=document.getElementById('app'); app.innerHTML='';
@@ -685,8 +692,8 @@ function render(M){
       <div class="cal-strip"><div class="cal-mini lateral" id="cal-prev"></div><div class="cal-mini" id="cal-atual"></div><div class="cal-mini lateral" id="cal-next"></div></div>
       <div class="cal-total" id="cal-total"></div><div class="cal-agenda" id="cal-agenda"></div></div>`);
 
-  appendAll(wrap,`<div class="sec-head"><div><h2>Estimativa dos impostos</h2>
-    <p>Quanto sai do caixa em cada mês, por tributo — pelo vencimento da guia.</p></div></div>
+  appendAll(wrap,`<div class="sec-head"><div><h2>Provisionamento dos impostos</h2>
+    <p>Quanto separar para os próximos vencimentos — por tributo, pelo mês em que a guia vence.</p></div></div>
     <div class="charts3" id="estim3">
       ${[0,1,2].map(i=>`<div class="card chart"><h3 id="est-t-${i}"></h3><div class="sub" id="est-s-${i}"></div><div class="cbox"><canvas id="est-${i}"></canvas></div><div class="pie-legend" id="est-lg-${i}"></div></div>`).join('')}
     </div>`);
@@ -744,7 +751,8 @@ function render(M){
     document.getElementById('cal-next').innerHTML=dentro(nextD.getFullYear())?miniGradeHTML(nextD.getFullYear(),nextD.getMonth(),vencimentosDoMes(M,nextD.getFullYear(),nextD.getMonth()),false):'';
     const agenda=Array.from(marc.entries()).sort((a,b)=>a[0]-b[0]).map(([dia,items])=>items.map(it=>{
       const vh=it.valor===null?'<span style="color:var(--muted)">a apurar</span>':`<b class="num${it.est?' estimativa':''}">${brl(it.valor)}${it.est?' (estimativa)':''}</b>`;
-      return '<div class="row"><span>'+String(dia).padStart(2,'0')+' · '+esc(it.descricao)+'</span>'+vh+'</div>'; }).join('')).join('');
+      const refTxt=it.ref?` <span style="color:var(--muted);font-weight:500">de ${compRefTexto(it.ref,ano)}</span>`:'';
+      return '<div class="row"><span>'+String(dia).padStart(2,'0')+' · '+esc(it.descricao)+refTxt+'</span>'+vh+'</div>'; }).join('')).join('');
     document.getElementById('cal-agenda').innerHTML=agenda||'<div class="empty">Nenhuma guia neste mês.</div>';
     document.getElementById('cal-prev-btn').disabled = !dentro(new Date(ano,mes-1,1).getFullYear());
     document.getElementById('cal-next-btn').disabled = !dentro(new Date(ano,mes+1,1).getFullYear());
@@ -1052,11 +1060,12 @@ function desembolsoPorTributoNoMes(M,ano,mes){
 function desenharEstimativas(M){
   const opts={responsive:true,maintainAspectRatio:false,animation:{duration:500},cutout:'60%',
     plugins:{legend:{display:false},tooltip:{backgroundColor:PAL.petroleo,padding:10,cornerRadius:6,bodyFont:{family:'Montserrat',size:12},callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
-  for(let i=0;i<3;i++){ const d=new Date(hoje.getFullYear(),hoje.getMonth()+i,1); const comp=compDe(d);
+  // Próximos 3 meses de VENCIMENTO (a partir do mês seguinte ao atual): ago/set/out quando estamos em julho.
+  for(let i=0;i<3;i++){ const d=new Date(hoje.getFullYear(),hoje.getMonth()+1+i,1); const comp=compDe(d);
     const porTrib=desembolsoPorTributoNoMes(M,d.getFullYear(),d.getMonth());
     const dados=M.tribs.map(t=>({n:t.n,c:t.c,v:porTrib[t.pag]||0})); const total=dados.reduce((s,x)=>s+x.v,0);
     document.getElementById('est-t-'+i).textContent=mesLongo(comp);
-    document.getElementById('est-s-'+i).innerHTML='total estimado <span class="estimativa">'+brl(total)+'</span>';
+    document.getElementById('est-s-'+i).innerHTML='provisionar <span class="estimativa">'+brl(total)+'</span>';
     document.getElementById('est-lg-'+i).innerHTML=dados.map(x=>`<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`).join('');
     new Chart(document.getElementById('est-'+i),{type:'doughnut',data:{labels:dados.map(x=>x.n),datasets:[{data:dados.map(x=>x.v),backgroundColor:dados.map(x=>x.c),borderWidth:0}]},options:opts});
   }
