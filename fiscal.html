@@ -310,10 +310,9 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 /* ===== CONFIG =====
-   Vazio = modo demonstração (para revisar a interface sem backend).
-   PARA IR AO AR: troque por  const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
-   (confirme que é a URL /exec da implantação ATUAL) */
-const API_URL = '';
+   URL /exec da sua implantação do Apps Script. Confirme que é a implantação ATUAL
+   (Implantar > Gerenciar implantações). Deixe '' apenas para rodar a demonstração. */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 
 const PAL = {
   iss:'#3FA680', das:'#3FA680', pis:'#A7715D', cofins:'#C79873', csll:'#8F5A4A', irpj:'#6B4236',
@@ -722,7 +721,12 @@ function render(M){
   wrap.appendChild(el(`<footer><span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span><span>back4you · inteligência tributária</span></footer>`));
 
   // carrossel calendário, limitado à janela de 3 anos
-  const anoMin=hoje.getFullYear()-1, anoMax=hoje.getFullYear()+1;
+  // Janela do calendário: ano anterior/vigente/próximo, mas SEMPRE abrangendo todos
+  // os anos que existem no calendário — assim nenhum mês com guia fica inalcançável,
+  // mesmo que o relógio do navegador não bata com o ano dos dados.
+  const anosCal=(M.cal||[]).map(c=>+String(c.vencimento||'').slice(0,4)).filter(y=>y>1900);
+  const anoMin=Math.min(hoje.getFullYear()-1, ...(anosCal.length?anosCal:[hoje.getFullYear()]));
+  const anoMax=Math.max(hoje.getFullYear()+1, ...(anosCal.length?anosCal:[hoje.getFullYear()]));
   let calCentro=null;
   const centerFromComp=comp=>{ const [a,m]=comp.split('-').map(Number); const d=new Date(a,m,1); return {ano:d.getFullYear(),mes:d.getMonth()}; };
   function dentro(ano){ return ano>=anoMin && ano<=anoMax; }
