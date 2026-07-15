@@ -95,6 +95,8 @@ table.ped tbody tr:last-child td{border-bottom:none}
 .item a:hover{color:var(--brand-dark)}
 .item .em-breve{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
 
+.vazio{color:var(--muted);font-size:13.5px;padding:24px 20px;text-align:center}
+
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px;font-weight:700}
 .state p{color:var(--muted);font-size:14px;max-width:44ch}
@@ -297,7 +299,7 @@ function render(M){
 
   appendAll(wrap, `
     <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
-    <div class="charts">
+    ${P.length ? `<div class="charts">
       <div class="card chart">
         <h3>Situação dos pedidos</h3>
         <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação.</div>
@@ -315,17 +317,17 @@ function render(M){
         <div class="sub">Competência do crédito (ano de origem do excesso pago).</div>
         <div class="cbox"><canvas id="c4"></canvas></div>
       </div>
-    </div>`);
+    </div>` : `<div class="card"><div class="vazio">Nenhum pedido transmitido ainda — assim que o primeiro PER/DCOMP for enviado, os gráficos aparecem aqui.</div></div>`}`);
 
   appendAll(wrap, `
     <div class="sec-head"><div><h2>Pedidos</h2><p>Clique numa linha para ver os detalhes.</p></div></div>
-    <div class="card" style="padding:18px 20px"><div class="table-scroll"><table class="ped" id="tabela-pedidos">
+    ${P.length ? `<div class="card" style="padding:18px 20px"><div class="table-scroll"><table class="ped" id="tabela-pedidos">
       <thead><tr>
         <th>Competência</th><th>Tributo</th><th class="r">Solicitado</th><th class="r">Atualizado</th>
         <th>Situação</th><th class="r">Aprovado</th>
       </tr></thead>
       <tbody></tbody>
-    </table></div></div>`);
+    </table></div></div>` : `<div class="card"><div class="vazio">Nenhum pedido de equiparação transmitido ainda para este cliente.</div></div>`}`);
 
   appendAll(wrap, `
     <div class="sec-head"><div><h2>Documentos</h2><p>Relatórios deste cliente e modelos de referência.</p></div></div>
@@ -338,36 +340,38 @@ function render(M){
 
   // --- tabela ---
   const tbody = document.querySelector('#tabela-pedidos tbody');
-  tbody.innerHTML = P.map((p,i)=>{
-    return `<tr class="linha" data-i="${i}">
-      <td>${p._comp.label}</td>
-      <td>${p.tributo}</td>
-      <td class="r num">${brl(p.valor_solicitado)}</td>
-      <td class="r num">${brl(p.valor_atualizado)}</td>
-      <td><span class="status-chip status-${p._grupo}">${p.status}</span></td>
-      <td class="r num">${p._concluido ? brl(p.valor_aprovado) : '—'}</td>
-    </tr>
-    <tr class="detalhe-row" id="det-${i}"><td colspan="6">
-      <div class="detalhe-box">
-        <div class="detalhe-grid">
-          <div><span>PER/DCOMP</span>${p.numero_per_dcomp}</div>
-          <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
-          <div><span>SELIC acumulada</span>${(p.selic_pct||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
-          <div><span>Data de pagamento</span>${dBR(p.data_pagamento)}</div>
+  if (tbody){
+    tbody.innerHTML = P.map((p,i)=>{
+      return `<tr class="linha" data-i="${i}">
+        <td>${p._comp.label}</td>
+        <td>${p.tributo}</td>
+        <td class="r num">${brl(p.valor_solicitado)}</td>
+        <td class="r num">${brl(p.valor_atualizado)}</td>
+        <td><span class="status-chip status-${p._grupo}">${p.status}</span></td>
+        <td class="r num">${p._concluido ? brl(p.valor_aprovado) : '—'}</td>
+      </tr>
+      <tr class="detalhe-row" id="det-${i}"><td colspan="6">
+        <div class="detalhe-box">
+          <div class="detalhe-grid">
+            <div><span>PER/DCOMP</span>${p.numero_per_dcomp}</div>
+            <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
+            <div><span>SELIC acumulada</span>${(p.selic_pct||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
+            <div><span>Data de pagamento</span>${dBR(p.data_pagamento)}</div>
+          </div>
+          <div class="detalhe-explicacao">${p._explicacao}</div>
         </div>
-        <div class="detalhe-explicacao">${p._explicacao}</div>
-      </div>
-    </td></tr>`;
-  }).join('');
+      </td></tr>`;
+    }).join('');
 
-  tbody.querySelectorAll('tr.linha').forEach(tr=>{
-    tr.addEventListener('click', ()=>{
-      document.getElementById('det-'+tr.dataset.i).classList.toggle('aberto');
+    tbody.querySelectorAll('tr.linha').forEach(tr=>{
+      tr.addEventListener('click', ()=>{
+        document.getElementById('det-'+tr.dataset.i).classList.toggle('aberto');
+      });
     });
-  });
+  }
 
   desenharDocumentos(M, []);
-  desenharGraficos(M);
+  if (P.length) desenharGraficos(M);
 }
 
 function desenharGraficos(M){
@@ -478,7 +482,6 @@ function erro(msg){
   try {
     const raw = await carregar();
     const M = preparar(raw);
-    if (!M.pedidos.length) return erro('Nenhum pedido de equiparação encontrado para este cliente.');
     render(M);
     carregarModelos().then(modelos => desenharDocumentos(M, modelos)).catch(()=>desenharDocumentos(M, []));
   } catch (e) {
