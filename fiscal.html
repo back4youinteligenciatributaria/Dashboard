@@ -529,7 +529,7 @@ function preparar(raw){
   const regraDe=Object.fromEntries(regras.map(r=>[r.id,r]));
   const porComp=Object.fromEntries(empresa.map(r=>[r.competencia,r]));
   const cfg=raw.config||{}; const reg=regimeDe(cfg);
-  const centros=(cfg.centros||[]).slice().sort((a,b)=>num(a.ordem_exibicao)-num(b.ordem_exibicao)).map(c=>c.centro);
+  const centros=(cfg.centros||[]).slice().sort((a,b)=>num(a.ordem_exibicao!=null?a.ordem_exibicao:a.ordem)-num(b.ordem_exibicao!=null?b.ordem_exibicao:b.ordem)).map(c=>c.centro);
   const nfs=raw.nfs||{}; const links=raw.links||{};
 
   // tributos visíveis pelo regime (a checagem de "vazio some" é por competência, na hora de pintar)
@@ -707,21 +707,7 @@ function render(M){
       <div class="table-scroll"><table class="nf" id="nf-tabela"><thead></thead><tbody></tbody></table></div>
     </div>`);
 
-  appendAll(wrap,`<div class="sec-head"><div><h2>Precisa de algo?</h2><p>Chamados e solicitações de nota são respondidos em até 48h úteis.</p></div></div>
-    <div class="charts">
-      <div class="card chart"><h3>Abrir chamado</h3><div class="sub">Escreva o que você precisa.</div>
-        <textarea id="ticket-msg" rows="4" placeholder="Descreva o que você precisa..." class="campo-texto"></textarea>
-        <button class="btn-acao" id="ticket-enviar">Enviar chamado</button><div class="msg-status" id="ticket-status"></div></div>
-      <div class="card chart"><h3>Solicitar emissão de nota fiscal</h3><div class="sub">Dados do tomador e do serviço.</div>
-        <div class="form-nf"><input id="nf-nome" placeholder="Nome / razão social do tomador"><input id="nf-doc" placeholder="CPF ou CNPJ do tomador">
-          <input id="nf-centro" placeholder="Centro de custo"><input id="nf-valor" placeholder="Valor (R$)"><input id="nf-cep" placeholder="CEP">
-          <textarea id="nf-descricao" rows="2" placeholder="Descrição do serviço"></textarea><input id="nf-data" type="date">
-          <button class="btn-acao" id="nf-enviar">Enviar solicitação</button><div class="msg-status" id="nf-status"></div></div></div>
-    </div>`);
-
   wrap.appendChild(el(`<footer><span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span><span>back4you · inteligência tributária</span></footer>`));
-
-  ligarFormularios(M);
 
   // carrossel calendário, limitado à janela de 3 anos
   const anoMin=hoje.getFullYear()-1, anoMax=hoje.getFullYear()+1;
@@ -771,7 +757,7 @@ function pintarMes(M,comp){
 
   // tributos visíveis: regime + "vazio some"
   const visiveis=M.tribs.filter(t=>temMetrica(r,t.pag));
-  const linkUrl=M.links[comp];
+  const linkUrl=(M.links&&(M.links.planilha||M.links[comp]))||'';
   document.getElementById('hero').innerHTML=`<div class="hero">
     <div class="card hero-main"><span class="lbl">Competência</span><div class="comp-title">${mesLongo(comp)}</div>
       <p class="comp-note">Os impostos desta competência vencem em ${mesLongo(mesSeguinteComp(comp))}.</p>
@@ -1028,23 +1014,6 @@ function desenharGraficos(M){
   const c3=new Chart(document.getElementById('c3'),{type:'doughnut',data:{labels:M.tribs.map(t=>t.n),datasets:[{data:M.tribs.map(()=>0),backgroundColor:M.tribs.map(t=>t.c),borderWidth:0}]},options:donut});
   const c5=new Chart(document.getElementById('c5'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:0}]},options:donut});
   return {c1,c2,c3,c5};
-}
-
-/* ---- formulários (chamado / NF) ---- */
-function ligarFormularios(M){
-  const idc=IDENTIDADE;
-  async function enviar(acao,params,statusEl,ok){ statusEl.textContent='Enviando…'; statusEl.className='msg-status enviando';
-    try{ if(!API_URL){ statusEl.textContent='(demonstração) enviado — em produção isto vai para a planilha.'; statusEl.className='msg-status sucesso'; if(ok)ok(); return; }
-      const qs=new URLSearchParams({id:idc.id,codigo:idc.codigo,acao,...params}); const d=await jsonp(API_URL+'?'+qs.toString());
-      if(d.erro)throw new Error(d.erro); statusEl.textContent=d.mensagem||'Enviado com sucesso.'; statusEl.className='msg-status sucesso'; if(ok)ok();
-    }catch(e){ statusEl.textContent=e.message||String(e); statusEl.className='msg-status erro'; } }
-  const bt=document.getElementById('ticket-enviar'); if(bt)bt.onclick=()=>{ const msg=document.getElementById('ticket-msg').value.trim(); const s=document.getElementById('ticket-status');
-    if(!msg){s.textContent='Escreva a mensagem antes de enviar.';s.className='msg-status erro';return;} enviar('ticket',{mensagem:msg},s,()=>{document.getElementById('ticket-msg').value='';}); };
-  const bn=document.getElementById('nf-enviar'); if(bn)bn.onclick=()=>{ const campos={tomador_nome:v('nf-nome'),tomador_documento:v('nf-doc'),centro_custo:v('nf-centro'),valor:v('nf-valor'),descricao_servico:v('nf-descricao'),data_desejada:v('nf-data'),cep:v('nf-cep')};
-    const s=document.getElementById('nf-status'); const falta=['tomador_nome','tomador_documento','valor','descricao_servico'].filter(k=>!campos[k]);
-    if(falta.length){s.textContent='Preencha nome, documento, valor e descrição.';s.className='msg-status erro';return;}
-    enviar('solicitar_nf',campos,s,()=>{['nf-nome','nf-doc','nf-centro','nf-valor','nf-cep','nf-descricao','nf-data'].forEach(id=>document.getElementById(id).value='');}); };
-  function v(id){return document.getElementById(id).value.trim();}
 }
 
 function erro(msg){ document.getElementById('app').innerHTML=`<div class="state"><h1>Não deu para abrir o painel</h1><p>${esc(msg)}</p>
