@@ -33,6 +33,12 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .voltar:hover{color:var(--brand-teal)}
 .spacer{flex:1}
 .badge-topo{font-size:11px;font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:5px 12px;border-radius:20px}
+.picker{display:flex;align-items:center;gap:8px}
+.picker .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.picker select{
+  font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);
+  border:1px solid var(--line-2);border-radius:20px;padding:7px 14px;background:var(--surface);cursor:pointer;
+}
 
 .busca{margin:28px 0 24px}
 .busca input{
@@ -123,6 +129,33 @@ table.func tbody tr:last-child td{border-bottom:none}
 .table-scroll table{min-width:520px}
 
 .vazio{color:var(--muted);font-size:13.5px;padding:16px 0;text-align:center}
+
+.campo-texto,.form-solic input,.form-solic textarea{
+  width:100%;font-family:var(--sans);font-size:13px;color:var(--ink);
+  border:1px solid var(--line-2);border-radius:8px;padding:9px 11px;background:var(--surface-warm);
+  margin-top:10px;resize:vertical;
+}
+.campo-texto:focus,.form-solic input:focus,.form-solic textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.form-solic{display:flex;flex-direction:column}
+.btn-acao{
+  margin-top:12px;font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto2));
+  border:none;border-radius:20px;padding:9px 18px;cursor:pointer;align-self:flex-start;
+}
+.btn-acao:hover{filter:brightness(1.05)}
+.msg-status{font-size:12px;margin-top:8px;min-height:16px}
+.msg-status.enviando{color:var(--muted)}
+.msg-status.sucesso{color:var(--receita);font-weight:600}
+.msg-status.erro{color:#8B2E22;font-weight:600}
+.grade-solic{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card-solic{padding:18px 20px}
+.card-solic h3{font-size:13.5px;font-weight:700;margin-bottom:2px}
+.card-solic .sub{font-size:11.5px;color:var(--muted);margin-bottom:2px}
+
+.folha-mes{display:flex;flex-wrap:wrap;gap:20px;padding:18px 20px}
+.folha-mes .bloco{flex:1;min-width:160px}
+.folha-mes .bloco .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.folha-mes .bloco .v{font-size:20px;font-weight:800;margin-top:4px}
 
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px;font-weight:700}
@@ -229,9 +262,31 @@ function mesAtualISO(){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
 }
 
+const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const mesLongo = c => { const [a,m]=c.split('-'); return MESES[+m-1]+' '+a; };
+
+/** Janela rolante de competências pra escolher no seletor: 12 meses pra trás e
+    2 pra frente a partir de hoje — cobre histórico de folha e permite editar
+    as caixinhas de meses futuros também, se for o caso. */
+function janelaCompetencias(){
+  const hoje = new Date();
+  const lista = [];
+  for (let i=-12;i<=2;i++){
+    const d = new Date(hoje.getFullYear(), hoje.getMonth()+i, 1);
+    lista.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  }
+  return lista;
+}
+
+let DADOS_ATUAIS = null;
+
 function render(M, modelos){
+  DADOS_ATUAIS = M;
   const app = document.getElementById('app');
   app.innerHTML = '';
+
+  const janela = janelaCompetencias();
+  const compInicial = janela.includes(mesAtualISO()) ? mesAtualISO() : janela[janela.length-1];
 
   app.appendChild(el(`
     <header><div class="bar">
@@ -241,6 +296,10 @@ function render(M, modelos){
         <div class="brand-sub">${(M.config && M.config.razao_social) || TITULO_PAGINA} · cliente ${M.id}</div>
       </div>
       <div class="spacer"></div>
+      <div class="picker">
+        <label class="lbl" for="comp">Competência</label>
+        <select id="comp">${janela.slice().reverse().map(c=>`<option value="${c}" ${c===compInicial?'selected':''}>${mesLongo(c)}</option>`).join('')}</select>
+      </div>
       <span class="badge-topo">${TITULO_PAGINA}</span>
     </div></header>`));
 
@@ -249,11 +308,6 @@ function render(M, modelos){
 
   const funcionarios = M.funcionarios || [];
   const ativos = funcionarios.filter(f => normTxt(f.status) !== 'desligado' && !f.data_desligamento);
-  const folha = M.folha || [];
-  const competencias = Array.from(new Set(folha.map(f=>f.competencia))).sort();
-  const ultimaComp = competencias[competencias.length-1];
-  const folhaUltimoMes = folha.filter(f=>f.competencia===ultimaComp);
-  const totalFolha = folhaUltimoMes.reduce((s,f)=>s+Number(f.salario_liquido||0),0);
 
   appendAll(wrap, `
     <div class="hero" style="margin:28px 0 24px">
@@ -263,11 +317,6 @@ function render(M, modelos){
         <div class="s">${funcionarios.length} no total cadastrados</div>
       </div>
       <div class="card stat">
-        <span class="lbl">Folha do último mês</span>
-        <div class="v">${ultimaComp ? brl(totalFolha) : '—'}</div>
-        <div class="s">${ultimaComp ? 'competência ' + ultimaComp : 'sem lançamento ainda'}</div>
-      </div>
-      <div class="card stat">
         <span class="lbl">Admissões/desligamentos</span>
         <div class="v">${(M.admissoes||[]).length}</div>
         <div class="s">processos com etapas registradas</div>
@@ -275,8 +324,17 @@ function render(M, modelos){
     </div>`);
 
   appendAll(wrap, `
-    <div class="sec-head"><div><h2>Informe o que aconteceu este mês</h2><p>Salva sozinho, 3 segundos depois de você parar de digitar.</p></div></div>
+    <div class="sec-head"><div><h2>Folha e desligamentos do mês</h2><p>Muda com a competência selecionada no topo.</p></div></div>
+    <div class="card folha-mes" id="folha-mes"></div>
+    <div id="desligamentos-mes" style="margin-top:12px"></div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Informe o que aconteceu na competência selecionada</h2><p>Salva sozinho, 3 segundos depois de você parar de digitar.</p></div></div>
     <div class="caixinhas" id="caixinhas"></div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Precisa de algo?</h2><p>Respondemos em até 48h úteis.</p></div></div>
+    <div class="grade-solic" id="solicitacoes"></div>`);
 
   appendAll(wrap, `
     <div class="busca">
@@ -311,19 +369,132 @@ function render(M, modelos){
       <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
     </footer>`));
 
-  desenharCaixinhas(M.informado || []);
+  desenharMes(M, compInicial);
   desenharAdmissoes(M.admissoes || []);
   desenharFuncionarios(funcionarios);
   desenharFerias(M.ferias || []);
   desenharDocumentos(M.documentos || []);
   desenharModelos(modelos);
+  desenharSolicitacoes();
 
   document.getElementById('busca').addEventListener('input', e => filtrar(e.target.value));
+  document.getElementById('comp').addEventListener('change', e => desenharMes(DADOS_ATUAIS, e.target.value));
 }
 
-/** As 5 caixinhas editáveis, com salvamento automático 3s após a última digitação. */
-function desenharCaixinhas(informado){
-  const comp = mesAtualISO();
+/** Tudo que muda com a competência selecionada: folha do mês, desligamentos
+    daquele mês e as 5 caixinhas (que carregam/salvam nessa competência). */
+function desenharMes(M, comp){
+  const folhaMes = (M.folha||[]).filter(f=>f.competencia===comp);
+  const totalBruto = folhaMes.reduce((s,f)=>s+Number(f.salario_bruto||0),0);
+  const totalLiquido = folhaMes.reduce((s,f)=>s+Number(f.salario_liquido||0),0);
+
+  document.getElementById('folha-mes').innerHTML = folhaMes.length ? `
+    <div class="bloco"><span class="lbl">Funcionários na folha</span><div class="v">${folhaMes.length}</div></div>
+    <div class="bloco"><span class="lbl">Total bruto</span><div class="v">${brl(totalBruto)}</div></div>
+    <div class="bloco"><span class="lbl">Total líquido</span><div class="v">${brl(totalLiquido)}</div></div>
+  ` : `<div class="vazio">Sem lançamento de folha para ${mesLongo(comp)} ainda.</div>`;
+
+  const [ano, mes] = comp.split('-').map(Number);
+  const desligadosMes = (M.funcionarios||[]).filter(f=>{
+    if (!f.data_desligamento) return false;
+    const [a,m] = String(f.data_desligamento).split('-').map(Number);
+    return a===ano && m===mes;
+  });
+  document.getElementById('desligamentos-mes').innerHTML = desligadosMes.length ? `
+    <div class="card lista">${desligadosMes.map(f=>`
+      <div class="item"><div class="nome">${f.nome_completo}</div><span class="status-chip status-vencida">Desligado em ${dBR(f.data_desligamento)}</span></div>
+    `).join('')}</div>` : '';
+
+  desenharCaixinhas(M.informado || [], comp);
+}
+
+/** Precisa de algo? — 5 formulários simples, gravados direto na planilha. */
+function desenharSolicitacoes(){
+  const FORMS = [
+    {acao:'solicitar_ferias', titulo:'Solicitar férias', sub:'Para um funcionário específico.', campos:[
+      {id:'funcionario', label:'Funcionário', tipo:'input'},
+      {id:'periodo_inicio', label:'Início do período', tipo:'date'},
+      {id:'periodo_fim', label:'Fim do período', tipo:'date'},
+      {id:'observacoes', label:'Observações', tipo:'textarea'},
+    ]},
+    {acao:'solicitar_admissao', titulo:'Solicitar admissão', sub:'Já com candidato definido.', campos:[
+      {id:'nome_candidato', label:'Nome do candidato', tipo:'input'},
+      {id:'cargo', label:'Cargo', tipo:'input'},
+      {id:'salario_proposto', label:'Salário proposto (R$)', tipo:'input'},
+      {id:'data_prevista', label:'Data prevista de início', tipo:'date'},
+      {id:'observacoes', label:'Observações', tipo:'textarea'},
+    ]},
+    {acao:'solicitar_desligamento', titulo:'Solicitar desligamento', sub:'De um funcionário já definido.', campos:[
+      {id:'funcionario', label:'Funcionário', tipo:'input'},
+      {id:'motivo', label:'Motivo', tipo:'input'},
+      {id:'data_prevista', label:'Data prevista', tipo:'date'},
+      {id:'observacoes', label:'Observações', tipo:'textarea'},
+    ]},
+    {acao:'previa_admissao', titulo:'Prévia de admissão', sub:'Simular custo antes de decidir contratar.', campos:[
+      {id:'cargo_cogitado', label:'Cargo cogitado', tipo:'input'},
+      {id:'faixa_salarial', label:'Faixa salarial (R$)', tipo:'input'},
+      {id:'observacoes', label:'Observações', tipo:'textarea'},
+    ]},
+    {acao:'previa_desligamento', titulo:'Prévia de desligamento', sub:'Simular custo antes de decidir desligar.', campos:[
+      {id:'funcionario', label:'Funcionário', tipo:'input'},
+      {id:'motivo_cogitado', label:'Motivo cogitado', tipo:'input'},
+      {id:'observacoes', label:'Observações', tipo:'textarea'},
+    ]},
+  ];
+
+  document.getElementById('solicitacoes').innerHTML = FORMS.map((f,i)=>`
+    <div class="card card-solic">
+      <h3>${f.titulo}</h3>
+      <div class="sub">${f.sub}</div>
+      <div class="form-solic" data-acao="${f.acao}" data-idx="${i}">
+        ${f.campos.map(c=>`
+          ${c.tipo==='textarea'
+            ? `<textarea id="sol-${i}-${c.id}" rows="2" placeholder="${c.label}"></textarea>`
+            : `<input id="sol-${i}-${c.id}" type="${c.tipo}" placeholder="${c.label}">`}
+        `).join('')}
+        <button class="btn-acao" data-i="${i}">Enviar</button>
+        <div class="msg-status" id="sol-status-${i}"></div>
+      </div>
+    </div>`).join('');
+
+  FORMS.forEach((f,i)=>{
+    document.querySelector(`.form-solic[data-idx="${i}"] .btn-acao`).addEventListener('click', () => enviarSolicitacao(f, i));
+  });
+}
+
+async function enviarSolicitacao(f, i){
+  const statusEl = document.getElementById('sol-status-'+i);
+  const valores = {};
+  let faltando = false;
+  f.campos.forEach(c=>{
+    const v = document.getElementById(`sol-${i}-${c.id}`).value.trim();
+    valores[c.id] = v;
+    if (c.tipo !== 'textarea' && c.id !== 'observacoes' && !v && c.id !== 'periodo_fim' && c.id !== 'data_prevista') {
+      if (c.id === 'periodo_inicio' || c.id === 'funcionario' || c.id === 'nome_candidato' || c.id === 'cargo' ||
+          c.id === 'cargo_cogitado' || c.id === 'motivo' || c.id === 'motivo_cogitado') faltando = true;
+    }
+  });
+  if (faltando){ statusEl.textContent = 'Preencha os campos principais antes de enviar.'; statusEl.className = 'msg-status erro'; return; }
+
+  statusEl.textContent = 'Enviando…';
+  statusEl.className = 'msg-status enviando';
+  try {
+    if (!API_URL) throw new Error('Sem API configurada neste modo de demonstração.');
+    const qs = new URLSearchParams({ id: IDENTIDADE.id, codigo: IDENTIDADE.codigo, acao: f.acao, ...valores });
+    const d = await jsonp(API_URL + '?' + qs.toString());
+    if (d.erro) throw new Error(d.erro);
+    statusEl.textContent = d.mensagem || 'Enviado com sucesso.';
+    statusEl.className = 'msg-status sucesso';
+    f.campos.forEach(c => { document.getElementById(`sol-${i}-${c.id}`).value = ''; });
+  } catch (e) {
+    statusEl.textContent = e.message || String(e);
+    statusEl.className = 'msg-status erro';
+  }
+}
+
+/** As 5 caixinhas editáveis, com salvamento automático 3s após a última digitação.
+    Trocar de competência no topo recarrega o texto já salvo daquele mês (se houver). */
+function desenharCaixinhas(informado, comp){
   const linhaAtual = informado.find(i => i.competencia === comp) || {};
 
   const box = document.getElementById('caixinhas');
@@ -342,13 +513,12 @@ function desenharCaixinhas(informado){
       statusEl.textContent = 'Digitando…';
       statusEl.className = 'status';
       clearTimeout(timer);
-      timer = setTimeout(() => salvarCaixinha(c.campo, area.value, statusEl), 3000);
+      timer = setTimeout(() => salvarCaixinha(comp, c.campo, area.value, statusEl), 3000);
     });
   });
 }
 
-async function salvarCaixinha(campo, valor, statusEl){
-  const comp = mesAtualISO();
+async function salvarCaixinha(comp, campo, valor, statusEl){
   statusEl.textContent = 'Salvando…';
   statusEl.className = 'status salvando';
   try {
