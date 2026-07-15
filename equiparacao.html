@@ -205,6 +205,20 @@ function prepararCompetencia(c){
   return {tri, ano, ord: ano*4+tri, label:`${tri}º tri/${ano}`};
 }
 
+/** Algumas planilhas trazem o código de arrecadação da Receita (número) em vez do
+    nome do tributo — ex.: 2089/2372 no lucro presumido, 3373/6012 no ajuste anual
+    do lucro real, 5993/2484 na estimativa mensal do lucro real. Traduz pro nome;
+    se já vier como texto ("IRPJ"/"CSLL"), passa direto. */
+const CODIGO_TRIBUTO = {
+  '2089':'IRPJ', '2372':'CSLL',
+  '3373':'IRPJ', '6012':'CSLL',
+  '5993':'IRPJ', '2484':'CSLL',
+};
+function normalizarTributo(v){
+  const s = String(v==null ? '' : v).trim();
+  return CODIGO_TRIBUTO[s] || s || 'Outro';
+}
+
 function preparar(raw){
   const pedidos = (raw.pedidos||[]).map(p => {
     // Critério de verdade: se tem data_pagamento, foi aprovado e será (ou já foi) pago —
@@ -214,6 +228,7 @@ function preparar(raw){
     const info = STATUS_INFO[p.status] || {grupo:'neutro', txt:''};
     return {
       ...p,
+      tributo: normalizarTributo(p.tributo),
       _comp: prepararCompetencia(p.competencia),
       _concluido: concluido,
       _grupo: concluido ? 'concluido' : info.grupo,
@@ -221,7 +236,7 @@ function preparar(raw){
         ? 'Crédito reconhecido pela Receita Federal — valor aprovado e em pagamento (ou já pago).'
         : info.txt,
     };
-  }).sort((a,b) => a._comp.ord - b._comp.ord || a.tributo.localeCompare(b.tributo));
+  }).sort((a,b) => a._comp.ord - b._comp.ord || String(a.tributo).localeCompare(String(b.tributo)));
   return { cfg: raw.config||{}, id: raw.id, pedidos, documentos: raw.documentos||[], atualizado_em: raw.atualizado_em };
 }
 
