@@ -24,7 +24,7 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 :focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
 .wrap{max-width:960px;margin:0 auto;padding:0 24px 72px}
 
-header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:30}
+header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:var(--b4u-bar-h,0px);z-index:30}
 .bar{max-width:960px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .logo{font-weight:900;font-size:19px;letter-spacing:-.02em;line-height:1}
 .logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
@@ -151,6 +151,16 @@ table.func tbody tr:last-child td{border-bottom:none}
 .card-solic{padding:18px 20px}
 .card-solic h3{font-size:13.5px;font-weight:700;margin-bottom:2px}
 .card-solic .sub{font-size:11.5px;color:var(--muted);margin-bottom:2px}
+.card-solic-btn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;
+  font-family:var(--sans);cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s}
+.card-solic-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(17,61,57,.08);border-color:var(--brand-teal)}
+.card-solic-btn .solic-cta{margin-top:8px;font-size:12px;font-weight:700;color:var(--brand-teal)}
+
+.comp-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin:28px 0 22px}
+@media(max-width:760px){.comp-hero{grid-template-columns:1fr}}
+.comp-hero .comp-main{padding:22px 24px;display:flex;flex-direction:column;justify-content:center}
+.comp-hero .comp-title{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.comp-hero .comp-note{font-size:12.5px;color:var(--muted);margin-top:6px;max-width:42ch}
 
 .folha-mes{padding:18px 20px}
 .folha-mes-resumo{display:flex;flex-wrap:wrap;gap:20px;margin-bottom:16px}
@@ -185,6 +195,252 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 </style>
 </head>
 <body>
+<!--B4U:START-->
+<script>window.B4U = { area:'dpto_pessoal' };</script>
+<!-- ═══════════ back4you · cabeçalho + chamados (compartilhado) ═══════════
+     Bloco único, autocontido e com prefixo .b4u- (não conflita com o CSS da
+     página). Cole logo depois de <body>, e ANTES dele defina:
+        <script>window.B4U = { area:'fiscal' };</script>
+     area = área padrão do chamado desta página
+        (fiscal | dpto_pessoal | contabil | societario | equiparacao | outros)
+     home:true  -> esconde o botão "Início" (usar só no index).
+     Para reaproveitar em todas as páginas, mantenha este bloco IDÊNTICO. ─── -->
+<style>
+.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;
+  padding:10px 18px;background:#073034;color:#fff;box-shadow:0 2px 12px rgba(7,48,52,.20);
+  font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+.b4u-bar .b4u-logo{font-weight:900;font-size:17px;letter-spacing:-.02em;margin-right:auto;
+  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1}
+.b4u-bar .b4u-logo .y{color:#3FA680}
+.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;
+  font-family:inherit;font-weight:600;font-size:13px;padding:8px 13px;border-radius:10px;
+  text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
+.b4u-btn svg{width:16px;height:16px;flex-shrink:0}
+.b4u-btn:active{transform:translateY(1px)}
+.b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
+.b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
+.b4u-btn.wa{background:#25D366;color:#053d1c}
+.b4u-btn.wa:hover{background:#20bd5a}
+.b4u-btn.call{background:#3FA680;color:#04241d}
+.b4u-btn.call:hover{background:#37946f}
+.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+  padding:0;border:0;cursor:pointer;border-radius:9px;background:rgba(255,255,255,.10);color:#fff;
+  transition:background .15s}
+.b4u-icobtn:hover{background:rgba(255,255,255,.18)}
+.b4u-icobtn svg{width:17px;height:17px}
+@media(max-width:640px){
+  .b4u-bar{gap:7px;padding:9px 12px}
+  .b4u-btn .lbl{display:none}
+  .b4u-btn{padding:9px 11px}
+}
+.b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
+  display:none;align-items:flex-end;justify-content:center;
+  font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+.b4u-ov.on{display:flex}
+@media(min-width:640px){.b4u-ov{align-items:center;padding:24px}}
+.b4u-modal{background:#fff;color:#113D39;width:100%;max-width:520px;border-radius:16px 16px 0 0;
+  max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+@media(min-width:640px){.b4u-modal{border-radius:16px}}
+.b4u-modal h3{font-size:17px;font-weight:800;padding:18px 20px 3px;letter-spacing:-.01em}
+.b4u-modal .b4u-sub{font-size:12.5px;color:#8A7D70;padding:0 20px 10px;line-height:1.5}
+.b4u-fld{padding:7px 20px}
+.b4u-fld label{display:block;font-size:12px;font-weight:700;color:#3F5854;margin-bottom:5px}
+.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:14px;
+  padding:10px 12px;border:1px solid #E4D9C9;border-radius:10px;background:#FBF6EF;color:#113D39}
+.b4u-fld textarea{min-height:120px;resize:vertical;line-height:1.5}
+.b4u-fld select:focus,.b4u-fld input:focus,.b4u-fld textarea:focus{outline:2px solid #0F8C85;outline-offset:1px;border-color:transparent}
+.b4u-err{color:#B4322A;font-size:12.5px;padding:2px 20px 0;min-height:16px}
+.b4u-foot{display:flex;gap:10px;padding:14px 20px 20px;position:sticky;bottom:0;background:#fff}
+.b4u-foot .b4u-btn{flex:1;justify-content:center;padding:12px}
+.b4u-foot .primary{background:#0F8C85;color:#fff}
+.b4u-foot .primary:hover{background:#0c756f}
+.b4u-foot .primary[disabled]{opacity:.6;cursor:default}
+.b4u-foot .cancel{background:#F1E7DC;color:#3F5854}
+.b4u-foot .cancel:hover{background:#e8dccb}
+.b4u-ok{padding:30px 22px;text-align:center}
+.b4u-ok .chk{width:56px;height:56px;border-radius:50%;background:#E7F4EC;color:#2E9E63;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.b4u-ok .chk svg{width:30px;height:30px}
+.b4u-ok h3{font-size:18px;font-weight:800;margin-bottom:6px}
+.b4u-ok p{font-size:13.5px;color:#3F5854;line-height:1.55;max-width:40ch;margin:0 auto 20px}
+</style>
+<script>
+(function(){
+  var CFG = window.B4U || {};
+  if (CFG.__ready) return;
+
+  var WA = '5511937173906';                        // +55 11 93717-3906
+  var API_FALLBACK = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+  function api(){ try{ if(typeof API_URL==='string' && API_URL) return API_URL; }catch(e){} return API_FALLBACK; }
+
+  var AREAS = [
+    ['fiscal','Fiscal'], ['dpto_pessoal','Departamento Pessoal'], ['contabil','Contábil'],
+    ['societario','Societário'], ['equiparacao','Equiparação'], ['outros','Outros / reportar erro']
+  ];
+  // tipo -> [rótulo, esqueleto de mensagem]
+  var TIPOS = {
+    livre:            ['Chamado livre', ''],
+    solicitar_nf:     ['Solicitar nota fiscal', 'Solicito a emissão de uma nota fiscal.\n\nTomador (cliente):\nValor:\nDescrição do serviço:\nData desejada:'],
+    duvida:           ['Tirar uma dúvida', 'Minha dúvida é:\n\n'],
+    ferias:           ['Solicitar férias', 'Solicito a programação de férias.\n\nColaborador:\nInício desejado:\nDias:\nObservações:'],
+    previa_admissao:  ['Prévia de admissão', 'Estou avaliando uma contratação (prévia, ainda sem formalizar).\n\nCargo cogitado:\nFaixa salarial:\nObservações:'],
+    contratacao:      ['Formalizar admissão', 'Quero formalizar uma contratação.\n\nNome do colaborador:\nCargo:\nSalário:\nData de início:\nObservações:'],
+    previa_rescisao:  ['Prévia de rescisão', 'Estou avaliando desligar um colaborador (prévia).\n\nColaborador:\nMotivo:\nObservações:'],
+    rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
+  };
+  var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+
+  // ---- id/código a partir da URL (?id=&codigo= ou #id-codigo) -------------
+  function idc(){
+    var qs = new URLSearchParams(location.search);
+    var id = qs.get('id')||'', cod = qs.get('codigo')||'';
+    if(!id){
+      var h = (location.hash||'').replace('#','').trim();
+      var m = h.match(/^(\d+)-(.+)$/); var s = h.match(/^(\d+)$/);
+      if(m){ id=m[1]; cod=m[2]; } else if(s){ id=s[1]; }
+    }
+    return { id:String(id).replace(/\D/g,''), codigo:String(cod).trim() };
+  }
+  function jsonp(url){
+    return new Promise(function(ok,fail){
+      var cb='b4ucb_'+Math.random().toString(36).slice(2);
+      var s=document.createElement('script');
+      var t=setTimeout(function(){ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
+      function limpa(){ clearTimeout(t); try{delete window[cb];}catch(e){window[cb]=undefined;} s.remove(); }
+      window[cb]=function(d){ limpa(); ok(d); };
+      s.onerror=function(){ limpa(); fail(new Error('Não consegui alcançar a API.')); };
+      s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+      document.body.appendChild(s);
+    });
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  var IC = {
+    home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
+    wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>',
+    chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/></svg>',
+    help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>',
+    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>'
+  };
+
+  var C = idc();
+  var linkHome = 'index.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var linkTickets = 'meustickets.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
+
+  // ---- barra fixa ----------------------------------------------------------
+  var bar = document.createElement('div');
+  bar.className = 'b4u-bar';
+  bar.innerHTML =
+    '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
+    (CFG.home ? '' :
+      '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="lbl">Início</span></a>') +
+    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="lbl">WhatsApp</span></a>' +
+    '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="lbl">Abrir chamado</span></button>' +
+    '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
+  document.body.insertBefore(bar, document.body.firstChild);
+  // publica a altura da barra p/ os cabeçalhos internos grudarem logo abaixo dela
+  function medirBarra(){ document.documentElement.style.setProperty('--b4u-bar-h', bar.offsetHeight + 'px'); }
+  medirBarra();
+  window.addEventListener('resize', medirBarra);
+  window.addEventListener('load', medirBarra);
+
+  // ---- modal ---------------------------------------------------------------
+  var ov = document.createElement('div');
+  ov.className = 'b4u-ov';
+  document.body.appendChild(ov);
+
+  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; }
+
+  function abrir(opts){
+    opts = opts || {};
+    var areaSel = opts.area || CFG.area || 'outros';
+    var tipoSel = opts.tipo || 'livre';
+    ov.innerHTML =
+      '<div class="b4u-modal" role="dialog" aria-modal="true" aria-label="Abrir chamado">' +
+        '<h3>Abrir um chamado</h3>' +
+        '<div class="b4u-sub">Registramos aqui e retornamos em até 48h úteis. Você pode acompanhar em “Meus chamados”.</div>' +
+        '<div class="b4u-fld"><label for="b4u-area">Área</label><select id="b4u-area">' +
+          AREAS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===areaSel?' selected':'')+'>'+esc(a[1])+'</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="b4u-fld"><label for="b4u-tipo">Tipo de solicitação</label><select id="b4u-tipo">' +
+          ORDEM_TIPOS.map(function(t){ return '<option value="'+t+'"'+(t===tipoSel?' selected':'')+'>'+esc(TIPOS[t][0])+'</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
+        '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
+        '<div class="b4u-err" id="b4u-erro"></div>' +
+        '<div class="b4u-foot">' +
+          '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
+          '<button type="button" class="b4u-btn primary" id="b4u-send">Enviar chamado</button>' +
+        '</div>' +
+      '</div>';
+    ov.classList.add('on');
+    var selTipo = ov.querySelector('#b4u-tipo');
+    var txt = ov.querySelector('#b4u-msg');
+    function aplicaSkeleton(force){
+      var esq = TIPOS[selTipo.value] ? TIPOS[selTipo.value][1] : '';
+      if(force || !txt.value.trim()) txt.value = esq;
+    }
+    aplicaSkeleton(true);
+    selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
+    ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
+    ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
+    ov.querySelector('#b4u-send').addEventListener('click', enviar);
+    ov.querySelector('#b4u-assunto').focus();
+  }
+
+  function enviar(){
+    var cc = idc();
+    var erroEl = ov.querySelector('#b4u-erro');
+    var btn = ov.querySelector('#b4u-send');
+    erroEl.textContent = '';
+    if(!cc.id || !cc.codigo){ erroEl.textContent = 'Abra o painel pelo seu link (com ID e código) para enviar um chamado.'; return; }
+    var area = ov.querySelector('#b4u-area').value;
+    var tipo = ov.querySelector('#b4u-tipo').value;
+    var assunto = ov.querySelector('#b4u-assunto').value.trim();
+    var msg = ov.querySelector('#b4u-msg').value.trim();
+    if(!msg){ erroEl.textContent = 'Escreva a mensagem do chamado.'; return; }
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    var qs = new URLSearchParams({ id:cc.id, codigo:cc.codigo, acao:'ticket',
+      area:area, tipo:tipo, assunto:assunto, mensagem:msg });
+    jsonp(api()+'?'+qs.toString()).then(function(d){
+      if(d && d.erro) throw new Error(d.erro);
+      sucesso();
+    }).catch(function(e){
+      btn.disabled=false; btn.textContent='Enviar chamado';
+      erroEl.textContent = e.message || String(e);
+    });
+  }
+
+  function sucesso(){
+    ov.innerHTML =
+      '<div class="b4u-modal">' +
+        '<div class="b4u-ok">' +
+          '<div class="chk">'+IC.chk+'</div>' +
+          '<h3>Chamado registrado</h3>' +
+          '<p>Recebemos sua solicitação e retornamos em até 48h úteis. Em breve o acompanhamento também chegará por e-mail.</p>' +
+          '<div class="b4u-foot" style="position:static;padding:0">' +
+            '<button type="button" class="b4u-btn cancel" id="b4u-fecha">Fechar</button>' +
+            '<a class="b4u-btn primary" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    ov.querySelector('#b4u-fecha').addEventListener('click', fecharModal);
+  }
+
+  bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
+  bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
+
+  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets };
+})();
+</script>
+<!-- ═══════════ fim do bloco compartilhado back4you ═══════════ -->
+<!--B4U:END-->
+
+
+
 
 <div id="app">
   <div class="state">
@@ -308,7 +564,6 @@ function render(M, modelos){
   app.appendChild(el(`
     <header><div class="bar">
       <div>
-        <a class="voltar" href="index.html#${IDENTIDADE.id}-${IDENTIDADE.codigo}">← Painel do cliente</a>
         <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
         <div class="brand-sub">${(M.config && M.config.razao_social) || TITULO_PAGINA} · ${(M.config && M.config.cnpj) ? 'CNPJ ' + M.config.cnpj : 'cliente ' + M.id}</div>
       </div>
@@ -327,16 +582,16 @@ function render(M, modelos){
   const ativos = funcionarios.filter(f => normTxt(f.status) !== 'desligado' && !f.data_desligamento);
 
   appendAll(wrap, `
-    <div class="hero" style="margin:28px 0 24px">
+    <div class="comp-hero">
+      <div class="card comp-main">
+        <span class="lbl">Competência</span>
+        <div class="comp-title" id="comp-title">${mesLongo(compInicial)}</div>
+        <p class="comp-note">Folha, encargos e movimentações desta competência. Muda com o seletor no topo.</p>
+      </div>
       <div class="card stat">
         <span class="lbl">Funcionários ativos</span>
         <div class="v">${ativos.length}</div>
-        <div class="s">${funcionarios.length} no total cadastrados</div>
-      </div>
-      <div class="card stat">
-        <span class="lbl">Admissões/desligamentos</span>
-        <div class="v">${(M.admissoes||[]).length}</div>
-        <div class="s">processos com etapas registradas</div>
+        <div class="s">${funcionarios.length} no total · ${(M.admissoes||[]).length} processos de adm./deslig.</div>
       </div>
     </div>`);
 
@@ -405,6 +660,7 @@ function render(M, modelos){
 /** Tudo que muda com a competência selecionada: folha do mês, desligamentos
     daquele mês e as 5 caixinhas (que carregam/salvam nessa competência). */
 function desenharMes(M, comp){
+  const ct = document.getElementById('comp-title'); if (ct) ct.textContent = mesLongo(comp);
   const folhaMes = (M.folha||[]).filter(f=>f.competencia===comp);
   const totalBruto = folhaMes.reduce((s,f)=>s+Number(f.salario_bruto||0),0);
   const totalLiquido = folhaMes.reduce((s,f)=>s+Number(f.salario_liquido||0),0);
@@ -501,55 +757,26 @@ function desenharSolicitacoesStatus(solicitacoes){
 
 /** Precisa de algo? — 5 formulários simples, gravados direto na planilha. */
 function desenharSolicitacoes(){
-  const FORMS = [
-    {acao:'solicitar_ferias', titulo:'Solicitar férias', sub:'Para um funcionário específico.', campos:[
-      {id:'funcionario', label:'Funcionário', tipo:'input'},
-      {id:'periodo_inicio', label:'Início do período', tipo:'date'},
-      {id:'periodo_fim', label:'Fim do período', tipo:'date'},
-      {id:'observacoes', label:'Observações', tipo:'textarea'},
-    ]},
-    {acao:'solicitar_admissao', titulo:'Solicitar admissão', sub:'Já com candidato definido.', campos:[
-      {id:'nome_candidato', label:'Nome do candidato', tipo:'input'},
-      {id:'cargo', label:'Cargo', tipo:'input'},
-      {id:'salario_proposto', label:'Salário proposto (R$)', tipo:'input'},
-      {id:'data_prevista', label:'Data prevista de início', tipo:'date'},
-      {id:'observacoes', label:'Observações', tipo:'textarea'},
-    ]},
-    {acao:'solicitar_desligamento', titulo:'Solicitar desligamento', sub:'De um funcionário já definido.', campos:[
-      {id:'funcionario', label:'Funcionário', tipo:'input'},
-      {id:'motivo', label:'Motivo', tipo:'input'},
-      {id:'data_prevista', label:'Data prevista', tipo:'date'},
-      {id:'observacoes', label:'Observações', tipo:'textarea'},
-    ]},
-    {acao:'previa_admissao', titulo:'Prévia de admissão', sub:'Simular custo antes de decidir contratar.', campos:[
-      {id:'cargo_cogitado', label:'Cargo cogitado', tipo:'input'},
-      {id:'faixa_salarial', label:'Faixa salarial (R$)', tipo:'input'},
-      {id:'observacoes', label:'Observações', tipo:'textarea'},
-    ]},
-    {acao:'previa_desligamento', titulo:'Prévia de desligamento', sub:'Simular custo antes de decidir desligar.', campos:[
-      {id:'funcionario', label:'Funcionário', tipo:'input'},
-      {id:'motivo_cogitado', label:'Motivo cogitado', tipo:'input'},
-      {id:'observacoes', label:'Observações', tipo:'textarea'},
-    ]},
+  // As solicitações do DP agora abrem UM chamado central (área Departamento Pessoal),
+  // com o modelo já escolhido. Mantemos o "Precisa de algo?/48h" — só muda o destino.
+  const ACOES = [
+    {tipo:'ferias',          titulo:'Solicitar férias',        sub:'Programar férias de um colaborador.'},
+    {tipo:'contratacao',     titulo:'Solicitar admissão',      sub:'Formalizar uma contratação já definida.'},
+    {tipo:'rescisao',        titulo:'Solicitar desligamento',  sub:'Formalizar o desligamento de um colaborador.'},
+    {tipo:'previa_admissao', titulo:'Prévia de admissão',      sub:'Simular custo antes de decidir contratar.'},
+    {tipo:'previa_rescisao', titulo:'Prévia de desligamento',  sub:'Simular custo antes de decidir desligar.'},
   ];
+  document.getElementById('solicitacoes').innerHTML = ACOES.map((a,i)=>`
+    <button class="card card-solic card-solic-btn" data-tipo="${a.tipo}">
+      <h3>${a.titulo}</h3>
+      <div class="sub">${a.sub}</div>
+      <span class="solic-cta">Abrir chamado →</span>
+    </button>`).join('');
 
-  document.getElementById('solicitacoes').innerHTML = FORMS.map((f,i)=>`
-    <div class="card card-solic">
-      <h3>${f.titulo}</h3>
-      <div class="sub">${f.sub}</div>
-      <div class="form-solic" data-acao="${f.acao}" data-idx="${i}">
-        ${f.campos.map(c=>`
-          ${c.tipo==='textarea'
-            ? `<textarea id="sol-${i}-${c.id}" rows="2" placeholder="${c.label}"></textarea>`
-            : `<input id="sol-${i}-${c.id}" type="${c.tipo}" placeholder="${c.label}">`}
-        `).join('')}
-        <button class="btn-acao" data-i="${i}">Enviar</button>
-        <div class="msg-status" id="sol-status-${i}"></div>
-      </div>
-    </div>`).join('');
-
-  FORMS.forEach((f,i)=>{
-    document.querySelector(`.form-solic[data-idx="${i}"] .btn-acao`).addEventListener('click', () => enviarSolicitacao(f, i));
+  document.querySelectorAll('.card-solic-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if (window.B4U && window.B4U.abrirChamado) window.B4U.abrirChamado({ area:'dpto_pessoal', tipo: btn.dataset.tipo });
+    });
   });
 }
 
