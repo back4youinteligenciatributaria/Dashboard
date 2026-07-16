@@ -83,6 +83,25 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .stat .s{font-size:12px;color:var(--muted);margin-top:3px}
 .stat.div-alerta{border-color:#E0B45A;background:#FBF3E2}
 .stat.div-alerta .s{color:#9A6B10;font-weight:600}
+.card-click{cursor:pointer;text-align:left;font-family:var(--sans);width:100%;transition:border-color .12s,transform .12s}
+.card-click:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
+.dv-card{padding:18px 20px;margin-bottom:16px}
+.dv-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dv-head b{font-size:14px}
+.dv-close{background:none;border:0;cursor:pointer;font-size:15px;color:var(--muted)}
+.dv-sub{font-size:12px;color:var(--muted);margin:4px 0 12px;max-width:60ch}
+.dv-list{display:flex;flex-direction:column;gap:8px}
+.dv-row{display:grid;grid-template-columns:1fr auto 130px;align-items:center;gap:12px}
+.dv-centro{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
+.dv-centro i{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.dv-luc{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.dv-in{font-family:var(--sans);font-size:13px;text-align:right;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface-warm);color:var(--ink)}
+.dv-in:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.dv-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}
+.dv-foot #dv-msg{font-size:12px}
+.btn.dv-save{background:var(--brand-teal);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-family:var(--sans);font-weight:700;font-size:13px;cursor:pointer}
+.btn.dv-save[disabled]{opacity:.6;cursor:default}
+@media(max-width:560px){.dv-row{grid-template-columns:1fr 110px}.dv-luc{display:none}}
 
 .guias-card{padding:20px 24px;margin-bottom:16px}
 .guias-card .relacao-head{margin-bottom:10px}
@@ -229,8 +248,15 @@ table.nf td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:
 table.nf tbody tr.nf-open{background:var(--surface-warm)}
 .nf-cp{font-weight:600}
 .nf-tipo{font-size:11px;color:var(--muted)}
-.nf-desc{font-size:11.5px;color:var(--ink-2);margin-top:2px}
-.nf-obs{font-size:11px;color:var(--muted);margin-top:2px;font-style:italic}
+.nf-expand{background:none;border:0;cursor:pointer;font-family:var(--sans);font-size:11px;font-weight:700;color:var(--brand-teal);padding:3px 0;margin-top:3px;display:inline-flex;align-items:center;gap:4px}
+.nf-expand .mais{display:inline-block;transition:transform .15s}
+.nf-expand[aria-expanded="true"] .mais{transform:rotate(45deg)}
+.nf-detalhe{display:none;margin-top:6px;padding:8px 11px;background:var(--surface-warm);border:1px solid var(--line);border-radius:8px;max-width:340px}
+.nf-detalhe.aberto{display:block}
+.nf-detalhe .det-lbl{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:1px}
+.nf-desc{font-size:12px;color:var(--ink-2)}
+.nf-obs{font-size:12px;color:var(--ink-2);margin-top:6px}
+.nf-comp{display:inline-block;font-size:11px;font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:2px 8px;border-radius:8px}
 .nf-sit{font-size:10px;font-weight:700;padding:1px 7px;border-radius:9px;margin-left:6px;white-space:nowrap;vertical-align:middle}
 .nf-sit.cancel{background:#F3DEDB;color:#8B2E22}
 .nf-sit.subst{background:#EDE7DD;color:#7a6a56}
@@ -243,6 +269,8 @@ table.nf tbody tr.nf-inativa .nf-cp{text-decoration:line-through}
 .btn-edit{font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--brand-teal);background:var(--surface-warm);
   border:1px solid var(--line-2);border-radius:14px;padding:5px 12px;cursor:pointer;white-space:nowrap}
 .btn-edit:hover{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
+.btn-edit.pend{background:#F3DEDB;color:#8B2E22;border-color:#E0B4AC}
+.btn-edit.pend:hover{background:#8B2E22;color:#fff;border-color:#8B2E22}
 tr.editor-row{display:none}
 tr.editor-row.aberto{display:table-row}
 tr.editor-row>td{background:var(--surface-warm);padding:0 10px 14px}
@@ -297,6 +325,41 @@ table.rat{min-width:560px} table.nf{min-width:620px}
   .chart{padding:16px 16px 13px}.charts,.charts3{gap:12px}
   .ed-row{grid-template-columns:16px 1fr 92px}
   footer{flex-direction:column;gap:4px}
+
+  /* itens de grid/flex podem encolher (senão a tabela estica o cartão e vaza a página) */
+  .hero>*,.rateio-grid>*,.charts>*,.charts3>*,.slim>*{min-width:0}
+  /* ---- Tabelas no mobile: sem overflow da página / botão fora da tela ---- */
+  .table-scroll{overflow-x:auto}                 /* se sobrar, rola DENTRO do cartão, nunca a página */
+  .table-scroll table,table.rat,table.nf{min-width:0}
+  table.imp{font-size:12px;table-layout:fixed;width:100%}
+  table.imp th,table.imp td{padding:6px 0;overflow:hidden;text-overflow:ellipsis}
+  table.imp th:first-child,table.imp td:first-child{width:34%}
+
+  /* Notas: cada NF vira um cartão empilhado (mesma info, sem overflow) */
+  table.nf thead{display:none}
+  table.nf tbody tr[id^="nfrow-"]{display:grid;grid-template-columns:auto 1fr auto;column-gap:8px;row-gap:2px;
+    align-items:center;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-top:10px}
+  table.nf tbody tr[id^="nfrow-"]>td{display:block;border:none;padding:0}
+  table.nf tbody tr[id^="nfrow-"]>td:nth-child(1){grid-column:1;grid-row:1;font-weight:700;font-size:13px}
+  table.nf tbody tr[id^="nfrow-"]>td:nth-child(2){grid-column:2;grid-row:1;font-size:11.5px;color:var(--muted)}
+  table.nf tbody tr[id^="nfrow-"]>td:nth-child(4){grid-column:3;grid-row:1;text-align:right;font-weight:700;font-size:13px}
+  table.nf tbody tr[id^="nfrow-"]>td:nth-child(3){grid-column:1/-1;grid-row:2;margin-top:3px}
+  table.nf tbody tr[id^="nfrow-"]>td:nth-child(5){grid-column:1/-1;grid-row:3;margin-top:6px}
+  table.nf tbody tr[id^="nfrow-"]>td:nth-child(6){grid-column:1/-1;grid-row:4;margin-top:8px}
+  table.nf tbody tr[id^="nfrow-"]>td:nth-child(6) .btn-edit{display:block;width:100%;text-align:center;padding:11px}
+  table.nf tbody tr.editor-row{display:block;border:none;padding:0;margin:0}
+  table.nf tbody tr.editor-row>td{display:block;padding:0;border:none}
+  .nf-detalhe{max-width:none}
+
+  /* Rateio: compacto, sem largura mínima */
+  table.rat{font-size:12px}
+  table.rat th,table.rat td{padding:8px 6px}
+  table.rat th:first-child,table.rat td:first-child{padding-left:0}
+  table.rat th:last-child,table.rat td:last-child{padding-right:0}
+
+  /* Editor de dividendos: empilha rótulo e input */
+  .dv-row{grid-template-columns:1fr auto}
+  .dv-in{width:120px}
 }
 </style>
 </head>
@@ -322,13 +385,14 @@ table.rat{min-width:560px} table.nf{min-width:620px}
   font-family:inherit;font-weight:600;font-size:13px;padding:8px 13px;border-radius:10px;
   text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
 .b4u-btn svg{width:16px;height:16px;flex-shrink:0}
+.b4u-btn .b4u-lbl{color:inherit;text-transform:none;letter-spacing:normal;font-size:13px}
 .b4u-btn:active{transform:translateY(1px)}
 .b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
 .b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
-.b4u-btn.wa{background:#25D366;color:#053d1c}
+.b4u-btn.wa{background:#25D366;color:#fff}
 .b4u-btn.wa:hover{background:#20bd5a}
-.b4u-btn.call{background:#3FA680;color:#04241d}
-.b4u-btn.call:hover{background:#37946f}
+.b4u-btn.call{background:#0F8C85;color:#fff}
+.b4u-btn.call:hover{background:#0c756f}
 .b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
   padding:0;border:0;cursor:pointer;border-radius:9px;background:rgba(255,255,255,.10);color:#fff;
   transition:background .15s}
@@ -336,7 +400,7 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 .b4u-icobtn svg{width:17px;height:17px}
 @media(max-width:640px){
   .b4u-bar{gap:7px;padding:9px 12px}
-  .b4u-btn .lbl{display:none}
+  .b4u-btn .b4u-lbl{display:none}
   .b4u-btn{padding:9px 11px}
 }
 .b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
@@ -395,6 +459,21 @@ table.rat{min-width:560px} table.nf{min-width:620px}
     rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
   };
   var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
+  var TIPOS_POR_AREA = {
+    fiscal:       ['livre','solicitar_nf','duvida'],
+    dpto_pessoal: ['livre','ferias','previa_admissao','contratacao','previa_rescisao','rescisao','duvida'],
+    contabil:     ['livre','duvida'],
+    societario:   ['livre','duvida'],
+    equiparacao:  ['livre','duvida'],
+    outros:       ['livre','duvida']
+  };
+  function tiposDaArea(area){ return TIPOS_POR_AREA[area] || TIPOS_POR_AREA.outros; }
+  function opcoesTipo(area, sel){
+    return tiposDaArea(area).map(function(t){
+      return '<option value="'+t+'"'+(t===sel?' selected':'')+'>'+esc(TIPOS[t][0])+'</option>';
+    }).join('');
+  }
 
   // ---- id/código a partir da URL (?id=&codigo= ou #id-codigo) -------------
   function idc(){
@@ -441,9 +520,9 @@ table.rat{min-width:560px} table.nf{min-width:620px}
   bar.innerHTML =
     '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
     (CFG.home ? '' :
-      '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="lbl">Início</span></a>') +
-    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="lbl">WhatsApp</span></a>' +
-    '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="lbl">Abrir chamado</span></button>' +
+      '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
+    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
+    '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
     '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
   document.body.insertBefore(bar, document.body.firstChild);
   // publica a altura da barra p/ os cabeçalhos internos grudarem logo abaixo dela
@@ -463,6 +542,7 @@ table.rat{min-width:560px} table.nf{min-width:620px}
     opts = opts || {};
     var areaSel = opts.area || CFG.area || 'outros';
     var tipoSel = opts.tipo || 'livre';
+    if (tiposDaArea(areaSel).indexOf(tipoSel) < 0) tipoSel = tiposDaArea(areaSel)[0];   // tipo válido p/ a área
     ov.innerHTML =
       '<div class="b4u-modal" role="dialog" aria-modal="true" aria-label="Abrir chamado">' +
         '<h3>Abrir um chamado</h3>' +
@@ -471,7 +551,7 @@ table.rat{min-width:560px} table.nf{min-width:620px}
           AREAS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===areaSel?' selected':'')+'>'+esc(a[1])+'</option>'; }).join('') +
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-tipo">Tipo de solicitação</label><select id="b4u-tipo">' +
-          ORDEM_TIPOS.map(function(t){ return '<option value="'+t+'"'+(t===tipoSel?' selected':'')+'>'+esc(TIPOS[t][0])+'</option>'; }).join('') +
+          opcoesTipo(areaSel, tipoSel) +
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
         '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
@@ -490,6 +570,11 @@ table.rat{min-width:560px} table.nf{min-width:620px}
     }
     aplicaSkeleton(true);
     selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
+    // trocar a ÁREA repovoa os tipos válidos para ela
+    ov.querySelector('#b4u-area').addEventListener('change', function(){
+      selTipo.innerHTML = opcoesTipo(this.value, selTipo.value);
+      aplicaSkeleton(true);
+    });
     ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
     ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
@@ -547,6 +632,8 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 
 
 
+
+
 <div id="app"><div class="state"><div class="spin" role="status" aria-label="Carregando"></div><p>Carregando o painel…</p></div></div>
 
 <div class="modal-bg" id="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
@@ -573,7 +660,8 @@ const PAL = {
   inss:'#CBA88F', fgts:'#B89572', estimativa:'#3FA680',
   musgo:'#1D3B37', petroleo:'#113D39', vinho:'#731007', muted:'#8A7D70', line:'#E4D9C9'
 };
-const CENTRO_PAL = ['#3FA680','#A7715D','#0F8C85','#8F5A4A','#649C8A','#C79873','#113D39','#CBA88F','#6B4236','#731007'];
+// Paleta FIXA dos centros de custo (ordem 1..10) — cor sempre consistente por posição do centro.
+const CENTRO_PAL = ['#B8D8F0','#BFE3D0','#F6E6A8','#F3C1CF','#D8C4E8','#F5C7A9','#C9D8B6','#C7D0EA','#F0B8AC','#B9E1DE'];
 
 /* Definição de tributos por REGIME. Cada tributo aponta para colunas da aba Empresa/Rateio.
    O painel só mostra um tributo se o regime o inclui E se o valor não estiver vazio. */
@@ -794,7 +882,8 @@ function preparar(raw){
   const regraDe=Object.fromEntries(regras.map(r=>[r.id,r]));
   const porComp=Object.fromEntries(empresa.map(r=>[r.competencia,r]));
   const cfg=raw.config||{}; const reg=regimeDe(cfg);
-  const centros=(cfg.centros||[]).slice().sort((a,b)=>num(a.ordem_exibicao!=null?a.ordem_exibicao:a.ordem)-num(b.ordem_exibicao!=null?b.ordem_exibicao:b.ordem)).map(c=>c.centro);
+  // ordem NATURAL dos centros (a ordem em que vêm do Config) — sem ordem_exibicao.
+  const centros=(cfg.centros||[]).map(c=>c.centro);
   const nfs=raw.nfs||{}; const links=raw.links||{};
 
   // tributos visíveis pelo regime (a checagem de "vazio some" é por competência, na hora de pintar)
@@ -906,7 +995,7 @@ function vencimentosDoMes(M,ano,mes){ const marc=new Map();
     marc.get(d.getDate()).push({descricao:c.descricao,valor:v>0?v:null,est,ref:c.competencia_ref}); }); return marc; }
 
 /* ===================== RENDER ===================== */
-let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='', NF_PEND=false;
+let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='', NF_PEND=false, NF_ANO=false;
 function render(M){
   M_GLOBAL=M;
   // Só competências até a atual — não faz sentido escolher meses futuros (parcial do mês corrente aparece).
@@ -935,6 +1024,7 @@ function render(M){
   wrap.appendChild(el('<div id="outras"></div>'));
   wrap.appendChild(el('<div id="alerta"></div>'));
   wrap.appendChild(el('<div id="slim"></div>'));
+  wrap.appendChild(el('<div id="div-editor"></div>'));
   wrap.appendChild(el('<div id="prov"></div>'));
 
   appendAll(wrap,`<div class="sec-head"><div><h2>Calendário de vencimentos</h2>
@@ -975,8 +1065,9 @@ function render(M){
     <div class="card" style="padding:18px 20px">
       <div class="nf-toolbar"><span class="lbl" id="nf-resumo"></span>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn-pend" id="nf-ano" title="Buscar em todas as competências do ano">No ano todo</button>
           <button class="btn-pend" id="nf-pend">Só sem centro</button>
-          <input class="nf-search" id="nf-search" placeholder="buscar por nº ou nome…"></div></div>
+          <input class="nf-search" id="nf-search" placeholder="buscar nº, nome, descrição…"></div></div>
       <div class="table-scroll"><table class="nf" id="nf-tabela"><thead></thead><tbody></tbody></table></div>
     </div>`);
 
@@ -1023,6 +1114,7 @@ function render(M){
   document.getElementById('tab-tom').addEventListener('click',()=>{NF_TAB='tomadas';toggleTabs();desenharNotas(M,SEL);});
   document.getElementById('nf-search').addEventListener('input',e=>{NF_BUSCA=e.target.value.trim().toLowerCase();desenharNotas(M,SEL);});
   document.getElementById('nf-pend').addEventListener('click',()=>{NF_PEND=!NF_PEND;desenharNotas(M,SEL);});
+  document.getElementById('nf-ano').addEventListener('click',()=>{NF_ANO=!NF_ANO;desenharNotas(M,SEL);});
 
   calCentro=centerFromComp(SEL); if(!dentro(calCentro.ano))calCentro={ano:anoMax,mes:calCentro.mes};
   renderCarrossel(); pintarMes(M,SEL);
@@ -1058,7 +1150,8 @@ function pintarMes(M,comp){
     ${M.reg.retencao?`<div class="card stat"><span class="lbl">Retido na fonte</span><div class="v num">${brl(ret)}</div><div class="s">${ret?'já pago pelos tomadores':'nenhuma retenção no mês'}</div></div>`:''}
     <div class="card stat"><span class="lbl">Carga efetiva</span><div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>
     <div class="card stat"><span class="lbl">Resultado líquido</span><div class="v num" style="color:var(--receita)">${brl(liq)}</div><div class="s">depois dos impostos</div></div>
-    <div class="card stat${semDiv?' div-alerta':''}"><span class="lbl">Dividendos distribuídos</span><div class="v num">${divid>0?brl(divid):'—'}</div><div class="s">${semDiv?'⚠ lucro apurado sem distribuição informada':(divid>0?('de '+brl(lucroAp)+' de lucro apurado'):'nenhum lucro apurado no mês')}</div></div></div>`;
+    <button type="button" id="card-div" class="card stat card-click${semDiv?' div-alerta':''}"><span class="lbl">Dividendos distribuídos</span><div class="v num">${divid>0?brl(divid):'—'}</div><div class="s">${semDiv?'⚠ informe a distribuição →':(divid>0?('de '+brl(lucroAp)+' de lucro apurado · editar →'):'informar distribuição →')}</div></button></div>`;
+  const cd=document.getElementById('card-div'); if(cd) cd.addEventListener('click',()=>abrirEditorDividendos(M,comp));
 
   document.getElementById('prov').innerHTML=prov?(()=>{ const dias=prov.venc?Math.round((dParse(prov.venc)-hoje)/864e5):null;
     return `<div class="card prov-compact"><div class="prov-compact-head"><span class="lbl">Provisão IRPJ+CSLL · ${prov.tri}º trimestre de ${prov.ano}</span>
@@ -1136,15 +1229,17 @@ function desenharRateio(M,comp,tot){
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
     <div><b>${pct(shareNid)} do faturamento de ${mesLongo(comp)} está sem centro de custo.</b> <span style="font-weight:600;text-decoration:underline">Identificar pendências ↓</span></div></div>`:'';
 
-  if(CHARTS){ const pal=CENTRO_PAL.slice(); const nidIdx=linhas.findIndex(x=>x.centro==='Não identificado'); if(nidIdx>-1)pal[nidIdx]=PAL.vinho;
+  if(CHARTS){ // cor SEMPRE pela posição do centro (consistente com os chips e o editor)
     CHARTS.c5.data.labels=linhas.map(x=>x.centro); CHARTS.c5.data.datasets[0].data=linhas.map(x=>num(x['Total (R$)']));
-    CHARTS.c5.data.datasets[0].backgroundColor=linhas.map((_,i)=>pal[i%pal.length]); CHARTS.c5.update();
-    document.getElementById('c5-lg').innerHTML=linhas.map((x,i)=>`<div class="pie-legend-row"><i style="background:${pal[i%pal.length]}"></i><span>${esc(x.centro)}</span><b class="num">${brl(M.impostos(x))}</b></div>`).join('');
+    CHARTS.c5.data.datasets[0].backgroundColor=linhas.map(x=>centroCor(M,x.centro)); CHARTS.c5.update();
+    document.getElementById('c5-lg').innerHTML=linhas.map(x=>`<div class="pie-legend-row"><i style="background:${centroCor(M,x.centro)}"></i><span>${esc(x.centro)}</span><b class="num">${brl(M.impostos(x))}</b></div>`).join('');
   }
 }
 
 /* ---- Notas do mês + editor de centro ---- */
-function centroCor(M,centro){ const i=M.centros.indexOf(centro); return centro==='Não identificado'?PAL.vinho:CENTRO_PAL[(i<0?0:i)%CENTRO_PAL.length]; }
+function centroCor(M,centro){ if(centro==='Não identificado') return PAL.vinho;
+  const reais=(M.centros||[]).filter(c=>c!=='Não identificado'); const i=reais.indexOf(centro);
+  return CENTRO_PAL[(i<0?0:i)%CENTRO_PAL.length]; }
 function chipsCentro(M,nf){
   const w=pesosNF(nf); const ent=Object.entries(w).filter(([,p])=>p>0.0005).sort((a,b)=>b[1]-a[1]);
   if(!ent.length) return `<span class="chip-c nid">Não identificado</span>`;
@@ -1153,33 +1248,56 @@ function chipsCentro(M,nf){
 function semCentro(nf){ const w=pesosNF(nf); return (w['Não identificado']||0)>0.005; }
 function notaInativa(nf){ return !!(nf && (nf.ativa===false || /cancel|substit/i.test(nf.situacao||''))); }
 
+function notasDoAno_(M,ano,tab){
+  const out=[];
+  Object.keys(M.nfs||{}).forEach(c=>{ if(String(c).slice(0,4)!==String(ano)) return;
+    ((M.nfs[c]||{})[tab]||[]).forEach((nf,oi)=>out.push({nf,oi,comp:c})); });
+  return out;
+}
+
 function desenharNotas(M,comp){
-  const pack=M.nfs[comp]||{prestadas:[],tomadas:[]}; const prest=NF_TAB==='prestadas';
-  const todas=(pack[NF_TAB]||[]).map((nf,oi)=>({nf,oi}));   // guarda o índice ORIGINAL
+  const prest=NF_TAB==='prestadas';
+  const ano=String(comp).slice(0,4);
+  const anoMode=NF_ANO;                                   // busca/lista em todas as competências do ano
+  let todas;
+  if(anoMode) todas=notasDoAno_(M,ano,NF_TAB).sort((a,b)=>String(a.comp).localeCompare(b.comp)||(''+a.nf.nf).localeCompare(''+b.nf.nf));
+  else { const pack=M.nfs[comp]||{prestadas:[],tomadas:[]}; todas=(pack[NF_TAB]||[]).map((nf,oi)=>({nf,oi,comp})); }
   const nPend=todas.filter(x=>semCentro(x.nf) && !notaInativa(x.nf)).length;
   let lista=todas;
-  if(NF_PEND) lista=lista.filter(x=>semCentro(x.nf));
-  if(NF_BUSCA) lista=lista.filter(x=>(x.nf.nf+' '+x.nf.contraparte+' '+(x.nf.tipo||'')).toLowerCase().includes(NF_BUSCA));
+  if(NF_PEND) lista=lista.filter(x=>semCentro(x.nf) && !notaInativa(x.nf));
+  if(NF_BUSCA) lista=lista.filter(x=>(x.nf.nf+' '+x.nf.contraparte+' '+(x.nf.tipo||'')+' '+(x.nf.descricao||'')+' '+(x.nf.observacao||'')).toLowerCase().includes(NF_BUSCA));
 
-  const totBruto=todas.reduce((s,x)=>s+num(x.nf.valorBruto),0);
-  document.getElementById('nf-resumo').innerHTML=`${todas.length} notas ${prest?'prestadas':'tomadas'} · ${brl(totBruto)}${nPend?` · <b style="color:var(--sinal)">${nPend} sem centro</b>`:''}`;
+  const escopo=anoMode?`no ano de ${ano}`:mesLongo(comp);
+  document.getElementById('nf-resumo').innerHTML=`${lista.length===todas.length?todas.length:lista.length+' de '+todas.length} notas ${prest?'prestadas':'tomadas'} ${escopo}${nPend?` · <b style="color:var(--sinal)">${nPend} sem centro</b>`:''}`;
   const pb=document.getElementById('nf-pend'); pb.classList.toggle('on',NF_PEND); pb.textContent=NF_PEND?'Mostrar todas':'Só sem centro';
+  const ab=document.getElementById('nf-ano'); if(ab){ ab.classList.toggle('on',NF_ANO); ab.textContent=NF_ANO?'Só este mês':'No ano todo'; }
 
   const thead=document.querySelector('#nf-tabela thead');
-  thead.innerHTML=`<tr><th>NF</th><th>Data</th><th>${prest?'Tomador':'Prestador'}</th><th class="r">Valor</th><th>Centro de custo</th><th class="r"></th></tr>`;
+  thead.innerHTML=`<tr><th>NF</th><th>${anoMode?'Comp.':'Data'}</th><th>${prest?'Tomador':'Prestador'}</th><th class="r">Valor</th><th>Centro de custo</th><th class="r"></th></tr>`;
   const tb=document.querySelector('#nf-tabela tbody');
-  if(!lista.length){ tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">${NF_PEND?'Nenhuma nota sem centro neste mês.':('Nenhuma nota '+(prest?'prestada':'tomada')+' neste mês.')}</td></tr>`; return; }
-  tb.innerHTML=lista.map(({nf,oi})=>{
-    const gid=`${NF_TAB}-${oi}`; const inativa=notaInativa(nf); const pend=semCentro(nf)&&!inativa;
+  if(!lista.length){ tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">${NF_BUSCA?'Nenhuma nota encontrada'+(anoMode?' no ano.':' neste mês.'):(NF_PEND?'Nenhuma nota sem centro'+(anoMode?' no ano.':' neste mês.'):('Nenhuma nota '+(prest?'prestada':'tomada')+(anoMode?' no ano.':' neste mês.')))}</td></tr>`; return; }
+  tb.innerHTML=lista.map(({nf,oi,comp:c})=>{
+    const gid=`${c}-${NF_TAB}-${oi}`; const inativa=notaInativa(nf); const pend=semCentro(nf)&&!inativa;
     const sit=(nf.situacao||'').trim();
     const badge=sit?`<span class="nf-sit ${/cancel/i.test(sit)?'cancel':'subst'}">${esc(sit)}${nf.substituidaPor?(' → NF '+esc(nf.substituidaPor)):''}</span>`:'';
-    return `<tr id="nfrow-${gid}" class="${inativa?'nf-inativa':''}"><td class="num">${esc(nf.nf)}</td><td class="num">${esc((nf.data||'').slice(8)+'/'+(nf.data||'').slice(5,7))}</td>
-      <td><div class="nf-cp">${esc(nf.contraparte)}${badge}</div><div class="nf-tipo">${esc(nf.tipo||'')}</div>${nf.descricao?`<div class="nf-desc">${esc(nf.descricao)}</div>`:''}${nf.observacao?`<div class="nf-obs" title="${esc(nf.observacao)}">✎ ${esc(nf.observacao)}</div>`:''}</td>
+    const temDet = !!(nf.descricao || nf.observacao);
+    const dataCel = anoMode ? `<span class="nf-comp">${esc(mesLabel(c))}</span>` : esc((nf.data||'').slice(8)+'/'+(nf.data||'').slice(5,7));
+    return `<tr id="nfrow-${gid}" class="${inativa?'nf-inativa':''}"><td class="num">${esc(nf.nf)}</td><td class="num">${dataCel}</td>
+      <td><div class="nf-cp">${esc(nf.contraparte)}${badge}</div><div class="nf-tipo">${esc(nf.tipo||'')}</div>
+        ${temDet?`<button class="nf-expand" data-exp="${gid}" aria-expanded="false"><span class="mais">＋</span> detalhes</button>
+        <div class="nf-detalhe" id="det-${gid}">
+          ${nf.descricao?`<div class="nf-desc"><span class="det-lbl">Descrição</span>${esc(nf.descricao)}</div>`:''}
+          ${nf.observacao?`<div class="nf-obs"><span class="det-lbl">Observação</span>${esc(nf.observacao)}</div>`:''}
+        </div>`:''}</td>
       <td class="r num">${brl(num(nf.valorBruto))}</td><td><div class="chips" id="chips-${gid}">${inativa?'<span style="font-size:11px;color:var(--muted)">fora do cálculo</span>':chipsCentro(M,nf)}</div></td>
-      <td class="r">${inativa?'':`<button class="btn-edit" data-gid="${gid}" data-idx="${oi}">${pend?'Identificar':'Editar centro'}</button>`}</td></tr>
+      <td class="r">${inativa?'':`<button class="btn-edit ${pend?'pend':''}" data-gid="${gid}" data-idx="${oi}" data-comp="${c}">${pend?'Identificar':'Editar centro'}</button>`}</td></tr>
     <tr class="editor-row" id="editor-${gid}"><td colspan="6"></td></tr>`;
   }).join('');
-  tb.querySelectorAll('.btn-edit').forEach(b=>b.addEventListener('click',()=>abrirEditor(M,comp,NF_TAB,+b.dataset.idx,b.dataset.gid)));
+  tb.querySelectorAll('.btn-edit').forEach(b=>b.addEventListener('click',()=>abrirEditor(M,b.dataset.comp,NF_TAB,+b.dataset.idx,b.dataset.gid)));
+  tb.querySelectorAll('.nf-expand').forEach(b=>b.addEventListener('click',()=>{
+    const det=document.getElementById('det-'+b.dataset.exp); const ab=det.classList.toggle('aberto');
+    b.setAttribute('aria-expanded',ab);
+  }));
 }
 
 const EDIT_STATE={};
@@ -1194,7 +1312,7 @@ function abrirEditor(M,comp,tab,idx,gid){
   const st={ modo: Object.values(nf.centros||{}).some(v=>typeof v==='number')?'valor':'igual',
              sel:{} }; // sel[centro] = {on:bool, valor:number}
   centrosReais(M).forEach(c=>{ st.sel[c]={on:(w[c]||0)>0.0005, valor: round2((w[c]||0)*bruto)}; });
-  EDIT_STATE[gid]={nf,comp,tab,idx,bruto,st};
+  EDIT_STATE[gid]={nf,comp,tab,idx,bruto,st,gid};
   renderEditor(M,gid);
 }
 function round2(v){ return Math.round(v*100)/100; }
@@ -1284,7 +1402,7 @@ async function salvarCentros(M,E,map){
   }
   // aplica localmente (na demonstração é a fonte; em produção é prévia até o backend confirmar)
   E.nf.centros=map;
-  const gid=`${E.tab}-${E.idx}`; const row=document.getElementById('editor-'+gid); if(row){row.classList.remove('aberto');row.querySelector('td').innerHTML='';}
+  const gid=E.gid||`${E.comp}-${E.tab}-${E.idx}`; const row=document.getElementById('editor-'+gid); if(row){row.classList.remove('aberto');row.querySelector('td').innerHTML='';}
   delete EDIT_STATE[gid];
   // atualiza SÓ o que depende do rateio, sem recarregar a página nem re-renderizar o painel todo
   if(E.comp===SEL){
@@ -1295,6 +1413,47 @@ async function salvarCentros(M,E,map){
   } else {
     const chips=document.getElementById('chips-'+gid); if(chips) chips.innerHTML=chipsCentro(M,E.nf);
   }
+}
+
+/* ---- Editar dividendos/lucros distribuídos (grava no Fechamento) ---- */
+function abrirEditorDividendos(M,comp){
+  const box=document.getElementById('div-editor'); if(!box) return;
+  if(box.dataset.open==='1'){ box.innerHTML=''; box.dataset.open=''; return; }
+  box.dataset.open='1';
+  const rat=rateioParaComp(M,comp); const byC={}; rat.forEach(x=>{ if(x.centro) byC[x.centro]=x; });
+  const linhas=centrosReais(M).map(c=>{
+    const o=byC[c]||{}; const dv=num(o['Dividendos distribuídos (R$)']); const luc=num(o['Apuração de lucro do mês (R$)']);
+    return `<div class="dv-row">
+      <span class="dv-centro"><i style="background:${centroCor(M,c)}"></i>${esc(c)}</span>
+      <span class="dv-luc">lucro apurado ${brl(luc)}</span>
+      <input class="dv-in" data-centro="${esc(c)}" type="text" inputmode="decimal" value="${dv>0?dv.toFixed(2).replace('.',','):''}" placeholder="0,00" aria-label="Dividendos ${esc(c)}"></div>`;
+  }).join('');
+  box.innerHTML=`<div class="card dv-card">
+    <div class="dv-head"><b>Distribuição de lucros/dividendos — ${mesLongo(comp)}</b><button class="dv-close" data-act="fechar" aria-label="Fechar">✕</button></div>
+    <p class="dv-sub">Informe quanto foi efetivamente distribuído a cada sócio nesta competência. Salva por cima do fechamento e atualiza o painel.</p>
+    <div class="dv-list">${linhas}</div>
+    <div class="dv-foot"><span id="dv-msg"></span><button class="btn dv-save" data-act="salvar">Salvar distribuição</button></div></div>`;
+  box.querySelector('[data-act="fechar"]').addEventListener('click',()=>{ box.innerHTML=''; box.dataset.open=''; });
+  box.querySelector('[data-act="salvar"]').addEventListener('click',()=>salvarDividendos(M,comp,box));
+}
+
+async function salvarDividendos(M,comp,box){
+  const msg=box.querySelector('#dv-msg'); const btn=box.querySelector('.dv-save');
+  const valores={};
+  // só envia o que foi preenchido (vazio = não mexe no valor atual daquele sócio; digite 0 para zerar)
+  box.querySelectorAll('.dv-in').forEach(inp=>{ const raw=inp.value.trim().replace(/\./g,'').replace(',','.');
+    if(raw==='') return; valores[inp.dataset.centro]=Number(raw)||0; });
+  if(!API_URL){ msg.textContent='Sem API neste modo de demonstração.'; msg.style.color='#8B2E22'; return; }
+  btn.disabled=true; btn.textContent='Salvando…'; msg.textContent='';
+  try{
+    const qs=new URLSearchParams({ id:IDENTIDADE.id, codigo:IDENTIDADE.codigo, acao:'atualizar_dividendos',
+      competencia:comp, valores:JSON.stringify(valores) });
+    const d=await jsonp(API_URL+'?'+qs.toString()); if(d.erro) throw new Error(d.erro);
+    if(d.rateio){ M.rateioAPI=(M.rateioAPI||[]).filter(x=>x.competencia!==comp).concat(d.rateio); }
+    if(d.empresa){ Object.assign(M.porComp[comp]||{}, d.empresa); }
+    box.innerHTML=''; box.dataset.open='';
+    if(comp===SEL) pintarMes(M,comp);
+  }catch(e){ btn.disabled=false; btn.textContent='Salvar distribuição'; msg.textContent=e.message||String(e); msg.style.color='#8B2E22'; }
 }
 
 /** Rola até as notas e liga o filtro de pendências (notas sem centro). */

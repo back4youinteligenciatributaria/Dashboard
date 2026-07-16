@@ -31,6 +31,56 @@ body{
 .saudacao p{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.6}
 .saudacao .cliente{font-size:12.5px;color:var(--ink-2);font-weight:600;margin-top:10px}
 .saudacao .cta{font-size:13px;color:var(--brand-teal);font-weight:700;margin-top:18px}
+.acoes-chamado{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.ac-btn{font-family:var(--sans);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;
+  padding:11px 18px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);transition:border-color .12s,transform .12s}
+.ac-btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
+.ac-btn.ac-primary{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
+.ac-btn.ac-primary:hover{background:var(--brand-dark)}
+.quem{margin-top:14px;font-size:12.5px;color:var(--ink-2)}
+.quem-trocar{background:none;border:0;color:var(--brand-teal);font-weight:700;cursor:pointer;font-size:12.5px;text-decoration:underline;padding:0 2px}
+.id-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;width:100%;max-width:380px}
+.id-form input{flex:1;min-width:190px;font-family:var(--sans);font-size:14px;padding:11px 13px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);color:var(--ink)}
+.id-form input:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.reenvio{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin:6px auto 0}
+.reenvio-op{width:100%}
+/* overlay de contatos (bottom sheet no mobile, modal no desktop) */
+.ov{position:fixed;inset:0;z-index:1200;background:rgba(7,48,52,.45);display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:640px){.ov{align-items:center;padding:24px}}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.25)}
+@media(min-width:640px){.sheet{border-radius:16px}}
+.sheet-head{position:sticky;top:0;background:var(--surface);display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+.sheet-head b{font-size:16px;font-weight:800}
+.sheet-x{background:none;border:0;font-size:16px;cursor:pointer;color:var(--muted)}
+.sheet-body{padding:16px 20px 20px}
+.sheet-note{font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.ct-fld{margin-bottom:12px}
+.ct-fld label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-2);margin-bottom:5px}
+.ct-fld .ct-sub{font-weight:500;color:var(--muted)}
+.ct-fld textarea{width:100%;font-family:var(--sans);font-size:13.5px;padding:10px 12px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface-warm);color:var(--ink);resize:vertical;min-height:44px}
+.ct-fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.ct-err{color:#8B2E22;font-size:12.5px;min-height:16px}
+.sheet-foot{display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface);padding-top:12px}
+.sheet-foot .ac-btn{flex:1}
+@media(min-width:640px){.sheet-foot .ac-btn{flex:0 0 auto}}
+.ct-card{border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:10px;background:var(--surface)}
+.ct-card-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ct-card-top b{font-size:13.5px;flex:1}
+.ct-papel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:999px}
+.ct-papel.p{background:var(--brand-teal);color:#fff}
+.ct-papel.s{background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
+.ct-mail{font-size:12.5px;color:var(--ink-2);margin-bottom:8px;word-break:break-all}
+.ct-areas{display:flex;flex-wrap:wrap;gap:6px}
+.ct-area-chip{font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface-warm);color:var(--muted);border:1px solid var(--line)}
+.ct-area-chip.on{background:var(--receita-soft,#DCEFEC);color:var(--brand-dark);border-color:transparent}
+.ct-in{width:100%;font-family:var(--sans);font-size:13.5px;padding:8px 10px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface-warm);color:var(--ink);margin-bottom:7px}
+.ct-in:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.ct-card-top .ct-nome{margin-bottom:0}
+.ct-rm{background:none;border:0;cursor:pointer;color:var(--muted);font-size:14px;padding:4px 6px}
+.ct-rm:hover{color:#8B2E22}
+.ct-area-chk{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer}
+.ct-area-chk input{accent-color:var(--brand-teal)}
+.ct-areas.oculto{display:none}
 
 .grade{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:18px;max-width:680px;width:100%}
 @media(max-width:560px){.grade{grid-template-columns:1fr}}
@@ -84,13 +134,14 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
   font-family:inherit;font-weight:600;font-size:13px;padding:8px 13px;border-radius:10px;
   text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
 .b4u-btn svg{width:16px;height:16px;flex-shrink:0}
+.b4u-btn .b4u-lbl{color:inherit;text-transform:none;letter-spacing:normal;font-size:13px}
 .b4u-btn:active{transform:translateY(1px)}
 .b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
 .b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
-.b4u-btn.wa{background:#25D366;color:#053d1c}
+.b4u-btn.wa{background:#25D366;color:#fff}
 .b4u-btn.wa:hover{background:#20bd5a}
-.b4u-btn.call{background:#3FA680;color:#04241d}
-.b4u-btn.call:hover{background:#37946f}
+.b4u-btn.call{background:#0F8C85;color:#fff}
+.b4u-btn.call:hover{background:#0c756f}
 .b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
   padding:0;border:0;cursor:pointer;border-radius:9px;background:rgba(255,255,255,.10);color:#fff;
   transition:background .15s}
@@ -98,7 +149,7 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 .b4u-icobtn svg{width:17px;height:17px}
 @media(max-width:640px){
   .b4u-bar{gap:7px;padding:9px 12px}
-  .b4u-btn .lbl{display:none}
+  .b4u-btn .b4u-lbl{display:none}
   .b4u-btn{padding:9px 11px}
 }
 .b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
@@ -157,6 +208,21 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
   };
   var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
+  var TIPOS_POR_AREA = {
+    fiscal:       ['livre','solicitar_nf','duvida'],
+    dpto_pessoal: ['livre','ferias','previa_admissao','contratacao','previa_rescisao','rescisao','duvida'],
+    contabil:     ['livre','duvida'],
+    societario:   ['livre','duvida'],
+    equiparacao:  ['livre','duvida'],
+    outros:       ['livre','duvida']
+  };
+  function tiposDaArea(area){ return TIPOS_POR_AREA[area] || TIPOS_POR_AREA.outros; }
+  function opcoesTipo(area, sel){
+    return tiposDaArea(area).map(function(t){
+      return '<option value="'+t+'"'+(t===sel?' selected':'')+'>'+esc(TIPOS[t][0])+'</option>';
+    }).join('');
+  }
 
   // ---- id/código a partir da URL (?id=&codigo= ou #id-codigo) -------------
   function idc(){
@@ -203,9 +269,9 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
   bar.innerHTML =
     '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
     (CFG.home ? '' :
-      '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="lbl">Início</span></a>') +
-    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="lbl">WhatsApp</span></a>' +
-    '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="lbl">Abrir chamado</span></button>' +
+      '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
+    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
+    '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
     '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
   document.body.insertBefore(bar, document.body.firstChild);
   // publica a altura da barra p/ os cabeçalhos internos grudarem logo abaixo dela
@@ -225,6 +291,7 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     opts = opts || {};
     var areaSel = opts.area || CFG.area || 'outros';
     var tipoSel = opts.tipo || 'livre';
+    if (tiposDaArea(areaSel).indexOf(tipoSel) < 0) tipoSel = tiposDaArea(areaSel)[0];   // tipo válido p/ a área
     ov.innerHTML =
       '<div class="b4u-modal" role="dialog" aria-modal="true" aria-label="Abrir chamado">' +
         '<h3>Abrir um chamado</h3>' +
@@ -233,7 +300,7 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
           AREAS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===areaSel?' selected':'')+'>'+esc(a[1])+'</option>'; }).join('') +
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-tipo">Tipo de solicitação</label><select id="b4u-tipo">' +
-          ORDEM_TIPOS.map(function(t){ return '<option value="'+t+'"'+(t===tipoSel?' selected':'')+'>'+esc(TIPOS[t][0])+'</option>'; }).join('') +
+          opcoesTipo(areaSel, tipoSel) +
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
         '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
@@ -252,6 +319,11 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     }
     aplicaSkeleton(true);
     selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
+    // trocar a ÁREA repovoa os tipos válidos para ela
+    ov.querySelector('#b4u-area').addEventListener('change', function(){
+      selTipo.innerHTML = opcoesTipo(this.value, selTipo.value);
+      aplicaSkeleton(true);
+    });
     ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
     ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
@@ -310,6 +382,8 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 
 
 
+
+
 <div class="topo">
   <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
 </div>
@@ -325,6 +399,8 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function getIdCodigo(){
   const qs = new URLSearchParams(location.search);
@@ -369,17 +445,25 @@ const DEFINICOES = [
   { chave:'pessoal',     arquivo:'dptopessoal.html',  titulo:'Departamento Pessoal',    desc:'Folha, encargos e obrigações trabalhistas.' },
 ];
 
-function render(id, codigo, disponiveis){
+function render(id, codigo, disponiveis, pessoa){
   const destino = pagina => `${pagina}#${id}-${codigo}`;
-  const visiveis = DEFINICOES.filter(d => disponiveis[d.chave]);
+  const areasP = pessoa && Array.isArray(pessoa.areas) ? pessoa.areas : null;   // login por e-mail
+  const visiveis = DEFINICOES.filter(d => disponiveis[d.chave] && (!areasP || areasP.indexOf(d.chave)>=0));
+  const quem = pessoa ? `<div class="quem">Você: <b>${esc(pessoa.nome||pessoa.email||'')}</b>${/principal/i.test(pessoa.papel||'')?' · responsável principal':''} <button type="button" class="quem-trocar" id="quem-trocar">trocar</button></div>` : '';
 
   document.getElementById('miolo').innerHTML = `
     <div class="saudacao">
       <h1>Bem-vindo à back4you</h1>
       <p>Aqui fica tudo o que você precisa acompanhar sobre a sua empresa — de impostos a processos em andamento.</p>
       <div class="cta">Clique abaixo para verificar documentos, andamento e muito mais.</div>
+      ${quem}
     </div>
-    <div class="grade" id="grade"></div>`;
+    <div class="grade" id="grade"></div>
+    <div class="acoes-chamado">
+      <button type="button" class="ac-btn ac-primary" id="ac-abrir">Abrir um chamado</button>
+      <a class="ac-btn" href="${destino('meustickets.html')}">Meus chamados</a>
+      <button type="button" class="ac-btn" id="ac-contatos">E-mails e contatos</button>
+    </div>`;
 
   document.getElementById('grade').innerHTML = visiveis.length
     ? visiveis.map(d => `<a class="opcao" href="${destino(d.arquivo)}">
@@ -389,6 +473,164 @@ function render(id, codigo, disponiveis){
         <span class="seta">→</span>
       </a>`).join('')
     : `<p style="color:var(--muted);grid-column:1/-1;text-align:center">Nenhum painel disponível para este cliente ainda.</p>`;
+
+  const ab = document.getElementById('ac-abrir');
+  if (ab) ab.addEventListener('click', () => { if (window.B4U && window.B4U.abrirChamado) window.B4U.abrirChamado({}); });
+  const ct = document.getElementById('ac-contatos');
+  if (ct) ct.addEventListener('click', () => abrirContatos(id, codigo));
+  const tr = document.getElementById('quem-trocar');
+  if (tr) tr.addEventListener('click', () => { esquecerEmail(id); telaIdentificar(id, codigo, disponiveis); });
+}
+
+// ---- login por e-mail (mostra só as áreas da pessoa) ----
+function chaveEmail(id){ return 'b4u_eu_' + id; }
+function lembrarEmail(id){ try{ return localStorage.getItem(chaveEmail(id))||''; }catch(e){ return ''; } }
+function guardarEmail(id,email){ try{ localStorage.setItem(chaveEmail(id), email); }catch(e){} }
+function esquecerEmail(id){ try{ localStorage.removeItem(chaveEmail(id)); }catch(e){} }
+
+async function pessoaAreas(id, codigo, email){
+  try{
+    const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&tipo=acesso_pessoa&email='+encodeURIComponent(email));
+    return d && !d.erro ? d : null;
+  }catch(e){ return null; }
+}
+
+function telaIdentificar(id, codigo, disponiveis, msg){
+  const wa = 'https://wa.me/5511937173906?text='+encodeURIComponent('Olá, preciso de acesso ao painel (ID '+id+').');
+  document.getElementById('miolo').innerHTML = `
+    <div class="state">
+      <h1>Quem está acessando?</h1>
+      <p>Entre com o seu e-mail para vermos a quais áreas você tem acesso.</p>
+      <form id="id-form" class="id-form">
+        <input id="id-email" type="email" inputmode="email" placeholder="voce@empresa.com" autocomplete="email" required>
+        <button type="submit" class="ac-btn ac-primary">Entrar</button>
+      </form>
+      <div class="ct-err" id="id-err" style="min-height:16px">${msg?esc(msg):''}</div>
+      <p style="margin-top:2px">Não está cadastrado? <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">Falar com o atendimento</a></p>
+    </div>`;
+  document.getElementById('id-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const email = document.getElementById('id-email').value.trim();
+    if(!email) return;
+    const err=document.getElementById('id-err'); err.textContent='Verificando…';
+    const p = await pessoaAreas(id, codigo, email);
+    if(p && p.encontrado){ guardarEmail(id, email); render(id, codigo, disponiveis, {...p, email}); }
+    else { err.textContent = 'Esse e-mail não está cadastrado nos contatos deste cliente. Peça a um responsável principal para te adicionar.'; }
+  });
+}
+
+const AREAS_LABEL = { fiscal:'Fiscal', contabil:'Contábil', pessoal:'Pessoal', societario:'Societário', equiparacao:'Equiparação', financeiro:'Financeiro' };
+let CT = null;
+
+function fecharOverlay(){ const o=document.getElementById('ov-contatos'); if(o) o.remove(); CT=null; }
+
+async function abrirContatos(id, codigo){
+  fecharOverlay();
+  const ov = document.createElement('div');
+  ov.id = 'ov-contatos'; ov.className = 'ov';
+  ov.innerHTML = `<div class="sheet"><div class="sheet-head"><b>Contatos e acessos</b><button class="sheet-x" aria-label="Fechar">✕</button></div>
+    <div class="sheet-body" id="ct-body"><div class="state" style="min-height:120px"><div class="spin"></div><p>Carregando…</p></div></div></div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e=>{ if(e.target===ov) fecharOverlay(); });
+  ov.querySelector('.sheet-x').addEventListener('click', fecharOverlay);
+  try{
+    const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&tipo=contatos');
+    if(d.erro) throw new Error(d.erro);
+    CT = { id, codigo,
+      contatos:(d.contatos||[]).map(c=>({nome:c.nome,email:c.email,papel:c.papel,areas:Object.keys(c.areas||{}).filter(a=>c.areas[a])})),
+      areas:(d.areas&&d.areas.length)?d.areas:Object.keys(AREAS_LABEL), eu:'', editando:!!d.semPrincipal, semPrincipal:!!d.semPrincipal };
+    renderContatos();
+  }catch(e){ document.getElementById('ct-body').innerHTML = `<p class="sheet-note" style="color:#8B2E22">${esc(e.message||e)}</p>`; }
+}
+
+function renderContatos(){
+  const body=document.getElementById('ct-body'); if(!body||!CT) return;
+  const podeEditar = CT.editando;
+  const identifica = CT.semPrincipal ? '' : `
+    <div class="ct-fld"><label>Para editar, identifique-se (só principais editam)</label>
+      <select id="ct-eu"><option value="">— selecione seu e-mail —</option>
+        ${CT.contatos.map(c=>`<option value="${esc(c.email)}"${c.email===CT.eu?' selected':''}>${esc(c.nome||c.email)} · ${/principal/i.test(c.papel)?'principal':'secundário'}</option>`).join('')}
+      </select></div>`;
+  body.innerHTML = `
+    <p class="sheet-note"><b>Principal</b> acessa tudo e edita os contatos. <b>Secundário</b> acessa e recebe só as áreas marcadas.</p>
+    ${identifica}
+    <div id="ct-lista">${CT.contatos.map((c,i)=>cardContato(c,i,podeEditar)).join('') || '<p class="sheet-note">Nenhum contato cadastrado ainda.</p>'}</div>
+    ${podeEditar?`<button class="ac-btn" id="ct-add" style="margin-top:8px;width:100%">+ Adicionar contato</button>`:''}
+    <div class="ct-err" id="ct-err"></div>
+    <div class="sheet-foot"><button class="ac-btn" id="ct-cancel">Fechar</button>${podeEditar?`<button class="ac-btn ac-primary" id="ct-save">Salvar</button>`:''}</div>`;
+  const selEu=document.getElementById('ct-eu');
+  if(selEu) selEu.addEventListener('change',e=>{ CT.eu=e.target.value; CT.editando=/principal/i.test((CT.contatos.find(c=>c.email===CT.eu)||{}).papel||''); renderContatos(); });
+  document.getElementById('ct-cancel').addEventListener('click', fecharOverlay);
+  const add=document.getElementById('ct-add'); if(add) add.addEventListener('click',()=>{ CT.contatos.push({nome:'',email:'',papel:'Secundário',areas:[]}); renderContatos(); });
+  const save=document.getElementById('ct-save'); if(save) save.addEventListener('click', salvarContatos);
+  if(podeEditar) wireCards();
+}
+
+function cardContato(c,i,editar){
+  const principal=/principal/i.test(c.papel);
+  if(!editar){
+    return `<div class="ct-card"><div class="ct-card-top"><b>${esc(c.nome||'—')}</b><span class="ct-papel ${principal?'p':'s'}">${principal?'Principal':'Secundário'}</span></div>
+      <div class="ct-mail">${esc(c.email)}</div>
+      <div class="ct-areas">${principal?'<span class="ct-area-chip on">Acesso total</span>':CT.areas.map(a=>`<span class="ct-area-chip${c.areas.indexOf(a)>=0?' on':''}">${AREAS_LABEL[a]||a}</span>`).join('')}</div></div>`;
+  }
+  return `<div class="ct-card" data-i="${i}">
+    <div class="ct-card-top"><input class="ct-in ct-nome" data-i="${i}" placeholder="Nome" value="${esc(c.nome)}">
+      <button class="ct-rm" data-i="${i}" aria-label="Remover">✕</button></div>
+    <input class="ct-in ct-email" data-i="${i}" placeholder="e-mail@empresa.com" value="${esc(c.email)}">
+    <select class="ct-in ct-papel" data-i="${i}">
+      <option value="Principal"${principal?' selected':''}>Principal · acesso total</option>
+      <option value="Secundário"${!principal?' selected':''}>Secundário · áreas escolhidas</option></select>
+    <div class="ct-areas ${principal?'oculto':''}">${CT.areas.map(a=>`<label class="ct-area-chk"><input type="checkbox" data-i="${i}" data-area="${a}"${c.areas.indexOf(a)>=0?' checked':''}> ${AREAS_LABEL[a]||a}</label>`).join('')}</div>
+  </div>`;
+}
+
+function wireCards(){
+  document.querySelectorAll('.ct-nome').forEach(el=>el.addEventListener('input',e=>{ CT.contatos[+e.target.dataset.i].nome=e.target.value; }));
+  document.querySelectorAll('.ct-email').forEach(el=>el.addEventListener('input',e=>{ CT.contatos[+e.target.dataset.i].email=e.target.value; }));
+  document.querySelectorAll('.ct-papel').forEach(el=>el.addEventListener('change',e=>{ CT.contatos[+e.target.dataset.i].papel=e.target.value; renderContatos(); }));
+  document.querySelectorAll('.ct-rm').forEach(el=>el.addEventListener('click',e=>{ CT.contatos.splice(+e.target.dataset.i,1); renderContatos(); }));
+  document.querySelectorAll('.ct-area-chk input').forEach(el=>el.addEventListener('change',e=>{
+    const i=+e.target.dataset.i, a=e.target.dataset.area, arr=CT.contatos[i].areas;
+    if(e.target.checked){ if(arr.indexOf(a)<0) arr.push(a); } else { const k=arr.indexOf(a); if(k>=0) arr.splice(k,1); }
+  }));
+}
+
+async function salvarContatos(){
+  const err=document.getElementById('ct-err'), btn=document.getElementById('ct-save'); err.textContent='';
+  const payload=CT.contatos.map(c=>({nome:c.nome,email:c.email,papel:c.papel,areas:/principal/i.test(c.papel)?[]:c.areas}));
+  const params=new URLSearchParams({ id:CT.id, codigo:CT.codigo, acao:'salvar_contatos', eu:CT.eu, contatos:JSON.stringify(payload) });
+  btn.disabled=true; btn.textContent='Salvando…';
+  try{
+    const d=await jsonp(API_URL+'?'+params.toString());
+    if(d.erro) throw new Error(d.erro);
+    document.getElementById('ct-body').innerHTML=`<div class="state" style="min-height:160px"><h1 style="font-size:17px">Contatos salvos ✓</h1><p>${esc(d.mensagem||'Tudo certo.')}</p><button class="ac-btn ac-primary" id="ct-ok">Fechar</button></div>`;
+    document.getElementById('ct-ok').addEventListener('click', fecharOverlay);
+  }catch(e){ btn.disabled=false; btn.textContent='Salvar'; err.textContent=e.message||String(e); }
+}
+
+async function telaAcessoExpirado(id, msg){
+  let opcoes = [];
+  try{ const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&tipo=reenvio_opcoes'); opcoes = (d && d.opcoes) || []; }catch(e){}
+  const wa = 'https://wa.me/5511937173906?text='+encodeURIComponent('Olá, preciso de ajuda com o acesso ao painel (ID '+id+').');
+  document.getElementById('miolo').innerHTML = `
+    <div class="state">
+      <h1>Seu link de acesso expirou</h1>
+      <p>Por segurança, o código de acesso muda de tempos em tempos. Peça um novo por e-mail:</p>
+      <div class="reenvio" id="reenvio">
+        ${opcoes.length
+          ? opcoes.map(o=>`<button class="ac-btn reenvio-op" data-idx="${o.idx}">Enviar para ${o.mascarado}</button>`).join('')
+          : `<p style="color:var(--muted)">Nenhum e-mail cadastrado para este acesso.</p>`}
+      </div>
+      <p style="margin-top:6px">Nenhum é o seu, ou precisa mudar? <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">Falar com o atendimento</a></p>
+    </div>`;
+  document.querySelectorAll('.reenvio-op').forEach(b=>b.addEventListener('click', async ()=>{
+    const box=document.getElementById('reenvio'); box.innerHTML='<div class="spin"></div>';
+    try{
+      const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&acao=reenviar_codigo&idx='+encodeURIComponent(b.dataset.idx));
+      if(d.erro) throw new Error(d.erro);
+      box.innerHTML = `<p style="color:var(--brand-teal);font-weight:700">${d.mensagem||'Pedido enviado.'}</p>`;
+    }catch(e){ box.innerHTML = `<p style="color:#8B2E22">${e.message||e}</p>`; }
+  }));
 }
 
 function erro(msg){
@@ -402,14 +644,26 @@ function erro(msg){
 
 (async function(){
   const { id, codigo } = getIdCodigo();
-  if (!id || !codigo) return erro('Informe o ID e o código de acesso no final do endereço.');
+  if (!id) return erro('Informe o ID e o código de acesso no final do endereço.');
+  if (!codigo) return telaAcessoExpirado(id, 'Sem código no endereço.');
   try {
     const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=links';
     const d = await jsonp(url);
     if (d.erro) throw new Error(d.erro);
-    render(id, codigo, d.disponiveis || {});
+    const disp = d.disponiveis || {};
+    if (d.temSecundarios){                       // login por e-mail (secundários só veem as áreas deles)
+      const lembrado = lembrarEmail(id);
+      if (lembrado){
+        const p = await pessoaAreas(id, codigo, lembrado);
+        if (p && p.encontrado) return render(id, codigo, disp, {...p, email:lembrado});
+        esquecerEmail(id);                        // e-mail salvo não vale mais
+      }
+      return telaIdentificar(id, codigo, disp);
+    }
+    render(id, codigo, disp);                     // sem secundários: acesso pleno pelo código
   } catch (e) {
-    erro(e.message || String(e));
+    // id existe mas código inválido/expirado -> oferece reenvio; erro genérico caso contrário
+    telaAcessoExpirado(id, e.message || String(e));
   }
 })();
 </script>

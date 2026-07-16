@@ -74,13 +74,14 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
   font-family:inherit;font-weight:600;font-size:13px;padding:8px 13px;border-radius:10px;
   text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
 .b4u-btn svg{width:16px;height:16px;flex-shrink:0}
+.b4u-btn .b4u-lbl{color:inherit;text-transform:none;letter-spacing:normal;font-size:13px}
 .b4u-btn:active{transform:translateY(1px)}
 .b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
 .b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
-.b4u-btn.wa{background:#25D366;color:#053d1c}
+.b4u-btn.wa{background:#25D366;color:#fff}
 .b4u-btn.wa:hover{background:#20bd5a}
-.b4u-btn.call{background:#3FA680;color:#04241d}
-.b4u-btn.call:hover{background:#37946f}
+.b4u-btn.call{background:#0F8C85;color:#fff}
+.b4u-btn.call:hover{background:#0c756f}
 .b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
   padding:0;border:0;cursor:pointer;border-radius:9px;background:rgba(255,255,255,.10);color:#fff;
   transition:background .15s}
@@ -88,7 +89,7 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 .b4u-icobtn svg{width:17px;height:17px}
 @media(max-width:640px){
   .b4u-bar{gap:7px;padding:9px 12px}
-  .b4u-btn .lbl{display:none}
+  .b4u-btn .b4u-lbl{display:none}
   .b4u-btn{padding:9px 11px}
 }
 .b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
@@ -147,6 +148,21 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
   };
   var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
+  var TIPOS_POR_AREA = {
+    fiscal:       ['livre','solicitar_nf','duvida'],
+    dpto_pessoal: ['livre','ferias','previa_admissao','contratacao','previa_rescisao','rescisao','duvida'],
+    contabil:     ['livre','duvida'],
+    societario:   ['livre','duvida'],
+    equiparacao:  ['livre','duvida'],
+    outros:       ['livre','duvida']
+  };
+  function tiposDaArea(area){ return TIPOS_POR_AREA[area] || TIPOS_POR_AREA.outros; }
+  function opcoesTipo(area, sel){
+    return tiposDaArea(area).map(function(t){
+      return '<option value="'+t+'"'+(t===sel?' selected':'')+'>'+esc(TIPOS[t][0])+'</option>';
+    }).join('');
+  }
 
   // ---- id/código a partir da URL (?id=&codigo= ou #id-codigo) -------------
   function idc(){
@@ -193,9 +209,9 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
   bar.innerHTML =
     '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
     (CFG.home ? '' :
-      '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="lbl">Início</span></a>') +
-    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="lbl">WhatsApp</span></a>' +
-    '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="lbl">Abrir chamado</span></button>' +
+      '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
+    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
+    '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
     '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
   document.body.insertBefore(bar, document.body.firstChild);
   // publica a altura da barra p/ os cabeçalhos internos grudarem logo abaixo dela
@@ -215,6 +231,7 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     opts = opts || {};
     var areaSel = opts.area || CFG.area || 'outros';
     var tipoSel = opts.tipo || 'livre';
+    if (tiposDaArea(areaSel).indexOf(tipoSel) < 0) tipoSel = tiposDaArea(areaSel)[0];   // tipo válido p/ a área
     ov.innerHTML =
       '<div class="b4u-modal" role="dialog" aria-modal="true" aria-label="Abrir chamado">' +
         '<h3>Abrir um chamado</h3>' +
@@ -223,7 +240,7 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
           AREAS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===areaSel?' selected':'')+'>'+esc(a[1])+'</option>'; }).join('') +
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-tipo">Tipo de solicitação</label><select id="b4u-tipo">' +
-          ORDEM_TIPOS.map(function(t){ return '<option value="'+t+'"'+(t===tipoSel?' selected':'')+'>'+esc(TIPOS[t][0])+'</option>'; }).join('') +
+          opcoesTipo(areaSel, tipoSel) +
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
         '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
@@ -242,6 +259,11 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     }
     aplicaSkeleton(true);
     selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
+    // trocar a ÁREA repovoa os tipos válidos para ela
+    ov.querySelector('#b4u-area').addEventListener('change', function(){
+      selTipo.innerHTML = opcoesTipo(this.value, selTipo.value);
+      aplicaSkeleton(true);
+    });
     ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
     ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
@@ -296,6 +318,8 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 </script>
 <!-- ═══════════ fim do bloco compartilhado back4you ═══════════ -->
 <!--B4U:END-->
+
+
 
 
 
