@@ -1213,8 +1213,9 @@ function renderGuias(M){
   const anoAtual=hoje.getFullYear();
   const hojeISO=compDe(hoje);
   let lista=(M.cal||[]).filter(c=>c.vencimento && +String(c.vencimento).slice(0,4)>=anoAtual).map(c=>{
-    const vd=M.valorDe?M.valorDe(c):{v:0,est:false}; const st=(M.agenda||{})[chaveGuia(c)]||{status:'',por:'',link:''};
-    return {venc:c.vencimento, desc:c.descricao, ref:c.competencia_ref, valor:vd.v, est:vd.est, chave:chaveGuia(c), status:st.status||'', por:st.por||'', link:st.link||''};
+    const vd=M.valorDe?M.valorDe(c):{v:0,est:false}; const ch=chaveGuia(c); const st=(M.agenda||{})[ch]||{status:'',por:'',link:'',venc:''};
+    const ov=(st.venc&&/^\d{4}-\d{2}-\d{2}/.test(st.venc))?String(st.venc).slice(0,10):'';   // vencimento forçado na planilha (override)
+    return {venc:ov||c.vencimento, ajustada:!!ov, desc:c.descricao, ref:c.competencia_ref, valor:vd.v, est:vd.est, chave:ch, status:st.status||'', por:st.por||'', link:st.link||''};
   }).sort((a,b)=>String(a.venc).localeCompare(b.venc));
   if(GUIAS_FILTRO==='pendentes') lista=lista.filter(g=>(g.status||'').toLowerCase()!=='paga');
   const grupos={}; lista.forEach(g=>{ const mk=String(g.venc).slice(0,7); (grupos[mk]=grupos[mk]||[]).push(g); });
@@ -1235,7 +1236,7 @@ function cardGuia(g){
   return `<div class="guia-card ${cls}${vencida?' vencida':''}">
     <div class="guia-venc"><b>${dia}</b>${vencida?'<span class="gv-tag">vencida</span>':''}</div>
     <div class="guia-info"><div class="guia-desc">${esc(g.desc)}</div>
-      <div class="guia-meta">${g.ref?('comp. '+esc(g.ref)+' · '):''}${g.valor>0?brl(g.valor)+(g.est?' (estim.)':''):'a apurar'}${g.por?(' · por '+esc(g.por)):''}</div>
+      <div class="guia-meta">${g.ref?('comp. '+esc(g.ref)+' · '):''}${g.valor>0?brl(g.valor)+(g.est?' (estim.)':''):'a apurar'}${g.por?(' · por '+esc(g.por)):''}${g.ajustada?' · <span title="vencimento definido manualmente na planilha">data ajustada</span>':''}</div>
       ${g.link?`<a class="guia-baixar" href="${esc(g.link)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:12px;font-weight:600;color:var(--teal,#0F8C85);text-decoration:none">📄 Baixar guia</a>`:''}</div>
     <div class="guia-acoes">
       <span class="guia-status ${cls}">${rot}</span>
