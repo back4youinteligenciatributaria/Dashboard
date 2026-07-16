@@ -134,14 +134,16 @@ table.func tbody tr:last-child td{border-bottom:none}
   .table-scroll table,table.func{min-width:0}
   .sec-head{margin:22px 0 10px}.sec-head h2{font-size:14.5px}
   .caixinhas{grid-template-columns:1fr}
-  /* Funcionários vira cartão empilhado (sem rolagem lateral) */
+  /* Folha vira cartão empilhado, com rótulos (sem rolagem lateral) */
+  table.func,table.func tbody{display:block}
   table.func thead{display:none}
-  table.func tbody tr{display:grid;grid-template-columns:1fr auto;gap:1px 10px;border:1px solid var(--line);border-radius:12px;padding:10px 13px;margin-bottom:8px}
-  table.func tbody tr td{border:none;padding:0}
-  table.func tbody tr td:nth-child(1){grid-column:1;grid-row:1;font-weight:700}
-  table.func tbody tr td:nth-child(2){grid-column:1;grid-row:2;font-size:12px;color:var(--muted)}
-  table.func tbody tr td:nth-child(3){grid-column:2;grid-row:1;text-align:right;font-size:12px;color:var(--muted)}
-  table.func tbody tr td:nth-child(4){grid-column:2;grid-row:2;text-align:right}
+  table.func tbody tr{display:block;border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin-bottom:8px}
+  table.func tbody tr td{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0;border:none;font-size:13px}
+  table.func tbody tr td::before{content:attr(data-label);color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  table.func tbody tr td:first-child{font-weight:800;font-size:15px;padding-bottom:6px;margin-bottom:4px;border-bottom:1px solid var(--line)}
+  table.func tbody tr td:first-child::before{display:none}
+  table.func tbody tr td.liq{font-weight:700}
+  table.func tbody tr td.liq::before{color:var(--ink-2)}
 }
 
 .vazio{color:var(--muted);font-size:13.5px;padding:16px 0;text-align:center}
@@ -715,11 +717,11 @@ function desenharMes(M, comp){
       <thead><tr><th>Nome</th><th>Bruto</th><th>Descontos</th><th>Bonificações</th><th>Líquido</th></tr></thead>
       <tbody>
         ${folhaMes.map(f=>`<tr>
-          <td>${f.nome||'—'}</td>
-          <td>${brl(f.salario_bruto)}</td>
-          <td>${Number(f.descontos)>0 ? brl(f.descontos) : '—'}</td>
-          <td>${Number(f.bonificacoes)>0 ? brl(f.bonificacoes) : '—'}</td>
-          <td>${brl(f.salario_liquido)}</td>
+          <td data-label="Funcionário">${f.nome||'—'}</td>
+          <td data-label="Bruto" class="num">${brl(f.salario_bruto)}</td>
+          <td data-label="Descontos" class="num">${Number(f.descontos)>0 ? brl(f.descontos) : '—'}</td>
+          <td data-label="Bonificações" class="num">${Number(f.bonificacoes)>0 ? brl(f.bonificacoes) : '—'}</td>
+          <td data-label="Líquido" class="num liq">${brl(f.salario_liquido)}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>

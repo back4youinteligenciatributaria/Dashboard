@@ -197,6 +197,7 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .cbox{position:relative;height:210px}
 .charts3 .cbox{height:160px}
 .pie-legend{margin-top:10px}
+.prov-vazio{font-size:12.5px;color:var(--muted);padding:8px 0 2px}
 .pie-legend-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:12.5px}
 .pie-legend-row:first-child{border-top:none}
 .pie-legend-row i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
@@ -1494,7 +1495,10 @@ function desenharEstimativas(M){
     const dados=M.tribs.map(t=>({n:t.n,c:t.c,v:porTrib[t.pag]||0})); const total=dados.reduce((s,x)=>s+x.v,0);
     document.getElementById('est-t-'+i).textContent=mesLongo(comp);
     document.getElementById('est-s-'+i).innerHTML='provisionar <span class="estimativa">'+brl(total)+'</span>';
-    document.getElementById('est-lg-'+i).innerHTML=dados.map(x=>`<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`).join('');
+    const lg=document.getElementById('est-lg-'+i), cbox=document.getElementById('est-'+i).closest('.cbox');
+    if(total<=0){ if(cbox) cbox.style.display='none'; lg.innerHTML='<div class="prov-vazio">Sem guias a provisionar neste mês.</div>'; continue; }
+    if(cbox) cbox.style.display='';
+    lg.innerHTML=dados.map(x=>`<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`).join('');
     new Chart(document.getElementById('est-'+i),{type:'doughnut',data:{labels:dados.map(x=>x.n),datasets:[{data:dados.map(x=>x.v),backgroundColor:dados.map(x=>x.c),borderWidth:0}]},options:opts});
   }
 }

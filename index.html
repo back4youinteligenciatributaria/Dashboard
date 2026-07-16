@@ -44,6 +44,16 @@ body{
 .id-form input:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .reenvio{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin:6px auto 0}
 .reenvio-op{width:100%}
+/* código de verificação — 6 caixinhas numéricas */
+.otp{display:flex;gap:9px;justify-content:center;margin:14px 0 6px}
+.otp-box{width:46px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:var(--sans);
+  color:var(--ink);border:1.5px solid var(--line-2);border-radius:13px;background:var(--surface);caret-color:var(--brand-teal)}
+.otp-box:focus{outline:none;border-color:var(--brand-teal);box-shadow:0 0 0 3px rgba(15,140,133,.16)}
+.otp-box.ok{border-color:var(--brand-teal)}
+@media(max-width:400px){.otp{gap:6px}.otp-box{width:42px;height:52px;font-size:21px;border-radius:11px}}
+@media(max-width:340px){.otp-box{width:38px;height:48px;font-size:19px}}
+.linklike{background:none;border:0;color:var(--brand-teal);font-weight:700;cursor:pointer;font:inherit;padding:0}
+.linklike:hover{text-decoration:underline}
 /* overlay de contatos (bottom sheet no mobile, modal no desktop) */
 .ov{position:fixed;inset:0;z-index:1200;background:rgba(7,48,52,.45);display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.ov{align-items:center;padding:24px}}
@@ -566,53 +576,143 @@ async function salvarContatos(){
   }catch(e){ btn.disabled=false; btn.textContent='Salvar'; err.textContent=e.message||String(e); }
 }
 
-/** Entra com o código pessoal digitado/colado, montando o link certo (#ID-EMPRESA-CONTATO). */
+/* ---------- código de verificação: 6 caixinhas, só números ---------- */
+function boxesOTP(){
+  return `<div class="otp" id="otp">${Array.from({length:6}).map(()=>
+    `<input class="otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="dígito do código">`).join('')}</div>`;
+}
+function wireOTP(onComplete){
+  const inputs = Array.from(document.querySelectorAll('#otp .otp-box'));
+  const val = () => inputs.map(i=>i.value).join('');
+  const marcar = ()=> inputs.forEach(i=> i.classList.toggle('ok', !!i.value));
+  inputs.forEach((inp,i)=>{
+    inp.addEventListener('input', ()=>{
+      inp.value = inp.value.replace(/\D/g,'').slice(0,1);
+      if(inp.value && i<inputs.length-1) inputs[i+1].focus();
+      marcar();
+      if(val().length===inputs.length && onComplete) onComplete(val());
+    });
+    inp.addEventListener('keydown', e=>{
+      if(e.key==='Backspace' && !inp.value && i>0){ inputs[i-1].focus(); e.preventDefault(); }
+    });
+    inp.addEventListener('paste', e=>{
+      e.preventDefault();
+      const d=(e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,inputs.length);
+      if(!d) return; inputs.forEach((x,k)=> x.value=d[k]||''); marcar();
+      (inputs[Math.min(d.length,inputs.length-1)]||inp).focus();
+      if(d.length>=inputs.length && onComplete) onComplete(val());
+    });
+  });
+  if(inputs[0]) inputs[0].focus();
+  return { val, clear:()=>{inputs.forEach(i=>{i.value='';i.classList.remove('ok');}); inputs[0]&&inputs[0].focus();} };
+}
+
+/* ---------- entrar com o código pessoal (já tem ID+empresa no link) ---------- */
 function entrarComCodigo(entrada){
   const { id, codigo } = getIdCodigo();
-  let empresa = (codigo||'').split('-')[0].trim();
-  let contato = String(entrada||'').trim();
-  if (contato.includes('#')) contato = contato.split('#').pop();      // colou o link inteiro
-  if (contato.includes('-')){                                        // colou "EMPRESA-CONTATO" ou "ID-EMPRESA-CONTATO"
-    const p = contato.split('-').filter(Boolean);
-    if (/^\d+$/.test(p[0]) && p.length>=3){ empresa=p[1]; contato=p.slice(2).join('-'); }
-    else if (p.length>=2){ empresa=p[0]; contato=p.slice(1).join('-'); }
-    else contato=p[0];
-  }
-  contato = contato.replace(/[^0-9A-Za-z]/g,'');
-  if (!contato) return 'Cole o seu código de acesso pessoal.';
-  if (!empresa) return 'Faltou o código da empresa no endereço — use o link que você recebeu.';
-  location.hash = id + '-' + empresa + '-' + contato;               // corrige a URL
-  boot();                                                            // re-tenta o acesso
+  const empresa = (codigo||'').split('-')[0].trim();
+  const contato = String(entrada||'').replace(/\D/g,'');   // código é numérico
+  if (!contato) return 'Digite o seu código de acesso.';
+  if (!empresa) return 'Faltou o código da empresa no endereço — entre pelo seu e-mail.';
+  location.hash = id + '-' + empresa + '-' + contato;      // corrige a URL
+  boot();                                                  // re-tenta o acesso
   return '';
 }
 
-async function telaAcessoExpirado(id, msg){
-  let opcoes = [];
-  try{ const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&tipo=reenvio_opcoes'); opcoes = (d && d.opcoes) || []; }catch(e){}
-  const incompleto = /incompl|individual|pessoal|contato/i.test(String(msg||''));
-  const wa = 'https://wa.me/5511937173906?text='+encodeURIComponent('Olá, preciso de ajuda com o acesso ao painel (ID '+id+').');
+const WA_ACESSO = m => 'https://wa.me/5511937173906?text='+encodeURIComponent(m);
+
+/* ---------- E-MAIL PRIMEIRO: pede o e-mail, envia o código, monta o link ---------- */
+async function telaLoginEmail(){
+  const wa = WA_ACESSO('Olá, preciso de ajuda com o acesso ao painel back4you.');
   document.getElementById('miolo').innerHTML = `
     <div class="state">
-      <h1>${incompleto?'Falta o seu código de acesso pessoal':'Seu link de acesso expirou'}</h1>
-      <p>Cada pessoa tem um código pessoal que muda a cada dia. Cole abaixo o código que você recebeu por e-mail:</p>
-      <form id="cod-form" class="id-form">
-        <input id="cod-input" type="text" inputmode="text" autocomplete="off" placeholder="seu código pessoal" required>
-        <button type="submit" class="ac-btn ac-primary">Entrar</button>
+      <h1>Acesse o seu painel</h1>
+      <p>Digite o seu e-mail cadastrado. Enviamos um código de 6 dígitos para você entrar.</p>
+      <form id="mail-form" class="id-form">
+        <input id="mail-input" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" required>
+        <button type="submit" class="ac-btn ac-primary">Enviar código</button>
       </form>
-      <div class="ct-err" id="cod-err" style="min-height:16px"></div>
-      <p style="margin-top:8px;color:var(--muted)">Não tem o código? Enviamos um novo para o seu e-mail:</p>
+      <div class="ct-err" id="mail-err" style="min-height:18px"></div>
+      <p style="margin-top:2px">Não sabe qual e-mail? <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">Falar com o atendimento</a></p>
+    </div>`;
+  const form = document.getElementById('mail-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const email = document.getElementById('mail-input').value.trim();
+    const errEl = document.getElementById('mail-err');
+    if(!email){ errEl.textContent='Digite o seu e-mail.'; return; }
+    const btn = form.querySelector('button'); btn.disabled=true; btn.textContent='Enviando…';
+    try{
+      const d = await jsonp(API_URL+'?tipo=login_email_iniciar&email='+encodeURIComponent(email));
+      if(d.erro) throw new Error(d.erro);
+      if(!d.encontrado){ btn.disabled=false; btn.textContent='Enviar código';
+        errEl.innerHTML = 'Não encontramos esse e-mail no cadastro. Confira ou <a href="'+wa+'" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">fale com o atendimento</a>.'; return; }
+      telaCodigoEmail(email, d.mascarado||'');
+    }catch(err){ btn.disabled=false; btn.textContent='Enviar código'; errEl.textContent = err.message||String(err); }
+  });
+  document.getElementById('mail-input').focus();
+}
+
+function telaCodigoEmail(email, mascarado){
+  const wa = WA_ACESSO('Olá, não recebi o código de acesso ao painel back4you.');
+  document.getElementById('miolo').innerHTML = `
+    <div class="state">
+      <h1>Código de verificação</h1>
+      <p>Enviamos um código de 6 dígitos para ${mascarado?('<b>'+esc(mascarado)+'</b>'):'o seu e-mail'}. Digite abaixo para entrar.</p>
+      ${boxesOTP()}
+      <div class="ct-err" id="cod-err" style="min-height:18px"></div>
+      <button type="button" class="ac-btn ac-primary" id="cod-continuar" style="min-width:220px">Continuar</button>
+      <p style="margin-top:12px;color:var(--muted)">Não recebeu? <button type="button" class="linklike" id="reenviar-mail">Reenviar código</button> · <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">atendimento</a></p>
+    </div>`;
+  const otp = wireOTP(()=>submeter());
+  const btn = document.getElementById('cod-continuar');
+  async function submeter(){
+    const code = otp.val();
+    const errEl = document.getElementById('cod-err');
+    if(code.length<6){ errEl.textContent='Digite os 6 dígitos.'; return; }
+    errEl.textContent=''; btn.disabled=true; btn.textContent='Entrando…';
+    try{
+      const d = await jsonp(API_URL+'?tipo=login_email_verificar&email='+encodeURIComponent(email)+'&codigo='+encodeURIComponent(code));
+      if(d.erro) throw new Error(d.erro);
+      if(!d.ok){ btn.disabled=false; btn.textContent='Continuar'; errEl.textContent = d.mensagem||'Código incorreto.'; otp.clear(); return; }
+      location.hash = d.hash; boot();
+    }catch(err){ btn.disabled=false; btn.textContent='Continuar'; errEl.textContent = err.message||String(err); }
+  }
+  btn.addEventListener('click', submeter);
+  document.getElementById('reenviar-mail').addEventListener('click', async ()=>{
+    const errEl = document.getElementById('cod-err'); errEl.textContent='Reenviando…';
+    try{ const d=await jsonp(API_URL+'?tipo=login_email_iniciar&email='+encodeURIComponent(email));
+      errEl.textContent = d.encontrado ? 'Código reenviado. Confira o seu e-mail.' : 'E-mail não encontrado.'; otp.clear(); }
+    catch(e){ errEl.textContent = 'Não consegui reenviar agora.'; }
+  });
+}
+
+/* ---------- ID+empresa no link, mas falta/expirou o código pessoal ---------- */
+async function telaAcessoExpirado(id, msg){
+  const { codigo } = getIdCodigo();
+  if(!(codigo||'').split('-')[0].trim()) return telaLoginEmail();  // sem código da empresa → e-mail primeiro
+  let opcoes = [];
+  try{ const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&tipo=reenvio_opcoes'); opcoes = (d && d.opcoes) || []; }catch(e){}
+  const wa = WA_ACESSO('Olá, preciso de ajuda com o acesso ao painel (ID '+id+').');
+  document.getElementById('miolo').innerHTML = `
+    <div class="state">
+      <h1>Código de verificação</h1>
+      <p>Digite o seu código de acesso pessoal de 6 dígitos — o que você recebeu por e-mail.</p>
+      ${boxesOTP()}
+      <div class="ct-err" id="cod-err" style="min-height:18px"></div>
+      <button type="button" class="ac-btn ac-primary" id="cod-continuar" style="min-width:220px">Continuar</button>
+      <p style="margin-top:14px;color:var(--muted)">Não tem o código? Enviamos um novo para o seu e-mail:</p>
       <div class="reenvio" id="reenvio">
         ${opcoes.length
           ? opcoes.map(o=>`<button type="button" class="ac-btn reenvio-op" data-idx="${o.idx}">Enviar para ${o.mascarado}</button>`).join('')
           : `<p style="color:var(--muted)">Nenhum e-mail cadastrado para este acesso.</p>`}
       </div>
-      <p style="margin-top:6px">Nenhum é o seu, ou precisa mudar? <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">Falar com o atendimento</a></p>
+      <p style="margin-top:8px">Prefere entrar pelo e-mail? <button type="button" class="linklike" id="ir-email">Usar meu e-mail</button> · <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">atendimento</a></p>
     </div>`;
-  document.getElementById('cod-form').addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const err = entrarComCodigo(document.getElementById('cod-input').value);
-    if(err) document.getElementById('cod-err').textContent = err;
-  });
+  const otp = wireOTP(()=>submeter());
+  function submeter(){ const err = entrarComCodigo(otp.val()); if(err) document.getElementById('cod-err').textContent = err; }
+  document.getElementById('cod-continuar').addEventListener('click', submeter);
+  document.getElementById('ir-email').addEventListener('click', telaLoginEmail);
   document.querySelectorAll('.reenvio-op').forEach(b=>b.addEventListener('click', async ()=>{
     const box=document.getElementById('reenvio'); box.innerHTML='<div class="spin"></div>';
     try{
@@ -623,19 +723,12 @@ async function telaAcessoExpirado(id, msg){
   }));
 }
 
-function erro(msg){
-  document.getElementById('miolo').innerHTML = `
-    <div class="state">
-      <h1>Não deu para identificar o cliente</h1>
-      <p>${msg}</p>
-      <p>Confira se o endereço termina com o ID e o código de acesso, assim: <code>#482913-AbC123</code></p>
-    </div>`;
-}
+function erro(){ return telaLoginEmail(); }   // sem id → entra pelo e-mail
 
 async function boot(){
   const { id, codigo } = getIdCodigo();
-  if (!id) return erro('Informe o ID e o código de acesso no final do endereço.');
-  if (!codigo) return telaAcessoExpirado(id, 'incompleto');   // sem código nenhum -> tela de acesso
+  if (!id) return telaLoginEmail();                          // URL sem código → e-mail primeiro
+  if (!codigo) return telaAcessoExpirado(id, 'incompleto');
   document.getElementById('miolo').innerHTML = `<div class="state"><div class="spin" role="status" aria-label="Carregando"></div><p>Carregando…</p></div>`;
   try {
     const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=links';

@@ -82,12 +82,32 @@ table.ped tbody tr:last-child td{border-bottom:none}
 @media(max-width:640px){
   .wrap{padding:0 14px 60px}
   .hero>*,.charts>*,.docs-chave>*{min-width:0}
-  .table-scroll{overflow-x:auto}
+  .table-scroll{overflow-x:visible;margin:0}
   .table-scroll table,table.ped{min-width:0}
-  table.ped{font-size:12px}
-  table.ped th,table.ped td{padding:8px 5px}
-  table.ped th:first-child,table.ped td:first-child{padding-left:0}
-  table.ped th:last-child,table.ped td:last-child{padding-right:0}
+  /* Cada pedido vira um cartão empilhado (mesma info, sem rolagem lateral). */
+  table.ped thead{display:none}
+  table.ped,table.ped tbody{display:block}
+  table.ped tbody tr.linha{display:grid;grid-template-columns:1fr auto;gap:2px 12px;
+    border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
+  table.ped tbody tr.linha td{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    padding:3px 0;border:none;font-size:13px}
+  table.ped tbody tr.linha td::before{content:attr(data-label);color:var(--muted);font-size:11px;
+    font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  /* linha 1: competência (esq) + tributo (dir), destacados, sem rótulo */
+  table.ped tbody tr.linha td:nth-child(1){grid-column:1;grid-row:1;font-weight:800;font-size:15px}
+  table.ped tbody tr.linha td:nth-child(2){grid-column:2;grid-row:1;justify-content:flex-end;font-weight:700;font-size:12.5px;color:var(--brand-teal)}
+  table.ped tbody tr.linha td:nth-child(1)::before,
+  table.ped tbody tr.linha td:nth-child(2)::before{display:none}
+  /* demais campos: rótulo à esq, valor à dir, largura total */
+  table.ped tbody tr.linha td:nth-child(3){grid-column:1/-1;grid-row:2}
+  table.ped tbody tr.linha td:nth-child(4){grid-column:1/-1;grid-row:3}
+  table.ped tbody tr.linha td:nth-child(5){grid-column:1/-1;grid-row:4}
+  table.ped tbody tr.linha td:nth-child(6){grid-column:1/-1;grid-row:5}
+  table.ped tbody tr.linha td.num{font-variant-numeric:tabular-nums}
+  /* linha de detalhe: bloco de largura total abaixo do cartão */
+  table.ped tbody tr.detalhe-row{display:none}
+  table.ped tbody tr.detalhe-row.aberto{display:block}
+  table.ped tbody tr.detalhe-row td{display:block;padding:6px 0 2px;border:none}
   .sec-head{margin:22px 0 10px}.sec-head h2{font-size:14.5px}
   .hero{gap:12px}.stat .v{font-size:20px}
 }
@@ -654,12 +674,12 @@ function render(M){
   if (tbody){
     tbody.innerHTML = P.map((p,i)=>{
       return `<tr class="linha" data-i="${i}">
-        <td>${p._comp.label}</td>
-        <td>${p.tributo}</td>
-        <td class="r num">${brl(p.valor_solicitado)}</td>
-        <td class="r num">${brl(p.valor_atualizado)}</td>
-        <td><span class="status-chip status-${p._grupo}">${p.status}</span></td>
-        <td class="r num">${p._concluido ? brl(p.valor_aprovado) : '—'}</td>
+        <td data-label="Competência">${p._comp.label}</td>
+        <td data-label="Tributo">${p.tributo}</td>
+        <td class="r num" data-label="Solicitado">${brl(p.valor_solicitado)}</td>
+        <td class="r num" data-label="Atualizado">${brl(p.valor_atualizado)}</td>
+        <td data-label="Situação"><span class="status-chip status-${p._grupo}">${p.status}</span></td>
+        <td class="r num" data-label="Aprovado">${p._concluido ? brl(p.valor_aprovado) : '—'}</td>
       </tr>
       <tr class="detalhe-row" id="det-${i}"><td colspan="6">
         <div class="detalhe-box">

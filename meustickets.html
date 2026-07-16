@@ -32,8 +32,30 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);min-heigh
 .tk .badge.aberto{background:#FFF1DC;color:#9A6B10;border:1px solid #F0D9AE}
 .tk .badge.respondido{background:#E5F0FF;color:#25518F;border:1px solid #C9DEF7}
 .tk .badge.concluido{background:#E7F4EC;color:#2E7D4F;border:1px solid #CBE7D4}
+.tk .badge.cancelado{background:#F3E3E1;color:#8B2E22;border:1px solid #E4C9C4}
+.tk.cancelada{opacity:.72}
 .tk .data{font-size:11.5px;color:var(--muted);margin-left:auto}
-.tk h2{font-size:15px;font-weight:700;margin:2px 0 6px}
+.tk h2{font-size:15px;font-weight:700;margin:2px 0 4px}
+.tk .quem{font-size:11.5px;color:var(--muted);margin-bottom:7px}
+.tk .quem b{color:var(--ink-2);font-weight:600}
+.tk-acoes{margin-top:12px;display:flex;justify-content:flex-end;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-cancelar{background:none;border:1px solid var(--line-2);color:#8B2E22;font-weight:600;font-size:12px;
+  padding:8px 13px;border-radius:9px;cursor:pointer;font-family:inherit}
+.btn-cancelar:hover{background:#F7EEEC;border-color:#E4C9C4}
+.confirma{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.confirma .sim{background:#8B2E22;color:#fff;border:0}.confirma .sim:hover{background:#742418}
+.confirma .nao{background:var(--surface-warm)}
+.confirma button{font-weight:600;font-size:12px;padding:7px 12px;border-radius:9px;cursor:pointer;border:1px solid var(--line-2);font-family:inherit;color:var(--ink-2)}
+.antigos{margin-top:20px}
+.antigos-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 18px;cursor:pointer;
+  font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink)}
+.antigos-btn:hover{background:var(--surface-warm)}
+.antigos-btn .conta{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--muted);background:var(--surface-warm);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.antigos-btn .seta{transition:transform .2s;color:var(--muted)}
+.antigos-btn[aria-expanded="true"] .seta{transform:rotate(180deg)}
+.antigos-body{display:none;margin-top:12px}
+.antigos-body.on{display:block}
 .tk .msg{font-size:13px;color:var(--ink-2);line-height:1.55;white-space:pre-wrap}
 .tk .resp{margin-top:12px;padding:12px 14px;background:var(--surface-warm);
   border:1px solid var(--line);border-radius:10px}
@@ -372,20 +394,47 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;'
 
 function classeStatus(st){
   const s = (st||'').toString().toLowerCase();
+  if(s.indexOf('cancel')>=0) return 'cancelado';
   if(s.indexOf('conclu')>=0 || s.indexOf('fechad')>=0) return 'concluido';
   if(s.indexOf('respond')>=0 || s.indexOf('andamento')>=0) return 'respondido';
   return 'aberto';
 }
+const ROT_STATUS = { concluido:'Concluído', cancelado:'Cancelado', respondido:'Respondido', aberto:'Aberto' };
 function dataBonita(v){
   if(!v) return '';
   const d = new Date(v);
   if(!isNaN(d)) return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
   return esc(v);
 }
+function idadeDias(v){ const d = new Date(v); return isNaN(d) ? 0 : (Date.now() - d.getTime())/864e5; }
+
+let TICKETS = [];
+
+function cardTicket(t){
+  const cls = classeStatus(t.status);
+  const rotStatus = ROT_STATUS[cls] || 'Aberto';
+  const area = AREA_LABEL[(t.area||'').toLowerCase()] || (t.area||'—');
+  const tipo = TIPO_LABEL[(t.tipo||'').toLowerCase()] || t.tipo || '';
+  const podeCancelar = (cls==='aberto' || cls==='respondido') && t._row;
+  return `<div class="tk ${cls==='cancelado'?'cancelada':''}" data-row="${t._row||''}">
+    <div class="top">
+      <span class="area">${esc(area)}</span>
+      <span class="badge ${cls}">${rotStatus}</span>
+      <span class="data">${dataBonita(t.timestamp)}</span>
+    </div>
+    <h2>${esc(t.assunto || tipo || 'Chamado')}</h2>
+    ${t.solicitante ? `<div class="quem">Aberto por <b>${esc(t.solicitante)}</b></div>`:''}
+    ${tipo && t.assunto ? `<div class="msg" style="font-size:11.5px;color:var(--muted);margin-bottom:6px">${esc(tipo)}</div>`:''}
+    <div class="msg">${esc(t.mensagem||'')}</div>
+    ${t.resposta ? `<div class="resp"><div class="lbl">Resposta da back4you</div><div class="txt">${esc(t.resposta)}</div></div>`:''}
+    ${podeCancelar ? `<div class="tk-acoes"><button type="button" class="btn-cancelar" data-row="${t._row}">Cancelar chamado</button></div>`:''}
+  </div>`;
+}
 
 function render(tickets){
+  TICKETS = tickets || [];
   const app = document.getElementById('app');
-  if(!tickets.length){
+  if(!TICKETS.length){
     app.innerHTML = `
       <div class="cab"><h1>Meus chamados</h1><p>Aqui ficam todas as solicitações que você abriu, de qualquer área.</p></div>
       <div class="state" style="min-height:34vh">
@@ -395,26 +444,55 @@ function render(tickets){
       </div>`;
     return;
   }
+  // "antigos" = já tratados (concluído/cancelado ou respondido) e com mais de 30 dias
+  const ehTratado = t => { const c = classeStatus(t.status); return c==='concluido' || c==='cancelado' || !!t.resposta; };
+  const antigos = TICKETS.filter(t => ehTratado(t) && idadeDias(t.timestamp) > 30);
+  const recentes = TICKETS.filter(t => !(ehTratado(t) && idadeDias(t.timestamp) > 30));
+
   app.innerHTML = `
-    <div class="cab"><h1>Meus chamados</h1><p>${tickets.length} chamado(s). Retornamos em até 48h úteis; respostas aparecem abaixo de cada um.</p></div>
-    <div id="lista"></div>`;
-  document.getElementById('lista').innerHTML = tickets.map(t=>{
-    const cls = classeStatus(t.status);
-    const rotStatus = cls==='concluido'?'Concluído':cls==='respondido'?'Respondido':'Aberto';
-    const area = AREA_LABEL[(t.area||'').toLowerCase()] || (t.area||'—');
-    const tipo = TIPO_LABEL[(t.tipo||'').toLowerCase()] || t.tipo || '';
-    return `<div class="tk">
-      <div class="top">
-        <span class="area">${esc(area)}</span>
-        <span class="badge ${cls}">${rotStatus}</span>
-        <span class="data">${dataBonita(t.timestamp)}</span>
-      </div>
-      <h2>${esc(t.assunto || tipo || 'Chamado')}</h2>
-      ${tipo && t.assunto ? `<div class="msg" style="font-size:11.5px;color:var(--muted);margin-bottom:6px">${esc(tipo)}</div>`:''}
-      <div class="msg">${esc(t.mensagem||'')}</div>
-      ${t.resposta ? `<div class="resp"><div class="lbl">Resposta da back4you</div><div class="txt">${esc(t.resposta)}</div></div>`:''}
-    </div>`;
-  }).join('');
+    <div class="cab"><h1>Meus chamados</h1><p>${recentes.length} chamado(s) em aberto ou recentes. Retornamos em até 48h úteis; respostas aparecem abaixo de cada um.</p></div>
+    <div id="lista">${recentes.map(cardTicket).join('') || '<div class="state" style="min-height:20vh"><p>Nenhum chamado recente — os anteriores estão em “Chamados antigos”.</p></div>'}</div>
+    ${antigos.length ? `
+      <div class="antigos">
+        <button type="button" class="antigos-btn" id="antigos-btn" aria-expanded="false">
+          Chamados antigos<span class="conta">${antigos.length}</span><span class="seta">▾</span>
+        </button>
+        <div class="antigos-body" id="antigos-body">${antigos.map(cardTicket).join('')}</div>
+      </div>`:''}`;
+
+  const ab = document.getElementById('antigos-btn');
+  if(ab) ab.addEventListener('click', ()=>{
+    const body = document.getElementById('antigos-body');
+    const open = body.classList.toggle('on');
+    ab.setAttribute('aria-expanded', open?'true':'false');
+  });
+  app.querySelectorAll('.btn-cancelar').forEach(b=> b.addEventListener('click', ()=> pedirCancelamento(b)));
+}
+
+/** Confirmação inline (sem popup nativo) antes de cancelar. */
+function pedirCancelamento(btn){
+  const acoes = btn.closest('.tk-acoes');
+  const row = btn.dataset.row;
+  acoes.innerHTML = `<span class="confirma">Cancelar mesmo este chamado?
+    <button type="button" class="sim">Sim, cancelar</button>
+    <button type="button" class="nao">Voltar</button></span>`;
+  acoes.querySelector('.nao').addEventListener('click', ()=>{
+    acoes.innerHTML = `<button type="button" class="btn-cancelar" data-row="${row}">Cancelar chamado</button>`;
+    acoes.querySelector('.btn-cancelar').addEventListener('click', e=> pedirCancelamento(e.target));
+  });
+  acoes.querySelector('.sim').addEventListener('click', ()=> cancelarChamado(row, acoes));
+}
+
+async function cancelarChamado(row, acoes){
+  acoes.innerHTML = `<span class="confirma">Cancelando…</span>`;
+  const { id, codigo } = getIdCodigo();
+  try{
+    const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&acao=cancelar_ticket&linha='+encodeURIComponent(row));
+    if(d.erro) throw new Error(d.erro);
+    // recarrega a lista para refletir o novo status
+    const r = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&tipo=meus_tickets');
+    render(r.tickets || []);
+  }catch(e){ acoes.innerHTML = `<span class="confirma" style="color:#8B2E22">${esc(e.message||String(e))}</span>`; }
 }
 
 function erro(msg){
