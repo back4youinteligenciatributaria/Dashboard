@@ -1204,14 +1204,17 @@ function render(M){
 
 /* ---- Lista de guias com controle de pago/agendado ---- */
 let GUIAS_FILTRO='pendentes';
-function chaveGuia(c){ return (c.id_regra||'')+'|'+(c.competencia_ref||'')+'|'+(c.vencimento||''); }
+// CHAVE de 2 partes (regra|competência) — casa com a aba Agenda pré-preenchida da planilha
+// fiscal. Não inclui o vencimento (que varia com feriados), então status + LINK da guia
+// batem sempre com a linha da Agenda que o colaborador preencheu.
+function chaveGuia(c){ return (c.id_regra||'')+'|'+(c.competencia_ref||''); }
 function renderGuias(M){
   const box=document.getElementById('guias-lista'); if(!box) return;
   const anoAtual=hoje.getFullYear();
   const hojeISO=compDe(hoje);
   let lista=(M.cal||[]).filter(c=>c.vencimento && +String(c.vencimento).slice(0,4)>=anoAtual).map(c=>{
-    const vd=M.valorDe?M.valorDe(c):{v:0,est:false}; const st=(M.agenda||{})[chaveGuia(c)]||{status:'',por:''};
-    return {venc:c.vencimento, desc:c.descricao, ref:c.competencia_ref, valor:vd.v, est:vd.est, chave:chaveGuia(c), status:st.status||'', por:st.por||''};
+    const vd=M.valorDe?M.valorDe(c):{v:0,est:false}; const st=(M.agenda||{})[chaveGuia(c)]||{status:'',por:'',link:''};
+    return {venc:c.vencimento, desc:c.descricao, ref:c.competencia_ref, valor:vd.v, est:vd.est, chave:chaveGuia(c), status:st.status||'', por:st.por||'', link:st.link||''};
   }).sort((a,b)=>String(a.venc).localeCompare(b.venc));
   if(GUIAS_FILTRO==='pendentes') lista=lista.filter(g=>(g.status||'').toLowerCase()!=='paga');
   const grupos={}; lista.forEach(g=>{ const mk=String(g.venc).slice(0,7); (grupos[mk]=grupos[mk]||[]).push(g); });
@@ -1232,7 +1235,8 @@ function cardGuia(g){
   return `<div class="guia-card ${cls}${vencida?' vencida':''}">
     <div class="guia-venc"><b>${dia}</b>${vencida?'<span class="gv-tag">vencida</span>':''}</div>
     <div class="guia-info"><div class="guia-desc">${esc(g.desc)}</div>
-      <div class="guia-meta">${g.ref?('comp. '+esc(g.ref)+' · '):''}${g.valor>0?brl(g.valor)+(g.est?' (estim.)':''):'a apurar'}${g.por?(' · por '+esc(g.por)):''}</div></div>
+      <div class="guia-meta">${g.ref?('comp. '+esc(g.ref)+' · '):''}${g.valor>0?brl(g.valor)+(g.est?' (estim.)':''):'a apurar'}${g.por?(' · por '+esc(g.por)):''}</div>
+      ${g.link?`<a class="guia-baixar" href="${esc(g.link)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:12px;font-weight:600;color:var(--teal,#0F8C85);text-decoration:none">📄 Baixar guia</a>`:''}</div>
     <div class="guia-acoes">
       <span class="guia-status ${cls}">${rot}</span>
       <div class="guia-btns">

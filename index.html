@@ -616,15 +616,16 @@ function render(id, codigo, disponiveis, pessoa){
   const ct = document.getElementById('ac-contatos');
   if (ct) ct.addEventListener('click', () => abrirContatos(id, codigo));
 
-  // "confiar neste aparelho"
+  // "confiar neste aparelho": a OFERTA agora aparece só uma vez, logo após inserir o
+  // código (tela telaConfiarAparelho). Na home mostramos apenas a CONFIRMAÇÃO quando o
+  // aparelho já é confiável (com a opção de sair). Sem oferta recorrente aqui.
   const cr = document.getElementById('confiar-row');
   if (cr){
     if (lerToken()){
       cr.innerHTML = `<span class="conf-ok">✓ Este aparelho é confiável — você entra sem digitar código.</span> · <button type="button" class="linklike" id="sair-ap">Sair deste aparelho</button>`;
       cr.querySelector('#sair-ap').addEventListener('click', async ()=>{ await sairDesteAparelho(id, codigo); render(id, codigo, disponiveis, pessoa); });
     } else {
-      cr.innerHTML = `<button type="button" class="linklike" id="conf-ap">🔒 Confiar neste aparelho — não pedir código por 30 dias</button>`;
-      cr.querySelector('#conf-ap').addEventListener('click', async (e)=>{ e.target.textContent='Ativando…'; await confiarNesteAparelho(id, codigo); render(id, codigo, disponiveis, pessoa); });
+      cr.innerHTML = '';
     }
   }
 
@@ -771,6 +772,7 @@ function entrarComCodigo(entrada){
   if (!contato) return 'Digite o seu código de acesso.';
   if (!empresa) return 'Faltou o código da empresa no endereço — entre pelo seu e-mail.';
   location.hash = id + '-' + empresa + '-' + contato;      // corrige a URL
+  if(!lerToken()){ telaConfiarAparelho(); return ''; }     // oferece confiar (tela própria) — só se ainda não confia
   boot();                                                  // re-tenta o acesso
   return '';
 }
@@ -833,7 +835,9 @@ function telaCodigoEmail(email, mascarado){
       const d = await jsonp(API_URL+'?tipo=login_email_verificar&email='+encodeURIComponent(email)+'&codigo='+encodeURIComponent(code));
       if(d.erro) throw new Error(d.erro);
       if(!d.ok){ btn.disabled=false; btn.textContent='Continuar'; errEl.textContent = d.mensagem||'Código incorreto.'; otp.clear(); return; }
-      location.hash = d.hash; boot();
+      location.hash = d.hash;
+      if(!lerToken()) return telaConfiarAparelho();   // logo após o código: oferece confiar (tela própria)
+      boot();
     }catch(err){ btn.disabled=false; btn.textContent='Continuar'; errEl.textContent = err.message||String(err); }
   }
   btn.addEventListener('click', submeter);
@@ -903,6 +907,30 @@ async function confiarNesteAparelho(id, codigo){
 async function sairDesteAparelho(id, codigo){
   try{ await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&acao=revogar_aparelhos'); }catch(e){}
   limparToken();
+}
+/* Oferta "confiar neste aparelho" — tela PRÓPRIA, mostrada UMA vez, logo após o
+ * cliente inserir o código (e só se o aparelho ainda não for confiável). Depois
+ * não reaparece na home. */
+function telaConfiarAparelho(){
+  const { id, codigo } = getIdCodigo();
+  if(!(id && codigo)) return boot();
+  document.getElementById('miolo').innerHTML = `
+    <div class="state">
+      <div style="font-size:42px;line-height:1;margin-bottom:4px">🔒</div>
+      <h1>Confiar neste aparelho?</h1>
+      <p>Se este aparelho é só seu, mantemos você conectado por <b>30 dias</b> sem pedir o código de novo.</p>
+      <div class="id-form" style="gap:10px;align-items:center">
+        <button type="button" class="ac-btn ac-primary" id="cf-sim" style="min-width:250px">Confiar neste aparelho — 30 dias</button>
+        <button type="button" class="linklike" id="cf-nao">Agora não</button>
+      </div>
+      <p style="margin-top:12px;color:var(--muted);font-size:12px">Não ative em computadores públicos ou compartilhados.</p>
+    </div>`;
+  document.getElementById('cf-sim').addEventListener('click', async (e)=>{
+    e.target.disabled=true; e.target.textContent='Ativando…';
+    await confiarNesteAparelho(id, codigo);
+    boot();
+  });
+  document.getElementById('cf-nao').addEventListener('click', ()=> boot());
 }
 
 async function boot(){

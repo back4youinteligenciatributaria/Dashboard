@@ -835,8 +835,8 @@ function temMetrica(row,key){ const v=getM(row,key); return v!==undefined && v!=
 /* Estrutura idêntica ao que o Apps Script devolve: config, empresa, rateio, regras,
    calendario, nfs (por competência) e links (por competência). */
 const DEMO = (function(){
-  const centros = ['Não identificado','Sharon Admoni','Rafael Sanches Simone','Vladimir Cordeiro de Carvalho','Flavia M Duch Simone'];
-  const config = { cliente_id:'482913', razao_social:'DSCA Serviços Médicos Ltda', cnpj:'54.123.456/0001-00',
+  const centros = ['Não identificado','Sócio 1','Sócio 2','Sócio 3','Sócio 4'];
+  const config = { cliente_id:'000000', razao_social:'Clínica Exemplo Ltda', cnpj:'00.000.000/0001-00',
     municipio:'São Paulo', estado:'SP', regime:'Lucro Presumido', periodicidade_irpj_csll:'Trimestral',
     centros: centros.map((n,i)=>({centro:n, ordem_exibicao:i})) };
 
