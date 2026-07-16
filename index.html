@@ -566,21 +566,53 @@ async function salvarContatos(){
   }catch(e){ btn.disabled=false; btn.textContent='Salvar'; err.textContent=e.message||String(e); }
 }
 
+/** Entra com o código pessoal digitado/colado, montando o link certo (#ID-EMPRESA-CONTATO). */
+function entrarComCodigo(entrada){
+  const { id, codigo } = getIdCodigo();
+  let empresa = (codigo||'').split('-')[0].trim();
+  let contato = String(entrada||'').trim();
+  if (contato.includes('#')) contato = contato.split('#').pop();      // colou o link inteiro
+  if (contato.includes('-')){                                        // colou "EMPRESA-CONTATO" ou "ID-EMPRESA-CONTATO"
+    const p = contato.split('-').filter(Boolean);
+    if (/^\d+$/.test(p[0]) && p.length>=3){ empresa=p[1]; contato=p.slice(2).join('-'); }
+    else if (p.length>=2){ empresa=p[0]; contato=p.slice(1).join('-'); }
+    else contato=p[0];
+  }
+  contato = contato.replace(/[^0-9A-Za-z]/g,'');
+  if (!contato) return 'Cole o seu código de acesso pessoal.';
+  if (!empresa) return 'Faltou o código da empresa no endereço — use o link que você recebeu.';
+  location.hash = id + '-' + empresa + '-' + contato;               // corrige a URL
+  boot();                                                            // re-tenta o acesso
+  return '';
+}
+
 async function telaAcessoExpirado(id, msg){
   let opcoes = [];
   try{ const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&tipo=reenvio_opcoes'); opcoes = (d && d.opcoes) || []; }catch(e){}
+  const incompleto = /incompl|individual|pessoal|contato/i.test(String(msg||''));
   const wa = 'https://wa.me/5511937173906?text='+encodeURIComponent('Olá, preciso de ajuda com o acesso ao painel (ID '+id+').');
   document.getElementById('miolo').innerHTML = `
     <div class="state">
-      <h1>Seu link de acesso expirou</h1>
-      <p>Por segurança, o código de acesso muda de tempos em tempos. Peça um novo por e-mail:</p>
+      <h1>${incompleto?'Falta o seu código de acesso pessoal':'Seu link de acesso expirou'}</h1>
+      <p>Cada pessoa tem um código pessoal que muda a cada dia. Cole abaixo o código que você recebeu por e-mail:</p>
+      <form id="cod-form" class="id-form">
+        <input id="cod-input" type="text" inputmode="text" autocomplete="off" placeholder="seu código pessoal" required>
+        <button type="submit" class="ac-btn ac-primary">Entrar</button>
+      </form>
+      <div class="ct-err" id="cod-err" style="min-height:16px"></div>
+      <p style="margin-top:8px;color:var(--muted)">Não tem o código? Enviamos um novo para o seu e-mail:</p>
       <div class="reenvio" id="reenvio">
         ${opcoes.length
-          ? opcoes.map(o=>`<button class="ac-btn reenvio-op" data-idx="${o.idx}">Enviar para ${o.mascarado}</button>`).join('')
+          ? opcoes.map(o=>`<button type="button" class="ac-btn reenvio-op" data-idx="${o.idx}">Enviar para ${o.mascarado}</button>`).join('')
           : `<p style="color:var(--muted)">Nenhum e-mail cadastrado para este acesso.</p>`}
       </div>
       <p style="margin-top:6px">Nenhum é o seu, ou precisa mudar? <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">Falar com o atendimento</a></p>
     </div>`;
+  document.getElementById('cod-form').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const err = entrarComCodigo(document.getElementById('cod-input').value);
+    if(err) document.getElementById('cod-err').textContent = err;
+  });
   document.querySelectorAll('.reenvio-op').forEach(b=>b.addEventListener('click', async ()=>{
     const box=document.getElementById('reenvio'); box.innerHTML='<div class="spin"></div>';
     try{
@@ -600,21 +632,21 @@ function erro(msg){
     </div>`;
 }
 
-(async function(){
+async function boot(){
   const { id, codigo } = getIdCodigo();
   if (!id) return erro('Informe o ID e o código de acesso no final do endereço.');
-  if (!codigo) return telaAcessoExpirado(id, 'Sem código no endereço.');
+  if (!codigo) return telaAcessoExpirado(id, 'incompleto');   // sem código nenhum -> tela de acesso
+  document.getElementById('miolo').innerHTML = `<div class="state"><div class="spin" role="status" aria-label="Carregando"></div><p>Carregando…</p></div>`;
   try {
     const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=links';
     const d = await jsonp(url);
     if (d.erro) throw new Error(d.erro);
-    // o CÓDIGO já diz quem é: d.pessoa traz nome/áreas (secundário) ou vem null (acesso pleno)
     render(id, codigo, d.disponiveis || {}, d.pessoa || null);
   } catch (e) {
-    // id existe mas código inválido/expirado -> oferece reenvio; erro genérico caso contrário
-    telaAcessoExpirado(id, e.message || String(e));
+    telaAcessoExpirado(id, e.message || String(e));   // sem chave pessoal / expirado -> tela de acesso
   }
-})();
+}
+boot();
 </script>
 </body>
 </html>
