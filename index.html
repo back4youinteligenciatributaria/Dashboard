@@ -647,6 +647,8 @@ async function telaLoginEmail(){
       if(d.erro) throw new Error(d.erro);
       if(!d.encontrado){ btn.disabled=false; btn.textContent='Enviar código';
         errEl.innerHTML = 'Não encontramos esse e-mail no cadastro. Confira ou <a href="'+wa+'" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">fale com o atendimento</a>.'; return; }
+      if(d.enviado===false){ btn.disabled=false; btn.textContent='Enviar código';
+        errEl.innerHTML = (d.mensagem||'Encontramos seu cadastro, mas não consegui enviar o e-mail agora.')+' <a href="'+wa+'" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">atendimento</a>'; return; }
       telaCodigoEmail(email, d.mascarado||'');
     }catch(err){ btn.disabled=false; btn.textContent='Enviar código'; errEl.textContent = err.message||String(err); }
   });
