@@ -83,8 +83,11 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .stat .s{font-size:12px;color:var(--muted);margin-top:3px}
 .stat.div-alerta{border-color:#E0B45A;background:#FBF3E2}
 .stat.div-alerta .s{color:#9A6B10;font-weight:600}
-.card-click{cursor:pointer;text-align:left;font-family:var(--sans);width:100%;transition:border-color .12s,transform .12s}
-.card-click:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
+.card-click{cursor:pointer;text-align:left;font-family:var(--sans);width:100%;transition:border-color .12s,transform .12s,box-shadow .12s;display:flex;flex-direction:column}
+.card-click:hover{border-color:var(--brand-teal);transform:translateY(-1px);box-shadow:0 6px 16px rgba(17,61,57,.10)}
+.stat-cta{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:11.5px;font-weight:700;color:#fff;background:var(--brand-teal);padding:6px 12px;border-radius:999px}
+.card-click:hover .stat-cta{background:var(--brand-dark)}
+.stat.div-alerta .stat-cta{background:#B57A16}
 .dv-card{padding:18px 20px;margin-bottom:16px}
 .dv-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .dv-head b{font-size:14px}
@@ -1122,6 +1125,7 @@ function render(M){
 function toggleTabs(){ document.getElementById('tab-prest').classList.toggle('on',NF_TAB==='prestadas'); document.getElementById('tab-tom').classList.toggle('on',NF_TAB==='tomadas'); }
 
 function pintarMes(M,comp){
+  const de=document.getElementById('div-editor'); if(de){ de.innerHTML=''; de.dataset.open=''; } // fecha o editor de dividendos ao trocar de mês
   const r=M.porComp[comp]; const i=M.empresa.findIndex(x=>x.competencia===comp); const ant=i>0?M.empresa[i-1]:null;
   const tot=num(getM(r,'Total (R$)')), imp=M.impostos(r), ret=M.retido(r), liq=num(getM(r,'Resultado Líquido (R$)'));
   const carga=tot?imp/tot:0; const totAnt=ant?num(getM(ant,'Total (R$)')):null; const dif=(ant&&totAnt)?(tot/totAnt-1):null; const nfs=num(getM(r,'Nº NFs'));
@@ -1150,7 +1154,7 @@ function pintarMes(M,comp){
     ${M.reg.retencao?`<div class="card stat"><span class="lbl">Retido na fonte</span><div class="v num">${brl(ret)}</div><div class="s">${ret?'já pago pelos tomadores':'nenhuma retenção no mês'}</div></div>`:''}
     <div class="card stat"><span class="lbl">Carga efetiva</span><div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>
     <div class="card stat"><span class="lbl">Resultado líquido</span><div class="v num" style="color:var(--receita)">${brl(liq)}</div><div class="s">depois dos impostos</div></div>
-    <button type="button" id="card-div" class="card stat card-click${semDiv?' div-alerta':''}"><span class="lbl">Dividendos distribuídos</span><div class="v num">${divid>0?brl(divid):'—'}</div><div class="s">${semDiv?'⚠ informe a distribuição →':(divid>0?('de '+brl(lucroAp)+' de lucro apurado · editar →'):'informar distribuição →')}</div></button></div>`;
+    <button type="button" id="card-div" class="card stat card-click${semDiv?' div-alerta':''}"><span class="lbl">Dividendos distribuídos</span><div class="v num">${divid>0?brl(divid):'—'}</div><div class="s">${semDiv?'⚠ nenhuma distribuição informada':(divid>0?('de '+brl(lucroAp)+' de lucro apurado'):'nenhum valor informado')}</div><span class="stat-cta">${divid>0?'Editar distribuição':'Informar distribuição'} →</span></button></div>`;
   const cd=document.getElementById('card-div'); if(cd) cd.addEventListener('click',()=>abrirEditorDividendos(M,comp));
 
   document.getElementById('prov').innerHTML=prov?(()=>{ const dias=prov.venc?Math.round((dParse(prov.venc)-hoje)/864e5):null;

@@ -78,6 +78,8 @@ body{
 .ct-card-top .ct-nome{margin-bottom:0}
 .ct-rm{background:none;border:0;cursor:pointer;color:var(--muted);font-size:14px;padding:4px 6px}
 .ct-rm:hover{color:#8B2E22}
+.ct-voce{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-teal);background:var(--surface-warm);border:1px solid var(--line);padding:3px 9px;border-radius:999px;white-space:nowrap}
+.ct-in[disabled],.ct-in[readonly]{opacity:.7}
 .ct-area-chk{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer}
 .ct-area-chk input{accent-color:var(--brand-teal)}
 .ct-areas.oculto{display:none}
@@ -449,7 +451,7 @@ function render(id, codigo, disponiveis, pessoa){
   const destino = pagina => `${pagina}#${id}-${codigo}`;
   const areasP = pessoa && Array.isArray(pessoa.areas) ? pessoa.areas : null;   // login por e-mail
   const visiveis = DEFINICOES.filter(d => disponiveis[d.chave] && (!areasP || areasP.indexOf(d.chave)>=0));
-  const quem = pessoa ? `<div class="quem">Você: <b>${esc(pessoa.nome||pessoa.email||'')}</b>${/principal/i.test(pessoa.papel||'')?' · responsável principal':''} <button type="button" class="quem-trocar" id="quem-trocar">trocar</button></div>` : '';
+  const quem = (pessoa && (pessoa.nome||pessoa.email)) ? `<div class="quem">Você: <b>${esc(pessoa.nome||pessoa.email||'')}</b>${/principal/i.test(pessoa.papel||'')?' · responsável principal':''}</div>` : '';
 
   document.getElementById('miolo').innerHTML = `
     <div class="saudacao">
@@ -478,45 +480,6 @@ function render(id, codigo, disponiveis, pessoa){
   if (ab) ab.addEventListener('click', () => { if (window.B4U && window.B4U.abrirChamado) window.B4U.abrirChamado({}); });
   const ct = document.getElementById('ac-contatos');
   if (ct) ct.addEventListener('click', () => abrirContatos(id, codigo));
-  const tr = document.getElementById('quem-trocar');
-  if (tr) tr.addEventListener('click', () => { esquecerEmail(id); telaIdentificar(id, codigo, disponiveis); });
-}
-
-// ---- login por e-mail (mostra só as áreas da pessoa) ----
-function chaveEmail(id){ return 'b4u_eu_' + id; }
-function lembrarEmail(id){ try{ return localStorage.getItem(chaveEmail(id))||''; }catch(e){ return ''; } }
-function guardarEmail(id,email){ try{ localStorage.setItem(chaveEmail(id), email); }catch(e){} }
-function esquecerEmail(id){ try{ localStorage.removeItem(chaveEmail(id)); }catch(e){} }
-
-async function pessoaAreas(id, codigo, email){
-  try{
-    const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&tipo=acesso_pessoa&email='+encodeURIComponent(email));
-    return d && !d.erro ? d : null;
-  }catch(e){ return null; }
-}
-
-function telaIdentificar(id, codigo, disponiveis, msg){
-  const wa = 'https://wa.me/5511937173906?text='+encodeURIComponent('Olá, preciso de acesso ao painel (ID '+id+').');
-  document.getElementById('miolo').innerHTML = `
-    <div class="state">
-      <h1>Quem está acessando?</h1>
-      <p>Entre com o seu e-mail para vermos a quais áreas você tem acesso.</p>
-      <form id="id-form" class="id-form">
-        <input id="id-email" type="email" inputmode="email" placeholder="voce@empresa.com" autocomplete="email" required>
-        <button type="submit" class="ac-btn ac-primary">Entrar</button>
-      </form>
-      <div class="ct-err" id="id-err" style="min-height:16px">${msg?esc(msg):''}</div>
-      <p style="margin-top:2px">Não está cadastrado? <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">Falar com o atendimento</a></p>
-    </div>`;
-  document.getElementById('id-form').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const email = document.getElementById('id-email').value.trim();
-    if(!email) return;
-    const err=document.getElementById('id-err'); err.textContent='Verificando…';
-    const p = await pessoaAreas(id, codigo, email);
-    if(p && p.encontrado){ guardarEmail(id, email); render(id, codigo, disponiveis, {...p, email}); }
-    else { err.textContent = 'Esse e-mail não está cadastrado nos contatos deste cliente. Peça a um responsável principal para te adicionar.'; }
-  });
 }
 
 const AREAS_LABEL = { fiscal:'Fiscal', contabil:'Contábil', pessoal:'Pessoal', societario:'Societário', equiparacao:'Equiparação', financeiro:'Financeiro' };
@@ -538,7 +501,7 @@ async function abrirContatos(id, codigo){
     if(d.erro) throw new Error(d.erro);
     CT = { id, codigo,
       contatos:(d.contatos||[]).map(c=>({nome:c.nome,email:c.email,papel:c.papel,areas:Object.keys(c.areas||{}).filter(a=>c.areas[a])})),
-      areas:(d.areas&&d.areas.length)?d.areas:Object.keys(AREAS_LABEL), eu:'', editando:!!d.semPrincipal, semPrincipal:!!d.semPrincipal };
+      areas:(d.areas&&d.areas.length)?d.areas:Object.keys(AREAS_LABEL), editando:!!d.podeEditar, euEmail:(d.euEmail||'').toLowerCase() };
     renderContatos();
   }catch(e){ document.getElementById('ct-body').innerHTML = `<p class="sheet-note" style="color:#8B2E22">${esc(e.message||e)}</p>`; }
 }
@@ -546,20 +509,14 @@ async function abrirContatos(id, codigo){
 function renderContatos(){
   const body=document.getElementById('ct-body'); if(!body||!CT) return;
   const podeEditar = CT.editando;
-  const identifica = CT.semPrincipal ? '' : `
-    <div class="ct-fld"><label>Para editar, identifique-se (só principais editam)</label>
-      <select id="ct-eu"><option value="">— selecione seu e-mail —</option>
-        ${CT.contatos.map(c=>`<option value="${esc(c.email)}"${c.email===CT.eu?' selected':''}>${esc(c.nome||c.email)} · ${/principal/i.test(c.papel)?'principal':'secundário'}</option>`).join('')}
-      </select></div>`;
+  const aviso = podeEditar ? '' : `<p class="sheet-note" style="color:#9A6B10">Você está vendo em modo leitura. Só um <b>responsável principal</b> (entrando com o próprio código) pode editar.</p>`;
   body.innerHTML = `
     <p class="sheet-note"><b>Principal</b> acessa tudo e edita os contatos. <b>Secundário</b> acessa e recebe só as áreas marcadas.</p>
-    ${identifica}
+    ${aviso}
     <div id="ct-lista">${CT.contatos.map((c,i)=>cardContato(c,i,podeEditar)).join('') || '<p class="sheet-note">Nenhum contato cadastrado ainda.</p>'}</div>
     ${podeEditar?`<button class="ac-btn" id="ct-add" style="margin-top:8px;width:100%">+ Adicionar contato</button>`:''}
     <div class="ct-err" id="ct-err"></div>
     <div class="sheet-foot"><button class="ac-btn" id="ct-cancel">Fechar</button>${podeEditar?`<button class="ac-btn ac-primary" id="ct-save">Salvar</button>`:''}</div>`;
-  const selEu=document.getElementById('ct-eu');
-  if(selEu) selEu.addEventListener('change',e=>{ CT.eu=e.target.value; CT.editando=/principal/i.test((CT.contatos.find(c=>c.email===CT.eu)||{}).papel||''); renderContatos(); });
   document.getElementById('ct-cancel').addEventListener('click', fecharOverlay);
   const add=document.getElementById('ct-add'); if(add) add.addEventListener('click',()=>{ CT.contatos.push({nome:'',email:'',papel:'Secundário',areas:[]}); renderContatos(); });
   const save=document.getElementById('ct-save'); if(save) save.addEventListener('click', salvarContatos);
@@ -573,13 +530,14 @@ function cardContato(c,i,editar){
       <div class="ct-mail">${esc(c.email)}</div>
       <div class="ct-areas">${principal?'<span class="ct-area-chip on">Acesso total</span>':CT.areas.map(a=>`<span class="ct-area-chip${c.areas.indexOf(a)>=0?' on':''}">${AREAS_LABEL[a]||a}</span>`).join('')}</div></div>`;
   }
+  const euMesmo = !!CT.euEmail && (c.email||'').toLowerCase()===CT.euEmail;
   return `<div class="ct-card" data-i="${i}">
     <div class="ct-card-top"><input class="ct-in ct-nome" data-i="${i}" placeholder="Nome" value="${esc(c.nome)}">
-      <button class="ct-rm" data-i="${i}" aria-label="Remover">✕</button></div>
-    <input class="ct-in ct-email" data-i="${i}" placeholder="e-mail@empresa.com" value="${esc(c.email)}">
-    <select class="ct-in ct-papel" data-i="${i}">
+      ${euMesmo?`<span class="ct-voce">você</span>`:`<button class="ct-rm" data-i="${i}" aria-label="Remover">✕</button>`}</div>
+    <input class="ct-in ct-email" data-i="${i}" placeholder="e-mail@empresa.com" value="${esc(c.email)}"${euMesmo?' readonly':''}>
+    <select class="ct-in ct-papel" data-i="${i}"${euMesmo?' disabled title="Você não pode remover o seu próprio acesso principal"':''}>
       <option value="Principal"${principal?' selected':''}>Principal · acesso total</option>
-      <option value="Secundário"${!principal?' selected':''}>Secundário · áreas escolhidas</option></select>
+      ${euMesmo?'':`<option value="Secundário"${!principal?' selected':''}>Secundário · áreas escolhidas</option>`}</select>
     <div class="ct-areas ${principal?'oculto':''}">${CT.areas.map(a=>`<label class="ct-area-chk"><input type="checkbox" data-i="${i}" data-area="${a}"${c.areas.indexOf(a)>=0?' checked':''}> ${AREAS_LABEL[a]||a}</label>`).join('')}</div>
   </div>`;
 }
@@ -598,7 +556,7 @@ function wireCards(){
 async function salvarContatos(){
   const err=document.getElementById('ct-err'), btn=document.getElementById('ct-save'); err.textContent='';
   const payload=CT.contatos.map(c=>({nome:c.nome,email:c.email,papel:c.papel,areas:/principal/i.test(c.papel)?[]:c.areas}));
-  const params=new URLSearchParams({ id:CT.id, codigo:CT.codigo, acao:'salvar_contatos', eu:CT.eu, contatos:JSON.stringify(payload) });
+  const params=new URLSearchParams({ id:CT.id, codigo:CT.codigo, acao:'salvar_contatos', contatos:JSON.stringify(payload) });
   btn.disabled=true; btn.textContent='Salvando…';
   try{
     const d=await jsonp(API_URL+'?'+params.toString());
@@ -650,17 +608,8 @@ function erro(msg){
     const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=links';
     const d = await jsonp(url);
     if (d.erro) throw new Error(d.erro);
-    const disp = d.disponiveis || {};
-    if (d.temSecundarios){                       // login por e-mail (secundários só veem as áreas deles)
-      const lembrado = lembrarEmail(id);
-      if (lembrado){
-        const p = await pessoaAreas(id, codigo, lembrado);
-        if (p && p.encontrado) return render(id, codigo, disp, {...p, email:lembrado});
-        esquecerEmail(id);                        // e-mail salvo não vale mais
-      }
-      return telaIdentificar(id, codigo, disp);
-    }
-    render(id, codigo, disp);                     // sem secundários: acesso pleno pelo código
+    // o CÓDIGO já diz quem é: d.pessoa traz nome/áreas (secundário) ou vem null (acesso pleno)
+    render(id, codigo, d.disponiveis || {}, d.pessoa || null);
   } catch (e) {
     // id existe mas código inválido/expirado -> oferece reenvio; erro genérico caso contrário
     telaAcessoExpirado(id, e.message || String(e));
