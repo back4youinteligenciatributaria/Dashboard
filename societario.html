@@ -53,6 +53,21 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .status-concluido{background:var(--receita-soft);color:var(--receita)}
 .status-andamento{background:var(--andamento-soft);color:var(--andamento)}
 
+/* stepper horizontal (linha do tempo resumida) */
+.stepper{margin:0 0 16px}
+.stepper-topo{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.stepper-cap{font-size:12px;color:var(--muted)}
+.stepper-pct{font-size:13px;font-weight:800;color:var(--receita)}
+.stepper-track{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.stepper-fill{height:100%;background:linear-gradient(90deg,var(--brand-teal),var(--brand-eucalipto2));border-radius:99px;transition:width .4s}
+.stepper-passos{display:flex;align-items:center;gap:6px;margin-top:9px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.st-passo{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.st-dot{width:10px;height:10px;border-radius:50%;background:var(--aguardando);flex-shrink:0}
+.st-dot.concluido{background:var(--receita)}
+.st-dot.andamento{background:var(--andamento);box-shadow:0 0 0 3px var(--andamento-soft)}
+.st-lbl{font-size:11px;color:var(--ink-2);white-space:nowrap}
+.st-linha{width:16px;height:2px;background:var(--line-2);flex-shrink:0}
+@media(max-width:600px){.st-lbl{max-width:110px;overflow:hidden;text-overflow:ellipsis}}
 .timeline{position:relative;padding-left:22px}
 .timeline::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line-2)}
 .etapa{position:relative;padding-bottom:16px}
@@ -83,6 +98,15 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .etapa-obs{display:none;margin-top:8px;padding:10px 12px;background:var(--surface-warm);
   border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--ink-2);line-height:1.55;white-space:pre-wrap}
 .etapa-obs.aberto{display:block}
+/* Histórico / observações do processo (log corrido da MESTRA) */
+.hist{margin-top:12px}
+.hist-btn{background:none;border:0;cursor:pointer;font-family:var(--sans);font-size:11.5px;font-weight:700;
+  color:var(--brand-teal);display:inline-flex;align-items:center;gap:5px;padding:0}
+.hist-btn .mais{display:inline-block;transition:transform .15s}
+.hist-btn.aberto .mais{transform:rotate(45deg)}
+.hist-corpo{display:none;margin-top:8px;padding:11px 13px;background:var(--surface-warm);
+  border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--ink-2);line-height:1.6;white-space:pre-wrap}
+.hist-corpo.aberto{display:block}
 
 .lista{padding:8px 24px}
 .item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
@@ -192,6 +216,19 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 .b4u-ok .chk svg{width:30px;height:30px}
 .b4u-ok h3{font-size:18px;font-weight:800;margin-bottom:6px}
 .b4u-ok p{font-size:13.5px;color:#3F5854;line-height:1.55;max-width:40ch;margin:0 auto 20px}
+/* Skeleton (carregando) — barras cinza com brilho passando */
+.b4u-skel{display:block;border-radius:8px;background:#Eadfce;
+  background-image:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.65) 50%,rgba(255,255,255,0) 100%);
+  background-size:180px 100%;background-repeat:no-repeat;animation:b4ushine 1.15s ease-in-out infinite}
+@keyframes b4ushine{0%{background-position:-120px 0}100%{background-position:calc(100% + 120px) 0}}
+@media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
+/* Puxar para atualizar (mobile) */
+.b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
+  height:0;overflow:hidden;color:#0F8C85;z-index:1500;pointer-events:none;
+  font-family:'Montserrat',system-ui,sans-serif;font-size:12px;font-weight:700;gap:8px}
+.b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:#0F8C85;border-radius:50%}
+.b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
+@keyframes b4uspin{to{transform:rotate(360deg)}}
 </style>
 <script>
 (function(){
@@ -218,6 +255,14 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
     rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
   };
   var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // Tipo do DOCUMENTO anexado -> define para qual PASTA (programa) o arquivo vai.
+  // As chaves batem com o backend (COLUNA_POR_TIPO_DOC); a pasta vem do Site Links.
+  var DOCTIPOS = [
+    ['principal','Documentos recebidos (geral)'],
+    ['extratos','Extratos bancários'],
+    ['notas','Notas fiscais e comprovantes'],
+    ['outros','Outros']
+  ];
   // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
   var TIPOS_POR_AREA = {
     fiscal:       ['livre','solicitar_nf','duvida'],
@@ -314,6 +359,14 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
         '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
+        '<div class="b4u-fld"><label for="b4u-file">Anexo <span style="font-weight:500;color:#8A7D70">(opcional · até 10 MB)</span></label>' +
+          '<input type="file" id="b4u-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.xls,.xlsx,.csv,.txt,.xml,.ofx,.zip"></div>' +
+        '<div class="b4u-fld" id="b4u-tipodoc-wrap" style="display:none">' +
+          '<label for="b4u-tipodoc">Tipo do documento</label><select id="b4u-tipodoc">' +
+            DOCTIPOS.map(function(d){ return '<option value="'+d[0]+'">'+esc(d[1])+'</option>'; }).join('') +
+          '</select>' +
+          '<div class="b4u-sub" style="padding:6px 0 0">Enviamos seu arquivo direto para a pasta certa do seu programa.</div>' +
+        '</div>' +
         '<div class="b4u-err" id="b4u-erro"></div>' +
         '<div class="b4u-foot">' +
           '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
@@ -337,6 +390,12 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
     ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
     ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
+    // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
+    var fileEl = ov.querySelector('#b4u-file');
+    var tdWrap = ov.querySelector('#b4u-tipodoc-wrap');
+    fileEl.addEventListener('change', function(){
+      tdWrap.style.display = (fileEl.files && fileEl.files.length) ? 'block' : 'none';
+    });
     ov.querySelector('#b4u-assunto').focus();
   }
 
@@ -351,16 +410,37 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
     var assunto = ov.querySelector('#b4u-assunto').value.trim();
     var msg = ov.querySelector('#b4u-msg').value.trim();
     if(!msg){ erroEl.textContent = 'Escreva a mensagem do chamado.'; return; }
+    var fileEl = ov.querySelector('#b4u-file');
+    var file = fileEl && fileEl.files && fileEl.files[0];
+    if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
     btn.disabled = true; btn.textContent = 'Enviando…';
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    if(file){
+      // COM arquivo -> POST (JSONP/GET não comporta base64)
+      var reader = new FileReader();
+      reader.onload = function(){
+        var base64 = String(reader.result||'').split(',')[1] || '';
+        var tdEl = ov.querySelector('#b4u-tipodoc');
+        var tipoDoc = (tdEl && tdEl.value) ? tdEl.value : 'principal';
+        var body = JSON.stringify({ id:cc.id, codigo:cc.codigo, acao:'ticket_anexo',
+          area:area, tipo:tipo, assunto:assunto, mensagem:msg, tipo_documento:tipoDoc,
+          arquivo_nome:file.name, arquivo_tipo:file.type, arquivo_base64:base64 });
+        fetch(api(), { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if(d && d.erro) throw new Error(d.erro); sucesso(); })
+          .catch(falhou);
+      };
+      reader.onerror = function(){ falhou(new Error('Não consegui ler o arquivo.')); };
+      reader.readAsDataURL(file);
+      return;
+    }
+    // SEM arquivo -> JSONP como sempre
     var qs = new URLSearchParams({ id:cc.id, codigo:cc.codigo, acao:'ticket',
       area:area, tipo:tipo, assunto:assunto, mensagem:msg });
     jsonp(api()+'?'+qs.toString()).then(function(d){
       if(d && d.erro) throw new Error(d.erro);
       sucesso();
-    }).catch(function(e){
-      btn.disabled=false; btn.textContent='Enviar chamado';
-      erroEl.textContent = e.message || String(e);
-    });
+    }).catch(falhou);
   }
 
   function sucesso(){
@@ -372,22 +452,69 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
           '<p>Recebemos sua solicitação e retornamos em até 48h úteis. Em breve o acompanhamento também chegará por e-mail.</p>' +
           '<div class="b4u-foot" style="position:static;padding:0">' +
             '<button type="button" class="b4u-btn cancel" id="b4u-fecha">Fechar</button>' +
-            '<a class="b4u-btn primary" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
+            '<a class="b4u-btn primary" id="b4u-ir-tickets" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
           '</div>' +
         '</div>' +
       '</div>';
     ov.querySelector('#b4u-fecha').addEventListener('click', fecharModal);
+    // Se já estou em meus chamados, trocar só o hash não recarrega — força o reload
+    // para o novo chamado aparecer. Em outra página, navega normalmente.
+    ov.querySelector('#b4u-ir-tickets').addEventListener('click', function(e){
+      if (/meustickets\.html/i.test(location.pathname)){
+        e.preventDefault();
+        if (C.id) location.hash = C.id + (C.codigo ? '-'+C.codigo : '');
+        location.reload();
+      }
+    });
   }
 
   bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
   bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
 
-  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets };
+  // ---- Puxar para atualizar (mobile) --------------------------------------
+  // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
+  // depois do limiar. Não atrapalha a rolagem normal.
+  (function(){
+    var ind=document.createElement('div'); ind.className='b4u-ptr';
+    ind.innerHTML='<span class="ring"></span><span class="txt">Puxe para atualizar</span>';
+    document.body.appendChild(ind);
+    var y0=null, dist=0, LIM=70, ativo=false;
+    function topo(){ return (window.scrollY||document.documentElement.scrollTop||0)<=0; }
+    window.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1 || !topo() || (ov&&ov.classList.contains('on'))){ y0=null; return; }
+      y0=e.touches[0].clientY; ativo=true;
+    },{passive:true});
+    window.addEventListener('touchmove',function(e){
+      if(!ativo||y0===null) return;
+      dist=e.touches[0].clientY - y0;
+      if(dist<=0){ ind.style.height='0'; return; }
+      if(!topo()){ ativo=false; ind.style.height='0'; return; }
+      var h=Math.min(dist*0.5, LIM+20); ind.style.height=h+'px';
+      ind.querySelector('.txt').textContent = dist>LIM?'Solte para atualizar':'Puxe para atualizar';
+    },{passive:true});
+    window.addEventListener('touchend',function(){
+      if(!ativo){ return; } ativo=false;
+      if(dist>LIM){ ind.classList.add('spin'); ind.style.height=(LIM)+'px'; ind.querySelector('.txt').textContent='Atualizando…'; setTimeout(function(){ location.reload(); },150); }
+      else { ind.style.height='0'; }
+      y0=null; dist=0;
+    });
+  })();
+
+  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
+    skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
+      var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
+      return g.join(''); } };
 })();
 </script>
 <!-- ═══════════ fim do bloco compartilhado back4you ═══════════ -->
 <!--B4U:END-->
+
+
+
+
+
 
 
 
@@ -494,6 +621,10 @@ function render(M, modelos){
     </div>`);
 
   appendAll(wrap, `
+    <div class="sec-head" id="sec-venc" style="display:none"><div><h2>Certificados e licenças</h2><p>Vencimentos para acompanhar</p></div></div>
+    <div class="card lista" id="vencimentos" style="display:none"></div>`);
+
+  appendAll(wrap, `
     <div class="sec-head"><div><h2>Alterações societárias</h2></div></div>
     <div id="alteracoes"></div>`);
 
@@ -509,6 +640,7 @@ function render(M, modelos){
       <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
     </footer>`));
 
+  desenharVencimentos(M);
   desenharAlteracoes(M.alteracoes || []);
   desenharDocumentos(M.documentos || []);
   desenharModelos(modelos);
@@ -517,12 +649,19 @@ function render(M, modelos){
 }
 
 function periodoEtapa(e){
-  const i = e.inicio ? dBR(e.inicio) : '';
-  const f = e.fim ? dBR(e.fim) : '';
+  // MESTRA (formato novo): data_inicio + data_fim. Aceita também data única / inicio-fim antigos.
+  const i = e.data_inicio ? dBR(e.data_inicio) : (e.data ? dBR(e.data) : (e.inicio ? dBR(e.inicio) : ''));
+  const f = e.data_fim ? dBR(e.data_fim) : (e.fim ? dBR(e.fim) : '');
   if (i && f) return i === f ? i : `${i} → ${f}`;
   if (i) return `Início ${i}`;
-  if (f) return `Até ${f}`;
+  if (f) return `Concluído ${f}`;
   return '';
+}
+
+/* Histórico/observações do processo (log corrido que a equipe escreve na MESTRA). */
+function histHTML(obs){
+  if (!obs || !String(obs).trim()) return '';
+  return `<div class="hist"><button type="button" class="hist-btn"><span class="mais">＋</span> Histórico / observações</button><div class="hist-corpo">${esc(obs)}</div></div>`;
 }
 
 function timelineHTML(p){
@@ -532,15 +671,31 @@ function timelineHTML(p){
       const per = periodoEtapa(e);
       const temObs = !!(e.observacoes && e.observacoes.trim());
       return `<div class="etapa ${cl}${temObs?' tem-obs':''}" ${temObs?`data-etapa="${idx}"`:''}>
-        <div class="etapa-nome">${e.nome}</div>
+        <div class="etapa-nome">${esc(e.nome)}</div>
         <div class="etapa-meta">
-          ${per ? `<span class="etapa-datas">${per}</span>` : ''}
-          <span class="etapa-status ${cl}">${e.status || '—'}</span>
+          ${per ? `<span class="etapa-datas">${esc(per)}</span>` : ''}
+          <span class="etapa-status ${cl}">${esc(e.status || '—')}</span>
         </div>
         ${temObs ? `<div class="obs-hint"><span class="mais">＋</span> observação</div>
           <div class="etapa-obs">${esc(e.observacoes)}</div>` : ''}
       </div>`;
     }).join('')}
+  </div>`;
+}
+
+/* Barra de progresso horizontal (linha do tempo resumida): etapa 1 → 2 → 3. */
+function stepperHTML(p){
+  const n = (p.etapas||[]).length; if(!n) return '';
+  const done = p.etapas.filter(e=>classeStatus(e.status)==='concluido').length;
+  const emAnd = p.etapas.some(e=>classeStatus(e.status)==='andamento');
+  const dots = p.etapas.map((e,i)=>{ const cl=classeStatus(e.status);
+    return `<span class="st-passo"><span class="st-dot ${cl}"></span><span class="st-lbl">${esc(e.nome)}</span></span>`;
+  }).join('<span class="st-linha"></span>');
+  const pct = Math.round((done/n)*100);
+  return `<div class="stepper">
+    <div class="stepper-topo"><span class="stepper-cap">${done} de ${n} etapa${n>1?'s':''} concluída${done===1?'':'s'}${emAnd&&done<n?' · 1 em andamento':''}</span><b class="stepper-pct">${pct}%</b></div>
+    <div class="stepper-track"><div class="stepper-fill" style="width:${Math.max(3,pct)}%"></div></div>
+    <div class="stepper-passos">${dots}</div>
   </div>`;
 }
 
@@ -556,26 +711,29 @@ function desenharAlteracoes(alteracoes){
 
   box.innerHTML = ordenadas.map(p=>{
     const nEt = p.etapas.length;
+    const busca = normTxt(p.processo) + ' ' + normTxt(p.observacoes||'') + ' ' + normTxt(p.status_geral||'');
     if (p.concluido){
       // processo inteiro concluído -> recolhido, com opção de expandir
-      return `<div class="card processo-card recolhido" data-busca="${normTxt(p.processo)}">
+      return `<div class="card processo-card recolhido" data-busca="${busca}">
         <button class="processo-toggle" data-proc aria-expanded="false">
           <span class="lado">
-            <span class="status-chip status-concluido">Concluído</span>
-            <h3>${p.processo}</h3>
+            <span class="status-chip status-concluido">${esc(p.status_geral||'Concluído')}</span>
+            <h3>${esc(p.processo)}</h3>
             <span class="conta">${nEt} etapa${nEt>1?'s':''}</span>
           </span>
           <span class="seta">▸</span>
         </button>
-        <div class="processo-corpo" style="display:none">${timelineHTML(p)}</div>
+        <div class="processo-corpo" style="display:none">${timelineHTML(p)}${histHTML(p.observacoes)}</div>
       </div>`;
     }
-    return `<div class="card processo-card" data-busca="${normTxt(p.processo)}">
+    return `<div class="card processo-card" data-busca="${busca}">
       <div class="processo-head">
-        <h3>${p.processo}</h3>
-        <span class="status-chip status-andamento">Em andamento</span>
+        <h3>${esc(p.processo)}</h3>
+        <span class="status-chip status-andamento">${esc(p.status_geral||'Em andamento')}</span>
       </div>
+      ${stepperHTML(p)}
       ${timelineHTML(p)}
+      ${histHTML(p.observacoes)}
     </div>`;
   }).join('');
 
@@ -588,6 +746,8 @@ function desenharAlteracoes(alteracoes){
       proc.setAttribute('aria-expanded', abrir);
       return;
     }
+    const hb = ev.target.closest('.hist-btn');
+    if (hb){ hb.classList.toggle('aberto'); const c = hb.nextElementSibling; if (c) c.classList.toggle('aberto'); return; }
     const et = ev.target.closest('.etapa.tem-obs');
     if (et){
       et.classList.toggle('aberto');
@@ -611,14 +771,34 @@ function vencimentoInfo(iso){
   return `<span class="venc ${classe}">${texto}</span>`;
 }
 
+/* Certificado digital, procurações e licenças — SÓ os vencimentos (nunca senhas).
+ * Fontes: Site Links > "Certificados Digitais" e "Licenças" (lidas por ID no backend). */
+function desenharVencimentos(M){
+  const cert = M.certificado || {}, lic = M.licencas || {};
+  const itens = [];
+  if (cert.venc_certificado) itens.push({ nome:'Certificado digital', sub: cert.responsavel||'', venc: cert.venc_certificado });
+  if (cert.venc_ecac)        itens.push({ nome:'Procuração e-CAC', sub:'', venc: cert.venc_ecac });
+  if (cert.venc_spe)         itens.push({ nome:'Procuração SPE', sub:'', venc: cert.venc_spe });
+  if (lic.venc_alvara)       itens.push({ nome:'Alvará sanitário', sub:'', venc: lic.venc_alvara });
+  if (lic.venc_regularidade) itens.push({ nome:'Regularidade CRM', sub: lic.regularidade||'', venc: lic.venc_regularidade });
+  else if (lic.regularidade) itens.push({ nome:'Regularidade CRM', sub:'', texto: lic.regularidade });
+  if (!itens.length) return;
+  document.getElementById('sec-venc').style.display = '';
+  const box = document.getElementById('vencimentos'); box.style.display = '';
+  box.innerHTML = itens.map(it=>`<div class="item" data-busca="${normTxt(it.nome)} ${normTxt(it.sub)}">
+      <div><div class="nome">${esc(it.nome)}</div>${it.sub?`<div class="cat">${esc(it.sub)}</div>`:''}</div>
+      ${it.venc ? vencimentoInfo(it.venc) : (it.texto?`<span class="venc venc-ok">${esc(it.texto)}</span>`:'')}
+    </div>`).join('');
+}
+
 function desenharDocumentos(documentos){
   const box = document.getElementById('documentos');
   const comLink = (documentos||[]).filter(d => d.link && String(d.link).trim());
   if (!comLink.length){ box.innerHTML = '<div class="vazio">Nenhum documento cadastrado ainda.</div>'; return; }
   box.innerHTML = comLink.map(d=>{
     return `<div class="item" data-busca="${normTxt(d.documento)}">
-      <div><div class="nome">${d.documento}</div>${vencimentoInfo(d.vencimento)}</div>
-      <a href="${d.link}" target="_blank" rel="noopener">Abrir ↗</a>
+      <div><div class="nome">${esc(d.documento)}</div>${vencimentoInfo(d.vencimento)}</div>
+      <a href="${esc(d.link)}" target="_blank" rel="noopener">Abrir ↗</a>
     </div>`;
   }).join('');
 }
@@ -644,7 +824,7 @@ function desenharModelos(modelos){
         body.style.display = abrir?'block':'none'; this.setAttribute('aria-expanded', abrir);
         this.querySelector('.seta').style.transform = abrir?'rotate(180deg)':'';
       ">
-        <span class="grupo-cat-nome">${cat}</span>
+        <span class="grupo-cat-nome">${esc(cat)}</span>
         <span class="grupo-cat-conta">${itens.length}</span>
         <span class="seta">▾</span>
       </button>
@@ -652,8 +832,8 @@ function desenharModelos(modelos){
         ${itens.map(m=>{
           const link = m.link && String(m.link).trim();
           return `<div class="item" data-busca="${normTxt(m.documento)}">
-            <div class="nome">${m.documento}</div>
-            ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
+            <div class="nome">${esc(m.documento)}</div>
+            ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
           </div>`;
         }).join('')}
       </div>
@@ -664,8 +844,8 @@ function desenharModelos(modelos){
 function filtrar(termo){
   const alvo = normTxt(termo);
 
-  // Documentos e processos societários — comportamento simples de mostrar/esconder.
-  document.querySelectorAll('#documentos [data-busca], #alteracoes [data-busca]').forEach(el=>{
+  // Documentos, processos e vencimentos — mostrar/esconder simples.
+  document.querySelectorAll('#documentos [data-busca], #alteracoes [data-busca], #vencimentos [data-busca]').forEach(el=>{
     el.style.display = !alvo || el.dataset.busca.includes(alvo) ? '' : 'none';
   });
 

@@ -38,6 +38,8 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);min-heigh
 .tk h2{font-size:15px;font-weight:700;margin:2px 0 4px}
 .tk .quem{font-size:11.5px;color:var(--muted);margin-bottom:7px}
 .tk .quem b{color:var(--ink-2);font-weight:600}
+.tk-anexo{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--brand-teal);text-decoration:none;background:var(--surface-warm);border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+.tk-anexo:hover{border-color:var(--brand-teal)}
 .tk-acoes{margin-top:12px;display:flex;justify-content:flex-end;gap:8px;align-items:center;flex-wrap:wrap}
 .btn-cancelar{background:none;border:1px solid var(--line-2);color:#8B2E22;font-weight:600;font-size:12px;
   padding:8px 13px;border-radius:9px;cursor:pointer;font-family:inherit}
@@ -144,6 +146,19 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 .b4u-ok .chk svg{width:30px;height:30px}
 .b4u-ok h3{font-size:18px;font-weight:800;margin-bottom:6px}
 .b4u-ok p{font-size:13.5px;color:#3F5854;line-height:1.55;max-width:40ch;margin:0 auto 20px}
+/* Skeleton (carregando) — barras cinza com brilho passando */
+.b4u-skel{display:block;border-radius:8px;background:#Eadfce;
+  background-image:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.65) 50%,rgba(255,255,255,0) 100%);
+  background-size:180px 100%;background-repeat:no-repeat;animation:b4ushine 1.15s ease-in-out infinite}
+@keyframes b4ushine{0%{background-position:-120px 0}100%{background-position:calc(100% + 120px) 0}}
+@media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
+/* Puxar para atualizar (mobile) */
+.b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
+  height:0;overflow:hidden;color:#0F8C85;z-index:1500;pointer-events:none;
+  font-family:'Montserrat',system-ui,sans-serif;font-size:12px;font-weight:700;gap:8px}
+.b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:#0F8C85;border-radius:50%}
+.b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
+@keyframes b4uspin{to{transform:rotate(360deg)}}
 </style>
 <script>
 (function(){
@@ -170,6 +185,14 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
   };
   var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // Tipo do DOCUMENTO anexado -> define para qual PASTA (programa) o arquivo vai.
+  // As chaves batem com o backend (COLUNA_POR_TIPO_DOC); a pasta vem do Site Links.
+  var DOCTIPOS = [
+    ['principal','Documentos recebidos (geral)'],
+    ['extratos','Extratos bancários'],
+    ['notas','Notas fiscais e comprovantes'],
+    ['outros','Outros']
+  ];
   // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
   var TIPOS_POR_AREA = {
     fiscal:       ['livre','solicitar_nf','duvida'],
@@ -266,6 +289,14 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
         '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
+        '<div class="b4u-fld"><label for="b4u-file">Anexo <span style="font-weight:500;color:#8A7D70">(opcional · até 10 MB)</span></label>' +
+          '<input type="file" id="b4u-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.xls,.xlsx,.csv,.txt,.xml,.ofx,.zip"></div>' +
+        '<div class="b4u-fld" id="b4u-tipodoc-wrap" style="display:none">' +
+          '<label for="b4u-tipodoc">Tipo do documento</label><select id="b4u-tipodoc">' +
+            DOCTIPOS.map(function(d){ return '<option value="'+d[0]+'">'+esc(d[1])+'</option>'; }).join('') +
+          '</select>' +
+          '<div class="b4u-sub" style="padding:6px 0 0">Enviamos seu arquivo direto para a pasta certa do seu programa.</div>' +
+        '</div>' +
         '<div class="b4u-err" id="b4u-erro"></div>' +
         '<div class="b4u-foot">' +
           '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
@@ -289,6 +320,12 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
     ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
+    // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
+    var fileEl = ov.querySelector('#b4u-file');
+    var tdWrap = ov.querySelector('#b4u-tipodoc-wrap');
+    fileEl.addEventListener('change', function(){
+      tdWrap.style.display = (fileEl.files && fileEl.files.length) ? 'block' : 'none';
+    });
     ov.querySelector('#b4u-assunto').focus();
   }
 
@@ -303,16 +340,37 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     var assunto = ov.querySelector('#b4u-assunto').value.trim();
     var msg = ov.querySelector('#b4u-msg').value.trim();
     if(!msg){ erroEl.textContent = 'Escreva a mensagem do chamado.'; return; }
+    var fileEl = ov.querySelector('#b4u-file');
+    var file = fileEl && fileEl.files && fileEl.files[0];
+    if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
     btn.disabled = true; btn.textContent = 'Enviando…';
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    if(file){
+      // COM arquivo -> POST (JSONP/GET não comporta base64)
+      var reader = new FileReader();
+      reader.onload = function(){
+        var base64 = String(reader.result||'').split(',')[1] || '';
+        var tdEl = ov.querySelector('#b4u-tipodoc');
+        var tipoDoc = (tdEl && tdEl.value) ? tdEl.value : 'principal';
+        var body = JSON.stringify({ id:cc.id, codigo:cc.codigo, acao:'ticket_anexo',
+          area:area, tipo:tipo, assunto:assunto, mensagem:msg, tipo_documento:tipoDoc,
+          arquivo_nome:file.name, arquivo_tipo:file.type, arquivo_base64:base64 });
+        fetch(api(), { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if(d && d.erro) throw new Error(d.erro); sucesso(); })
+          .catch(falhou);
+      };
+      reader.onerror = function(){ falhou(new Error('Não consegui ler o arquivo.')); };
+      reader.readAsDataURL(file);
+      return;
+    }
+    // SEM arquivo -> JSONP como sempre
     var qs = new URLSearchParams({ id:cc.id, codigo:cc.codigo, acao:'ticket',
       area:area, tipo:tipo, assunto:assunto, mensagem:msg });
     jsonp(api()+'?'+qs.toString()).then(function(d){
       if(d && d.erro) throw new Error(d.erro);
       sucesso();
-    }).catch(function(e){
-      btn.disabled=false; btn.textContent='Enviar chamado';
-      erroEl.textContent = e.message || String(e);
-    });
+    }).catch(falhou);
   }
 
   function sucesso(){
@@ -324,18 +382,60 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
           '<p>Recebemos sua solicitação e retornamos em até 48h úteis. Em breve o acompanhamento também chegará por e-mail.</p>' +
           '<div class="b4u-foot" style="position:static;padding:0">' +
             '<button type="button" class="b4u-btn cancel" id="b4u-fecha">Fechar</button>' +
-            '<a class="b4u-btn primary" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
+            '<a class="b4u-btn primary" id="b4u-ir-tickets" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
           '</div>' +
         '</div>' +
       '</div>';
     ov.querySelector('#b4u-fecha').addEventListener('click', fecharModal);
+    // Se já estou em meus chamados, trocar só o hash não recarrega — força o reload
+    // para o novo chamado aparecer. Em outra página, navega normalmente.
+    ov.querySelector('#b4u-ir-tickets').addEventListener('click', function(e){
+      if (/meustickets\.html/i.test(location.pathname)){
+        e.preventDefault();
+        if (C.id) location.hash = C.id + (C.codigo ? '-'+C.codigo : '');
+        location.reload();
+      }
+    });
   }
 
   bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
   bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
 
-  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets };
+  // ---- Puxar para atualizar (mobile) --------------------------------------
+  // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
+  // depois do limiar. Não atrapalha a rolagem normal.
+  (function(){
+    var ind=document.createElement('div'); ind.className='b4u-ptr';
+    ind.innerHTML='<span class="ring"></span><span class="txt">Puxe para atualizar</span>';
+    document.body.appendChild(ind);
+    var y0=null, dist=0, LIM=70, ativo=false;
+    function topo(){ return (window.scrollY||document.documentElement.scrollTop||0)<=0; }
+    window.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1 || !topo() || (ov&&ov.classList.contains('on'))){ y0=null; return; }
+      y0=e.touches[0].clientY; ativo=true;
+    },{passive:true});
+    window.addEventListener('touchmove',function(e){
+      if(!ativo||y0===null) return;
+      dist=e.touches[0].clientY - y0;
+      if(dist<=0){ ind.style.height='0'; return; }
+      if(!topo()){ ativo=false; ind.style.height='0'; return; }
+      var h=Math.min(dist*0.5, LIM+20); ind.style.height=h+'px';
+      ind.querySelector('.txt').textContent = dist>LIM?'Solte para atualizar':'Puxe para atualizar';
+    },{passive:true});
+    window.addEventListener('touchend',function(){
+      if(!ativo){ return; } ativo=false;
+      if(dist>LIM){ ind.classList.add('spin'); ind.style.height=(LIM)+'px'; ind.querySelector('.txt').textContent='Atualizando…'; setTimeout(function(){ location.reload(); },150); }
+      else { ind.style.height='0'; }
+      y0=null; dist=0;
+    });
+  })();
+
+  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
+    skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
+      var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
+      return g.join(''); } };
 })();
 </script>
 <!-- ═══════════ fim do bloco compartilhado back4you ═══════════ -->
@@ -346,11 +446,19 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 
 
 
+
+
+
+
+
 <div class="wrap" id="app">
-  <div class="state">
-    <div class="spin" role="status" aria-label="Carregando"></div>
-    <p>Carregando seus chamados…</p>
+  <div class="cab">
+    <div class="b4u-skel" style="height:26px;width:210px;margin-bottom:10px"></div>
+    <div class="b4u-skel" style="height:13px;width:80%;max-width:360px"></div>
   </div>
+  <div class="b4u-skel" style="height:118px;border-radius:16px;margin-bottom:14px"></div>
+  <div class="b4u-skel" style="height:118px;border-radius:16px;margin-bottom:14px"></div>
+  <div class="b4u-skel" style="height:118px;border-radius:16px;opacity:.6"></div>
 </div>
 
 <footer>back4you · inteligência tributária</footer>
@@ -426,6 +534,7 @@ function cardTicket(t){
     ${t.solicitante ? `<div class="quem">Aberto por <b>${esc(t.solicitante)}</b></div>`:''}
     ${tipo && t.assunto ? `<div class="msg" style="font-size:11.5px;color:var(--muted);margin-bottom:6px">${esc(tipo)}</div>`:''}
     <div class="msg">${esc(t.mensagem||'')}</div>
+    ${t.anexo ? `<a class="tk-anexo" href="${esc(t.anexo)}" target="_blank" rel="noopener">📎 Ver anexo</a>`:''}
     ${t.resposta ? `<div class="resp"><div class="lbl">Resposta da back4you</div><div class="txt">${esc(t.resposta)}</div></div>`:''}
     ${podeCancelar ? `<div class="tk-acoes"><button type="button" class="btn-cancelar" data-row="${t._row}">Cancelar chamado</button></div>`:''}
   </div>`;

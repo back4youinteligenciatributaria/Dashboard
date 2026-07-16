@@ -219,6 +219,19 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .b4u-ok .chk svg{width:30px;height:30px}
 .b4u-ok h3{font-size:18px;font-weight:800;margin-bottom:6px}
 .b4u-ok p{font-size:13.5px;color:#3F5854;line-height:1.55;max-width:40ch;margin:0 auto 20px}
+/* Skeleton (carregando) — barras cinza com brilho passando */
+.b4u-skel{display:block;border-radius:8px;background:#Eadfce;
+  background-image:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.65) 50%,rgba(255,255,255,0) 100%);
+  background-size:180px 100%;background-repeat:no-repeat;animation:b4ushine 1.15s ease-in-out infinite}
+@keyframes b4ushine{0%{background-position:-120px 0}100%{background-position:calc(100% + 120px) 0}}
+@media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
+/* Puxar para atualizar (mobile) */
+.b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
+  height:0;overflow:hidden;color:#0F8C85;z-index:1500;pointer-events:none;
+  font-family:'Montserrat',system-ui,sans-serif;font-size:12px;font-weight:700;gap:8px}
+.b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:#0F8C85;border-radius:50%}
+.b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
+@keyframes b4uspin{to{transform:rotate(360deg)}}
 </style>
 <script>
 (function(){
@@ -245,6 +258,14 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
     rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
   };
   var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // Tipo do DOCUMENTO anexado -> define para qual PASTA (programa) o arquivo vai.
+  // As chaves batem com o backend (COLUNA_POR_TIPO_DOC); a pasta vem do Site Links.
+  var DOCTIPOS = [
+    ['principal','Documentos recebidos (geral)'],
+    ['extratos','Extratos bancários'],
+    ['notas','Notas fiscais e comprovantes'],
+    ['outros','Outros']
+  ];
   // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
   var TIPOS_POR_AREA = {
     fiscal:       ['livre','solicitar_nf','duvida'],
@@ -341,6 +362,14 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
         '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
+        '<div class="b4u-fld"><label for="b4u-file">Anexo <span style="font-weight:500;color:#8A7D70">(opcional · até 10 MB)</span></label>' +
+          '<input type="file" id="b4u-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.xls,.xlsx,.csv,.txt,.xml,.ofx,.zip"></div>' +
+        '<div class="b4u-fld" id="b4u-tipodoc-wrap" style="display:none">' +
+          '<label for="b4u-tipodoc">Tipo do documento</label><select id="b4u-tipodoc">' +
+            DOCTIPOS.map(function(d){ return '<option value="'+d[0]+'">'+esc(d[1])+'</option>'; }).join('') +
+          '</select>' +
+          '<div class="b4u-sub" style="padding:6px 0 0">Enviamos seu arquivo direto para a pasta certa do seu programa.</div>' +
+        '</div>' +
         '<div class="b4u-err" id="b4u-erro"></div>' +
         '<div class="b4u-foot">' +
           '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
@@ -364,6 +393,12 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
     ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
     ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
+    // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
+    var fileEl = ov.querySelector('#b4u-file');
+    var tdWrap = ov.querySelector('#b4u-tipodoc-wrap');
+    fileEl.addEventListener('change', function(){
+      tdWrap.style.display = (fileEl.files && fileEl.files.length) ? 'block' : 'none';
+    });
     ov.querySelector('#b4u-assunto').focus();
   }
 
@@ -378,16 +413,37 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
     var assunto = ov.querySelector('#b4u-assunto').value.trim();
     var msg = ov.querySelector('#b4u-msg').value.trim();
     if(!msg){ erroEl.textContent = 'Escreva a mensagem do chamado.'; return; }
+    var fileEl = ov.querySelector('#b4u-file');
+    var file = fileEl && fileEl.files && fileEl.files[0];
+    if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
     btn.disabled = true; btn.textContent = 'Enviando…';
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    if(file){
+      // COM arquivo -> POST (JSONP/GET não comporta base64)
+      var reader = new FileReader();
+      reader.onload = function(){
+        var base64 = String(reader.result||'').split(',')[1] || '';
+        var tdEl = ov.querySelector('#b4u-tipodoc');
+        var tipoDoc = (tdEl && tdEl.value) ? tdEl.value : 'principal';
+        var body = JSON.stringify({ id:cc.id, codigo:cc.codigo, acao:'ticket_anexo',
+          area:area, tipo:tipo, assunto:assunto, mensagem:msg, tipo_documento:tipoDoc,
+          arquivo_nome:file.name, arquivo_tipo:file.type, arquivo_base64:base64 });
+        fetch(api(), { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if(d && d.erro) throw new Error(d.erro); sucesso(); })
+          .catch(falhou);
+      };
+      reader.onerror = function(){ falhou(new Error('Não consegui ler o arquivo.')); };
+      reader.readAsDataURL(file);
+      return;
+    }
+    // SEM arquivo -> JSONP como sempre
     var qs = new URLSearchParams({ id:cc.id, codigo:cc.codigo, acao:'ticket',
       area:area, tipo:tipo, assunto:assunto, mensagem:msg });
     jsonp(api()+'?'+qs.toString()).then(function(d){
       if(d && d.erro) throw new Error(d.erro);
       sucesso();
-    }).catch(function(e){
-      btn.disabled=false; btn.textContent='Enviar chamado';
-      erroEl.textContent = e.message || String(e);
-    });
+    }).catch(falhou);
   }
 
   function sucesso(){
@@ -399,22 +455,69 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
           '<p>Recebemos sua solicitação e retornamos em até 48h úteis. Em breve o acompanhamento também chegará por e-mail.</p>' +
           '<div class="b4u-foot" style="position:static;padding:0">' +
             '<button type="button" class="b4u-btn cancel" id="b4u-fecha">Fechar</button>' +
-            '<a class="b4u-btn primary" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
+            '<a class="b4u-btn primary" id="b4u-ir-tickets" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
           '</div>' +
         '</div>' +
       '</div>';
     ov.querySelector('#b4u-fecha').addEventListener('click', fecharModal);
+    // Se já estou em meus chamados, trocar só o hash não recarrega — força o reload
+    // para o novo chamado aparecer. Em outra página, navega normalmente.
+    ov.querySelector('#b4u-ir-tickets').addEventListener('click', function(e){
+      if (/meustickets\.html/i.test(location.pathname)){
+        e.preventDefault();
+        if (C.id) location.hash = C.id + (C.codigo ? '-'+C.codigo : '');
+        location.reload();
+      }
+    });
   }
 
   bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
   bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
 
-  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets };
+  // ---- Puxar para atualizar (mobile) --------------------------------------
+  // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
+  // depois do limiar. Não atrapalha a rolagem normal.
+  (function(){
+    var ind=document.createElement('div'); ind.className='b4u-ptr';
+    ind.innerHTML='<span class="ring"></span><span class="txt">Puxe para atualizar</span>';
+    document.body.appendChild(ind);
+    var y0=null, dist=0, LIM=70, ativo=false;
+    function topo(){ return (window.scrollY||document.documentElement.scrollTop||0)<=0; }
+    window.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1 || !topo() || (ov&&ov.classList.contains('on'))){ y0=null; return; }
+      y0=e.touches[0].clientY; ativo=true;
+    },{passive:true});
+    window.addEventListener('touchmove',function(e){
+      if(!ativo||y0===null) return;
+      dist=e.touches[0].clientY - y0;
+      if(dist<=0){ ind.style.height='0'; return; }
+      if(!topo()){ ativo=false; ind.style.height='0'; return; }
+      var h=Math.min(dist*0.5, LIM+20); ind.style.height=h+'px';
+      ind.querySelector('.txt').textContent = dist>LIM?'Solte para atualizar':'Puxe para atualizar';
+    },{passive:true});
+    window.addEventListener('touchend',function(){
+      if(!ativo){ return; } ativo=false;
+      if(dist>LIM){ ind.classList.add('spin'); ind.style.height=(LIM)+'px'; ind.querySelector('.txt').textContent='Atualizando…'; setTimeout(function(){ location.reload(); },150); }
+      else { ind.style.height='0'; }
+      y0=null; dist=0;
+    });
+  })();
+
+  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
+    skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
+      var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
+      return g.join(''); } };
 })();
 </script>
 <!-- ═══════════ fim do bloco compartilhado back4you ═══════════ -->
 <!--B4U:END-->
+
+
+
+
+
 
 
 
@@ -635,15 +738,10 @@ function render(M){
         <div class="pie-legend" id="c1-lg"></div>
       </div>
       <div class="card chart">
-        <h3>Valor atualizado por tributo</h3>
-        <div class="sub">IRPJ e CSLL — soma do valor atualizado (com SELIC).</div>
-        <div class="cbox"><canvas id="c2"></canvas></div>
-        <div class="pie-legend" id="c2-lg"></div>
-      </div>
-      <div class="card chart">
-        <h3>Evolução por ano de origem</h3>
-        <div class="sub">Competência do crédito (ano de origem do excesso pago).</div>
+        <h3>Valores por ano</h3>
+        <div class="sub">Total pleiteado (atualizado com SELIC) e quanto já foi aprovado, por ano de origem do crédito.</div>
         <div class="cbox"><canvas id="c4"></canvas></div>
+        <div class="pie-legend" id="c4-lg"></div>
       </div>
     </div>` : `<div class="card"><div class="vazio">Nenhum pedido transmitido ainda — assim que o primeiro PER/DCOMP for enviado, os gráficos aparecem aqui.</div></div>`}`);
 
@@ -732,39 +830,38 @@ function desenharGraficos(M){
     `<div class="pie-legend-row"><i style="background:${GRUPO_COR[g]}"></i><span>${GRUPO_NOME[g]}</span><b class="num">${brl(porGrupo[g])}</b></div>`
   ).join('');
 
-  // c2: valor atualizado por tributo
-  const porTributo = {};
-  P.forEach(p=>{ porTributo[p.tributo] = (porTributo[p.tributo]||0) + num(p.valor_atualizado); });
-  const tributos = Object.keys(porTributo);
-  const coresTrib = [PAL.teal, PAL.couro, PAL.neutro];
-  new Chart(document.getElementById('c2'), {
-    type:'doughnut',
-    data:{labels:tributos, datasets:[{data:tributos.map(t=>porTributo[t]), backgroundColor:tributos.map((_,i)=>coresTrib[i%coresTrib.length]), borderWidth:0}]},
-    options:donutOpts
-  });
-  document.getElementById('c2-lg').innerHTML = tributos.map((t,i)=>
-    `<div class="pie-legend-row"><i style="background:${coresTrib[i%coresTrib.length]}"></i><span>${t}</span><b class="num">${brl(porTributo[t])}</b></div>`
-  ).join('');
-
-  // c4: por ano de origem da competência
+  // c4: VALORES POR ANO — barra marrom (total pleiteado) com a verde (aprovado) sobreposta.
+  // "Aprovado" = análise concluída: tem data de pagamento OU status homologado/deferido/creditado/pago.
+  const aprovadoDe = p => {
+    const ok = !!p.data_pagamento || /homolog|deferid|credit|aprovad|\bpag/i.test(normTxt(p.status || ''));
+    if (!ok) return 0;
+    return num(p.valor_aprovado) > 0 ? num(p.valor_aprovado) : num(p.valor_atualizado);
+  };
   const porAno = {};
   P.forEach(p=>{
     const ano = p._comp.ano || 0;
-    porAno[ano] = porAno[ano] || {solicitado:0, atualizado:0, aprovado:0};
-    porAno[ano].solicitado += num(p.valor_solicitado);
-    porAno[ano].atualizado += num(p.valor_atualizado);
-    if (p._concluido) porAno[ano].aprovado += num(p.valor_aprovado);
+    porAno[ano] = porAno[ano] || {total:0, aprovado:0};
+    porAno[ano].total += num(p.valor_atualizado);
+    porAno[ano].aprovado += aprovadoDe(p);
   });
   const anos = Object.keys(porAno).sort();
+  const totalGeral = anos.reduce((s,a)=>s+porAno[a].total,0);
+  const aprovadoGeral = anos.reduce((s,a)=>s+porAno[a].aprovado,0);
   new Chart(document.getElementById('c4'), {
     type:'bar',
     data:{labels:anos, datasets:[
-      {label:'Atualizado', data:anos.map(a=>porAno[a].atualizado), backgroundColor:PAL.bege, borderRadius:4, maxBarThickness:34},
-      {label:'Aprovado', data:anos.map(a=>porAno[a].aprovado), backgroundColor:PAL.teal, borderRadius:4, maxBarThickness:34},
+      // barra grande marrom (total) ao fundo; barra verde (aprovado) sobreposta e mais estreita
+      {label:'Total pleiteado', data:anos.map(a=>porAno[a].total), backgroundColor:PAL.couro,
+        borderRadius:4, categoryPercentage:0.7, barPercentage:0.9, grouped:false, order:2},
+      {label:'Aprovado', data:anos.map(a=>porAno[a].aprovado), backgroundColor:PAL.eucalipto2,
+        borderRadius:4, categoryPercentage:0.7, barPercentage:0.5, grouped:false, order:1},
     ]},
-    options:{...barOpts, plugins:{...barOpts.plugins, legend:{display:true, position:'bottom',
-      labels:{color:PAL.muted, font:{family:'Montserrat',size:11}, boxWidth:9}}}}
+    options:{...barOpts, plugins:{...barOpts.plugins, legend:{display:false},
+      tooltip:{...barOpts.plugins.tooltip}}}
   });
+  document.getElementById('c4-lg').innerHTML =
+    `<div class="pie-legend-row"><i style="background:${PAL.couro}"></i><span>Total pleiteado</span><b class="num">${brl(totalGeral)}</b></div>` +
+    `<div class="pie-legend-row"><i style="background:${PAL.eucalipto2}"></i><span>Aprovado</span><b class="num">${brl(aprovadoGeral)}</b></div>`;
 }
 
 async function carregarModelos(){

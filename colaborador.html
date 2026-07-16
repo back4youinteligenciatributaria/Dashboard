@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel da Equipe — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
+  --ink:#113D39; --ink-2:#3F5854; --muted:#8A7D70; --line:#E4D9C9; --line-2:#D6C3AC;
+  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-eucalipto2:#3FA680;
+  --amber:#E8892E; --amber-soft:#FCEFE0; --amber-line:#F0D6B4;
+  --vermelho:#8B2E22; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:14px;padding:12px 22px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:900;font-size:18px;letter-spacing:-.02em}
+.barra .logo .y{color:var(--brand-eucalipto2)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .spacer{flex:1}
+.barra .cnt{font-size:12px;color:#bcd;opacity:.9}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 22px 70px}
+.topo{position:sticky;top:52px;z-index:40;background:var(--canvas);padding:12px 0 10px}
+.busca{width:100%;font-family:var(--sans);font-size:15px;padding:13px 17px;border-radius:26px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.dica{font-size:12px;color:var(--muted);margin-top:7px;padding-left:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;margin-top:14px}
+.cli{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 16px;display:flex;flex-direction:column;gap:11px}
+.cli-top{display:flex;align-items:flex-start;gap:10px}
+.cli-id{font-size:11px;font-weight:800;color:#fff;background:var(--brand-teal);border-radius:7px;padding:3px 8px;white-space:nowrap;margin-top:1px}
+.cli-nome{font-size:14px;font-weight:700;line-height:1.3;flex:1}
+.cli-cnpj{font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
+.linha{display:flex;flex-wrap:wrap;gap:6px}
+.rot{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);width:100%;margin-top:2px}
+.lk{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;text-decoration:none;
+  padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface-warm);color:var(--ink);transition:border-color .12s,transform .1s}
+.lk:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
+.lk.drive{background:#EAF4F1;border-color:#cfe6e2}
+.lk.area{background:#fff}
+.lk .ic{font-size:13px}
+.lk.off{opacity:.4;pointer-events:none}
+.alertas{display:flex;flex-wrap:wrap;gap:6px}
+.al{font-size:11px;font-weight:700;border-radius:8px;padding:4px 9px;display:inline-flex;gap:5px;align-items:center}
+.al.ok{background:#E7F4EC;color:#2E7D52}
+.al.aten{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
+.al.venc{background:#F8E3DF;color:var(--vermelho)}
+.vazio-cli{font-size:12px;color:var(--muted)}
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:60vh;text-align:center;padding:0 24px}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:46ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
+.spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.wrap{padding:16px 14px 60px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="barra">
+  <span class="logo">back<span class="y">4you</span></span>
+  <span class="tag">Painel da equipe</span>
+  <span class="spacer"></span>
+  <span class="cnt" id="cnt"></span>
+</div>
+<div id="app">
+  <div class="state"><div class="spin"></div><p>Carregando clientes…</p></div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+// Chave da equipe ("por ora sem senha"): o link já vem com ela. Troque aqui e no TEAM_KEY (Equipe.gs).
+const CHAVE_PADRAO = 'b4u-equipe-2026';
+function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); const h=(location.hash||'').replace('#','').trim(); return q || h || CHAVE_PADRAO; }
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function normTxt(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
+function jsonp(url){
+  return new Promise((ok,fail)=>{
+    const cb='cb_'+Math.random().toString(36).slice(2);
+    const s=document.createElement('script');
+    const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);
+    function limpa(){clearTimeout(t);delete window[cb];s.remove();}
+    window[cb]=d=>{limpa();ok(d);};
+    s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};
+    s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    document.body.appendChild(s);
+  });
+}
+
+const hoje=new Date(); hoje.setHours(0,0,0,0);
+function alertaVenc(nome, iso){
+  if(!iso) return '';
+  const m=String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return '';
+  const dias=Math.round((new Date(+m[1],+m[2]-1,+m[3])-hoje)/864e5);
+  let cl='ok', txt=`${nome} ok`;
+  if(dias<0){ cl='venc'; txt=`${nome} vencido`; }
+  else if(dias<=60){ cl='aten'; txt=`${nome} vence em ${dias}d`; }
+  else return ''; // só alerta quando importa (≤60d ou vencido)
+  return `<span class="al ${cl}">⏰ ${esc(txt)}</span>`;
+}
+
+function lkArea(rot, url, ic){
+  if(url && /^https?:/.test(url)) return `<a class="lk area" href="${esc(url)}" target="_blank" rel="noopener"><span class="ic">${ic}</span>${esc(rot)}</a>`;
+  return `<span class="lk area off"><span class="ic">${ic}</span>${esc(rot)}</span>`;
+}
+function lkPasta(rot, url){
+  if(url && /^https?:/.test(url)) return `<a class="lk" href="${esc(url)}" target="_blank" rel="noopener">${esc(rot)}</a>`;
+  return '';
+}
+
+function cardCliente(c){
+  const p=c.pastas||{}, a=c.areas||{}, cert=c.certificado||{}, lic=c.licencas||{};
+  const alertas=[
+    alertaVenc('Certificado', cert.venc_certificado),
+    alertaVenc('Alvará', lic.venc_alvara),
+    alertaVenc('e-CAC', cert.venc_ecac)
+  ].filter(Boolean).join('');
+  const drive = c.drive && /^https?:/.test(c.drive)
+    ? `<a class="lk drive" href="${esc(c.drive)}" target="_blank" rel="noopener"><span class="ic">📁</span>Drive do cliente</a>` : '';
+  const subs=[lkPasta('Recebidos',p.principal),lkPasta('Extratos',p.extratos),lkPasta('Notas fiscais',p.notas),lkPasta('Outros',p.outros)].filter(Boolean).join('');
+  const dash = c.dashboard && /^https?:/.test(c.dashboard)
+    ? `<a class="lk" href="${esc(c.dashboard)}" target="_blank" rel="noopener"><span class="ic">🔗</span>Painel do cliente</a>` : '';
+  const busca = normTxt(c.id+' '+c.nome+' '+(c.cnpj||''));
+  return `<div class="cli" data-busca="${busca}">
+    <div class="cli-top">
+      <span class="cli-id">${esc(c.id)}</span>
+      <div class="cli-nome">${esc(c.nome||'(sem nome)')}${c.cnpj?`<div class="cli-cnpj">${esc(c.cnpj)}</div>`:''}</div>
+    </div>
+    ${alertas?`<div class="alertas">${alertas}</div>`:''}
+    ${(drive||subs)?`<div class="linha"><span class="rot">Drive</span>${drive}${subs}</div>`:''}
+    <div class="linha"><span class="rot">Planilhas</span>
+      ${lkArea('Fiscal',a.fiscal,'📊')}
+      ${lkArea('Equiparação',a.equiparacao,'⚖️')}
+      ${lkArea('Societário',a.societario,'🏛️')}
+      ${lkArea('Contábil',a.contabil,'📒')}
+      ${lkArea('Pessoal',a.pessoal,'👥')}
+    </div>
+    ${dash?`<div class="linha">${dash}</div>`:''}
+  </div>`;
+}
+
+let TODOS=[];
+function render(clientes){
+  TODOS=clientes;
+  const app=document.getElementById('app');
+  document.getElementById('cnt').textContent = clientes.length+' clientes';
+  app.innerHTML=`
+    <div class="wrap">
+      <div class="topo">
+        <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome ou CNPJ…">
+        <div class="dica">Atalhos para o Drive e as planilhas de cada cliente — sem precisar caçar nas pastas.</div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>`;
+  desenhar(clientes);
+  document.getElementById('busca').addEventListener('input', e=>{
+    const alvo=normTxt(e.target.value);
+    document.querySelectorAll('#grid .cli').forEach(el=>{
+      el.style.display = !alvo || el.dataset.busca.includes(alvo) ? '' : 'none';
+    });
+  });
+}
+function desenhar(clientes){
+  const grid=document.getElementById('grid');
+  // ordena por ID
+  const ord=clientes.slice().sort((a,b)=>String(a.id).localeCompare(String(b.id),'pt',{numeric:true}));
+  grid.innerHTML = ord.map(cardCliente).join('') || '<div class="vazio-cli">Nenhum cliente encontrado.</div>';
+}
+
+(async function(){
+  try{
+    const d=await jsonp(API_URL+'?tipo=equipe&chave='+encodeURIComponent(chaveAtual()));
+    if(d.erro) throw new Error(d.erro);
+    render(d.clientes||[]);
+  }catch(e){
+    document.getElementById('app').innerHTML=
+      `<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||String(e))}</p>
+       <p>Confira se a <code>chave</code> da equipe está correta no fim do endereço e se o Web App foi republicado.</p></div>`;
+  }
+})();
+</script>
+</body>
+</html>

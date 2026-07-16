@@ -180,6 +180,17 @@ table.func tbody tr:last-child td{border-bottom:none}
 .comp-hero .comp-title{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
 .comp-hero .comp-note{font-size:12.5px;color:var(--muted);margin-top:6px;max-width:42ch}
 
+.obr-bloco{margin-bottom:6px}
+.obr-bloco:not(:first-child){border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.obr-mestit{font-size:12px;font-weight:800;text-transform:capitalize;color:var(--brand-teal);letter-spacing:.02em;margin-bottom:8px}
+.obr-item{display:flex;align-items:center;gap:12px;padding:8px 0}
+.obr-item+.obr-item{border-top:1px solid var(--surface-warm)}
+.obr-dia{flex-shrink:0;width:46px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.obr-info{flex:1;min-width:0}
+.obr-nome{font-size:13px;font-weight:600}
+.obr-obs{font-size:11px;color:var(--muted);margin-top:1px}
+.obr-tag{flex-shrink:0;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--andamento,#A7715D);background:var(--surface-warm);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+.obr-tag.cli{color:var(--brand-teal)}
 .folha-mes{padding:18px 20px}
 .folha-mes-resumo{display:flex;flex-wrap:wrap;gap:20px;margin-bottom:16px}
 .folha-mes-resumo .bloco{flex:1;min-width:160px}
@@ -282,6 +293,19 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 .b4u-ok .chk svg{width:30px;height:30px}
 .b4u-ok h3{font-size:18px;font-weight:800;margin-bottom:6px}
 .b4u-ok p{font-size:13.5px;color:#3F5854;line-height:1.55;max-width:40ch;margin:0 auto 20px}
+/* Skeleton (carregando) — barras cinza com brilho passando */
+.b4u-skel{display:block;border-radius:8px;background:#Eadfce;
+  background-image:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.65) 50%,rgba(255,255,255,0) 100%);
+  background-size:180px 100%;background-repeat:no-repeat;animation:b4ushine 1.15s ease-in-out infinite}
+@keyframes b4ushine{0%{background-position:-120px 0}100%{background-position:calc(100% + 120px) 0}}
+@media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
+/* Puxar para atualizar (mobile) */
+.b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
+  height:0;overflow:hidden;color:#0F8C85;z-index:1500;pointer-events:none;
+  font-family:'Montserrat',system-ui,sans-serif;font-size:12px;font-weight:700;gap:8px}
+.b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:#0F8C85;border-radius:50%}
+.b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
+@keyframes b4uspin{to{transform:rotate(360deg)}}
 </style>
 <script>
 (function(){
@@ -308,6 +332,14 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
     rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
   };
   var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // Tipo do DOCUMENTO anexado -> define para qual PASTA (programa) o arquivo vai.
+  // As chaves batem com o backend (COLUNA_POR_TIPO_DOC); a pasta vem do Site Links.
+  var DOCTIPOS = [
+    ['principal','Documentos recebidos (geral)'],
+    ['extratos','Extratos bancários'],
+    ['notas','Notas fiscais e comprovantes'],
+    ['outros','Outros']
+  ];
   // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
   var TIPOS_POR_AREA = {
     fiscal:       ['livre','solicitar_nf','duvida'],
@@ -404,6 +436,14 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
         '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
+        '<div class="b4u-fld"><label for="b4u-file">Anexo <span style="font-weight:500;color:#8A7D70">(opcional · até 10 MB)</span></label>' +
+          '<input type="file" id="b4u-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.xls,.xlsx,.csv,.txt,.xml,.ofx,.zip"></div>' +
+        '<div class="b4u-fld" id="b4u-tipodoc-wrap" style="display:none">' +
+          '<label for="b4u-tipodoc">Tipo do documento</label><select id="b4u-tipodoc">' +
+            DOCTIPOS.map(function(d){ return '<option value="'+d[0]+'">'+esc(d[1])+'</option>'; }).join('') +
+          '</select>' +
+          '<div class="b4u-sub" style="padding:6px 0 0">Enviamos seu arquivo direto para a pasta certa do seu programa.</div>' +
+        '</div>' +
         '<div class="b4u-err" id="b4u-erro"></div>' +
         '<div class="b4u-foot">' +
           '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
@@ -427,6 +467,12 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
     ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
     ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
+    // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
+    var fileEl = ov.querySelector('#b4u-file');
+    var tdWrap = ov.querySelector('#b4u-tipodoc-wrap');
+    fileEl.addEventListener('change', function(){
+      tdWrap.style.display = (fileEl.files && fileEl.files.length) ? 'block' : 'none';
+    });
     ov.querySelector('#b4u-assunto').focus();
   }
 
@@ -441,16 +487,37 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
     var assunto = ov.querySelector('#b4u-assunto').value.trim();
     var msg = ov.querySelector('#b4u-msg').value.trim();
     if(!msg){ erroEl.textContent = 'Escreva a mensagem do chamado.'; return; }
+    var fileEl = ov.querySelector('#b4u-file');
+    var file = fileEl && fileEl.files && fileEl.files[0];
+    if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
     btn.disabled = true; btn.textContent = 'Enviando…';
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    if(file){
+      // COM arquivo -> POST (JSONP/GET não comporta base64)
+      var reader = new FileReader();
+      reader.onload = function(){
+        var base64 = String(reader.result||'').split(',')[1] || '';
+        var tdEl = ov.querySelector('#b4u-tipodoc');
+        var tipoDoc = (tdEl && tdEl.value) ? tdEl.value : 'principal';
+        var body = JSON.stringify({ id:cc.id, codigo:cc.codigo, acao:'ticket_anexo',
+          area:area, tipo:tipo, assunto:assunto, mensagem:msg, tipo_documento:tipoDoc,
+          arquivo_nome:file.name, arquivo_tipo:file.type, arquivo_base64:base64 });
+        fetch(api(), { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if(d && d.erro) throw new Error(d.erro); sucesso(); })
+          .catch(falhou);
+      };
+      reader.onerror = function(){ falhou(new Error('Não consegui ler o arquivo.')); };
+      reader.readAsDataURL(file);
+      return;
+    }
+    // SEM arquivo -> JSONP como sempre
     var qs = new URLSearchParams({ id:cc.id, codigo:cc.codigo, acao:'ticket',
       area:area, tipo:tipo, assunto:assunto, mensagem:msg });
     jsonp(api()+'?'+qs.toString()).then(function(d){
       if(d && d.erro) throw new Error(d.erro);
       sucesso();
-    }).catch(function(e){
-      btn.disabled=false; btn.textContent='Enviar chamado';
-      erroEl.textContent = e.message || String(e);
-    });
+    }).catch(falhou);
   }
 
   function sucesso(){
@@ -462,22 +529,69 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
           '<p>Recebemos sua solicitação e retornamos em até 48h úteis. Em breve o acompanhamento também chegará por e-mail.</p>' +
           '<div class="b4u-foot" style="position:static;padding:0">' +
             '<button type="button" class="b4u-btn cancel" id="b4u-fecha">Fechar</button>' +
-            '<a class="b4u-btn primary" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
+            '<a class="b4u-btn primary" id="b4u-ir-tickets" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
           '</div>' +
         '</div>' +
       '</div>';
     ov.querySelector('#b4u-fecha').addEventListener('click', fecharModal);
+    // Se já estou em meus chamados, trocar só o hash não recarrega — força o reload
+    // para o novo chamado aparecer. Em outra página, navega normalmente.
+    ov.querySelector('#b4u-ir-tickets').addEventListener('click', function(e){
+      if (/meustickets\.html/i.test(location.pathname)){
+        e.preventDefault();
+        if (C.id) location.hash = C.id + (C.codigo ? '-'+C.codigo : '');
+        location.reload();
+      }
+    });
   }
 
   bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
   bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
 
-  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets };
+  // ---- Puxar para atualizar (mobile) --------------------------------------
+  // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
+  // depois do limiar. Não atrapalha a rolagem normal.
+  (function(){
+    var ind=document.createElement('div'); ind.className='b4u-ptr';
+    ind.innerHTML='<span class="ring"></span><span class="txt">Puxe para atualizar</span>';
+    document.body.appendChild(ind);
+    var y0=null, dist=0, LIM=70, ativo=false;
+    function topo(){ return (window.scrollY||document.documentElement.scrollTop||0)<=0; }
+    window.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1 || !topo() || (ov&&ov.classList.contains('on'))){ y0=null; return; }
+      y0=e.touches[0].clientY; ativo=true;
+    },{passive:true});
+    window.addEventListener('touchmove',function(e){
+      if(!ativo||y0===null) return;
+      dist=e.touches[0].clientY - y0;
+      if(dist<=0){ ind.style.height='0'; return; }
+      if(!topo()){ ativo=false; ind.style.height='0'; return; }
+      var h=Math.min(dist*0.5, LIM+20); ind.style.height=h+'px';
+      ind.querySelector('.txt').textContent = dist>LIM?'Solte para atualizar':'Puxe para atualizar';
+    },{passive:true});
+    window.addEventListener('touchend',function(){
+      if(!ativo){ return; } ativo=false;
+      if(dist>LIM){ ind.classList.add('spin'); ind.style.height=(LIM)+'px'; ind.querySelector('.txt').textContent='Atualizando…'; setTimeout(function(){ location.reload(); },150); }
+      else { ind.style.height='0'; }
+      y0=null; dist=0;
+    });
+  })();
+
+  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
+    skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
+      var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
+      return g.join(''); } };
 })();
 </script>
 <!-- ═══════════ fim do bloco compartilhado back4you ═══════════ -->
 <!--B4U:END-->
+
+
+
+
+
 
 
 
@@ -506,6 +620,7 @@ const CAIXINHAS = [
 ];
 
 function normTxt(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function getIdCodigo(){
   const qs = new URLSearchParams(location.search);
@@ -601,7 +716,8 @@ function render(M, modelos){
   app.innerHTML = '';
 
   const janela = janelaCompetencias();
-  const compInicial = janela.includes(mesAtualISO()) ? mesAtualISO() : janela[janela.length-1];
+  let compInicial = janela.includes(mesAtualISO()) ? mesAtualISO() : janela[janela.length-1];
+  try{ const salvo=localStorage.getItem('b4u_dp_comp_'+M.id); if(salvo && janela.includes(salvo)) compInicial=salvo; }catch(e){}  // lembrar onde parou
 
   app.appendChild(el(`
     <header><div class="bar">
@@ -645,6 +761,10 @@ function render(M, modelos){
     <div class="sec-head"><div><h2>Folha e desligamentos do mês</h2><p>Muda com a competência selecionada no topo.</p></div></div>
     <div class="card folha-mes" id="folha-mes"></div>
     <div id="desligamentos-mes" style="margin-top:12px"></div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Obrigações e prazos</h2><p>Calendário padrão do departamento pessoal (datas de referência) — a equipe ajusta conforme feriados e mudanças.</p></div></div>
+    <div id="obrigacoes-dp"></div>`);
 
   appendAll(wrap, `
     <div class="sec-head"><div><h2>Informe o que aconteceu na competência selecionada</h2><p>Salva sozinho, 3 segundos depois de você parar de digitar.</p></div></div>
@@ -694,9 +814,50 @@ function render(M, modelos){
   desenharDocumentos(M.documentos || []);
   desenharModelos(modelos);
   desenharSolicitacoes();
+  desenharObrigacoesDP(M);
 
   document.getElementById('busca').addEventListener('input', e => filtrar(e.target.value));
-  document.getElementById('comp').addEventListener('change', e => desenharMes(DADOS_ATUAIS, e.target.value));
+  document.getElementById('comp').addEventListener('change', e => { try{localStorage.setItem('b4u_dp_comp_'+M.id,e.target.value);}catch(err){} desenharMes(DADOS_ATUAIS, e.target.value); });
+}
+
+/* Calendário padrão de obrigações do DP (2026-2027). Mostra as próximas (a partir
+   do mês atual), agrupadas por mês. Se o backend trouxer M.obrigacoes (aba própria
+   que o colaborador edita), elas entram junto. */
+function gerarObrigacoesDP(anos){
+  const out=[];
+  const mensais=[
+    {dia:5,  nome:'Pagamento de salários', obs:'até o 5º dia útil do mês'},
+    {dia:15, nome:'eSocial — fechamento da folha', obs:'eventos periódicos'},
+    {dia:20, nome:'FGTS (FGTS Digital)', obs:'competência anterior'},
+    {dia:20, nome:'INSS / DARF da folha (DCTFWeb)', obs:'contribuições previdenciárias'}
+  ];
+  anos.forEach(a=>{ for(let m=1;m<=12;m++){ mensais.forEach(o=>{
+    out.push({data:a+'-'+String(m).padStart(2,'0')+'-'+String(o.dia).padStart(2,'0'), nome:o.nome, obs:o.obs, tipo:'mensal'});
+  }); }});
+  anos.forEach(a=>{
+    out.push({data:a+'-11-30', nome:'13º salário — 1ª parcela', obs:'até 30/11', tipo:'anual'});
+    out.push({data:a+'-12-20', nome:'13º salário — 2ª parcela', obs:'até 20/12', tipo:'anual'});
+    out.push({data:a+'-02-28', nome:'DIRF / informes de rendimentos', obs:'confira o prazo vigente', tipo:'anual'});
+  });
+  return out;
+}
+function desenharObrigacoesDP(M){
+  const box=document.getElementById('obrigacoes-dp'); if(!box) return;
+  const hj=new Date(); const ini=hj.getFullYear()+'-'+String(hj.getMonth()+1).padStart(2,'0');
+  let lista=gerarObrigacoesDP([hj.getFullYear(), hj.getFullYear()+1]);
+  (M.obrigacoes||[]).forEach(o=>{ if(o && o.data && o.nome) lista.push({data:String(o.data).slice(0,10), nome:o.nome, obs:o.obs||'', tipo:'cliente'}); });
+  lista = lista.filter(o=> o.data.slice(0,7) >= ini).sort((a,b)=>a.data.localeCompare(b.data));
+  const grupos={}; lista.forEach(o=>{ const mk=o.data.slice(0,7); (grupos[mk]=grupos[mk]||[]).push(o); });
+  const meses=Object.keys(grupos).sort().slice(0,14);
+  box.innerHTML = `<div class="card" style="padding:14px 18px">${meses.map(mk=>`
+    <div class="obr-bloco">
+      <div class="obr-mestit">${mesLongo(mk)}</div>
+      ${grupos[mk].map(o=>`<div class="obr-item ${o.tipo==='anual'?'anual':o.tipo==='cliente'?'cliente':''}">
+        <div class="obr-dia">${o.data.slice(8,10)}/${o.data.slice(5,7)}</div>
+        <div class="obr-info"><div class="obr-nome">${esc(o.nome)}</div>${o.obs?`<div class="obr-obs">${esc(o.obs)}</div>`:''}</div>
+        ${o.tipo==='anual'?'<span class="obr-tag">anual</span>':o.tipo==='cliente'?'<span class="obr-tag cli">deste cliente</span>':''}
+      </div>`).join('')}
+    </div>`).join('')}</div>`;
 }
 
 /** Tudo que muda com a competência selecionada: folha do mês, desligamentos

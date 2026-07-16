@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Painel fiscal — back4you</title>
+<title>Agenda de pagamentos — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
@@ -198,13 +198,29 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .charts3 .cbox{height:160px}
 .pie-legend{margin-top:10px}
 .prov-vazio{font-size:12.5px;color:var(--muted);padding:8px 0 2px}
-.ir-guias{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto-2,#3FA680));color:#fff;text-decoration:none;border-radius:14px;padding:16px 20px;margin:22px 0 6px}
-.ir-guias:hover{filter:brightness(1.05)}
-.ir-guias .ir-ico{font-size:22px;flex-shrink:0}
-.ir-guias .ir-txt{flex:1;display:flex;flex-direction:column;gap:2px}
-.ir-guias .ir-txt b{font-size:15px}
-.ir-guias .ir-txt span{font-size:12px;color:rgba(255,255,255,.85)}
-.ir-guias .ir-seta{font-size:20px;font-weight:700}
+/* lista de guias */
+.guias-bloco{margin-bottom:22px}
+.guias-mestit{font-size:13px;font-weight:800;text-transform:capitalize;color:var(--ink);margin:0 2px 10px;letter-spacing:-.01em}
+.guia-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin-bottom:9px}
+.guia-card.paga{opacity:.66}
+.guia-card.vencida{border-color:#E0B4AC;background:#FCF2F0}
+.guia-venc{flex-shrink:0;width:52px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.guia-venc b{font-size:15px;font-variant-numeric:tabular-nums}
+.gv-tag{font-size:9px;font-weight:800;text-transform:uppercase;color:#8B2E22}
+.guia-info{flex:1;min-width:0}
+.guia-desc{font-size:13.5px;font-weight:600}
+.guia-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.guia-acoes{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0}
+.guia-status{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:999px}
+.guia-status.apagar{background:#FFF1DC;color:#9A6B10}
+.guia-status.agendada{background:#E5F0FF;color:#25518F}
+.guia-status.paga{background:#E7F4EC;color:#2E7D4F}
+.guia-btns{display:flex;gap:6px}
+.guia-btns button{font-family:var(--sans);font-size:11.5px;font-weight:700;border:1px solid var(--line-2);background:var(--surface-warm);color:var(--ink-2);border-radius:8px;padding:6px 10px;cursor:pointer}
+.guia-btns button:hover{border-color:var(--brand-teal)}
+.guia-btns button.on{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
+@media(max-width:600px){.guia-card{flex-wrap:wrap;gap:10px}.guia-venc{width:44px}
+  .guia-acoes{flex-direction:row;align-items:center;width:100%;justify-content:space-between;flex-wrap:wrap}}
 .pend-banner{display:flex;align-items:center;gap:13px;background:#FCEFE0;border:1px solid #F0D6B4;border-radius:12px;padding:13px 16px;margin:18px 0 4px}
 .pend-b-ico{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#E8892E;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
 .pend-b-txt{flex:1;display:flex;flex-direction:column;gap:2px;font-size:13.5px}
@@ -987,7 +1003,7 @@ async function carregar(){
   if(API_URL){
     if(!id) throw new Error('Informe o ID do cliente no final do endereço.');
     if(!codigo) throw new Error('Informe também o código de acesso, no formato #482913-CODIGO.');
-    const url=API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&tipo=fiscal';
+    const url=API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&tipo=guias';
     const d=await jsonp(url); if(d.erro) throw new Error(d.erro); return d;
   }
   MODO_DEMO=true; return JSON.parse(JSON.stringify(DEMO)); // cópia — o "salvar" mexe nela localmente
@@ -1030,7 +1046,7 @@ function preparar(raw){
     return {v:Math.round(total*100)/100, est:estimado};
   }
   return {cfg, reg, tribs, centros, empresa, regras, cal, regraDe, porComp, nfs, links,
-          rateioAPI: raw.rateio||[],
+          rateioAPI: raw.rateio||[], agenda: raw.agenda||{},
           impostos, retido, valorDe, media, id:raw.id||cfg.cliente_id, atualizado_em:raw.atualizado_em};
 }
 
@@ -1119,86 +1135,126 @@ function vencimentosDoMes(M,ano,mes){ const marc=new Map();
 let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='', NF_PEND=false, NF_ANO=false;
 function render(M){
   M_GLOBAL=M;
-  // Só competências até a atual — não faz sentido escolher meses futuros (parcial do mês corrente aparece).
-  const compAtual=compDe(hoje);
-  const compsAll=M.empresa.map(r=>r.competencia);
-  const compsPassadas=compsAll.filter(c=>c<=compAtual);
-  const comps=compsPassadas.length?compsPassadas:compsAll;
-  const mesAnt=compDe(new Date(hoje.getFullYear(),hoje.getMonth()-1,1));
-  SEL=comps.includes(mesAnt)?mesAnt:comps[comps.length-1];
-  try{ const salvo=localStorage.getItem('b4u_fisc_comp_'+M.id); if(salvo && comps.includes(salvo)) SEL=salvo; }catch(e){}  // lembrar onde parou
   const app=document.getElementById('app'); app.innerHTML='';
-
   app.appendChild(el(`<header><div class="bar">
     <div>
       <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
-      <div class="brand-sub">${esc(M.cfg.razao_social||'Painel fiscal')} · ${M.cfg.cnpj?'CNPJ '+esc(M.cfg.cnpj):'cliente '+esc(M.id)}<span class="reg">${esc(M.cfg.regime||'')}</span></div>
+      <div class="brand-sub">${esc(M.cfg.razao_social||'Agenda de pagamentos')} · ${M.cfg.cnpj?'CNPJ '+esc(M.cfg.cnpj):'cliente '+esc(M.id)}<span class="reg">${esc(M.cfg.regime||'')}</span></div>
     </div>
     <div class="spacer"></div>
     ${MODO_DEMO?'<span class="demo-flag">modo demonstração</span>':''}
-    <div class="picker"><label class="lbl" for="comp">Competência</label>
-      <select id="comp">${comps.slice().reverse().map(c=>`<option value="${c}">${mesLongo(c)}</option>`).join('')}</select></div>
+    <span class="badge-topo">Agenda de pagamentos</span>
   </div></header>`));
-
   const wrap=el('<div class="wrap"></div>'); app.appendChild(wrap);
-  wrap.appendChild(el('<div id="pend-topo"></div>'));
-  wrap.appendChild(el('<div id="hero"></div>'));
-  wrap.appendChild(el('<div id="guias-mes"></div>'));
-  wrap.appendChild(el('<div id="outras"></div>'));
-  wrap.appendChild(el('<div id="alerta"></div>'));
-  wrap.appendChild(el('<div id="slim"></div>'));
-  wrap.appendChild(el('<div id="div-editor"></div>'));
-  wrap.appendChild(el('<div id="prov"></div>'));
 
-  appendAll(wrap,`<a class="ir-guias" href="guias.html#${M.id}-${getIdCodigo().codigo}">
-      <div class="ir-ico">📅</div>
-      <div class="ir-txt"><b>Agenda de pagamentos</b><span>Calendário de vencimentos, provisionamento e controle das guias (agendada/paga)</span></div>
-      <div class="ir-seta">→</div></a>`);
-
-  appendAll(wrap,`<div class="sec-head"><div><h2>Histórico e composição</h2></div></div>
-    <div class="charts">
-      <div class="card chart"><h3>Faturamento e imposto</h3><div class="sub">Barras: faturamento. Linha: total de impostos a pagar.</div><div class="cbox"><canvas id="c1"></canvas></div></div>
-      <div class="card chart"><h3>Impostos por tributo</h3><div class="legend" id="lg2"></div><div class="cbox"><canvas id="c2"></canvas></div></div>
-      <div class="card chart"><h3>Composição do mês</h3><div class="sub" id="c3sub"></div><div class="cbox" style="height:170px"><canvas id="c3"></canvas></div><div class="pie-legend" id="c3-lg"></div></div>
+  appendAll(wrap,`<div class="sec-head"><div><h2>Provisionamento dos impostos</h2>
+    <p>Quanto separar para os próximos vencimentos — por tributo, pelo mês em que a guia vence.</p></div></div>
+    <div class="charts3" id="estim3">
+      ${[0,1,2].map(i=>`<div class="card chart"><h3 id="est-t-${i}"></h3><div class="sub" id="est-s-${i}"></div><div class="cbox"><canvas id="est-${i}"></canvas></div><div class="pie-legend" id="est-lg-${i}"></div></div>`).join('')}
     </div>`);
 
-  appendAll(wrap,`<div class="sec-head" id="rateio"><div><h2>Rateio por centro de custo</h2><p id="rat-sub"></p></div></div>
-    <div class="rateio-grid">
-      <div class="card" style="padding:18px 20px"><div class="table-scroll"><table class="rat" id="rat">
-        <thead><tr><th>Centro</th><th class="r">NFs</th><th class="r">Faturamento</th><th class="r">Impostos</th>${M.reg.retencao?'<th class="r">Retido</th>':''}<th class="r">Líquido</th></tr></thead>
-        <tbody></tbody></table></div></div>
-      <div class="card chart"><h3>Participação por centro</h3><div class="sub">Anel: participação no faturamento.</div>
-        <div class="cbox"><canvas id="c5"></canvas></div><div class="pie-legend" id="c5-lg"></div></div>
-    </div>`);
+  appendAll(wrap,`<div class="sec-head"><div><h2>Calendário de vencimentos</h2>
+    <p>Use as setas para navegar pelos meses.</p></div></div>
+    <div class="card cal-card">
+      <div class="cal-nav"><button class="cal-arrow" id="cal-prev-btn" aria-label="Mês anterior">‹</button>
+      <h3 id="cal-titulo">—</h3><button class="cal-arrow" id="cal-next-btn" aria-label="Próximo mês">›</button></div>
+      <div class="cal-strip"><div class="cal-mini lateral" id="cal-prev"></div><div class="cal-mini" id="cal-atual"></div><div class="cal-mini lateral" id="cal-next"></div></div>
+      <div class="cal-total" id="cal-total"></div><div class="cal-agenda" id="cal-agenda"></div></div>`);
 
-  appendAll(wrap,`<div class="sec-head" id="notas"><div><h2>Notas do mês</h2>
-    <p>Clique em <b>Editar centro</b> para reatribuir a nota — dividir igual, por % ou por valor. Salvar grava na planilha do mês.</p></div>
-    <div class="tabs"><button class="tab on" id="tab-prest" data-tab="prestadas">Prestadas</button><button class="tab" id="tab-tom" data-tab="tomadas">Tomadas</button></div></div>
-    <div class="card" style="padding:18px 20px">
-      <div class="nf-toolbar"><span class="lbl" id="nf-resumo"></span>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="btn-pend" id="nf-ano" title="Buscar em todas as competências do ano">No ano todo</button>
-          <button class="btn-pend" id="nf-pend">Só sem centro</button>
-          <input class="nf-search" id="nf-search" placeholder="buscar nº, nome, descrição…"></div></div>
-      <div class="table-scroll"><table class="nf" id="nf-tabela"><thead></thead><tbody></tbody></table></div>
-    </div>`);
+  appendAll(wrap,`<div class="sec-head"><div><h2>Guias e obrigações</h2><p>Marque como agendada ou paga conforme for resolvendo — fica registrado quem marcou.</p></div>
+    <div class="tabs"><button class="tab on" id="gf-pend" data-f="pendentes">Em aberto</button><button class="tab" id="gf-todas" data-f="todas">Todas</button></div></div>
+    <div id="guias-lista"></div>`);
 
   wrap.appendChild(el(`<footer><span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span><span>back4you · inteligência tributária</span></footer>`));
 
-  CHARTS=desenharGraficos(M);
+  // ---- calendário (carrossel) ----
+  const anosCal=(M.cal||[]).map(c=>+String(c.vencimento||'').slice(0,4)).filter(y=>y>1900);
+  const anoMin=Math.min(hoje.getFullYear()-1, ...(anosCal.length?anosCal:[hoje.getFullYear()]));
+  const anoMax=Math.max(hoje.getFullYear()+1, ...(anosCal.length?anosCal:[hoje.getFullYear()]));
+  let calCentro={ano:hoje.getFullYear(),mes:hoje.getMonth()};
+  function dentro(ano){ return ano>=anoMin && ano<=anoMax; }
+  function renderCarrossel(){
+    let {ano,mes}=calCentro;
+    const prevD=new Date(ano,mes-1,1), nextD=new Date(ano,mes+1,1);
+    const marc=vencimentosDoMes(M,ano,mes); const itens=Array.from(marc.values()).flat();
+    const total=itens.reduce((s,x)=>s+(x.valor||0),0);
+    document.getElementById('cal-titulo').textContent=mesLongo(compDe(new Date(ano,mes,1)));
+    document.getElementById('cal-total').textContent=!itens.length?'sem guias neste mês':(total>0?brl(total):'valores a apurar');
+    document.getElementById('cal-prev').innerHTML=dentro(prevD.getFullYear())?miniGradeHTML(prevD.getFullYear(),prevD.getMonth(),vencimentosDoMes(M,prevD.getFullYear(),prevD.getMonth()),false):'';
+    document.getElementById('cal-atual').innerHTML=miniGradeHTML(ano,mes,marc,true);
+    document.getElementById('cal-next').innerHTML=dentro(nextD.getFullYear())?miniGradeHTML(nextD.getFullYear(),nextD.getMonth(),vencimentosDoMes(M,nextD.getFullYear(),nextD.getMonth()),false):'';
+    const agenda=Array.from(marc.entries()).sort((a,b)=>a[0]-b[0]).map(([dia,items])=>items.map(it=>{
+      const vh=it.valor===null?'<span style="color:var(--muted)">a apurar</span>':`<b class="num${it.est?' estimativa':''}">${brl(it.valor)}${it.est?' (estimativa)':''}</b>`;
+      const refTxt=it.ref?` <span style="color:var(--muted);font-weight:500">de ${compRefTexto(it.ref,ano)}</span>`:'';
+      return '<div class="row"><span>'+String(dia).padStart(2,'0')+' · '+esc(it.descricao)+refTxt+'</span>'+vh+'</div>'; }).join('')).join('');
+    document.getElementById('cal-agenda').innerHTML=agenda||'<div class="empty">Nenhuma guia neste mês.</div>';
+    document.getElementById('cal-prev-btn').disabled = !dentro(new Date(ano,mes-1,1).getFullYear());
+    document.getElementById('cal-next-btn').disabled = !dentro(new Date(ano,mes+1,1).getFullYear());
+  }
+  document.getElementById('cal-prev-btn').addEventListener('click',()=>{ const d=new Date(calCentro.ano,calCentro.mes-1,1); if(dentro(d.getFullYear())){calCentro={ano:d.getFullYear(),mes:d.getMonth()};renderCarrossel();} });
+  document.getElementById('cal-next-btn').addEventListener('click',()=>{ const d=new Date(calCentro.ano,calCentro.mes+1,1); if(dentro(d.getFullYear())){calCentro={ano:d.getFullYear(),mes:d.getMonth()};renderCarrossel();} });
 
-  const pick=document.getElementById('comp'); pick.value=SEL;
-  pick.addEventListener('change',e=>{ SEL=e.target.value; try{localStorage.setItem('b4u_fisc_comp_'+M.id,SEL);}catch(err){} pintarMes(M,SEL); });
-  document.getElementById('tab-prest').addEventListener('click',()=>{NF_TAB='prestadas';toggleTabs();desenharNotas(M,SEL);});
-  document.getElementById('tab-tom').addEventListener('click',()=>{NF_TAB='tomadas';toggleTabs();desenharNotas(M,SEL);});
-  document.getElementById('nf-search').addEventListener('input',e=>{NF_BUSCA=e.target.value.trim().toLowerCase();desenharNotas(M,SEL);});
-  document.getElementById('nf-pend').addEventListener('click',()=>{NF_PEND=!NF_PEND;desenharNotas(M,SEL);});
-  document.getElementById('nf-ano').addEventListener('click',()=>{NF_ANO=!NF_ANO;desenharNotas(M,SEL);});
+  document.getElementById('gf-pend').addEventListener('click',()=>{ GUIAS_FILTRO='pendentes'; document.getElementById('gf-pend').classList.add('on'); document.getElementById('gf-todas').classList.remove('on'); renderGuias(M); });
+  document.getElementById('gf-todas').addEventListener('click',()=>{ GUIAS_FILTRO='todas'; document.getElementById('gf-todas').classList.add('on'); document.getElementById('gf-pend').classList.remove('on'); renderGuias(M); });
 
-  pintarMes(M,SEL);
-  computarPendencias(M);                                        // banner de pendências + resumo p/ a home
-  if(/[?&]pend=1/.test(location.href)) irParaPendencias();      // veio da home clicando no alerta
+  desenharEstimativas(M);
+  renderCarrossel();
+  renderGuias(M);
 }
+
+/* ---- Lista de guias com controle de pago/agendado ---- */
+let GUIAS_FILTRO='pendentes';
+function chaveGuia(c){ return (c.id_regra||'')+'|'+(c.competencia_ref||'')+'|'+(c.vencimento||''); }
+function renderGuias(M){
+  const box=document.getElementById('guias-lista'); if(!box) return;
+  const anoAtual=hoje.getFullYear();
+  const hojeISO=compDe(hoje);
+  let lista=(M.cal||[]).filter(c=>c.vencimento && +String(c.vencimento).slice(0,4)>=anoAtual).map(c=>{
+    const vd=M.valorDe?M.valorDe(c):{v:0,est:false}; const st=(M.agenda||{})[chaveGuia(c)]||{status:'',por:''};
+    return {venc:c.vencimento, desc:c.descricao, ref:c.competencia_ref, valor:vd.v, est:vd.est, chave:chaveGuia(c), status:st.status||'', por:st.por||''};
+  }).sort((a,b)=>String(a.venc).localeCompare(b.venc));
+  if(GUIAS_FILTRO==='pendentes') lista=lista.filter(g=>(g.status||'').toLowerCase()!=='paga');
+  const grupos={}; lista.forEach(g=>{ const mk=String(g.venc).slice(0,7); (grupos[mk]=grupos[mk]||[]).push(g); });
+  const meses=Object.keys(grupos).sort();
+  box.innerHTML = meses.length ? meses.map(mk=>`
+    <div class="guias-bloco">
+      <div class="guias-mestit">${mesLongo(mk)}</div>
+      ${grupos[mk].map(g=>cardGuia(g)).join('')}
+    </div>`).join('') : `<div class="card"><div class="vazio" style="padding:20px;text-align:center;color:var(--muted)">Nenhuma guia ${GUIAS_FILTRO==='pendentes'?'em aberto':''} por aqui.</div></div>`;
+  box.querySelectorAll('[data-marca]').forEach(b=> b.addEventListener('click',()=>marcarGuiaUI(M,b.dataset.chave,b.dataset.marca)));
+}
+function cardGuia(g){
+  const st=(g.status||'').toLowerCase();
+  const cls= st==='paga'?'paga': st==='agendada'?'agendada':'apagar';
+  const rot= st==='paga'?'Paga': st==='agendada'?'Agendada':'A pagar';
+  const dia=String(g.venc).slice(8,10)+'/'+String(g.venc).slice(5,7);
+  const vencida = st!=='paga' && String(g.venc)<compDeDia(hoje);
+  return `<div class="guia-card ${cls}${vencida?' vencida':''}">
+    <div class="guia-venc"><b>${dia}</b>${vencida?'<span class="gv-tag">vencida</span>':''}</div>
+    <div class="guia-info"><div class="guia-desc">${esc(g.desc)}</div>
+      <div class="guia-meta">${g.ref?('comp. '+esc(g.ref)+' · '):''}${g.valor>0?brl(g.valor)+(g.est?' (estim.)':''):'a apurar'}${g.por?(' · por '+esc(g.por)):''}</div></div>
+    <div class="guia-acoes">
+      <span class="guia-status ${cls}">${rot}</span>
+      <div class="guia-btns">
+        <button data-marca="Agendada" data-chave="${g.chave}" class="${st==='agendada'?'on':''}">Agendar</button>
+        <button data-marca="Paga" data-chave="${g.chave}" class="${st==='paga'?'on':''}">Paga</button>
+      </div>
+    </div>
+  </div>`;
+}
+function compDeDia(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+async function marcarGuiaUI(M,chave,marca){
+  const atual=(M.agenda||{})[chave]; const novo=(atual&&atual.status===marca)?'':marca;
+  const {id,codigo}=getIdCodigo();
+  try{
+    const d=await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&acao=marcar_guia&chave='+encodeURIComponent(chave)+'&status='+encodeURIComponent(novo));
+    if(d&&d.erro) throw new Error(d.erro);
+    M.agenda=M.agenda||{};
+    if(novo){ M.agenda[chave]={status:novo,por:(d&&d.por)||'',em:(d&&d.em)||''}; } else { delete M.agenda[chave]; }
+    renderGuias(M);
+  }catch(e){ alert('Não consegui marcar agora: '+(e.message||e)); }
+}
+
 
 /* Junta as pendências do fiscal (notas sem centro no ano; meses com lucro apurado
    sem distribuição informada), mostra um banner no topo e grava um resumo em

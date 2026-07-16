@@ -39,6 +39,16 @@ body{
 .ac-btn.ac-primary:hover{background:var(--brand-dark)}
 .quem{margin-top:14px;font-size:12.5px;color:var(--ink-2)}
 .quem-trocar{background:none;border:0;color:var(--brand-teal);font-weight:700;cursor:pointer;font-size:12.5px;text-decoration:underline;padding:0 2px}
+.confiar-row{margin-top:18px;font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
+.conf-ok{color:var(--brand-eucalipto2);font-weight:600}
+.alertas-home{width:100%;max-width:680px;display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.alerta-card{display:flex;align-items:center;gap:12px;background:#FCEFE0;border:1px solid #F0D6B4;border-radius:12px;
+  padding:12px 15px;text-decoration:none;color:var(--ink);transition:border-color .12s,transform .12s}
+.alerta-card:hover{border-color:#E0A96A;transform:translateY(-1px)}
+.alerta-ico{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#E8892E;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+.alerta-txt{flex:1;font-size:13px;display:flex;flex-direction:column;gap:2px}
+.alerta-txt span{font-size:11.5px;color:var(--muted)}
+.alerta-seta{color:#B4772A;font-weight:700}
 .id-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;width:100%;max-width:380px}
 .id-form input{flex:1;min-width:190px;font-family:var(--sans);font-size:14px;padding:11px 13px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);color:var(--ink)}
 .id-form input:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
@@ -96,6 +106,8 @@ body{
 
 .grade{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:18px;max-width:680px;width:100%}
 @media(max-width:560px){.grade{grid-template-columns:1fr}}
+.opcao.opcao-destaque{grid-column:1/-1;border-color:var(--brand-teal);background:linear-gradient(135deg,rgba(15,140,133,.06),rgba(63,166,128,.04))}
+.opcao.opcao-destaque .icone{background:var(--brand-teal);color:#fff}
 
 .opcao{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
@@ -194,6 +206,19 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 .b4u-ok .chk svg{width:30px;height:30px}
 .b4u-ok h3{font-size:18px;font-weight:800;margin-bottom:6px}
 .b4u-ok p{font-size:13.5px;color:#3F5854;line-height:1.55;max-width:40ch;margin:0 auto 20px}
+/* Skeleton (carregando) — barras cinza com brilho passando */
+.b4u-skel{display:block;border-radius:8px;background:#Eadfce;
+  background-image:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.65) 50%,rgba(255,255,255,0) 100%);
+  background-size:180px 100%;background-repeat:no-repeat;animation:b4ushine 1.15s ease-in-out infinite}
+@keyframes b4ushine{0%{background-position:-120px 0}100%{background-position:calc(100% + 120px) 0}}
+@media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
+/* Puxar para atualizar (mobile) */
+.b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
+  height:0;overflow:hidden;color:#0F8C85;z-index:1500;pointer-events:none;
+  font-family:'Montserrat',system-ui,sans-serif;font-size:12px;font-weight:700;gap:8px}
+.b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:#0F8C85;border-radius:50%}
+.b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
+@keyframes b4uspin{to{transform:rotate(360deg)}}
 </style>
 <script>
 (function(){
@@ -220,6 +245,14 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
   };
   var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // Tipo do DOCUMENTO anexado -> define para qual PASTA (programa) o arquivo vai.
+  // As chaves batem com o backend (COLUNA_POR_TIPO_DOC); a pasta vem do Site Links.
+  var DOCTIPOS = [
+    ['principal','Documentos recebidos (geral)'],
+    ['extratos','Extratos bancários'],
+    ['notas','Notas fiscais e comprovantes'],
+    ['outros','Outros']
+  ];
   // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
   var TIPOS_POR_AREA = {
     fiscal:       ['livre','solicitar_nf','duvida'],
@@ -316,6 +349,14 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
         '</select></div>' +
         '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
         '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
+        '<div class="b4u-fld"><label for="b4u-file">Anexo <span style="font-weight:500;color:#8A7D70">(opcional · até 10 MB)</span></label>' +
+          '<input type="file" id="b4u-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.xls,.xlsx,.csv,.txt,.xml,.ofx,.zip"></div>' +
+        '<div class="b4u-fld" id="b4u-tipodoc-wrap" style="display:none">' +
+          '<label for="b4u-tipodoc">Tipo do documento</label><select id="b4u-tipodoc">' +
+            DOCTIPOS.map(function(d){ return '<option value="'+d[0]+'">'+esc(d[1])+'</option>'; }).join('') +
+          '</select>' +
+          '<div class="b4u-sub" style="padding:6px 0 0">Enviamos seu arquivo direto para a pasta certa do seu programa.</div>' +
+        '</div>' +
         '<div class="b4u-err" id="b4u-erro"></div>' +
         '<div class="b4u-foot">' +
           '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
@@ -339,6 +380,12 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
     ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
+    // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
+    var fileEl = ov.querySelector('#b4u-file');
+    var tdWrap = ov.querySelector('#b4u-tipodoc-wrap');
+    fileEl.addEventListener('change', function(){
+      tdWrap.style.display = (fileEl.files && fileEl.files.length) ? 'block' : 'none';
+    });
     ov.querySelector('#b4u-assunto').focus();
   }
 
@@ -353,16 +400,37 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
     var assunto = ov.querySelector('#b4u-assunto').value.trim();
     var msg = ov.querySelector('#b4u-msg').value.trim();
     if(!msg){ erroEl.textContent = 'Escreva a mensagem do chamado.'; return; }
+    var fileEl = ov.querySelector('#b4u-file');
+    var file = fileEl && fileEl.files && fileEl.files[0];
+    if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
     btn.disabled = true; btn.textContent = 'Enviando…';
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    if(file){
+      // COM arquivo -> POST (JSONP/GET não comporta base64)
+      var reader = new FileReader();
+      reader.onload = function(){
+        var base64 = String(reader.result||'').split(',')[1] || '';
+        var tdEl = ov.querySelector('#b4u-tipodoc');
+        var tipoDoc = (tdEl && tdEl.value) ? tdEl.value : 'principal';
+        var body = JSON.stringify({ id:cc.id, codigo:cc.codigo, acao:'ticket_anexo',
+          area:area, tipo:tipo, assunto:assunto, mensagem:msg, tipo_documento:tipoDoc,
+          arquivo_nome:file.name, arquivo_tipo:file.type, arquivo_base64:base64 });
+        fetch(api(), { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if(d && d.erro) throw new Error(d.erro); sucesso(); })
+          .catch(falhou);
+      };
+      reader.onerror = function(){ falhou(new Error('Não consegui ler o arquivo.')); };
+      reader.readAsDataURL(file);
+      return;
+    }
+    // SEM arquivo -> JSONP como sempre
     var qs = new URLSearchParams({ id:cc.id, codigo:cc.codigo, acao:'ticket',
       area:area, tipo:tipo, assunto:assunto, mensagem:msg });
     jsonp(api()+'?'+qs.toString()).then(function(d){
       if(d && d.erro) throw new Error(d.erro);
       sucesso();
-    }).catch(function(e){
-      btn.disabled=false; btn.textContent='Enviar chamado';
-      erroEl.textContent = e.message || String(e);
-    });
+    }).catch(falhou);
   }
 
   function sucesso(){
@@ -374,22 +442,69 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
           '<p>Recebemos sua solicitação e retornamos em até 48h úteis. Em breve o acompanhamento também chegará por e-mail.</p>' +
           '<div class="b4u-foot" style="position:static;padding:0">' +
             '<button type="button" class="b4u-btn cancel" id="b4u-fecha">Fechar</button>' +
-            '<a class="b4u-btn primary" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
+            '<a class="b4u-btn primary" id="b4u-ir-tickets" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
           '</div>' +
         '</div>' +
       '</div>';
     ov.querySelector('#b4u-fecha').addEventListener('click', fecharModal);
+    // Se já estou em meus chamados, trocar só o hash não recarrega — força o reload
+    // para o novo chamado aparecer. Em outra página, navega normalmente.
+    ov.querySelector('#b4u-ir-tickets').addEventListener('click', function(e){
+      if (/meustickets\.html/i.test(location.pathname)){
+        e.preventDefault();
+        if (C.id) location.hash = C.id + (C.codigo ? '-'+C.codigo : '');
+        location.reload();
+      }
+    });
   }
 
   bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
   bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
 
-  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets };
+  // ---- Puxar para atualizar (mobile) --------------------------------------
+  // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
+  // depois do limiar. Não atrapalha a rolagem normal.
+  (function(){
+    var ind=document.createElement('div'); ind.className='b4u-ptr';
+    ind.innerHTML='<span class="ring"></span><span class="txt">Puxe para atualizar</span>';
+    document.body.appendChild(ind);
+    var y0=null, dist=0, LIM=70, ativo=false;
+    function topo(){ return (window.scrollY||document.documentElement.scrollTop||0)<=0; }
+    window.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1 || !topo() || (ov&&ov.classList.contains('on'))){ y0=null; return; }
+      y0=e.touches[0].clientY; ativo=true;
+    },{passive:true});
+    window.addEventListener('touchmove',function(e){
+      if(!ativo||y0===null) return;
+      dist=e.touches[0].clientY - y0;
+      if(dist<=0){ ind.style.height='0'; return; }
+      if(!topo()){ ativo=false; ind.style.height='0'; return; }
+      var h=Math.min(dist*0.5, LIM+20); ind.style.height=h+'px';
+      ind.querySelector('.txt').textContent = dist>LIM?'Solte para atualizar':'Puxe para atualizar';
+    },{passive:true});
+    window.addEventListener('touchend',function(){
+      if(!ativo){ return; } ativo=false;
+      if(dist>LIM){ ind.classList.add('spin'); ind.style.height=(LIM)+'px'; ind.querySelector('.txt').textContent='Atualizando…'; setTimeout(function(){ location.reload(); },150); }
+      else { ind.style.height='0'; }
+      y0=null; dist=0;
+    });
+  })();
+
+  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
+    skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
+      var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
+      return g.join(''); } };
 })();
 </script>
 <!-- ═══════════ fim do bloco compartilhado back4you ═══════════ -->
 <!--B4U:END-->
+
+
+
+
+
 
 
 
@@ -447,10 +562,11 @@ const ICONES = {
   pessoal:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><path d="M16 4.2c1.7.4 3 2 3 3.8s-1.3 3.4-3 3.8M23 20c0-2.8-2.3-5.1-5.4-5.8"/></svg>',
   equiparacao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>',
   contabil:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h3M13 11h3M8 15h3M13 15h3"/></svg>',
+  guias:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m8.5 15 2 2 4-4"/></svg>',
 };
 
 const DEFINICOES = [
-  { chave:'fiscal',      arquivo:'fiscal.html',       titulo:'Dashboard Fiscal',        desc:'Faturamento, impostos a pagar, rateio por centro de custo e calendário de vencimentos.' },
+  { chave:'fiscal',      arquivo:'fiscal.html',       titulo:'Dashboard Fiscal',        desc:'Faturamento, impostos, rateio por centro de custo e notas fiscais.' },
   { chave:'equiparacao', arquivo:'equiparacao.html',  titulo:'Equiparação hospitalar',  desc:'Pedidos de restituição, valores atualizados e situação de cada processo.' },
   { chave:'societario',  arquivo:'societario.html',   titulo:'Societário',  desc:'Contrato social, alterações, alvarás, processos e modelos de documentos da empresa.' },
   { chave:'contabil',    arquivo:'contabil.html',     titulo:'Dashboard Contábil',      desc:'Balanço, DRE e indicadores contábeis.' },
@@ -461,6 +577,13 @@ function render(id, codigo, disponiveis, pessoa){
   const destino = pagina => `${pagina}#${id}-${codigo}`;
   const areasP = pessoa && Array.isArray(pessoa.areas) ? pessoa.areas : null;   // login por e-mail
   const visiveis = DEFINICOES.filter(d => disponiveis[d.chave] && (!areasP || areasP.indexOf(d.chave)>=0));
+  // Agenda de pagamentos: quem tem fiscal OU pessoal (junta impostos + INSS/FGTS)
+  const temGuias = (disponiveis.fiscal || disponiveis.pessoal) && (!areasP || areasP.indexOf('fiscal')>=0 || areasP.indexOf('pessoal')>=0);
+  const cardGuias = destino('guias.html') && temGuias ? `<a class="opcao opcao-destaque" href="${destino('guias.html')}">
+      <div class="icone">${ICONES.guias}</div>
+      <h2>Agenda de pagamentos</h2>
+      <p>Vencimentos, provisionamento e controle das guias — marque agendada ou paga, por você.</p>
+      <span class="seta">→</span></a>` : '';
   const quem = (pessoa && (pessoa.nome||pessoa.email)) ? `<div class="quem">Você: <b>${esc(pessoa.nome||pessoa.email||'')}</b>${/principal/i.test(pessoa.papel||'')?' · responsável principal':''}</div>` : '';
 
   document.getElementById('miolo').innerHTML = `
@@ -470,26 +593,59 @@ function render(id, codigo, disponiveis, pessoa){
       <div class="cta">Clique abaixo para verificar documentos, andamento e muito mais.</div>
       ${quem}
     </div>
+    <div class="alertas-home" id="alertas-home"></div>
     <div class="grade" id="grade"></div>
     <div class="acoes-chamado">
       <button type="button" class="ac-btn ac-primary" id="ac-abrir">Abrir um chamado</button>
       <a class="ac-btn" href="${destino('meustickets.html')}">Meus chamados</a>
       <button type="button" class="ac-btn" id="ac-contatos">E-mails e contatos</button>
-    </div>`;
+    </div>
+    <div class="confiar-row" id="confiar-row"></div>`;
 
-  document.getElementById('grade').innerHTML = visiveis.length
+  document.getElementById('grade').innerHTML = (cardGuias + (visiveis.length
     ? visiveis.map(d => `<a class="opcao" href="${destino(d.arquivo)}">
         <div class="icone">${ICONES[d.chave]}</div>
         <h2>${d.titulo}</h2>
         <p>${d.desc}</p>
         <span class="seta">→</span>
       </a>`).join('')
-    : `<p style="color:var(--muted);grid-column:1/-1;text-align:center">Nenhum painel disponível para este cliente ainda.</p>`;
+    : '')) || `<p style="color:var(--muted);grid-column:1/-1;text-align:center">Nenhum painel disponível para este cliente ainda.</p>`;
 
   const ab = document.getElementById('ac-abrir');
   if (ab) ab.addEventListener('click', () => { if (window.B4U && window.B4U.abrirChamado) window.B4U.abrirChamado({}); });
   const ct = document.getElementById('ac-contatos');
   if (ct) ct.addEventListener('click', () => abrirContatos(id, codigo));
+
+  // "confiar neste aparelho"
+  const cr = document.getElementById('confiar-row');
+  if (cr){
+    if (lerToken()){
+      cr.innerHTML = `<span class="conf-ok">✓ Este aparelho é confiável — você entra sem digitar código.</span> · <button type="button" class="linklike" id="sair-ap">Sair deste aparelho</button>`;
+      cr.querySelector('#sair-ap').addEventListener('click', async ()=>{ await sairDesteAparelho(id, codigo); render(id, codigo, disponiveis, pessoa); });
+    } else {
+      cr.innerHTML = `<button type="button" class="linklike" id="conf-ap">🔒 Confiar neste aparelho — não pedir código por 30 dias</button>`;
+      cr.querySelector('#conf-ap').addEventListener('click', async (e)=>{ e.target.textContent='Ativando…'; await confiarNesteAparelho(id, codigo); render(id, codigo, disponiveis, pessoa); });
+    }
+  }
+
+  // alertas de pendência na home (resumo que o painel fiscal grava no aparelho)
+  carregarAlertasHome(id, codigo);
+}
+
+/* ---------- Alertas de pendência na home ----------
+ * O painel fiscal grava um resumo em localStorage (b4u_pend_<id>) sempre que
+ * abre; a home lê e mostra os cartões (cada um leva ao ponto de ajuste). */
+function carregarAlertasHome(id, codigo){
+  const box = document.getElementById('alertas-home'); if(!box) return;
+  let dados=null;
+  try{ dados = JSON.parse(localStorage.getItem('b4u_pend_'+id)||'null'); }catch(e){}
+  if(!dados || !Array.isArray(dados.itens) || !dados.itens.length){ box.innerHTML=''; return; }
+  box.innerHTML = dados.itens.map(p=>{
+    const alvo = (p.area||'fiscal')+'.html#'+id+'-'+codigo+(p.pend?'?pend=1':'');
+    return `<a class="alerta-card" href="${esc(alvo)}">
+      <span class="alerta-ico">!</span>
+      <span class="alerta-txt"><b>${esc(p.titulo)}</b>${p.detalhe?`<span>${esc(p.detalhe)}</span>`:''}</span>
+      <span class="alerta-seta">→</span></a>`; }).join('');
 }
 
 const AREAS_LABEL = { fiscal:'Fiscal', contabil:'Contábil', pessoal:'Pessoal', societario:'Societário', equiparacao:'Equiparação', financeiro:'Financeiro' };
@@ -727,17 +883,41 @@ async function telaAcessoExpirado(id, msg){
 
 function erro(){ return telaLoginEmail(); }   // sem id → entra pelo e-mail
 
+/* ---------- Confiar neste aparelho (token no localStorage) ---------- */
+function lerToken(){ try{ return localStorage.getItem('b4u_token'); }catch(e){ return null; } }
+function salvarToken(t){ try{ localStorage.setItem('b4u_token', t); }catch(e){} }
+function limparToken(){ try{ localStorage.removeItem('b4u_token'); }catch(e){} }
+async function tentarToken(){
+  const tok = lerToken(); if(!tok) return false;
+  try{ const d = await jsonp(API_URL+'?tipo=entrar_token&token='+encodeURIComponent(tok));
+    if(d && d.ok && d.hash){ location.hash = d.hash; return true; }
+    limparToken(); }catch(e){}
+  return false;
+}
+async function confiarNesteAparelho(id, codigo){
+  const nav = (navigator.userAgent||'').slice(0,60);
+  try{ const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&acao=confiar_aparelho&aparelho='+encodeURIComponent(nav));
+    if(d && d.ok && d.token){ salvarToken(d.token); return true; } }catch(e){}
+  return false;
+}
+async function sairDesteAparelho(id, codigo){
+  try{ await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&acao=revogar_aparelhos'); }catch(e){}
+  limparToken();
+}
+
 async function boot(){
   const { id, codigo } = getIdCodigo();
+  if (!(id && codigo)) { if(await tentarToken()) return boot(); }   // aparelho confiável entra sem código
   if (!id) return telaLoginEmail();                          // URL sem código → e-mail primeiro
   if (!codigo) return telaAcessoExpirado(id, 'incompleto');
-  document.getElementById('miolo').innerHTML = `<div class="state"><div class="spin" role="status" aria-label="Carregando"></div><p>Carregando…</p></div>`;
+  document.getElementById('miolo').innerHTML = `<div class="saudacao">${window.B4U&&window.B4U.skeleton?window.B4U.skeleton(1,26):''}</div><div class="grade">${window.B4U&&window.B4U.skeleton?window.B4U.skeleton(4,90):'<div class="spin"></div>'}</div>`;
   try {
     const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=links';
     const d = await jsonp(url);
     if (d.erro) throw new Error(d.erro);
     render(id, codigo, d.disponiveis || {}, d.pessoa || null);
   } catch (e) {
+    if(await tentarToken()) return boot();                   // código expirou mas o aparelho é confiável
     telaAcessoExpirado(id, e.message || String(e));   // sem chave pessoal / expirado -> tela de acesso
   }
 }
