@@ -112,10 +112,11 @@ function lkPasta(rot, url){
 }
 
 function cardCliente(c){
-  const p=c.pastas||{}, a=c.areas||{}, cert=c.certificado||{}, lic=c.licencas||{};
+  const p=c.pastas||{}, a=c.areas||{}, cert=c.certificado||{};
+  // Alvará/regularidade saíram da aba central "Licenças" (removida) → hoje ficam na
+  // aba Documentos de cada planilha (vistos no painel societário do cliente).
   const alertas=[
     alertaVenc('Certificado', cert.venc_certificado),
-    alertaVenc('Alvará', lic.venc_alvara),
     alertaVenc('e-CAC', cert.venc_ecac)
   ].filter(Boolean).join('');
   const drive = c.drive && /^https?:/.test(c.drive)

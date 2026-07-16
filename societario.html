@@ -649,13 +649,14 @@ function render(M, modelos){
 }
 
 function periodoEtapa(e){
-  // MESTRA (formato novo): data_inicio + data_fim. Aceita também data única / inicio-fim antigos.
-  const i = e.data_inicio ? dBR(e.data_inicio) : (e.data ? dBR(e.data) : (e.inicio ? dBR(e.inicio) : ''));
-  const f = e.data_fim ? dBR(e.data_fim) : (e.fim ? dBR(e.fim) : '');
-  if (i && f) return i === f ? i : `${i} → ${f}`;
-  if (i) return `Início ${i}`;
-  if (f) return `Concluído ${f}`;
-  return '';
+  // Mostra a data que EXISTIR (início e/ou finalização), cada uma independente.
+  // Se estiver vazia, simplesmente não aparece (sem erro). MESTRA: data_inicio / data_fim.
+  const ini = String(e.data_inicio || e.inicio || e.data || '').trim();
+  const fim = String(e.data_fim || e.data_finalizacao || e.finalizacao || e.fim || '').trim();
+  const partes = [];
+  if (ini) partes.push('Início ' + dBR(ini));
+  if (fim) partes.push('Fim ' + dBR(fim));
+  return partes.join(' · ');
 }
 
 /* Histórico/observações do processo (log corrido que a equipe escreve na MESTRA). */
@@ -665,19 +666,17 @@ function histHTML(obs){
 }
 
 function timelineHTML(p){
+  // Observações (livres e internas) por etapa NÃO aparecem para o cliente.
   return `<div class="timeline">
-    ${p.etapas.map((e,idx)=>{
+    ${p.etapas.map((e)=>{
       const cl = classeStatus(e.status);
       const per = periodoEtapa(e);
-      const temObs = !!(e.observacoes && e.observacoes.trim());
-      return `<div class="etapa ${cl}${temObs?' tem-obs':''}" ${temObs?`data-etapa="${idx}"`:''}>
+      return `<div class="etapa ${cl}">
         <div class="etapa-nome">${esc(e.nome)}</div>
         <div class="etapa-meta">
           ${per ? `<span class="etapa-datas">${esc(per)}</span>` : ''}
           <span class="etapa-status ${cl}">${esc(e.status || '—')}</span>
         </div>
-        ${temObs ? `<div class="obs-hint"><span class="mais">＋</span> observação</div>
-          <div class="etapa-obs">${esc(e.observacoes)}</div>` : ''}
       </div>`;
     }).join('')}
   </div>`;
@@ -711,7 +710,8 @@ function desenharAlteracoes(alteracoes){
 
   box.innerHTML = ordenadas.map(p=>{
     const nEt = p.etapas.length;
-    const busca = normTxt(p.processo) + ' ' + normTxt(p.observacoes||'') + ' ' + normTxt(p.status_geral||'');
+    // Observações do processo NÃO aparecem para o cliente (nem no texto de busca).
+    const busca = normTxt(p.processo) + ' ' + normTxt(p.status_geral||'');
     if (p.concluido){
       // processo inteiro concluído -> recolhido, com opção de expandir
       return `<div class="card processo-card recolhido" data-busca="${busca}">
@@ -723,7 +723,7 @@ function desenharAlteracoes(alteracoes){
           </span>
           <span class="seta">▸</span>
         </button>
-        <div class="processo-corpo" style="display:none">${timelineHTML(p)}${histHTML(p.observacoes)}</div>
+        <div class="processo-corpo" style="display:none">${timelineHTML(p)}</div>
       </div>`;
     }
     return `<div class="card processo-card" data-busca="${busca}">
@@ -733,7 +733,6 @@ function desenharAlteracoes(alteracoes){
       </div>
       ${stepperHTML(p)}
       ${timelineHTML(p)}
-      ${histHTML(p.observacoes)}
     </div>`;
   }).join('');
 
@@ -771,23 +770,20 @@ function vencimentoInfo(iso){
   return `<span class="venc ${classe}">${texto}</span>`;
 }
 
-/* Certificado digital, procurações e licenças — SÓ os vencimentos (nunca senhas).
- * Fontes: Site Links > "Certificados Digitais" e "Licenças" (lidas por ID no backend). */
+/* Certificados e licenças — SÓ os vencimentos (nunca logins/senhas).
+ * Fonte: a aba "Documentos" da planilha do cliente (qualquer documento que tenha
+ * "vencimento" preenchido: Alvará Sanitário, Certificado e-CNPJ, Regularidade CRM…).
+ * Os logins ficam na aba interna "Acessos", que NÃO vem para o painel. */
 function desenharVencimentos(M){
-  const cert = M.certificado || {}, lic = M.licencas || {};
-  const itens = [];
-  if (cert.venc_certificado) itens.push({ nome:'Certificado digital', sub: cert.responsavel||'', venc: cert.venc_certificado });
-  if (cert.venc_ecac)        itens.push({ nome:'Procuração e-CAC', sub:'', venc: cert.venc_ecac });
-  if (cert.venc_spe)         itens.push({ nome:'Procuração SPE', sub:'', venc: cert.venc_spe });
-  if (lic.venc_alvara)       itens.push({ nome:'Alvará sanitário', sub:'', venc: lic.venc_alvara });
-  if (lic.venc_regularidade) itens.push({ nome:'Regularidade CRM', sub: lic.regularidade||'', venc: lic.venc_regularidade });
-  else if (lic.regularidade) itens.push({ nome:'Regularidade CRM', sub:'', texto: lic.regularidade });
+  const itens = (M.documentos||[])
+    .filter(d => d.vencimento && String(d.vencimento).trim())
+    .map(d => ({ nome: d.documento, venc: d.vencimento }));
   if (!itens.length) return;
   document.getElementById('sec-venc').style.display = '';
   const box = document.getElementById('vencimentos'); box.style.display = '';
-  box.innerHTML = itens.map(it=>`<div class="item" data-busca="${normTxt(it.nome)} ${normTxt(it.sub)}">
-      <div><div class="nome">${esc(it.nome)}</div>${it.sub?`<div class="cat">${esc(it.sub)}</div>`:''}</div>
-      ${it.venc ? vencimentoInfo(it.venc) : (it.texto?`<span class="venc venc-ok">${esc(it.texto)}</span>`:'')}
+  box.innerHTML = itens.map(it=>`<div class="item" data-busca="${normTxt(it.nome)}">
+      <div><div class="nome">${esc(it.nome)}</div></div>
+      ${vencimentoInfo(it.venc)}
     </div>`).join('');
 }
 
