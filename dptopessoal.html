@@ -1033,14 +1033,8 @@ function appendAll(parent, h){
   Array.from(t.content.children).forEach(n => parent.appendChild(n));
 }
 
-function erro(msg){
-  document.getElementById('app').innerHTML = `
-    <div class="state">
-      <h1>Não deu para abrir o painel</h1>
-      <p>${msg}</p>
-      <p>Confira se o endereço termina com o ID e o código de acesso do cliente, assim: <code>#482913-AbC123</code></p>
-    </div>`;
-}
+// Em subpágina, qualquer falha de acesso volta direto para o index (que trata código expirado / áreas da pessoa).
+function erro(msg){ const {id,codigo}=getIdCodigo(); location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); }
 
 (async function(){
   const { id, codigo } = getIdCodigo();

@@ -418,12 +418,14 @@ function render(tickets){
 }
 
 function erro(msg){
+  // erro de acesso/identidade -> volta para o index; outros erros mostram mensagem
+  const s = String(msg||'').toLowerCase();
+  if (/inv[aá]lid|c[oó]digo|cliente|acesso/.test(s)){
+    const { id, codigo } = getIdCodigo();
+    return location.replace('index.html' + (id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||'')));
+  }
   document.getElementById('app').innerHTML = `
-    <div class="state">
-      <h1>Não deu para carregar</h1>
-      <p>${esc(msg)}</p>
-      <p>Abra esta página pelo seu link, terminando com o ID e o código: <code>#482913-AbC123</code></p>
-    </div>`;
+    <div class="state"><h1>Não deu para carregar</h1><p>${esc(msg)}</p></div>`;
 }
 
 (async function(){
