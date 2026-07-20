@@ -255,6 +255,30 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .pitem.flash{animation:b4uflash 1.8s ease}
 @keyframes b4uflash{0%,22%{background:#DBEFEC}100%{background:var(--surface)}}
 
+/* Panorama — barra "quanto já voltou" */
+.recup{margin-bottom:16px;padding:20px 22px}
+.recup-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.recup-v{font-size:22px;font-weight:800;letter-spacing:-.02em;color:#1F9D57;margin-top:4px}
+.recup-de{font-size:12.5px;font-weight:600;color:var(--muted)}
+.recup-pct{font-size:30px;font-weight:800;color:#1F9D57;letter-spacing:-.02em;line-height:1}
+.recup-bar{height:16px;border-radius:999px;background:#EFE6D6;overflow:hidden;border:1px solid var(--line)}
+.recup-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#19AFA4,#1F9D57)}
+.recup-legs{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--ink-2);font-weight:600}
+.recup-legs i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.recup-legs .dot-ap{background:#1F9D57}.recup-legs .dot-an{background:#B9791A}
+
+/* Panorama — espaçamento dos cards em largura total */
+.charts{margin-bottom:16px}
+.chart-full{margin-bottom:16px}
+
+/* Panorama — funil de etapas */
+.funil{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.funil-row{display:flex;align-items:center;gap:12px}
+.funil-bar{height:40px;border-radius:10px;display:flex;align-items:center;padding:0 14px;min-width:110px;color:#fff;font-weight:800;font-size:13px;box-shadow:0 8px 18px -12px rgba(6,48,51,.6)}
+.funil-bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.funil-meta{font-size:12.5px;color:var(--ink-2);font-weight:700;white-space:nowrap}
+.funil-meta b{color:var(--ink);font-size:14px}
+
 @media(max-width:560px){
   .acc-item>summary{flex-wrap:wrap;gap:10px 12px;padding:14px 15px}
   .acc-dot{order:1}
@@ -864,19 +888,31 @@ function render(M){
     // 2) Panorama (gráficos) — fica acima do detalhamento
     appendAll(wrap, `
       <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
+      <div class="card recup" id="recup"></div>
       <div class="charts">
         <div class="card chart">
           <h3>Situação dos pedidos</h3>
-          <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação.</div>
+          <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação. Clique para filtrar.</div>
           <div class="cbox"><canvas id="c1"></canvas></div>
           <div class="pie-legend" id="c1-lg"></div>
         </div>
         <div class="card chart">
           <h3>Valores por ano</h3>
-          <div class="sub">Total pleiteado (atualizado com SELIC) e quanto já foi aprovado, por ano de origem do crédito.</div>
+          <div class="sub">Total pleiteado (atualizado com SELIC) e quanto já foi aprovado, por ano. Clique para filtrar.</div>
           <div class="cbox"><canvas id="c4"></canvas></div>
           <div class="pie-legend" id="c4-lg"></div>
         </div>
+      </div>
+      <div class="card chart chart-full">
+        <h3>Linha do tempo de pagamentos</h3>
+        <div class="sub">Quanto já foi creditado (verde) e o que está previsto (amarelo), por mês.</div>
+        <div class="cbox"><canvas id="c5"></canvas></div>
+        <div class="pie-legend" id="c5-lg"></div>
+      </div>
+      <div class="card chart chart-full">
+        <h3>Etapas dos pedidos</h3>
+        <div class="sub">Do que foi transmitido até o que já foi pago — com o valor em cada fase.</div>
+        <div class="funil" id="funil"></div>
       </div>`);
 
     // 3) Detalhamento completo — filtro/busca + um dropdown por PER/DCOMP
@@ -1266,6 +1302,77 @@ function desenharGraficos(M){
   document.getElementById('c4-lg').innerHTML =
     `<div class="pie-legend-row"><i style="background:${PAL.couro}"></i><span>Total pleiteado</span><b class="num">${brl(totalGeral)}</b></div>` +
     `<div class="pie-legend-row"><i style="background:${PAL.eucalipto2}"></i><span>Aprovado</span><b class="num">${brl(aprovadoGeral)}</b></div>`;
+
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const concl = P.filter(p => p._concluido);
+
+  // --- "Quanto já voltou": barra de progresso aprovado ÷ pleiteado ---
+  const totAtual = P.reduce((s,p)=>s+num(p.valor_atualizado),0);
+  const totAprov = concl.reduce((s,p)=>s+(num(p.valor_aprovado)||num(p.valor_atualizado)),0);
+  const pctRec = totAtual ? Math.round(totAprov/totAtual*100) : 0;
+  const recup = document.getElementById('recup');
+  if (recup) recup.innerHTML = `
+    <div class="recup-top">
+      <div>
+        <span class="lbl">Quanto já voltou</span>
+        <div class="recup-v num">${brl(totAprov)} <span class="recup-de">de ${brl(totAtual)} pleiteados</span></div>
+      </div>
+      <div class="recup-pct num">${pctRec}%</div>
+    </div>
+    <div class="recup-bar"><div class="recup-fill" style="width:${Math.max(2,pctRec)}%"></div></div>
+    <div class="recup-legs">
+      <span><i class="dot-ap"></i>Já aprovado · ${brl(totAprov)}</span>
+      <span><i class="dot-an"></i>Falta aprovar · ${brl(totAtual-totAprov)}</span>
+    </div>`;
+
+  // --- Linha do tempo de pagamentos (recebido x previsto, por mês) ---
+  const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const porMesPag = {};
+  P.forEach(p=>{
+    if (!p.data_pagamento) return;
+    const d = parseData(p.data_pagamento); if (!d) return;
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    (porMesPag[key] = porMesPag[key] || {v:0, fut:false}).v += num(p.valor_aprovado)||num(p.valor_atualizado);
+    if (d > hoje) porMesPag[key].fut = true;
+  });
+  const mesesPag = Object.keys(porMesPag).sort();
+  const c5 = document.getElementById('c5');
+  if (c5 && mesesPag.length){
+    const labels = mesesPag.map(m=>{ const [a,mm]=m.split('-'); return MES[+mm-1]+'/'+a.slice(2); });
+    new Chart(c5, {
+      type:'bar',
+      data:{labels, datasets:[{data:mesesPag.map(m=>porMesPag[m].v),
+        backgroundColor:mesesPag.map(m=>porMesPag[m].fut?'#B9791A':'#1F9D57'), borderRadius:6, maxBarThickness:54}]},
+      options:{...barOpts, plugins:{...barOpts.plugins, legend:{display:false},
+        tooltip:{...barOpts.plugins.tooltip, callbacks:{label:c=>' '+brl(c.parsed.y)}}}}
+    });
+    const recebido = mesesPag.filter(m=>!porMesPag[m].fut).reduce((s,m)=>s+porMesPag[m].v,0);
+    const previsto = mesesPag.filter(m=>porMesPag[m].fut).reduce((s,m)=>s+porMesPag[m].v,0);
+    document.getElementById('c5-lg').innerHTML =
+      (recebido>0 ? `<div class="pie-legend-row"><i style="background:#1F9D57"></i><span>Recebido</span><b class="num">${brl(recebido)}</b></div>` : '') +
+      (previsto>0 ? `<div class="pie-legend-row"><i style="background:#B9791A"></i><span>Previsto</span><b class="num">${brl(previsto)}</b></div>` : '');
+  } else {
+    const card = c5 ? c5.closest('.card') : null; if (card) card.remove();
+  }
+
+  // --- Funil de etapas (valor em cada fase) ---
+  const pagos = P.filter(p=>{ const d = parseData(p.data_pagamento); return d && d <= hoje; });
+  const somaAtual = arr => arr.reduce((s,p)=>s+num(p.valor_atualizado),0);
+  const somaAprov = arr => arr.reduce((s,p)=>s+(num(p.valor_aprovado)||num(p.valor_atualizado)),0);
+  const etapas = [
+    {nome:'Transmitidos',      n:P.length,     v:somaAtual(P),     cor:PAL.petroleo},
+    {nome:'Análise concluída', n:concl.length, v:somaAtual(concl), cor:PAL.teal},
+    {nome:'Pagos',             n:pagos.length, v:somaAprov(pagos), cor:'#1F9D57'},
+  ];
+  const baseV = etapas[0].v || 1;
+  const funil = document.getElementById('funil');
+  if (funil) funil.innerHTML = etapas.map(e=>{
+    const w = Math.max(16, Math.round(e.v/baseV*100));
+    return `<div class="funil-row">
+        <div class="funil-bar" style="width:${w}%;background:${e.cor}"><span>${e.nome}</span></div>
+        <div class="funil-meta"><b>${e.n}</b> · ${brl(e.v)}</div>
+      </div>`;
+  }).join('');
 }
 
 async function carregarModelos(){
