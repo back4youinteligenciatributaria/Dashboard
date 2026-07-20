@@ -251,6 +251,17 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .det-limpar{font-family:var(--sans);font-size:12.5px;font-weight:700;padding:10px 14px;border:1px solid var(--line-2);border-radius:999px;background:none;color:var(--ink-2);cursor:pointer}
 .det-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
 .det-count{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 2px 2px}
+.det-barra{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px}
+.det-fbtn{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-size:12.5px;font-weight:700;padding:10px 14px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);color:var(--ink-2);cursor:pointer}
+.det-fbtn svg{width:15px;height:15px}
+.det-fbtn:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
+.det-fbtn.ativo{border-color:#1F9D57;background:#EAF7EF;color:#0E5B37}
+.det-fbadge{display:none;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#1F9D57;color:#fff;font-size:10.5px;font-weight:800;line-height:18px;text-align:center}
+.det-fbtn.ativo .det-fbadge{display:inline-block}
+.det-painel{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:10px;padding:12px;border:1px solid var(--line-2);border-radius:14px;background:var(--surface-warm)}
+.det-painel[hidden]{display:none}
+.det-painel .det-busca{flex:1 1 220px}
+.alerta-pgto-pix{font-size:12px;color:#0E5B37}
 .det-vazio{padding:24px;text-align:center;color:var(--muted);font-size:13.5px}
 .pitem.flash{animation:b4uflash 1.8s ease}
 @keyframes b4uflash{0%,22%{background:#DBEFEC}100%{background:var(--surface)}}
@@ -294,6 +305,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 </head>
 <body>
 <!--B4U:START-->
+<style id="b4u-oculta-chamado">/* "Abrir chamado" oculto por ora (topo #b4u-open e rodape #ac-abrir) */ #b4u-open,#ac-abrir{display:none!important}</style>
 <script>window.B4U = { area:'equiparacao' };</script>
 <!-- ═══════════ back4you · cabeçalho + chamados (compartilhado) ═══════════
      Bloco único, autocontido e com prefixo .b4u- (não conflita com o CSS da
@@ -692,6 +704,8 @@ const STATUS_INFO = {
   'Em discussão administrativa - CSRF': {grupo:'andamento', txt:'O recurso está em julgamento (ou já foi julgado) na Câmara Superior de Recursos Fiscais (CSRF), última instância administrativa.'},
   'Análise concluída': {grupo:'neutro', txt:'A análise terminou, mas isso sozinho não diz se o crédito foi reconhecido — é preciso aguardar a comunicação oficial da Receita ou o pagamento.'},
   'Homologado': {grupo:'concluido', txt:'A compensação foi totalmente aceita pela Receita Federal.'},
+  'Creditado': {grupo:'concluido', txt:'O crédito foi reconhecido e creditado — valor aprovado e pago (ou em pagamento).'},
+  'Crédito': {grupo:'concluido', txt:'O crédito foi reconhecido — valor aprovado e pago (ou em pagamento).'},
   'PER deferido': {grupo:'concluido', txt:'O pedido de restituição/ressarcimento foi totalmente aceito. Pode já ter sido pago ou estar na fila de pagamento.'},
   'Pedido de cancelamento deferido': {grupo:'concluido', txt:'O pedido de cancelamento apresentado foi aceito pela Receita.'},
   'Não admitido': {grupo:'encerrado', txt:'O pedido de retificação ou cancelamento foi rejeitado, por estar em desacordo com a legislação.'},
@@ -880,8 +894,7 @@ function render(M){
     <div class="sec-head"><div><h2>Pedidos por situação</h2><p>${P.length ? 'Agrupados pela situação oficial na Receita — toque para abrir cada grupo.' : 'Acompanhe aqui cada PER/DCOMP.'}</p></div></div>
     ${P.length ? `<div class="acc" id="pedidos-status"></div>` : `<div class="card"><div class="vazio">
         Nenhum pedido de equiparação transmitido ainda para este cliente.<br>
-        Se sua empresa estiver passando primeiro por alguma alteração societária, verifique no
-        <a href="societario.html#${M.id}-${IDENTIDADE.codigo}">painel Societário</a>.
+        Se você acredita que isso pode ser um engano, <a href="https://wa.me/5511937173906" target="_blank" rel="noopener">entre em contato com o atendimento</a>.
       </div></div>`}`);
 
   if (P.length){
@@ -976,7 +989,7 @@ function construirResumoStatus(M){
 
   const grupos = {};
   M.pedidos.forEach(p => {
-    if (!STATUS_INFO[p.status]) return;                 // só situações padronizadas
+    if (!STATUS_INFO[p.status] && !p._concluido) return;  // situações padronizadas + qualquer pedido já pago/creditado
     (grupos[p.status] = grupos[p.status] || []).push(p);
   });
   const chaves = Object.keys(grupos);
@@ -1058,6 +1071,23 @@ function construirResumoStatus(M){
 /* ===== Detalhamento completo: filtro + busca + um dropdown por PER/DCOMP ===== */
 const FILTRO = { busca:'', ano:'', situacao:'', pagamento:'' };
 let DETPEDIDOS = [];
+let ORDEM = 'comp';   // 'comp' | 'pgto' | 'valor-desc' | 'valor-asc'
+function valorPedido(p){ return p._concluido ? (num(p.valor_aprovado) || num(p.valor_atualizado)) : num(p.valor_atualizado); }
+function ordenarDet(arr){
+  const a = arr.slice();
+  if (ORDEM === 'valor-desc') a.sort((x,y)=> valorPedido(y) - valorPedido(x));
+  else if (ORDEM === 'valor-asc') a.sort((x,y)=> valorPedido(x) - valorPedido(y));
+  else if (ORDEM === 'pgto') a.sort((x,y)=>{ const dx=parseData(x.data_pagamento), dy=parseData(y.data_pagamento); if(!dx&&!dy) return 0; if(!dx) return 1; if(!dy) return -1; return dy - dx; });
+  else a.sort((x,y)=> x._comp.ord - y._comp.ord || String(x.tributo).localeCompare(String(y.tributo)));
+  return a;
+}
+function filtrosAtivos(){ return ['busca','ano','situacao','pagamento'].filter(k => FILTRO[k]).length; }
+function atualizarBotaoFiltros(){
+  const btn = document.getElementById('det-fbtn'); if (!btn) return;
+  const n = filtrosAtivos();
+  btn.classList.toggle('ativo', n > 0);
+  const badge = document.getElementById('det-fbadge'); if (badge) badge.textContent = n || '';
+}
 
 /* Pagamento dentro da janela de ±30 dias de hoje (passado recente OU previsto próximo). */
 function pagamentoRecente(p){
@@ -1126,17 +1156,19 @@ function cardDetalhe(p){
 }
 function renderListaDetalhe(){
   const lista = document.getElementById('det-lista'); if (!lista) return;
-  const arr = DETPEDIDOS.filter(passaFiltro);
+  const arr = ordenarDet(DETPEDIDOS.filter(passaFiltro));
   const cont = document.getElementById('det-count');
   if (cont) cont.textContent = arr.length === DETPEDIDOS.length
     ? `${DETPEDIDOS.length} PER/DCOMP`
     : `${arr.length} de ${DETPEDIDOS.length} PER/DCOMP`;
   lista.innerHTML = arr.length ? arr.map(cardDetalhe).join('') : '<div class="det-vazio">Nenhum PER/DCOMP com esses filtros.</div>';
+  atualizarBotaoFiltros();
 }
 function sincronizarControles(){
   const b = document.getElementById('pedidos-detalhe'); if (!b) return;
   const q = b.querySelector('#det-q'), fa = b.querySelector('#det-ano'), fs = b.querySelector('#det-sit'), fp = b.querySelector('#det-pag');
   if (q) q.value = FILTRO.busca; if (fa) fa.value = FILTRO.ano; if (fs) fs.value = FILTRO.situacao; if (fp) fp.value = FILTRO.pagamento;
+  const fo = b.querySelector('#det-ordem'); if (fo) fo.value = ORDEM;
 }
 /* Aplica um conjunto de filtros do zero, abre o detalhamento e rola até ele. */
 function filtrarDetalhe(patch, scroll){
@@ -1188,7 +1220,20 @@ function construirDetalheTodos(M){
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
       <div class="acc-body">
-        <div class="det-filtros">
+        <div class="det-barra">
+          <button type="button" class="det-fbtn" id="det-fbtn" aria-expanded="false" aria-controls="det-painel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+            Filtros <span class="det-fbadge" id="det-fbadge"></span>
+          </button>
+          <select id="det-ordem" class="det-sel" aria-label="Ordenar">
+            <option value="comp">Ordenar: competência</option>
+            <option value="pgto">Ordenar: data de pagamento</option>
+            <option value="valor-desc">Ordenar: maior valor</option>
+            <option value="valor-asc">Ordenar: menor valor</option>
+          </select>
+          <button type="button" class="det-limpar" id="det-limpar">Limpar filtros</button>
+        </div>
+        <div class="det-painel" id="det-painel" hidden>
           <div class="det-busca">${lupa}<input id="det-q" type="search" placeholder="Buscar por nº, competência, tributo…" autocomplete="off"></div>
           <select id="det-ano" class="det-sel" aria-label="Filtrar por ano"><option value="">Todos os anos</option>${anos.map(a=>`<option value="${a}">${a}</option>`).join('')}</select>
           <select id="det-sit" class="det-sel" aria-label="Filtrar por situação">${sitOpts}</select>
@@ -1198,7 +1243,6 @@ function construirDetalheTodos(M){
             <option value="com">Com pagamento</option>
             <option value="sem">Sem pagamento</option>
           </select>
-          <button type="button" class="det-limpar" id="det-limpar">Limpar</button>
         </div>
         <div class="det-count" id="det-count"></div>
         <div class="pacc" id="det-lista"></div>
@@ -1210,6 +1254,14 @@ function construirDetalheTodos(M){
   fa.addEventListener('change', () => { FILTRO.ano = fa.value; renderListaDetalhe(); });
   fs.addEventListener('change', () => { FILTRO.situacao = fs.value; renderListaDetalhe(); });
   fp.addEventListener('change', () => { FILTRO.pagamento = fp.value; renderListaDetalhe(); });
+  const ford = box.querySelector('#det-ordem'); ford.value = ORDEM;
+  ford.addEventListener('change', () => { ORDEM = ford.value; renderListaDetalhe(); });
+  const fbtn = box.querySelector('#det-fbtn'), painel = box.querySelector('#det-painel');
+  fbtn.addEventListener('click', () => {
+    const abrir = painel.hasAttribute('hidden');
+    if (abrir) painel.removeAttribute('hidden'); else painel.setAttribute('hidden','');
+    fbtn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+  });
   box.querySelector('#det-limpar').addEventListener('click', () => filtrarDetalhe({}, false));
   renderListaDetalhe();
 }
@@ -1232,6 +1284,7 @@ function construirAlertaPagamento(M){
     <div class="alerta-pgto-txt">
       <b>${n} pagamento${n>1?'s':''} ${algumFuturo?'a caminho':('recente'+(n>1?'s':''))} · ${brl(total)}</b>
       <span>${algumFuturo?'Crédito com pagamento':'Crédito creditado'} ${periodo}. Confira antes que passe despercebido.</span>
+      <span class="alerta-pgto-pix">O valor é depositado pela Receita via PIX na conta bancária do CNPJ — verifique se a conta está ativa e funcionando para receber.</span>
     </div>
     <button type="button" class="alerta-pgto-btn" id="alerta-pgto-btn">Ver pagamentos</button>`;
   box.querySelector('#alerta-pgto-btn').addEventListener('click', () => filtrarDetalhe({ pagamento:'recente' }));
