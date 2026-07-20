@@ -44,6 +44,21 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .doc-chave-icone svg{width:22px;height:22px}
 .doc-chave-nome{font-size:13px;font-weight:700;line-height:1.3}
 .doc-chave-abrir{font-size:11.5px;font-weight:600;color:var(--brand-teal);margin-top:2px}
+.docs-chave--destaque{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:32px}
+.docs-chave--destaque .doc-chave-card{padding:26px 24px;background:linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);border:none;box-shadow:0 14px 30px -12px rgba(6,48,51,.45)}
+.docs-chave--destaque .doc-chave-icone{width:52px;height:52px;background:rgba(255,255,255,.16);color:#fff}
+.docs-chave--destaque .doc-chave-icone svg{width:26px;height:26px}
+.docs-chave--destaque .doc-chave-nome{font-size:16px;color:#fff}
+.docs-chave--destaque .doc-chave-abrir{font-size:12.5px;color:rgba(255,255,255,.85)}
+.secao-mob{border:none;background:none;margin:32px 0 0;padding:0}
+.secao-mob>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
+.secao-mob>summary::-webkit-details-marker{display:none}
+.secao-mob>summary::marker{content:''}
+.secao-mob .sec-head{margin:0;flex:1}
+.secao-mob-chev{width:20px;height:20px;color:var(--muted);flex-shrink:0;transition:transform .2s}
+.secao-mob[open] .secao-mob-chev{transform:rotate(180deg)}
+.secao-mob-body{margin-top:14px}
+@media(min-width:641px){.secao-mob>summary{cursor:default;pointer-events:none}.secao-mob-chev{display:none}}
 
 .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:28px 0 22px}
 .stat{padding:18px 18px}
@@ -716,9 +731,9 @@ const GRUPO_COR = {andamento:PAL.couro, concluido:PAL.teal, neutro:PAL.neutro, e
 const GRUPO_NOME = {andamento:'Em andamento', concluido:'Concluído', neutro:'Concluído (aguardando comunicado)', encerrado:'Encerrado sem crédito'};
 
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
-const brl2 = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
-const pct = v => (v*100).toFixed(1).replace('.',',')+'%';
+const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+const brl2 = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = v => (v*100).toFixed(2).replace('.',',')+'%';
 const num = v => Number(v)||0;
 const dBR = s => { if(!s) return '—'; const [a,m,d]=String(s).split('-'); return `${d}/${m}/${a}`; };
 const el = h => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
@@ -772,12 +787,23 @@ async function carregar(){
   return r.json();
 }
 
+/* Aceita muitas grafias de competência trimestral e normaliza para
+   "2º Trimestre de 2024". Ex.: "Trim2/2024", "2Trim 2024", "2tri 24",
+   "1º TRIM/2023", "T2/2024", "2º trimestre de 2024". */
 function prepararCompetencia(c){
-  // "1º TRIM/2023" -> {tri:1, ano:2023, ord: 2023*4+1}
-  const m = String(c||'').match(/(\d)º?\s*TRIM\/(\d{4})/i);
-  if (!m) return {tri:0, ano:0, ord:0, label:c||'—'};
-  const tri = Number(m[1]), ano = Number(m[2]);
-  return {tri, ano, ord: ano*4+tri, label:`${tri}º tri/${ano}`};
+  const raw = String(c == null ? '' : c).trim();
+  const s = raw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  let tri = 0, ano = 0;
+  // trimestre: dígito 1-4 antes OU depois de trimestre/trim/tri/t
+  let m = s.match(/([1-4])\s*[oº°ª]?\s*(?:trimestre|trim|tri|t)\b/)
+       || s.match(/(?:trimestre|trim|tri|t)\.?\s*[oº°ª]?\s*[\/:\-]?\s*([1-4])\b/);
+  if (m) tri = Number(m[1]);
+  // ano: 4 dígitos preferencial; senão 2 dígitos -> 20xx
+  const a4 = s.match(/\b(19|20)(\d{2})\b/);
+  if (a4) ano = Number(a4[1] + a4[2]);
+  else { const a2 = s.match(/(?:^|[^\d])(\d{2})(?!\d)/); if (a2) ano = 2000 + Number(a2[1]); }
+  if (!tri || !ano) return { tri: 0, ano: 0, ord: 0, label: raw || '—' };
+  return { tri, ano, ord: ano * 4 + tri, label: `${tri}º Trimestre de ${ano}` };
 }
 
 /** Algumas planilhas trazem o código de arrecadação da Receita (número) em vez do
@@ -838,11 +864,13 @@ function render(M){
   const wrap = el('<div class="wrap"></div>');
   app.appendChild(wrap);
 
+  const semPedidos = !((M.pedidos || []).length);
+
   const docsDisponiveis = DOCS_CHAVE
     .map(d => ({ ...d, link: (M.documentos||[]).find(x => x.documento === d.nome && x.link && String(x.link).trim()) }))
     .filter(d => d.link);
   if (docsDisponiveis.length){
-    appendAll(wrap, `<div class="docs-chave">${docsDisponiveis.map(d => `
+    appendAll(wrap, `<div class="docs-chave${semPedidos ? ' docs-chave--destaque' : ''}">${docsDisponiveis.map(d => `
       <a class="card doc-chave-card" href="${d.link.link}" target="_blank" rel="noopener">
         <div class="doc-chave-icone">${d.icone}</div>
         <div><div class="doc-chave-nome">${d.nome}</div><div class="doc-chave-abrir">Abrir ↗</div></div>
@@ -857,9 +885,10 @@ function render(M){
   const pendentes = P.filter(p=>!p._concluido);
   const totPendente = pendentes.reduce((s,p)=>s+num(p.valor_atualizado),0);
 
-  wrap.appendChild(el(`
+  if (P.length){
+    wrap.appendChild(el(`
     <div class="hero">
-      <div class="card stat destaque">
+      <div class="card stat">
         <span class="lbl">Pedidos transmitidos</span>
         <div class="v num">${P.length}</div>
         <div class="s">${concluidos.length} concluído${concluidos.length===1?'':'s'} · ${pendentes.length} em andamento</div>
@@ -885,6 +914,7 @@ function render(M){
         <div class="s">estimativa, sujeita a confirmação</div>
       </div>
     </div>`));
+  }
 
   // banner de pagamento recente (preenchido por construirAlertaPagamento)
   wrap.appendChild(el('<div id="alerta-pagamento"></div>'));
@@ -893,40 +923,47 @@ function render(M){
   appendAll(wrap, `
     <div class="sec-head"><div><h2>Pedidos por situação</h2><p>${P.length ? 'Agrupados pela situação oficial na Receita — toque para abrir cada grupo.' : 'Acompanhe aqui cada PER/DCOMP.'}</p></div></div>
     ${P.length ? `<div class="acc" id="pedidos-status"></div>` : `<div class="card"><div class="vazio">
-        Nenhum pedido de equiparação transmitido ainda para este cliente.<br>
+        Nenhum pedido de equiparação transmitido ainda. Se o seu CNPJ ainda estiver passando por alguma alteração societária os seus pedidos ainda não vão aparecer aqui. Enquanto isso verifique a relação de documentos e memórias de cálculo acima.<br>
         Se você acredita que isso pode ser um engano, <a href="https://wa.me/5511937173906" target="_blank" rel="noopener">entre em contato com o atendimento</a>.
       </div></div>`}`);
 
   if (P.length){
     // 2) Panorama (gráficos) — fica acima do detalhamento
     appendAll(wrap, `
-      <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
-      <div class="card recup" id="recup"></div>
-      <div class="charts">
-        <div class="card chart">
-          <h3>Situação dos pedidos</h3>
-          <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação. Clique para filtrar.</div>
-          <div class="cbox"><canvas id="c1"></canvas></div>
-          <div class="pie-legend" id="c1-lg"></div>
+      <details class="secao-mob" id="panorama-det">
+        <summary class="secao-mob-sum">
+          <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
+          <svg class="secao-mob-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="secao-mob-body">
+          <div class="card recup" id="recup"></div>
+          <div class="charts">
+            <div class="card chart">
+              <h3>Situação dos pedidos</h3>
+              <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação. Clique para filtrar.</div>
+              <div class="cbox"><canvas id="c1"></canvas></div>
+              <div class="pie-legend" id="c1-lg"></div>
+            </div>
+            <div class="card chart">
+              <h3>Valores por ano</h3>
+              <div class="sub">Total pleiteado (atualizado com SELIC) e quanto já foi aprovado, por ano. Clique para filtrar.</div>
+              <div class="cbox"><canvas id="c4"></canvas></div>
+              <div class="pie-legend" id="c4-lg"></div>
+            </div>
+          </div>
+          <div class="card chart chart-full">
+            <h3>Linha do tempo de pagamentos</h3>
+            <div class="sub">Quanto já foi creditado (verde) e o que está previsto (amarelo), por mês.</div>
+            <div class="cbox"><canvas id="c5"></canvas></div>
+            <div class="pie-legend" id="c5-lg"></div>
+          </div>
+          <div class="card chart chart-full">
+            <h3>Etapas dos pedidos</h3>
+            <div class="sub">Do que foi transmitido até o que já foi pago — com o valor em cada fase.</div>
+            <div class="funil" id="funil"></div>
+          </div>
         </div>
-        <div class="card chart">
-          <h3>Valores por ano</h3>
-          <div class="sub">Total pleiteado (atualizado com SELIC) e quanto já foi aprovado, por ano. Clique para filtrar.</div>
-          <div class="cbox"><canvas id="c4"></canvas></div>
-          <div class="pie-legend" id="c4-lg"></div>
-        </div>
-      </div>
-      <div class="card chart chart-full">
-        <h3>Linha do tempo de pagamentos</h3>
-        <div class="sub">Quanto já foi creditado (verde) e o que está previsto (amarelo), por mês.</div>
-        <div class="cbox"><canvas id="c5"></canvas></div>
-        <div class="pie-legend" id="c5-lg"></div>
-      </div>
-      <div class="card chart chart-full">
-        <h3>Etapas dos pedidos</h3>
-        <div class="sub">Do que foi transmitido até o que já foi pago — com o valor em cada fase.</div>
-        <div class="funil" id="funil"></div>
-      </div>`);
+      </details>`);
 
     // 3) Detalhamento completo — filtro/busca + um dropdown por PER/DCOMP
     appendAll(wrap, `
@@ -948,7 +985,17 @@ function render(M){
   construirAlertaPagamento(M);
 
   desenharDocumentos(M, []);
-  if (P.length){ try { desenharGraficos(M); } catch (e) { console.warn('Gráficos indisponíveis:', e); } }
+  if (P.length){
+    const pdet = document.getElementById('panorama-det');
+    const draw = () => { try { desenharGraficos(M); } catch (e) { console.warn('Gráficos indisponíveis:', e); } };
+    if (pdet && window.matchMedia('(max-width:640px)').matches){
+      // mobile: Panorama começa fechado; desenha os gráficos só ao abrir (evita canvas 0x0)
+      pdet.addEventListener('toggle', () => { if (pdet.open && !pdet.dataset.drawn){ pdet.dataset.drawn = '1'; draw(); } });
+    } else {
+      if (pdet) pdet.open = true;   // desktop: sempre aberto
+      draw();
+    }
+  }
 }
 
 /* Converte 'AAAA-MM-DD' (ou algo que o Date entenda) num Date local. */
@@ -1145,7 +1192,7 @@ function cardDetalhe(p){
           <div><span>Tributo</span>${esc(p.tributo)}</div>
           <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
           <div class="num"><span>Solicitado</span>${brl2(p.valor_solicitado)}</div>
-          <div class="num"><span>SELIC acumulada</span>${(num(p.selic_pct)).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
+          <div class="num"><span>SELIC acumulada</span>${(num(p.selic_pct)).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</div>
           <div class="num"><span>Valor atualizado</span>${brl2(p.valor_atualizado)}</div>
           <div><span>${lblPg}</span>${dBR(p.data_pagamento)}</div>
           <div class="num"><span>Valor aprovado</span>${p._concluido ? brl2(p.valor_aprovado) : '—'}</div>
