@@ -184,20 +184,76 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .mini-r .v{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .mini-r .k{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
 
-/* ── "detalhamento completo": um cartão por pedido ── */
-.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px;margin-top:14px}
-.pcard{border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:12px;padding:14px 15px;background:var(--surface-warm)}
-.pcard.andamento{border-left-color:var(--andamento)}
-.pcard.concluido{border-left-color:var(--receita)}
-.pcard.neutro{border-left-color:var(--neutro)}
-.pcard.encerrado{border-left-color:var(--encerrado)}
-.pcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:11px}
-.pcard-num{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:-.01em;text-align:right;word-break:break-all;max-width:56%}
-.pcard-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px}
+/* ── "detalhamento completo": cada PER/DCOMP num dropdown próprio ── */
+.pacc{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.pitem{border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:10px;overflow:hidden;background:var(--surface)}
+.pitem.andamento{border-left-color:var(--andamento)}
+.pitem.concluido{border-left-color:var(--receita)}
+.pitem.neutro{border-left-color:var(--neutro)}
+.pitem.encerrado{border-left-color:var(--encerrado)}
+.pitem>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:11px;padding:12px 14px}
+.pitem>summary::-webkit-details-marker{display:none}
+.pitem>summary:hover{background:var(--surface-warm)}
+.pitem>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.pitem-main{flex:1;min-width:0;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pitem-title{font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.pitem-val{flex-shrink:0;font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em;color:var(--ink)}
+.pitem.concluido .pitem-val{color:var(--receita)}
+.pitem>summary .chev{width:16px;height:16px}
+.pitem[open]>summary .chev{transform:rotate(180deg)}
+.pitem-body{padding:2px 14px 14px;border-top:1px solid var(--line)}
+.pitem-num{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:-.01em;word-break:break-all;margin:10px 0 12px}
+.pcard-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
 .pcard-grid>div{font-size:13px;font-weight:700;color:var(--ink);min-width:0}
 .pcard-grid>div span{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin-bottom:2px}
 .pcard-grid .num{font-variant-numeric:tabular-nums}
 .pcard-expl{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line-2);font-size:12px;color:var(--ink-2);line-height:1.5}
+
+/* hero — cores por situação */
+.stat.stat-aprovado{background:linear-gradient(135deg,#EAF7EF,#F6FBF8);border-color:#CDE8D7}
+.stat.stat-aprovado .lbl{color:#3C7A57}
+.stat.stat-aprovado .v{color:#1F9D57}
+.stat.stat-analise{background:linear-gradient(135deg,#FCF3DC,#FEFAF1);border-color:#EFDDAE}
+.stat.stat-analise .lbl{color:#977519}
+.stat.stat-analise .v{color:#B9791A}
+
+/* alerta de pagamento recente (±30 dias) */
+.alerta-pgto{display:flex;align-items:center;gap:14px;margin:20px 0 2px;padding:15px 18px;border-radius:16px;
+  background:linear-gradient(120deg,#E7F6EF,#F4FBF7);border:1px solid #C6E6D6;box-shadow:0 14px 30px -16px rgba(31,157,87,.6)}
+.alerta-pgto-ico{width:40px;height:40px;border-radius:12px;background:#1F9D57;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alerta-pgto-ico svg{width:22px;height:22px}
+.alerta-pgto-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.alerta-pgto-txt b{font-size:15px;font-weight:800;color:#0E5B37;letter-spacing:-.01em}
+.alerta-pgto-txt span{font-size:12.5px;color:var(--ink-2)}
+.alerta-pgto-btn{flex-shrink:0;border:0;cursor:pointer;font-family:var(--sans);font-weight:800;font-size:13px;
+  padding:11px 20px;border-radius:999px;background:#1F9D57;color:#fff;transition:background .15s,transform .1s;white-space:nowrap}
+.alerta-pgto-btn:hover{background:#187a44;transform:translateY(-1px)}
+
+/* mini-rows (Pedidos por situação): agora com datas e clicáveis */
+.mini{cursor:pointer;border-radius:8px;padding-inline:6px;transition:background .12s}
+.mini:hover{background:var(--surface-warm)}
+.mini:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.mini-datas{display:block;width:100%;font-size:11px;color:var(--muted);margin-top:3px}
+.mini-datas .prev{color:#B9791A;font-weight:700}
+.mini-datas .pago{color:#1F9D57;font-weight:700}
+
+/* pill "pago" nas situações concluídas recentes */
+.pill-pago{font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;background:#1F9D57;color:#fff;white-space:nowrap}
+
+/* filtros + busca do detalhamento */
+.det-filtros{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px}
+.det-busca{position:relative;flex:1 1 220px;min-width:170px}
+.det-busca svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);pointer-events:none}
+.det-busca input{width:100%;font-family:var(--sans);font-size:13.5px;padding:10px 14px 10px 36px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);color:var(--ink)}
+.det-busca input:focus{outline:2px solid var(--brand-teal);outline-offset:1px;border-color:transparent}
+.det-sel{font-family:var(--sans);font-size:12.5px;font-weight:600;padding:10px 12px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer}
+.det-sel:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.det-limpar{font-family:var(--sans);font-size:12.5px;font-weight:700;padding:10px 14px;border:1px solid var(--line-2);border-radius:999px;background:none;color:var(--ink-2);cursor:pointer}
+.det-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
+.det-count{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 2px 2px}
+.det-vazio{padding:24px;text-align:center;color:var(--muted);font-size:13.5px}
+.pitem.flash{animation:b4uflash 1.8s ease}
+@keyframes b4uflash{0%,22%{background:#DBEFEC}100%{background:var(--surface)}}
 
 @media(max-width:560px){
   .acc-item>summary{flex-wrap:wrap;gap:10px 12px;padding:14px 15px}
@@ -205,7 +261,9 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
   .chev{order:2;margin-left:auto}
   .acc-val{order:3;flex-direction:row;align-items:baseline;gap:6px}
   .acc-head-main{order:4;flex-basis:100%}
-  .pcards{grid-template-columns:1fr}
+  .det-sel{flex:1 1 auto}
+  .alerta-pgto{flex-wrap:wrap}
+  .alerta-pgto-btn{flex-basis:100%}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
@@ -778,17 +836,20 @@ function render(M){
         <div class="v num">${brl(totAtualizado)}</div>
         <div class="s">solicitado + SELIC acumulada</div>
       </div>
-      <div class="card stat">
+      <div class="card stat stat-aprovado">
         <span class="lbl">Já aprovado</span>
-        <div class="v num" style="color:var(--receita)">${brl(totAprovado)}</div>
+        <div class="v num">${brl(totAprovado)}</div>
         <div class="s">valor fechado pela Receita</div>
       </div>
-      <div class="card stat">
+      <div class="card stat stat-analise">
         <span class="lbl">Ainda em análise</span>
         <div class="v num">${brl(totPendente)}</div>
         <div class="s">estimativa, sujeita a confirmação</div>
       </div>
     </div>`));
+
+  // banner de pagamento recente (preenchido por construirAlertaPagamento)
+  wrap.appendChild(el('<div id="alerta-pagamento"></div>'));
 
   // 1) PER/DCOMPs agrupados por situação (dropdowns por categoria)
   appendAll(wrap, `
@@ -800,12 +861,7 @@ function render(M){
       </div></div>`}`);
 
   if (P.length){
-    // 2) Detalhamento completo — todos os PER/DCOMPs, um a um
-    appendAll(wrap, `
-      <div class="sec-head"><div><h2>Detalhamento completo</h2><p>Todos os PER/DCOMPs, um a um, com tudo o que temos de cada pedido.</p></div></div>
-      <div class="acc" id="pedidos-detalhe"></div>`);
-
-    // 3) Panorama (gráficos)
+    // 2) Panorama (gráficos) — fica acima do detalhamento
     appendAll(wrap, `
       <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
       <div class="charts">
@@ -822,6 +878,11 @@ function render(M){
           <div class="pie-legend" id="c4-lg"></div>
         </div>
       </div>`);
+
+    // 3) Detalhamento completo — filtro/busca + um dropdown por PER/DCOMP
+    appendAll(wrap, `
+      <div class="sec-head"><div><h2>Detalhamento completo</h2><p>Filtre, busque e abra cada PER/DCOMP individualmente.</p></div></div>
+      <div class="acc" id="pedidos-detalhe"></div>`);
   }
 
   appendAll(wrap, `
@@ -833,8 +894,9 @@ function render(M){
     </footer>`));
 
   // --- dropdowns de pedidos ---
+  construirDetalheTodos(M);      // primeiro: os deep-links do resumo/banner precisam da lista pronta
   construirResumoStatus(M);
-  construirDetalheTodos(M);
+  construirAlertaPagamento(M);
 
   desenharDocumentos(M, []);
   if (P.length){ try { desenharGraficos(M); } catch (e) { console.warn('Gráficos indisponíveis:', e); } }
@@ -913,15 +975,21 @@ function construirResumoStatus(M){
     const kLabel = concluido ? 'aprovado' : 'atualizado';
 
     const itensOrd = itens.slice().sort((a,b) => a._comp.ord - b._comp.ord || String(a.tributo).localeCompare(String(b.tributo)));
-    const mini = itensOrd.map(p => `
-      <div class="mini">
+    const mini = itensOrd.map(p => {
+      const ip = infoPagamento(p);
+      const rec = pagamentoRecente(p);
+      return `
+      <div class="mini" data-key="${esc(p.numero_per_dcomp)}" role="button" tabindex="0" title="Abrir este PER/DCOMP no detalhamento">
         <div class="mini-l">
           <b>${p._comp.label}</b>
           <span class="mini-trib">${esc(p.tributo)}</span>
+          ${rec ? '<span class="pill-pago">✓ pago</span>' : ''}
           <span class="mini-num">${esc(p.numero_per_dcomp)}</span>
+          <span class="mini-datas">Transmissão ${dBR(p.data_transmissao)} · <span class="${ip.cls}">${ip.txt}</span></span>
         </div>
         <div class="mini-r"><div class="v">${brl(valorDe(p))}</div><div class="k">${kLabel}</div></div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
 
     return `
       <details class="acc-item ${g}">
@@ -940,47 +1008,197 @@ function construirResumoStatus(M){
         </div>
       </details>`;
   }).join('');
+
+  // clicar numa linha (PER/DCOMP específico) abre o pedido correspondente no detalhamento
+  box.addEventListener('click', e => {
+    const row = e.target.closest('.mini[data-key]'); if (row) irParaPedido(row.dataset.key);
+  });
+  box.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const row = e.target.closest('.mini[data-key]'); if (row){ e.preventDefault(); irParaPedido(row.dataset.key); }
+  });
 }
 
-/* Dropdown 2 — detalhamento completo: todos os PER/DCOMPs, um a um. */
+/* ===== Detalhamento completo: filtro + busca + um dropdown por PER/DCOMP ===== */
+const FILTRO = { busca:'', ano:'', situacao:'', pagamento:'' };
+let DETPEDIDOS = [];
+
+/* Pagamento dentro da janela de ±30 dias de hoje (passado recente OU previsto próximo). */
+function pagamentoRecente(p){
+  if (!p.data_pagamento) return false;
+  const d = parseData(p.data_pagamento); if (!d) return false;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const dias = (d - hoje) / 86400000;
+  return dias >= -30 && dias <= 30;
+}
+/* Rótulo de pagamento: "Pago em…" (passado) ou "Pagamento previsto…" (futuro). */
+function infoPagamento(p){
+  if (!p.data_pagamento) return { txt:'Pagamento a definir', cls:'' };
+  const d = parseData(p.data_pagamento); const hoje = new Date(); hoje.setHours(0,0,0,0);
+  if (d && d > hoje) return { txt:'Pagamento previsto ' + dBR(p.data_pagamento), cls:'prev', futuro:true };
+  return { txt:'Pago em ' + dBR(p.data_pagamento), cls:'pago' };
+}
+function passaFiltro(p){
+  if (FILTRO.ano && String(p._comp.ano) !== FILTRO.ano) return false;
+  if (FILTRO.situacao){
+    const t = FILTRO.situacao;
+    if (t.slice(0,2) === 'g:' && p._grupo !== t.slice(2)) return false;
+    if (t.slice(0,2) === 's:' && p.status !== t.slice(2)) return false;
+  }
+  if (FILTRO.pagamento === 'com' && !p.data_pagamento) return false;
+  if (FILTRO.pagamento === 'sem' && p.data_pagamento) return false;
+  if (FILTRO.pagamento === 'recente' && !pagamentoRecente(p)) return false;
+  if (FILTRO.busca){
+    const q = normTxt(FILTRO.busca);
+    const hay = normTxt([p.numero_per_dcomp, p._comp.label, p.tributo, p.status].join(' '));
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+function cardDetalhe(p){
+  const vShown = p._concluido ? (num(p.valor_aprovado) || num(p.valor_atualizado)) : num(p.valor_atualizado);
+  const ip = infoPagamento(p);
+  const rec = pagamentoRecente(p);
+  const lblPg = ip.futuro ? 'Pagamento previsto' : 'Data de pagamento';
+  return `
+    <details class="pitem ${p._grupo}" data-key="${esc(p.numero_per_dcomp)}">
+      <summary>
+        <span class="acc-dot" style="background:${GRUPO_COR[p._grupo] || PAL.muted}"></span>
+        <span class="pitem-main">
+          <span class="pitem-title">${p._comp.label} · ${esc(p.tributo)}</span>
+          <span class="status-chip status-${p._grupo}">${esc(p.status)}</span>
+          ${rec ? '<span class="pill-pago">✓ pago</span>' : ''}
+        </span>
+        <span class="pitem-val num">${brl(vShown)}</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="pitem-body">
+        <div class="pitem-num">PER/DCOMP ${esc(p.numero_per_dcomp)}</div>
+        <div class="pcard-grid">
+          <div><span>Competência</span>${p._comp.label}</div>
+          <div><span>Tributo</span>${esc(p.tributo)}</div>
+          <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
+          <div class="num"><span>Solicitado</span>${brl2(p.valor_solicitado)}</div>
+          <div class="num"><span>SELIC acumulada</span>${(num(p.selic_pct)).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
+          <div class="num"><span>Valor atualizado</span>${brl2(p.valor_atualizado)}</div>
+          <div><span>${lblPg}</span>${dBR(p.data_pagamento)}</div>
+          <div class="num"><span>Valor aprovado</span>${p._concluido ? brl2(p.valor_aprovado) : '—'}</div>
+        </div>
+        ${p._explicacao ? `<div class="pcard-expl">${p._explicacao}</div>` : ''}
+      </div>
+    </details>`;
+}
+function renderListaDetalhe(){
+  const lista = document.getElementById('det-lista'); if (!lista) return;
+  const arr = DETPEDIDOS.filter(passaFiltro);
+  const cont = document.getElementById('det-count');
+  if (cont) cont.textContent = arr.length === DETPEDIDOS.length
+    ? `${DETPEDIDOS.length} PER/DCOMP`
+    : `${arr.length} de ${DETPEDIDOS.length} PER/DCOMP`;
+  lista.innerHTML = arr.length ? arr.map(cardDetalhe).join('') : '<div class="det-vazio">Nenhum PER/DCOMP com esses filtros.</div>';
+}
+function sincronizarControles(){
+  const b = document.getElementById('pedidos-detalhe'); if (!b) return;
+  const q = b.querySelector('#det-q'), fa = b.querySelector('#det-ano'), fs = b.querySelector('#det-sit'), fp = b.querySelector('#det-pag');
+  if (q) q.value = FILTRO.busca; if (fa) fa.value = FILTRO.ano; if (fs) fs.value = FILTRO.situacao; if (fp) fp.value = FILTRO.pagamento;
+}
+/* Aplica um conjunto de filtros do zero, abre o detalhamento e rola até ele. */
+function filtrarDetalhe(patch, scroll){
+  Object.assign(FILTRO, { busca:'', ano:'', situacao:'', pagamento:'' }, patch || {});
+  const outer = document.getElementById('det-outer'); if (outer) outer.open = true;
+  sincronizarControles();
+  renderListaDetalhe();
+  if (scroll !== false){ const el = document.getElementById('pedidos-detalhe'); if (el) el.scrollIntoView({ behavior:'smooth', block:'start' }); }
+}
+/* Deep-link para um PER/DCOMP específico: limpa filtros, abre e destaca o pedido. */
+function irParaPedido(numero){
+  Object.assign(FILTRO, { busca:'', ano:'', situacao:'', pagamento:'' });
+  const outer = document.getElementById('det-outer'); if (outer) outer.open = true;
+  sincronizarControles();
+  renderListaDetalhe();
+  const alvo = document.querySelector('#det-lista .pitem[data-key="' + String(numero).replace(/"/g,'\\"') + '"]');
+  if (alvo){
+    alvo.open = true;
+    alvo.classList.remove('flash'); void alvo.offsetWidth; alvo.classList.add('flash');
+    alvo.scrollIntoView({ behavior:'smooth', block:'center' });
+  } else {
+    const el = document.getElementById('pedidos-detalhe'); if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+}
+
 function construirDetalheTodos(M){
   const box = document.getElementById('pedidos-detalhe');
   if (!box) return;
-  const P = M.pedidos;
-  if (!P.length){ box.remove(); return; }
+  DETPEDIDOS = M.pedidos;
+  if (!DETPEDIDOS.length){ box.remove(); return; }
 
-  const cards = P.map(p => `
-    <div class="pcard ${p._grupo}">
-      <div class="pcard-top">
-        <span class="status-chip status-${p._grupo}">${esc(p.status)}</span>
-        <span class="pcard-num">${esc(p.numero_per_dcomp)}</span>
-      </div>
-      <div class="pcard-grid">
-        <div><span>Competência</span>${p._comp.label}</div>
-        <div><span>Tributo</span>${esc(p.tributo)}</div>
-        <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
-        <div class="num"><span>Solicitado</span>${brl2(p.valor_solicitado)}</div>
-        <div class="num"><span>SELIC acumulada</span>${(num(p.selic_pct)).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
-        <div class="num"><span>Valor atualizado</span>${brl2(p.valor_atualizado)}</div>
-        <div><span>Data de pagamento</span>${dBR(p.data_pagamento)}</div>
-        <div class="num"><span>Valor aprovado</span>${p._concluido ? brl2(p.valor_aprovado) : '—'}</div>
-      </div>
-      ${p._explicacao ? `<div class="pcard-expl">${p._explicacao}</div>` : ''}
-    </div>`).join('');
+  const anos = [...new Set(DETPEDIDOS.map(p => p._comp.ano).filter(Boolean))].sort();
+  const gruposPres = [...new Set(DETPEDIDOS.map(p => p._grupo))].sort((a,b)=>GRUPO_ORDER.indexOf(a)-GRUPO_ORDER.indexOf(b));
+  const statusPres = [...new Set(DETPEDIDOS.map(p => p.status))];
+  const sitOpts = '<option value="">Todas as situações</option>'
+    + '<optgroup label="Grupo">' + gruposPres.map(g => `<option value="g:${g}">${GRUPO_NOME[g]}</option>`).join('') + '</optgroup>'
+    + '<optgroup label="Situação (Receita)">' + statusPres.map(s => `<option value="s:${esc(s)}">${esc(s)}</option>`).join('') + '</optgroup>';
+  const lupa = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>';
 
   box.innerHTML = `
-    <details class="acc-item acc-all">
+    <details class="acc-item acc-all" id="det-outer">
       <summary>
         <span class="acc-dot" style="background:${PAL.petroleo}"></span>
         <span class="acc-head-main">
           <span class="acc-head-title">Todos os PER/DCOMPs em detalhe</span>
-          <span class="acc-head-sub">Cada pedido com todos os dados que temos, um por um</span>
+          <span class="acc-head-sub">Filtre, busque e abra cada pedido individualmente</span>
         </span>
-        <span class="acc-val"><span class="v num">${P.length}</span><span class="k">pedidos</span></span>
+        <span class="acc-val"><span class="v num">${DETPEDIDOS.length}</span><span class="k">pedidos</span></span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
-      <div class="acc-body"><div class="pcards">${cards}</div></div>
+      <div class="acc-body">
+        <div class="det-filtros">
+          <div class="det-busca">${lupa}<input id="det-q" type="search" placeholder="Buscar por nº, competência, tributo…" autocomplete="off"></div>
+          <select id="det-ano" class="det-sel" aria-label="Filtrar por ano"><option value="">Todos os anos</option>${anos.map(a=>`<option value="${a}">${a}</option>`).join('')}</select>
+          <select id="det-sit" class="det-sel" aria-label="Filtrar por situação">${sitOpts}</select>
+          <select id="det-pag" class="det-sel" aria-label="Filtrar por pagamento">
+            <option value="">Pagamento: todos</option>
+            <option value="recente">Pagamento recente (±30 dias)</option>
+            <option value="com">Com pagamento</option>
+            <option value="sem">Sem pagamento</option>
+          </select>
+          <button type="button" class="det-limpar" id="det-limpar">Limpar</button>
+        </div>
+        <div class="det-count" id="det-count"></div>
+        <div class="pacc" id="det-lista"></div>
+      </div>
     </details>`;
+
+  const q = box.querySelector('#det-q'), fa = box.querySelector('#det-ano'), fs = box.querySelector('#det-sit'), fp = box.querySelector('#det-pag');
+  q.addEventListener('input', () => { FILTRO.busca = q.value; renderListaDetalhe(); });
+  fa.addEventListener('change', () => { FILTRO.ano = fa.value; renderListaDetalhe(); });
+  fs.addEventListener('change', () => { FILTRO.situacao = fs.value; renderListaDetalhe(); });
+  fp.addEventListener('change', () => { FILTRO.pagamento = fp.value; renderListaDetalhe(); });
+  box.querySelector('#det-limpar').addEventListener('click', () => filtrarDetalhe({}, false));
+  renderListaDetalhe();
+}
+
+/* Banner de pagamento: destaca créditos com data de pagamento dentro de ±30 dias. */
+function construirAlertaPagamento(M){
+  const box = document.getElementById('alerta-pagamento'); if (!box) return;
+  const rec = (M.pedidos || []).filter(pagamentoRecente);
+  if (!rec.length){ box.remove(); return; }
+  const total = rec.reduce((s,p) => s + (num(p.valor_aprovado) || num(p.valor_atualizado)), 0);
+  const datas = rec.map(p => parseData(p.data_pagamento)).filter(Boolean).sort((a,b)=>a-b);
+  const fmt = d => d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const periodo = datas.length ? (datas.length > 1 ? `entre ${fmt(datas[0])} e ${fmt(datas[datas.length-1])}` : `em ${fmt(datas[0])}`) : '';
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const algumFuturo = rec.some(p => { const d = parseData(p.data_pagamento); return d && d > hoje; });
+  const n = rec.length;
+  box.className = 'alerta-pgto';
+  box.innerHTML = `
+    <div class="alerta-pgto-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><path d="M6 15h5"/></svg></div>
+    <div class="alerta-pgto-txt">
+      <b>${n} pagamento${n>1?'s':''} ${algumFuturo?'a caminho':('recente'+(n>1?'s':''))} · ${brl(total)}</b>
+      <span>${algumFuturo?'Crédito com pagamento':'Crédito creditado'} ${periodo}. Confira antes que passe despercebido.</span>
+    </div>
+    <button type="button" class="alerta-pgto-btn" id="alerta-pgto-btn">Ver pagamentos</button>`;
+  box.querySelector('#alerta-pgto-btn').addEventListener('click', () => filtrarDetalhe({ pagamento:'recente' }));
 }
 
 function desenharGraficos(M){
@@ -1004,11 +1222,15 @@ function desenharGraficos(M){
     type:'doughnut',
     data:{labels:gruposUsados.map(g=>GRUPO_NOME[g]), datasets:[{data:gruposUsados.map(g=>porGrupo[g]),
       backgroundColor:gruposUsados.map(g=>GRUPO_COR[g]), borderWidth:0}]},
-    options:donutOpts
+    options:{...donutOpts,
+      onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
+      onClick:(e,els)=>{ if(els.length) filtrarDetalhe({situacao:'g:'+gruposUsados[els[0].index]}); }}
   });
-  document.getElementById('c1-lg').innerHTML = gruposUsados.map(g=>
-    `<div class="pie-legend-row"><i style="background:${GRUPO_COR[g]}"></i><span>${GRUPO_NOME[g]}</span><b class="num">${brl(porGrupo[g])}</b></div>`
+  const c1lg = document.getElementById('c1-lg');
+  c1lg.innerHTML = gruposUsados.map(g=>
+    `<div class="pie-legend-row" data-g="${g}" style="cursor:pointer"><i style="background:${GRUPO_COR[g]}"></i><span>${GRUPO_NOME[g]}</span><b class="num">${brl(porGrupo[g])}</b></div>`
   ).join('');
+  c1lg.querySelectorAll('.pie-legend-row').forEach(row => row.addEventListener('click', () => filtrarDetalhe({ situacao:'g:'+row.dataset.g })));
 
   // c4: VALORES POR ANO — barra marrom (total pleiteado) com a verde (aprovado) sobreposta.
   // "Aprovado" = análise concluída: tem data de pagamento OU status homologado/deferido/creditado/pago.
@@ -1036,8 +1258,10 @@ function desenharGraficos(M){
       {label:'Aprovado', data:anos.map(a=>porAno[a].aprovado), backgroundColor:PAL.eucalipto2,
         borderRadius:4, categoryPercentage:0.7, barPercentage:0.5, grouped:false, order:1},
     ]},
-    options:{...barOpts, plugins:{...barOpts.plugins, legend:{display:false},
-      tooltip:{...barOpts.plugins.tooltip}}}
+    options:{...barOpts,
+      onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
+      onClick:(e,els)=>{ if(els.length) filtrarDetalhe({ano:String(anos[els[0].index])}); },
+      plugins:{...barOpts.plugins, legend:{display:false}, tooltip:{...barOpts.plugins.tooltip}}}
   });
   document.getElementById('c4-lg').innerHTML =
     `<div class="pie-legend-row"><i style="background:${PAL.couro}"></i><span>Total pleiteado</span><b class="num">${brl(totalGeral)}</b></div>` +
