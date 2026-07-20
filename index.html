@@ -33,6 +33,8 @@ body{
 .saudacao .cliente{font-size:12.5px;color:var(--ink-2);font-weight:600;margin-top:10px}
 .saudacao .cta{font-size:13px;color:var(--brand-teal);font-weight:700;margin-top:18px}
 .acoes-chamado{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.escolha-empresas{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:10px}
+.escolha-emp{min-width:260px}
 .ac-btn{font-family:var(--sans);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;
   padding:11px 20px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);transition:border-color .12s,transform .12s,box-shadow .12s}
 .ac-btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
@@ -140,7 +142,7 @@ footer{padding:18px 24px;text-align:center;font-size:11.5px;color:var(--muted)}
 </head>
 <body>
 <!--B4U:START-->
-<style id="b4u-oculta-chamado">/* "Abrir chamado" oculto por ora (topo #b4u-open e rodape #ac-abrir) */ #b4u-open,#ac-abrir,#b4u-help{display:none!important}</style>
+<style id="b4u-oculta-chamado">/* "Abrir chamado" oculto por ora (topo #b4u-open e rodape #ac-abrir) */ #b4u-open,#ac-abrir,#b4u-help,.acoes-chamado a[href*="meustickets"]{display:none!important}</style>
 <script>window.B4U = { area:'outros', home:true };</script>
 <!-- ═══════════ back4you · cabeçalho + chamados (compartilhado) ═══════════
      Bloco único, autocontido e com prefixo .b4u- (não conflita com o CSS da
@@ -839,6 +841,7 @@ function telaCodigoEmail(email, mascarado){
       const d = await jsonp(API_URL+'?tipo=login_email_verificar&email='+encodeURIComponent(email)+'&codigo='+encodeURIComponent(code));
       if(d.erro) throw new Error(d.erro);
       if(!d.ok){ btn.disabled=false; btn.textContent='Continuar'; errEl.textContent = d.mensagem||'Código incorreto.'; otp.clear(); return; }
+      if(d.multi && d.empresas && d.empresas.length){ return telaEscolherEmpresa(d.empresas); }
       location.hash = d.hash;
       if(!lerToken()) return telaConfiarAparelho();   // logo após o código: oferece confiar (tela própria)
       boot();
@@ -851,6 +854,24 @@ function telaCodigoEmail(email, mascarado){
       errEl.textContent = d.encontrado ? 'Código reenviado. Confira o seu e-mail.' : 'E-mail não encontrado.'; otp.clear(); }
     catch(e){ errEl.textContent = 'Não consegui reenviar agora.'; }
   });
+}
+
+/* ---------- E-mail com acesso a várias empresas: escolher qual abrir ---------- */
+function telaEscolherEmpresa(empresas){
+  document.getElementById('miolo').innerHTML = `
+    <div class="state">
+      <h1>Escolha a empresa</h1>
+      <p>O seu e-mail tem acesso a mais de uma empresa. Selecione qual você quer abrir.</p>
+      <div class="escolha-empresas">
+        ${empresas.map((e,i)=>`<button type="button" class="ac-btn ac-primary escolha-emp" data-i="${i}">${esc(e.nome||('Empresa '+e.id))}</button>`).join('')}
+      </div>
+    </div>`;
+  document.querySelectorAll('.escolha-emp').forEach(b=>b.addEventListener('click', ()=>{
+    const e = empresas[+b.dataset.i];
+    location.hash = e.hash;
+    if(!lerToken()) return telaConfiarAparelho();
+    boot();
+  }));
 }
 
 /* ---------- ID+empresa no link, mas falta/expirou o código pessoal ---------- */
