@@ -6,13 +6,14 @@
 <title>Painel do cliente — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
-  --ink:#113D39; --ink-2:#3F5854; --muted:#8A7D70; --line:#E4D9C9; --line-2:#D6C3AC;
-  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-eucalipto2:#3FA680;
-  --radius:16px; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+  --canvas:#F3EFE8; --surface:#FFFFFF; --surface-warm:#FAF6EF;
+  --ink:#063033; --ink-2:#3B5551; --muted:#8A7D70; --line:#E7DFD2; --line-2:#D8CDBB;
+  --brand-dark:#063033; --brand-teal:#128D84; --brand-eucalipto2:#19AFA4; --accent:#FF8100;
+  --receita-soft:#DBEFEC;
+  --radius:18px; --sans:'Manrope',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -33,10 +34,10 @@ body{
 .saudacao .cta{font-size:13px;color:var(--brand-teal);font-weight:700;margin-top:18px}
 .acoes-chamado{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px}
 .ac-btn{font-family:var(--sans);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;
-  padding:11px 18px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);transition:border-color .12s,transform .12s}
+  padding:11px 20px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);transition:border-color .12s,transform .12s,box-shadow .12s}
 .ac-btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
-.ac-btn.ac-primary{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
-.ac-btn.ac-primary:hover{background:var(--brand-dark)}
+.ac-btn.ac-primary{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal);box-shadow:0 8px 18px -8px rgba(18,141,132,.6)}
+.ac-btn.ac-primary:hover{background:var(--brand-dark);border-color:var(--brand-dark)}
 .quem{margin-top:14px;font-size:12.5px;color:var(--ink-2)}
 .quem-trocar{background:none;border:0;color:var(--brand-teal);font-weight:700;cursor:pointer;font-size:12.5px;text-decoration:underline;padding:0 2px}
 .confiar-row{margin-top:18px;font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
@@ -106,7 +107,7 @@ body{
 
 .grade{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:18px;max-width:680px;width:100%}
 @media(max-width:560px){.grade{grid-template-columns:1fr}}
-.opcao.opcao-destaque{grid-column:1/-1;border-color:var(--brand-teal);background:linear-gradient(135deg,rgba(15,140,133,.06),rgba(63,166,128,.04))}
+.opcao.opcao-destaque{grid-column:1/-1;border-color:var(--brand-teal);background:linear-gradient(135deg,rgba(18,141,132,.08),rgba(25,175,164,.05))}
 .opcao.opcao-destaque .icone{background:var(--brand-teal);color:#fff}
 
 .opcao{

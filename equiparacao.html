@@ -6,17 +6,17 @@
 <title>Equiparação hospitalar — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
-  --ink:#113D39; --ink-2:#3F5854; --muted:#8A7D70; --line:#E4D9C9; --line-2:#D6C3AC;
-  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-eucalipto2:#3FA680;
-  --receita:#0F8C85; --receita-soft:#DCEFEC;
+  --canvas:#F3EFE8; --surface:#FFFFFF; --surface-warm:#FAF6EF;
+  --ink:#063033; --ink-2:#3B5551; --muted:#8A7D70; --line:#E7DFD2; --line-2:#D8CDBB;
+  --brand-dark:#063033; --brand-teal:#128D84; --brand-eucalipto2:#19AFA4; --accent:#FF8100;
+  --receita:#128D84; --receita-soft:#DBEFEC;
   --andamento:#A7715D; --andamento-soft:#F1E1D8;
-  --neutro:#649C8A; --neutro-soft:#E1EEE9;
-  --encerrado:#731007; --encerrado-soft:#F3DEDB;
-  --radius:12px; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+  --neutro:#5E9C8C; --neutro-soft:#E1EEE9;
+  --encerrado:#8E2B20; --encerrado-soft:#F3DEDB;
+  --radius:16px; --radius-sm:12px; --sans:'Manrope',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -49,7 +49,9 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .stat{padding:18px 18px}
 .stat .v{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
 .stat .s{font-size:11.5px;color:var(--muted);margin-top:4px}
-.stat.destaque{background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto2));border:none}
+.stat{border-radius:var(--radius)}
+.stat .v{font-weight:800}
+.stat.destaque{background:linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);border:none;box-shadow:0 14px 30px -12px rgba(6,48,51,.55)}
 .stat.destaque .lbl,.stat.destaque .s{color:rgba(255,255,255,.8)}
 .stat.destaque .v{color:#fff}
 
@@ -146,6 +148,65 @@ table.ped tbody tr:last-child td{border-bottom:none}
 .spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+/* ════════ Dropdowns (accordion nativo <details>) ════════ */
+.acc{display:flex;flex-direction:column;gap:10px;margin-top:2px}
+.acc-item{background:var(--surface);border:1px solid var(--line);border-left-width:4px;border-radius:14px;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.acc-item.andamento{border-left-color:var(--andamento)}
+.acc-item.concluido{border-left-color:var(--receita)}
+.acc-item.neutro{border-left-color:var(--neutro)}
+.acc-item.encerrado{border-left-color:var(--encerrado)}
+.acc-item.acc-all{border-left-color:var(--brand-dark)}
+.acc-item[open]{box-shadow:0 12px 30px -14px rgba(6,48,51,.35)}
+.acc-item>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:13px;padding:15px 18px}
+.acc-item>summary::-webkit-details-marker{display:none}
+.acc-item>summary:hover{background:var(--surface-warm)}
+.acc-item>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.acc-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.acc-head-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.acc-head-title{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.acc-head-sub{font-size:12px;color:var(--muted);font-weight:500}
+.acc-head-sub b{color:var(--ink-2);font-weight:700}
+.acc-val{flex-shrink:0;text-align:right;display:flex;flex-direction:column;gap:0}
+.acc-val .v{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.acc-val .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+.acc-item.concluido .acc-val .v{color:var(--receita)}
+.chev{flex-shrink:0;width:18px;height:18px;color:var(--muted);transition:transform .22s ease}
+.acc-item[open] .chev{transform:rotate(180deg)}
+.acc-body{padding:4px 18px 16px;border-top:1px solid var(--line)}
+.acc-expl{font-size:12.5px;color:var(--ink-2);line-height:1.55;background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:14px 0 6px}
+.mini{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px;border-top:1px solid var(--line)}
+.mini:first-of-type{border-top:none}
+.mini-l{display:flex;align-items:baseline;gap:9px;min-width:0;flex-wrap:wrap}
+.mini-l b{font-size:14px;font-weight:800;color:var(--ink)}
+.mini-trib{font-size:10.5px;font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:2px 9px;border-radius:999px}
+.mini-num{display:block;width:100%;font-size:10.5px;color:var(--muted);margin-top:1px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.mini-r{text-align:right;flex-shrink:0}
+.mini-r .v{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.mini-r .k{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+
+/* ── "detalhamento completo": um cartão por pedido ── */
+.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px;margin-top:14px}
+.pcard{border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:12px;padding:14px 15px;background:var(--surface-warm)}
+.pcard.andamento{border-left-color:var(--andamento)}
+.pcard.concluido{border-left-color:var(--receita)}
+.pcard.neutro{border-left-color:var(--neutro)}
+.pcard.encerrado{border-left-color:var(--encerrado)}
+.pcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:11px}
+.pcard-num{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:-.01em;text-align:right;word-break:break-all;max-width:56%}
+.pcard-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px}
+.pcard-grid>div{font-size:13px;font-weight:700;color:var(--ink);min-width:0}
+.pcard-grid>div span{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin-bottom:2px}
+.pcard-grid .num{font-variant-numeric:tabular-nums}
+.pcard-expl{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line-2);font-size:12px;color:var(--ink-2);line-height:1.5}
+
+@media(max-width:560px){
+  .acc-item>summary{flex-wrap:wrap;gap:10px 12px;padding:14px 15px}
+  .acc-dot{order:1}
+  .chev{order:2;margin-left:auto}
+  .acc-val{order:3;flex-direction:row;align-items:baseline;gap:6px}
+  .acc-head-main{order:4;flex-basis:100%}
+  .pcards{grid-template-columns:1fr}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -535,8 +596,8 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 
-const PAL = { teal:'#0F8C85', eucalipto2:'#3FA680', couro:'#A7715D', vinho:'#731007',
-  petroleo:'#113D39', muted:'#8A7D70', line:'#E4D9C9', neutro:'#649C8A', bege:'#CBA88F' };
+const PAL = { teal:'#128D84', eucalipto2:'#19AFA4', couro:'#A7715D', vinho:'#8E2B20',
+  petroleo:'#063033', muted:'#8A7D70', line:'#E7DFD2', neutro:'#5E9C8C', bege:'#CBA88F' };
 
 /** Grupo visual de cada situação oficial do PER/DCOMP + explicação (parafraseada da Receita Federal). */
 const STATUS_INFO = {
@@ -558,6 +619,7 @@ const STATUS_INFO = {
 const GRUPO_COR = {andamento:PAL.couro, concluido:PAL.teal, neutro:PAL.neutro, encerrado:PAL.vinho};
 const GRUPO_NOME = {andamento:'Em andamento', concluido:'Concluído', neutro:'Concluído (aguardando comunicado)', encerrado:'Encerrado sem crédito'};
 
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
 const brl2 = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
 const pct = v => (v*100).toFixed(1).replace('.',',')+'%';
@@ -728,36 +790,39 @@ function render(M){
       </div>
     </div>`));
 
+  // 1) PER/DCOMPs agrupados por situação (dropdowns por categoria)
   appendAll(wrap, `
-    <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
-    ${P.length ? `<div class="charts">
-      <div class="card chart">
-        <h3>Situação dos pedidos</h3>
-        <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação.</div>
-        <div class="cbox"><canvas id="c1"></canvas></div>
-        <div class="pie-legend" id="c1-lg"></div>
-      </div>
-      <div class="card chart">
-        <h3>Valores por ano</h3>
-        <div class="sub">Total pleiteado (atualizado com SELIC) e quanto já foi aprovado, por ano de origem do crédito.</div>
-        <div class="cbox"><canvas id="c4"></canvas></div>
-        <div class="pie-legend" id="c4-lg"></div>
-      </div>
-    </div>` : `<div class="card"><div class="vazio">Nenhum pedido transmitido ainda — assim que o primeiro PER/DCOMP for enviado, os gráficos aparecem aqui.</div></div>`}`);
-
-  appendAll(wrap, `
-    <div class="sec-head"><div><h2>Pedidos</h2><p>Clique numa linha para ver os detalhes.</p></div></div>
-    ${P.length ? `<div class="card" style="padding:18px 20px"><div class="table-scroll"><table class="ped" id="tabela-pedidos">
-      <thead><tr>
-        <th>Competência</th><th>Tributo</th><th class="r">Solicitado</th><th class="r">Atualizado</th>
-        <th>Situação</th><th class="r">Aprovado</th>
-      </tr></thead>
-      <tbody></tbody>
-    </table></div></div>` : `<div class="card"><div class="vazio">
+    <div class="sec-head"><div><h2>Pedidos por situação</h2><p>${P.length ? 'Agrupados pela situação oficial na Receita — toque para abrir cada grupo.' : 'Acompanhe aqui cada PER/DCOMP.'}</p></div></div>
+    ${P.length ? `<div class="acc" id="pedidos-status"></div>` : `<div class="card"><div class="vazio">
         Nenhum pedido de equiparação transmitido ainda para este cliente.<br>
         Se sua empresa estiver passando primeiro por alguma alteração societária, verifique no
         <a href="societario.html#${M.id}-${IDENTIDADE.codigo}">painel Societário</a>.
       </div></div>`}`);
+
+  if (P.length){
+    // 2) Detalhamento completo — todos os PER/DCOMPs, um a um
+    appendAll(wrap, `
+      <div class="sec-head"><div><h2>Detalhamento completo</h2><p>Todos os PER/DCOMPs, um a um, com tudo o que temos de cada pedido.</p></div></div>
+      <div class="acc" id="pedidos-detalhe"></div>`);
+
+    // 3) Panorama (gráficos)
+    appendAll(wrap, `
+      <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
+      <div class="charts">
+        <div class="card chart">
+          <h3>Situação dos pedidos</h3>
+          <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação.</div>
+          <div class="cbox"><canvas id="c1"></canvas></div>
+          <div class="pie-legend" id="c1-lg"></div>
+        </div>
+        <div class="card chart">
+          <h3>Valores por ano</h3>
+          <div class="sub">Total pleiteado (atualizado com SELIC) e quanto já foi aprovado, por ano de origem do crédito.</div>
+          <div class="cbox"><canvas id="c4"></canvas></div>
+          <div class="pie-legend" id="c4-lg"></div>
+        </div>
+      </div>`);
+  }
 
   appendAll(wrap, `
     <div class="sec-head"><div><h2>Documentos</h2><p>Relatórios deste cliente e modelos de referência.</p></div></div>
@@ -767,40 +832,155 @@ function render(M){
       <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
     </footer>`));
 
-  // --- tabela ---
-  const tbody = document.querySelector('#tabela-pedidos tbody');
-  if (tbody){
-    tbody.innerHTML = P.map((p,i)=>{
-      return `<tr class="linha" data-i="${i}">
-        <td data-label="Competência">${p._comp.label}</td>
-        <td data-label="Tributo">${p.tributo}</td>
-        <td class="r num" data-label="Solicitado">${brl(p.valor_solicitado)}</td>
-        <td class="r num" data-label="Atualizado">${brl(p.valor_atualizado)}</td>
-        <td data-label="Situação"><span class="status-chip status-${p._grupo}">${p.status}</span></td>
-        <td class="r num" data-label="Aprovado">${p._concluido ? brl(p.valor_aprovado) : '—'}</td>
-      </tr>
-      <tr class="detalhe-row" id="det-${i}"><td colspan="6">
-        <div class="detalhe-box">
-          <div class="detalhe-grid">
-            <div><span>PER/DCOMP</span>${p.numero_per_dcomp}</div>
-            <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
-            <div><span>SELIC acumulada</span>${(p.selic_pct||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
-            <div><span>Data de pagamento</span>${dBR(p.data_pagamento)}</div>
-          </div>
-          <div class="detalhe-explicacao">${p._explicacao}</div>
-        </div>
-      </td></tr>`;
-    }).join('');
-
-    tbody.querySelectorAll('tr.linha').forEach(tr=>{
-      tr.addEventListener('click', ()=>{
-        document.getElementById('det-'+tr.dataset.i).classList.toggle('aberto');
-      });
-    });
-  }
+  // --- dropdowns de pedidos ---
+  construirResumoStatus(M);
+  construirDetalheTodos(M);
 
   desenharDocumentos(M, []);
-  if (P.length) desenharGraficos(M);
+  if (P.length){ try { desenharGraficos(M); } catch (e) { console.warn('Gráficos indisponíveis:', e); } }
+}
+
+/* Converte 'AAAA-MM-DD' (ou algo que o Date entenda) num Date local. */
+function parseData(s){
+  if (!s) return null;
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  const d = new Date(s); return isNaN(d.getTime()) ? null : d;
+}
+/* Dias corridos do envio até o pagamento (se houver) ou até hoje. */
+function diasCorridos(p){
+  const ini = parseData(p.data_transmissao);
+  const fim = p.data_pagamento ? parseData(p.data_pagamento) : new Date();
+  if (!ini || !fim) return null;
+  return Math.max(0, (fim - ini) / 86400000);
+}
+/* Humaniza uma quantidade de dias: "23 dias", "8 meses", "1 ano e 3 meses". */
+function humanizarDias(d){
+  if (d == null) return '—';
+  d = Math.round(d);
+  if (d < 1) return 'menos de 1 dia';
+  if (d < 45) return d === 1 ? '1 dia' : d + ' dias';
+  const m = Math.round(d / 30.44);
+  if (m < 12) return m === 1 ? '1 mês' : m + ' meses';
+  const a = Math.floor(m / 12), r = m % 12;
+  let s = a === 1 ? '1 ano' : a + ' anos';
+  if (r) s += ' e ' + (r === 1 ? '1 mês' : r + ' meses');
+  return s;
+}
+
+const GRUPO_ORDER = ['andamento','neutro','concluido','encerrado'];
+
+/* Dropdown 1 — PER/DCOMPs agrupados por situação padronizada.
+   Só entram os status oficiais da Receita (STATUS_INFO) que realmente existem. */
+function construirResumoStatus(M){
+  const box = document.getElementById('pedidos-status');
+  if (!box) return;
+
+  const grupos = {};
+  M.pedidos.forEach(p => {
+    if (!STATUS_INFO[p.status]) return;                 // só situações padronizadas
+    (grupos[p.status] = grupos[p.status] || []).push(p);
+  });
+  const chaves = Object.keys(grupos);
+  if (!chaves.length){
+    box.outerHTML = '<div class="card"><div class="vazio">Assim que os PER/DCOMPs receberem uma situação oficial da Receita, o resumo por situação aparece aqui.</div></div>';
+    return;
+  }
+
+  // grupo visual de um status (verde só se todos daquele status já foram pagos)
+  const grupoDe = st => {
+    const itens = grupos[st];
+    const canon = (STATUS_INFO[st] || {}).grupo || 'neutro';
+    return itens.every(p => p._concluido) ? 'concluido' : canon;
+  };
+  chaves.sort((a,b) => {
+    const d = GRUPO_ORDER.indexOf(grupoDe(a)) - GRUPO_ORDER.indexOf(grupoDe(b));
+    if (d) return d;
+    return grupos[b].length - grupos[a].length || a.localeCompare(b);
+  });
+
+  box.innerHTML = chaves.map(st => {
+    const itens = grupos[st];
+    const g = grupoDe(st);
+    const concluido = g === 'concluido';
+    const n = itens.length;
+    const valorDe = p => concluido ? (num(p.valor_aprovado) || num(p.valor_atualizado)) : num(p.valor_atualizado);
+    const valor = itens.reduce((s,p) => s + valorDe(p), 0);
+    const tempos = itens.map(diasCorridos).filter(x => x != null);
+    const media = tempos.length ? tempos.reduce((a,b)=>a+b,0) / tempos.length : null;
+    const tempoLbl = concluido ? 'tempo médio até o pagamento' : 'tempo médio desde o envio';
+    const expl = (STATUS_INFO[st] || {}).txt || '';
+    const kLabel = concluido ? 'aprovado' : 'atualizado';
+
+    const itensOrd = itens.slice().sort((a,b) => a._comp.ord - b._comp.ord || String(a.tributo).localeCompare(String(b.tributo)));
+    const mini = itensOrd.map(p => `
+      <div class="mini">
+        <div class="mini-l">
+          <b>${p._comp.label}</b>
+          <span class="mini-trib">${esc(p.tributo)}</span>
+          <span class="mini-num">${esc(p.numero_per_dcomp)}</span>
+        </div>
+        <div class="mini-r"><div class="v">${brl(valorDe(p))}</div><div class="k">${kLabel}</div></div>
+      </div>`).join('');
+
+    return `
+      <details class="acc-item ${g}">
+        <summary>
+          <span class="acc-dot" style="background:${GRUPO_COR[g]}"></span>
+          <span class="acc-head-main">
+            <span class="acc-head-title">${esc(st)}</span>
+            <span class="acc-head-sub"><b>${n} PER/DCOMP</b> · ${tempoLbl}: <b>${humanizarDias(media)}</b></span>
+          </span>
+          <span class="acc-val"><span class="v num">${brl(valor)}</span><span class="k">${kLabel}</span></span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="acc-body">
+          ${expl ? `<div class="acc-expl">${expl}</div>` : ''}
+          ${mini}
+        </div>
+      </details>`;
+  }).join('');
+}
+
+/* Dropdown 2 — detalhamento completo: todos os PER/DCOMPs, um a um. */
+function construirDetalheTodos(M){
+  const box = document.getElementById('pedidos-detalhe');
+  if (!box) return;
+  const P = M.pedidos;
+  if (!P.length){ box.remove(); return; }
+
+  const cards = P.map(p => `
+    <div class="pcard ${p._grupo}">
+      <div class="pcard-top">
+        <span class="status-chip status-${p._grupo}">${esc(p.status)}</span>
+        <span class="pcard-num">${esc(p.numero_per_dcomp)}</span>
+      </div>
+      <div class="pcard-grid">
+        <div><span>Competência</span>${p._comp.label}</div>
+        <div><span>Tributo</span>${esc(p.tributo)}</div>
+        <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
+        <div class="num"><span>Solicitado</span>${brl2(p.valor_solicitado)}</div>
+        <div class="num"><span>SELIC acumulada</span>${(num(p.selic_pct)).toLocaleString('pt-BR',{minimumFractionDigits:2})}%</div>
+        <div class="num"><span>Valor atualizado</span>${brl2(p.valor_atualizado)}</div>
+        <div><span>Data de pagamento</span>${dBR(p.data_pagamento)}</div>
+        <div class="num"><span>Valor aprovado</span>${p._concluido ? brl2(p.valor_aprovado) : '—'}</div>
+      </div>
+      ${p._explicacao ? `<div class="pcard-expl">${p._explicacao}</div>` : ''}
+    </div>`).join('');
+
+  box.innerHTML = `
+    <details class="acc-item acc-all">
+      <summary>
+        <span class="acc-dot" style="background:${PAL.petroleo}"></span>
+        <span class="acc-head-main">
+          <span class="acc-head-title">Todos os PER/DCOMPs em detalhe</span>
+          <span class="acc-head-sub">Cada pedido com todos os dados que temos, um por um</span>
+        </span>
+        <span class="acc-val"><span class="v num">${P.length}</span><span class="k">pedidos</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body"><div class="pcards">${cards}</div></div>
+    </details>`;
 }
 
 function desenharGraficos(M){
