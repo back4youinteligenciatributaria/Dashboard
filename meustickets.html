@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meus chamados — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
@@ -606,14 +607,21 @@ async function cancelarChamado(row, acoes){
 }
 
 function erro(msg){
-  // erro de acesso/identidade -> volta para o index; outros erros mostram mensagem
-  const s = String(msg||'').toLowerCase();
-  if (/inv[aá]lid|c[oó]digo|cliente|acesso/.test(s)){
-    const { id, codigo } = getIdCodigo();
-    return location.replace('index.html' + (id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||'')));
-  }
-  document.getElementById('app').innerHTML = `
-    <div class="state"><h1>Não deu para carregar</h1><p>${esc(msg)}</p></div>`;
+  // Sem login (sem id/codigo) -> volta para o index. Com id+codigo -> aviso amigável, sem redirecionar.
+  var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
+  if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
+  var volta='index.html#'+id+(codigo?('-'+codigo):'');
+  document.body.innerHTML=
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;'
+   +'font-family:\'Montserrat\',system-ui,-apple-system,sans-serif;background:#f4f6f6;color:#063033">'
+   +'<div style="max-width:440px;text-align:center;background:#fff;border:1px solid #e3e8e8;'
+   +'border-radius:16px;padding:32px 28px;box-shadow:0 6px 24px rgba(6,48,51,.06)">'
+   +'<div style="font-size:34px;line-height:1;margin-bottom:10px">📄</div>'
+   +'<h2 style="margin:0 0 8px;font-size:19px">Não foi possível carregar suas informações agora.</h2>'
+   +'<p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#3f5b5d">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#128D84;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:14px">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#128D84;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
+   +'</div></div>';
 }
 
 (async function(){

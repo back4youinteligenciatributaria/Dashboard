@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Societário — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
@@ -90,23 +91,7 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .processo-toggle .seta{color:var(--muted);font-size:13px;transition:transform .2s}
 .processo-toggle[aria-expanded="true"] .seta{transform:rotate(90deg)}
 .processo-corpo{padding:0 22px 20px}
-.etapa.tem-obs{cursor:pointer}
 .etapa-datas{display:inline-flex;gap:5px;align-items:center;white-space:nowrap}
-.etapa .obs-hint{font-size:10.5px;font-weight:700;color:var(--brand-teal);margin-top:4px;display:inline-flex;align-items:center;gap:4px}
-.etapa.tem-obs.aberto .obs-hint .mais{transform:rotate(45deg)}
-.obs-hint .mais{display:inline-block;transition:transform .15s}
-.etapa-obs{display:none;margin-top:8px;padding:10px 12px;background:var(--surface-warm);
-  border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--ink-2);line-height:1.55;white-space:pre-wrap}
-.etapa-obs.aberto{display:block}
-/* Histórico / observações do processo (log corrido da MESTRA) */
-.hist{margin-top:12px}
-.hist-btn{background:none;border:0;cursor:pointer;font-family:var(--sans);font-size:11.5px;font-weight:700;
-  color:var(--brand-teal);display:inline-flex;align-items:center;gap:5px;padding:0}
-.hist-btn .mais{display:inline-block;transition:transform .15s}
-.hist-btn.aberto .mais{transform:rotate(45deg)}
-.hist-corpo{display:none;margin-top:8px;padding:11px 13px;background:var(--surface-warm);
-  border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--ink-2);line-height:1.6;white-space:pre-wrap}
-.hist-corpo.aberto{display:block}
 
 .lista{padding:8px 24px}
 .item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
@@ -660,16 +645,10 @@ function periodoEtapa(e){
   return partes.join(' · ');
 }
 
-/* Histórico/observações do processo (log corrido que a equipe escreve na MESTRA). */
-function histHTML(obs){
-  if (!obs || !String(obs).trim()) return '';
-  return `<div class="hist"><button type="button" class="hist-btn"><span class="mais">＋</span> Histórico / observações</button><div class="hist-corpo">${esc(obs)}</div></div>`;
-}
-
 function timelineHTML(p){
   // Observações (livres e internas) por etapa NÃO aparecem para o cliente.
   return `<div class="timeline">
-    ${p.etapas.map((e)=>{
+    ${(p.etapas||[]).map((e)=>{
       const cl = classeStatus(e.status);
       const per = periodoEtapa(e);
       return `<div class="etapa ${cl}">
@@ -710,7 +689,7 @@ function desenharAlteracoes(alteracoes){
     (a.concluido === b.concluido) ? 0 : (a.concluido ? 1 : -1));
 
   box.innerHTML = ordenadas.map(p=>{
-    const nEt = p.etapas.length;
+    const nEt = (p.etapas||[]).length;
     // Observações do processo NÃO aparecem para o cliente (nem no texto de busca).
     const busca = normTxt(p.processo) + ' ' + normTxt(p.status_geral||'');
     if (p.concluido){
@@ -746,23 +725,27 @@ function desenharAlteracoes(alteracoes){
       proc.setAttribute('aria-expanded', abrir);
       return;
     }
-    const hb = ev.target.closest('.hist-btn');
-    if (hb){ hb.classList.toggle('aberto'); const c = hb.nextElementSibling; if (c) c.classList.toggle('aberto'); return; }
-    const et = ev.target.closest('.etapa.tem-obs');
-    if (et){
-      et.classList.toggle('aberto');
-      const obs = et.querySelector('.etapa-obs');
-      if (obs) obs.classList.toggle('aberto');
-    }
   };
 }
 
 const hoje = new Date(); hoje.setHours(0,0,0,0);
 
+// Aceita AAAA-MM-DD, AAAA-MM-DD HH:MM:SS e dd/mm/aaaa. Se não reconhecer, devolve null
+// (o chamador não mostra selo — nunca "NaN"). Espelha a tolerância de dBR().
+function parseVenc(iso){
+  const s = String(iso||'').trim();
+  if (!s) return null;
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);   // ISO, com ou sem hora
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);      // dd/mm/aaaa
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  return null;
+}
+
 function vencimentoInfo(iso){
   if (!iso) return '';
-  const [a,m,d] = String(iso).split('-').map(Number);
-  const venc = new Date(a, m-1, d);
+  const venc = parseVenc(iso);
+  if (!venc || isNaN(venc)) return '';   // data não interpretável -> sem selo (nunca "NaN")
   const dias = Math.round((venc - hoje) / 864e5);
   let classe = 'venc-ok', texto;
   if (dias < 0){ classe = 'venc-vencido'; texto = `Venceu há ${-dias}d`; }
@@ -871,8 +854,23 @@ function appendAll(parent, h){
   Array.from(t.content.children).forEach(n => parent.appendChild(n));
 }
 
-// Em subpágina, qualquer falha de acesso volta direto para o index (que trata código expirado / áreas da pessoa).
-function erro(msg){ const {id,codigo}=getIdCodigo(); location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); }
+// Sem login (id/codigo) volta ao index; com login, mostra aviso amigável (sem loop de redirecionamento).
+function erro(msg){
+  var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
+  if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
+  var volta='index.html#'+id+(codigo?('-'+codigo):'');
+  document.body.innerHTML=
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;'
+   +'font-family:\'Montserrat\',system-ui,-apple-system,sans-serif;background:#f4f6f6;color:#063033">'
+   +'<div style="max-width:440px;text-align:center;background:#fff;border:1px solid #e3e8e8;'
+   +'border-radius:16px;padding:32px 28px;box-shadow:0 6px 24px rgba(6,48,51,.06)">'
+   +'<div style="font-size:34px;line-height:1;margin-bottom:10px">📄</div>'
+   +'<h2 style="margin:0 0 8px;font-size:19px">Não foi possível carregar suas informações agora.</h2>'
+   +'<p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#3f5b5d">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#128D84;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:14px">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#128D84;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
+   +'</div></div>';
+}
 
 (async function(){
   const { id, codigo } = getIdCodigo();

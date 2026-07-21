@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Departamento Pessoal — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
@@ -148,23 +149,6 @@ table.func tbody tr:last-child td{border-bottom:none}
 
 .vazio{color:var(--muted);font-size:13.5px;padding:16px 0;text-align:center}
 
-.campo-texto,.form-solic input,.form-solic textarea{
-  width:100%;font-family:var(--sans);font-size:13px;color:var(--ink);
-  border:1px solid var(--line-2);border-radius:8px;padding:9px 11px;background:var(--surface-warm);
-  margin-top:10px;resize:vertical;
-}
-.campo-texto:focus,.form-solic input:focus,.form-solic textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-.form-solic{display:flex;flex-direction:column}
-.btn-acao{
-  margin-top:12px;font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;
-  background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto2));
-  border:none;border-radius:20px;padding:9px 18px;cursor:pointer;align-self:flex-start;
-}
-.btn-acao:hover{filter:brightness(1.05)}
-.msg-status{font-size:12px;margin-top:8px;min-height:16px}
-.msg-status.enviando{color:var(--muted)}
-.msg-status.sucesso{color:var(--receita);font-weight:600}
-.msg-status.erro{color:#8B2E22;font-weight:600}
 .grade-solic{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
 .card-solic{padding:18px 20px}
 .card-solic h3{font-size:13.5px;font-weight:700;margin-bottom:2px}
@@ -666,10 +650,20 @@ async function carregarTipo(tipo){
   return r.json();
 }
 
+/* Aceita AAAA-MM-DD, AAAA-MM-DD HH:MM:SS e dd/mm/aaaa. Devolve [ano,mes,dia] (strings) ou null. */
+function partesData(v){
+  if (!v) return null;
+  const s = String(v).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);   // ISO, com ou sem hora
+  if (m) return [m[1], m[2], m[3]];
+  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);      // dd/mm/aaaa
+  if (m) return [m[3], m[2], m[1]];
+  return null;
+}
+
 function dBR(iso){
-  if (!iso) return '';
-  const [a,m,d] = String(iso).split('-');
-  return `${d}/${m}/${a}`;
+  const p = partesData(iso);
+  return p ? `${p[2]}/${p[1]}/${p[0]}` : '';
 }
 
 function brl(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
@@ -846,7 +840,7 @@ function desenharObrigacoesDP(M){
   const box=document.getElementById('obrigacoes-dp'); if(!box) return;
   const hj=new Date(); const ini=hj.getFullYear()+'-'+String(hj.getMonth()+1).padStart(2,'0');
   let lista=gerarObrigacoesDP([hj.getFullYear(), hj.getFullYear()+1]);
-  (M.obrigacoes||[]).forEach(o=>{ if(o && o.data && o.nome) lista.push({data:String(o.data).slice(0,10), nome:o.nome, obs:o.obs||'', tipo:'cliente'}); });
+  (M.obrigacoes||[]).forEach(o=>{ const p=o&&o.data?partesData(o.data):null; if(p && o.nome) lista.push({data:p[0]+'-'+p[1]+'-'+p[2], nome:o.nome, obs:o.obs||'', tipo:'cliente'}); });
   lista = lista.filter(o=> o.data.slice(0,7) >= ini).sort((a,b)=>a.data.localeCompare(b.data));
   const grupos={}; lista.forEach(o=>{ const mk=o.data.slice(0,7); (grupos[mk]=grupos[mk]||[]).push(o); });
   const meses=Object.keys(grupos).sort().slice(0,14);
@@ -959,7 +953,7 @@ function desenharSolicitacoesStatus(solicitacoes){
   });
 }
 
-/** Precisa de algo? — 5 formulários simples, gravados direto na planilha. */
+/** Precisa de algo? — 5 cards que abrem o chamado central. */
 function desenharSolicitacoes(){
   // As solicitações do DP agora abrem UM chamado central (área Departamento Pessoal),
   // com o modelo já escolhido. Mantemos o "Precisa de algo?/48h" — só muda o destino.
@@ -982,36 +976,6 @@ function desenharSolicitacoes(){
       if (window.B4U && window.B4U.abrirChamado) window.B4U.abrirChamado({ area:'dpto_pessoal', tipo: btn.dataset.tipo });
     });
   });
-}
-
-async function enviarSolicitacao(f, i){
-  const statusEl = document.getElementById('sol-status-'+i);
-  const valores = {};
-  let faltando = false;
-  f.campos.forEach(c=>{
-    const v = document.getElementById(`sol-${i}-${c.id}`).value.trim();
-    valores[c.id] = v;
-    if (c.tipo !== 'textarea' && c.id !== 'observacoes' && !v && c.id !== 'periodo_fim' && c.id !== 'data_prevista') {
-      if (c.id === 'periodo_inicio' || c.id === 'funcionario' || c.id === 'nome_candidato' || c.id === 'cargo' ||
-          c.id === 'cargo_cogitado' || c.id === 'motivo' || c.id === 'motivo_cogitado') faltando = true;
-    }
-  });
-  if (faltando){ statusEl.textContent = 'Preencha os campos principais antes de enviar.'; statusEl.className = 'msg-status erro'; return; }
-
-  statusEl.textContent = 'Enviando…';
-  statusEl.className = 'msg-status enviando';
-  try {
-    if (!API_URL) throw new Error('Sem API configurada neste modo de demonstração.');
-    const qs = new URLSearchParams({ id: IDENTIDADE.id, codigo: IDENTIDADE.codigo, acao: f.acao, ...valores });
-    const d = await jsonp(API_URL + '?' + qs.toString());
-    if (d.erro) throw new Error(d.erro);
-    statusEl.textContent = d.mensagem || 'Enviado com sucesso.';
-    statusEl.className = 'msg-status sucesso';
-    f.campos.forEach(c => { document.getElementById(`sol-${i}-${c.id}`).value = ''; });
-  } catch (e) {
-    statusEl.textContent = e.message || String(e);
-    statusEl.className = 'msg-status erro';
-  }
 }
 
 /** As 5 caixinhas editáveis, com salvamento automático 3s após a última digitação.
@@ -1113,9 +1077,9 @@ function desenharFuncionarios(funcionarios){
 const hoje = new Date(); hoje.setHours(0,0,0,0);
 
 function vencimentoInfo(iso){
-  if (!iso) return '';
-  const [a,m,d] = String(iso).split('-').map(Number);
-  const venc = new Date(a, m-1, d);
+  const p = partesData(iso);
+  if (!p) return '';
+  const venc = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
   const dias = Math.round((venc - hoje) / 864e5);
   let classe = 'venc-ok', texto;
   if (dias < 0){ classe = 'venc-vencido'; texto = `Venceu há ${-dias}d`; }
@@ -1198,7 +1162,22 @@ function appendAll(parent, h){
 }
 
 // Em subpágina, qualquer falha de acesso volta direto para o index (que trata código expirado / áreas da pessoa).
-function erro(msg){ const {id,codigo}=getIdCodigo(); location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); }
+function erro(msg){
+  var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
+  if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
+  var volta='index.html#'+id+(codigo?('-'+codigo):'');
+  document.body.innerHTML=
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;'
+   +'font-family:\'Montserrat\',system-ui,-apple-system,sans-serif;background:#f4f6f6;color:#063033">'
+   +'<div style="max-width:440px;text-align:center;background:#fff;border:1px solid #e3e8e8;'
+   +'border-radius:16px;padding:32px 28px;box-shadow:0 6px 24px rgba(6,48,51,.06)">'
+   +'<div style="font-size:34px;line-height:1;margin-bottom:10px">📄</div>'
+   +'<h2 style="margin:0 0 8px;font-size:19px">Não foi possível carregar suas informações agora.</h2>'
+   +'<p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#3f5b5d">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#128D84;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:14px">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#128D84;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
+   +'</div></div>';
+}
 
 (async function(){
   const { id, codigo } = getIdCodigo();

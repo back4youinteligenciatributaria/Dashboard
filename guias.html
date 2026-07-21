@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agenda de pagamentos — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
@@ -1051,74 +1052,6 @@ function preparar(raw){
           impostos, retido, valorDe, media, id:raw.id||cfg.cliente_id, atualizado_em:raw.atualizado_em};
 }
 
-/* Rateio por centro a partir das NFs do mês (espelha os pesos da planilha).
-   Peso de um centro numa NF: true => 1/N (rateio igual); número => valor/bruto (absoluto);
-   nenhum marcado => tudo em "Não identificado". Devolve linhas {centro, ...métricas}. */
-function pesosNF(nf){
-  const bruto=num(nf.valorBruto); const map=nf.centros||{}; const nomes=Object.keys(map);
-  const marcadosTrue=nomes.filter(k=>map[k]===true);
-  const numericos=nomes.filter(k=>typeof map[k]==='number');
-  const pesos={};
-  if(marcadosTrue.length===0 && numericos.length===0){ pesos['Não identificado']=1; return pesos; }
-  marcadosTrue.forEach(k=>pesos[k]=1/marcadosTrue.length);
-  numericos.forEach(k=>{ pesos[k]=(pesos[k]||0)+(bruto?num(map[k])/bruto:0); });
-  return pesos;
-}
-function rateioDoMes(M, comp){
-  const pack=M.nfs[comp]||{prestadas:[],tomadas:[]};
-  const acc={}; // centro -> métricas
-  const garante=c=>{ if(!acc[c]) acc[c]={centro:c,'Nº NFs':0,'Total (R$)':0}; return acc[c]; };
-  M.centros.forEach(c=>garante(c));
-  (pack.prestadas||[]).forEach(nf=>{ const w=pesosNF(nf);
-    for(const [c,peso] of Object.entries(w)){ const row=garante(c);
-      if(peso>0) row['Nº NFs']+=peso>0?1*peso:0;
-      row['Total (R$)']+=num(nf.valorBruto)*peso;
-      for(const [k,v] of Object.entries(nf.trib)) row[k]=(row[k]||0)+num(v)*peso; } });
-  (pack.tomadas||[]).forEach(nf=>{ const w=pesosNF(nf);
-    for(const [c,peso] of Object.entries(w)){ const row=garante(c);
-      for(const [k,v] of Object.entries(nf.trib)) row[k]=(row[k]||0)+num(v)*peso; } });
-  // resultado líquido por centro
-  const rows=Object.values(acc).map(r=>{
-    const imp=M.tribs.reduce((s,t)=>s+num(r[t.pag]),0);
-    const tom=OUTRAS_TOMADAS.reduce((s,k)=>s+num(r[k]),0);
-    r['Nº NFs']=Math.round(r['Nº NFs']);
-    r['Resultado Líquido (R$)']=num(r['Total (R$)'])-imp-tom;
-    return r;
-  });
-  return rows;
-}
-const OUTRAS_TOMADAS=['TOMADAS: ISS a pagar (R$)','TOMADAS: PIS a pagar (R$)','TOMADAS: COFINS a pagar (R$)','TOMADAS: CSLL a pagar (R$)','TOMADAS: IR a pagar (R$)'];
-
-/* Rateio para exibição: usa os números autoritativos do Fechamento (API) quando houver;
-   na demonstração (ou como prévia instantânea da edição) recalcula a partir das NFs. */
-function rateioParaComp(M, comp){
-  const api=(M.rateioAPI||[]).filter(x=>x.competencia===comp);
-  return api.length ? api : rateioDoMes(M, comp);
-}
-
-/* ===================== PROVISÃO / CALENDÁRIO helpers ===================== */
-function nivelarTrimestre(M,comp,coluna){
-  const [a,m]=comp.split('-').map(Number); const tri=Math.ceil(m/3);
-  const mesesTri=(ano,t)=>{const ini=(t-1)*3+1; return [0,1,2].map(i=>ano+'-'+String(ini+i).padStart(2,'0'));};
-  const fechado=ms=>ms.every(c=>!!M.porComp[c]);
-  if(fechado(mesesTri(a,tri))){ const r=M.porComp[comp]; return r?num(getM(r,coluna)):0; }
-  let ano=a,t=tri;
-  for(let k=0;k<8;k++){ t--; if(t===0){t=4;ano--;} const ms=mesesTri(ano,t);
-    if(fechado(ms)) return ms.reduce((s,c)=>s+num(getM(M.porComp[c],coluna)),0)/3; }
-  return M.media(coluna);
-}
-function provisaoDoMes(M,comp){
-  if(!M.reg.provisaoTrimestral) return null;
-  const per=String(M.cfg.periodicidade_irpj_csll||'trimestral').toLowerCase(); if(!per.includes('trim')) return null;
-  const [a,m]=comp.split('-').map(Number); const tri=Math.ceil(m/3); const ini=(tri-1)*3+1;
-  const meses=[]; for(let i=0;i<3;i++){ const c=a+'-'+String(ini+i).padStart(2,'0'); const r=M.porComp[c];
-    const v=r?num(getM(r,'IR a pagar (R$)'))+num(getM(r,'CSLL a pagar (R$)'))
-           :nivelarTrimestre(M,c,'IR a pagar (R$)')+nivelarTrimestre(M,c,'CSLL a pagar (R$)');
-    meses.push({comp:c,apurado:!!r,v}); }
-  const total=meses.reduce((s,x)=>s+x.v,0); const fimTri=a+'-'+String(ini+2).padStart(2,'0');
-  const guia=M.cal.find(c=>c.id_regra==='R07'&&c.competencia_ref===fimTri);
-  return {tri,ano:a,total,meses,venc:guia?guia.vencimento:null};
-}
 function gradeDoMes(ano,mes){ const p=new Date(ano,mes,1); const ini=p.getDay(); const dias=new Date(ano,mes+1,0).getDate();
   const cel=[]; for(let i=0;i<ini;i++)cel.push(null); for(let d=1;d<=dias;d++)cel.push(d); while(cel.length%7)cel.push(null); return cel; }
 function miniGradeHTML(ano,mes,marc,destaque){ const cel=gradeDoMes(ano,mes);
@@ -1198,7 +1131,8 @@ function render(M){
   document.getElementById('gf-pend').addEventListener('click',()=>{ GUIAS_FILTRO='pendentes'; document.getElementById('gf-pend').classList.add('on'); document.getElementById('gf-todas').classList.remove('on'); renderGuias(M); });
   document.getElementById('gf-todas').addEventListener('click',()=>{ GUIAS_FILTRO='todas'; document.getElementById('gf-todas').classList.add('on'); document.getElementById('gf-pend').classList.remove('on'); renderGuias(M); });
 
-  desenharEstimativas(M);
+  // Se o Chart.js (CDN) falhar, o painel deve continuar aparecendo (sem os gráficos), nunca redirecionar.
+  try{ desenharEstimativas(M); }catch(e){ if(window.console&&console.warn) console.warn('Gráficos de provisão indisponíveis:', e); }
   renderCarrossel();
   renderGuias(M);
 }
@@ -1256,386 +1190,14 @@ async function marcarGuiaUI(M,chave,marca){
     const d=await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&acao=marcar_guia&chave='+encodeURIComponent(chave)+'&status='+encodeURIComponent(novo));
     if(d&&d.erro) throw new Error(d.erro);
     M.agenda=M.agenda||{};
-    if(novo){ M.agenda[chave]={status:novo,por:(d&&d.por)||'',em:(d&&d.em)||''}; } else { delete M.agenda[chave]; }
+    if(novo){ M.agenda[chave]=Object.assign({}, M.agenda[chave], {status:novo,por:(d&&d.por)||'',em:(d&&d.em)||''}); } else { delete M.agenda[chave]; }
     renderGuias(M);
   }catch(e){ alert('Não consegui marcar agora: '+(e.message||e)); }
 }
 
 
-/* Junta as pendências do fiscal (notas sem centro no ano; meses com lucro apurado
-   sem distribuição informada), mostra um banner no topo e grava um resumo em
-   localStorage para a HOME exibir o alerta com botão. */
-function computarPendencias(M){
-  const anoAtual=String(compDe(hoje)).slice(0,4);
-  let semCentroN=0;
-  ['prestadas','tomadas'].forEach(tab=>{ notasDoAno_(M,anoAtual,tab).forEach(x=>{ if(semCentro(x.nf)&&!notaInativa(x.nf)) semCentroN++; }); });
-  let lucroSemDist=0;
-  (M.empresa||[]).forEach(r=>{ const c=String(r.competencia||''); if(c.slice(0,4)!==anoAtual) return;
-    const lucro=num(getM(r,'Apuração de lucro do mês (R$)')); const div=num(getM(r,'Dividendos distribuídos (R$)'));
-    if(lucro>0 && div<=0) lucroSemDist++; });
-  const itens=[];
-  if(semCentroN>0) itens.push({titulo:semCentroN+(semCentroN>1?' notas sem centro de custo':' nota sem centro de custo'),
-    detalhe:'Identifique para o rateio e os impostos ficarem certos.', area:'fiscal', pend:true});
-  if(lucroSemDist>0) itens.push({titulo:lucroSemDist+(lucroSemDist>1?' meses com lucro sem distribuição informada':' mês com lucro sem distribuição informada'),
-    detalhe:'Informe quanto foi distribuído de lucros/dividendos.', area:'fiscal'});
-  // banner no topo do fiscal
-  const box=document.getElementById('pend-topo');
-  if(box){ box.innerHTML = itens.length ? `<div class="pend-banner">
-      <div class="pend-b-ico">!</div>
-      <div class="pend-b-txt"><b>${itens.length>1?'Algumas pendências':'Uma pendência'} para resolver</b>
-        <span>${itens.map(i=>esc(i.titulo)).join(' · ')}</span></div>
-      ${semCentroN>0?'<button type="button" class="pend-b-btn" onclick="irParaPendencias()">Identificar ↓</button>':''}
-    </div>` : ''; }
-  // resumo para a home (mesmo domínio => localStorage compartilhado)
-  try{ localStorage.setItem('b4u_pend_'+M.id, JSON.stringify({itens:itens, ts:Date.now()})); }catch(e){}
-}
-function toggleTabs(){ document.getElementById('tab-prest').classList.toggle('on',NF_TAB==='prestadas'); document.getElementById('tab-tom').classList.toggle('on',NF_TAB==='tomadas'); }
 
-function pintarMes(M,comp){
-  const de=document.getElementById('div-editor'); if(de){ de.innerHTML=''; de.dataset.open=''; } // fecha o editor de dividendos ao trocar de mês
-  const r=M.porComp[comp]; const i=M.empresa.findIndex(x=>x.competencia===comp); const ant=i>0?M.empresa[i-1]:null;
-  const tot=num(getM(r,'Total (R$)')), imp=M.impostos(r), ret=M.retido(r), liq=num(getM(r,'Resultado Líquido (R$)'));
-  const carga=tot?imp/tot:0; const totAnt=ant?num(getM(ant,'Total (R$)')):null; const dif=(ant&&totAnt)?(tot/totAnt-1):null; const nfs=num(getM(r,'Nº NFs'));
-
-  desenharGuiasDoMes(M,comp);
-
-  // tributos visíveis: regime + "vazio some"
-  const visiveis=M.tribs.filter(t=>temMetrica(r,t.pag));
-  document.getElementById('hero').innerHTML=`<div class="hero">
-    <div class="card hero-main"><span class="lbl">Competência</span><div class="comp-title">${mesLongo(comp)}</div>
-      <p class="comp-note">Os impostos desta competência vencem em ${mesLongo(mesSeguinteComp(comp))}.</p>
-      <div class="big num">${brl2(tot)}</div>
-      <div class="delta">${dif===null?'':`<span class="chip ${dif>=0?'up':'down'}">${dif>=0?'+':''}${(dif*100).toFixed(1).replace('.',',')}%</span>`}<span>${nfs} notas emitidas · total: ${brl(tot)}</span></div>
-    </div>
-    <div class="card relacao"><div class="relacao-head"><h2>Impostos a pagar</h2></div>
-      <div class="table-scroll"><table class="imp"><thead><tr><th>Tributo</th><th>Devido</th>${M.reg.retencao?'<th>Retido</th>':''}<th>A pagar</th></tr></thead>
-      <tbody>${visiveis.map(t=>`<tr><td>${t.n}</td><td class="num">${brl(num(getM(r,t.dev)))}</td>${M.reg.retencao?`<td class="num">${t.ret?brl(num(getM(r,t.ret))):'—'}</td>`:''}<td class="num">${brl(num(getM(r,t.pag)))}</td></tr>`).join('')}</tbody>
-      <tfoot><tr><td>Total</td><td></td>${M.reg.retencao?`<td class="num">${brl(ret)}</td>`:''}<td class="num">${brl(imp)}</td></tr></tfoot></table></div>
-      <a class="btn" href="#rateio">Ver rateio por centro de custo ↓</a></div></div>`;
-
-  const prov=provisaoDoMes(M,comp);
-  const lucroAp=num(getM(r,'Apuração de lucro do mês (R$)'));
-  const divid=num(getM(r,'Dividendos distribuídos (R$)'));
-  const semDiv = lucroAp>0 && divid<=0;
-  document.getElementById('slim').innerHTML=`<div class="slim">
-    ${M.reg.retencao?`<div class="card stat"><span class="lbl">Retido na fonte</span><div class="v num">${brl(ret)}</div><div class="s">${ret?'já pago pelos tomadores':'nenhuma retenção no mês'}</div></div>`:''}
-    <div class="card stat"><span class="lbl">Carga efetiva</span><div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>
-    <div class="card stat"><span class="lbl">Resultado líquido</span><div class="v num" style="color:var(--receita)">${brl(liq)}</div><div class="s">depois dos impostos</div></div>
-    <button type="button" id="card-div" class="card stat card-click${semDiv?' div-alerta':''}"><span class="lbl">Dividendos distribuídos</span><div class="v num">${divid>0?brl(divid):'—'}</div><div class="s">${semDiv?'⚠ nenhuma distribuição informada':(divid>0?('de '+brl(lucroAp)+' de lucro apurado'):'nenhum valor informado')}</div><span class="stat-cta">${divid>0?'Editar distribuição':'Informar distribuição'} →</span></button></div>`;
-  const cd=document.getElementById('card-div'); if(cd) cd.addEventListener('click',()=>abrirEditorDividendos(M,comp));
-
-  document.getElementById('prov').innerHTML=prov?(()=>{ const dias=prov.venc?Math.round((dParse(prov.venc)-hoje)/864e5):null;
-    return `<div class="card prov-compact"><div class="prov-compact-head"><span class="lbl">Provisão IRPJ+CSLL · ${prov.tri}º trimestre de ${prov.ano}</span>
-      <span class="prov-compact-venc">${prov.venc?'vence '+dParse(prov.venc).toLocaleDateString('pt-BR')+(dias!==null?(dias>=0?` · em ${dias}d`:' · vencida'):''):'sem guia projetada'}</span></div>
-      <div class="prov-compact-meses">${prov.meses.map(x=>`<div class="pmes ${x.apurado?'':'futuro'}"><span class="pmes-label">${mesLabel(x.comp)} · ${x.apurado?'apurado':'estimado'}</span><span class="pmes-v num ${x.apurado?'':'est'}">${brl(x.v)}</span></div>`).join('')}</div>
-      <div class="prov-compact-total"><span>Total do trimestre</span><b class="num">${brl(prov.total)}</b></div></div>`; })():'';
-
-  desenharRateio(M,comp,tot);
-  desenharNotas(M,comp);
-
-  if(CHARTS){
-    CHARTS.c1.data.datasets[0].backgroundColor=M.empresa.map(r2=>r2.competencia===comp?PAL.iss:'#D9CDBB'); CHARTS.c1.update('none');
-    CHARTS.c3.data.labels=visiveis.map(t=>t.n); CHARTS.c3.data.datasets[0].data=visiveis.map(t=>num(getM(r,t.pag)));
-    CHARTS.c3.data.datasets[0].backgroundColor=visiveis.map(t=>t.c);
-    document.getElementById('c3sub').textContent=mesLongo(comp)+' · total '+brl(imp);
-    document.getElementById('c3-lg').innerHTML=visiveis.map(t=>`<div class="pie-legend-row"><i style="background:${t.c}"></i><span>${t.n}</span><b class="num">${brl(num(getM(r,t.pag)))}</b></div>`).join('');
-    CHARTS.c3.update();
-  }
-}
-
-/* Guias que rateiam por centro (aparecem em "Guias do mês", clicáveis). As demais
-   (INSS, FGTS, IRRF sobre dividendos — não proporcionais à receita) vão para "Outras guias". */
-const GUIA_RATEAVEL=new Set(['ISS a Pagar (R$)','PIS a pagar (R$)','COFINS a pagar (R$)','CSLL a pagar (R$)','IR a pagar (R$)',
-  'TOMADAS: ISS a pagar (R$)','TOMADAS: PIS a pagar (R$)','TOMADAS: COFINS a pagar (R$)','TOMADAS: CSLL a pagar (R$)','TOMADAS: IR a pagar (R$)',
-  'IRRF Dividendos (R$)','DAS a Pagar (R$)']);   // IRRF e DAS rateiam por centro
-function guiaEhRateavel(reg){ const f=String((reg||{}).metrica_fonte||'').trim(); if(!f) return false;
-  return f.split('|').map(s=>s.trim()).filter(Boolean).every(k=>GUIA_RATEAVEL.has(k)); }
-function corDaCategoria(cat){ cat=String(cat||'').toLowerCase();
-  if(cat.indexOf('pessoal')>-1) return PAL.inss; if(cat.indexOf('federal')>-1) return PAL.irpj; return PAL.couro; }
-
-/** Quebra o valor de uma guia por centro, somando os mesmos meses que valorDe usaria
-    (respeita acumula_meses, ex.: o trimestre do IRPJ), a partir do rateio autoritativo. */
-function detalheGuiaPorCentro(M,item){
-  const reg=M.regraDe[item.id_regra]||{}; const fonte=String(reg.metrica_fonte||'').trim(); if(!fonte) return [];
-  const chaves=fonte.split('|').map(s=>s.trim()).filter(Boolean); const n=Math.max(1,num(reg.acumula_meses)||1);
-  const ref=String(item.competencia_ref||''); if(!/^\d{4}-\d{2}$/.test(ref)) return [];
-  const [a,m]=ref.split('-').map(Number); const porCentro={};
-  for(let i=0;i<n;i++){ const c=compDe(new Date(a,m-1-i,1));
-    rateioParaComp(M,c).forEach(x=>{ if(!x.centro) return; const v=chaves.reduce((s,k)=>s+num(x[k]),0); porCentro[x.centro]=(porCentro[x.centro]||0)+v; }); }
-  return Object.entries(porCentro).map(([centro,v])=>({centro,v:Math.round(v*100)/100})).filter(x=>x.v>0.004).sort((a,b)=>b.v-a.v);
-}
-
-function desenharGuiasDoMes(M,comp){
-  const itens=M.cal.filter(c=>c.competencia_ref===comp).map(c=>({...c,...M.valorDe(c)}));
-  const fiscais=itens.filter(it=>guiaEhRateavel(M.regraDe[it.id_regra])).sort((a,b)=>b.v-a.v);
-  const outras=itens.filter(it=>!guiaEhRateavel(M.regraDe[it.id_regra]) && it.v>0 && String((M.regraDe[it.id_regra]||{}).periodicidade)!=='Anual').sort((a,b)=>b.v-a.v);
-
-  const box=document.getElementById('guias-mes');
-  box.innerHTML=fiscais.length?`<div class="card guias-card"><div class="relacao-head"><h2>Guias do mês</h2><span class="lbl">tributos que vencem a partir desta competência · clique para ver por centro</span></div>
-    ${fiscais.map(it=>{ const status=it.v<=0?'aberto':(it.est?'estimativa':'fechada'); const rot={fechada:'Fechada',estimativa:'Estimativa',aberto:'Em aberto'}[status];
-      const det=it.v>0?detalheGuiaPorCentro(M,it):[];
-      return `<div class="guia-row"><div class="guia-main"><span class="guia-status status-${status}">${rot}</span><span class="guia-nome">${esc(it.descricao)}</span>
-        <span class="guia-valor num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (est.)':''}</span>
-        ${det.length?`<button class="guia-toggle" onclick="const d=this.closest('.guia-row').querySelector('.guia-detalhe');const a=d.classList.toggle('aberto');this.classList.toggle('on',a);this.firstChild.textContent=a?'ocultar':'por centro'"><span>por centro</span><span class="car">▾</span></button>`:''}</div>
-        ${det.length?`<div class="guia-detalhe">${det.map(d=>`<div class="guia-detalhe-row"><span>${esc(d.centro)}</span><b class="num">${brl(d.v)}</b></div>`).join('')}</div>`:''}</div>`;}).join('')}</div>`:'';
-
-  const ob=document.getElementById('outras');
-  ob.innerHTML=outras.length?`<div class="card outras"><h4>Outras guias do mês</h4><div class="lbl" style="margin:-4px 0 8px;text-transform:none;letter-spacing:0">não rateiam por centro (folha/retenções)</div>
-    ${outras.map(it=>`<div class="outras-row"><i style="background:${corDaCategoria(it.categoria)}"></i><span>${esc(it.descricao)}</span><b class="num">${brl(it.v)}</b></div>`).join('')}</div>`:'';
-}
-
-function desenharRateio(M,comp,tot){
-  const linhas=rateioParaComp(M,comp).filter(x=>num(x['Total (R$)'])>0||num(x['Nº NFs'])>0||M.impostos(x)>0)
-    .sort((a,b)=>num(b['Total (R$)'])-num(a['Total (R$)']));
-  const tb=document.querySelector('#rat tbody');
-  tb.innerHTML=linhas.map(x=>{ const nid=x.centro==='Não identificado'; const t=num(x['Total (R$)']); const sh=tot?t/tot:0;
-    return `<tr class="${nid?'nid':''}"${nid?' onclick="irParaPendencias()" style="cursor:pointer" title="Ver e identificar as notas sem centro"':''}><td><b style="font-weight:${nid?800:600}">${esc(x.centro)}${nid?' <span style="font-weight:600;text-decoration:underline;color:var(--alerta)">identificar ↓</span>':''}</b><div class="share"><i style="width:${(sh*100).toFixed(1)}%"></i></div></td>
-      <td class="r num">${x['Nº NFs']}</td><td class="r num">${brl(t)}<div style="font-size:11px;color:var(--muted)">${pct(sh)}</div></td>
-      <td class="r num">${brl(M.impostos(x))}</td>${M.reg.retencao?`<td class="r num">${brl(M.retido(x))}</td>`:''}<td class="r num">${brl(num(x['Resultado Líquido (R$)']))}</td></tr>`;
-  }).join('')||`<tr><td colspan="6" style="color:var(--muted)">Sem rateio informado neste mês.</td></tr>`;
-
-  const nidRow=linhas.find(x=>x.centro==='Não identificado'); const shareNid=nidRow&&tot?num(nidRow['Total (R$)'])/tot:0;
-  document.getElementById('rat-sub').textContent=`${linhas.length} centros com movimento em ${mesLongo(comp)}.`;
-  document.getElementById('alerta').innerHTML=shareNid>0.001?`<div class="alert clicavel" role="button" tabindex="0" onclick="irParaPendencias()" onkeydown="if(event.key==='Enter')irParaPendencias()">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-    <div><b>${pct(shareNid)} do faturamento de ${mesLongo(comp)} está sem centro de custo.</b> <span style="font-weight:600;text-decoration:underline">Identificar pendências ↓</span></div></div>`:'';
-
-  if(CHARTS){ // cor SEMPRE pela posição do centro (consistente com os chips e o editor)
-    CHARTS.c5.data.labels=linhas.map(x=>x.centro); CHARTS.c5.data.datasets[0].data=linhas.map(x=>num(x['Total (R$)']));
-    CHARTS.c5.data.datasets[0].backgroundColor=linhas.map(x=>centroCor(M,x.centro)); CHARTS.c5.update();
-    document.getElementById('c5-lg').innerHTML=linhas.map(x=>`<div class="pie-legend-row"><i style="background:${centroCor(M,x.centro)}"></i><span>${esc(x.centro)}</span><b class="num">${brl(M.impostos(x))}</b></div>`).join('');
-  }
-}
-
-/* ---- Notas do mês + editor de centro ---- */
-function centroCor(M,centro){ if(centro==='Não identificado') return PAL.vinho;
-  const reais=(M.centros||[]).filter(c=>c!=='Não identificado'); const i=reais.indexOf(centro);
-  return CENTRO_PAL[(i<0?0:i)%CENTRO_PAL.length]; }
-function chipsCentro(M,nf){
-  const w=pesosNF(nf); const ent=Object.entries(w).filter(([,p])=>p>0.0005).sort((a,b)=>b[1]-a[1]);
-  if(!ent.length) return `<span class="chip-c nid" onclick="irParaPendencias()" style="cursor:pointer" title="Filtrar as notas sem centro">Não identificado</span>`;
-  return ent.map(([c,p])=>{ const nid=c==='Não identificado';
-    return `<span class="chip-c ${nid?'nid':''}"${nid?' onclick="irParaPendencias()" style="cursor:pointer" title="Filtrar as notas sem centro"':''}><i style="background:${centroCor(M,c)}"></i>${esc(c)} · ${pct(p)}</span>`; }).join('');
-}
-function semCentro(nf){ const w=pesosNF(nf); return (w['Não identificado']||0)>0.005; }
-function notaInativa(nf){ return !!(nf && (nf.ativa===false || /cancel|substit/i.test(nf.situacao||''))); }
-
-function notasDoAno_(M,ano,tab){
-  const out=[];
-  Object.keys(M.nfs||{}).forEach(c=>{ if(String(c).slice(0,4)!==String(ano)) return;
-    ((M.nfs[c]||{})[tab]||[]).forEach((nf,oi)=>out.push({nf,oi,comp:c})); });
-  return out;
-}
-
-function desenharNotas(M,comp){
-  const prest=NF_TAB==='prestadas';
-  const ano=String(comp).slice(0,4);
-  const anoMode=NF_ANO;                                   // busca/lista em todas as competências do ano
-  let todas;
-  if(anoMode) todas=notasDoAno_(M,ano,NF_TAB).sort((a,b)=>String(a.comp).localeCompare(b.comp)||(''+a.nf.nf).localeCompare(''+b.nf.nf));
-  else { const pack=M.nfs[comp]||{prestadas:[],tomadas:[]}; todas=(pack[NF_TAB]||[]).map((nf,oi)=>({nf,oi,comp})); }
-  const nPend=todas.filter(x=>semCentro(x.nf) && !notaInativa(x.nf)).length;
-  let lista=todas;
-  if(NF_PEND) lista=lista.filter(x=>semCentro(x.nf) && !notaInativa(x.nf));
-  if(NF_BUSCA) lista=lista.filter(x=>(x.nf.nf+' '+x.nf.contraparte+' '+(x.nf.tipo||'')+' '+(x.nf.descricao||'')+' '+(x.nf.observacao||'')).toLowerCase().includes(NF_BUSCA));
-
-  const escopo=anoMode?`no ano de ${ano}`:mesLongo(comp);
-  document.getElementById('nf-resumo').innerHTML=`${lista.length===todas.length?todas.length:lista.length+' de '+todas.length} notas ${prest?'prestadas':'tomadas'} ${escopo}${nPend?` · <b style="color:var(--sinal)">${nPend} sem centro</b>`:''}`;
-  const pb=document.getElementById('nf-pend'); pb.classList.toggle('on',NF_PEND); pb.textContent=NF_PEND?'Mostrar todas':'Só sem centro';
-  const ab=document.getElementById('nf-ano'); if(ab){ ab.classList.toggle('on',NF_ANO); ab.textContent=NF_ANO?'Só este mês':'No ano todo'; }
-
-  const thead=document.querySelector('#nf-tabela thead');
-  thead.innerHTML=`<tr><th>NF</th><th>${anoMode?'Comp.':'Data'}</th><th>${prest?'Tomador':'Prestador'}</th><th class="r">Valor</th><th>Centro de custo</th><th class="r"></th></tr>`;
-  const tb=document.querySelector('#nf-tabela tbody');
-  if(!lista.length){ tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">${NF_BUSCA?'Nenhuma nota encontrada'+(anoMode?' no ano.':' neste mês.'):(NF_PEND?'Nenhuma nota sem centro'+(anoMode?' no ano.':' neste mês.'):('Nenhuma nota '+(prest?'prestada':'tomada')+(anoMode?' no ano.':' neste mês.')))}</td></tr>`; return; }
-  tb.innerHTML=lista.map(({nf,oi,comp:c})=>{
-    const gid=`${c}-${NF_TAB}-${oi}`; const inativa=notaInativa(nf); const pend=semCentro(nf)&&!inativa;
-    const sit=(nf.situacao||'').trim();
-    const badge=sit?`<span class="nf-sit ${/cancel/i.test(sit)?'cancel':'subst'}">${esc(sit)}${nf.substituidaPor?(' → NF '+esc(nf.substituidaPor)):''}</span>`:'';
-    const temDet = !!(nf.descricao || nf.observacao);
-    const dataCel = anoMode ? `<span class="nf-comp">${esc(mesLabel(c))}</span>` : esc((nf.data||'').slice(8)+'/'+(nf.data||'').slice(5,7));
-    return `<tr id="nfrow-${gid}" class="${inativa?'nf-inativa':''}"><td class="num">${esc(nf.nf)}</td><td class="num">${dataCel}</td>
-      <td><div class="nf-cp">${esc(nf.contraparte)}${badge}</div><div class="nf-tipo">${esc(nf.tipo||'')}</div>
-        ${temDet?`<button class="nf-expand" data-exp="${gid}" aria-expanded="false"><span class="mais">＋</span> detalhes</button>
-        <div class="nf-detalhe" id="det-${gid}">
-          ${nf.descricao?`<div class="nf-desc"><span class="det-lbl">Descrição</span>${esc(nf.descricao)}</div>`:''}
-          ${nf.observacao?`<div class="nf-obs"><span class="det-lbl">Observação</span>${esc(nf.observacao)}</div>`:''}
-        </div>`:''}</td>
-      <td class="r num">${brl(num(nf.valorBruto))}</td><td><div class="chips" id="chips-${gid}">${inativa?'<span style="font-size:11px;color:var(--muted)">fora do cálculo</span>':chipsCentro(M,nf)}</div></td>
-      <td class="r">${inativa?'':`<button class="btn-edit ${pend?'pend':''}" data-gid="${gid}" data-idx="${oi}" data-comp="${c}">${pend?'Identificar':'Editar centro'}</button>`}</td></tr>
-    <tr class="editor-row" id="editor-${gid}"><td colspan="6"></td></tr>`;
-  }).join('');
-  tb.querySelectorAll('.btn-edit').forEach(b=>b.addEventListener('click',()=>abrirEditor(M,b.dataset.comp,NF_TAB,+b.dataset.idx,b.dataset.gid)));
-  tb.querySelectorAll('.nf-expand').forEach(b=>b.addEventListener('click',()=>{
-    const det=document.getElementById('det-'+b.dataset.exp); const ab=det.classList.toggle('aberto');
-    b.setAttribute('aria-expanded',ab);
-  }));
-}
-
-const EDIT_STATE={};
-function abrirEditor(M,comp,tab,idx,gid){
-  const nf=M.nfs[comp][tab][idx]; const row=document.getElementById('editor-'+gid); const cell=row.querySelector('td');
-  const aberto=row.classList.contains('aberto');
-  document.querySelectorAll('.editor-row.aberto').forEach(r=>{ if(r!==row){r.classList.remove('aberto');r.querySelector('td').innerHTML='';} });
-  if(aberto){ row.classList.remove('aberto'); cell.innerHTML=''; return; }
-  row.classList.add('aberto');
-  // estado de edição: partir do rateio atual da NF
-  const w=pesosNF(nf); const bruto=num(nf.valorBruto);
-  const st={ modo: Object.values(nf.centros||{}).some(v=>typeof v==='number')?'valor':'igual',
-             sel:{} }; // sel[centro] = {on:bool, valor:number}
-  centrosReais(M).forEach(c=>{ st.sel[c]={on:(w[c]||0)>0.0005, valor: round2((w[c]||0)*bruto)}; });
-  EDIT_STATE[gid]={nf,comp,tab,idx,bruto,st,gid};
-  renderEditor(M,gid);
-}
-function round2(v){ return Math.round(v*100)/100; }
-function centrosReais(M){ return M.centros.filter(c=>c!=='Não identificado'); }
-function renderEditor(M,gid){
-  const E=EDIT_STATE[gid]; const {bruto,st}=E; const cell=document.getElementById('editor-'+gid).querySelector('td');
-  const modos=[['igual','Dividir igual'],['pct','Por %'],['valor','Por valor (R$)']];
-  const rows=centrosReais(M).map(c=>{ const s=st.sel[c]; const cor=centroCor(M,c);
-    let inputHtml='';
-    if(st.modo==='igual') inputHtml=`<span style="font-size:11.5px;color:var(--muted);text-align:right">${s.on?pct(1/Math.max(1,contarOn(st))):'—'}</span>`;
-    else if(st.modo==='pct') inputHtml=`<input class="ed-num" type="number" min="0" max="100" step="0.1" data-c="${esc(c)}" data-f="pct" ${s.on?'':'disabled'} value="${s.on?round2(s.valor/bruto*100):''}">`;
-    else inputHtml=`<input class="ed-num" type="number" min="0" step="0.01" data-c="${esc(c)}" data-f="valor" ${s.on?'':'disabled'} value="${s.on?s.valor:''}">`;
-    return `<div class="ed-row"><i style="background:${cor}"></i><label><input type="checkbox" data-c="${esc(c)}" data-f="on" ${s.on?'checked':''}> ${esc(c)}</label>${inputHtml}</div>`;
-  }).join('');
-  const {somaValor,somaPct,estado,txt}=resumoEditor(M,gid);
-  cell.innerHTML=`<div class="editor">
-    <div class="editor-modos">${modos.map(([k,l])=>`<button class="tab ${st.modo===k?'on':''}" data-modo="${k}">${l}</button>`).join('')}
-      <span style="flex:1"></span>
-      <button class="tab" data-act="todos" title="Rateio geral: divide igual entre todos os centros">Todos os centros</button>
-      <button class="tab" data-act="limpar">Limpar</button></div>
-    ${rows}
-    <div class="ed-foot"><span class="ed-sum ${estado}">${txt}</span>
-      <div class="ed-actions"><button class="btn-ghost" data-act="cancel">Cancelar</button><button class="btn-save" data-act="save" ${estado==='err'?'disabled':''}>Salvar</button></div></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:8px">Não marcar nenhum centro = a nota fica em <b>Não identificado</b>. "Todos os centros" = rateio geral (divide igual entre todos).</div>
-  </div>`;
-  // listeners
-  cell.querySelectorAll('[data-modo]').forEach(b=>b.addEventListener('click',()=>{ st.modo=b.dataset.modo; renderEditor(M,gid); }));
-  cell.querySelector('[data-act="todos"]').addEventListener('click',()=>{ st.modo='igual'; centrosReais(M).forEach(c=>st.sel[c].on=true); renderEditor(M,gid); });
-  cell.querySelector('[data-act="limpar"]').addEventListener('click',()=>{ centrosReais(M).forEach(c=>{st.sel[c].on=false;}); renderEditor(M,gid); });
-  cell.querySelectorAll('input[data-f="on"]').forEach(inp=>inp.addEventListener('change',()=>{ st.sel[inp.dataset.c].on=inp.checked; renderEditor(M,gid); }));
-  cell.querySelectorAll('input[data-f="pct"]').forEach(inp=>inp.addEventListener('input',()=>{ st.sel[inp.dataset.c].valor=round2((num(inp.value)/100)*bruto); atualizarResumo(M,gid); }));
-  cell.querySelectorAll('input[data-f="valor"]').forEach(inp=>inp.addEventListener('input',()=>{ st.sel[inp.dataset.c].valor=round2(num(inp.value)); atualizarResumo(M,gid); }));
-  cell.querySelector('[data-act="cancel"]').addEventListener('click',()=>{ document.getElementById('editor-'+gid).classList.remove('aberto'); cell.innerHTML=''; delete EDIT_STATE[gid]; });
-  cell.querySelector('[data-act="save"]').addEventListener('click',()=>confirmarSalvar(M,gid));
-}
-function contarOn(st){ return Object.values(st.sel).filter(s=>s.on).length; }
-function resumoEditor(M,gid){
-  const E=EDIT_STATE[gid]; const {bruto,st}=E; const on=Object.entries(st.sel).filter(([,s])=>s.on);
-  if(st.modo==='igual'){ const n=on.length; return {somaValor:bruto,somaPct:n?1:0,estado:n?'ok':'warn',
-    txt:n?`Dividido igual entre ${n} centro(s) · ${pct(1/n)} cada`:'Nenhum centro marcado → vai para Não identificado'}; }
-  const somaValor=on.reduce((s,[,x])=>s+num(x.valor),0); const somaPct=bruto?somaValor/bruto:0; const dif=round2(bruto-somaValor);
-  let estado='ok', txt=`Alocado ${brl(somaValor)} de ${brl(bruto)} · ${pct(somaPct)}`;
-  if(!on.length){ estado='warn'; txt='Nenhum centro marcado → vai para Não identificado'; }
-  else if(somaValor-bruto>0.01){ estado='err'; txt=`Passou do valor da nota em ${brl(somaValor-bruto)}`; }
-  else if(dif>0.01){ estado='warn'; txt=`Faltam ${brl(dif)} (${pct(dif/bruto)}) — o restante fica sem centro`; }
-  return {somaValor,somaPct,estado,txt};
-}
-function atualizarResumo(M,gid){ const cell=document.getElementById('editor-'+gid).querySelector('td'); const {estado,txt}=resumoEditor(M,gid);
-  const sp=cell.querySelector('.ed-sum'); if(sp){ sp.className='ed-sum '+estado; sp.textContent=txt; }
-  const save=cell.querySelector('[data-act="save"]'); if(save) save.disabled=(estado==='err'); }
-
-/* monta o mapa de centros que será gravado (true = igual; número = valor absoluto) */
-function montarCentrosParaSalvar(gid){
-  const {bruto,st}=EDIT_STATE[gid]; const map={};
-  const on=Object.entries(st.sel).filter(([,s])=>s.on);
-  if(st.modo==='igual'){ on.forEach(([c])=>map[c]=true); }
-  else { on.forEach(([c,s])=>{ if(num(s.valor)>0) map[c]=round2(num(s.valor)); }); }
-  return map;
-}
-function confirmarSalvar(M,gid){
-  const E=EDIT_STATE[gid]; const map=montarCentrosParaSalvar(gid); const bruto=E.bruto;
-  const w=pesosNFmap(map,bruto); const ent=Object.entries(w).filter(([,p])=>p>0.0005).sort((a,b)=>b[1]-a[1]);
-  const resumo=(ent.length?ent:[['Não identificado',1]]).map(([c,p])=>`<div><span>${esc(c)}</span><b>${pct(p)} · ${brl(p*bruto)}</b></div>`).join('');
-  document.getElementById('modal-texto').innerHTML=`Nota <b>${esc(E.nf.nf)}</b> (${brl(bruto)}) passará a ser rateada assim:`;
-  document.getElementById('modal-resumo').innerHTML=resumo;
-  const bg=document.getElementById('modal-bg'); bg.classList.add('on');
-  const conf=document.getElementById('modal-confirmar'), canc=document.getElementById('modal-cancelar');
-  const fechar=()=>{ bg.classList.remove('on'); conf.onclick=null; canc.onclick=null; };
-  canc.onclick=fechar;
-  conf.onclick=async()=>{ conf.disabled=true; conf.textContent='Salvando…';
-    try{ await salvarCentros(M,E,map); fechar(); }
-    catch(err){ document.getElementById('modal-texto').innerHTML=`<span style="color:var(--alerta)">Não deu para salvar: ${esc(err.message||err)}</span>`; }
-    finally{ conf.disabled=false; conf.textContent='Sim, salvar'; }
-  };
-}
-function pesosNFmap(map,bruto){ const nomes=Object.keys(map); const t=nomes.filter(k=>map[k]===true); const nums=nomes.filter(k=>typeof map[k]==='number');
-  const p={}; if(!t.length&&!nums.length){p['Não identificado']=1;return p;} t.forEach(k=>p[k]=1/t.length); nums.forEach(k=>p[k]=(p[k]||0)+(bruto?num(map[k])/bruto:0)); return p; }
-
-async function salvarCentros(M,E,map){
-  if(API_URL){
-    const qs=new URLSearchParams({ id:IDENTIDADE.id, codigo:IDENTIDADE.codigo, acao:'atualizar_centro',
-      competencia:E.comp, tipo_nf:E.tab, nf:E.nf.nf, centros:JSON.stringify(map) });
-    const d=await jsonp(API_URL+'?'+qs.toString()); if(d.erro) throw new Error(d.erro);
-    // substitui os números autoritativos desta competência pelos que o Fechamento recalculou
-    if(d.rateio){ M.rateioAPI=(M.rateioAPI||[]).filter(x=>x.competencia!==E.comp).concat(d.rateio); }
-    if(d.empresa){ Object.assign(M.porComp[E.comp]||{}, d.empresa); }
-  }
-  // aplica localmente (na demonstração é a fonte; em produção é prévia até o backend confirmar)
-  E.nf.centros=map;
-  const gid=E.gid||`${E.comp}-${E.tab}-${E.idx}`; const row=document.getElementById('editor-'+gid); if(row){row.classList.remove('aberto');row.querySelector('td').innerHTML='';}
-  delete EDIT_STATE[gid];
-  // atualiza SÓ o que depende do rateio, sem recarregar a página nem re-renderizar o painel todo
-  if(E.comp===SEL){
-    const r=M.porComp[E.comp]; const tot=num(getM(r,'Total (R$)'));
-    desenharRateio(M,E.comp,tot);      // tabela de rateio + gráfico de participação + alerta de pendências
-    desenharGuiasDoMes(M,E.comp);      // quebra "por centro" das guias
-    desenharNotas(M,E.comp);           // chips e contagem de pendências
-  } else {
-    const chips=document.getElementById('chips-'+gid); if(chips) chips.innerHTML=chipsCentro(M,E.nf);
-  }
-}
-
-/* ---- Editar dividendos/lucros distribuídos (grava no Fechamento) ---- */
-function abrirEditorDividendos(M,comp){
-  const box=document.getElementById('div-editor'); if(!box) return;
-  if(box.dataset.open==='1'){ box.innerHTML=''; box.dataset.open=''; return; }
-  box.dataset.open='1';
-  const rat=rateioParaComp(M,comp); const byC={}; rat.forEach(x=>{ if(x.centro) byC[x.centro]=x; });
-  const linhas=centrosReais(M).map(c=>{
-    const o=byC[c]||{}; const dv=num(o['Dividendos distribuídos (R$)']); const luc=num(o['Apuração de lucro do mês (R$)']);
-    return `<div class="dv-row">
-      <span class="dv-centro"><i style="background:${centroCor(M,c)}"></i>${esc(c)}</span>
-      <span class="dv-luc">lucro apurado ${brl(luc)}</span>
-      <input class="dv-in" data-centro="${esc(c)}" type="text" inputmode="decimal" value="${dv>0?dv.toFixed(2).replace('.',','):''}" placeholder="0,00" aria-label="Dividendos ${esc(c)}"></div>`;
-  }).join('');
-  box.innerHTML=`<div class="card dv-card">
-    <div class="dv-head"><b>Distribuição de lucros/dividendos — ${mesLongo(comp)}</b><button class="dv-close" data-act="fechar" aria-label="Fechar">✕</button></div>
-    <p class="dv-sub">Informe quanto foi efetivamente distribuído a cada sócio nesta competência. Salva por cima do fechamento e atualiza o painel.</p>
-    <div class="dv-list">${linhas}</div>
-    <div class="dv-foot"><span id="dv-msg"></span><button class="btn dv-save" data-act="salvar">Salvar distribuição</button></div></div>`;
-  box.querySelector('[data-act="fechar"]').addEventListener('click',()=>{ box.innerHTML=''; box.dataset.open=''; });
-  box.querySelector('[data-act="salvar"]').addEventListener('click',()=>salvarDividendos(M,comp,box));
-}
-
-async function salvarDividendos(M,comp,box){
-  const msg=box.querySelector('#dv-msg'); const btn=box.querySelector('.dv-save');
-  const valores={};
-  // só envia o que foi preenchido (vazio = não mexe no valor atual daquele sócio; digite 0 para zerar)
-  box.querySelectorAll('.dv-in').forEach(inp=>{ const raw=inp.value.trim().replace(/\./g,'').replace(',','.');
-    if(raw==='') return; valores[inp.dataset.centro]=Number(raw)||0; });
-  if(!API_URL){ msg.textContent='Sem API neste modo de demonstração.'; msg.style.color='#8B2E22'; return; }
-  btn.disabled=true; btn.textContent='Salvando…'; msg.textContent='';
-  try{
-    const qs=new URLSearchParams({ id:IDENTIDADE.id, codigo:IDENTIDADE.codigo, acao:'atualizar_dividendos',
-      competencia:comp, valores:JSON.stringify(valores) });
-    const d=await jsonp(API_URL+'?'+qs.toString()); if(d.erro) throw new Error(d.erro);
-    if(d.rateio){ M.rateioAPI=(M.rateioAPI||[]).filter(x=>x.competencia!==comp).concat(d.rateio); }
-    if(d.empresa){ Object.assign(M.porComp[comp]||{}, d.empresa); }
-    box.innerHTML=''; box.dataset.open='';
-    if(comp===SEL) pintarMes(M,comp);
-  }catch(e){ btn.disabled=false; btn.textContent='Salvar distribuição'; msg.textContent=e.message||String(e); msg.style.color='#8B2E22'; }
-}
-
-/** Rola até as notas e liga o filtro de pendências (notas sem centro). */
-function irParaPendencias(){
-  NF_PEND=true;
-  if(M_GLOBAL) desenharNotas(M_GLOBAL,SEL);
-  const n=document.getElementById('notas'); if(n) n.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-/* ---- estimativas / anuais / gráficos ---- */
+/* ---- estimativas (provisionamento) ---- */
 /* Soma a coluna por n meses a partir de ref. Mês FECHADO (tem dado) usa o valor real;
    mês ABERTO usa a MÉDIA dos últimos meses com movimento (M.media) e marca est=true.
    Assim os trimestrais usam o cálculo real nos meses fechados + média nos abertos. */
@@ -1675,36 +1237,25 @@ function desenharEstimativas(M){
     new Chart(document.getElementById('est-'+i),{type:'doughnut',data:{labels:dados.map(x=>x.n),datasets:[{data:dados.map(x=>x.v),backgroundColor:dados.map(x=>x.c),borderWidth:0}]},options:opts});
   }
 }
-function desenharAnuais(M){
-  const anuais=M.regras.filter(r=>r.periodicidade==='Anual'&&String(r.ativo)!=='FALSE');
-  const cartoes=anuais.map(reg=>{ const oc=M.cal.filter(c=>c.id_regra===reg.id).map(c=>({...c,data:dParse(c.vencimento),...M.valorDe(c)})).sort((a,b)=>a.data-b.data);
-    const passadas=oc.filter(o=>o.data<=hoje), futuras=oc.filter(o=>o.data>hoje);
-    const linhas=[passadas.length?passadas[passadas.length-1]:null,futuras.length?futuras[0]:null].filter(Boolean); if(!linhas.length)return'';
-    return `<div class="card month"><h4>${esc(reg.descricao)}</h4><div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:10px">${esc(reg.categoria||'')}</div>
-      ${linhas.map(o=>{ const passado=o.data<=hoje; const dias=Math.round((o.data-hoje)/864e5); const classe=passado?'due-pago':(dias<=92?'due-atencao':'');
-        const vh=o.v>0?`<span class="vl num ${o.est?'est':''}">${brl(o.v)}</span>`:`<span class="vl num" style="color:var(--muted);font-weight:500">só entrega</span>`;
-        return `<div class="due ${classe}"><span class="day num">${String(o.vencimento).slice(8)}/${String(o.vencimento).slice(5,7)}</span><span class="body"><span class="nm">${passado?'Último':'Próximo'} · ${o.vencimento.slice(0,4)}</span>${vh}</span></div>`; }).join('')}</div>`;
-  }).filter(Boolean);
-  document.getElementById('anuais').innerHTML=cartoes.join('')||'<p style="color:var(--muted)">Nenhuma obrigação anual no momento.</p>';
-}
-function desenharGraficos(M){
-  const labels=M.empresa.map(r=>mesLabel(r.competencia));
-  const base={responsive:true,maintainAspectRatio:false,animation:{duration:550},
-    plugins:{legend:{display:false},tooltip:{backgroundColor:PAL.petroleo,padding:10,cornerRadius:6,titleFont:{family:'Montserrat',size:12,weight:600},bodyFont:{family:'Montserrat',size:12},displayColors:true,boxWidth:8,boxHeight:8,callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y??c.parsed)}}},
-    scales:{x:{grid:{display:false},border:{color:PAL.line},ticks:{color:PAL.muted,font:{family:'Montserrat',size:11}}},y:{grid:{color:'#EDE4D6'},border:{display:false},ticks:{color:PAL.muted,font:{family:'Montserrat',size:11},callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
-  const c1=new Chart(document.getElementById('c1'),{data:{labels,datasets:[
-    {type:'bar',label:'Faturamento',data:M.empresa.map(r=>num(getM(r,'Total (R$)'))),backgroundColor:'#D9CDBB',borderRadius:{topLeft:4,topRight:4},maxBarThickness:24,order:2},
-    {type:'line',label:'Impostos',data:M.empresa.map(r=>M.impostos(r)),borderColor:PAL.vinho,backgroundColor:PAL.vinho,borderWidth:2,tension:.3,pointRadius:2.5,pointHoverRadius:5,order:1}]},options:base});
-  document.getElementById('lg2').innerHTML=M.tribs.map(t=>`<span><i style="background:${t.c}"></i>${t.n}</span>`).join('');
-  const c2=new Chart(document.getElementById('c2'),{type:'bar',data:{labels,datasets:M.tribs.map(t=>({label:t.n,data:M.empresa.map(r=>num(getM(r,t.pag))),backgroundColor:t.c,borderRadius:2,maxBarThickness:24,borderWidth:0}))},options:{...base,scales:{x:{...base.scales.x,stacked:true},y:{...base.scales.y,stacked:true}}}});
-  const donut={responsive:true,maintainAspectRatio:false,animation:{duration:550},cutout:'62%',plugins:{legend:{display:false},tooltip:base.plugins.tooltip}};
-  const c3=new Chart(document.getElementById('c3'),{type:'doughnut',data:{labels:M.tribs.map(t=>t.n),datasets:[{data:M.tribs.map(()=>0),backgroundColor:M.tribs.map(t=>t.c),borderWidth:0}]},options:donut});
-  const c5=new Chart(document.getElementById('c5'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:0}]},options:donut});
-  return {c1,c2,c3,c5};
-}
 
-// Em subpágina, qualquer falha de acesso volta direto para o index (que trata código expirado / áreas da pessoa).
-function erro(msg){ const {id,codigo}=getIdCodigo(); location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); }
+// Sem login (falta id/código) volta ao index; com login, mostra aviso amigável e não redireciona
+// (assim uma falha momentânea de dados/gráfico nunca "expulsa" o cliente do painel).
+function erro(msg){
+  var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
+  if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
+  var volta='index.html#'+id+(codigo?('-'+codigo):'');
+  document.body.innerHTML=
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;'
+   +'font-family:\'Montserrat\',system-ui,-apple-system,sans-serif;background:#f4f6f6;color:#063033">'
+   +'<div style="max-width:440px;text-align:center;background:#fff;border:1px solid #e3e8e8;'
+   +'border-radius:16px;padding:32px 28px;box-shadow:0 6px 24px rgba(6,48,51,.06)">'
+   +'<div style="font-size:34px;line-height:1;margin-bottom:10px">📄</div>'
+   +'<h2 style="margin:0 0 8px;font-size:19px">Não foi possível carregar suas informações agora.</h2>'
+   +'<p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#3f5b5d">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#128D84;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:14px">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#128D84;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
+   +'</div></div>';
+}
 
 (async function(){ try{ const raw=await carregar(); const M=preparar(raw); M.atualizado_em=raw.atualizado_em;
   if(!M.empresa.length) return erro('A planilha deste cliente não tem nenhum mês na aba Empresa.'); render(M);

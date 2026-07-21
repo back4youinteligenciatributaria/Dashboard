@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Equiparação hospitalar — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --canvas:#F3EFE8; --surface:#FFFFFF; --surface-warm:#FAF6EF;
@@ -16,7 +17,7 @@
   --andamento:#A7715D; --andamento-soft:#F1E1D8;
   --neutro:#5E9C8C; --neutro-soft:#E1EEE9;
   --encerrado:#8E2B20; --encerrado-soft:#F3DEDB;
-  --radius:16px; --radius-sm:12px; --sans:'Manrope',system-ui,-apple-system,sans-serif;
+  --radius:16px; --radius-sm:12px; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -86,45 +87,9 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .pie-legend-row i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
 .pie-legend-row span{flex:1;color:var(--ink-2)}
 
-table.ped{width:100%;border-collapse:collapse;font-size:13px}
-table.ped th{text-align:left;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 9px;border-bottom:1px solid var(--line-2)}
-table.ped th.r{text-align:right}
-table.ped td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
-table.ped td.r{text-align:right}
-table.ped tbody tr.linha{cursor:pointer}
-table.ped tbody tr.linha:hover{background:var(--surface-warm)}
-table.ped tbody tr:last-child td{border-bottom:none}
-.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.table-scroll table{min-width:640px}
 @media(max-width:640px){
   .wrap{padding:0 14px 60px}
   .hero>*,.charts>*,.docs-chave>*{min-width:0}
-  .table-scroll{overflow-x:visible;margin:0}
-  .table-scroll table,table.ped{min-width:0}
-  /* Cada pedido vira um cartão empilhado (mesma info, sem rolagem lateral). */
-  table.ped thead{display:none}
-  table.ped,table.ped tbody{display:block}
-  table.ped tbody tr.linha{display:grid;grid-template-columns:1fr auto;gap:2px 12px;
-    border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
-  table.ped tbody tr.linha td{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-    padding:3px 0;border:none;font-size:13px}
-  table.ped tbody tr.linha td::before{content:attr(data-label);color:var(--muted);font-size:11px;
-    font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-  /* linha 1: competência (esq) + tributo (dir), destacados, sem rótulo */
-  table.ped tbody tr.linha td:nth-child(1){grid-column:1;grid-row:1;font-weight:800;font-size:15px}
-  table.ped tbody tr.linha td:nth-child(2){grid-column:2;grid-row:1;justify-content:flex-end;font-weight:700;font-size:12.5px;color:var(--brand-teal)}
-  table.ped tbody tr.linha td:nth-child(1)::before,
-  table.ped tbody tr.linha td:nth-child(2)::before{display:none}
-  /* demais campos: rótulo à esq, valor à dir, largura total */
-  table.ped tbody tr.linha td:nth-child(3){grid-column:1/-1;grid-row:2}
-  table.ped tbody tr.linha td:nth-child(4){grid-column:1/-1;grid-row:3}
-  table.ped tbody tr.linha td:nth-child(5){grid-column:1/-1;grid-row:4}
-  table.ped tbody tr.linha td:nth-child(6){grid-column:1/-1;grid-row:5}
-  table.ped tbody tr.linha td.num{font-variant-numeric:tabular-nums}
-  /* linha de detalhe: bloco de largura total abaixo do cartão */
-  table.ped tbody tr.detalhe-row{display:none}
-  table.ped tbody tr.detalhe-row.aberto{display:block}
-  table.ped tbody tr.detalhe-row td{display:block;padding:6px 0 2px;border:none}
   .sec-head{margin:22px 0 10px}.sec-head h2{font-size:14.5px}
   .hero{gap:12px}.stat .v{font-size:20px}
 }
@@ -135,14 +100,6 @@ table.ped tbody tr:last-child td{border-bottom:none}
 .status-neutro{background:var(--neutro-soft);color:var(--neutro)}
 .status-encerrado{background:var(--encerrado-soft);color:var(--encerrado)}
 
-.detalhe-row{display:none}
-.detalhe-row.aberto{display:table-row}
-.detalhe-row td{padding:0 10px 16px;border-bottom:1px solid var(--line)}
-.detalhe-box{background:var(--surface-warm);border-radius:8px;padding:12px 16px;font-size:12.5px}
-.detalhe-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 20px;margin-bottom:8px}
-.detalhe-grid div span{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
-.detalhe-explicacao{padding-top:8px;border-top:1px dashed var(--line-2);color:var(--ink-2)}
-
 .lista{padding:8px 24px}
 .item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:none}
@@ -150,7 +107,6 @@ table.ped tbody tr:last-child td{border-bottom:none}
 .item .cat{font-size:11px;color:var(--muted);margin-top:2px}
 .item a{font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none;white-space:nowrap}
 .item a:hover{color:var(--brand-dark)}
-.item .em-breve{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
 
 .vazio{color:var(--muted);font-size:13.5px;padding:24px 20px;text-align:center;line-height:1.7}
 .vazio a{color:var(--brand-teal);font-weight:700;text-decoration:none}
@@ -735,10 +691,17 @@ const GRUPO_NOME = {andamento:'Em andamento', concluido:'Concluído', neutro:'Co
 
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
-const brl2 = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
 const pct = v => (v*100).toFixed(2).replace('.',',')+'%';
 const num = v => Number(v)||0;
-const dBR = s => { if(!s) return '—'; const [a,m,d]=String(s).split('-'); return `${d}/${m}/${a}`; };
+const dBR = s => {
+  if(!s) return '—';
+  const str = String(s).trim();
+  let m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);   // AAAA-MM-DD (com ou sem hora)
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);      // dd/mm/aaaa
+  if (m) return `${m[1]}/${m[2]}/${m[3]}`;
+  return str;
+};
 const el = h => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
 function appendAll(parent, h){
   const t = document.createElement('template'); t.innerHTML = h.trim();
@@ -1061,9 +1024,12 @@ function render(M){
 /* Converte 'AAAA-MM-DD' (ou algo que o Date entenda) num Date local. */
 function parseData(s){
   if (!s) return null;
-  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const str = String(s).trim();
+  let m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);   // AAAA-MM-DD [HH:MM:SS]
   if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-  const d = new Date(s); return isNaN(d.getTime()) ? null : d;
+  m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);      // dd/mm/aaaa
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  const d = new Date(str); return isNaN(d.getTime()) ? null : d;
 }
 /* Dias corridos do envio até o pagamento (se houver) ou até hoje. */
 function diasCorridos(p){
@@ -1251,11 +1217,11 @@ function cardDetalhe(p){
           <div><span>Competência</span>${p._comp.label}</div>
           <div><span>Tributo</span>${esc(p.tributo)}</div>
           <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
-          <div class="num"><span>Solicitado</span>${brl2(p.valor_solicitado)}</div>
+          <div class="num"><span>Solicitado</span>${brl(p.valor_solicitado)}</div>
           <div class="num"><span>SELIC acumulada</span>${(num(p.selic_pct)).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</div>
-          <div class="num"><span>Valor atualizado</span>${brl2(p.valor_atualizado)}</div>
+          <div class="num"><span>Valor atualizado</span>${brl(p.valor_atualizado)}</div>
           <div><span>${lblPg}</span>${dBR(p.data_pagamento)}</div>
-          <div class="num"><span>Valor aprovado</span>${p._concluido ? brl2(p.valor_aprovado) : '—'}</div>
+          <div class="num"><span>Valor aprovado</span>${p._concluido ? brl(p.valor_aprovado) : '—'}</div>
         </div>
         ${p._explicacao ? `<div class="pcard-expl">${p._explicacao}</div>` : ''}
       </div>
@@ -1414,14 +1380,16 @@ function desenharGraficos(M){
   const porGrupo = {};
   P.forEach(p=>{ porGrupo[p._grupo] = (porGrupo[p._grupo]||0) + num(p.valor_atualizado); });
   const gruposUsados = Object.keys(porGrupo);
-  new Chart(document.getElementById('c1'), {
-    type:'doughnut',
-    data:{labels:gruposUsados.map(g=>GRUPO_NOME[g]), datasets:[{data:gruposUsados.map(g=>porGrupo[g]),
-      backgroundColor:gruposUsados.map(g=>GRUPO_COR[g]), borderWidth:0}]},
-    options:{...donutOpts,
-      onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
-      onClick:(e,els)=>{ if(els.length) filtrarDetalhe({situacao:'g:'+gruposUsados[els[0].index]}); }}
-  });
+  try {
+    new Chart(document.getElementById('c1'), {
+      type:'doughnut',
+      data:{labels:gruposUsados.map(g=>GRUPO_NOME[g]), datasets:[{data:gruposUsados.map(g=>porGrupo[g]),
+        backgroundColor:gruposUsados.map(g=>GRUPO_COR[g]), borderWidth:0}]},
+      options:{...donutOpts,
+        onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
+        onClick:(e,els)=>{ if(els.length) filtrarDetalhe({situacao:'g:'+gruposUsados[els[0].index]}); }}
+    });
+  } catch(e){ console.warn('Gráfico "Situação dos pedidos" indisponível:', e); }
   const c1lg = document.getElementById('c1-lg');
   c1lg.innerHTML = gruposUsados.map(g=>
     `<div class="pie-legend-row" data-g="${g}" style="cursor:pointer"><i style="background:${GRUPO_COR[g]}"></i><span>${GRUPO_NOME[g]}</span><b class="num">${brl(porGrupo[g])}</b></div>`
@@ -1429,10 +1397,9 @@ function desenharGraficos(M){
   c1lg.querySelectorAll('.pie-legend-row').forEach(row => row.addEventListener('click', () => filtrarDetalhe({ situacao:'g:'+row.dataset.g })));
 
   // c4: VALORES POR ANO — barra marrom (total pleiteado) com a verde (aprovado) sobreposta.
-  // "Aprovado" = análise concluída: tem data de pagamento OU status homologado/deferido/creditado/pago.
+  // "Aprovado" usa o MESMO critério do hero "Já aprovado": só conta quem já tem data de pagamento.
   const aprovadoDe = p => {
-    const ok = !!p.data_pagamento || /homolog|deferid|credit|aprovad|\bpag/i.test(normTxt(p.status || ''));
-    if (!ok) return 0;
+    if (!p._concluido) return 0;   // p._concluido === !!p.data_pagamento
     return num(p.valor_aprovado) > 0 ? num(p.valor_aprovado) : num(p.valor_atualizado);
   };
   const porAno = {};
@@ -1445,20 +1412,22 @@ function desenharGraficos(M){
   const anos = Object.keys(porAno).sort();
   const totalGeral = anos.reduce((s,a)=>s+porAno[a].total,0);
   const aprovadoGeral = anos.reduce((s,a)=>s+porAno[a].aprovado,0);
-  new Chart(document.getElementById('c4'), {
-    type:'bar',
-    data:{labels:anos, datasets:[
-      // barra grande marrom (total) ao fundo; barra verde (aprovado) sobreposta e mais estreita
-      {label:'Total pleiteado', data:anos.map(a=>porAno[a].total), backgroundColor:PAL.couro,
-        borderRadius:4, categoryPercentage:0.7, barPercentage:0.9, grouped:false, order:2},
-      {label:'Aprovado', data:anos.map(a=>porAno[a].aprovado), backgroundColor:PAL.eucalipto2,
-        borderRadius:4, categoryPercentage:0.7, barPercentage:0.5, grouped:false, order:1},
-    ]},
-    options:{...barOpts,
-      onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
-      onClick:(e,els)=>{ if(els.length) filtrarDetalhe({ano:String(anos[els[0].index])}); },
-      plugins:{...barOpts.plugins, legend:{display:false}, tooltip:{...barOpts.plugins.tooltip}}}
-  });
+  try {
+    new Chart(document.getElementById('c4'), {
+      type:'bar',
+      data:{labels:anos, datasets:[
+        // barra grande marrom (total) ao fundo; barra verde (aprovado) sobreposta e mais estreita
+        {label:'Total pleiteado', data:anos.map(a=>porAno[a].total), backgroundColor:PAL.couro,
+          borderRadius:4, categoryPercentage:0.7, barPercentage:0.9, grouped:false, order:2},
+        {label:'Aprovado', data:anos.map(a=>porAno[a].aprovado), backgroundColor:PAL.eucalipto2,
+          borderRadius:4, categoryPercentage:0.7, barPercentage:0.5, grouped:false, order:1},
+      ]},
+      options:{...barOpts,
+        onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
+        onClick:(e,els)=>{ if(els.length) filtrarDetalhe({ano:String(anos[els[0].index])}); },
+        plugins:{...barOpts.plugins, legend:{display:false}, tooltip:{...barOpts.plugins.tooltip}}}
+    });
+  } catch(e){ console.warn('Gráfico "Valores por ano" indisponível:', e); }
   document.getElementById('c4-lg').innerHTML =
     `<div class="pie-legend-row"><i style="background:${PAL.couro}"></i><span>Total pleiteado</span><b class="num">${brl(totalGeral)}</b></div>` +
     `<div class="pie-legend-row"><i style="background:${PAL.eucalipto2}"></i><span>Aprovado</span><b class="num">${brl(aprovadoGeral)}</b></div>`;
@@ -1469,7 +1438,7 @@ function desenharGraficos(M){
   // --- "Quanto já voltou": barra de progresso aprovado ÷ pleiteado ---
   const totAtual = P.reduce((s,p)=>s+num(p.valor_atualizado),0);
   const totAprov = concl.reduce((s,p)=>s+(num(p.valor_aprovado)||num(p.valor_atualizado)),0);
-  const pctRec = totAtual ? Math.round(totAprov/totAtual*100) : 0;
+  const pctRec = totAtual ? Math.min(100, Math.round(totAprov/totAtual*100)) : 0;
   const recup = document.getElementById('recup');
   if (recup) recup.innerHTML = `
     <div class="recup-top">
@@ -1499,13 +1468,15 @@ function desenharGraficos(M){
   const c5 = document.getElementById('c5');
   if (c5 && mesesPag.length){
     const labels = mesesPag.map(m=>{ const [a,mm]=m.split('-'); return MES[+mm-1]+'/'+a.slice(2); });
-    new Chart(c5, {
-      type:'bar',
-      data:{labels, datasets:[{data:mesesPag.map(m=>porMesPag[m].v),
-        backgroundColor:mesesPag.map(m=>porMesPag[m].fut?'#B9791A':'#1F9D57'), borderRadius:6, maxBarThickness:54}]},
-      options:{...barOpts, plugins:{...barOpts.plugins, legend:{display:false},
-        tooltip:{...barOpts.plugins.tooltip, callbacks:{label:c=>' '+brl(c.parsed.y)}}}}
-    });
+    try {
+      new Chart(c5, {
+        type:'bar',
+        data:{labels, datasets:[{data:mesesPag.map(m=>porMesPag[m].v),
+          backgroundColor:mesesPag.map(m=>porMesPag[m].fut?'#B9791A':'#1F9D57'), borderRadius:6, maxBarThickness:54}]},
+        options:{...barOpts, plugins:{...barOpts.plugins, legend:{display:false},
+          tooltip:{...barOpts.plugins.tooltip, callbacks:{label:c=>' '+brl(c.parsed.y)}}}}
+      });
+    } catch(e){ console.warn('Gráfico "Linha do tempo" indisponível:', e); }
     const recebido = mesesPag.filter(m=>!porMesPag[m].fut).reduce((s,m)=>s+porMesPag[m].v,0);
     const previsto = mesesPag.filter(m=>porMesPag[m].fut).reduce((s,m)=>s+porMesPag[m].v,0);
     document.getElementById('c5-lg').innerHTML =
@@ -1611,8 +1582,23 @@ function desenharDocumentos(M, modelos){
   }).join('');
 }
 
-// Em subpágina, qualquer falha de acesso volta direto para o index (que trata código expirado / áreas da pessoa).
-function erro(msg){ const {id,codigo}=getIdCodigo(); location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); }
+// Em subpágina, sem login volta ao index; com id+código mostra aviso amigável em vez de redirecionar.
+function erro(msg){
+  var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
+  if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
+  var volta='index.html#'+id+(codigo?('-'+codigo):'');
+  document.body.innerHTML=
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;'
+   +'font-family:\'Montserrat\',system-ui,-apple-system,sans-serif;background:#f4f6f6;color:#063033">'
+   +'<div style="max-width:440px;text-align:center;background:#fff;border:1px solid #e3e8e8;'
+   +'border-radius:16px;padding:32px 28px;box-shadow:0 6px 24px rgba(6,48,51,.06)">'
+   +'<div style="font-size:34px;line-height:1;margin-bottom:10px">📄</div>'
+   +'<h2 style="margin:0 0 8px;font-size:19px">Não foi possível carregar suas informações agora.</h2>'
+   +'<p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#3f5b5d">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#128D84;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:14px">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#128D84;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
+   +'</div></div>';
+}
 
 (async function(){
   try {

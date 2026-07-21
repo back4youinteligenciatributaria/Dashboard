@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Painel fiscal — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
@@ -1186,7 +1187,8 @@ function render(M){
 
   wrap.appendChild(el(`<footer><span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span><span>back4you · inteligência tributária</span></footer>`));
 
-  CHARTS=desenharGraficos(M);
+  // Se o Chart.js (CDN) falhar, o painel deve continuar aparecendo (sem os gráficos), nunca redirecionar.
+  try{ CHARTS=desenharGraficos(M); }catch(e){ CHARTS=null; if(window.console&&console.warn) console.warn('Gráficos indisponíveis:', e); }
 
   const pick=document.getElementById('comp'); pick.value=SEL;
   pick.addEventListener('change',e=>{ SEL=e.target.value; try{localStorage.setItem('b4u_fisc_comp_'+M.id,SEL);}catch(err){} pintarMes(M,SEL); });
@@ -1574,58 +1576,7 @@ function irParaPendencias(){
   const n=document.getElementById('notas'); if(n) n.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-/* ---- estimativas / anuais / gráficos ---- */
-/* Soma a coluna por n meses a partir de ref. Mês FECHADO (tem dado) usa o valor real;
-   mês ABERTO usa a MÉDIA dos últimos meses com movimento (M.media) e marca est=true.
-   Assim os trimestrais usam o cálculo real nos meses fechados + média nos abertos. */
-function valorAcumuladoColuna(M,ref,coluna,n){ const [a,m]=ref.split('-').map(Number); let total=0, est=false;
-  for(let i=0;i<n;i++){ const c=compDe(new Date(a,m-1-i,1)); const r=M.porComp[c];
-    if(r) total+=num(getM(r,coluna)); else { total+=M.media(coluna); est=true; } }
-  return {v:Math.round(total*100)/100, est:est}; }
-/* Desembolso por tributo no mês de vencimento — genérico por regime: para cada
-   tributo visível, acha a regra cuja metrica_fonte inclui a coluna "a pagar" dele
-   e a guia que vence neste mês (respeitando acumula_meses). Serve Presumido (ISS/
-   PIS/COFINS/CSLL/IRPJ) e Simples (DAS) sem hard-code de id de regra. */
-function desembolsoPorTributoNoMes(M,ano,mes){
-  const out={}; M.tribs.forEach(t=>out[t.pag]={v:0,est:false});
-  M.tribs.forEach(t=>{
-    const reg=(M.regras||[]).find(r=>String(r.metrica_fonte||'').split('|').map(s=>s.trim()).includes(t.pag));
-    if(!reg) return;
-    const guia=M.cal.find(c=>{ if(c.id_regra!==reg.id)return false; const d=dParse(c.vencimento); return d.getFullYear()===ano&&d.getMonth()===mes; });
-    if(!guia) return;
-    out[t.pag]=valorAcumuladoColuna(M,guia.competencia_ref,t.pag,Math.max(1,num(reg.acumula_meses)||1));
-  });
-  return out;
-}
-function desenharEstimativas(M){
-  const opts={responsive:true,maintainAspectRatio:false,animation:{duration:500},cutout:'60%',
-    plugins:{legend:{display:false},tooltip:{backgroundColor:PAL.petroleo,padding:10,cornerRadius:6,bodyFont:{family:'Montserrat',size:12},callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
-  // Próximos 3 meses de VENCIMENTO (a partir do mês seguinte ao atual): ago/set/out quando estamos em julho.
-  for(let i=0;i<3;i++){ const d=new Date(hoje.getFullYear(),hoje.getMonth()+1+i,1); const comp=compDe(d);
-    const porTrib=desembolsoPorTributoNoMes(M,d.getFullYear(),d.getMonth());
-    const dados=M.tribs.map(t=>{ const o=porTrib[t.pag]||{v:0,est:false}; return {n:t.n,c:t.c,v:o.v,est:o.est}; });
-    const total=dados.reduce((s,x)=>s+x.v,0); const algumEst=dados.some(x=>x.est&&x.v>0);
-    document.getElementById('est-t-'+i).textContent=mesLongo(comp);
-    document.getElementById('est-s-'+i).innerHTML=(algumEst?'estimativa · ':'')+'provisionar <span class="estimativa">'+brl(total)+'</span>';
-    const lg=document.getElementById('est-lg-'+i), cbox=document.getElementById('est-'+i).closest('.cbox');
-    if(total<=0){ if(cbox) cbox.style.display='none'; lg.innerHTML='<div class="prov-vazio">Sem guias a provisionar neste mês.</div>'; continue; }
-    if(cbox) cbox.style.display='';
-    lg.innerHTML=dados.map(x=>`<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}${x.est&&x.v>0?' <span style="color:var(--muted);font-weight:500">· estim.</span>':''}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`).join('');
-    new Chart(document.getElementById('est-'+i),{type:'doughnut',data:{labels:dados.map(x=>x.n),datasets:[{data:dados.map(x=>x.v),backgroundColor:dados.map(x=>x.c),borderWidth:0}]},options:opts});
-  }
-}
-function desenharAnuais(M){
-  const anuais=M.regras.filter(r=>r.periodicidade==='Anual'&&String(r.ativo)!=='FALSE');
-  const cartoes=anuais.map(reg=>{ const oc=M.cal.filter(c=>c.id_regra===reg.id).map(c=>({...c,data:dParse(c.vencimento),...M.valorDe(c)})).sort((a,b)=>a.data-b.data);
-    const passadas=oc.filter(o=>o.data<=hoje), futuras=oc.filter(o=>o.data>hoje);
-    const linhas=[passadas.length?passadas[passadas.length-1]:null,futuras.length?futuras[0]:null].filter(Boolean); if(!linhas.length)return'';
-    return `<div class="card month"><h4>${esc(reg.descricao)}</h4><div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:10px">${esc(reg.categoria||'')}</div>
-      ${linhas.map(o=>{ const passado=o.data<=hoje; const dias=Math.round((o.data-hoje)/864e5); const classe=passado?'due-pago':(dias<=92?'due-atencao':'');
-        const vh=o.v>0?`<span class="vl num ${o.est?'est':''}">${brl(o.v)}</span>`:`<span class="vl num" style="color:var(--muted);font-weight:500">só entrega</span>`;
-        return `<div class="due ${classe}"><span class="day num">${String(o.vencimento).slice(8)}/${String(o.vencimento).slice(5,7)}</span><span class="body"><span class="nm">${passado?'Último':'Próximo'} · ${o.vencimento.slice(0,4)}</span>${vh}</span></div>`; }).join('')}</div>`;
-  }).filter(Boolean);
-  document.getElementById('anuais').innerHTML=cartoes.join('')||'<p style="color:var(--muted)">Nenhuma obrigação anual no momento.</p>';
-}
+/* ---- gráficos ---- */
 function desenharGraficos(M){
   const labels=M.empresa.map(r=>mesLabel(r.competencia));
   const base={responsive:true,maintainAspectRatio:false,animation:{duration:550},
@@ -1642,8 +1593,24 @@ function desenharGraficos(M){
   return {c1,c2,c3,c5};
 }
 
-// Em subpágina, qualquer falha de acesso volta direto para o index (que trata código expirado / áreas da pessoa).
-function erro(msg){ const {id,codigo}=getIdCodigo(); location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); }
+// Sem login (falta id/código) volta ao index; com login, mostra aviso amigável e não redireciona
+// (assim uma falha momentânea de dados/gráfico nunca "expulsa" o cliente do painel).
+function erro(msg){
+  var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
+  if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
+  var volta='index.html#'+id+(codigo?('-'+codigo):'');
+  document.body.innerHTML=
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;'
+   +'font-family:\'Montserrat\',system-ui,-apple-system,sans-serif;background:#f4f6f6;color:#063033">'
+   +'<div style="max-width:440px;text-align:center;background:#fff;border:1px solid #e3e8e8;'
+   +'border-radius:16px;padding:32px 28px;box-shadow:0 6px 24px rgba(6,48,51,.06)">'
+   +'<div style="font-size:34px;line-height:1;margin-bottom:10px">📄</div>'
+   +'<h2 style="margin:0 0 8px;font-size:19px">Não foi possível carregar suas informações agora.</h2>'
+   +'<p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#3f5b5d">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#128D84;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:14px">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#128D84;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
+   +'</div></div>';
+}
 
 (async function(){ try{ const raw=await carregar(); const M=preparar(raw); M.atualizado_em=raw.atualizado_em;
   if(!M.empresa.length) return erro('A planilha deste cliente não tem nenhum mês na aba Empresa.'); render(M);
