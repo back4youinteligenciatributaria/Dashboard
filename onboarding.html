@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding — novo cliente · back4you</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --brand-teal:#128D84; --brand-dark:#063033; --eucalipto:#19AFA4; --laranja:#FF8100;
+      --verde:#1F9D57; --ink:#0E2E30; --ink-2:#3f5b5d; --muted:#6b8486;
+      --surface:#ffffff; --surface-warm:#F4F7F6; --line:#e2e9e8; --line-2:#cdd8d7; --erro:#8B2E22;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Montserrat',system-ui,-apple-system,sans-serif;background:var(--surface-warm);color:var(--ink);line-height:1.5}
+    .top{position:sticky;top:0;z-index:5;background:var(--brand-dark);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+    .top b{font-size:15px;font-weight:700}
+    .top a{color:#bfeae6;text-decoration:none;font-size:13px;font-weight:700}
+    .wrap{max-width:820px;margin:0 auto;padding:18px 16px 60px}
+    .idcard{background:linear-gradient(135deg,rgba(18,141,132,.10),rgba(25,175,164,.06));border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:18px}
+    .idcard .lbl{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+    .idcard .idval{font-size:26px;font-weight:700;color:var(--brand-teal);letter-spacing:1px}
+    .idcard .nome{font-size:14px;color:var(--ink-2);margin-top:4px}
+    .idcard .nome b{color:var(--ink)}
+    .sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+    .sec > h2{font-size:14px;font-weight:700;margin:0 0 12px;color:var(--brand-dark);display:flex;align-items:center;gap:8px}
+    .sec > h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--brand-teal)}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media(max-width:600px){.grid{grid-template-columns:1fr}}
+    .fld{display:flex;flex-direction:column}
+    .fld.full{grid-column:1/-1}
+    .fld label{font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:5px}
+    .fld label .req{color:var(--laranja)}
+    .fld input,.fld select,.fld textarea{font-family:inherit;font-size:13.5px;padding:9px 11px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface-warm);color:var(--ink);width:100%}
+    .fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+    .fld textarea{resize:vertical;min-height:44px}
+    .fld.miss input,.fld.miss select{border-color:var(--erro);background:#fdf3f1}
+    .prods{display:flex;flex-wrap:wrap;gap:8px}
+    .prod{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line-2);border-radius:999px;padding:8px 13px;cursor:pointer;user-select:none}
+    .prod input{accent-color:var(--brand-teal);width:16px;height:16px}
+    .prod.on{background:rgba(18,141,132,.10);border-color:var(--brand-teal);color:var(--brand-dark)}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px}
+    .btn{font-family:inherit;font-size:14px;font-weight:700;border:1px solid var(--line-2);border-radius:999px;padding:12px 20px;cursor:pointer;background:var(--surface);color:var(--ink)}
+    .btn.primary{background:var(--verde);color:#fff;border-color:transparent;font-weight:700}
+    .btn.primary:hover{background:#178A4B}
+    .btn.primary:disabled{opacity:.6;cursor:default}
+    .foot{display:flex;gap:10px;align-items:center;margin-top:8px}
+    .foot .btn.primary{flex:1}
+    .msg{font-size:13px;font-weight:700;min-height:18px;margin-top:10px}
+    .msg.err{color:var(--erro)}
+    .ok-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px;text-align:center}
+    .ok-card h1{font-size:20px;margin:6px 0}
+    .ok-card .big{font-size:30px;font-weight:700;color:var(--brand-teal);letter-spacing:1px}
+    .ok-links{display:flex;flex-direction:column;gap:8px;margin:16px 0;text-align:left}
+    .ok-links a{background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:11px 13px;text-decoration:none;color:var(--brand-dark);font-weight:700;font-size:13.5px}
+    .lock{max-width:420px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="top"><b>Onboarding — novo cliente</b><a id="voltar" href="colaborador.html">← Painel da equipe</a></div>
+  <div class="wrap" id="wrap"><div class="idcard"><div class="lbl">Carregando…</div></div></div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+    const CHAVE_PADRAO = 'b4u-equipe-2026';
+
+    function chaveAtual(){
+      const u=new URLSearchParams(location.search); if(u.get('chave')) return u.get('chave').trim();
+      const h=(location.hash||'').replace(/^#/,''); if(h) return decodeURIComponent(h).trim();
+      return CHAVE_PADRAO;
+    }
+    const CHAVE = chaveAtual();
+    document.getElementById('voltar').href = 'colaborador.html?chave='+encodeURIComponent(CHAVE);
+
+    const esc = s => String(s==null?'':s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+    function jsonp(url){ return new Promise((res,rej)=>{ const cb='cb_'+Math.random().toString(36).slice(2); const t=setTimeout(()=>{rej(new Error('timeout'));cleanup();},20000);
+      function cleanup(){ delete window[cb]; s.remove(); } window[cb]=d=>{clearTimeout(t);cleanup();res(d);};
+      const s=document.createElement('script'); s.src=url+(url.indexOf('?')<0?'?':'&')+'callback='+cb; s.onerror=()=>{clearTimeout(t);cleanup();rej(new Error('rede'));}; document.body.appendChild(s); }); }
+
+    // Produtos -> quais planilhas (só informativo na tela; a regra real está no backend)
+    const PRODUTOS = ['Contabilidade','Controladoria','Equiparação','Agora Tem Especialistas','DP pessoa física','INSS'];
+
+    // Campos do Registro (col = nome EXATO da coluna). t: text|select|date|textarea. req: obrigatório.
+    const CAMPOS = [
+      {s:'Identificação', col:'Razão social da empresa', t:'text', req:true, full:true},
+      {s:'Identificação', col:'CNPJ ou CPF', t:'text', req:true},
+      {s:'Identificação', col:'Nome Fantasia', t:'text'},
+      {s:'Identificação', col:'Cidade', t:'text', req:true},
+      {s:'Identificação', col:'UF', t:'text', req:true, max:2, up:true},
+      {s:'Identificação', col:'Contato', t:'text', ph:'e-mail(s) / telefone'},
+      {s:'Identificação', col:'Resumo', t:'textarea', full:true},
+
+      {s:'Empresa', col:'Data de Abertura', t:'date'},
+      {s:'Empresa', col:'Porte', t:'text'},
+      {s:'Empresa', col:'Natureza Jurídica', t:'text'},
+      {s:'Empresa', col:'Endereço', t:'text', full:true},
+      {s:'Empresa', col:'CNAEs', t:'textarea', full:true},
+      {s:'Empresa', col:'Registro na Junta', t:'text'},
+      {s:'Empresa', col:'Número de sócios', t:'text'},
+      {s:'Empresa', col:'Descrição sócios', t:'textarea', full:true},
+      {s:'Empresa', col:'Cadastro Municipal (número)', t:'text'},
+      {s:'Empresa', col:'CNES', t:'text'},
+      {s:'Empresa', col:'Link Form Diagnóstico', t:'text', full:true},
+
+      {s:'Fiscal / Contábil', col:'Regime', t:'select', opts:['','Lucro Presumido','Simples Nacional']},
+      {s:'Fiscal / Contábil', col:'Fator R?', t:'select', opts:['','Sim','Não']},
+      {s:'Fiscal / Contábil', col:'Equiparados', t:'text'},
+      {s:'Fiscal / Contábil', col:'ISS', t:'text'},
+      {s:'Fiscal / Contábil', col:'Livro caixa', t:'select', opts:['','Sim','Não']},
+      {s:'Fiscal / Contábil', col:'Procuração E-Cac', t:'select', opts:['','Sim','Não','Feita']},
+      {s:'Fiscal / Contábil', col:'Procuração SPE', t:'select', opts:['','Sim','Não','Feita']},
+      {s:'Fiscal / Contábil', col:'Contabilidade prévia', t:'text'},
+      {s:'Fiscal / Contábil', col:'Data de início da contabilidade', t:'date'},
+      {s:'Fiscal / Contábil', col:'Data de fim da contabilidade', t:'date'},
+
+      {s:'Departamento Pessoal', col:'Tem DPTO pessoal', t:'select', opts:['','Sim','Não']},
+      {s:'Departamento Pessoal', col:'Pró Labore', t:'text'},
+      {s:'Departamento Pessoal', col:'# de funcionários', t:'text'},
+      {s:'Departamento Pessoal', col:'Adiantamento salarial', t:'select', opts:['','Sim','Não']},
+      {s:'Departamento Pessoal', col:'Vale Alimentação', t:'select', opts:['','Sim','Não']},
+      {s:'Departamento Pessoal', col:'VALE TRANSPORTE', t:'select', opts:['','Sim','Não']},
+      {s:'Departamento Pessoal', col:'Controle de Ponto', t:'select', opts:['','Sim','Não']},
+      {s:'Departamento Pessoal', col:'Funcionário de pessoa física', t:'select', opts:['','Sim','Não']},
+
+      {s:'Aluguel', col:'Paga aluguel?', t:'select', opts:['','Sim','Não']},
+      {s:'Aluguel', col:'Aluguel para PF?', t:'select', opts:['','Sim','Não']},
+      {s:'Aluguel', col:'Pagamento Aluguel', t:'text'},
+      {s:'Aluguel', col:'Valor do Aluguel', t:'text'},
+      {s:'Aluguel', col:'Obs Aluguel', t:'textarea', full:true},
+    ];
+
+    let PROX_ID = '';
+    const val = {};   // col -> valor
+    const prodSel = new Set();
+
+    function campoHTML(f){
+      const id='f_'+CAMPOS.indexOf(f);
+      const req=f.req?'<span class="req">*</span>':'';
+      let inner;
+      if(f.t==='select'){ inner=`<select id="${id}" data-col="${esc(f.col)}">${f.opts.map(o=>`<option value="${esc(o)}">${o||'—'}</option>`).join('')}</select>`; }
+      else if(f.t==='textarea'){ inner=`<textarea id="${id}" data-col="${esc(f.col)}" rows="2" placeholder="${esc(f.ph||'')}"></textarea>`; }
+      else { inner=`<input id="${id}" data-col="${esc(f.col)}" type="${f.t==='date'?'date':'text'}" ${f.max?`maxlength="${f.max}"`:''} placeholder="${esc(f.ph||'')}">`; }
+      return `<div class="fld ${f.full?'full':''}" data-fld="${esc(f.col)}"><label for="${id}">${esc(f.col)} ${req}</label>${inner}</div>`;
+    }
+
+    function render(){
+      const secs=[...new Set(CAMPOS.map(f=>f.s))];
+      let html=`
+        <div class="idcard">
+          <div class="lbl">Próximo ID previsto</div>
+          <div class="idval" id="idprev">${PROX_ID||'…'}</div>
+          <div class="nome" id="nomeprev">Nome: <b>—</b></div>
+        </div>
+        <div class="sec">
+          <h2><span class="dot"></span>Produtos Back4you <span class="req" style="color:var(--laranja)">*</span></h2>
+          <div class="prods" id="prods">${PRODUTOS.map(p=>`<label class="prod"><input type="checkbox" value="${esc(p)}"> ${esc(p)}</label>`).join('')}</div>
+          <p class="hint">Os produtos definem quais planilhas serão criadas: <b>Equiparação</b> → planilha de Equiparação · <b>Contabilidade/Controladoria</b> → Fiscal + Contábil + DP · <b>DP pessoa física</b> → DP. INSS e Agora Tem Especialistas não geram planilha por ora.</p>
+        </div>`;
+      secs.forEach(sc=>{
+        html+=`<div class="sec"><h2><span class="dot"></span>${esc(sc)}</h2><div class="grid">${CAMPOS.filter(f=>f.s===sc).map(campoHTML).join('')}</div></div>`;
+      });
+      html+=`<div class="msg" id="msg"></div><div class="foot"><button class="btn" id="limpar" type="button">Limpar</button><button class="btn primary" id="criar" type="button">Criar cliente</button></div>`;
+      document.getElementById('wrap').innerHTML=html;
+
+      // wire
+      document.querySelectorAll('#prods input').forEach(c=>c.addEventListener('change',e=>{
+        const l=e.target.closest('.prod'); if(e.target.checked){prodSel.add(e.target.value);l.classList.add('on');}else{prodSel.delete(e.target.value);l.classList.remove('on');}
+      }));
+      document.querySelectorAll('[data-col]').forEach(el=>el.addEventListener('input',e=>{
+        let v=e.target.value; const f=CAMPOS[+e.target.id.slice(2)];
+        if(f&&f.up){ v=v.toUpperCase(); e.target.value=v; }
+        val[e.target.dataset.col]=v;
+        e.target.closest('.fld').classList.remove('miss');
+        if(e.target.dataset.col==='Razão social da empresa') atualizarNome();
+      }));
+      document.getElementById('limpar').addEventListener('click',()=>{ if(confirm('Limpar tudo?')) location.reload(); });
+      document.getElementById('criar').addEventListener('click', criar);
+      atualizarNome();
+    }
+
+    function atualizarNome(){
+      const razao=(val['Razão social da empresa']||'').trim();
+      document.getElementById('nomeprev').innerHTML='Nome: <b>'+esc((PROX_ID?PROX_ID+' ':'')+ (razao||'—'))+'</b>';
+    }
+
+    async function criar(){
+      const msg=document.getElementById('msg'); msg.className='msg'; msg.textContent='';
+      // validação dos obrigatórios
+      const obrig=['Razão social da empresa','CNPJ ou CPF','Cidade','UF'];
+      let faltou=false;
+      obrig.forEach(c=>{ const f=document.querySelector(`[data-fld="${CSS.escape(c)}"]`); if(!((val[c]||'').trim())){ if(f)f.classList.add('miss'); faltou=true; } });
+      if(!prodSel.size){ document.getElementById('prods').closest('.sec').style.outline='2px solid var(--erro)'; faltou=true; }
+      if(faltou){ msg.className='msg err'; msg.textContent='Preencha os campos obrigatórios (marcados com *).'; window.scrollTo({top:0,behavior:'smooth'}); return; }
+
+      const btn=document.getElementById('criar'); btn.disabled=true; btn.textContent='Criando… (até ~1 min)';
+      msg.className='msg'; msg.textContent='Criando pastas no Drive e planilhas… não feche a página.';
+      try{
+        const body=JSON.stringify({ acao:'onboard', chave:CHAVE, produtos:[...prodSel], registro:val });
+        const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+        const d=await r.json();
+        if(d.erro) throw new Error(d.erro);
+        sucesso(d);
+      }catch(e){ btn.disabled=false; btn.textContent='Criar cliente'; msg.className='msg err'; msg.textContent=(e.message||e)+''; }
+    }
+
+    function sucesso(d){
+      const pl=d.planilhas||{};
+      const links=[];
+      if(d.pasta) links.push(`<a href="${esc(d.pasta)}" target="_blank" rel="noopener">📁 Pasta do cliente no Drive</a>`);
+      if(pl.fiscal) links.push(`<a href="${esc(pl.fiscal)}" target="_blank" rel="noopener">📊 Planilha Fiscal</a>`);
+      if(pl.equiparacao) links.push(`<a href="${esc(pl.equiparacao)}" target="_blank" rel="noopener">📊 Planilha Equiparação</a>`);
+      if(pl.pessoal) links.push(`<a href="${esc(pl.pessoal)}" target="_blank" rel="noopener">📊 Planilha Departamento Pessoal</a>`);
+      document.getElementById('wrap').innerHTML=`
+        <div class="ok-card">
+          <div style="font-size:34px">✅</div>
+          <h1>Cliente criado!</h1>
+          <div class="big">${esc(d.id)}</div>
+          <div style="color:var(--ink-2);font-size:14px;margin-top:4px">${esc(d.nome||'')}</div>
+          <div class="ok-links">${links.join('')||'<span class="hint">Nenhuma planilha gerada (confira os produtos).</span>'}</div>
+          <p class="hint">Já gravado nas abas <b>Links</b> e <b>Registro</b>. Os contatos/e-mails de acesso do cliente são cadastrados à parte, na planilha de Contatos.</p>
+          <button class="btn primary" onclick="location.reload()">Cadastrar outro cliente</button>
+        </div>`;
+      window.scrollTo({top:0});
+    }
+
+    // boot: busca o próximo ID previsto (protegido pela chave)
+    (async ()=>{
+      try{
+        const d=await jsonp(API_URL+'?tipo=proximo_id&chave='+encodeURIComponent(CHAVE));
+        if(d && d.erro){ document.getElementById('wrap').innerHTML='<div class="lock"><h2>Acesso restrito</h2><p class="hint">'+esc(d.erro)+'</p></div>'; return; }
+        PROX_ID=(d&&d.id)||'';
+      }catch(e){ /* segue sem o preview */ }
+      render();
+    })();
+  </script>
+</body>
+</html>

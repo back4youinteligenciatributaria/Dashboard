@@ -152,12 +152,16 @@ function render(clientes){
   app.innerHTML=`
     <div class="wrap">
       <div class="topo">
-        <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome ou CNPJ…">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome ou CNPJ…" style="flex:1;min-width:200px">
+          <a id="novo-cliente" href="onboarding.html" style="background:#1F9D57;color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:999px;white-space:nowrap;font-size:14px">+ Novo cliente</a>
+        </div>
         <div class="dica">Atalhos para o Drive e as planilhas de cada cliente — sem precisar caçar nas pastas.</div>
       </div>
       <div class="grid" id="grid"></div>
     </div>`;
   desenhar(clientes);
+  const _nc=document.getElementById('novo-cliente'); if(_nc) _nc.href='onboarding.html?chave='+encodeURIComponent(chaveAtual());
   document.getElementById('busca').addEventListener('input', e=>{
     const alvo=normTxt(e.target.value);
     document.querySelectorAll('#grid .cli').forEach(el=>{
