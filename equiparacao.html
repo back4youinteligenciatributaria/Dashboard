@@ -155,6 +155,9 @@ table.ped tbody tr:last-child td{border-bottom:none}
 .vazio{color:var(--muted);font-size:13.5px;padding:24px 20px;text-align:center;line-height:1.7}
 .vazio a{color:var(--brand-teal);font-weight:700;text-decoration:none}
 .vazio a:hover{text-decoration:underline}
+.aviso-estimativa{display:flex;gap:12px;align-items:flex-start;padding:14px 18px;margin-bottom:16px;background:#FFF6E9;border:1px solid #F0D9A8;color:#6B5326;font-size:13px;line-height:1.55}
+.aviso-estimativa .ae-ico{font-size:18px;line-height:1;color:#C8891A;flex-shrink:0;margin-top:1px}
+.aviso-estimativa b{color:#5A4413}
 
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px;font-weight:700}
@@ -838,7 +841,7 @@ function preparar(raw){
         : info.txt,
     };
   }).sort((a,b) => a._comp.ord - b._comp.ord || String(a.tributo).localeCompare(String(b.tributo)));
-  return { cfg: raw.config||{}, id: raw.id, pedidos, documentos: raw.documentos||[], atualizado_em: raw.atualizado_em };
+  return { cfg: raw.config||{}, id: raw.id, pedidos, documentos: raw.documentos||[], memoria: raw.memoria||null, atualizado_em: raw.atualizado_em };
 }
 
 const DOCS_CHAVE = [
@@ -865,6 +868,10 @@ function render(M){
   app.appendChild(wrap);
 
   const semPedidos = !((M.pedidos || []).length);
+  // Estimativa (memória de cálculo): só entra quando ainda NÃO há PER/DCOMP transmitido
+  // e a aba de memória tem dados. Se tiver pedidos, a memória some; se não tiver nem
+  // pedidos nem memória, a página fica como sempre foi (estado vazio original).
+  const temMemoria = semPedidos && M.memoria && M.memoria.tem_dados && (M.memoria.periodos||[]).length;
 
   const docsDisponiveis = DOCS_CHAVE
     .map(d => ({ ...d, link: (M.documentos||[]).find(x => x.documento === d.nome && x.link && String(x.link).trim()) }))
@@ -919,13 +926,65 @@ function render(M){
   // banner de pagamento recente (preenchido por construirAlertaPagamento)
   wrap.appendChild(el('<div id="alerta-pagamento"></div>'));
 
-  // 1) PER/DCOMPs agrupados por situação (dropdowns por categoria)
+  // 0) ESTIMATIVA — só quando ainda não há PER/DCOMP, mas há memória de cálculo.
+  if (temMemoria){
+    const MEM = M.memoria;
+    const pctEleg = (MEM.pct_elegivel != null && MEM.pct_elegivel !== '')
+      ? (MEM.pct_elegivel <= 1 ? MEM.pct_elegivel*100 : MEM.pct_elegivel) : null;
+    appendAll(wrap, `
+      <div class="sec-head"><div><h2>Estimativa de crédito</h2><p>Prévia calculada a partir da memória de cálculo — ainda não há PER/DCOMP transmitido.</p></div></div>
+      <div class="card aviso-estimativa">
+        <span class="ae-ico">⚠︎</span>
+        <div><b>Valores estimativos e preliminares.</b> A recomposição da base presumida (IRPJ 32%→8%, CSLL 32%→12%) foi aplicada sobre a parcela de receita elegível${pctEleg!=null?` (${pct(pctEleg/100)})`:''} informada pelo cliente. A apuração definitiva depende da análise nota a nota de cada competência — os números finais podem variar.</div>
+      </div>
+      <div class="hero">
+        <div class="card stat destaque">
+          <span class="lbl">Crédito potencial estimado</span>
+          <div class="v num">${brl(MEM.total_geral)}</div>
+          <div class="s">IRPJ + CSLL · sem atualização SELIC</div>
+        </div>
+        <div class="card stat">
+          <span class="lbl">IRPJ estimado</span>
+          <div class="v num">${brl(MEM.total_irpj)}</div>
+          <div class="s">recomposição da base 32% → 8%</div>
+        </div>
+        <div class="card stat">
+          <span class="lbl">CSLL estimada</span>
+          <div class="v num">${brl(MEM.total_csll)}</div>
+          <div class="s">recomposição da base 32% → 12%</div>
+        </div>
+        <div class="card stat">
+          <span class="lbl">Períodos analisados</span>
+          <div class="v num">${(MEM.periodos||[]).length}</div>
+          <div class="s">${pctEleg!=null?`${pct(pctEleg/100)} da receita elegível`:'trimestres da memória'}</div>
+        </div>
+      </div>
+      <div class="charts">
+        <div class="card chart">
+          <h3>Crédito estimado por período</h3>
+          <div class="sub">Diferença entre o tributo recolhido (32%) e o recalculado com equiparação, por trimestre.</div>
+          <div class="cbox"><canvas id="mc1"></canvas></div>
+          <div class="pie-legend" id="mc1-lg"></div>
+        </div>
+        <div class="card chart">
+          <h3>IRPJ × CSLL</h3>
+          <div class="sub">Como o crédito potencial se divide entre os dois tributos.</div>
+          <div class="cbox"><canvas id="mc2"></canvas></div>
+          <div class="pie-legend" id="mc2-lg"></div>
+        </div>
+      </div>`);
+  }
+
+  // 1) PER/DCOMPs agrupados por situação (dropdowns por categoria).
+  //    Quando estamos mostrando a estimativa (temMemoria), pulamos o cartão vazio.
+  if (P.length || !temMemoria){
   appendAll(wrap, `
     <div class="sec-head"><div><h2>Pedidos por situação</h2><p>${P.length ? 'Agrupados pela situação oficial na Receita — toque para abrir cada grupo.' : 'Acompanhe aqui cada PER/DCOMP.'}</p></div></div>
     ${P.length ? `<div class="acc" id="pedidos-status"></div>` : `<div class="card"><div class="vazio">
         Nenhum pedido de equiparação transmitido ainda. Se o seu CNPJ ainda estiver passando por alguma alteração societária os seus pedidos ainda não vão aparecer aqui. Enquanto isso verifique a relação de documentos e memórias de cálculo acima.<br>
         Se você acredita que isso pode ser um engano, <a href="https://wa.me/5511937173906" target="_blank" rel="noopener">entre em contato com o atendimento</a>.
       </div></div>`}`);
+  }
 
   if (P.length){
     // 2) Panorama (gráficos) — fica acima do detalhamento
@@ -996,6 +1055,7 @@ function render(M){
       draw();
     }
   }
+  if (temMemoria){ try { desenharMemoria(M); } catch (e) { console.warn('Estimativa indisponível:', e); } }
 }
 
 /* Converte 'AAAA-MM-DD' (ou algo que o Date entenda) num Date local. */
@@ -1473,6 +1533,49 @@ function desenharGraficos(M){
         <div class="funil-meta"><b>${e.n}</b> · ${brl(e.v)}</div>
       </div>`;
   }).join('');
+}
+
+/* Gráficos da ESTIMATIVA (memória de cálculo) — só rodam quando não há PER/DCOMP. */
+function desenharMemoria(M){
+  const MEM = M.memoria; if (!MEM || !(MEM.periodos||[]).length) return;
+  const IRPJ_COR = PAL.teal, CSLL_COR = PAL.couro;
+  const per = MEM.periodos.slice().sort((a,b)=>prepararCompetencia(a.ref).ord - prepararCompetencia(b.ref).ord);
+  const rotulo = p => { const c = prepararCompetencia(p.ref); return c.ord ? `${c.tri}T/${String(c.ano).slice(2)}` : (p.ref || '—'); };
+
+  const barOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500},
+    plugins:{legend:{display:false}, tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
+      bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y)}}},
+    scales:{x:{stacked:true, grid:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11}}},
+      y:{stacked:true, grid:{color:'#EDE4D6'}, border:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11},
+        callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
+
+  const mc1 = document.getElementById('mc1');
+  if (mc1) new Chart(mc1, {
+    type:'bar',
+    data:{labels:per.map(rotulo), datasets:[
+      {label:'IRPJ', data:per.map(p=>num(p.credito_irpj)), backgroundColor:IRPJ_COR, borderRadius:4, stack:'s', maxBarThickness:46},
+      {label:'CSLL', data:per.map(p=>num(p.credito_csll)), backgroundColor:CSLL_COR, borderRadius:4, stack:'s', maxBarThickness:46},
+    ]},
+    options:barOpts
+  });
+  const lg1 = document.getElementById('mc1-lg');
+  if (lg1) lg1.innerHTML =
+    `<div class="pie-legend-row"><i style="background:${IRPJ_COR}"></i><span>IRPJ</span><b class="num">${brl(MEM.total_irpj)}</b></div>` +
+    `<div class="pie-legend-row"><i style="background:${CSLL_COR}"></i><span>CSLL</span><b class="num">${brl(MEM.total_csll)}</b></div>`;
+
+  const mc2 = document.getElementById('mc2');
+  if (mc2) new Chart(mc2, {
+    type:'doughnut',
+    data:{labels:['IRPJ','CSLL'], datasets:[{data:[num(MEM.total_irpj), num(MEM.total_csll)],
+      backgroundColor:[IRPJ_COR, CSLL_COR], borderWidth:0}]},
+    options:{responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
+      plugins:{legend:{display:false}, tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
+        bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}}
+  });
+  const lg2 = document.getElementById('mc2-lg');
+  if (lg2) lg2.innerHTML =
+    `<div class="pie-legend-row"><i style="background:${IRPJ_COR}"></i><span>IRPJ</span><b class="num">${brl(MEM.total_irpj)}</b></div>` +
+    `<div class="pie-legend-row"><i style="background:${CSLL_COR}"></i><span>CSLL</span><b class="num">${brl(MEM.total_csll)}</b></div>`;
 }
 
 async function carregarModelos(){
