@@ -87,26 +87,38 @@ body{
 .sheet-foot{display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface);padding-top:12px}
 .sheet-foot .ac-btn{flex:1}
 @media(min-width:640px){.sheet-foot .ac-btn{flex:0 0 auto}}
-.ct-card{border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:10px;background:var(--surface)}
-.ct-card-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.ct-card-top b{font-size:13.5px;flex:1}
-.ct-papel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:999px}
+/* accordion de contatos (cada nome abre/fecha) */
+.ct-acc{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--surface);overflow:hidden}
+.ct-acc.open{border-color:var(--brand-teal);box-shadow:0 2px 12px rgba(15,140,133,.09)}
+.ct-acc-head{display:flex;align-items:center;gap:9px;padding:13px 14px;cursor:pointer;user-select:none}
+.ct-acc-head:hover{background:var(--surface-warm)}
+.ct-acc-name{flex:1;font-size:13.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct-chev{color:var(--muted);font-size:11px;transition:transform .18s}
+.ct-acc.open .ct-chev{transform:rotate(180deg)}
+.ct-acc-body{display:none;padding:2px 14px 14px}
+.ct-acc.open .ct-acc-body{display:block}
+.ct-papel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:999px;white-space:nowrap}
 .ct-papel.p{background:var(--brand-teal);color:#fff}
 .ct-papel.s{background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
-.ct-mail{font-size:12.5px;color:var(--ink-2);margin-bottom:8px;word-break:break-all}
+.ct-lbl{display:block;font-size:11.5px;font-weight:700;color:var(--ink-2);margin:11px 0 4px}
+.ct-mail{font-size:12.5px;color:var(--ink-2);margin:6px 0 10px;word-break:break-all}
 .ct-areas{display:flex;flex-wrap:wrap;gap:6px}
+.ct-areas-wrap.oculto{display:none}
 .ct-area-chip{font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface-warm);color:var(--muted);border:1px solid var(--line)}
 .ct-area-chip.on{background:var(--receita-soft,#DCEFEC);color:var(--brand-dark);border-color:transparent}
-.ct-in{width:100%;font-family:var(--sans);font-size:13.5px;padding:8px 10px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface-warm);color:var(--ink);margin-bottom:7px}
+.ct-in{width:100%;font-family:var(--sans);font-size:13.5px;padding:9px 11px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface-warm);color:var(--ink)}
 .ct-in:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-.ct-card-top .ct-nome{margin-bottom:0}
-.ct-rm{background:none;border:0;cursor:pointer;color:var(--muted);font-size:14px;padding:4px 6px}
-.ct-rm:hover{color:#8B2E22}
-.ct-voce{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-teal);background:var(--surface-warm);border:1px solid var(--line);padding:3px 9px;border-radius:999px;white-space:nowrap}
 .ct-in[disabled],.ct-in[readonly]{opacity:.7}
 .ct-area-chk{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer}
 .ct-area-chk input{accent-color:var(--brand-teal)}
-.ct-areas.oculto{display:none}
+.ct-rm{margin-top:14px;background:none;border:0;color:#8B2E22;font-size:12.5px;font-weight:700;cursor:pointer;padding:2px 0}
+.ct-rm:hover{text-decoration:underline}
+.ct-voce{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-teal);background:var(--surface-warm);border:1px solid var(--line);padding:3px 9px;border-radius:999px;white-space:nowrap}
+.ct-selfnote{font-size:12px;color:var(--muted);margin-top:14px}
+.ct-add{margin-top:10px;width:100%;background:#1F9D57;color:#fff;border-color:transparent;font-weight:800}
+.ct-add:hover{background:#178A4B}
+.ct-warn{flex:1;font-size:12.5px;font-weight:700;color:#9A6B10;display:flex;align-items:center;gap:6px}
+.ct-danger{background:#8B2E22;color:#fff;border-color:transparent}
 
 .grade{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:18px;max-width:680px;width:100%}
 .grade.grade--uma{grid-template-columns:minmax(240px,340px);justify-content:center}
@@ -660,22 +672,40 @@ function carregarAlertasHome(id, codigo){
 const AREAS_LABEL = { fiscal:'Fiscal', contabil:'Contábil', pessoal:'Pessoal', societario:'Societário', equiparacao:'Equiparação', financeiro:'Financeiro' };
 let CT = null;
 
-function fecharOverlay(){ const o=document.getElementById('ov-contatos'); if(o) o.remove(); CT=null; }
+function fecharOverlay(force){
+  if(!force && CT && CT.editando && CT.dirty){ pedirDescartar(); return; }
+  const o=document.getElementById('ov-contatos'); if(o) o.remove(); CT=null;
+}
+function pedirDescartar(){
+  const foot=document.getElementById('ct-foot');
+  if(!foot){ const o=document.getElementById('ov-contatos'); if(o) o.remove(); CT=null; return; }
+  foot.innerHTML=`<span class="ct-warn">⚠ Alterações não salvas</span>`+
+    `<button class="ac-btn" id="ct-keep">Continuar</button>`+
+    `<button class="ac-btn ct-danger" id="ct-discard">Sair sem salvar</button>`;
+  document.getElementById('ct-keep').addEventListener('click', montarFoot);
+  document.getElementById('ct-discard').addEventListener('click', ()=>fecharOverlay(true));
+}
+function montarFoot(){
+  const foot=document.getElementById('ct-foot'); if(!foot||!CT) return;
+  foot.innerHTML=`<button class="ac-btn" id="ct-cancel">Fechar</button>`+(CT.editando?`<button class="ac-btn ac-primary" id="ct-save">Salvar</button>`:'');
+  document.getElementById('ct-cancel').addEventListener('click', ()=>fecharOverlay());
+  const save=document.getElementById('ct-save'); if(save) save.addEventListener('click', salvarContatos);
+}
 
 async function abrirContatos(id, codigo){
-  fecharOverlay();
+  fecharOverlay(true);
   const ov = document.createElement('div');
   ov.id = 'ov-contatos'; ov.className = 'ov';
   ov.innerHTML = `<div class="sheet"><div class="sheet-head"><b>Contatos e acessos</b><button class="sheet-x" aria-label="Fechar">✕</button></div>
     <div class="sheet-body" id="ct-body"><div class="state" style="min-height:120px"><div class="spin"></div><p>Carregando…</p></div></div></div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click', e=>{ if(e.target===ov) fecharOverlay(); });
-  ov.querySelector('.sheet-x').addEventListener('click', fecharOverlay);
+  ov.querySelector('.sheet-x').addEventListener('click', ()=>fecharOverlay());
   try{
     const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&tipo=contatos');
     if(d.erro) throw new Error(d.erro);
-    CT = { id, codigo,
-      contatos:(d.contatos||[]).map(c=>({nome:c.nome,email:c.email,papel:c.papel,areas:Object.keys(c.areas||{}).filter(a=>c.areas[a])})),
+    CT = { id, codigo, dirty:false,
+      contatos:(d.contatos||[]).map(c=>({nome:c.nome,email:c.email,papel:c.papel,areas:Object.keys(c.areas||{}).filter(a=>c.areas[a]),_open:false})),
       areas:(d.areas&&d.areas.length)?d.areas:Object.keys(AREAS_LABEL), editando:!!d.podeEditar, euEmail:(d.euEmail||'').toLowerCase() };
     renderContatos();
   }catch(e){ document.getElementById('ct-body').innerHTML = `<p class="sheet-note" style="color:#8B2E22">${esc(e.message||e)}</p>`; }
@@ -686,59 +716,90 @@ function renderContatos(){
   const podeEditar = CT.editando;
   const aviso = podeEditar ? '' : `<p class="sheet-note" style="color:#9A6B10">Você está vendo em modo leitura. Só um <b>responsável principal</b> (entrando com o próprio código) pode editar.</p>`;
   body.innerHTML = `
-    <p class="sheet-note"><b>Principal</b> acessa tudo e edita os contatos. <b>Secundário</b> acessa e recebe só as áreas marcadas.</p>
+    <p class="sheet-note">Toque em um nome para ver ou editar. <b>Principal</b> acessa tudo; <b>Secundário</b> recebe só as áreas marcadas.</p>
     ${aviso}
     <div id="ct-lista">${CT.contatos.map((c,i)=>cardContato(c,i,podeEditar)).join('') || '<p class="sheet-note">Nenhum contato cadastrado ainda.</p>'}</div>
-    ${podeEditar?`<button class="ac-btn" id="ct-add" style="margin-top:8px;width:100%">+ Adicionar contato</button>`:''}
+    ${podeEditar?`<button class="ac-btn ct-add" id="ct-add">+ Adicionar contato</button>`:''}
     <div class="ct-err" id="ct-err"></div>
-    <div class="sheet-foot"><button class="ac-btn" id="ct-cancel">Fechar</button>${podeEditar?`<button class="ac-btn ac-primary" id="ct-save">Salvar</button>`:''}</div>`;
-  document.getElementById('ct-cancel').addEventListener('click', fecharOverlay);
-  const add=document.getElementById('ct-add'); if(add) add.addEventListener('click',()=>{ CT.contatos.push({nome:'',email:'',papel:'Secundário',areas:[]}); renderContatos(); });
-  const save=document.getElementById('ct-save'); if(save) save.addEventListener('click', salvarContatos);
-  if(podeEditar) wireCards();
+    <div class="sheet-foot" id="ct-foot"></div>`;
+  montarFoot();
+  const add=document.getElementById('ct-add'); if(add) add.addEventListener('click',()=>{ CT.contatos.push({nome:'',email:'',papel:'Secundário',areas:[],_open:true}); CT.dirty=true; renderContatos(); });
+  wireCards(podeEditar);
 }
 
 function cardContato(c,i,editar){
   const principal=/principal/i.test(c.papel);
+  const pill=`<span class="ct-papel ${principal?'p':'s'}">${principal?'Principal':'Secundário'}</span>`;
+  const chev=`<span class="ct-chev">▾</span>`;
   if(!editar){
-    return `<div class="ct-card"><div class="ct-card-top"><b>${esc(c.nome||'—')}</b><span class="ct-papel ${principal?'p':'s'}">${principal?'Principal':'Secundário'}</span></div>
-      <div class="ct-mail">${esc(c.email)}</div>
-      <div class="ct-areas">${principal?'<span class="ct-area-chip on">Acesso total</span>':CT.areas.map(a=>`<span class="ct-area-chip${c.areas.indexOf(a)>=0?' on':''}">${AREAS_LABEL[a]||a}</span>`).join('')}</div></div>`;
+    return `<div class="ct-acc${c._open?' open':''}" data-i="${i}">
+      <div class="ct-acc-head" data-i="${i}"><span class="ct-acc-name">${esc(c.nome||'—')}</span>${pill}${chev}</div>
+      <div class="ct-acc-body">
+        <div class="ct-mail">${esc(c.email||'—')}</div>
+        <div class="ct-areas">${principal?'<span class="ct-area-chip on">Acesso total</span>':CT.areas.map(a=>`<span class="ct-area-chip${c.areas.indexOf(a)>=0?' on':''}">${AREAS_LABEL[a]||a}</span>`).join('')}</div>
+      </div></div>`;
   }
   const euMesmo = !!CT.euEmail && (c.email||'').toLowerCase()===CT.euEmail;
-  return `<div class="ct-card" data-i="${i}">
-    <div class="ct-card-top"><input class="ct-in ct-nome" data-i="${i}" placeholder="Nome" value="${esc(c.nome)}">
-      ${euMesmo?`<span class="ct-voce">você</span>`:`<button class="ct-rm" data-i="${i}" aria-label="Remover">✕</button>`}</div>
-    <input class="ct-in ct-email" data-i="${i}" placeholder="e-mail@empresa.com" value="${esc(c.email)}"${euMesmo?' readonly':''}>
-    <select class="ct-in ct-papel" data-i="${i}"${euMesmo?' disabled title="Você não pode remover o seu próprio acesso principal"':''}>
-      <option value="Principal"${principal?' selected':''}>Principal · acesso total</option>
-      ${euMesmo?'':`<option value="Secundário"${!principal?' selected':''}>Secundário · áreas escolhidas</option>`}</select>
-    <div class="ct-areas ${principal?'oculto':''}">${CT.areas.map(a=>`<label class="ct-area-chk"><input type="checkbox" data-i="${i}" data-area="${a}"${c.areas.indexOf(a)>=0?' checked':''}> ${AREAS_LABEL[a]||a}</label>`).join('')}</div>
-  </div>`;
+  return `<div class="ct-acc${c._open?' open':''}" data-i="${i}">
+    <div class="ct-acc-head" data-i="${i}"><span class="ct-acc-name">${esc(c.nome||'Novo contato')}</span>${euMesmo?'<span class="ct-voce">você</span>':''}${pill}${chev}</div>
+    <div class="ct-acc-body">
+      <label class="ct-lbl">Nome</label>
+      <input class="ct-in ct-nome" data-i="${i}" placeholder="Nome" value="${esc(c.nome)}">
+      <label class="ct-lbl">E-mail</label>
+      <input class="ct-in ct-email" data-i="${i}" placeholder="e-mail@empresa.com" value="${esc(c.email)}"${euMesmo?' readonly':''}>
+      <label class="ct-lbl">Tipo de acesso</label>
+      <select class="ct-in ct-papel-sel" data-i="${i}"${euMesmo?' disabled title="Você não pode remover o seu próprio acesso principal"':''}>
+        <option value="Principal"${principal?' selected':''}>Principal · acesso total</option>
+        ${euMesmo?'':`<option value="Secundário"${!principal?' selected':''}>Secundário · áreas escolhidas</option>`}
+      </select>
+      <div class="ct-areas-wrap${principal?' oculto':''}">
+        <label class="ct-lbl">Áreas que recebe</label>
+        <div class="ct-areas">${CT.areas.map(a=>`<label class="ct-area-chk"><input type="checkbox" data-i="${i}" data-area="${a}"${c.areas.indexOf(a)>=0?' checked':''}> ${AREAS_LABEL[a]||a}</label>`).join('')}</div>
+      </div>
+      ${euMesmo?'<p class="ct-selfnote">Este é o seu acesso — você não pode se remover.</p>':`<button class="ct-rm" data-i="${i}">Remover contato</button>`}
+    </div></div>`;
 }
 
-function wireCards(){
-  document.querySelectorAll('.ct-nome').forEach(el=>el.addEventListener('input',e=>{ CT.contatos[+e.target.dataset.i].nome=e.target.value; }));
-  document.querySelectorAll('.ct-email').forEach(el=>el.addEventListener('input',e=>{ CT.contatos[+e.target.dataset.i].email=e.target.value; }));
-  document.querySelectorAll('.ct-papel').forEach(el=>el.addEventListener('change',e=>{ CT.contatos[+e.target.dataset.i].papel=e.target.value; renderContatos(); }));
-  document.querySelectorAll('.ct-rm').forEach(el=>el.addEventListener('click',e=>{ CT.contatos.splice(+e.target.dataset.i,1); renderContatos(); }));
+function wireCards(editar){
+  document.querySelectorAll('#ct-lista .ct-acc-head').forEach(h=>h.addEventListener('click',e=>{
+    const acc=e.currentTarget.closest('.ct-acc'); const i=+e.currentTarget.dataset.i;
+    const abrir=!acc.classList.contains('open'); acc.classList.toggle('open',abrir);
+    if(CT.contatos[i]) CT.contatos[i]._open=abrir;
+  }));
+  if(!editar) return;
+  document.querySelectorAll('.ct-nome').forEach(el=>el.addEventListener('input',e=>{
+    const i=+e.target.dataset.i; CT.contatos[i].nome=e.target.value; CT.dirty=true;
+    const acc=e.target.closest('.ct-acc'), nm=acc&&acc.querySelector('.ct-acc-name');
+    if(nm) nm.textContent=e.target.value||'Novo contato';
+  }));
+  document.querySelectorAll('.ct-email').forEach(el=>el.addEventListener('input',e=>{ CT.contatos[+e.target.dataset.i].email=e.target.value; CT.dirty=true; }));
+  document.querySelectorAll('.ct-papel-sel').forEach(el=>el.addEventListener('change',e=>{
+    const i=+e.target.dataset.i, principal=/principal/i.test(e.target.value);
+    CT.contatos[i].papel=e.target.value; CT.dirty=true;
+    const acc=e.target.closest('.ct-acc');
+    const wrap=acc&&acc.querySelector('.ct-areas-wrap'); if(wrap) wrap.classList.toggle('oculto',principal);
+    const pill=acc&&acc.querySelector('.ct-papel'); if(pill){ pill.className='ct-papel '+(principal?'p':'s'); pill.textContent=principal?'Principal':'Secundário'; }
+  }));
+  document.querySelectorAll('.ct-rm').forEach(el=>el.addEventListener('click',e=>{ CT.contatos.splice(+e.target.dataset.i,1); CT.dirty=true; renderContatos(); }));
   document.querySelectorAll('.ct-area-chk input').forEach(el=>el.addEventListener('change',e=>{
     const i=+e.target.dataset.i, a=e.target.dataset.area, arr=CT.contatos[i].areas;
     if(e.target.checked){ if(arr.indexOf(a)<0) arr.push(a); } else { const k=arr.indexOf(a); if(k>=0) arr.splice(k,1); }
+    CT.dirty=true;
   }));
 }
 
 async function salvarContatos(){
-  const err=document.getElementById('ct-err'), btn=document.getElementById('ct-save'); err.textContent='';
+  const err=document.getElementById('ct-err'), btn=document.getElementById('ct-save'); if(err) err.textContent='';
   const payload=CT.contatos.map(c=>({nome:c.nome,email:c.email,papel:c.papel,areas:/principal/i.test(c.papel)?[]:c.areas}));
   const params=new URLSearchParams({ id:CT.id, codigo:CT.codigo, acao:'salvar_contatos', contatos:JSON.stringify(payload) });
-  btn.disabled=true; btn.textContent='Salvando…';
+  if(btn){ btn.disabled=true; btn.textContent='Salvando…'; }
   try{
     const d=await jsonp(API_URL+'?'+params.toString());
     if(d.erro) throw new Error(d.erro);
+    CT.dirty=false;
     document.getElementById('ct-body').innerHTML=`<div class="state" style="min-height:160px"><h1 style="font-size:17px">Contatos salvos ✓</h1><p>${esc(d.mensagem||'Tudo certo.')}</p><button class="ac-btn ac-primary" id="ct-ok">Fechar</button></div>`;
-    document.getElementById('ct-ok').addEventListener('click', fecharOverlay);
-  }catch(e){ btn.disabled=false; btn.textContent='Salvar'; err.textContent=e.message||String(e); }
+    document.getElementById('ct-ok').addEventListener('click', ()=>fecharOverlay(true));
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='Salvar'; } if(err) err.textContent=e.message||String(e); }
 }
 
 /* ---------- código de verificação: 6 caixinhas, só números ---------- */
