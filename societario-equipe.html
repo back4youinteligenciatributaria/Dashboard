@@ -70,6 +70,7 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra-salvar{position:sticky;bottom:0;background:var(--surface-warm);padding-top:12px;margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .msg{font-size:13px;font-weight:600}
 .msg.ok{color:#2E7D52}.msg.err{color:var(--vermelho)}
+.autosave{font-size:12.5px;font-weight:600;color:var(--muted)}
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:50vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
@@ -131,7 +132,7 @@ function render(){
     <div class="topo"><div class="linha-topo">
       <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome, código, processo ou status…">
       <button class="btn green" id="novo">+ Novo processo</button>
-    </div><div class="dica">Clique num processo para editar status, datas, etapas e campos internos, e para lançar observações datadas.</div></div>
+    </div><div class="dica">Clique num processo para editar. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar".</div></div>
     <div class="lista" id="lista"></div></div>`;
   desenhar('');
   document.getElementById('busca').addEventListener('input',e=>desenhar(e.target.value));
@@ -205,8 +206,7 @@ function editorHTML(p){
     </div>
 
     <div class="barra-salvar">
-      <button class="btn pri" data-salvar>Salvar alterações</button>
-      <span class="msg" data-msg></span>
+      <span class="autosave" data-msg>✓ As alterações são salvas automaticamente</span>
     </div>`;
 }
 function abrirEditor(row){
@@ -225,19 +225,27 @@ function coletar(row){
   const etapas=[...ed.querySelectorAll('.etapa')].map(el=>({n:+el.dataset.n,nome:el.querySelector('.e-nome').value.trim(),status:el.querySelector('.e-status').value,data_inicio:el.querySelector('.e-ini').value.trim(),data_fim:el.querySelector('.e-fim').value.trim()}));
   return {nome:ed.querySelector('.f-nome').value.trim(),codigo_processo:ed.querySelector('.f-cod').value.trim(),processo:ed.querySelector('.f-proc').value.trim(),status_geral:ed.querySelector('.f-stg').value,extras:{responsavel:ed.querySelector('.f-e34').value.trim(),uf:ed.querySelector('.f-e35').value.trim(),orgao:ed.querySelector('.f-e36').value.trim(),protocolo:ed.querySelector('.f-e37').value.trim(),dias:ed.querySelector('.f-dias').value.trim()},etapas};
 }
-async function salvar(row,btn){
-  const p=PROCS.find(x=>x.row==row);const ed=document.getElementById('ed-'+row);const msg=ed.querySelector('[data-msg]');
-  const dados=coletar(row);btn.disabled=true;msg.className='msg';msg.textContent='Salvando…';
+let saveTimers={};
+function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function setMsg(row,cls,txt){const ed=document.getElementById('ed-'+row);const m=ed&&ed.querySelector('[data-msg]');if(m){m.className=cls;m.textContent=txt;}}
+function agendarSalvar(row){
+  const dados=coletar(row);                       // captura AGORA (mesmo que feche o editor depois)
+  setMsg(row,'autosave','Alterado…');
+  clearTimeout(saveTimers[row]);
+  saveTimers[row]=setTimeout(()=>salvarAuto(row,dados),450);
+}
+async function salvarAuto(row,dados){
+  const p=PROCS.find(x=>x.row==row);if(!p)return;
+  setMsg(row,'autosave','Salvando…');
   try{
     await postAcao(Object.assign({acao:'soc_salvar',row:p.row,id:p.id},dados));
     Object.assign(p,{nome:dados.nome,codigo_processo:dados.codigo_processo,processo:dados.processo,status_geral:dados.status_geral,extras:dados.extras});
-    dados.etapas.forEach(e=>{const alvo=p.etapas[e.n-1];alvo.nome=e.nome;alvo.status=e.status;alvo.data_inicio=e.data_inicio;alvo.data_fim=e.data_fim;});
-    msg.className='msg ok';msg.textContent='Salvo ✓';
+    dados.etapas.forEach(e=>{const alvo=p.etapas[e.n-1];if(alvo){alvo.nome=e.nome;alvo.status=e.status;alvo.data_inicio=e.data_inicio;alvo.data_fim=e.data_fim;}});
+    setMsg(row,'msg ok','Salvo ✓ '+horaAgora());
     const h=document.querySelector(`.proc[data-row="${row}"] .pmeta`);
     if(h){const nEt=p.etapas.filter(e=>e.nome).length,nOk=p.etapas.filter(e=>e.nome&&/conclu|finaliz|encerr/.test(normTxt(e.status))).length;h.innerHTML=bdgStatus(p.status_geral)+`<span class="bdg agu">${nOk}/${nEt} etapas ok</span>`+(p.codigo_processo?`<span class="bdg na">${esc(p.codigo_processo)}</span>`:'');}
     const nome=document.querySelector(`.proc[data-row="${row}"] .pnome`);if(nome)nome.textContent=p.nome||'(sem nome)';
-  }catch(e){msg.className='msg err';msg.textContent=e.message||e;}
-  btn.disabled=false;
+  }catch(e){setMsg(row,'msg err','Não salvou: '+(e.message||e));}
 }
 async function addObs(row,btn,tipo,n){
   const p=PROCS.find(x=>x.row==row);const ed=document.getElementById('ed-'+row);
@@ -274,13 +282,19 @@ async function criarNovo(btn){
 // eventos (delegação)
 document.addEventListener('click',e=>{
   const tg=e.target.closest('[data-toggle]');if(tg){abrirEditor(tg.dataset.toggle);return;}
-  const sv=e.target.closest('[data-salvar]');if(sv){salvar(sv.closest('.proc').dataset.row,sv);return;}
   const ag=e.target.closest('[data-addgeral]');if(ag){addObs(ag.closest('.proc').dataset.row,ag,'geral');return;}
   const ae=e.target.closest('[data-addet]');if(ae){addObs(ae.closest('.proc').dataset.row,ae,'etapa',+ae.dataset.addet);return;}
   const at=e.target.closest('[data-addetapa]');if(at){addEtapa(at.closest('.proc').dataset.row);return;}
   if(e.target.id==='n-criar')criarNovo(e.target);
   if(e.target.id==='n-cancelar')fecharNovo();
   if(e.target.id==='modal')fecharNovo();
+});
+// SALVAMENTO AUTOMÁTICO: qualquer alteração num campo do editor salva sozinha.
+document.addEventListener('change',e=>{
+  const ed=e.target.closest('.editor');if(!ed)return;
+  const f=e.target;if(!f.matches||!f.matches('input,select,textarea'))return;
+  if(f.matches('[data-gobs],[data-etobs]'))return;   // as observações têm botão próprio (log com data)
+  const proc=e.target.closest('.proc');if(proc)agendarSalvar(proc.dataset.row);
 });
 
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
