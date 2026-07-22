@@ -170,29 +170,33 @@ function meia(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function addDias(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
 function fmtBR(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}
 
-let LINHAS=[],RESP=[],SORT={key:'id',dir:'asc'};
-function carregar(){
-  setSave('saving','Carregando…');
-  return jsonp(API_URL+'?tipo=restituicao_equipe&chave='+encodeURIComponent(chaveAtual()))
-    .then(d=>{if(d.erro)throw new Error(d.erro);LINHAS=d.linhas||[];RESP=d.responsaveis||[];setSave('','');render();})
-    .catch(e=>{setSave('err','Erro');document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> em <code>?chave=</code> e se o Web App foi republicado com <code>EquipeRestituicao.gs</code>.</p></div>`;});
+let LINHAS=[],RESPNOME='',SORT={key:'id',dir:'asc'};
+function telaChave(titulo,msg){
+  document.getElementById('app').innerHTML=`<div class="state"><div style="font-size:36px">🔒</div><h1>${esc(titulo)}</h1><p>${esc(msg)}</p></div>`;
+  setSave('','');document.getElementById('tag').textContent='Restituição';document.getElementById('cnt').textContent='';
 }
-function baseRows(){const resp=normTxt(respAtual());return LINHAS.filter(l=>!resp||normTxt(l.responsavel)===resp);}
+function carregar(){
+  const cod=respAtual();   // o que vem depois do # = CÓDIGO de acesso do colaborador
+  if(!cod){telaChave('Falta a chave de acesso','Abra pelo seu link pessoal, com o seu código no fim do endereço (depois do #).');return Promise.resolve();}
+  setSave('saving','Carregando…');
+  return jsonp(API_URL+'?tipo=restituicao_equipe&chave='+encodeURIComponent(chaveAtual())+'&cod='+encodeURIComponent(cod))
+    .then(d=>{if(d.erro)throw new Error(d.erro);LINHAS=d.linhas||[];RESPNOME=d.responsavel||'';setSave('','');render();})
+    .catch(e=>{const m=String(e.message||e);setSave('err','Erro');
+      if(/inv[aá]lid/i.test(m))telaChave('Chave de acesso inválida','O código no fim do endereço não corresponde a nenhum colaborador. Confira o seu link.');
+      else if(/falta/i.test(m))telaChave('Falta a chave de acesso','Abra pelo seu link pessoal, com o seu código no fim do endereço (depois do #).');
+      else document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(m)}</p><p>Confira o link e se o Web App foi republicado com <code>EquipeRestituicao.gs</code>.</p></div>`;});
+}
+function baseRows(){return LINHAS;}   // o backend já entrega só as linhas do colaborador do código
 function render(){
-  const resp=respAtual();
-  document.getElementById('tag').textContent='Restituição'+(resp?' · '+resp:'');
-  const chips=['<span class="chip'+(!resp?' on':'')+'" data-resp="">Todos</span>']
-    .concat(RESP.map(r=>`<span class="chip${normTxt(r)===normTxt(resp)?' on':''}" data-resp="${esc(r)}">${esc(r)}</span>`)).join('');
+  document.getElementById('tag').textContent='Restituição'+(RESPNOME?' · '+RESPNOME:'');
   document.getElementById('app').innerHTML=`
     <div class="topo">
-      <div class="chips">${chips}</div>
       <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome ou CNPJ…">
       <div class="dica">Clique num cabeçalho para ordenar (A→Z / Z→A). Só os campos de status/observação/links/tarefas são editáveis — salvam sozinhos.</div>
     </div>
     <div class="resumo" id="resumo"></div>
     <div class="tabela-wrap"><table id="tab"></table></div>`;
   document.getElementById('busca').addEventListener('input',e=>desenhar(e.target.value));
-  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{const r=c.dataset.resp;if(r)location.hash=encodeURIComponent(r);else history.replaceState(null,'',location.pathname+location.search);render();}));
   atualizarResumo();
   desenhar('');
 }
@@ -302,7 +306,7 @@ document.addEventListener('click',e=>{
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto,tk.dataset.k);return;}
 });
-window.addEventListener('hashchange',render);
+window.addEventListener('hashchange',carregar);   // trocar o código (#) recarrega para o colaborador certo
 
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
 carregar();
