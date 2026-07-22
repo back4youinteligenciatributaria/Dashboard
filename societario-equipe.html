@@ -22,6 +22,12 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
 .barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
+.save-status{font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:20px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
+.save-status:empty{display:none}
+.save-status.saving{background:#E8892E;color:#fff}
+.save-status.ok{background:#2E9D5F;color:#fff}
+.save-status.err{background:#C0392B;color:#fff}
+@media(max-width:560px){.barra .cnt{display:none}}
 .wrap{max-width:1000px;margin:0 auto;padding:18px 20px 80px}
 .topo{position:sticky;top:52px;z-index:40;background:var(--canvas);padding:12px 0 10px}
 .linha-topo{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -88,6 +94,7 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
   <span class="logo">back<span class="y">4you</span></span>
   <span class="tag">Societário · equipe</span>
   <span class="spacer"></span>
+  <span class="save-status" id="saveStatus"></span>
   <span class="cnt" id="cnt"></span>
   <a class="volta" id="volta" href="colaborador.html">← Painel</a>
 </div>
@@ -206,7 +213,7 @@ function editorHTML(p){
     </div>
 
     <div class="barra-salvar">
-      <span class="autosave" data-msg>✓ As alterações são salvas automaticamente</span>
+      <span class="autosave">✓ Salva automaticamente — o status aparece no topo da página</span>
     </div>`;
 }
 function abrirEditor(row){
@@ -227,7 +234,10 @@ function coletar(row){
 }
 let saveTimers={};
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
-function setMsg(row,cls,txt){const ed=document.getElementById('ed-'+row);const m=ed&&ed.querySelector('[data-msg]');if(m){m.className=cls;m.textContent=txt;}}
+function setMsg(row,cls,txt){
+  const el=document.getElementById('saveStatus');   // status VISÍVEL no topo (barra fixa)
+  if(el){el.className='save-status '+(/ok/.test(cls)?'ok':/err/.test(cls)?'err':'saving');el.textContent=txt;}
+}
 function agendarSalvar(row){
   const dados=coletar(row);                       // captura AGORA (mesmo que feche o editor depois)
   setMsg(row,'autosave','Alterado…');
