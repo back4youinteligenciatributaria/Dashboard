@@ -115,6 +115,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
   <div class="sec-tit">Ferramentas da equipe</div>
   <div class="centrais" id="ferramentas">
     <a class="central-lk" id="fp-societario" href="societario-equipe.html"><span class="ic">🏛️</span><span>Societário — editar processos</span><span class="arw">›</span></a>
+    <a class="central-lk" id="fp-restituicao" href="restituicao.html"><span class="ic">💸</span><span>Restituição — equiparação</span><span class="arw">›</span></a>
     <!-- Contatos (gerir & permissões) oculto por ora — reative quando quiser:
     <a class="central-lk" id="fp-contatos" href="contatos-equipe.html"><span class="ic">👥</span><span>Contatos — gerir &amp; permissões</span><span class="arw">›</span></a>
     -->
@@ -319,7 +320,7 @@ function boot(){
   ligarCombo();
   const nc=document.getElementById('novo-cliente');
   if(nc) nc.href='onboarding.html?chave='+encodeURIComponent(chaveAtual());
-  ['fp-societario'].forEach(id=>{const el=document.getElementById(id);if(el)el.href=el.getAttribute('href').split('?')[0]+'?chave='+encodeURIComponent(chaveAtual());});
+  ['fp-societario','fp-restituicao'].forEach(id=>{const el=document.getElementById(id);if(el)el.href=el.getAttribute('href').split('?')[0]+'?chave='+encodeURIComponent(chaveAtual());});
 
   jsonp(API_URL+'?tipo=equipe&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{
