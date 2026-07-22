@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Societário (equipe) — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
+.wrap{max-width:1000px;margin:0 auto;padding:18px 20px 80px}
+.topo{position:sticky;top:52px;z-index:40;background:var(--canvas);padding:12px 0 10px}
+.linha-topo{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font-weight:700;font-size:13.5px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+.btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
+.btn.pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn.green{background:#1F9D57;border-color:#1F9D57;color:#fff;border-radius:999px}
+.btn.mini{padding:7px 11px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.dica{font-size:12px;color:var(--muted);margin-top:7px}
+.lista{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.proc{background:var(--surface);border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.proc-h{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;cursor:pointer}
+.proc-h:hover{background:var(--surface-warm)}
+.pid{font-size:11px;font-weight:800;color:#fff;background:var(--brand-teal);border-radius:6px;padding:3px 8px;white-space:nowrap;margin-top:1px}
+.pmain{flex:1;min-width:0}
+.pnome{font-size:14px;font-weight:700;line-height:1.3}
+.pproc{font-size:12px;color:var(--ink-2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.bdg{font-size:10.5px;font-weight:700;border-radius:7px;padding:3px 8px}
+.bdg.and{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
+.bdg.ok{background:#E7F4EC;color:#2E7D52}
+.bdg.agu{background:#EEF1F0;color:#5B6B67;border:1px solid var(--line)}
+.bdg.na{background:#F2ECE4;color:#8A7D70}
+.chev{color:var(--line-2);font-weight:900;font-size:18px;margin-top:2px}
+.editor{border-top:1px solid var(--line);padding:15px;display:none;background:var(--surface-warm)}
+.proc.open .editor{display:block}
+.proc.open .chev{color:var(--brand-teal);transform:rotate(90deg)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fld{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.fld label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.fld input,.fld select,.fld textarea{font-family:var(--sans);font-size:14px;padding:9px 11px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);width:100%}
+.fld textarea{resize:vertical;min-height:52px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.sub{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.sub::after{content:"";flex:1;height:1px;background:var(--line)}
+.log{white-space:pre-wrap;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--ink-2);max-height:190px;overflow:auto}
+.log.vazio{color:var(--muted);font-style:italic}
+.addobs{display:flex;gap:8px;margin-top:7px;align-items:flex-start}
+.addobs textarea{flex:1;min-height:40px}
+.etapa{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:10px}
+.etapa-top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.etapa-n{font-size:10.5px;font-weight:800;color:#fff;background:var(--brand-euc);border-radius:6px;padding:3px 7px;white-space:nowrap}
+.barra-salvar{position:sticky;bottom:0;background:var(--surface-warm);padding-top:12px;margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.msg{font-size:13px;font-weight:600}
+.msg.ok{color:#2E7D52}.msg.err{color:var(--vermelho)}
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:50vh;text-align:center;padding:0 24px}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
+.spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.modal{position:fixed;inset:0;background:rgba(7,48,52,.45);display:none;align-items:center;justify-content:center;z-index:80;padding:18px}
+.modal.on{display:flex}
+.modal-card{background:var(--surface);border-radius:16px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
+.modal-card h2{font-size:17px;margin-bottom:12px}
+@media(max-width:620px){.grid2{grid-template-columns:1fr}.wrap{padding:14px 12px 70px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="barra">
+  <span class="logo">back<span class="y">4you</span></span>
+  <span class="tag">Societário · equipe</span>
+  <span class="spacer"></span>
+  <span class="cnt" id="cnt"></span>
+  <a class="volta" id="volta" href="colaborador.html">← Painel</a>
+</div>
+<div id="app"><div class="state"><div class="spin"></div><p>Carregando processos…</p></div></div>
+
+<div class="modal" id="modal"><div class="modal-card">
+  <h2>Novo processo societário</h2>
+  <div class="fld"><label>ID do cliente *</label><input id="n-id" placeholder="ex.: 250001"></div>
+  <div class="fld"><label>Nome / razão social</label><input id="n-nome" placeholder="opcional"></div>
+  <div class="fld"><label>Código Processo</label><input id="n-cod" placeholder="ex.: B4Y - 040"></div>
+  <div class="fld"><label>Processo *</label><textarea id="n-proc" placeholder="Descrição do processo (ex.: 4ª ACS …)"></textarea></div>
+  <div class="fld"><label>Status Geral</label><select id="n-stg"></select></div>
+  <div class="barra-salvar" style="position:static;background:none;padding:0">
+    <button class="btn pri" id="n-criar">Criar processo</button>
+    <button class="btn" id="n-cancelar">Cancelar</button>
+    <span class="msg" id="n-msg"></span>
+  </div>
+</div></div>
+
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+const CHAVE_PADRAO='b4u-equipe-2026';
+const STATUS=['','Aguardando','Em andamento','Concluído','Não se aplica'];
+function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');const h=(location.hash||'').replace('#','').trim();return q||h||CHAVE_PADRAO;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
+async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
+function selectHTML(cls,val){return `<select class="${cls}">`+STATUS.map(o=>`<option value="${esc(o)}"${normTxt(o)===normTxt(val)?' selected':''}>${o||'—'}</option>`).join('')+`</select>`;}
+function bdgStatus(s){const n=normTxt(s);let cl='agu';if(/conclu|finaliz|encerr/.test(n))cl='ok';else if(/andamento/.test(n))cl='and';else if(/nao se aplica|não se aplica/.test(n))cl='na';return `<span class="bdg ${cl}">${esc(s||'—')}</span>`;}
+
+let PROCS=[];
+function carregar(){
+  return jsonp(API_URL+'?tipo=societario_equipe&chave='+encodeURIComponent(chaveAtual()))
+    .then(d=>{if(d.erro)throw new Error(d.erro);PROCS=(d.processos||[]).map(p=>{p._visN=p.etapas.reduce((m,e)=>e.nome?e.n:m,0);return p;});render();})
+    .catch(e=>{document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> no endereço e se o Web App foi republicado com os arquivos <code>EquipeSocietario.gs</code> e as rotas novas.</p></div>`;});
+}
+function render(){
+  const app=document.getElementById('app');
+  document.getElementById('cnt').textContent=PROCS.length+' processos';
+  app.innerHTML=`<div class="wrap">
+    <div class="topo"><div class="linha-topo">
+      <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome, código, processo ou status…">
+      <button class="btn green" id="novo">+ Novo processo</button>
+    </div><div class="dica">Clique num processo para editar status, datas, etapas e campos internos, e para lançar observações datadas.</div></div>
+    <div class="lista" id="lista"></div></div>`;
+  desenhar('');
+  document.getElementById('busca').addEventListener('input',e=>desenhar(e.target.value));
+  document.getElementById('novo').addEventListener('click',abrirNovo);
+}
+function desenhar(termo){
+  const alvo=normTxt(termo);
+  const lista=document.getElementById('lista');
+  const arr=PROCS.filter(p=>!alvo||normTxt(p.id+' '+p.nome+' '+p.codigo_processo+' '+p.processo+' '+p.status_geral).includes(alvo))
+    .sort((a,b)=>String(a.id).localeCompare(String(b.id),'pt',{numeric:true}));
+  lista.innerHTML=arr.map(cardHTML).join('')||'<div class="dica">Nenhum processo encontrado.</div>';
+}
+function cardHTML(p){
+  const nEt=p.etapas.filter(e=>e.nome).length;
+  const nOk=p.etapas.filter(e=>e.nome&&/conclu|finaliz|encerr/.test(normTxt(e.status))).length;
+  return `<div class="proc" data-row="${p.row}">
+    <div class="proc-h" data-toggle="${p.row}">
+      <span class="pid">${esc(p.id)}</span>
+      <div class="pmain">
+        <div class="pnome">${esc(p.nome||'(sem nome)')}</div>
+        <div class="pproc">${esc(p.processo||'')}</div>
+        <div class="pmeta">${bdgStatus(p.status_geral)}<span class="bdg agu">${nOk}/${nEt} etapas ok</span>${p.codigo_processo?`<span class="bdg na">${esc(p.codigo_processo)}</span>`:''}</div>
+      </div>
+      <span class="chev">›</span>
+    </div>
+    <div class="editor" id="ed-${p.row}"></div>
+  </div>`;
+}
+function etapaHTML(p,e){
+  const log=e.obs_interna||'';
+  return `<div class="etapa" data-n="${e.n}">
+    <div class="etapa-top"><span class="etapa-n">Etapa ${e.n}</span>
+      <input class="e-nome" style="flex:1;font-weight:700;padding:7px 10px;border:1px solid var(--line-2);border-radius:8px" value="${esc(e.nome)}" placeholder="Nome da etapa"></div>
+    <div class="grid2">
+      <div class="fld"><label>Status</label>${selectHTML('e-status',e.status)}</div>
+      <div class="fld"><label>Data início</label><input class="e-ini" value="${esc(e.data_inicio)}" placeholder="dd/mm/aaaa ou set/2025"></div>
+      <div class="fld"><label>Data finalização</label><input class="e-fim" value="${esc(e.data_fim)}" placeholder="dd/mm/aaaa"></div>
+    </div>
+    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Observações internas da etapa</label>
+    <div class="log ${log?'':'vazio'}" data-etlog="${e.n}">${log?esc(log):'Sem observações.'}</div>
+    <div class="addobs"><textarea data-etobs="${e.n}" placeholder="Nova observação (entra com a data de hoje)"></textarea>
+      <button class="btn mini" data-addet="${e.n}">Adicionar</button></div>
+  </div>`;
+}
+function editorHTML(p){
+  const etv=[];for(let n=1;n<=p._visN;n++)etv.push(p.etapas[n-1]);
+  const glog=p.observacoes_internas||'';
+  return `<div class="grid2">
+      <div class="fld"><label>Nome / razão social</label><input class="f-nome" value="${esc(p.nome)}"></div>
+      <div class="fld"><label>Código Processo</label><input class="f-cod" value="${esc(p.codigo_processo)}"></div>
+    </div>
+    <div class="fld"><label>Processo</label><textarea class="f-proc">${esc(p.processo)}</textarea></div>
+    <div class="fld"><label>Status Geral</label>${selectHTML('f-stg',p.status_geral)}</div>
+
+    <div class="sub">Observações internas (geral)</div>
+    <div class="log ${glog?'':'vazio'}" data-glog>${glog?esc(glog):'Sem observações.'}</div>
+    <div class="addobs"><textarea data-gobs placeholder="Nova observação (entra com a data de hoje)"></textarea>
+      <button class="btn mini" data-addgeral>Adicionar</button></div>
+
+    <div class="sub">Etapas</div>
+    <div data-etapas>${etv.map(e=>etapaHTML(p,e)).join('')}</div>
+    <button class="btn mini" data-addetapa ${p._visN>=10?'disabled':''}>+ Adicionar etapa</button>
+
+    <div class="sub">Campos internos</div>
+    <div class="grid2">
+      <div class="fld"><label>Responsável (Extra 34)</label><input class="f-e34" value="${esc(p.extras.responsavel)}"></div>
+      <div class="fld"><label>UF / cidade (Extra 35)</label><input class="f-e35" value="${esc(p.extras.uf)}"></div>
+      <div class="fld"><label>Órgão (Extra 36)</label><input class="f-e36" value="${esc(p.extras.orgao)}"></div>
+      <div class="fld"><label>Protocolo (Extra 37)</label><input class="f-e37" value="${esc(p.extras.protocolo)}"></div>
+      <div class="fld"><label>Dias p/ finalização</label><input class="f-dias" value="${esc(p.extras.dias)}"></div>
+    </div>
+
+    <div class="barra-salvar">
+      <button class="btn pri" data-salvar>Salvar alterações</button>
+      <span class="msg" data-msg></span>
+    </div>`;
+}
+function abrirEditor(row){
+  const proc=document.querySelector(`.proc[data-row="${row}"]`);
+  const ed=document.getElementById('ed-'+row);
+  const p=PROCS.find(x=>x.row==row);
+  if(proc.classList.contains('open')){proc.classList.remove('open');ed.innerHTML='';return;}
+  document.querySelectorAll('.proc.open').forEach(el=>{el.classList.remove('open');el.querySelector('.editor').innerHTML='';});
+  ed.innerHTML=editorHTML(p);proc.classList.add('open');
+  proc.scrollIntoView({block:'nearest'});
+}
+function reabrir(row){const ed=document.getElementById('ed-'+row);const p=PROCS.find(x=>x.row==row);if(ed)ed.innerHTML=editorHTML(p);}
+
+function coletar(row){
+  const ed=document.getElementById('ed-'+row);
+  const etapas=[...ed.querySelectorAll('.etapa')].map(el=>({n:+el.dataset.n,nome:el.querySelector('.e-nome').value.trim(),status:el.querySelector('.e-status').value,data_inicio:el.querySelector('.e-ini').value.trim(),data_fim:el.querySelector('.e-fim').value.trim()}));
+  return {nome:ed.querySelector('.f-nome').value.trim(),codigo_processo:ed.querySelector('.f-cod').value.trim(),processo:ed.querySelector('.f-proc').value.trim(),status_geral:ed.querySelector('.f-stg').value,extras:{responsavel:ed.querySelector('.f-e34').value.trim(),uf:ed.querySelector('.f-e35').value.trim(),orgao:ed.querySelector('.f-e36').value.trim(),protocolo:ed.querySelector('.f-e37').value.trim(),dias:ed.querySelector('.f-dias').value.trim()},etapas};
+}
+async function salvar(row,btn){
+  const p=PROCS.find(x=>x.row==row);const ed=document.getElementById('ed-'+row);const msg=ed.querySelector('[data-msg]');
+  const dados=coletar(row);btn.disabled=true;msg.className='msg';msg.textContent='Salvando…';
+  try{
+    await postAcao(Object.assign({acao:'soc_salvar',row:p.row,id:p.id},dados));
+    Object.assign(p,{nome:dados.nome,codigo_processo:dados.codigo_processo,processo:dados.processo,status_geral:dados.status_geral,extras:dados.extras});
+    dados.etapas.forEach(e=>{const alvo=p.etapas[e.n-1];alvo.nome=e.nome;alvo.status=e.status;alvo.data_inicio=e.data_inicio;alvo.data_fim=e.data_fim;});
+    msg.className='msg ok';msg.textContent='Salvo ✓';
+    const h=document.querySelector(`.proc[data-row="${row}"] .pmeta`);
+    if(h){const nEt=p.etapas.filter(e=>e.nome).length,nOk=p.etapas.filter(e=>e.nome&&/conclu|finaliz|encerr/.test(normTxt(e.status))).length;h.innerHTML=bdgStatus(p.status_geral)+`<span class="bdg agu">${nOk}/${nEt} etapas ok</span>`+(p.codigo_processo?`<span class="bdg na">${esc(p.codigo_processo)}</span>`:'');}
+    const nome=document.querySelector(`.proc[data-row="${row}"] .pnome`);if(nome)nome.textContent=p.nome||'(sem nome)';
+  }catch(e){msg.className='msg err';msg.textContent=e.message||e;}
+  btn.disabled=false;
+}
+async function addObs(row,btn,tipo,n){
+  const p=PROCS.find(x=>x.row==row);const ed=document.getElementById('ed-'+row);
+  const ta=tipo==='geral'?ed.querySelector('[data-gobs]'):ed.querySelector(`[data-etobs="${n}"]`);
+  const texto=ta.value.trim();if(!texto){ta.focus();return;}
+  btn.disabled=true;const txtOrig=btn.textContent;btn.textContent='…';
+  try{
+    const acao=tipo==='geral'?'soc_obs_geral':'soc_obs_etapa';
+    const d=await postAcao(Object.assign({acao,row:p.row,id:p.id,texto},tipo==='etapa'?{n}:{}));
+    if(tipo==='geral'){p.observacoes_internas=d.valor;const log=ed.querySelector('[data-glog]');log.textContent=d.valor;log.classList.remove('vazio');}
+    else{p.etapas[n-1].obs_interna=d.valor;const log=ed.querySelector(`[data-etlog="${n}"]`);log.textContent=d.valor;log.classList.remove('vazio');}
+    ta.value='';ta.scrollIntoView({block:'nearest'});
+  }catch(e){alert('Não consegui salvar a observação: '+(e.message||e));}
+  btn.disabled=false;btn.textContent=txtOrig;
+}
+function addEtapa(row){const p=PROCS.find(x=>x.row==row);if(p._visN>=10)return;p._visN++;reabrir(row);}
+
+// modal novo processo
+function abrirNovo(){document.getElementById('n-stg').innerHTML=STATUS.filter(Boolean).map(o=>`<option${o==='Em andamento'?' selected':''}>${o}</option>`).join('');['n-id','n-nome','n-cod','n-proc'].forEach(i=>document.getElementById(i).value='');document.getElementById('n-msg').textContent='';document.getElementById('modal').classList.add('on');}
+function fecharNovo(){document.getElementById('modal').classList.remove('on');}
+async function criarNovo(btn){
+  const id=document.getElementById('n-id').value.trim(),proc=document.getElementById('n-proc').value.trim();
+  const msg=document.getElementById('n-msg');
+  if(!id||!proc){msg.className='msg err';msg.textContent='Informe ID e Processo.';return;}
+  btn.disabled=true;msg.className='msg';msg.textContent='Criando…';
+  try{
+    const d=await postAcao({acao:'soc_novo',id,nome:document.getElementById('n-nome').value.trim(),codigo_processo:document.getElementById('n-cod').value.trim(),processo:proc,status_geral:document.getElementById('n-stg').value});
+    fecharNovo();await carregar();
+    const el=document.querySelector(`.proc[data-row="${d.row}"]`);if(el){el.scrollIntoView({block:'center'});abrirEditor(d.row);}
+  }catch(e){msg.className='msg err';msg.textContent=e.message||e;}
+  btn.disabled=false;
+}
+
+// eventos (delegação)
+document.addEventListener('click',e=>{
+  const tg=e.target.closest('[data-toggle]');if(tg){abrirEditor(tg.dataset.toggle);return;}
+  const sv=e.target.closest('[data-salvar]');if(sv){salvar(sv.closest('.proc').dataset.row,sv);return;}
+  const ag=e.target.closest('[data-addgeral]');if(ag){addObs(ag.closest('.proc').dataset.row,ag,'geral');return;}
+  const ae=e.target.closest('[data-addet]');if(ae){addObs(ae.closest('.proc').dataset.row,ae,'etapa',+ae.dataset.addet);return;}
+  const at=e.target.closest('[data-addetapa]');if(at){addEtapa(at.closest('.proc').dataset.row);return;}
+  if(e.target.id==='n-criar')criarNovo(e.target);
+  if(e.target.id==='n-cancelar')fecharNovo();
+  if(e.target.id==='modal')fecharNovo();
+});
+
+document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+carregar();
+</script>
+</body>
+</html>

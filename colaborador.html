@@ -111,6 +111,13 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
   <div class="sec-tit">Acesso rápido — planilhas centrais</div>
   <div class="centrais" id="centrais"></div>
 
+  <!-- FERRAMENTAS DA EQUIPE -->
+  <div class="sec-tit">Ferramentas da equipe</div>
+  <div class="centrais" id="ferramentas">
+    <a class="central-lk" id="fp-societario" href="societario-equipe.html"><span class="ic">🏛️</span><span>Societário — editar processos</span><span class="arw">›</span></a>
+    <a class="central-lk" id="fp-contatos" href="contatos-equipe.html"><span class="ic">👥</span><span>Contatos — gerir &amp; permissões</span><span class="arw">›</span></a>
+  </div>
+
   <!-- CLIENTES — busca com dropdown -->
   <div class="sec-tit">Links por cliente</div>
   <div class="combo">
@@ -308,6 +315,7 @@ function boot(){
   ligarCombo();
   const nc=document.getElementById('novo-cliente');
   if(nc) nc.href='onboarding.html?chave='+encodeURIComponent(chaveAtual());
+  ['fp-societario','fp-contatos'].forEach(id=>{const el=document.getElementById(id);if(el)el.href=el.getAttribute('href').split('?')[0]+'?chave='+encodeURIComponent(chaveAtual());});
 
   jsonp(API_URL+'?tipo=equipe&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{
