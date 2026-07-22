@@ -37,6 +37,16 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .central-lk:hover{border-color:var(--brand-teal);transform:translateY(-1px);box-shadow:0 4px 14px rgba(7,48,52,.08)}
 .central-lk .ic{font-size:18px;width:22px;text-align:center;flex:none}
 .central-lk .arw{margin-left:auto;color:var(--line-2);font-weight:900}
+button.central-lk{width:100%;font-family:inherit;font-size:13.5px;text-align:left;cursor:pointer}
+button.central-lk[aria-expanded="true"]{border-color:var(--brand-teal)}
+button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
+.menu{position:relative}
+.menu-pop{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:35;background:var(--surface);
+  border:1px solid var(--line-2);border-radius:12px;box-shadow:0 12px 30px rgba(7,48,52,.16);padding:6px;min-width:230px}
+.menu-pop[hidden]{display:none}
+.menu-pop a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;text-decoration:none;color:var(--ink);font-weight:600;font-size:13.5px}
+.menu-pop a:hover{background:var(--surface-warm)}
+.menu-pop a .ic{font-size:16px;width:20px;text-align:center;flex:none}
 
 /* Combobox de clientes */
 .combo{position:relative}
@@ -123,16 +133,19 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-
 const CHAVE_PADRAO = 'b4u-equipe-2026';
 
 // Planilhas centrais — atalhos fixos (edite aqui se algum link mudar).
-const LINKS_CENTRAIS = [
-  {nome:'Site Links',            ic:'🗂️', url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1807029121#gid=1807029121'},
+// Principais = botões diretos. Outros = agrupados num dropdown "Outros".
+const LINKS_PRINCIPAIS = [
   {nome:'Societária Mestra',     ic:'🏛️', url:'https://docs.google.com/spreadsheets/d/1xcmKoj1hORiFQLdrUDxBicZri-tOXkwFiyqVF1NUGUg/edit?gid=1875565821#gid=1875565821'},
-  {nome:'Tickets',               ic:'🎫', url:'https://docs.google.com/spreadsheets/d/1ZQVgRsn5FwytaO7MyHLPATD88xQziUfZhOddV_I4j30/edit?gid=207987257#gid=207987257'},
   {nome:'Contatos',              ic:'👥', url:'https://docs.google.com/spreadsheets/d/17Yrjylaj0b-fgaH-ujFjLkeT-G4egKzV8yEg4q4yrzE/edit?gid=1163717920#gid=1163717920'},
-  {nome:'Feriados',              ic:'📅', url:'https://docs.google.com/spreadsheets/d/1Gpn84rlS0fbd1j-gOxWZc8s3TJ6CzRYwrm-QsBZwhCI/edit?gid=59736689#gid=59736689'},
-  {nome:'Modelos',               ic:'📄', url:'https://docs.google.com/spreadsheets/d/1NAzY_xSsdAYVwXZIy23dNXOkqLnt89UkFXPPeiEbHdI/edit?gid=1026418437#gid=1026418437'},
-  {nome:'Config Tributário',     ic:'⚙️', url:'https://docs.google.com/spreadsheets/d/1JiOjIfTXrOZPGuD_i4zmjXXVTaqPLlKD1fDCcMrDU4k/edit?gid=1736790632#gid=1736790632'},
   {nome:'Certificados Digitais', ic:'🔐', url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1519487343#gid=1519487343'},
   {nome:'Equiparação Controle',  ic:'⚖️', url:'https://docs.google.com/spreadsheets/d/18wIzGZtwIaDOxvIfWdBNBcWKcLzbNgxRB3C2-r8ymzg/edit?gid=619398478#gid=619398478'}
+];
+const LINKS_OUTROS = [
+  {nome:'Site Links',        ic:'🗂️', url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1807029121#gid=1807029121'},
+  {nome:'Tickets',           ic:'🎫', url:'https://docs.google.com/spreadsheets/d/1ZQVgRsn5FwytaO7MyHLPATD88xQziUfZhOddV_I4j30/edit?gid=207987257#gid=207987257'},
+  {nome:'Feriados',          ic:'📅', url:'https://docs.google.com/spreadsheets/d/1Gpn84rlS0fbd1j-gOxWZc8s3TJ6CzRYwrm-QsBZwhCI/edit?gid=59736689#gid=59736689'},
+  {nome:'Modelos',           ic:'📄', url:'https://docs.google.com/spreadsheets/d/1NAzY_xSsdAYVwXZIy23dNXOkqLnt89UkFXPPeiEbHdI/edit?gid=1026418437#gid=1026418437'},
+  {nome:'Config Tributário', ic:'⚙️', url:'https://docs.google.com/spreadsheets/d/1JiOjIfTXrOZPGuD_i4zmjXXVTaqPLlKD1fDCcMrDU4k/edit?gid=1736790632#gid=1736790632'}
 ];
 
 function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); const h=(location.hash||'').replace('#','').trim(); return q || h || CHAVE_PADRAO; }
@@ -172,11 +185,33 @@ function lkPasta(rot, url){
 }
 
 /* ---- Acesso rápido (independente da API) ---- */
-function pintarCentrais(){
-  document.getElementById('centrais').innerHTML = LINKS_CENTRAIS.map(l=>
-    `<a class="central-lk" href="${esc(l.url)}" target="_blank" rel="noopener">
+function botaoCentral(l){
+  return `<a class="central-lk" href="${esc(l.url)}" target="_blank" rel="noopener">
        <span class="ic">${l.ic}</span><span>${esc(l.nome)}</span><span class="arw">›</span>
-     </a>`).join('');
+     </a>`;
+}
+function pintarCentrais(){
+  const principais = LINKS_PRINCIPAIS.map(botaoCentral).join('');
+  const outros = LINKS_OUTROS.map(l=>
+    `<a href="${esc(l.url)}" target="_blank" rel="noopener"><span class="ic">${l.ic}</span>${esc(l.nome)}</a>`).join('');
+  document.getElementById('centrais').innerHTML = principais +
+    `<div class="menu" id="menu-outros">
+       <button type="button" class="central-lk" id="btn-outros" aria-expanded="false">
+         <span class="ic">🗂️</span><span>Outros</span><span class="arw">▾</span>
+       </button>
+       <div class="menu-pop" id="pop-outros" hidden>${outros}</div>
+     </div>`;
+  const btn=document.getElementById('btn-outros'), pop=document.getElementById('pop-outros');
+  btn.addEventListener('click', e=>{
+    e.stopPropagation();
+    const abrir = pop.hidden;
+    pop.hidden = !abrir;
+    btn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+  });
+}
+function fecharOutros(){
+  const pop=document.getElementById('pop-outros'), btn=document.getElementById('btn-outros');
+  if(pop && !pop.hidden){ pop.hidden=true; btn.setAttribute('aria-expanded','false'); }
 }
 
 /* ---- Painel de um cliente ---- */
@@ -186,8 +221,6 @@ function painelCliente(c){
   const drive = c.drive && /^https?:/.test(c.drive)
     ? `<a class="lk drive" href="${esc(c.drive)}" target="_blank" rel="noopener"><span class="ic">📁</span>Drive do cliente</a>` : '';
   const subs=[lkPasta('Recebidos',p.principal),lkPasta('Extratos',p.extratos),lkPasta('Notas fiscais',p.notas),lkPasta('Outros',p.outros)].filter(Boolean).join('');
-  const dash = c.dashboard && /^https?:/.test(c.dashboard)
-    ? `<a class="lk" href="${esc(c.dashboard)}" target="_blank" rel="noopener"><span class="ic">🔗</span>Painel do cliente</a>` : '';
   return `<div class="cli">
     <div class="cli-top">
       <span class="cli-id">${esc(c.id)}</span>
@@ -202,7 +235,6 @@ function painelCliente(c){
       ${lkArea('Contábil',a.contabil,'📒')}
       ${lkArea('Pessoal',a.pessoal,'👥')}
     </div>
-    ${dash?`<div class="linha">${dash}</div>`:''}
   </div>`;
 }
 
@@ -267,6 +299,7 @@ function ligarCombo(){
   });
   document.addEventListener('click', e=>{
     if(!e.target.closest('.combo')) fechar();
+    if(!e.target.closest('#menu-outros')) fecharOutros();
   });
 }
 
