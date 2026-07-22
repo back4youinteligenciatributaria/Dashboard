@@ -29,10 +29,9 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
 .chip{font-size:13px;font-weight:700;border-radius:999px;padding:7px 14px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
 .chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
-.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:11px 15px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca{width:100%;font-family:var(--sans);font-size:15px;padding:11px 15px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .dica{font-size:12px;color:var(--muted);margin-top:7px}
-/* resumo de prazos */
 .resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 12px}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .rhead{padding:10px 13px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
@@ -52,22 +51,26 @@ thead th{position:sticky;top:0;z-index:20;background:var(--brand-dark);color:#ff
 thead th:hover{background:#0a4247}
 tbody td{padding:3px 5px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:top;background:var(--surface)}
 tbody tr:nth-child(even) td{background:var(--surface-warm)}
-th.col-id,td.col-id{position:sticky;left:0;z-index:15}
-thead th.col-id{z-index:25}
-td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal);padding:6px 10px;white-space:nowrap;box-shadow:2px 0 6px rgba(7,48,52,.06)}
-tbody tr:nth-child(even) td.col-id{background:var(--surface-warm)}
+/* colunas congeladas: ID e Nome */
+th.col-id,td.col-id{position:sticky;left:0;width:74px;min-width:74px;max-width:74px}
+th.col-nome,td.col-nome{position:sticky;left:74px;min-width:210px;max-width:230px}
+thead th.col-id,thead th.col-nome{z-index:26}
+td.col-id,td.col-nome{z-index:15}
+td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal);padding:6px 9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
+td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.25;padding:6px 9px;white-space:normal;box-shadow:2px 0 6px rgba(7,48,52,.07)}
+tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
 .cel{display:flex;gap:4px;align-items:center}
-.cel input,.cel textarea{font-family:var(--sans);font-size:12.5px;padding:6px 8px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
+.cel input,.cel textarea,.cel select{font-family:var(--sans);font-size:12.5px;padding:6px 8px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
 .cel textarea{resize:both;min-height:34px;line-height:1.35}
-.cel input:focus,.cel textarea:focus{outline:2px solid var(--brand-teal);outline-offset:0}
+.cel select{font-weight:600;cursor:pointer}
+.cel input:focus,.cel textarea:focus,.cel select:focus{outline:2px solid var(--brand-teal);outline-offset:0}
 .cel a.abrir{color:var(--brand-teal);text-decoration:none;font-weight:800;font-size:14px;flex:none}
-input.st-ok{background:#E7F4EC;border-color:#bfe3cd;color:#216c43;font-weight:700}
-input.st-go{background:#FCEFE0;border-color:#F0D6B4;color:#8a5212;font-weight:700}
-input.st-bad{background:#F8E3DF;border-color:#e6bfb7;color:#8B2E22;font-weight:700}
-input.st-neu{background:#EEF1F0;border-color:#d7dedd;color:#4f5f5c;font-weight:700}
+/* somente-leitura */
+.ro{padding:6px 8px;font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro.roarea{white-space:pre-wrap;max-height:58px;overflow:auto;line-height:1.3;font-size:12px}
+.robadge{display:inline-block;padding:4px 9px;border-radius:7px;font-size:11.5px;font-weight:800;white-space:nowrap}
 @keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
 .flash{animation:fl 1.7s ease}
-input.flash,textarea.flash{animation:fl 1.7s ease}
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
@@ -97,52 +100,64 @@ function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
 function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 
+// ID e Nome são colunas CONGELADAS (fora de COLS). ro:1 = somente leitura.
 const COLS=[
-  {k:'nome',label:'Nome',t:'text',w:230},
-  {k:'cnpj',label:'CNPJ',t:'text',w:130},
-  {k:'status',label:'STATUS',t:'text',w:160,cor:1},
-  {k:'link_drive',label:'Link do drive',t:'url',w:170},
-  {k:'natureza_juridica',label:'Natureza Jurídica',t:'text',w:150},
-  {k:'prospectivo',label:'Prospectivo ou Retrospectivo',t:'text',w:150},
-  {k:'visao_geral',label:'Visão geral da equiparação',t:'area',w:260},
-  {k:'estrategia',label:'Estratégia Equiparação',t:'area',w:260},
-  {k:'natureza_empresarial',label:'Natureza Empresarial',t:'text',w:150},
+  {k:'cnpj',label:'CNPJ',t:'text',w:130,ro:1},
+  {k:'status',label:'STATUS',t:'select',opt:'status',w:180},
+  {k:'link_drive',label:'Link do drive',t:'url',w:170,ro:1},
+  {k:'natureza_juridica',label:'Natureza Jurídica',t:'text',w:150,ro:1},
+  {k:'prospectivo',label:'Prospectivo ou Retrospectivo',t:'text',opt:'prospectivo',w:170,ro:1},
+  {k:'visao_geral',label:'Visão geral da equiparação',t:'area',w:260,ro:1},
+  {k:'estrategia',label:'Estratégia Equiparação',t:'area',w:260,ro:1},
+  {k:'natureza_empresarial',label:'Natureza Empresarial',t:'text',w:150,ro:1},
   {k:'obs_status',label:'Observações (Status Geral)',t:'area',w:260},
-  {k:'responsavel',label:'Responsável',t:'text',w:120,cor:1},
-  {k:'rel_adequacao',label:'Relatório de Adequação',t:'text',w:150,cor:1},
-  {k:'prazo_adequacao',label:'Prazo Rel. Adequação',t:'text',w:120,sort:'date'},
+  {k:'rel_adequacao',label:'Relatório de Adequação',t:'select',opt:'rel_adequacao',w:160},
+  {k:'prazo_adequacao',label:'Prazo Rel. Adequação',t:'text',w:120,sort:'date',ro:1},
   {k:'link_adequacao',label:'Link Rel. Adequação',t:'url',w:150},
-  {k:'rel_prelim',label:'Relatório Executivo Preliminar',t:'text',w:170,cor:1},
-  {k:'prazo_prelim',label:'Prazo Rel. Exec. Preliminar',t:'text',w:120,sort:'date'},
+  {k:'rel_prelim',label:'Relatório Executivo Preliminar',t:'select',opt:'rel_prelim',w:180},
+  {k:'prazo_prelim',label:'Prazo Rel. Exec. Preliminar',t:'text',w:120,sort:'date',ro:1},
   {k:'link_prelim',label:'Link Rel. Exec. Preliminar',t:'url',w:150},
-  {k:'apuracao_nfs',label:'Apuração de NFs e coleta documental',t:'text',w:180,cor:1},
-  {k:'prazo_apuracao',label:'Prazo Apuração NFs',t:'text',w:120,sort:'date'},
-  {k:'protocolo',label:'Protocolo',t:'text',w:150,cor:1},
-  {k:'prazo_protocolo',label:'Prazo Protocolo',t:'text',w:120,sort:'date'},
-  {k:'rel_def',label:'Relatório Executivo Definitivo',t:'text',w:170,cor:1},
-  {k:'prazo_def',label:'Prazo Rel. Exec. Definitivo',t:'text',w:120,sort:'date'},
+  {k:'apuracao_nfs',label:'Apuração de NFs e coleta documental',t:'select',opt:'apuracao_nfs',w:190},
+  {k:'prazo_apuracao',label:'Prazo Apuração NFs',t:'text',w:120,sort:'date',ro:1},
+  {k:'protocolo',label:'Protocolo',t:'select',opt:'protocolo',w:160},
+  {k:'prazo_protocolo',label:'Prazo Protocolo',t:'text',w:120,sort:'date',ro:1},
+  {k:'rel_def',label:'Relatório Executivo Definitivo',t:'select',opt:'rel_def',w:180},
+  {k:'prazo_def',label:'Prazo Rel. Exec. Definitivo',t:'text',w:120,sort:'date',ro:1},
   {k:'link_def',label:'Link Rel. Exec. Definitivo',t:'url',w:150},
   {k:'tarefas',label:'Tarefas Ativas',t:'area',w:260}
 ];
-// tarefas com prazo (para o resumo). stk = coluna de status correspondente.
 const TAREFAS=[
   {k:'prazo_prelim',stk:'rel_prelim',label:'Rel. Exec. Preliminar'},
   {k:'prazo_apuracao',stk:'apuracao_nfs',label:'Apuração NFs'},
   {k:'prazo_protocolo',stk:'protocolo',label:'Protocolo'},
   {k:'prazo_def',stk:'rel_def',label:'Rel. Exec. Definitivo'}
 ];
-function corStatus(v){
-  const n=normTxt(v);if(!n)return '';
-  if(/aprovad|finaliz|protocolado|conclu/.test(n))return 'st-ok';
-  if(/execu|enviad|andamento|pre |pré|prelim|solicit/.test(n))return 'st-go';
-  if(/perdid|interromp|parado|cancel/.test(n))return 'st-bad';
-  if(/pendente|nao inici|não inici|aguard|definir|n\/a/.test(n))return 'st-neu';
-  return '';
-}
-function statusConcluido(v){return /aprovad|finaliz|conclu/.test(normTxt(v));}
+// opções EXATAS (aba Listas)
+const OPT={
+  status:['Alteração de CS prévia','Perdido','PROTOCOLADO','INTERROMPIDO','PRÉ - PROTOCOLO','PROSPECTIVO SOMENTE','PROSPECTIVO SOMENTE PROTOCOLADO','PRÉ - ONBOARDING','COLETA DE DOCUMENTAÇÃO'],
+  prospectivo:['Retrospectivo','Retrospectivo e Prospectivo','Prospectivo'],
+  rel_adequacao:['Aprovado','Falta onboarding','Em execução','Enviado ao cliente'],
+  rel_prelim:['Aprovado','Parado (não iniciar)','Em execução','Não feito','Enviado ao cliente'],
+  apuracao_nfs:['Aprovada','Enviada ao cliente','Em execução','Parado (não iniciar)'],
+  protocolo:['Finalizado','Parado (não iniciar)','Não iniciado','Em execução'],
+  rel_def:['Enviado ao cliente','Parado','Pendente','Feito']
+};
+// cores EXATAS por valor (formatação condicional) — por coluna
+const COR_RAW={
+  status:{'Alteração de CS prévia':'#579BFC','Perdido':'#333333','PROTOCOLADO':'#00C875','INTERROMPIDO':'#757575','PRÉ - PROTOCOLO':'#CAB641','PROSPECTIVO SOMENTE':'#A1E3F6','PROSPECTIVO SOMENTE PROTOCOLADO':'#037F4C','PRÉ - ONBOARDING':'#FF6D3B','COLETA DE DOCUMENTAÇÃO':'#FFCB00'},
+  prospectivo:{'Retrospectivo':'#00C875','Retrospectivo e Prospectivo':'#CAB641','Prospectivo':'#FFCB00'},
+  rel_adequacao:{'Aprovado':'#00C875','Falta onboarding':'#DF2F4A','Em execução':'#FDAB3D','Enviado ao cliente':'#007EB5'},
+  rel_prelim:{'Aprovado':'#00C875','Parado (não iniciar)':'#9D50DD','Em execução':'#FDAB3D','Não feito':'#DF2F4A','Enviado ao cliente':'#007EB5'},
+  apuracao_nfs:{'Aprovada':'#00C875','Enviada ao cliente':'#007EB5','Em execução':'#FDAB3D','Parado (não iniciar)':'#9D50DD'},
+  protocolo:{'Finalizado':'#00C875','Parado (não iniciar)':'#784BD1','Não iniciado':'#DF2F4A','Em execução':'#FDAB3D'},
+  rel_def:{'Enviado ao cliente':'#00C875','Parado':'#007EB5','Pendente':'#DF2F4A','Feito':'#FDAB3D'}
+};
+const COR_N={};Object.keys(COR_RAW).forEach(k=>{COR_N[k]={};Object.keys(COR_RAW[k]).forEach(v=>COR_N[k][normTxt(v)]=COR_RAW[k][v]);});
+function corDe(opt,val){const m=COR_N[opt];return m?(m[normTxt(val)]||''):'';}
+function textoContraste(hex){if(!hex)return '';const r=parseInt(hex.substr(1,2),16),g=parseInt(hex.substr(3,2),16),b=parseInt(hex.substr(5,2),16);return (0.299*r+0.587*g+0.114*b)<150?'#ffffff':'#10312f';}
+function statusConcluido(v){const n=normTxt(v);if(!n)return false;if(/nao feito|não feito/.test(n))return false;return /aprovad|finaliz|conclu|protocolado|^feito$/.test(n);}
 function setSave(cls,txt){const el=document.getElementById('saveStatus');if(el){el.className='save-status '+(cls||'');el.textContent=txt||'';}}
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
-// datas
 const MES3={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
 function parseData(s){
   s=String(s==null?'':s).trim();if(!s)return null;
@@ -172,7 +187,7 @@ function render(){
     <div class="topo">
       <div class="chips">${chips}</div>
       <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome ou CNPJ…">
-      <div class="dica">Clique num cabeçalho para ordenar (A→Z / Z→A, inclui datas e prazos). Edição direto na tabela — salva sozinho.</div>
+      <div class="dica">Clique num cabeçalho para ordenar (A→Z / Z→A). Só os campos de status/observação/links/tarefas são editáveis — salvam sozinhos.</div>
     </div>
     <div class="resumo" id="resumo"></div>
     <div class="tabela-wrap"><table id="tab"></table></div>`;
@@ -181,21 +196,17 @@ function render(){
   atualizarResumo();
   desenhar('');
 }
-// ---- RESUMO de prazos ----
 function computeResumo(){
-  const t0=meia(new Date());
-  const dow=t0.getDay();                       // 0=domingo
-  const fimSemana=addDias(t0,(7-dow)%7);        // próximo domingo (hoje, se hoje for domingo)
-  const proxIni=addDias(fimSemana,1), proxFim=addDias(proxIni,6);
+  const t0=meia(new Date()),dow=t0.getDay(),fimSemana=addDias(t0,(7-dow)%7),proxIni=addDias(fimSemana,1),proxFim=addDias(proxIni,6);
   const b={atrasada:[],semana:[],proxima:[]};
   baseRows().forEach(l=>TAREFAS.forEach(tf=>{
     const d=parseData(l[tf.k]);if(!d)return;
-    if(statusConcluido(l[tf.stk]))return;       // já concluída não vira pendência
+    if(statusConcluido(l[tf.stk]))return;
     const dm=meia(d),g=dm.getTime();
-    const item={row:l.row,id:l.id,nome:l.nome,k:tf.k,label:tf.label,dataStr:fmtBR(dm)};
-    if(g<t0.getTime())b.atrasada.push(Object.assign({ord:g},item));
-    else if(g<=fimSemana.getTime())b.semana.push(Object.assign({ord:g},item));
-    else if(g>=proxIni.getTime()&&g<=proxFim.getTime())b.proxima.push(Object.assign({ord:g},item));
+    const item={row:l.row,id:l.id,nome:l.nome,k:tf.k,label:tf.label,dataStr:fmtBR(dm),ord:g};
+    if(g<t0.getTime())b.atrasada.push(item);
+    else if(g<=fimSemana.getTime())b.semana.push(item);
+    else if(g>=proxIni.getTime()&&g<=proxFim.getTime())b.proxima.push(item);
   }));
   Object.keys(b).forEach(k=>b[k].sort((x,y)=>x.ord-y.ord));
   return b;
@@ -211,57 +222,57 @@ function atualizarResumo(){
     <div class="rcard semana"><div class="rhead">Esta semana (até domingo) <span class="n">${b.semana.length}</span></div><div class="rlista">${listaTk(b.semana)}</div></div>
     <div class="rcard proxima"><div class="rhead">Próxima semana <span class="n">${b.proxima.length}</span></div><div class="rlista">${listaTk(b.proxima)}</div></div>`;
 }
-// ---- ordenação + tabela ----
 function ehNum(s){return /^\s*-?\d+([.,]\d+)?\s*$/.test(String(s));}
-function valCmp(a,b){
-  if(ehNum(a)&&ehNum(b))return parseFloat(String(a).replace(',','.'))-parseFloat(String(b).replace(',','.'));
-  return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});
-}
+function valCmp(a,b){if(ehNum(a)&&ehNum(b))return parseFloat(String(a).replace(',','.'))-parseFloat(String(b).replace(',','.'));return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});}
 function ordenar(arr){
   const key=SORT.key,dir=SORT.dir,col=COLS.find(c=>c.k===key),isData=col&&col.sort==='date';
   return arr.slice().sort((x,y)=>{
     let va=x[key]==null?'':x[key],vb=y[key]==null?'':y[key];
     const ea=String(va).trim()==='',eb=String(vb).trim()==='';
-    if(ea&&eb)return 0;if(ea)return 1;if(eb)return -1;   // vazios sempre por último
+    if(ea&&eb)return 0;if(ea)return 1;if(eb)return -1;
     let r;
     if(isData){const da=parseData(va),db=parseData(vb);r=(da?da.getTime():Infinity)-(db?db.getTime():Infinity);}
     else r=valCmp(va,vb);
     return dir==='desc'?-r:r;
   });
 }
-function filtradas(termo){
-  const alvo=normTxt(termo);
-  return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj).includes(alvo));
-}
+function filtradas(termo){const alvo=normTxt(termo);return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj).includes(alvo));}
 function seta(key){return SORT.key===key?(SORT.dir==='asc'?' ▲':' ▼'):'';}
 function celHTML(l,c){
   const v=l[c.k]==null?'':l[c.k];
-  const cor=c.cor?corStatus(v):'';
-  let campo;
-  if(c.t==='area')campo=`<textarea data-k="${c.k}" style="width:${c.w}px">${esc(v)}</textarea>`;
-  else campo=`<input data-k="${c.k}" class="${cor}" type="text" value="${esc(v)}" style="width:${c.w}px">`;
   const abrir=(c.t==='url'&&/^https?:/i.test(v))?`<a class="abrir" href="${esc(v)}" target="_blank" rel="noopener" title="abrir">↗</a>`:'';
-  return `<td><div class="cel">${campo}${abrir}</div></td>`;
+  let campo;
+  if(c.ro){
+    if(c.opt&&corDe(c.opt,v)){const cor=corDe(c.opt,v);campo=`<span class="robadge" style="background:${cor};color:${textoContraste(cor)}">${esc(v)}</span>`;}
+    else if(c.t==='area')campo=`<div class="ro roarea" style="width:${c.w}px">${esc(v)}</div>`;
+    else campo=`<div class="ro" style="width:${c.w}px" title="${esc(v)}">${esc(v)}</div>`;
+  }else if(c.t==='select'){
+    const opts=OPT[c.opt].slice();if(v&&opts.indexOf(v)<0)opts.unshift(v);
+    const cor=corDe(c.opt,v);const st=`width:${c.w}px`+(cor?`;background:${cor};color:${textoContraste(cor)};font-weight:700`:'');
+    campo=`<select data-k="${c.k}" data-opt="${c.opt}" style="${st}"><option value=""${v===''?' selected':''}>—</option>`+opts.map(o=>`<option value="${esc(o)}"${o===v?' selected':''}>${esc(o)}</option>`).join('')+`</select>`;
+  }else if(c.t==='area')campo=`<textarea data-k="${c.k}" style="width:${c.w}px">${esc(v)}</textarea>`;
+  else campo=`<input data-k="${c.k}" type="text" value="${esc(v)}" style="width:${c.w}px">`;
+  return `<td><div class="cel" data-cell="${c.k}">${campo}${abrir}</div></td>`;
 }
 function desenhar(termo){
   const arr=ordenar(filtradas(termo));
   document.getElementById('cnt').textContent=arr.length+' clientes';
-  const head='<thead><tr><th class="col-id" data-sort="id">ID'+seta('id')+'</th>'
+  const head='<thead><tr>'
+    +'<th class="col-id" data-sort="id">ID'+seta('id')+'</th>'
+    +'<th class="col-nome" data-sort="nome">Nome'+seta('nome')+'</th>'
     +COLS.map(c=>`<th data-sort="${c.k}" style="min-width:${c.w+16}px">${esc(c.label)}${seta(c.k)}</th>`).join('')+'</tr></thead>';
-  const body='<tbody>'+(arr.map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+1}" style="padding:16px;color:var(--muted)">Nenhum cliente para esse filtro.</td></tr>`)+'</tbody>';
+  const body='<tbody>'+(arr.map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td><td class="col-nome">${esc(l.nome||'')}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+2}" style="padding:16px;color:var(--muted)">Nenhum cliente para esse filtro.</td></tr>`)+'</tbody>';
   document.getElementById('tab').innerHTML=head+body;
 }
-// ---- ir até a linha (a partir do resumo) ----
 function irPara(row,k){
   const busca=document.getElementById('busca');if(busca&&busca.value){busca.value='';desenhar('');}
   requestAnimationFrame(()=>{
     const tr=document.querySelector(`#tab tr[data-row="${row}"]`);if(!tr)return;
     tr.scrollIntoView({block:'center'});
-    const alvo=tr.querySelector(`[data-k="${k}"]`)||tr;
+    const alvo=tr.querySelector(`[data-cell="${k}"]`)||tr;
     alvo.classList.add('flash');setTimeout(()=>alvo.classList.remove('flash'),1700);
   });
 }
-// ---- salvar ----
 function coletar(tr){const campos={};tr.querySelectorAll('[data-k]').forEach(el=>campos[el.dataset.k]=el.value);return campos;}
 let timers={};
 function agendarSalvar(tr){
@@ -276,13 +287,15 @@ async function salvar(row,id,campos){
     await postAcao({acao:'rest_salvar',row:+row,id,campos});
     const l=LINHAS.find(x=>x.row==row);if(l)Object.keys(campos).forEach(k=>l[k]=campos[k]);
     setSave('ok','Salvo ✓ '+horaAgora());
-    atualizarResumo();   // prazos/status podem ter mudado
+    atualizarResumo();
   }catch(e){setSave('err','Não salvou: '+(e.message||e));}
 }
 
-// eventos (delegação)
-document.addEventListener('input',e=>{const el=e.target;if(!el.dataset||!el.dataset.k)return;const c=COLS.find(x=>x.k===el.dataset.k);if(c&&c.cor&&el.tagName==='INPUT')el.className=corStatus(el.value);});
-document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||!el.dataset.k)return;const tr=el.closest('tr[data-row]');if(tr)agendarSalvar(tr);});
+document.addEventListener('change',e=>{
+  const el=e.target;if(!el.dataset||!el.dataset.k)return;
+  if(el.tagName==='SELECT'&&el.dataset.opt){const cor=corDe(el.dataset.opt,el.value);el.style.background=cor||'';el.style.color=cor?textoContraste(cor):'';el.style.fontWeight=cor?'700':'600';}
+  const tr=el.closest('tr[data-row]');if(tr)agendarSalvar(tr);
+});
 document.addEventListener('click',e=>{
   const th=e.target.closest('th[data-sort]');
   if(th){const k=th.dataset.sort;if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}desenhar(document.getElementById('busca').value);return;}
