@@ -18,50 +18,61 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
 .barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
 .barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
 .save-status{font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:20px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
 .save-status.saving{background:#E8892E;color:#fff}.save-status.ok{background:#2E9D5F;color:#fff}.save-status.err{background:#C0392B;color:#fff}
-.wrap{max-width:1000px;margin:0 auto;padding:16px 20px 80px}
-.topo{position:sticky;top:52px;z-index:40;background:var(--canvas);padding:12px 0 10px}
+.topo{padding:12px 16px 8px}
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
 .chip{font-size:13px;font-weight:700;border-radius:999px;padding:7px 14px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
 .chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
-.busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:11px 15px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .dica{font-size:12px;color:var(--muted);margin-top:7px}
-.lista{margin-top:12px;display:flex;flex-direction:column;gap:10px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:13px;overflow:hidden}
-.card-h{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;cursor:pointer}
-.card-h:hover{background:var(--surface-warm)}
-.pid{font-size:11px;font-weight:800;color:#fff;background:var(--brand-teal);border-radius:6px;padding:3px 8px;white-space:nowrap;margin-top:1px}
-.pmain{flex:1;min-width:0}
-.pnome{font-size:14px;font-weight:700;line-height:1.3}
-.pmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
-.bdg{font-size:10.5px;font-weight:700;border-radius:7px;padding:3px 8px;background:#EEF1F0;color:#5B6B67;border:1px solid var(--line)}
-.bdg.resp{background:var(--amber-soft);color:#9A5B12;border-color:var(--amber-line)}
-.chev{color:var(--line-2);font-weight:900;font-size:18px;margin-top:2px}
-.editor{border-top:1px solid var(--line);padding:15px;display:none;background:var(--surface-warm)}
-.card.open .editor{display:block}.card.open .chev{color:var(--brand-teal);transform:rotate(90deg)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fld{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
-.fld.full{grid-column:1/-1}
-.fld label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.fld input,.fld textarea{font-family:var(--sans);font-size:14px;padding:9px 11px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);width:100%}
-.fld textarea{resize:vertical;min-height:56px}
-.fld input:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-.fld .abrir{font-size:11px;font-weight:700;color:var(--brand-teal);text-decoration:none;align-self:flex-start}
-.sub{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin:14px 0 8px;display:flex;align-items:center;gap:8px}
-.sub::after{content:"";flex:1;height:1px;background:var(--line)}
-.rodape{font-size:12.5px;color:var(--muted);margin-top:10px}
+/* resumo de prazos */
+.resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 12px}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.rhead{padding:10px 13px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
+.rcard.atrasada .rhead{background:#C0392B}.rcard.semana .rhead{background:#E8892E}.rcard.proxima .rhead{background:var(--brand-teal)}
+.rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:12px}
+.rlista{max-height:168px;overflow:auto;padding:6px}
+.tk{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:8px;cursor:pointer;font-size:12.5px}
+.tk:hover{background:var(--surface-warm)}
+.tk .d{font-weight:800;color:var(--ink);white-space:nowrap}
+.tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk .tp{font-size:10.5px;font-weight:700;color:var(--muted)}
+.rvazio{color:var(--muted);font-size:12px;padding:10px 9px}
+.tabela-wrap{overflow:auto;max-height:calc(100vh - 130px);border-top:1px solid var(--line)}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px}
+thead th{position:sticky;top:0;z-index:20;background:var(--brand-dark);color:#fff;font-weight:700;text-align:left;
+  padding:9px 10px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);font-size:11.5px;cursor:pointer;user-select:none}
+thead th:hover{background:#0a4247}
+tbody td{padding:3px 5px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:top;background:var(--surface)}
+tbody tr:nth-child(even) td{background:var(--surface-warm)}
+th.col-id,td.col-id{position:sticky;left:0;z-index:15}
+thead th.col-id{z-index:25}
+td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal);padding:6px 10px;white-space:nowrap;box-shadow:2px 0 6px rgba(7,48,52,.06)}
+tbody tr:nth-child(even) td.col-id{background:var(--surface-warm)}
+.cel{display:flex;gap:4px;align-items:center}
+.cel input,.cel textarea{font-family:var(--sans);font-size:12.5px;padding:6px 8px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
+.cel textarea{resize:both;min-height:34px;line-height:1.35}
+.cel input:focus,.cel textarea:focus{outline:2px solid var(--brand-teal);outline-offset:0}
+.cel a.abrir{color:var(--brand-teal);text-decoration:none;font-weight:800;font-size:14px;flex:none}
+input.st-ok{background:#E7F4EC;border-color:#bfe3cd;color:#216c43;font-weight:700}
+input.st-go{background:#FCEFE0;border-color:#F0D6B4;color:#8a5212;font-weight:700}
+input.st-bad{background:#F8E3DF;border-color:#e6bfb7;color:#8B2E22;font-weight:700}
+input.st-neu{background:#EEF1F0;border-color:#d7dedd;color:#4f5f5c;font-weight:700}
+@keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
+.flash{animation:fl 1.7s ease}
+input.flash,textarea.flash{animation:fl 1.7s ease}
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-@media(max-width:620px){.grid2{grid-template-columns:1fr}.wrap{padding:14px 12px 70px}.barra .cnt{display:none}}
+@media(max-width:720px){.resumo{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -76,19 +87,9 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 </div>
 <div id="app"><div class="state"><div class="spin"></div><p>Carregando restituição…</p></div></div>
 
-<datalist id="dl-status"></datalist>
-<datalist id="dl-prospectivo"></datalist>
-<datalist id="dl-responsavel"></datalist>
-<datalist id="dl-rel_adequacao"></datalist>
-<datalist id="dl-rel_prelim"></datalist>
-<datalist id="dl-apuracao_nfs"></datalist>
-<datalist id="dl-protocolo"></datalist>
-<datalist id="dl-rel_def"></datalist>
-
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 const CHAVE_PADRAO='b4u-equipe-2026';
-// chave = SÓ ?chave= (o # é o RESPONSÁVEL, não a chave)
 function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');return q?q.trim():CHAVE_PADRAO;}
 function respAtual(){return decodeURIComponent((location.hash||'').replace(/^#/,'')).trim();}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -96,144 +97,198 @@ function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
 function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 
-const OPT={
-  status:['PROTOCOLADO','Alteração de CS prévia','Perdido','PRÉ - PROTOCOLO','INTERROMPIDO','PROSPECTIVO SOMENTE','PROSPECTIVO SOMENTE PROTOCOLADO','PRÉ - ONBOARDING'],
-  prospectivo:['Retrospectivo','Prospectivo'],
-  responsavel:['MFBD','KAREANE','FABIANO','N/A','DEFINIR'],
-  rel_adequacao:['Aprovado','Falta onboarding'],
-  rel_prelim:['Aprovado','Em execução','Enviado ao cliente','Parado (não iniciar)'],
-  apuracao_nfs:['Aprovada','Aprovado','Enviada ao cliente','Parado (não iniciar)'],
-  protocolo:['Finalizado','Em execução','Não iniciado','Parado (não iniciar)'],
-  rel_def:['Pendente','Enviado ao cliente','Parado']
-};
-const CAMPOS=[
-  {k:'nome',label:'Nome',t:'text',full:true},
-  {k:'cnpj',label:'CNPJ',t:'text'},
-  {k:'status',label:'STATUS',t:'list',opt:'status'},
-  {k:'responsavel',label:'Responsável',t:'list',opt:'responsavel'},
-  {k:'link_drive',label:'Link do drive',t:'url',full:true},
-  {k:'natureza_juridica',label:'Natureza Jurídica',t:'text'},
-  {k:'natureza_empresarial',label:'Natureza Empresarial',t:'text'},
-  {k:'prospectivo',label:'Prospectivo ou Retrospectivo',t:'list',opt:'prospectivo'},
-  {k:'visao_geral',label:'Visão geral da equiparação',t:'area',full:true},
-  {k:'estrategia',label:'Estratégia Equiparação',t:'area',full:true},
-  {k:'obs_status',label:'Observações (Status Geral)',t:'area',full:true},
-  {k:'_s1',sub:'Relatório de Adequação'},
-  {k:'rel_adequacao',label:'Relatório de Adequação',t:'list',opt:'rel_adequacao'},
-  {k:'prazo_adequacao',label:'Prazo Rel. Adequação',t:'text'},
-  {k:'link_adequacao',label:'Link Rel. Adequação',t:'url',full:true},
-  {k:'_s2',sub:'Relatório Executivo Preliminar'},
-  {k:'rel_prelim',label:'Relatório Executivo Preliminar',t:'list',opt:'rel_prelim'},
-  {k:'prazo_prelim',label:'Prazo Rel. Exec. Preliminar',t:'text'},
-  {k:'link_prelim',label:'Link Rel. Exec. Preliminar',t:'url',full:true},
-  {k:'_s3',sub:'Apuração / Protocolo'},
-  {k:'apuracao_nfs',label:'Apuração de NFs e coleta documental',t:'list',opt:'apuracao_nfs'},
-  {k:'prazo_apuracao',label:'Prazo Apuração NFs',t:'text'},
-  {k:'protocolo',label:'Protocolo',t:'list',opt:'protocolo'},
-  {k:'prazo_protocolo',label:'Prazo Protocolo',t:'text'},
-  {k:'_s4',sub:'Relatório Executivo Definitivo'},
-  {k:'rel_def',label:'Relatório Executivo Definitivo',t:'list',opt:'rel_def'},
-  {k:'prazo_def',label:'Prazo Rel. Exec. Definitivo',t:'text'},
-  {k:'link_def',label:'Link Rel. Exec. Definitivo',t:'url',full:true},
-  {k:'_s5',sub:'Tarefas'},
-  {k:'tarefas',label:'Tarefas Ativas',t:'area',full:true}
+const COLS=[
+  {k:'nome',label:'Nome',t:'text',w:230},
+  {k:'cnpj',label:'CNPJ',t:'text',w:130},
+  {k:'status',label:'STATUS',t:'text',w:160,cor:1},
+  {k:'link_drive',label:'Link do drive',t:'url',w:170},
+  {k:'natureza_juridica',label:'Natureza Jurídica',t:'text',w:150},
+  {k:'prospectivo',label:'Prospectivo ou Retrospectivo',t:'text',w:150},
+  {k:'visao_geral',label:'Visão geral da equiparação',t:'area',w:260},
+  {k:'estrategia',label:'Estratégia Equiparação',t:'area',w:260},
+  {k:'natureza_empresarial',label:'Natureza Empresarial',t:'text',w:150},
+  {k:'obs_status',label:'Observações (Status Geral)',t:'area',w:260},
+  {k:'responsavel',label:'Responsável',t:'text',w:120,cor:1},
+  {k:'rel_adequacao',label:'Relatório de Adequação',t:'text',w:150,cor:1},
+  {k:'prazo_adequacao',label:'Prazo Rel. Adequação',t:'text',w:120,sort:'date'},
+  {k:'link_adequacao',label:'Link Rel. Adequação',t:'url',w:150},
+  {k:'rel_prelim',label:'Relatório Executivo Preliminar',t:'text',w:170,cor:1},
+  {k:'prazo_prelim',label:'Prazo Rel. Exec. Preliminar',t:'text',w:120,sort:'date'},
+  {k:'link_prelim',label:'Link Rel. Exec. Preliminar',t:'url',w:150},
+  {k:'apuracao_nfs',label:'Apuração de NFs e coleta documental',t:'text',w:180,cor:1},
+  {k:'prazo_apuracao',label:'Prazo Apuração NFs',t:'text',w:120,sort:'date'},
+  {k:'protocolo',label:'Protocolo',t:'text',w:150,cor:1},
+  {k:'prazo_protocolo',label:'Prazo Protocolo',t:'text',w:120,sort:'date'},
+  {k:'rel_def',label:'Relatório Executivo Definitivo',t:'text',w:170,cor:1},
+  {k:'prazo_def',label:'Prazo Rel. Exec. Definitivo',t:'text',w:120,sort:'date'},
+  {k:'link_def',label:'Link Rel. Exec. Definitivo',t:'url',w:150},
+  {k:'tarefas',label:'Tarefas Ativas',t:'area',w:260}
 ];
-
-function preencherDatalists(){Object.keys(OPT).forEach(k=>{const dl=document.getElementById('dl-'+k);if(dl)dl.innerHTML=OPT[k].map(o=>`<option value="${esc(o)}">`).join('');});}
+// tarefas com prazo (para o resumo). stk = coluna de status correspondente.
+const TAREFAS=[
+  {k:'prazo_prelim',stk:'rel_prelim',label:'Rel. Exec. Preliminar'},
+  {k:'prazo_apuracao',stk:'apuracao_nfs',label:'Apuração NFs'},
+  {k:'prazo_protocolo',stk:'protocolo',label:'Protocolo'},
+  {k:'prazo_def',stk:'rel_def',label:'Rel. Exec. Definitivo'}
+];
+function corStatus(v){
+  const n=normTxt(v);if(!n)return '';
+  if(/aprovad|finaliz|protocolado|conclu/.test(n))return 'st-ok';
+  if(/execu|enviad|andamento|pre |pré|prelim|solicit/.test(n))return 'st-go';
+  if(/perdid|interromp|parado|cancel/.test(n))return 'st-bad';
+  if(/pendente|nao inici|não inici|aguard|definir|n\/a/.test(n))return 'st-neu';
+  return '';
+}
+function statusConcluido(v){return /aprovad|finaliz|conclu/.test(normTxt(v));}
 function setSave(cls,txt){const el=document.getElementById('saveStatus');if(el){el.className='save-status '+(cls||'');el.textContent=txt||'';}}
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+// datas
+const MES3={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
+function parseData(s){
+  s=String(s==null?'':s).trim();if(!s)return null;
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[2]-1,+m[1]);}
+  m=s.toLowerCase().match(/([a-zç]{3})[a-zç.]*\/?\s*(\d{4})/);if(m&&MES3[m[1]]!=null)return new Date(+m[2],MES3[m[1]],1);
+  return null;
+}
+function meia(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+function addDias(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
+function fmtBR(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}
 
-let LINHAS=[],RESP=[];
+let LINHAS=[],RESP=[],SORT={key:'id',dir:'asc'};
 function carregar(){
   setSave('saving','Carregando…');
   return jsonp(API_URL+'?tipo=restituicao_equipe&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{if(d.erro)throw new Error(d.erro);LINHAS=d.linhas||[];RESP=d.responsaveis||[];setSave('','');render();})
     .catch(e=>{setSave('err','Erro');document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> em <code>?chave=</code> e se o Web App foi republicado com <code>EquipeRestituicao.gs</code>.</p></div>`;});
 }
+function baseRows(){const resp=normTxt(respAtual());return LINHAS.filter(l=>!resp||normTxt(l.responsavel)===resp);}
 function render(){
-  preencherDatalists();
   const resp=respAtual();
   document.getElementById('tag').textContent='Restituição'+(resp?' · '+resp:'');
   const chips=['<span class="chip'+(!resp?' on':'')+'" data-resp="">Todos</span>']
     .concat(RESP.map(r=>`<span class="chip${normTxt(r)===normTxt(resp)?' on':''}" data-resp="${esc(r)}">${esc(r)}</span>`)).join('');
-  document.getElementById('app').innerHTML=`<div class="wrap">
+  document.getElementById('app').innerHTML=`
     <div class="topo">
       <div class="chips">${chips}</div>
       <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome ou CNPJ…">
-      <div class="dica">Filtro por Responsável (o que vem depois do # no endereço). Tudo salva automaticamente — o status aparece no topo.</div>
+      <div class="dica">Clique num cabeçalho para ordenar (A→Z / Z→A, inclui datas e prazos). Edição direto na tabela — salva sozinho.</div>
     </div>
-    <div class="lista" id="lista"></div></div>`;
+    <div class="resumo" id="resumo"></div>
+    <div class="tabela-wrap"><table id="tab"></table></div>`;
   document.getElementById('busca').addEventListener('input',e=>desenhar(e.target.value));
   document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{const r=c.dataset.resp;if(r)location.hash=encodeURIComponent(r);else history.replaceState(null,'',location.pathname+location.search);render();}));
+  atualizarResumo();
   desenhar('');
 }
+// ---- RESUMO de prazos ----
+function computeResumo(){
+  const t0=meia(new Date());
+  const dow=t0.getDay();                       // 0=domingo
+  const fimSemana=addDias(t0,(7-dow)%7);        // próximo domingo (hoje, se hoje for domingo)
+  const proxIni=addDias(fimSemana,1), proxFim=addDias(proxIni,6);
+  const b={atrasada:[],semana:[],proxima:[]};
+  baseRows().forEach(l=>TAREFAS.forEach(tf=>{
+    const d=parseData(l[tf.k]);if(!d)return;
+    if(statusConcluido(l[tf.stk]))return;       // já concluída não vira pendência
+    const dm=meia(d),g=dm.getTime();
+    const item={row:l.row,id:l.id,nome:l.nome,k:tf.k,label:tf.label,dataStr:fmtBR(dm)};
+    if(g<t0.getTime())b.atrasada.push(Object.assign({ord:g},item));
+    else if(g<=fimSemana.getTime())b.semana.push(Object.assign({ord:g},item));
+    else if(g>=proxIni.getTime()&&g<=proxFim.getTime())b.proxima.push(Object.assign({ord:g},item));
+  }));
+  Object.keys(b).forEach(k=>b[k].sort((x,y)=>x.ord-y.ord));
+  return b;
+}
+function listaTk(arr){
+  if(!arr.length)return '<div class="rvazio">Nada por aqui 🎉</div>';
+  return arr.map(t=>`<div class="tk" data-goto="${t.row}" data-k="${t.k}"><span class="d">${esc(t.dataStr)}</span><span class="lb">${esc(t.id)} · ${esc(t.nome)}</span><span class="tp">${esc(t.label)}</span></div>`).join('');
+}
+function atualizarResumo(){
+  const b=computeResumo();
+  document.getElementById('resumo').innerHTML=`
+    <div class="rcard atrasada"><div class="rhead">Atrasadas <span class="n">${b.atrasada.length}</span></div><div class="rlista">${listaTk(b.atrasada)}</div></div>
+    <div class="rcard semana"><div class="rhead">Esta semana (até domingo) <span class="n">${b.semana.length}</span></div><div class="rlista">${listaTk(b.semana)}</div></div>
+    <div class="rcard proxima"><div class="rhead">Próxima semana <span class="n">${b.proxima.length}</span></div><div class="rlista">${listaTk(b.proxima)}</div></div>`;
+}
+// ---- ordenação + tabela ----
+function ehNum(s){return /^\s*-?\d+([.,]\d+)?\s*$/.test(String(s));}
+function valCmp(a,b){
+  if(ehNum(a)&&ehNum(b))return parseFloat(String(a).replace(',','.'))-parseFloat(String(b).replace(',','.'));
+  return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});
+}
+function ordenar(arr){
+  const key=SORT.key,dir=SORT.dir,col=COLS.find(c=>c.k===key),isData=col&&col.sort==='date';
+  return arr.slice().sort((x,y)=>{
+    let va=x[key]==null?'':x[key],vb=y[key]==null?'':y[key];
+    const ea=String(va).trim()==='',eb=String(vb).trim()==='';
+    if(ea&&eb)return 0;if(ea)return 1;if(eb)return -1;   // vazios sempre por último
+    let r;
+    if(isData){const da=parseData(va),db=parseData(vb);r=(da?da.getTime():Infinity)-(db?db.getTime():Infinity);}
+    else r=valCmp(va,vb);
+    return dir==='desc'?-r:r;
+  });
+}
 function filtradas(termo){
-  const resp=normTxt(respAtual());const alvo=normTxt(termo);
-  return LINHAS.filter(l=>(!resp||normTxt(l.responsavel)===resp)&&(!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj).includes(alvo)))
-    .sort((a,b)=>String(a.id).localeCompare(String(b.id),'pt',{numeric:true}));
+  const alvo=normTxt(termo);
+  return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj).includes(alvo));
+}
+function seta(key){return SORT.key===key?(SORT.dir==='asc'?' ▲':' ▼'):'';}
+function celHTML(l,c){
+  const v=l[c.k]==null?'':l[c.k];
+  const cor=c.cor?corStatus(v):'';
+  let campo;
+  if(c.t==='area')campo=`<textarea data-k="${c.k}" style="width:${c.w}px">${esc(v)}</textarea>`;
+  else campo=`<input data-k="${c.k}" class="${cor}" type="text" value="${esc(v)}" style="width:${c.w}px">`;
+  const abrir=(c.t==='url'&&/^https?:/i.test(v))?`<a class="abrir" href="${esc(v)}" target="_blank" rel="noopener" title="abrir">↗</a>`:'';
+  return `<td><div class="cel">${campo}${abrir}</div></td>`;
 }
 function desenhar(termo){
-  const arr=filtradas(termo);
+  const arr=ordenar(filtradas(termo));
   document.getElementById('cnt').textContent=arr.length+' clientes';
-  document.getElementById('lista').innerHTML=arr.map(cardHTML).join('')||'<div class="dica">Nenhum cliente para esse filtro.</div>';
+  const head='<thead><tr><th class="col-id" data-sort="id">ID'+seta('id')+'</th>'
+    +COLS.map(c=>`<th data-sort="${c.k}" style="min-width:${c.w+16}px">${esc(c.label)}${seta(c.k)}</th>`).join('')+'</tr></thead>';
+  const body='<tbody>'+(arr.map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+1}" style="padding:16px;color:var(--muted)">Nenhum cliente para esse filtro.</td></tr>`)+'</tbody>';
+  document.getElementById('tab').innerHTML=head+body;
 }
-function cardHTML(l){
-  return `<div class="card" data-row="${l.row}">
-    <div class="card-h" data-toggle="${l.row}">
-      <span class="pid">${esc(l.id)}</span>
-      <div class="pmain"><div class="pnome">${esc(l.nome||'(sem nome)')}</div>
-        <div class="pmeta"><span class="bdg">${esc(l.status||'—')}</span><span class="bdg resp">${esc(l.responsavel||'—')}</span>${l.cnpj?`<span class="bdg">${esc(l.cnpj)}</span>`:''}</div>
-      </div><span class="chev">›</span>
-    </div>
-    <div class="editor" id="ed-${l.row}"></div>
-  </div>`;
+// ---- ir até a linha (a partir do resumo) ----
+function irPara(row,k){
+  const busca=document.getElementById('busca');if(busca&&busca.value){busca.value='';desenhar('');}
+  requestAnimationFrame(()=>{
+    const tr=document.querySelector(`#tab tr[data-row="${row}"]`);if(!tr)return;
+    tr.scrollIntoView({block:'center'});
+    const alvo=tr.querySelector(`[data-k="${k}"]`)||tr;
+    alvo.classList.add('flash');setTimeout(()=>alvo.classList.remove('flash'),1700);
+  });
 }
-function fieldHTML(l,f){
-  if(f.sub)return `<div class="sub" style="grid-column:1/-1">${esc(f.sub)}</div>`;
-  const v=l[f.k]==null?'':l[f.k];
-  let inner;
-  if(f.t==='area')inner=`<textarea data-k="${f.k}">${esc(v)}</textarea>`;
-  else if(f.t==='list')inner=`<input data-k="${f.k}" list="dl-${f.opt}" value="${esc(v)}">`;
-  else inner=`<input data-k="${f.k}" type="text" value="${esc(v)}">`;
-  const abrir=(f.t==='url'&&/^https?:/i.test(v))?`<a class="abrir" href="${esc(v)}" target="_blank" rel="noopener">↗ abrir</a>`:'';
-  return `<div class="fld ${f.full?'full':''}"><label>${esc(f.label)}</label>${inner}${abrir}</div>`;
-}
-function editorHTML(l){
-  return `<div class="grid2">${CAMPOS.map(f=>fieldHTML(l,f)).join('')}</div>`;
-}
-function abrirEditor(row){
-  const card=document.querySelector(`.card[data-row="${row}"]`);const ed=document.getElementById('ed-'+row);const l=LINHAS.find(x=>x.row==row);
-  if(card.classList.contains('open')){card.classList.remove('open');ed.innerHTML='';return;}
-  document.querySelectorAll('.card.open').forEach(el=>{el.classList.remove('open');el.querySelector('.editor').innerHTML='';});
-  ed.innerHTML=editorHTML(l);card.classList.add('open');card.scrollIntoView({block:'nearest'});
-}
-function coletar(row){
-  const ed=document.getElementById('ed-'+row);const campos={};
-  ed.querySelectorAll('[data-k]').forEach(el=>{campos[el.dataset.k]=el.value;});
-  return campos;
-}
+// ---- salvar ----
+function coletar(tr){const campos={};tr.querySelectorAll('[data-k]').forEach(el=>campos[el.dataset.k]=el.value);return campos;}
 let timers={};
-function agendarSalvar(row){
-  const campos=coletar(row);
+function agendarSalvar(tr){
+  const row=tr.dataset.row,campos=coletar(tr);
   setSave('saving','Alterado…');
   clearTimeout(timers[row]);
-  timers[row]=setTimeout(()=>salvar(row,campos),450);
+  timers[row]=setTimeout(()=>salvar(row,tr.dataset.id,campos),450);
 }
-async function salvar(row,campos){
-  const l=LINHAS.find(x=>x.row==row);if(!l)return;
+async function salvar(row,id,campos){
   setSave('saving','Salvando…');
   try{
-    await postAcao({acao:'rest_salvar',row:l.row,id:l.id,campos});
-    Object.keys(campos).forEach(k=>l[k]=campos[k]);
+    await postAcao({acao:'rest_salvar',row:+row,id,campos});
+    const l=LINHAS.find(x=>x.row==row);if(l)Object.keys(campos).forEach(k=>l[k]=campos[k]);
     setSave('ok','Salvo ✓ '+horaAgora());
-    const card=document.querySelector(`.card[data-row="${row}"]`);
-    if(card){const nome=card.querySelector('.pnome');if(nome)nome.textContent=l.nome||'(sem nome)';
-      const meta=card.querySelector('.pmeta');if(meta)meta.innerHTML=`<span class="bdg">${esc(l.status||'—')}</span><span class="bdg resp">${esc(l.responsavel||'—')}</span>`+(l.cnpj?`<span class="bdg">${esc(l.cnpj)}</span>`:'');}
+    atualizarResumo();   // prazos/status podem ter mudado
   }catch(e){setSave('err','Não salvou: '+(e.message||e));}
 }
 
-document.addEventListener('click',e=>{const tg=e.target.closest('[data-toggle]');if(tg)abrirEditor(tg.dataset.toggle);});
-document.addEventListener('change',e=>{const ed=e.target.closest('.editor');if(!ed)return;const f=e.target;if(!f.matches||!f.matches('input,textarea'))return;const card=e.target.closest('.card');if(card)agendarSalvar(card.dataset.row);});
+// eventos (delegação)
+document.addEventListener('input',e=>{const el=e.target;if(!el.dataset||!el.dataset.k)return;const c=COLS.find(x=>x.k===el.dataset.k);if(c&&c.cor&&el.tagName==='INPUT')el.className=corStatus(el.value);});
+document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||!el.dataset.k)return;const tr=el.closest('tr[data-row]');if(tr)agendarSalvar(tr);});
+document.addEventListener('click',e=>{
+  const th=e.target.closest('th[data-sort]');
+  if(th){const k=th.dataset.sort;if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}desenhar(document.getElementById('busca').value);return;}
+  const tk=e.target.closest('.tk[data-goto]');
+  if(tk){irPara(tk.dataset.goto,tk.dataset.k);return;}
+});
 window.addEventListener('hashchange',render);
 
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
