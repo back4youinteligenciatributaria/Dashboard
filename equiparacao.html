@@ -1,298 +1,1615 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta name="robots" content="noindex, nofollow">
+  <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Restituição (equipe) — back4you</title>
+<title>Equiparação hospitalar — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
-  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
-  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
-  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+  --canvas:#F3EFE8; --surface:#FFFFFF; --surface-warm:#FAF6EF;
+  --ink:#063033; --ink-2:#3B5551; --muted:#8A7D70; --line:#E7DFD2; --line-2:#D8CDBB;
+  --brand-dark:#063033; --brand-teal:#128D84; --brand-eucalipto2:#19AFA4; --accent:#FF8100;
+  --receita:#128D84; --receita-soft:#DBEFEC;
+  --andamento:#A7715D; --andamento-soft:#F1E1D8;
+  --neutro:#5E9C8C; --neutro-soft:#E1EEE9;
+  --encerrado:#8E2B20; --encerrado-soft:#F3DEDB;
+  --radius:16px; --radius-sm:12px; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
-.barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
-.save-status{font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:20px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
-.save-status:empty{display:none}
-.save-status.saving{background:#E8892E;color:#fff}.save-status.ok{background:#2E9D5F;color:#fff}.save-status.err{background:#C0392B;color:#fff}
-.topo{padding:12px 16px 8px}
-.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
-.chip{font-size:13px;font-weight:700;border-radius:999px;padding:7px 14px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
-.chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
-.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:11px 15px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
-.busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-.dica{font-size:12px;color:var(--muted);margin-top:7px}
-/* resumo de prazos */
-.resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 12px}
-.rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-.rhead{padding:10px 13px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
-.rcard.atrasada .rhead{background:#C0392B}.rcard.semana .rhead{background:#E8892E}.rcard.proxima .rhead{background:var(--brand-teal)}
-.rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:12px}
-.rlista{max-height:168px;overflow:auto;padding:6px}
-.tk{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:8px;cursor:pointer;font-size:12.5px}
-.tk:hover{background:var(--surface-warm)}
-.tk .d{font-weight:800;color:var(--ink);white-space:nowrap}
-.tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tk .tp{font-size:10.5px;font-weight:700;color:var(--muted)}
-.rvazio{color:var(--muted);font-size:12px;padding:10px 9px}
-.tabela-wrap{overflow:auto;max-height:calc(100vh - 130px);border-top:1px solid var(--line)}
-table{border-collapse:separate;border-spacing:0;font-size:12.5px}
-thead th{position:sticky;top:0;z-index:20;background:var(--brand-dark);color:#fff;font-weight:700;text-align:left;
-  padding:9px 10px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);font-size:11.5px;cursor:pointer;user-select:none}
-thead th:hover{background:#0a4247}
-tbody td{padding:3px 5px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:top;background:var(--surface)}
-tbody tr:nth-child(even) td{background:var(--surface-warm)}
-th.col-id,td.col-id{position:sticky;left:0;z-index:15}
-thead th.col-id{z-index:25}
-td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal);padding:6px 10px;white-space:nowrap;box-shadow:2px 0 6px rgba(7,48,52,.06)}
-tbody tr:nth-child(even) td.col-id{background:var(--surface-warm)}
-.cel{display:flex;gap:4px;align-items:center}
-.cel input,.cel textarea{font-family:var(--sans);font-size:12.5px;padding:6px 8px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
-.cel textarea{resize:both;min-height:34px;line-height:1.35}
-.cel input:focus,.cel textarea:focus{outline:2px solid var(--brand-teal);outline-offset:0}
-.cel a.abrir{color:var(--brand-teal);text-decoration:none;font-weight:800;font-size:14px;flex:none}
-input.st-ok{background:#E7F4EC;border-color:#bfe3cd;color:#216c43;font-weight:700}
-input.st-go{background:#FCEFE0;border-color:#F0D6B4;color:#8a5212;font-weight:700}
-input.st-bad{background:#F8E3DF;border-color:#e6bfb7;color:#8B2E22;font-weight:700}
-input.st-neu{background:#EEF1F0;border-color:#d7dedd;color:#4f5f5c;font-weight:700}
-@keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
-.flash{animation:fl 1.7s ease}
-input.flash,textarea.flash{animation:fl 1.7s ease}
-.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
-.spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 72px}
+
+header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:var(--b4u-bar-h,0px);z-index:30}
+.bar{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.logo{font-weight:900;font-size:19px;letter-spacing:-.02em;line-height:1}
+.logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
+.brand-sub{font-size:15px;color:var(--brand-teal);font-weight:700;margin-top:2px}
+.voltar{display:inline-block;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:4px}
+.voltar:hover{color:var(--brand-teal)}
+.spacer{flex:1}
+.badge-topo{font-size:11px;font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:5px 12px;border-radius:20px}
+
+.docs-chave{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:28px 0 0}
+.doc-chave-card{display:flex;align-items:center;gap:14px;padding:18px 20px;text-decoration:none;color:inherit;transition:border-color .15s}
+.doc-chave-card:hover{border-color:var(--brand-teal)}
+.doc-chave-icone{flex-shrink:0;width:40px;height:40px;border-radius:10px;background:var(--receita-soft);color:var(--brand-teal);display:flex;align-items:center;justify-content:center}
+.doc-chave-icone svg{width:22px;height:22px}
+.doc-chave-nome{font-size:13px;font-weight:700;line-height:1.3}
+.doc-chave-abrir{font-size:11.5px;font-weight:600;color:var(--brand-teal);margin-top:2px}
+.docs-chave--destaque{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:32px}
+.docs-chave--destaque .doc-chave-card{padding:26px 24px;background:linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);border:none;box-shadow:0 14px 30px -12px rgba(6,48,51,.45)}
+.docs-chave--destaque .doc-chave-icone{width:52px;height:52px;background:rgba(255,255,255,.16);color:#fff}
+.docs-chave--destaque .doc-chave-icone svg{width:26px;height:26px}
+.docs-chave--destaque .doc-chave-nome{font-size:16px;color:#fff}
+.docs-chave--destaque .doc-chave-abrir{font-size:12.5px;color:rgba(255,255,255,.85)}
+.secao-mob{border:none;background:none;margin:32px 0 0;padding:0}
+.secao-mob>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
+.secao-mob>summary::-webkit-details-marker{display:none}
+.secao-mob>summary::marker{content:''}
+.secao-mob .sec-head{margin:0;flex:1}
+.secao-mob-chev{width:20px;height:20px;color:var(--muted);flex-shrink:0;transition:transform .2s}
+.secao-mob[open] .secao-mob-chev{transform:rotate(180deg)}
+.secao-mob-body{margin-top:14px}
+@media(min-width:641px){.secao-mob>summary{cursor:default;pointer-events:none}.secao-mob-chev{display:none}}
+
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:28px 0 22px}
+.stat{padding:18px 18px}
+.stat .v{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.stat .s{font-size:11.5px;color:var(--muted);margin-top:4px}
+.stat{border-radius:var(--radius)}
+.stat .v{font-weight:800}
+.stat.destaque{background:linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);border:none;box-shadow:0 14px 30px -12px rgba(6,48,51,.55)}
+.stat.destaque .lbl,.stat.destaque .s{color:rgba(255,255,255,.8)}
+.stat.destaque .v{color:#fff}
+
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:32px 0 14px}
+.sec-head h2{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.sec-head p{font-size:13px;color:var(--muted)}
+
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.charts{grid-template-columns:1fr}}
+.chart{padding:20px 22px 16px}
+.chart h3{font-size:14px;font-weight:700;margin-bottom:2px}
+.chart .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.cbox{position:relative;height:220px}
+.pie-legend{margin-top:10px}
+.pie-legend-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:12.5px}
+.pie-legend-row:first-child{border-top:none}
+.pie-legend-row i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.pie-legend-row span{flex:1;color:var(--ink-2)}
+
+@media(max-width:640px){
+  .wrap{padding:0 14px 60px}
+  .hero>*,.charts>*,.docs-chave>*{min-width:0}
+  .sec-head{margin:22px 0 10px}.sec-head h2{font-size:14.5px}
+  .hero{gap:12px}.stat .v{font-size:20px}
+}
+
+.status-chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.status-andamento{background:var(--andamento-soft);color:var(--andamento)}
+.status-concluido{background:var(--receita-soft);color:var(--receita)}
+.status-neutro{background:var(--neutro-soft);color:var(--neutro)}
+.status-encerrado{background:var(--encerrado-soft);color:var(--encerrado)}
+
+.lista{padding:8px 24px}
+.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:none}
+.item .nome{font-size:13.5px;font-weight:600}
+.item .cat{font-size:11px;color:var(--muted);margin-top:2px}
+.item a{font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none;white-space:nowrap}
+.item a:hover{color:var(--brand-dark)}
+
+.vazio{color:var(--muted);font-size:13.5px;padding:24px 20px;text-align:center;line-height:1.7}
+.vazio a{color:var(--brand-teal);font-weight:700;text-decoration:none}
+.vazio a:hover{text-decoration:underline}
+.aviso-estimativa{display:flex;gap:12px;align-items:flex-start;padding:14px 18px;margin-bottom:16px;background:#FFF6E9;border:1px solid #F0D9A8;color:#6B5326;font-size:13px;line-height:1.55}
+.aviso-estimativa .ae-ico{font-size:18px;line-height:1;color:#C8891A;flex-shrink:0;margin-top:1px}
+.aviso-estimativa b{color:#5A4413}
+
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
+.state h1{font-size:19px;font-weight:700}
+.state p{color:var(--muted);font-size:14px;max-width:44ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
+.spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-@media(max-width:720px){.resumo{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+/* ════════ Dropdowns (accordion nativo <details>) ════════ */
+.acc{display:flex;flex-direction:column;gap:10px;margin-top:2px}
+.acc-item{background:var(--surface);border:1px solid var(--line);border-left-width:4px;border-radius:14px;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.acc-item.andamento{border-left-color:var(--andamento)}
+.acc-item.concluido{border-left-color:var(--receita)}
+.acc-item.neutro{border-left-color:var(--neutro)}
+.acc-item.encerrado{border-left-color:var(--encerrado)}
+.acc-item.acc-all{border-left-color:var(--brand-dark)}
+.acc-item[open]{box-shadow:0 12px 30px -14px rgba(6,48,51,.35)}
+.acc-item>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:13px;padding:15px 18px}
+.acc-item>summary::-webkit-details-marker{display:none}
+.acc-item>summary:hover{background:var(--surface-warm)}
+.acc-item>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.acc-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.acc-head-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.acc-head-title{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.acc-head-sub{font-size:12px;color:var(--muted);font-weight:500}
+.acc-head-sub b{color:var(--ink-2);font-weight:700}
+.acc-val{flex-shrink:0;text-align:right;display:flex;flex-direction:column;gap:0}
+.acc-val .v{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.acc-val .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+.acc-item.concluido .acc-val .v{color:var(--receita)}
+.chev{flex-shrink:0;width:18px;height:18px;color:var(--muted);transition:transform .22s ease}
+.acc-item[open] .chev{transform:rotate(180deg)}
+.acc-body{padding:4px 18px 16px;border-top:1px solid var(--line)}
+.acc-expl{font-size:12.5px;color:var(--ink-2);line-height:1.55;background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:14px 0 6px}
+.mini{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px;border-top:1px solid var(--line)}
+.mini:first-of-type{border-top:none}
+.mini-l{display:flex;align-items:baseline;gap:9px;min-width:0;flex-wrap:wrap}
+.mini-l b{font-size:14px;font-weight:800;color:var(--ink)}
+.mini-trib{font-size:10.5px;font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:2px 9px;border-radius:999px}
+.mini-num{display:block;width:100%;font-size:10.5px;color:var(--muted);margin-top:1px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.mini-r{text-align:right;flex-shrink:0}
+.mini-r .v{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.mini-r .k{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+
+/* ── "detalhamento completo": cada PER/DCOMP num dropdown próprio ── */
+.pacc{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.pitem{border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:10px;overflow:hidden;background:var(--surface)}
+.pitem.andamento{border-left-color:var(--andamento)}
+.pitem.concluido{border-left-color:var(--receita)}
+.pitem.neutro{border-left-color:var(--neutro)}
+.pitem.encerrado{border-left-color:var(--encerrado)}
+.pitem>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:11px;padding:12px 14px}
+.pitem>summary::-webkit-details-marker{display:none}
+.pitem>summary:hover{background:var(--surface-warm)}
+.pitem>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.pitem-main{flex:1;min-width:0;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pitem-title{font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.pitem-val{flex-shrink:0;font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em;color:var(--ink)}
+.pitem.concluido .pitem-val{color:var(--receita)}
+.pitem>summary .chev{width:16px;height:16px}
+.pitem[open]>summary .chev{transform:rotate(180deg)}
+.pitem-body{padding:2px 14px 14px;border-top:1px solid var(--line)}
+.pitem-num{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:-.01em;word-break:break-all;margin:10px 0 12px}
+.pcard-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.pcard-grid>div{font-size:13px;font-weight:700;color:var(--ink);min-width:0}
+.pcard-grid>div span{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin-bottom:2px}
+.pcard-grid .num{font-variant-numeric:tabular-nums}
+.pcard-expl{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line-2);font-size:12px;color:var(--ink-2);line-height:1.5}
+
+/* hero — cores por situação */
+.stat.stat-aprovado{background:linear-gradient(135deg,#EAF7EF,#F6FBF8);border-color:#CDE8D7}
+.stat.stat-aprovado .lbl{color:#3C7A57}
+.stat.stat-aprovado .v{color:#1F9D57}
+.stat.stat-analise{background:linear-gradient(135deg,#FCF3DC,#FEFAF1);border-color:#EFDDAE}
+.stat.stat-analise .lbl{color:#977519}
+.stat.stat-analise .v{color:#B9791A}
+
+/* alerta de pagamento recente (±30 dias) */
+.alerta-pgto{display:flex;align-items:center;gap:14px;margin:20px 0 2px;padding:15px 18px;border-radius:16px;
+  background:linear-gradient(120deg,#E7F6EF,#F4FBF7);border:1px solid #C6E6D6;box-shadow:0 14px 30px -16px rgba(31,157,87,.6)}
+.alerta-pgto-ico{width:40px;height:40px;border-radius:12px;background:#1F9D57;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alerta-pgto-ico svg{width:22px;height:22px}
+.alerta-pgto-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.alerta-pgto-txt b{font-size:15px;font-weight:800;color:#0E5B37;letter-spacing:-.01em}
+.alerta-pgto-txt span{font-size:12.5px;color:var(--ink-2)}
+.alerta-pgto-btn{flex-shrink:0;border:0;cursor:pointer;font-family:var(--sans);font-weight:800;font-size:13px;
+  padding:11px 20px;border-radius:999px;background:#1F9D57;color:#fff;transition:background .15s,transform .1s;white-space:nowrap}
+.alerta-pgto-btn:hover{background:#187a44;transform:translateY(-1px)}
+
+/* mini-rows (Pedidos por situação): agora com datas e clicáveis */
+.mini{cursor:pointer;border-radius:8px;padding-inline:6px;transition:background .12s}
+.mini:hover{background:var(--surface-warm)}
+.mini:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.mini-datas{display:block;width:100%;font-size:11px;color:var(--muted);margin-top:3px}
+.mini-datas .prev{color:#B9791A;font-weight:700}
+.mini-datas .pago{color:#1F9D57;font-weight:700}
+
+/* pill "pago" nas situações concluídas recentes */
+.pill-pago{font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;background:#1F9D57;color:#fff;white-space:nowrap}
+
+/* filtros + busca do detalhamento */
+.det-filtros{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px}
+.det-busca{position:relative;flex:1 1 220px;min-width:170px}
+.det-busca svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);pointer-events:none}
+.det-busca input{width:100%;font-family:var(--sans);font-size:13.5px;padding:10px 14px 10px 36px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);color:var(--ink)}
+.det-busca input:focus{outline:2px solid var(--brand-teal);outline-offset:1px;border-color:transparent}
+.det-sel{font-family:var(--sans);font-size:12.5px;font-weight:600;padding:10px 12px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer}
+.det-sel:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.det-limpar{font-family:var(--sans);font-size:12.5px;font-weight:700;padding:10px 14px;border:1px solid var(--line-2);border-radius:999px;background:none;color:var(--ink-2);cursor:pointer}
+.det-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
+.det-count{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 2px 2px}
+.det-barra{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px}
+.det-fbtn{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-size:12.5px;font-weight:700;padding:10px 14px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);color:var(--ink-2);cursor:pointer}
+.det-fbtn svg{width:15px;height:15px}
+.det-fbtn:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
+.det-fbtn.ativo{border-color:#1F9D57;background:#EAF7EF;color:#0E5B37}
+.det-fbadge{display:none;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#1F9D57;color:#fff;font-size:10.5px;font-weight:800;line-height:18px;text-align:center}
+.det-fbtn.ativo .det-fbadge{display:inline-block}
+.det-painel{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:10px;padding:12px;border:1px solid var(--line-2);border-radius:14px;background:var(--surface-warm)}
+.det-painel[hidden]{display:none}
+.det-painel .det-busca{flex:1 1 220px}
+.alerta-pgto-pix{font-size:12px;color:#0E5B37}
+.det-vazio{padding:24px;text-align:center;color:var(--muted);font-size:13.5px}
+.pitem.flash{animation:b4uflash 1.8s ease}
+@keyframes b4uflash{0%,22%{background:#DBEFEC}100%{background:var(--surface)}}
+
+/* Panorama — barra "quanto já voltou" */
+.recup{margin-bottom:16px;padding:20px 22px}
+.recup-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.recup-v{font-size:22px;font-weight:800;letter-spacing:-.02em;color:#1F9D57;margin-top:4px}
+.recup-de{font-size:12.5px;font-weight:600;color:var(--muted)}
+.recup-pct{font-size:30px;font-weight:800;color:#1F9D57;letter-spacing:-.02em;line-height:1}
+.recup-bar{height:16px;border-radius:999px;background:#EFE6D6;overflow:hidden;border:1px solid var(--line)}
+.recup-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#19AFA4,#1F9D57)}
+.recup-legs{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--ink-2);font-weight:600}
+.recup-legs i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.recup-legs .dot-ap{background:#1F9D57}.recup-legs .dot-an{background:#B9791A}
+
+/* Panorama — espaçamento dos cards em largura total */
+.charts{margin-bottom:16px}
+.chart-full{margin-bottom:16px}
+
+/* Panorama — funil de etapas */
+.funil{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.funil-row{display:flex;align-items:center;gap:12px}
+.funil-bar{height:40px;border-radius:10px;display:flex;align-items:center;padding:0 14px;min-width:110px;color:#fff;font-weight:800;font-size:13px;box-shadow:0 8px 18px -12px rgba(6,48,51,.6)}
+.funil-bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.funil-meta{font-size:12.5px;color:var(--ink-2);font-weight:700;white-space:nowrap}
+.funil-meta b{color:var(--ink);font-size:14px}
+
+@media(max-width:560px){
+  .acc-item>summary{flex-wrap:wrap;gap:10px 12px;padding:14px 15px}
+  .acc-dot{order:1}
+  .chev{order:2;margin-left:auto}
+  .acc-val{order:3;flex-direction:row;align-items:baseline;gap:6px}
+  .acc-head-main{order:4;flex-basis:100%}
+  .det-sel{flex:1 1 auto}
+  .alerta-pgto{flex-wrap:wrap}
+  .alerta-pgto-btn{flex-basis:100%}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<div class="barra">
-  <span class="logo">back<span class="y">4you</span></span>
-  <span class="tag" id="tag">Restituição</span>
-  <span class="spacer"></span>
-  <span class="save-status" id="saveStatus"></span>
-  <span class="cnt" id="cnt"></span>
-  <a class="volta" id="volta" href="colaborador.html">← Painel</a>
-</div>
-<div id="app"><div class="state"><div class="spin"></div><p>Carregando restituição…</p></div></div>
-
+<!--B4U:START-->
+<style id="b4u-oculta-chamado">/* "Abrir chamado" oculto por ora (topo #b4u-open e rodape #ac-abrir) */ #b4u-open,#ac-abrir,#b4u-help{display:none!important}</style>
+<script>window.B4U = { area:'equiparacao' };</script>
+<!-- ═══════════ back4you · cabeçalho + chamados (compartilhado) ═══════════
+     Bloco único, autocontido e com prefixo .b4u- (não conflita com o CSS da
+     página). Cole logo depois de <body>, e ANTES dele defina:
+        <script>window.B4U = { area:'fiscal' };</script>
+     area = área padrão do chamado desta página
+        (fiscal | dpto_pessoal | contabil | societario | equiparacao | outros)
+     home:true  -> esconde o botão "Início" (usar só no index).
+     Para reaproveitar em todas as páginas, mantenha este bloco IDÊNTICO. ─── -->
+<style>
+.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;
+  padding:10px 18px;background:#073034;color:#fff;box-shadow:0 2px 12px rgba(7,48,52,.20);
+  font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+.b4u-bar .b4u-logo{font-weight:900;font-size:17px;letter-spacing:-.02em;margin-right:auto;
+  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1}
+.b4u-bar .b4u-logo .y{color:#3FA680}
+.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;
+  font-family:inherit;font-weight:600;font-size:13px;padding:8px 13px;border-radius:10px;
+  text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
+.b4u-btn svg{width:16px;height:16px;flex-shrink:0}
+.b4u-btn .b4u-lbl{color:inherit;text-transform:none;letter-spacing:normal;font-size:13px}
+.b4u-btn:active{transform:translateY(1px)}
+.b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
+.b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
+.b4u-btn.wa{background:#25D366;color:#fff}
+.b4u-btn.wa:hover{background:#20bd5a}
+.b4u-btn.call{background:#0F8C85;color:#fff}
+.b4u-btn.call:hover{background:#0c756f}
+.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+  padding:0;border:0;cursor:pointer;border-radius:9px;background:rgba(255,255,255,.10);color:#fff;
+  transition:background .15s}
+.b4u-icobtn:hover{background:rgba(255,255,255,.18)}
+.b4u-icobtn svg{width:17px;height:17px}
+@media(max-width:640px){
+  .b4u-bar{gap:7px;padding:9px 12px}
+  .b4u-btn .b4u-lbl{display:none}
+  .b4u-btn{padding:9px 11px}
+}
+.b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
+  display:none;align-items:flex-end;justify-content:center;
+  font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+.b4u-ov.on{display:flex}
+@media(min-width:640px){.b4u-ov{align-items:center;padding:24px}}
+.b4u-modal{background:#fff;color:#113D39;width:100%;max-width:520px;border-radius:16px 16px 0 0;
+  max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+@media(min-width:640px){.b4u-modal{border-radius:16px}}
+.b4u-modal h3{font-size:17px;font-weight:800;padding:18px 20px 3px;letter-spacing:-.01em}
+.b4u-modal .b4u-sub{font-size:12.5px;color:#8A7D70;padding:0 20px 10px;line-height:1.5}
+.b4u-fld{padding:7px 20px}
+.b4u-fld label{display:block;font-size:12px;font-weight:700;color:#3F5854;margin-bottom:5px}
+.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:14px;
+  padding:10px 12px;border:1px solid #E4D9C9;border-radius:10px;background:#FBF6EF;color:#113D39}
+.b4u-fld textarea{min-height:120px;resize:vertical;line-height:1.5}
+.b4u-fld select:focus,.b4u-fld input:focus,.b4u-fld textarea:focus{outline:2px solid #0F8C85;outline-offset:1px;border-color:transparent}
+.b4u-err{color:#B4322A;font-size:12.5px;padding:2px 20px 0;min-height:16px}
+.b4u-foot{display:flex;gap:10px;padding:14px 20px 20px;position:sticky;bottom:0;background:#fff}
+.b4u-foot .b4u-btn{flex:1;justify-content:center;padding:12px}
+.b4u-foot .primary{background:#0F8C85;color:#fff}
+.b4u-foot .primary:hover{background:#0c756f}
+.b4u-foot .primary[disabled]{opacity:.6;cursor:default}
+.b4u-foot .cancel{background:#F1E7DC;color:#3F5854}
+.b4u-foot .cancel:hover{background:#e8dccb}
+.b4u-ok{padding:30px 22px;text-align:center}
+.b4u-ok .chk{width:56px;height:56px;border-radius:50%;background:#E7F4EC;color:#2E9E63;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.b4u-ok .chk svg{width:30px;height:30px}
+.b4u-ok h3{font-size:18px;font-weight:800;margin-bottom:6px}
+.b4u-ok p{font-size:13.5px;color:#3F5854;line-height:1.55;max-width:40ch;margin:0 auto 20px}
+/* Skeleton (carregando) — barras cinza com brilho passando */
+.b4u-skel{display:block;border-radius:8px;background:#Eadfce;
+  background-image:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.65) 50%,rgba(255,255,255,0) 100%);
+  background-size:180px 100%;background-repeat:no-repeat;animation:b4ushine 1.15s ease-in-out infinite}
+@keyframes b4ushine{0%{background-position:-120px 0}100%{background-position:calc(100% + 120px) 0}}
+@media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
+/* Puxar para atualizar (mobile) */
+.b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
+  height:0;overflow:hidden;color:#0F8C85;z-index:1500;pointer-events:none;
+  font-family:'Montserrat',system-ui,sans-serif;font-size:12px;font-weight:700;gap:8px}
+.b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:#0F8C85;border-radius:50%}
+.b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
+@keyframes b4uspin{to{transform:rotate(360deg)}}
+</style>
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
-const CHAVE_PADRAO='b4u-equipe-2026';
-function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');return q?q.trim():CHAVE_PADRAO;}
-function respAtual(){return decodeURIComponent((location.hash||'').replace(/^#/,'')).trim();}
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
-function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
-async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
+(function(){
+  var CFG = window.B4U || {};
+  if (CFG.__ready) return;
 
-const COLS=[
-  {k:'nome',label:'Nome',t:'text',w:230},
-  {k:'cnpj',label:'CNPJ',t:'text',w:130},
-  {k:'status',label:'STATUS',t:'text',w:160,cor:1},
-  {k:'link_drive',label:'Link do drive',t:'url',w:170},
-  {k:'natureza_juridica',label:'Natureza Jurídica',t:'text',w:150},
-  {k:'prospectivo',label:'Prospectivo ou Retrospectivo',t:'text',w:150},
-  {k:'visao_geral',label:'Visão geral da equiparação',t:'area',w:260},
-  {k:'estrategia',label:'Estratégia Equiparação',t:'area',w:260},
-  {k:'natureza_empresarial',label:'Natureza Empresarial',t:'text',w:150},
-  {k:'obs_status',label:'Observações (Status Geral)',t:'area',w:260},
-  {k:'responsavel',label:'Responsável',t:'text',w:120,cor:1},
-  {k:'rel_adequacao',label:'Relatório de Adequação',t:'text',w:150,cor:1},
-  {k:'prazo_adequacao',label:'Prazo Rel. Adequação',t:'text',w:120,sort:'date'},
-  {k:'link_adequacao',label:'Link Rel. Adequação',t:'url',w:150},
-  {k:'rel_prelim',label:'Relatório Executivo Preliminar',t:'text',w:170,cor:1},
-  {k:'prazo_prelim',label:'Prazo Rel. Exec. Preliminar',t:'text',w:120,sort:'date'},
-  {k:'link_prelim',label:'Link Rel. Exec. Preliminar',t:'url',w:150},
-  {k:'apuracao_nfs',label:'Apuração de NFs e coleta documental',t:'text',w:180,cor:1},
-  {k:'prazo_apuracao',label:'Prazo Apuração NFs',t:'text',w:120,sort:'date'},
-  {k:'protocolo',label:'Protocolo',t:'text',w:150,cor:1},
-  {k:'prazo_protocolo',label:'Prazo Protocolo',t:'text',w:120,sort:'date'},
-  {k:'rel_def',label:'Relatório Executivo Definitivo',t:'text',w:170,cor:1},
-  {k:'prazo_def',label:'Prazo Rel. Exec. Definitivo',t:'text',w:120,sort:'date'},
-  {k:'link_def',label:'Link Rel. Exec. Definitivo',t:'url',w:150},
-  {k:'tarefas',label:'Tarefas Ativas',t:'area',w:260}
-];
-// tarefas com prazo (para o resumo). stk = coluna de status correspondente.
-const TAREFAS=[
-  {k:'prazo_prelim',stk:'rel_prelim',label:'Rel. Exec. Preliminar'},
-  {k:'prazo_apuracao',stk:'apuracao_nfs',label:'Apuração NFs'},
-  {k:'prazo_protocolo',stk:'protocolo',label:'Protocolo'},
-  {k:'prazo_def',stk:'rel_def',label:'Rel. Exec. Definitivo'}
-];
-function corStatus(v){
-  const n=normTxt(v);if(!n)return '';
-  if(/aprovad|finaliz|protocolado|conclu/.test(n))return 'st-ok';
-  if(/execu|enviad|andamento|pre |pré|prelim|solicit/.test(n))return 'st-go';
-  if(/perdid|interromp|parado|cancel/.test(n))return 'st-bad';
-  if(/pendente|nao inici|não inici|aguard|definir|n\/a/.test(n))return 'st-neu';
-  return '';
+  var WA = '5511937173906';                        // +55 11 93717-3906
+  var API_FALLBACK = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+  function api(){ try{ if(typeof API_URL==='string' && API_URL) return API_URL; }catch(e){} return API_FALLBACK; }
+
+  var AREAS = [
+    ['fiscal','Fiscal'], ['dpto_pessoal','Departamento Pessoal'], ['contabil','Contábil'],
+    ['societario','Societário'], ['equiparacao','Equiparação'], ['outros','Outros / reportar erro']
+  ];
+  // tipo -> [rótulo, esqueleto de mensagem]
+  var TIPOS = {
+    livre:            ['Chamado livre', ''],
+    solicitar_nf:     ['Solicitar nota fiscal', 'Solicito a emissão de uma nota fiscal.\n\nTomador (cliente):\nValor:\nDescrição do serviço:\nData desejada:'],
+    duvida:           ['Tirar uma dúvida', 'Minha dúvida é:\n\n'],
+    ferias:           ['Solicitar férias', 'Solicito a programação de férias.\n\nColaborador:\nInício desejado:\nDias:\nObservações:'],
+    previa_admissao:  ['Prévia de admissão', 'Estou avaliando uma contratação (prévia, ainda sem formalizar).\n\nCargo cogitado:\nFaixa salarial:\nObservações:'],
+    contratacao:      ['Formalizar admissão', 'Quero formalizar uma contratação.\n\nNome do colaborador:\nCargo:\nSalário:\nData de início:\nObservações:'],
+    previa_rescisao:  ['Prévia de rescisão', 'Estou avaliando desligar um colaborador (prévia).\n\nColaborador:\nMotivo:\nObservações:'],
+    rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
+  };
+  var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // Tipo do DOCUMENTO anexado -> define para qual PASTA (programa) o arquivo vai.
+  // As chaves batem com o backend (COLUNA_POR_TIPO_DOC); a pasta vem do Site Links.
+  var DOCTIPOS = [
+    ['principal','Documentos recebidos (geral)'],
+    ['extratos','Extratos bancários'],
+    ['notas','Notas fiscais e comprovantes'],
+    ['outros','Outros']
+  ];
+  // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
+  var TIPOS_POR_AREA = {
+    fiscal:       ['livre','solicitar_nf','duvida'],
+    dpto_pessoal: ['livre','ferias','previa_admissao','contratacao','previa_rescisao','rescisao','duvida'],
+    contabil:     ['livre','duvida'],
+    societario:   ['livre','duvida'],
+    equiparacao:  ['livre','duvida'],
+    outros:       ['livre','duvida']
+  };
+  function tiposDaArea(area){ return TIPOS_POR_AREA[area] || TIPOS_POR_AREA.outros; }
+  function opcoesTipo(area, sel){
+    return tiposDaArea(area).map(function(t){
+      return '<option value="'+t+'"'+(t===sel?' selected':'')+'>'+esc(TIPOS[t][0])+'</option>';
+    }).join('');
+  }
+
+  // ---- id/código a partir da URL (?id=&codigo= ou #id-codigo) -------------
+  function idc(){
+    var qs = new URLSearchParams(location.search);
+    var id = qs.get('id')||'', cod = qs.get('codigo')||'';
+    if(!id){
+      var h = (location.hash||'').replace('#','').trim();
+      var m = h.match(/^(\d+)-(.+)$/); var s = h.match(/^(\d+)$/);
+      if(m){ id=m[1]; cod=m[2]; } else if(s){ id=s[1]; }
+    }
+    return { id:String(id).replace(/\D/g,''), codigo:String(cod).trim() };
+  }
+  function jsonp(url){
+    return new Promise(function(ok,fail){
+      var cb='b4ucb_'+Math.random().toString(36).slice(2);
+      var s=document.createElement('script');
+      var t=setTimeout(function(){ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
+      function limpa(){ clearTimeout(t); try{delete window[cb];}catch(e){window[cb]=undefined;} s.remove(); }
+      window[cb]=function(d){ limpa(); ok(d); };
+      s.onerror=function(){ limpa(); fail(new Error('Não consegui alcançar a API.')); };
+      s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+      document.body.appendChild(s);
+    });
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  var IC = {
+    home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
+    wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>',
+    chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/></svg>',
+    help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>',
+    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>'
+  };
+
+  var C = idc();
+  var linkHome = 'index.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var linkTickets = 'meustickets.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
+
+  // ---- barra fixa ----------------------------------------------------------
+  var bar = document.createElement('div');
+  bar.className = 'b4u-bar';
+  bar.innerHTML =
+    '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
+    (CFG.home ? '' :
+      '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
+    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
+    '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
+    '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
+  document.body.insertBefore(bar, document.body.firstChild);
+  // publica a altura da barra p/ os cabeçalhos internos grudarem logo abaixo dela
+  function medirBarra(){ document.documentElement.style.setProperty('--b4u-bar-h', bar.offsetHeight + 'px'); }
+  medirBarra();
+  window.addEventListener('resize', medirBarra);
+  window.addEventListener('load', medirBarra);
+
+  // ---- modal ---------------------------------------------------------------
+  var ov = document.createElement('div');
+  ov.className = 'b4u-ov';
+  document.body.appendChild(ov);
+
+  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; }
+
+  function abrir(opts){
+    opts = opts || {};
+    var areaSel = opts.area || CFG.area || 'outros';
+    var tipoSel = opts.tipo || 'livre';
+    if (tiposDaArea(areaSel).indexOf(tipoSel) < 0) tipoSel = tiposDaArea(areaSel)[0];   // tipo válido p/ a área
+    ov.innerHTML =
+      '<div class="b4u-modal" role="dialog" aria-modal="true" aria-label="Abrir chamado">' +
+        '<h3>Abrir um chamado</h3>' +
+        '<div class="b4u-sub">Registramos aqui e retornamos em até 48h úteis. Você pode acompanhar em “Meus chamados”.</div>' +
+        '<div class="b4u-fld"><label for="b4u-area">Área</label><select id="b4u-area">' +
+          AREAS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===areaSel?' selected':'')+'>'+esc(a[1])+'</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="b4u-fld"><label for="b4u-tipo">Tipo de solicitação</label><select id="b4u-tipo">' +
+          opcoesTipo(areaSel, tipoSel) +
+        '</select></div>' +
+        '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
+        '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
+        '<div class="b4u-fld"><label for="b4u-file">Anexo <span style="font-weight:500;color:#8A7D70">(opcional · até 10 MB)</span></label>' +
+          '<input type="file" id="b4u-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.xls,.xlsx,.csv,.txt,.xml,.ofx,.zip"></div>' +
+        '<div class="b4u-fld" id="b4u-tipodoc-wrap" style="display:none">' +
+          '<label for="b4u-tipodoc">Tipo do documento</label><select id="b4u-tipodoc">' +
+            DOCTIPOS.map(function(d){ return '<option value="'+d[0]+'">'+esc(d[1])+'</option>'; }).join('') +
+          '</select>' +
+          '<div class="b4u-sub" style="padding:6px 0 0">Enviamos seu arquivo direto para a pasta certa do seu programa.</div>' +
+        '</div>' +
+        '<div class="b4u-err" id="b4u-erro"></div>' +
+        '<div class="b4u-foot">' +
+          '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
+          '<button type="button" class="b4u-btn primary" id="b4u-send">Enviar chamado</button>' +
+        '</div>' +
+      '</div>';
+    ov.classList.add('on');
+    var selTipo = ov.querySelector('#b4u-tipo');
+    var txt = ov.querySelector('#b4u-msg');
+    function aplicaSkeleton(force){
+      var esq = TIPOS[selTipo.value] ? TIPOS[selTipo.value][1] : '';
+      if(force || !txt.value.trim()) txt.value = esq;
+    }
+    aplicaSkeleton(true);
+    selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
+    // trocar a ÁREA repovoa os tipos válidos para ela
+    ov.querySelector('#b4u-area').addEventListener('change', function(){
+      selTipo.innerHTML = opcoesTipo(this.value, selTipo.value);
+      aplicaSkeleton(true);
+    });
+    ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
+    ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
+    ov.querySelector('#b4u-send').addEventListener('click', enviar);
+    // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
+    var fileEl = ov.querySelector('#b4u-file');
+    var tdWrap = ov.querySelector('#b4u-tipodoc-wrap');
+    fileEl.addEventListener('change', function(){
+      tdWrap.style.display = (fileEl.files && fileEl.files.length) ? 'block' : 'none';
+    });
+    ov.querySelector('#b4u-assunto').focus();
+  }
+
+  function enviar(){
+    var cc = idc();
+    var erroEl = ov.querySelector('#b4u-erro');
+    var btn = ov.querySelector('#b4u-send');
+    erroEl.textContent = '';
+    if(!cc.id || !cc.codigo){ erroEl.textContent = 'Abra o painel pelo seu link (com ID e código) para enviar um chamado.'; return; }
+    var area = ov.querySelector('#b4u-area').value;
+    var tipo = ov.querySelector('#b4u-tipo').value;
+    var assunto = ov.querySelector('#b4u-assunto').value.trim();
+    var msg = ov.querySelector('#b4u-msg').value.trim();
+    if(!msg){ erroEl.textContent = 'Escreva a mensagem do chamado.'; return; }
+    var fileEl = ov.querySelector('#b4u-file');
+    var file = fileEl && fileEl.files && fileEl.files[0];
+    if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    if(file){
+      // COM arquivo -> POST (JSONP/GET não comporta base64)
+      var reader = new FileReader();
+      reader.onload = function(){
+        var base64 = String(reader.result||'').split(',')[1] || '';
+        var tdEl = ov.querySelector('#b4u-tipodoc');
+        var tipoDoc = (tdEl && tdEl.value) ? tdEl.value : 'principal';
+        var body = JSON.stringify({ id:cc.id, codigo:cc.codigo, acao:'ticket_anexo',
+          area:area, tipo:tipo, assunto:assunto, mensagem:msg, tipo_documento:tipoDoc,
+          arquivo_nome:file.name, arquivo_tipo:file.type, arquivo_base64:base64 });
+        fetch(api(), { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if(d && d.erro) throw new Error(d.erro); sucesso(); })
+          .catch(falhou);
+      };
+      reader.onerror = function(){ falhou(new Error('Não consegui ler o arquivo.')); };
+      reader.readAsDataURL(file);
+      return;
+    }
+    // SEM arquivo -> JSONP como sempre
+    var qs = new URLSearchParams({ id:cc.id, codigo:cc.codigo, acao:'ticket',
+      area:area, tipo:tipo, assunto:assunto, mensagem:msg });
+    jsonp(api()+'?'+qs.toString()).then(function(d){
+      if(d && d.erro) throw new Error(d.erro);
+      sucesso();
+    }).catch(falhou);
+  }
+
+  function sucesso(){
+    ov.innerHTML =
+      '<div class="b4u-modal">' +
+        '<div class="b4u-ok">' +
+          '<div class="chk">'+IC.chk+'</div>' +
+          '<h3>Chamado registrado</h3>' +
+          '<p>Recebemos sua solicitação e retornamos em até 48h úteis. Em breve o acompanhamento também chegará por e-mail.</p>' +
+          '<div class="b4u-foot" style="position:static;padding:0">' +
+            '<button type="button" class="b4u-btn cancel" id="b4u-fecha">Fechar</button>' +
+            '<a class="b4u-btn primary" id="b4u-ir-tickets" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    ov.querySelector('#b4u-fecha').addEventListener('click', fecharModal);
+    // Se já estou em meus chamados, trocar só o hash não recarrega — força o reload
+    // para o novo chamado aparecer. Em outra página, navega normalmente.
+    ov.querySelector('#b4u-ir-tickets').addEventListener('click', function(e){
+      if (/meustickets\.html/i.test(location.pathname)){
+        e.preventDefault();
+        if (C.id) location.hash = C.id + (C.codigo ? '-'+C.codigo : '');
+        location.reload();
+      }
+    });
+  }
+
+  bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
+  bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
+
+  // ---- Puxar para atualizar (mobile) --------------------------------------
+  // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
+  // depois do limiar. Não atrapalha a rolagem normal.
+  (function(){
+    var ind=document.createElement('div'); ind.className='b4u-ptr';
+    ind.innerHTML='<span class="ring"></span><span class="txt">Puxe para atualizar</span>';
+    document.body.appendChild(ind);
+    var y0=null, dist=0, LIM=70, ativo=false;
+    function topo(){ return (window.scrollY||document.documentElement.scrollTop||0)<=0; }
+    window.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1 || !topo() || (ov&&ov.classList.contains('on'))){ y0=null; return; }
+      y0=e.touches[0].clientY; ativo=true;
+    },{passive:true});
+    window.addEventListener('touchmove',function(e){
+      if(!ativo||y0===null) return;
+      dist=e.touches[0].clientY - y0;
+      if(dist<=0){ ind.style.height='0'; return; }
+      if(!topo()){ ativo=false; ind.style.height='0'; return; }
+      var h=Math.min(dist*0.5, LIM+20); ind.style.height=h+'px';
+      ind.querySelector('.txt').textContent = dist>LIM?'Solte para atualizar':'Puxe para atualizar';
+    },{passive:true});
+    window.addEventListener('touchend',function(){
+      if(!ativo){ return; } ativo=false;
+      if(dist>LIM){ ind.classList.add('spin'); ind.style.height=(LIM)+'px'; ind.querySelector('.txt').textContent='Atualizando…'; setTimeout(function(){ location.reload(); },150); }
+      else { ind.style.height='0'; }
+      y0=null; dist=0;
+    });
+  })();
+
+  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
+    skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
+      var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
+      return g.join(''); } };
+})();
+</script>
+<!-- ═══════════ fim do bloco compartilhado back4you ═══════════ -->
+<!--B4U:END-->
+
+
+
+
+
+
+
+
+
+
+
+<div id="app">
+  <div class="state">
+    <div class="spin" role="status" aria-label="Carregando"></div>
+    <p>Carregando o painel…</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+
+const PAL = { teal:'#128D84', eucalipto2:'#19AFA4', couro:'#A7715D', vinho:'#8E2B20',
+  petroleo:'#063033', muted:'#8A7D70', line:'#E7DFD2', neutro:'#5E9C8C', bege:'#CBA88F' };
+
+/** Grupo visual de cada situação oficial do PER/DCOMP + explicação (parafraseada da Receita Federal). */
+const STATUS_INFO = {
+  'Em análise': {grupo:'andamento', txt:'O pedido foi recebido pela Receita e a análise ainda está em andamento.'},
+  'Análise preliminar disponibilizada': {grupo:'andamento', txt:'A Receita já disponibilizou uma análise preliminar, e ainda corre o prazo para o contribuinte se autorregularizar, se for o caso.'},
+  'Contribuinte intimado': {grupo:'andamento', txt:'A Receita enviou (ou está enviando) uma intimação pedindo que o contribuinte retifique ou cancele o pedido.'},
+  'Despacho decisório emitido': {grupo:'andamento', txt:'A Receita concluiu a análise e emitiu (ou está emitindo) a decisão formal — deferimento, indeferimento ou reconhecimento parcial.'},
+  'Em discussão administrativa - DRJ': {grupo:'andamento', txt:'O crédito não foi total ou parcialmente reconhecido e o contribuinte recorreu à Delegacia de Julgamento (DRJ).'},
+  'Em discussão administrativa - CARF': {grupo:'andamento', txt:'O recurso está em julgamento (ou já foi julgado) no Conselho Administrativo de Recursos Fiscais (CARF).'},
+  'Em discussão administrativa - CSRF': {grupo:'andamento', txt:'O recurso está em julgamento (ou já foi julgado) na Câmara Superior de Recursos Fiscais (CSRF), última instância administrativa.'},
+  'Análise concluída': {grupo:'neutro', txt:'A análise terminou, mas isso sozinho não diz se o crédito foi reconhecido — é preciso aguardar a comunicação oficial da Receita ou o pagamento.'},
+  'Homologado': {grupo:'concluido', txt:'A compensação foi totalmente aceita pela Receita Federal.'},
+  'Creditado': {grupo:'concluido', txt:'O crédito foi reconhecido e creditado — valor aprovado e pago (ou em pagamento).'},
+  'Crédito': {grupo:'concluido', txt:'O crédito foi reconhecido — valor aprovado e pago (ou em pagamento).'},
+  'PER deferido': {grupo:'concluido', txt:'O pedido de restituição/ressarcimento foi totalmente aceito. Pode já ter sido pago ou estar na fila de pagamento.'},
+  'Pedido de cancelamento deferido': {grupo:'concluido', txt:'O pedido de cancelamento apresentado foi aceito pela Receita.'},
+  'Não admitido': {grupo:'encerrado', txt:'O pedido de retificação ou cancelamento foi rejeitado, por estar em desacordo com a legislação.'},
+  'Cancelado': {grupo:'encerrado', txt:'O PER/DCOMP foi cancelado a pedido do próprio contribuinte.'},
+  'Retificado': {grupo:'encerrado', txt:'O PER/DCOMP foi substituído por outro, retificado a pedido do contribuinte.'},
+};
+const GRUPO_COR = {andamento:PAL.couro, concluido:PAL.teal, neutro:PAL.neutro, encerrado:PAL.vinho};
+const GRUPO_NOME = {andamento:'Em andamento', concluido:'Concluído', neutro:'Concluído (aguardando comunicado)', encerrado:'Encerrado sem crédito'};
+
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = v => (v*100).toFixed(2).replace('.',',')+'%';
+const num = v => Number(v)||0;
+const dBR = s => {
+  if(!s) return '—';
+  const str = String(s).trim();
+  let m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);   // AAAA-MM-DD (com ou sem hora)
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);      // dd/mm/aaaa
+  if (m) return `${m[1]}/${m[2]}/${m[3]}`;
+  return str;
+};
+const el = h => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
+function appendAll(parent, h){
+  const t = document.createElement('template'); t.innerHTML = h.trim();
+  Array.from(t.content.children).forEach(n => parent.appendChild(n));
 }
-function statusConcluido(v){return /aprovad|finaliz|conclu/.test(normTxt(v));}
-function setSave(cls,txt){const el=document.getElementById('saveStatus');if(el){el.className='save-status '+(cls||'');el.textContent=txt||'';}}
-function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
-// datas
-const MES3={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
+
+function getIdCodigo(){
+  const qs = new URLSearchParams(location.search);
+  let id = qs.get('id') || '';
+  let codigo = qs.get('codigo') || '';
+  if (!id){
+    const h = location.hash.replace('#','').trim();
+    const comCodigo = h.match(/^(\d+)-(.+)$/);
+    const soId = h.match(/^(\d+)$/);
+    if (comCodigo) { id = comCodigo[1]; codigo = comCodigo[2]; }
+    else if (soId) { id = soId[1]; }
+  }
+  return { id: id.replace(/\D/g,''), codigo: codigo.trim() };
+}
+
+function jsonp(url){
+  return new Promise((ok,fail)=>{
+    const cb = 'cb_'+Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    const t = setTimeout(()=>{ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
+    function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
+    window[cb] = d => { limpa(); ok(d); };
+    s.onerror = () => { limpa(); fail(new Error('Não consegui alcançar a API.')); };
+    s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+
+let IDENTIDADE = { id: '', codigo: '' };
+
+async function carregar(){
+  const { id, codigo } = getIdCodigo();
+  IDENTIDADE = { id, codigo };
+  if (API_URL){
+    if (!id) throw new Error('Informe o ID do cliente no final do endereço.');
+    if (!codigo) throw new Error('Informe também o código de acesso, no formato #482913-CODIGO.');
+    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=equiparacao';
+    const d = await jsonp(url);
+    if (d.erro) throw new Error(d.erro);
+    return d;
+  }
+  const r = await fetch('demo_equiparacao.json');
+  if (!r.ok) throw new Error('Sem API configurada e sem demo_equiparacao.json ao lado deste arquivo.');
+  return r.json();
+}
+
+/* Aceita muitas grafias de competência trimestral e normaliza para
+   "2º Trimestre de 2024". Ex.: "Trim2/2024", "2Trim 2024", "2tri 24",
+   "1º TRIM/2023", "T2/2024", "2º trimestre de 2024". */
+function prepararCompetencia(c){
+  const raw = String(c == null ? '' : c).trim();
+  const s = raw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  let tri = 0, ano = 0;
+  // trimestre: dígito 1-4 antes OU depois de trimestre/trim/tri/t
+  let m = s.match(/([1-4])\s*[oº°ª]?\s*(?:trimestre|trim|tri|t)\b/)
+       || s.match(/(?:trimestre|trim|tri|t)\.?\s*[oº°ª]?\s*[\/:\-]?\s*([1-4])\b/);
+  if (m) tri = Number(m[1]);
+  // ano: 4 dígitos preferencial; senão 2 dígitos -> 20xx
+  const a4 = s.match(/\b(19|20)(\d{2})\b/);
+  if (a4) ano = Number(a4[1] + a4[2]);
+  else { const a2 = s.match(/(?:^|[^\d])(\d{2})(?!\d)/); if (a2) ano = 2000 + Number(a2[1]); }
+  if (!tri || !ano) return { tri: 0, ano: 0, ord: 0, label: raw || '—' };
+  return { tri, ano, ord: ano * 4 + tri, label: `${tri}º Trimestre de ${ano}` };
+}
+
+/** Algumas planilhas trazem o código de arrecadação da Receita (número) em vez do
+    nome do tributo — ex.: 2089/2372 no lucro presumido, 3373/6012 no ajuste anual
+    do lucro real, 5993/2484 na estimativa mensal do lucro real. Traduz pro nome;
+    se já vier como texto ("IRPJ"/"CSLL"), passa direto. */
+const CODIGO_TRIBUTO = {
+  '2089':'IRPJ', '2372':'CSLL',
+  '3373':'IRPJ', '6012':'CSLL',
+  '5993':'IRPJ', '2484':'CSLL',
+};
+function normalizarTributo(v){
+  const s = String(v==null ? '' : v).trim();
+  return CODIGO_TRIBUTO[s] || s || 'Outro';
+}
+
+function preparar(raw){
+  const pedidos = (raw.pedidos||[]).map(p => {
+    // Critério de verdade: se tem data_pagamento, foi aprovado e será (ou já foi) pago —
+    // isso vale mais que o texto de 'status', que pode dizer só "Análise concluída"
+    // (ambíguo por definição da própria Receita) mesmo quando já se sabe o resultado.
+    const concluido = !!p.data_pagamento;
+    const info = STATUS_INFO[p.status] || {grupo:'neutro', txt:''};
+    return {
+      ...p,
+      tributo: normalizarTributo(p.tributo),
+      _comp: prepararCompetencia(p.competencia),
+      _concluido: concluido,
+      _grupo: concluido ? 'concluido' : info.grupo,
+      _explicacao: concluido
+        ? 'Crédito reconhecido pela Receita Federal — valor aprovado e em pagamento (ou já pago).'
+        : info.txt,
+    };
+  }).sort((a,b) => a._comp.ord - b._comp.ord || String(a.tributo).localeCompare(String(b.tributo)));
+  return { cfg: raw.config||{}, id: raw.id, pedidos, documentos: raw.documentos||[], memoria: raw.memoria||null, atualizado_em: raw.atualizado_em };
+}
+
+const DOCS_CHAVE = [
+  { nome: 'Relatório de Adequação', icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M5 8h14M7 8l-4 8a4 4 0 0 0 8 0l-4-8Zm10 0l-4 8a4 4 0 0 0 8 0l-4-8Z"/></svg>' },
+  { nome: 'Relatório Executivo Preliminar', icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 17v-4M12 17V9M16 17v-6"/></svg>' },
+  { nome: 'Relatório Executivo Definitivo', icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8.5 12.5l2.4 2.4 4.6-5"/></svg>' },
+];
+
+function render(M){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  app.appendChild(el(`
+    <header><div class="bar">
+      <div>
+        <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
+        <div class="brand-sub">${M.cfg.razao_social || 'Equiparação hospitalar'} · ${M.cfg.cnpj ? 'CNPJ ' + M.cfg.cnpj : 'cliente ' + M.id}</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="badge-topo">Equiparação hospitalar</span>
+    </div></header>`));
+
+  const wrap = el('<div class="wrap"></div>');
+  app.appendChild(wrap);
+
+  const semPedidos = !((M.pedidos || []).length);
+  // Estimativa (memória de cálculo): só entra quando ainda NÃO há PER/DCOMP transmitido
+  // e a aba de memória tem dados. Se tiver pedidos, a memória some; se não tiver nem
+  // pedidos nem memória, a página fica como sempre foi (estado vazio original).
+  const temMemoria = semPedidos && M.memoria && M.memoria.tem_dados && (M.memoria.periodos||[]).length;
+
+  const docsDisponiveis = DOCS_CHAVE
+    .map(d => ({ ...d, link: (M.documentos||[]).find(x => x.documento === d.nome && x.link && String(x.link).trim()) }))
+    .filter(d => d.link);
+  if (docsDisponiveis.length){
+    appendAll(wrap, `<div class="docs-chave${semPedidos ? ' docs-chave--destaque' : ''}">${docsDisponiveis.map(d => `
+      <a class="card doc-chave-card" href="${d.link.link}" target="_blank" rel="noopener">
+        <div class="doc-chave-icone">${d.icone}</div>
+        <div><div class="doc-chave-nome">${d.nome}</div><div class="doc-chave-abrir">Abrir ↗</div></div>
+      </a>`).join('')}</div>`);
+  }
+
+  const P = M.pedidos;
+  const totSolicitado = P.reduce((s,p)=>s+num(p.valor_solicitado),0);
+  const totAtualizado = P.reduce((s,p)=>s+num(p.valor_atualizado),0);
+  const concluidos = P.filter(p=>p._concluido);
+  const totAprovado = concluidos.reduce((s,p)=>s+num(p.valor_aprovado),0);
+  const pendentes = P.filter(p=>!p._concluido);
+  const totPendente = pendentes.reduce((s,p)=>s+num(p.valor_atualizado),0);
+
+  if (P.length){
+    wrap.appendChild(el(`
+    <div class="hero">
+      <div class="card stat">
+        <span class="lbl">Pedidos transmitidos</span>
+        <div class="v num">${P.length}</div>
+        <div class="s">${concluidos.length} concluído${concluidos.length===1?'':'s'} · ${pendentes.length} em andamento</div>
+      </div>
+      <div class="card stat">
+        <span class="lbl">Total solicitado</span>
+        <div class="v num">${brl(totSolicitado)}</div>
+        <div class="s">valor original, sem correção</div>
+      </div>
+      <div class="card stat">
+        <span class="lbl">Total atualizado</span>
+        <div class="v num">${brl(totAtualizado)}</div>
+        <div class="s">solicitado + SELIC acumulada</div>
+      </div>
+      <div class="card stat stat-aprovado">
+        <span class="lbl">Já aprovado</span>
+        <div class="v num">${brl(totAprovado)}</div>
+        <div class="s">valor fechado pela Receita</div>
+      </div>
+      <div class="card stat stat-analise">
+        <span class="lbl">Ainda em análise</span>
+        <div class="v num">${brl(totPendente)}</div>
+        <div class="s">estimativa, sujeita a confirmação</div>
+      </div>
+    </div>`));
+  }
+
+  // banner de pagamento recente (preenchido por construirAlertaPagamento)
+  wrap.appendChild(el('<div id="alerta-pagamento"></div>'));
+
+  // 0) ESTIMATIVA — só quando ainda não há PER/DCOMP, mas há memória de cálculo.
+  if (temMemoria){
+    const MEM = M.memoria;
+    const pctEleg = (MEM.pct_elegivel != null && MEM.pct_elegivel !== '')
+      ? (MEM.pct_elegivel <= 1 ? MEM.pct_elegivel*100 : MEM.pct_elegivel) : null;
+    appendAll(wrap, `
+      <div class="sec-head"><div><h2>Estimativa de crédito</h2><p>Prévia calculada a partir da memória de cálculo — ainda não há PER/DCOMP transmitido.</p></div></div>
+      <div class="card aviso-estimativa">
+        <span class="ae-ico">⚠︎</span>
+        <div><b>Valores estimativos e preliminares.</b> A recomposição da base presumida (IRPJ 32%→8%, CSLL 32%→12%) foi aplicada sobre a parcela de receita elegível${pctEleg!=null?` (${pct(pctEleg/100)})`:''} informada pelo cliente. A apuração definitiva depende da análise nota a nota de cada competência — os números finais podem variar.</div>
+      </div>
+      <div class="hero">
+        <div class="card stat destaque">
+          <span class="lbl">Crédito potencial estimado</span>
+          <div class="v num">${brl(MEM.total_geral)}</div>
+          <div class="s">IRPJ + CSLL · sem atualização SELIC</div>
+        </div>
+        <div class="card stat">
+          <span class="lbl">IRPJ estimado</span>
+          <div class="v num">${brl(MEM.total_irpj)}</div>
+          <div class="s">recomposição da base 32% → 8%</div>
+        </div>
+        <div class="card stat">
+          <span class="lbl">CSLL estimada</span>
+          <div class="v num">${brl(MEM.total_csll)}</div>
+          <div class="s">recomposição da base 32% → 12%</div>
+        </div>
+        <div class="card stat">
+          <span class="lbl">Períodos analisados</span>
+          <div class="v num">${(MEM.periodos||[]).length}</div>
+          <div class="s">${pctEleg!=null?`${pct(pctEleg/100)} da receita elegível`:'trimestres da memória'}</div>
+        </div>
+      </div>
+      <div class="charts">
+        <div class="card chart">
+          <h3>Crédito estimado por período</h3>
+          <div class="sub">Diferença entre o tributo recolhido (32%) e o recalculado com equiparação, por trimestre.</div>
+          <div class="cbox"><canvas id="mc1"></canvas></div>
+          <div class="pie-legend" id="mc1-lg"></div>
+        </div>
+        <div class="card chart">
+          <h3>IRPJ × CSLL</h3>
+          <div class="sub">Como o crédito potencial se divide entre os dois tributos.</div>
+          <div class="cbox"><canvas id="mc2"></canvas></div>
+          <div class="pie-legend" id="mc2-lg"></div>
+        </div>
+      </div>`);
+  }
+
+  // 1) PER/DCOMPs agrupados por situação (dropdowns por categoria).
+  //    Quando estamos mostrando a estimativa (temMemoria), pulamos o cartão vazio.
+  if (P.length || !temMemoria){
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Pedidos por situação</h2><p>${P.length ? 'Agrupados pela situação oficial na Receita — toque para abrir cada grupo.' : 'Acompanhe aqui cada PER/DCOMP.'}</p></div></div>
+    ${P.length ? `<div class="acc" id="pedidos-status"></div>` : `<div class="card"><div class="vazio">
+        Nenhum pedido de equiparação transmitido ainda. Se o seu CNPJ ainda estiver passando por alguma alteração societária os seus pedidos ainda não vão aparecer aqui. Enquanto isso verifique a relação de documentos e memórias de cálculo acima.<br>
+        Se você acredita que isso pode ser um engano, <a href="https://wa.me/5511937173906" target="_blank" rel="noopener">entre em contato com o atendimento</a>.
+      </div></div>`}`);
+  }
+
+  if (P.length){
+    // 2) Panorama (gráficos) — fica acima do detalhamento
+    appendAll(wrap, `
+      <details class="secao-mob" id="panorama-det">
+        <summary class="secao-mob-sum">
+          <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
+          <svg class="secao-mob-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="secao-mob-body">
+          <div class="card recup" id="recup"></div>
+          <div class="charts">
+            <div class="card chart">
+              <h3>Situação dos pedidos</h3>
+              <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação. Clique para filtrar.</div>
+              <div class="cbox"><canvas id="c1"></canvas></div>
+              <div class="pie-legend" id="c1-lg"></div>
+            </div>
+            <div class="card chart">
+              <h3>Valores por ano</h3>
+              <div class="sub">Total pleiteado (atualizado com SELIC) e quanto já foi aprovado, por ano. Clique para filtrar.</div>
+              <div class="cbox"><canvas id="c4"></canvas></div>
+              <div class="pie-legend" id="c4-lg"></div>
+            </div>
+          </div>
+          <div class="card chart chart-full">
+            <h3>Linha do tempo de pagamentos</h3>
+            <div class="sub">Quanto já foi creditado (verde) e o que está previsto (amarelo), por mês.</div>
+            <div class="cbox"><canvas id="c5"></canvas></div>
+            <div class="pie-legend" id="c5-lg"></div>
+          </div>
+          <div class="card chart chart-full">
+            <h3>Etapas dos pedidos</h3>
+            <div class="sub">Do que foi transmitido até o que já foi pago — com o valor em cada fase.</div>
+            <div class="funil" id="funil"></div>
+          </div>
+        </div>
+      </details>`);
+
+    // 3) Detalhamento completo — filtro/busca + um dropdown por PER/DCOMP
+    appendAll(wrap, `
+      <div class="sec-head"><div><h2>Detalhamento completo</h2><p>Filtre, busque e abra cada PER/DCOMP individualmente.</p></div></div>
+      <div class="acc" id="pedidos-detalhe"></div>`);
+  }
+
+  appendAll(wrap, `
+    <div class="sec-head"><div><h2>Documentos</h2><p>Relatórios deste cliente e modelos de referência.</p></div></div>
+    <div class="card lista" id="documentos-equip"></div>`);
+
+  wrap.appendChild(el(`<footer>
+      <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
+    </footer>`));
+
+  // --- dropdowns de pedidos ---
+  construirDetalheTodos(M);      // primeiro: os deep-links do resumo/banner precisam da lista pronta
+  construirResumoStatus(M);
+  construirAlertaPagamento(M);
+
+  desenharDocumentos(M, []);
+  if (P.length){
+    const pdet = document.getElementById('panorama-det');
+    const draw = () => { try { desenharGraficos(M); } catch (e) { console.warn('Gráficos indisponíveis:', e); } };
+    if (pdet && window.matchMedia('(max-width:640px)').matches){
+      // mobile: Panorama começa fechado; desenha os gráficos só ao abrir (evita canvas 0x0)
+      pdet.addEventListener('toggle', () => { if (pdet.open && !pdet.dataset.drawn){ pdet.dataset.drawn = '1'; draw(); } });
+    } else {
+      if (pdet) pdet.open = true;   // desktop: sempre aberto
+      draw();
+    }
+  }
+  if (temMemoria){ try { desenharMemoria(M); } catch (e) { console.warn('Estimativa indisponível:', e); } }
+}
+
+/* Converte 'AAAA-MM-DD' (ou algo que o Date entenda) num Date local. */
 function parseData(s){
-  s=String(s==null?'':s).trim();if(!s)return null;
-  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
-  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[2]-1,+m[1]);}
-  m=s.toLowerCase().match(/([a-zç]{3})[a-zç.]*\/?\s*(\d{4})/);if(m&&MES3[m[1]]!=null)return new Date(+m[2],MES3[m[1]],1);
-  return null;
+  if (!s) return null;
+  const str = String(s).trim();
+  let m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);   // AAAA-MM-DD [HH:MM:SS]
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);      // dd/mm/aaaa
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  const d = new Date(str); return isNaN(d.getTime()) ? null : d;
 }
-function meia(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
-function addDias(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
-function fmtBR(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}
+/* Dias corridos do envio até o pagamento (se houver) ou até hoje. */
+function diasCorridos(p){
+  const ini = parseData(p.data_transmissao);
+  const fim = p.data_pagamento ? parseData(p.data_pagamento) : new Date();
+  if (!ini || !fim) return null;
+  return Math.max(0, (fim - ini) / 86400000);
+}
+/* Humaniza uma quantidade de dias: "23 dias", "8 meses", "1 ano e 3 meses". */
+function humanizarDias(d){
+  if (d == null) return '—';
+  d = Math.round(d);
+  if (d < 1) return 'menos de 1 dia';
+  if (d < 45) return d === 1 ? '1 dia' : d + ' dias';
+  const m = Math.round(d / 30.44);
+  if (m < 12) return m === 1 ? '1 mês' : m + ' meses';
+  const a = Math.floor(m / 12), r = m % 12;
+  let s = a === 1 ? '1 ano' : a + ' anos';
+  if (r) s += ' e ' + (r === 1 ? '1 mês' : r + ' meses');
+  return s;
+}
 
-let LINHAS=[],RESP=[],SORT={key:'id',dir:'asc'};
-function carregar(){
-  setSave('saving','Carregando…');
-  return jsonp(API_URL+'?tipo=restituicao_equipe&chave='+encodeURIComponent(chaveAtual()))
-    .then(d=>{if(d.erro)throw new Error(d.erro);LINHAS=d.linhas||[];RESP=d.responsaveis||[];setSave('','');render();})
-    .catch(e=>{setSave('err','Erro');document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> em <code>?chave=</code> e se o Web App foi republicado com <code>EquipeRestituicao.gs</code>.</p></div>`;});
+const GRUPO_ORDER = ['andamento','neutro','concluido','encerrado'];
+
+/* Dropdown 1 — PER/DCOMPs agrupados por situação padronizada.
+   Só entram os status oficiais da Receita (STATUS_INFO) que realmente existem. */
+function construirResumoStatus(M){
+  const box = document.getElementById('pedidos-status');
+  if (!box) return;
+
+  const grupos = {};
+  M.pedidos.forEach(p => {
+    if (!STATUS_INFO[p.status] && !p._concluido) return;  // situações padronizadas + qualquer pedido já pago/creditado
+    (grupos[p.status] = grupos[p.status] || []).push(p);
+  });
+  const chaves = Object.keys(grupos);
+  if (!chaves.length){
+    box.outerHTML = '<div class="card"><div class="vazio">Assim que os PER/DCOMPs receberem uma situação oficial da Receita, o resumo por situação aparece aqui.</div></div>';
+    return;
+  }
+
+  // grupo visual de um status (verde só se todos daquele status já foram pagos)
+  const grupoDe = st => {
+    const itens = grupos[st];
+    const canon = (STATUS_INFO[st] || {}).grupo || 'neutro';
+    return itens.every(p => p._concluido) ? 'concluido' : canon;
+  };
+  chaves.sort((a,b) => {
+    const d = GRUPO_ORDER.indexOf(grupoDe(a)) - GRUPO_ORDER.indexOf(grupoDe(b));
+    if (d) return d;
+    return grupos[b].length - grupos[a].length || a.localeCompare(b);
+  });
+
+  box.innerHTML = chaves.map(st => {
+    const itens = grupos[st];
+    const g = grupoDe(st);
+    const concluido = g === 'concluido';
+    const n = itens.length;
+    const valorDe = p => concluido ? (num(p.valor_aprovado) || num(p.valor_atualizado)) : num(p.valor_atualizado);
+    const valor = itens.reduce((s,p) => s + valorDe(p), 0);
+    const tempos = itens.map(diasCorridos).filter(x => x != null);
+    const media = tempos.length ? tempos.reduce((a,b)=>a+b,0) / tempos.length : null;
+    const tempoLbl = concluido ? 'tempo médio até o pagamento' : 'tempo médio desde o envio';
+    const expl = (STATUS_INFO[st] || {}).txt || '';
+    const kLabel = concluido ? 'aprovado' : 'atualizado';
+
+    const itensOrd = itens.slice().sort((a,b) => a._comp.ord - b._comp.ord || String(a.tributo).localeCompare(String(b.tributo)));
+    const mini = itensOrd.map(p => {
+      const ip = infoPagamento(p);
+      const rec = pagamentoRecente(p);
+      return `
+      <div class="mini" data-key="${esc(p.numero_per_dcomp)}" role="button" tabindex="0" title="Abrir este PER/DCOMP no detalhamento">
+        <div class="mini-l">
+          <b>${p._comp.label}</b>
+          <span class="mini-trib">${esc(p.tributo)}</span>
+          ${rec ? '<span class="pill-pago">✓ pago</span>' : ''}
+          <span class="mini-num">${esc(p.numero_per_dcomp)}</span>
+          <span class="mini-datas">Transmissão ${dBR(p.data_transmissao)} · <span class="${ip.cls}">${ip.txt}</span></span>
+        </div>
+        <div class="mini-r"><div class="v">${brl(valorDe(p))}</div><div class="k">${kLabel}</div></div>
+      </div>`;
+    }).join('');
+
+    return `
+      <details class="acc-item ${g}">
+        <summary>
+          <span class="acc-dot" style="background:${GRUPO_COR[g]}"></span>
+          <span class="acc-head-main">
+            <span class="acc-head-title">${esc(st)}</span>
+            <span class="acc-head-sub"><b>${n} PER/DCOMP</b> · ${tempoLbl}: <b>${humanizarDias(media)}</b></span>
+          </span>
+          <span class="acc-val"><span class="v num">${brl(valor)}</span><span class="k">${kLabel}</span></span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="acc-body">
+          ${expl ? `<div class="acc-expl">${expl}</div>` : ''}
+          ${mini}
+        </div>
+      </details>`;
+  }).join('');
+
+  // clicar numa linha (PER/DCOMP específico) abre o pedido correspondente no detalhamento
+  box.addEventListener('click', e => {
+    const row = e.target.closest('.mini[data-key]'); if (row) irParaPedido(row.dataset.key);
+  });
+  box.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const row = e.target.closest('.mini[data-key]'); if (row){ e.preventDefault(); irParaPedido(row.dataset.key); }
+  });
 }
-function baseRows(){const resp=normTxt(respAtual());return LINHAS.filter(l=>!resp||normTxt(l.responsavel)===resp);}
-function render(){
-  const resp=respAtual();
-  document.getElementById('tag').textContent='Restituição'+(resp?' · '+resp:'');
-  const chips=['<span class="chip'+(!resp?' on':'')+'" data-resp="">Todos</span>']
-    .concat(RESP.map(r=>`<span class="chip${normTxt(r)===normTxt(resp)?' on':''}" data-resp="${esc(r)}">${esc(r)}</span>`)).join('');
-  document.getElementById('app').innerHTML=`
-    <div class="topo">
-      <div class="chips">${chips}</div>
-      <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome ou CNPJ…">
-      <div class="dica">Clique num cabeçalho para ordenar (A→Z / Z→A, inclui datas e prazos). Edição direto na tabela — salva sozinho.</div>
+
+/* ===== Detalhamento completo: filtro + busca + um dropdown por PER/DCOMP ===== */
+const FILTRO = { busca:'', ano:'', situacao:'', pagamento:'' };
+let DETPEDIDOS = [];
+let ORDEM = 'comp';   // 'comp' | 'pgto' | 'valor-desc' | 'valor-asc'
+function valorPedido(p){ return p._concluido ? (num(p.valor_aprovado) || num(p.valor_atualizado)) : num(p.valor_atualizado); }
+function ordenarDet(arr){
+  const a = arr.slice();
+  if (ORDEM === 'valor-desc') a.sort((x,y)=> valorPedido(y) - valorPedido(x));
+  else if (ORDEM === 'valor-asc') a.sort((x,y)=> valorPedido(x) - valorPedido(y));
+  else if (ORDEM === 'pgto') a.sort((x,y)=>{ const dx=parseData(x.data_pagamento), dy=parseData(y.data_pagamento); if(!dx&&!dy) return 0; if(!dx) return 1; if(!dy) return -1; return dy - dx; });
+  else a.sort((x,y)=> x._comp.ord - y._comp.ord || String(x.tributo).localeCompare(String(y.tributo)));
+  return a;
+}
+function filtrosAtivos(){ return ['busca','ano','situacao','pagamento'].filter(k => FILTRO[k]).length; }
+function atualizarBotaoFiltros(){
+  const btn = document.getElementById('det-fbtn'); if (!btn) return;
+  const n = filtrosAtivos();
+  btn.classList.toggle('ativo', n > 0);
+  const badge = document.getElementById('det-fbadge'); if (badge) badge.textContent = n || '';
+}
+
+/* Pagamento dentro da janela de ±30 dias de hoje (passado recente OU previsto próximo). */
+function pagamentoRecente(p){
+  if (!p.data_pagamento) return false;
+  const d = parseData(p.data_pagamento); if (!d) return false;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const dias = (d - hoje) / 86400000;
+  return dias >= -30 && dias <= 30;
+}
+/* Rótulo de pagamento: "Pago em…" (passado) ou "Pagamento previsto…" (futuro). */
+function infoPagamento(p){
+  if (!p.data_pagamento) return { txt:'Pagamento a definir', cls:'' };
+  const d = parseData(p.data_pagamento); const hoje = new Date(); hoje.setHours(0,0,0,0);
+  if (d && d > hoje) return { txt:'Pagamento previsto ' + dBR(p.data_pagamento), cls:'prev', futuro:true };
+  return { txt:'Pago em ' + dBR(p.data_pagamento), cls:'pago' };
+}
+function passaFiltro(p){
+  if (FILTRO.ano && String(p._comp.ano) !== FILTRO.ano) return false;
+  if (FILTRO.situacao){
+    const t = FILTRO.situacao;
+    if (t.slice(0,2) === 'g:' && p._grupo !== t.slice(2)) return false;
+    if (t.slice(0,2) === 's:' && p.status !== t.slice(2)) return false;
+  }
+  if (FILTRO.pagamento === 'com' && !p.data_pagamento) return false;
+  if (FILTRO.pagamento === 'sem' && p.data_pagamento) return false;
+  if (FILTRO.pagamento === 'recente' && !pagamentoRecente(p)) return false;
+  if (FILTRO.busca){
+    const q = normTxt(FILTRO.busca);
+    const hay = normTxt([p.numero_per_dcomp, p._comp.label, p.tributo, p.status].join(' '));
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+function cardDetalhe(p){
+  const vShown = p._concluido ? (num(p.valor_aprovado) || num(p.valor_atualizado)) : num(p.valor_atualizado);
+  const ip = infoPagamento(p);
+  const rec = pagamentoRecente(p);
+  const lblPg = ip.futuro ? 'Pagamento previsto' : 'Data de pagamento';
+  return `
+    <details class="pitem ${p._grupo}" data-key="${esc(p.numero_per_dcomp)}">
+      <summary>
+        <span class="acc-dot" style="background:${GRUPO_COR[p._grupo] || PAL.muted}"></span>
+        <span class="pitem-main">
+          <span class="pitem-title">${p._comp.label} · ${esc(p.tributo)}</span>
+          <span class="status-chip status-${p._grupo}">${esc(p.status)}</span>
+          ${rec ? '<span class="pill-pago">✓ pago</span>' : ''}
+        </span>
+        <span class="pitem-val num">${brl(vShown)}</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="pitem-body">
+        <div class="pitem-num">PER/DCOMP ${esc(p.numero_per_dcomp)}</div>
+        <div class="pcard-grid">
+          <div><span>Competência</span>${p._comp.label}</div>
+          <div><span>Tributo</span>${esc(p.tributo)}</div>
+          <div><span>Transmissão</span>${dBR(p.data_transmissao)}</div>
+          <div class="num"><span>Solicitado</span>${brl(p.valor_solicitado)}</div>
+          <div class="num"><span>SELIC acumulada</span>${(num(p.selic_pct)).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</div>
+          <div class="num"><span>Valor atualizado</span>${brl(p.valor_atualizado)}</div>
+          <div><span>${lblPg}</span>${dBR(p.data_pagamento)}</div>
+          <div class="num"><span>Valor aprovado</span>${p._concluido ? brl(p.valor_aprovado) : '—'}</div>
+        </div>
+        ${p._explicacao ? `<div class="pcard-expl">${p._explicacao}</div>` : ''}
+      </div>
+    </details>`;
+}
+function renderListaDetalhe(){
+  const lista = document.getElementById('det-lista'); if (!lista) return;
+  const arr = ordenarDet(DETPEDIDOS.filter(passaFiltro));
+  const cont = document.getElementById('det-count');
+  if (cont) cont.textContent = arr.length === DETPEDIDOS.length
+    ? `${DETPEDIDOS.length} PER/DCOMP`
+    : `${arr.length} de ${DETPEDIDOS.length} PER/DCOMP`;
+  lista.innerHTML = arr.length ? arr.map(cardDetalhe).join('') : '<div class="det-vazio">Nenhum PER/DCOMP com esses filtros.</div>';
+  atualizarBotaoFiltros();
+}
+function sincronizarControles(){
+  const b = document.getElementById('pedidos-detalhe'); if (!b) return;
+  const q = b.querySelector('#det-q'), fa = b.querySelector('#det-ano'), fs = b.querySelector('#det-sit'), fp = b.querySelector('#det-pag');
+  if (q) q.value = FILTRO.busca; if (fa) fa.value = FILTRO.ano; if (fs) fs.value = FILTRO.situacao; if (fp) fp.value = FILTRO.pagamento;
+  const fo = b.querySelector('#det-ordem'); if (fo) fo.value = ORDEM;
+}
+/* Aplica um conjunto de filtros do zero, abre o detalhamento e rola até ele. */
+function filtrarDetalhe(patch, scroll){
+  Object.assign(FILTRO, { busca:'', ano:'', situacao:'', pagamento:'' }, patch || {});
+  const outer = document.getElementById('det-outer'); if (outer) outer.open = true;
+  sincronizarControles();
+  renderListaDetalhe();
+  if (scroll !== false){ const el = document.getElementById('pedidos-detalhe'); if (el) el.scrollIntoView({ behavior:'smooth', block:'start' }); }
+}
+/* Deep-link para um PER/DCOMP específico: limpa filtros, abre e destaca o pedido. */
+function irParaPedido(numero){
+  Object.assign(FILTRO, { busca:'', ano:'', situacao:'', pagamento:'' });
+  const outer = document.getElementById('det-outer'); if (outer) outer.open = true;
+  sincronizarControles();
+  renderListaDetalhe();
+  const alvo = document.querySelector('#det-lista .pitem[data-key="' + String(numero).replace(/"/g,'\\"') + '"]');
+  if (alvo){
+    alvo.open = true;
+    alvo.classList.remove('flash'); void alvo.offsetWidth; alvo.classList.add('flash');
+    alvo.scrollIntoView({ behavior:'smooth', block:'center' });
+  } else {
+    const el = document.getElementById('pedidos-detalhe'); if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+}
+
+function construirDetalheTodos(M){
+  const box = document.getElementById('pedidos-detalhe');
+  if (!box) return;
+  DETPEDIDOS = M.pedidos;
+  if (!DETPEDIDOS.length){ box.remove(); return; }
+
+  const anos = [...new Set(DETPEDIDOS.map(p => p._comp.ano).filter(Boolean))].sort();
+  const gruposPres = [...new Set(DETPEDIDOS.map(p => p._grupo))].sort((a,b)=>GRUPO_ORDER.indexOf(a)-GRUPO_ORDER.indexOf(b));
+  const statusPres = [...new Set(DETPEDIDOS.map(p => p.status))];
+  const sitOpts = '<option value="">Todas as situações</option>'
+    + '<optgroup label="Grupo">' + gruposPres.map(g => `<option value="g:${g}">${GRUPO_NOME[g]}</option>`).join('') + '</optgroup>'
+    + '<optgroup label="Situação (Receita)">' + statusPres.map(s => `<option value="s:${esc(s)}">${esc(s)}</option>`).join('') + '</optgroup>';
+  const lupa = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>';
+
+  box.innerHTML = `
+    <details class="acc-item acc-all" id="det-outer">
+      <summary>
+        <span class="acc-dot" style="background:${PAL.petroleo}"></span>
+        <span class="acc-head-main">
+          <span class="acc-head-title">Todos os PER/DCOMPs em detalhe</span>
+          <span class="acc-head-sub">Filtre, busque e abra cada pedido individualmente</span>
+        </span>
+        <span class="acc-val"><span class="v num">${DETPEDIDOS.length}</span><span class="k">pedidos</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <div class="det-barra">
+          <button type="button" class="det-fbtn" id="det-fbtn" aria-expanded="false" aria-controls="det-painel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+            Filtros <span class="det-fbadge" id="det-fbadge"></span>
+          </button>
+          <select id="det-ordem" class="det-sel" aria-label="Ordenar">
+            <option value="comp">Ordenar: competência</option>
+            <option value="pgto">Ordenar: data de pagamento</option>
+            <option value="valor-desc">Ordenar: maior valor</option>
+            <option value="valor-asc">Ordenar: menor valor</option>
+          </select>
+          <button type="button" class="det-limpar" id="det-limpar">Limpar filtros</button>
+        </div>
+        <div class="det-painel" id="det-painel" hidden>
+          <div class="det-busca">${lupa}<input id="det-q" type="search" placeholder="Buscar por nº, competência, tributo…" autocomplete="off"></div>
+          <select id="det-ano" class="det-sel" aria-label="Filtrar por ano"><option value="">Todos os anos</option>${anos.map(a=>`<option value="${a}">${a}</option>`).join('')}</select>
+          <select id="det-sit" class="det-sel" aria-label="Filtrar por situação">${sitOpts}</select>
+          <select id="det-pag" class="det-sel" aria-label="Filtrar por pagamento">
+            <option value="">Pagamento: todos</option>
+            <option value="recente">Pagamento recente (±30 dias)</option>
+            <option value="com">Com pagamento</option>
+            <option value="sem">Sem pagamento</option>
+          </select>
+        </div>
+        <div class="det-count" id="det-count"></div>
+        <div class="pacc" id="det-lista"></div>
+      </div>
+    </details>`;
+
+  const q = box.querySelector('#det-q'), fa = box.querySelector('#det-ano'), fs = box.querySelector('#det-sit'), fp = box.querySelector('#det-pag');
+  q.addEventListener('input', () => { FILTRO.busca = q.value; renderListaDetalhe(); });
+  fa.addEventListener('change', () => { FILTRO.ano = fa.value; renderListaDetalhe(); });
+  fs.addEventListener('change', () => { FILTRO.situacao = fs.value; renderListaDetalhe(); });
+  fp.addEventListener('change', () => { FILTRO.pagamento = fp.value; renderListaDetalhe(); });
+  const ford = box.querySelector('#det-ordem'); ford.value = ORDEM;
+  ford.addEventListener('change', () => { ORDEM = ford.value; renderListaDetalhe(); });
+  const fbtn = box.querySelector('#det-fbtn'), painel = box.querySelector('#det-painel');
+  fbtn.addEventListener('click', () => {
+    const abrir = painel.hasAttribute('hidden');
+    if (abrir) painel.removeAttribute('hidden'); else painel.setAttribute('hidden','');
+    fbtn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+  });
+  box.querySelector('#det-limpar').addEventListener('click', () => filtrarDetalhe({}, false));
+  renderListaDetalhe();
+}
+
+/* Banner de pagamento: destaca créditos com data de pagamento dentro de ±30 dias. */
+function construirAlertaPagamento(M){
+  const box = document.getElementById('alerta-pagamento'); if (!box) return;
+  const rec = (M.pedidos || []).filter(pagamentoRecente);
+  if (!rec.length){ box.remove(); return; }
+  const total = rec.reduce((s,p) => s + (num(p.valor_aprovado) || num(p.valor_atualizado)), 0);
+  const datas = rec.map(p => parseData(p.data_pagamento)).filter(Boolean).sort((a,b)=>a-b);
+  const fmt = d => d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const periodo = datas.length ? (datas.length > 1 ? `entre ${fmt(datas[0])} e ${fmt(datas[datas.length-1])}` : `em ${fmt(datas[0])}`) : '';
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const algumFuturo = rec.some(p => { const d = parseData(p.data_pagamento); return d && d > hoje; });
+  const n = rec.length;
+  box.className = 'alerta-pgto';
+  box.innerHTML = `
+    <div class="alerta-pgto-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><path d="M6 15h5"/></svg></div>
+    <div class="alerta-pgto-txt">
+      <b>${n} pagamento${n>1?'s':''} ${algumFuturo?'a caminho':('recente'+(n>1?'s':''))} · ${brl(total)}</b>
+      <span>${algumFuturo?'Crédito com pagamento':'Crédito creditado'} ${periodo}. Confira antes que passe despercebido.</span>
+      <span class="alerta-pgto-pix">O valor é depositado pela Receita via PIX na conta bancária do CNPJ — verifique se a conta está ativa e funcionando para receber.</span>
     </div>
-    <div class="resumo" id="resumo"></div>
-    <div class="tabela-wrap"><table id="tab"></table></div>`;
-  document.getElementById('busca').addEventListener('input',e=>desenhar(e.target.value));
-  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{const r=c.dataset.resp;if(r)location.hash=encodeURIComponent(r);else history.replaceState(null,'',location.pathname+location.search);render();}));
-  atualizarResumo();
-  desenhar('');
-}
-// ---- RESUMO de prazos ----
-function computeResumo(){
-  const t0=meia(new Date());
-  const dow=t0.getDay();                       // 0=domingo
-  const fimSemana=addDias(t0,(7-dow)%7);        // próximo domingo (hoje, se hoje for domingo)
-  const proxIni=addDias(fimSemana,1), proxFim=addDias(proxIni,6);
-  const b={atrasada:[],semana:[],proxima:[]};
-  baseRows().forEach(l=>TAREFAS.forEach(tf=>{
-    const d=parseData(l[tf.k]);if(!d)return;
-    if(statusConcluido(l[tf.stk]))return;       // já concluída não vira pendência
-    const dm=meia(d),g=dm.getTime();
-    const item={row:l.row,id:l.id,nome:l.nome,k:tf.k,label:tf.label,dataStr:fmtBR(dm)};
-    if(g<t0.getTime())b.atrasada.push(Object.assign({ord:g},item));
-    else if(g<=fimSemana.getTime())b.semana.push(Object.assign({ord:g},item));
-    else if(g>=proxIni.getTime()&&g<=proxFim.getTime())b.proxima.push(Object.assign({ord:g},item));
-  }));
-  Object.keys(b).forEach(k=>b[k].sort((x,y)=>x.ord-y.ord));
-  return b;
-}
-function listaTk(arr){
-  if(!arr.length)return '<div class="rvazio">Nada por aqui 🎉</div>';
-  return arr.map(t=>`<div class="tk" data-goto="${t.row}" data-k="${t.k}"><span class="d">${esc(t.dataStr)}</span><span class="lb">${esc(t.id)} · ${esc(t.nome)}</span><span class="tp">${esc(t.label)}</span></div>`).join('');
-}
-function atualizarResumo(){
-  const b=computeResumo();
-  document.getElementById('resumo').innerHTML=`
-    <div class="rcard atrasada"><div class="rhead">Atrasadas <span class="n">${b.atrasada.length}</span></div><div class="rlista">${listaTk(b.atrasada)}</div></div>
-    <div class="rcard semana"><div class="rhead">Esta semana (até domingo) <span class="n">${b.semana.length}</span></div><div class="rlista">${listaTk(b.semana)}</div></div>
-    <div class="rcard proxima"><div class="rhead">Próxima semana <span class="n">${b.proxima.length}</span></div><div class="rlista">${listaTk(b.proxima)}</div></div>`;
-}
-// ---- ordenação + tabela ----
-function ehNum(s){return /^\s*-?\d+([.,]\d+)?\s*$/.test(String(s));}
-function valCmp(a,b){
-  if(ehNum(a)&&ehNum(b))return parseFloat(String(a).replace(',','.'))-parseFloat(String(b).replace(',','.'));
-  return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});
-}
-function ordenar(arr){
-  const key=SORT.key,dir=SORT.dir,col=COLS.find(c=>c.k===key),isData=col&&col.sort==='date';
-  return arr.slice().sort((x,y)=>{
-    let va=x[key]==null?'':x[key],vb=y[key]==null?'':y[key];
-    const ea=String(va).trim()==='',eb=String(vb).trim()==='';
-    if(ea&&eb)return 0;if(ea)return 1;if(eb)return -1;   // vazios sempre por último
-    let r;
-    if(isData){const da=parseData(va),db=parseData(vb);r=(da?da.getTime():Infinity)-(db?db.getTime():Infinity);}
-    else r=valCmp(va,vb);
-    return dir==='desc'?-r:r;
-  });
-}
-function filtradas(termo){
-  const alvo=normTxt(termo);
-  return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj).includes(alvo));
-}
-function seta(key){return SORT.key===key?(SORT.dir==='asc'?' ▲':' ▼'):'';}
-function celHTML(l,c){
-  const v=l[c.k]==null?'':l[c.k];
-  const cor=c.cor?corStatus(v):'';
-  let campo;
-  if(c.t==='area')campo=`<textarea data-k="${c.k}" style="width:${c.w}px">${esc(v)}</textarea>`;
-  else campo=`<input data-k="${c.k}" class="${cor}" type="text" value="${esc(v)}" style="width:${c.w}px">`;
-  const abrir=(c.t==='url'&&/^https?:/i.test(v))?`<a class="abrir" href="${esc(v)}" target="_blank" rel="noopener" title="abrir">↗</a>`:'';
-  return `<td><div class="cel">${campo}${abrir}</div></td>`;
-}
-function desenhar(termo){
-  const arr=ordenar(filtradas(termo));
-  document.getElementById('cnt').textContent=arr.length+' clientes';
-  const head='<thead><tr><th class="col-id" data-sort="id">ID'+seta('id')+'</th>'
-    +COLS.map(c=>`<th data-sort="${c.k}" style="min-width:${c.w+16}px">${esc(c.label)}${seta(c.k)}</th>`).join('')+'</tr></thead>';
-  const body='<tbody>'+(arr.map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+1}" style="padding:16px;color:var(--muted)">Nenhum cliente para esse filtro.</td></tr>`)+'</tbody>';
-  document.getElementById('tab').innerHTML=head+body;
-}
-// ---- ir até a linha (a partir do resumo) ----
-function irPara(row,k){
-  const busca=document.getElementById('busca');if(busca&&busca.value){busca.value='';desenhar('');}
-  requestAnimationFrame(()=>{
-    const tr=document.querySelector(`#tab tr[data-row="${row}"]`);if(!tr)return;
-    tr.scrollIntoView({block:'center'});
-    const alvo=tr.querySelector(`[data-k="${k}"]`)||tr;
-    alvo.classList.add('flash');setTimeout(()=>alvo.classList.remove('flash'),1700);
-  });
-}
-// ---- salvar ----
-function coletar(tr){const campos={};tr.querySelectorAll('[data-k]').forEach(el=>campos[el.dataset.k]=el.value);return campos;}
-let timers={};
-function agendarSalvar(tr){
-  const row=tr.dataset.row,campos=coletar(tr);
-  setSave('saving','Alterado…');
-  clearTimeout(timers[row]);
-  timers[row]=setTimeout(()=>salvar(row,tr.dataset.id,campos),450);
-}
-async function salvar(row,id,campos){
-  setSave('saving','Salvando…');
-  try{
-    await postAcao({acao:'rest_salvar',row:+row,id,campos});
-    const l=LINHAS.find(x=>x.row==row);if(l)Object.keys(campos).forEach(k=>l[k]=campos[k]);
-    setSave('ok','Salvo ✓ '+horaAgora());
-    atualizarResumo();   // prazos/status podem ter mudado
-  }catch(e){setSave('err','Não salvou: '+(e.message||e));}
+    <button type="button" class="alerta-pgto-btn" id="alerta-pgto-btn">Ver pagamentos</button>`;
+  box.querySelector('#alerta-pgto-btn').addEventListener('click', () => filtrarDetalhe({ pagamento:'recente' }));
 }
 
-// eventos (delegação)
-document.addEventListener('input',e=>{const el=e.target;if(!el.dataset||!el.dataset.k)return;const c=COLS.find(x=>x.k===el.dataset.k);if(c&&c.cor&&el.tagName==='INPUT')el.className=corStatus(el.value);});
-document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||!el.dataset.k)return;const tr=el.closest('tr[data-row]');if(tr)agendarSalvar(tr);});
-document.addEventListener('click',e=>{
-  const th=e.target.closest('th[data-sort]');
-  if(th){const k=th.dataset.sort;if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}desenhar(document.getElementById('busca').value);return;}
-  const tk=e.target.closest('.tk[data-goto]');
-  if(tk){irPara(tk.dataset.goto,tk.dataset.k);return;}
-});
-window.addEventListener('hashchange',render);
+function desenharGraficos(M){
+  const P = M.pedidos;
+  const donutOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
+    plugins:{legend:{display:false},
+      tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
+        bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
+  const barOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500},
+    plugins:{legend:{display:false}, tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
+      bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y)}}},
+    scales:{x:{grid:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11}}},
+      y:{grid:{color:'#EDE4D6'}, border:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11},
+        callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
 
-document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
-carregar();
+  // c1: situação — soma do VALOR atualizado por grupo, não quantidade de pedidos
+  const porGrupo = {};
+  P.forEach(p=>{ porGrupo[p._grupo] = (porGrupo[p._grupo]||0) + num(p.valor_atualizado); });
+  const gruposUsados = Object.keys(porGrupo);
+  try {
+    new Chart(document.getElementById('c1'), {
+      type:'doughnut',
+      data:{labels:gruposUsados.map(g=>GRUPO_NOME[g]), datasets:[{data:gruposUsados.map(g=>porGrupo[g]),
+        backgroundColor:gruposUsados.map(g=>GRUPO_COR[g]), borderWidth:0}]},
+      options:{...donutOpts,
+        onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
+        onClick:(e,els)=>{ if(els.length) filtrarDetalhe({situacao:'g:'+gruposUsados[els[0].index]}); }}
+    });
+  } catch(e){ console.warn('Gráfico "Situação dos pedidos" indisponível:', e); }
+  const c1lg = document.getElementById('c1-lg');
+  c1lg.innerHTML = gruposUsados.map(g=>
+    `<div class="pie-legend-row" data-g="${g}" style="cursor:pointer"><i style="background:${GRUPO_COR[g]}"></i><span>${GRUPO_NOME[g]}</span><b class="num">${brl(porGrupo[g])}</b></div>`
+  ).join('');
+  c1lg.querySelectorAll('.pie-legend-row').forEach(row => row.addEventListener('click', () => filtrarDetalhe({ situacao:'g:'+row.dataset.g })));
+
+  // c4: VALORES POR ANO — barra marrom (total pleiteado) com a verde (aprovado) sobreposta.
+  // "Aprovado" usa o MESMO critério do hero "Já aprovado": só conta quem já tem data de pagamento.
+  const aprovadoDe = p => {
+    if (!p._concluido) return 0;   // p._concluido === !!p.data_pagamento
+    return num(p.valor_aprovado) > 0 ? num(p.valor_aprovado) : num(p.valor_atualizado);
+  };
+  const porAno = {};
+  P.forEach(p=>{
+    const ano = p._comp.ano || 0;
+    porAno[ano] = porAno[ano] || {total:0, aprovado:0};
+    porAno[ano].total += num(p.valor_atualizado);
+    porAno[ano].aprovado += aprovadoDe(p);
+  });
+  const anos = Object.keys(porAno).sort();
+  const totalGeral = anos.reduce((s,a)=>s+porAno[a].total,0);
+  const aprovadoGeral = anos.reduce((s,a)=>s+porAno[a].aprovado,0);
+  try {
+    new Chart(document.getElementById('c4'), {
+      type:'bar',
+      data:{labels:anos, datasets:[
+        // barra grande marrom (total) ao fundo; barra verde (aprovado) sobreposta e mais estreita
+        {label:'Total pleiteado', data:anos.map(a=>porAno[a].total), backgroundColor:PAL.couro,
+          borderRadius:4, categoryPercentage:0.7, barPercentage:0.9, grouped:false, order:2},
+        {label:'Aprovado', data:anos.map(a=>porAno[a].aprovado), backgroundColor:PAL.eucalipto2,
+          borderRadius:4, categoryPercentage:0.7, barPercentage:0.5, grouped:false, order:1},
+      ]},
+      options:{...barOpts,
+        onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
+        onClick:(e,els)=>{ if(els.length) filtrarDetalhe({ano:String(anos[els[0].index])}); },
+        plugins:{...barOpts.plugins, legend:{display:false}, tooltip:{...barOpts.plugins.tooltip}}}
+    });
+  } catch(e){ console.warn('Gráfico "Valores por ano" indisponível:', e); }
+  document.getElementById('c4-lg').innerHTML =
+    `<div class="pie-legend-row"><i style="background:${PAL.couro}"></i><span>Total pleiteado</span><b class="num">${brl(totalGeral)}</b></div>` +
+    `<div class="pie-legend-row"><i style="background:${PAL.eucalipto2}"></i><span>Aprovado</span><b class="num">${brl(aprovadoGeral)}</b></div>`;
+
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const concl = P.filter(p => p._concluido);
+
+  // --- "Quanto já voltou": barra de progresso aprovado ÷ pleiteado ---
+  const totAtual = P.reduce((s,p)=>s+num(p.valor_atualizado),0);
+  const totAprov = concl.reduce((s,p)=>s+(num(p.valor_aprovado)||num(p.valor_atualizado)),0);
+  const pctRec = totAtual ? Math.min(100, Math.round(totAprov/totAtual*100)) : 0;
+  const recup = document.getElementById('recup');
+  if (recup) recup.innerHTML = `
+    <div class="recup-top">
+      <div>
+        <span class="lbl">Quanto já voltou</span>
+        <div class="recup-v num">${brl(totAprov)} <span class="recup-de">de ${brl(totAtual)} pleiteados</span></div>
+      </div>
+      <div class="recup-pct num">${pctRec}%</div>
+    </div>
+    <div class="recup-bar"><div class="recup-fill" style="width:${Math.max(2,pctRec)}%"></div></div>
+    <div class="recup-legs">
+      <span><i class="dot-ap"></i>Já aprovado · ${brl(totAprov)}</span>
+      <span><i class="dot-an"></i>Falta aprovar · ${brl(totAtual-totAprov)}</span>
+    </div>`;
+
+  // --- Linha do tempo de pagamentos (recebido x previsto, por mês) ---
+  const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const porMesPag = {};
+  P.forEach(p=>{
+    if (!p.data_pagamento) return;
+    const d = parseData(p.data_pagamento); if (!d) return;
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    (porMesPag[key] = porMesPag[key] || {v:0, fut:false}).v += num(p.valor_aprovado)||num(p.valor_atualizado);
+    if (d > hoje) porMesPag[key].fut = true;
+  });
+  const mesesPag = Object.keys(porMesPag).sort();
+  const c5 = document.getElementById('c5');
+  if (c5 && mesesPag.length){
+    const labels = mesesPag.map(m=>{ const [a,mm]=m.split('-'); return MES[+mm-1]+'/'+a.slice(2); });
+    try {
+      new Chart(c5, {
+        type:'bar',
+        data:{labels, datasets:[{data:mesesPag.map(m=>porMesPag[m].v),
+          backgroundColor:mesesPag.map(m=>porMesPag[m].fut?'#B9791A':'#1F9D57'), borderRadius:6, maxBarThickness:54}]},
+        options:{...barOpts, plugins:{...barOpts.plugins, legend:{display:false},
+          tooltip:{...barOpts.plugins.tooltip, callbacks:{label:c=>' '+brl(c.parsed.y)}}}}
+      });
+    } catch(e){ console.warn('Gráfico "Linha do tempo" indisponível:', e); }
+    const recebido = mesesPag.filter(m=>!porMesPag[m].fut).reduce((s,m)=>s+porMesPag[m].v,0);
+    const previsto = mesesPag.filter(m=>porMesPag[m].fut).reduce((s,m)=>s+porMesPag[m].v,0);
+    document.getElementById('c5-lg').innerHTML =
+      (recebido>0 ? `<div class="pie-legend-row"><i style="background:#1F9D57"></i><span>Recebido</span><b class="num">${brl(recebido)}</b></div>` : '') +
+      (previsto>0 ? `<div class="pie-legend-row"><i style="background:#B9791A"></i><span>Previsto</span><b class="num">${brl(previsto)}</b></div>` : '');
+  } else {
+    const card = c5 ? c5.closest('.card') : null; if (card) card.remove();
+  }
+
+  // --- Funil de etapas (valor em cada fase) ---
+  const pagos = P.filter(p=>{ const d = parseData(p.data_pagamento); return d && d <= hoje; });
+  const somaAtual = arr => arr.reduce((s,p)=>s+num(p.valor_atualizado),0);
+  const somaAprov = arr => arr.reduce((s,p)=>s+(num(p.valor_aprovado)||num(p.valor_atualizado)),0);
+  const etapas = [
+    {nome:'Transmitidos',      n:P.length,     v:somaAtual(P),     cor:PAL.petroleo},
+    {nome:'Análise concluída', n:concl.length, v:somaAtual(concl), cor:PAL.teal},
+    {nome:'Pagos',             n:pagos.length, v:somaAprov(pagos), cor:'#1F9D57'},
+  ];
+  const baseV = etapas[0].v || 1;
+  const funil = document.getElementById('funil');
+  if (funil) funil.innerHTML = etapas.map(e=>{
+    const w = Math.max(16, Math.round(e.v/baseV*100));
+    return `<div class="funil-row">
+        <div class="funil-bar" style="width:${w}%;background:${e.cor}"><span>${e.nome}</span></div>
+        <div class="funil-meta"><b>${e.n}</b> · ${brl(e.v)}</div>
+      </div>`;
+  }).join('');
+}
+
+/* Gráficos da ESTIMATIVA (memória de cálculo) — só rodam quando não há PER/DCOMP. */
+function desenharMemoria(M){
+  const MEM = M.memoria; if (!MEM || !(MEM.periodos||[]).length) return;
+  const IRPJ_COR = PAL.teal, CSLL_COR = PAL.couro;
+  const per = MEM.periodos.slice().sort((a,b)=>prepararCompetencia(a.ref).ord - prepararCompetencia(b.ref).ord);
+  const rotulo = p => { const c = prepararCompetencia(p.ref); return c.ord ? `${c.tri}T/${String(c.ano).slice(2)}` : (p.ref || '—'); };
+
+  const barOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500},
+    plugins:{legend:{display:false}, tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
+      bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y)}}},
+    scales:{x:{stacked:true, grid:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11}}},
+      y:{stacked:true, grid:{color:'#EDE4D6'}, border:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11},
+        callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
+
+  const mc1 = document.getElementById('mc1');
+  if (mc1) new Chart(mc1, {
+    type:'bar',
+    data:{labels:per.map(rotulo), datasets:[
+      {label:'IRPJ', data:per.map(p=>num(p.credito_irpj)), backgroundColor:IRPJ_COR, borderRadius:4, stack:'s', maxBarThickness:46},
+      {label:'CSLL', data:per.map(p=>num(p.credito_csll)), backgroundColor:CSLL_COR, borderRadius:4, stack:'s', maxBarThickness:46},
+    ]},
+    options:barOpts
+  });
+  const lg1 = document.getElementById('mc1-lg');
+  if (lg1) lg1.innerHTML =
+    `<div class="pie-legend-row"><i style="background:${IRPJ_COR}"></i><span>IRPJ</span><b class="num">${brl(MEM.total_irpj)}</b></div>` +
+    `<div class="pie-legend-row"><i style="background:${CSLL_COR}"></i><span>CSLL</span><b class="num">${brl(MEM.total_csll)}</b></div>`;
+
+  const mc2 = document.getElementById('mc2');
+  if (mc2) new Chart(mc2, {
+    type:'doughnut',
+    data:{labels:['IRPJ','CSLL'], datasets:[{data:[num(MEM.total_irpj), num(MEM.total_csll)],
+      backgroundColor:[IRPJ_COR, CSLL_COR], borderWidth:0}]},
+    options:{responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
+      plugins:{legend:{display:false}, tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
+        bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}}
+  });
+  const lg2 = document.getElementById('mc2-lg');
+  if (lg2) lg2.innerHTML =
+    `<div class="pie-legend-row"><i style="background:${IRPJ_COR}"></i><span>IRPJ</span><b class="num">${brl(MEM.total_irpj)}</b></div>` +
+    `<div class="pie-legend-row"><i style="background:${CSLL_COR}"></i><span>CSLL</span><b class="num">${brl(MEM.total_csll)}</b></div>`;
+}
+
+async function carregarModelos(){
+  if (API_URL){
+    const { id, codigo } = IDENTIDADE;
+    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=modelos';
+    const d = await jsonp(url);
+    return (d && d.modelos) || [];
+  }
+  const r = await fetch('demo_modelos.json');
+  if (!r.ok) return [];
+  const d = await r.json();
+  return d.modelos || [];
+}
+
+function normTxt(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+
+/** Junta os documentos específicos deste cliente (Relatório de Adequação Jurídica etc.)
+    com os modelos genéricos da categoria Equiparação (Modelo de emissão de NF etc.). */
+function desenharDocumentos(M, modelos){
+  const box = document.getElementById('documentos-equip');
+  if (!box) return;
+  const doCategoria = (modelos||[]).filter(m => normTxt(m.categoria) === normTxt('Equiparação'));
+  const todos = [...(M.documentos||[]), ...doCategoria].filter(d => d.link && String(d.link).trim());
+  if (!todos.length){ box.innerHTML = '<div class="vazio" style="padding:16px 0;text-align:center;color:var(--muted)">Nenhum documento cadastrado ainda.</div>'; return; }
+  box.innerHTML = todos.map(d=>{
+    const nome = d.documento;
+    const link = String(d.link).trim();
+    return `<div class="item">
+      <div><div class="nome">${nome}</div>${d.categoria?`<div class="cat">Modelo padrão</div>`:''}</div>
+      <a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>
+    </div>`;
+  }).join('');
+}
+
+// Em subpágina, sem login volta ao index; com id+código mostra aviso amigável em vez de redirecionar.
+function erro(msg){
+  var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
+  if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
+  var volta='index.html#'+id+(codigo?('-'+codigo):'');
+  document.body.innerHTML=
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;'
+   +'font-family:\'Montserrat\',system-ui,-apple-system,sans-serif;background:#f4f6f6;color:#063033">'
+   +'<div style="max-width:440px;text-align:center;background:#fff;border:1px solid #e3e8e8;'
+   +'border-radius:16px;padding:32px 28px;box-shadow:0 6px 24px rgba(6,48,51,.06)">'
+   +'<div style="font-size:34px;line-height:1;margin-bottom:10px">📄</div>'
+   +'<h2 style="margin:0 0 8px;font-size:19px">Não foi possível carregar suas informações agora.</h2>'
+   +'<p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#3f5b5d">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#128D84;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:14px">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#128D84;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
+   +'</div></div>';
+}
+
+(async function(){
+  try {
+    const raw = await carregar();
+    const M = preparar(raw);
+    render(M);
+    carregarModelos().then(modelos => desenharDocumentos(M, modelos)).catch(()=>desenharDocumentos(M, []));
+  } catch (e) {
+    erro(e.message || String(e));
+  }
+})();
 </script>
 </body>
 </html>
