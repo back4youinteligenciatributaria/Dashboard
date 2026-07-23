@@ -71,6 +71,7 @@ tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{backgrou
 .robadge{display:inline-block;padding:4px 9px;border-radius:7px;font-size:11.5px;font-weight:800;white-space:nowrap}
 @keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
 .flash{animation:fl 1.7s ease}
+tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}   /* realce da linha por 5s ao clicar numa tarefa */
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
@@ -136,7 +137,7 @@ const TAREFAS=[
 const OPT={
   status:['Alteração de CS prévia','Perdido','PROTOCOLADO','INTERROMPIDO','PRÉ - PROTOCOLO','PROSPECTIVO SOMENTE','PROSPECTIVO SOMENTE PROTOCOLADO','PRÉ - ONBOARDING','COLETA DE DOCUMENTAÇÃO'],
   prospectivo:['Retrospectivo','Retrospectivo e Prospectivo','Prospectivo'],
-  rel_adequacao:['Aprovado','Falta onboarding','Em execução','Enviado ao cliente'],
+  rel_adequacao:['Aprovado','Falta onboarding','Em execução','Enviado ao cliente','Parado (não iniciar)'],
   rel_prelim:['Aprovado','Parado (não iniciar)','Em execução','Não feito','Enviado ao cliente'],
   apuracao_nfs:['Aprovada','Enviada ao cliente','Em execução','Parado (não iniciar)'],
   protocolo:['Finalizado','Parado (não iniciar)','Não iniciado','Em execução'],
@@ -146,7 +147,7 @@ const OPT={
 const COR_RAW={
   status:{'Alteração de CS prévia':'#579BFC','Perdido':'#333333','PROTOCOLADO':'#00C875','INTERROMPIDO':'#757575','PRÉ - PROTOCOLO':'#CAB641','PROSPECTIVO SOMENTE':'#A1E3F6','PROSPECTIVO SOMENTE PROTOCOLADO':'#037F4C','PRÉ - ONBOARDING':'#FF6D3B','COLETA DE DOCUMENTAÇÃO':'#FFCB00'},
   prospectivo:{'Retrospectivo':'#00C875','Retrospectivo e Prospectivo':'#CAB641','Prospectivo':'#FFCB00'},
-  rel_adequacao:{'Aprovado':'#00C875','Falta onboarding':'#DF2F4A','Em execução':'#FDAB3D','Enviado ao cliente':'#007EB5'},
+  rel_adequacao:{'Aprovado':'#00C875','Falta onboarding':'#DF2F4A','Em execução':'#FDAB3D','Enviado ao cliente':'#007EB5','Parado (não iniciar)':'#9D50DD'},
   rel_prelim:{'Aprovado':'#00C875','Parado (não iniciar)':'#9D50DD','Em execução':'#FDAB3D','Não feito':'#DF2F4A','Enviado ao cliente':'#007EB5'},
   apuracao_nfs:{'Aprovada':'#00C875','Enviada ao cliente':'#007EB5','Em execução':'#FDAB3D','Parado (não iniciar)':'#9D50DD'},
   protocolo:{'Finalizado':'#00C875','Parado (não iniciar)':'#784BD1','Não iniciado':'#DF2F4A','Em execução':'#FDAB3D'},
@@ -155,7 +156,7 @@ const COR_RAW={
 const COR_N={};Object.keys(COR_RAW).forEach(k=>{COR_N[k]={};Object.keys(COR_RAW[k]).forEach(v=>COR_N[k][normTxt(v)]=COR_RAW[k][v]);});
 function corDe(opt,val){const m=COR_N[opt];return m?(m[normTxt(val)]||''):'';}
 function textoContraste(hex){if(!hex)return '';const r=parseInt(hex.substr(1,2),16),g=parseInt(hex.substr(3,2),16),b=parseInt(hex.substr(5,2),16);return (0.299*r+0.587*g+0.114*b)<150?'#ffffff':'#10312f';}
-function statusConcluido(v){const n=normTxt(v);if(!n)return false;if(/nao feito|não feito/.test(n))return false;return /aprovad|finaliz|conclu|protocolado|^feito$/.test(n);}
+function statusConcluido(stk,v){const n=normTxt(v);if(!n)return false;if(/nao feito/.test(n))return false;if(/aprovad|finaliz|conclu|protocolado|^feito$/.test(n))return true;if(stk==='rel_def'&&/enviad. ao cliente/.test(n))return true;return false;}
 function setSave(cls,txt){const el=document.getElementById('saveStatus');if(el){el.className='save-status '+(cls||'');el.textContent=txt||'';}}
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 const MES3={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
@@ -205,7 +206,7 @@ function computeResumo(){
   const b={atrasada:[],semana:[],proxima:[]};
   baseRows().forEach(l=>TAREFAS.forEach(tf=>{
     const d=parseData(l[tf.k]);if(!d)return;
-    if(statusConcluido(l[tf.stk]))return;
+    if(statusConcluido(tf.stk,l[tf.stk]))return;
     const dm=meia(d),g=dm.getTime();
     const item={row:l.row,id:l.id,nome:l.nome,k:tf.k,label:tf.label,dataStr:fmtBR(dm),ord:g};
     if(g<t0.getTime())b.atrasada.push(item);
@@ -273,8 +274,8 @@ function irPara(row,k){
   requestAnimationFrame(()=>{
     const tr=document.querySelector(`#tab tr[data-row="${row}"]`);if(!tr)return;
     tr.scrollIntoView({block:'center'});
-    const alvo=tr.querySelector(`[data-cell="${k}"]`)||tr;
-    alvo.classList.add('flash');setTimeout(()=>alvo.classList.remove('flash'),1700);
+    tr.classList.add('destaque');setTimeout(()=>tr.classList.remove('destaque'),5000);   // 5 segundos na linha
+    const cel=tr.querySelector(`[data-cell="${k}"]`);if(cel){cel.classList.add('flash');setTimeout(()=>cel.classList.remove('flash'),1700);}
   });
 }
 function coletar(tr){const campos={};tr.querySelectorAll('[data-k]').forEach(el=>campos[el.dataset.k]=el.value);return campos;}
