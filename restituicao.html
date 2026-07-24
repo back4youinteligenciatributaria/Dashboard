@@ -59,8 +59,8 @@ td.col-id,td.col-nome{z-index:15}
 td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal);padding:6px 9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
 td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.25;padding:6px 9px;white-space:normal;box-shadow:2px 0 6px rgba(7,48,52,.07)}
 tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
-td.col-email{font-size:11.5px;padding:6px 9px;white-space:nowrap;max-width:210px;overflow:hidden;text-overflow:ellipsis}
-td.col-email a{color:var(--brand-teal);text-decoration:none}
+td.col-email{font-size:11.5px;padding:6px 9px;white-space:normal;word-break:break-all;min-width:200px;max-width:280px;line-height:1.5}
+td.col-email a{color:var(--brand-teal);text-decoration:none;display:block}
 td.col-email a:hover{text-decoration:underline}
 .cel{display:flex;gap:4px;align-items:center}
 .cel input,.cel textarea,.cel select{font-family:var(--sans);font-size:12.5px;padding:6px 8px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
@@ -69,7 +69,7 @@ td.col-email a:hover{text-decoration:underline}
 .cel input:focus,.cel textarea:focus,.cel select:focus{outline:2px solid var(--brand-teal);outline-offset:0}
 .cel a.abrir{color:var(--brand-teal);text-decoration:none;font-weight:800;font-size:14px;flex:none}
 /* somente-leitura */
-.ro{padding:6px 8px;font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro{padding:6px 8px;font-size:12.5px;color:var(--ink-2);white-space:normal;word-break:break-word;line-height:1.4}
 .ro.roarea{white-space:pre-wrap;max-height:58px;overflow:auto;line-height:1.3;font-size:12px}
 .robadge{display:inline-block;padding:4px 9px;border-radius:7px;font-size:11.5px;font-weight:800;white-space:nowrap}
 @keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
@@ -106,7 +106,7 @@ async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chav
 
 // ID e Nome são colunas CONGELADAS (fora de COLS). ro:1 = somente leitura.
 const COLS=[
-  {k:'cnpj',label:'CNPJ',t:'text',w:130,ro:1},
+  {k:'cnpj',label:'CNPJ',t:'text',w:160,ro:1},
   {k:'status',label:'STATUS',t:'select',opt:'status',w:180},
   {k:'link_drive',label:'Link do drive',t:'url',w:170,ro:1},
   {k:'natureza_juridica',label:'Natureza Jurídica',t:'text',w:150,ro:1},
@@ -246,7 +246,7 @@ function ordenar(arr){
 }
 function filtradas(termo){const alvo=normTxt(termo);return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj+' '+(l.email||'')).includes(alvo));}
 function seta(key){return SORT.key===key?(SORT.dir==='asc'?' ▲':' ▼'):'';}
-function emailCel(e){e=String(e||'').trim();return e?`<a href="mailto:${esc(e)}" title="${esc(e)}">${esc(e)}</a>`:'<span style="color:var(--muted)">—</span>';}
+function emailCel(e){e=String(e||'').trim();if(!e)return '<span style="color:var(--muted)">—</span>';return e.split(/\s*,\s*/).filter(Boolean).map(x=>`<a href="mailto:${esc(x)}">${esc(x)}</a>`).join('');}
 function celHTML(l,c){
   const v=l[c.k]==null?'':l[c.k];
   const abrir=(c.t==='url'&&/^https?:/i.test(v))?`<a class="abrir" href="${esc(v)}" target="_blank" rel="noopener" title="abrir">↗</a>`:'';
