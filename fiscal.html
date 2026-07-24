@@ -143,6 +143,29 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .pmes-v{font-size:15px;font-weight:800;color:var(--provisao)}
 .prov-compact-total{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--line);font-size:13px}
 .prov-compact-total b{font-size:17px;color:var(--provisao)}
+.prov-compose{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0 2px}
+@media(max-width:600px){.prov-compose{grid-template-columns:1fr}}
+.prov-compose .pc{background:var(--surface-warm);border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:3px}
+.prov-compose .pc .k{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.prov-compose .pc .val{font-size:15px;font-weight:800}
+.prov-compose .pc.dev .val{color:var(--ink)}
+.prov-compose .pc.ret .val{color:var(--receita)}
+.prov-compose .pc.prov .val{color:var(--provisao)}
+.prov-compose .pc small{font-size:10px;color:var(--muted);font-weight:600}
+.prov-formula{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+.prov-tag{display:inline-block;margin-left:6px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+  color:var(--provisao);background:var(--provisao-soft);border-radius:5px;padding:1px 5px;vertical-align:middle}
+tr.rat-clic{cursor:pointer}
+tr.rat-clic .car-c{font-size:10px;color:var(--muted);margin-left:6px;transition:transform .15s}
+tr.rat-clic.exp .car-c{transform:rotate(180deg);display:inline-block}
+tr.rat-det{display:none}
+tr.rat-det.open{display:table-row}
+.rat-det-box{background:var(--surface-warm);border-radius:8px;padding:10px 12px;margin:2px 0}
+.rat-det-t{width:100%;border-collapse:collapse;font-size:12.5px}
+.rat-det-t th,.rat-det-t td{padding:5px 8px;text-align:right}
+.rat-det-t th:first-child,.rat-det-t td:first-child{text-align:left}
+.rat-det-t thead th{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--line)}
+.rat-det-t tfoot td{border-top:1px solid var(--line);font-weight:800}
 
 .alert{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;border-radius:var(--radius);
   background:var(--alerta-soft);border:1px solid #E3C4BE;color:var(--alerta);font-size:13.5px;margin-bottom:20px}
@@ -1096,13 +1119,15 @@ function provisaoDoMes(M,comp){
   if(!M.reg.provisaoTrimestral) return null;
   const per=String(M.cfg.periodicidade_irpj_csll||'trimestral').toLowerCase(); if(!per.includes('trim')) return null;
   const [a,m]=comp.split('-').map(Number); const tri=Math.ceil(m/3); const ini=(tri-1)*3+1;
-  const meses=[]; for(let i=0;i<3;i++){ const c=a+'-'+String(ini+i).padStart(2,'0'); const r=M.porComp[c];
-    const v=r?num(getM(r,'IR a pagar (R$)'))+num(getM(r,'CSLL a pagar (R$)'))
-           :nivelarTrimestre(M,c,'IR a pagar (R$)')+nivelarTrimestre(M,c,'CSLL a pagar (R$)');
+  const meses=[]; let retido=0; for(let i=0;i<3;i++){ const c=a+'-'+String(ini+i).padStart(2,'0'); const r=M.porComp[c];
+    const g=k=>r?num(getM(r,k)):nivelarTrimestre(M,c,k);
+    const v=g('IR a pagar (R$)')+g('CSLL a pagar (R$)');
+    retido+=g('IR Retido (R$)')+g('CSLL Retida (R$)');
     meses.push({comp:c,apurado:!!r,v}); }
   const total=meses.reduce((s,x)=>s+x.v,0); const fimTri=a+'-'+String(ini+2).padStart(2,'0');
   const guia=M.cal.find(c=>c.id_regra==='R07'&&c.competencia_ref===fimTri);
-  return {tri,ano:a,total,meses,venc:guia?guia.vencimento:null};
+  retido=Math.round(retido*100)/100; const devido=Math.round((total+retido)*100)/100;
+  return {tri,ano:a,total,meses,venc:guia?guia.vencimento:null,retido,devido};
 }
 function gradeDoMes(ano,mes){ const p=new Date(ano,mes,1); const ini=p.getDay(); const dias=new Date(ano,mes+1,0).getDate();
   const cel=[]; for(let i=0;i<ini;i++)cel.push(null); for(let d=1;d<=dias;d++)cel.push(d); while(cel.length%7)cel.push(null); return cel; }
@@ -1236,12 +1261,13 @@ function pintarMes(M,comp){
   const de=document.getElementById('div-editor'); if(de){ de.innerHTML=''; de.dataset.open=''; } // fecha o editor de dividendos ao trocar de mês
   const r=M.porComp[comp]; const i=M.empresa.findIndex(x=>x.competencia===comp); const ant=i>0?M.empresa[i-1]:null;
   const tot=num(getM(r,'Total (R$)')), imp=M.impostos(r), ret=M.retido(r), liq=num(getM(r,'Resultado Líquido (R$)'));
-  const carga=tot?imp/tot:0; const totAnt=ant?num(getM(ant,'Total (R$)')):null; const dif=(ant&&totAnt)?(tot/totAnt-1):null; const nfs=num(getM(r,'Nº NFs'));
+  const carga=tot?(imp+ret)/tot:0; const totAnt=ant?num(getM(ant,'Total (R$)')):null; const dif=(ant&&totAnt)?(tot/totAnt-1):null; const nfs=num(getM(r,'Nº NFs'));
 
   desenharGuiasDoMes(M,comp);
 
   // tributos visíveis: regime + "vazio some"
   const visiveis=M.tribs.filter(t=>temMetrica(r,t.pag));
+  const ehProvTrib=t=>(t.n==='IRPJ'||t.n==='CSLL') && M.reg.provisaoTrimestral && /trim/i.test(String(M.cfg.periodicidade_irpj_csll||'trimestral'));
   document.getElementById('hero').innerHTML=`<div class="hero">
     <div class="card hero-main"><span class="lbl">Competência</span><div class="comp-title">${mesLongo(comp)}</div>
       <p class="comp-note">Os impostos desta competência vencem em ${mesLongo(mesSeguinteComp(comp))}.</p>
@@ -1250,7 +1276,7 @@ function pintarMes(M,comp){
     </div>
     <div class="card relacao"><div class="relacao-head"><h2>Impostos a pagar</h2></div>
       <div class="table-scroll"><table class="imp"><thead><tr><th>Tributo</th><th>Devido</th>${M.reg.retencao?'<th>Retido</th>':''}<th>A pagar</th></tr></thead>
-      <tbody>${visiveis.map(t=>`<tr><td>${t.n}</td><td class="num">${brl(num(getM(r,t.dev)))}</td>${M.reg.retencao?`<td class="num">${t.ret?brl(num(getM(r,t.ret))):'—'}</td>`:''}<td class="num">${brl(num(getM(r,t.pag)))}</td></tr>`).join('')}</tbody>
+      <tbody>${visiveis.map(t=>`<tr><td>${t.n}</td><td class="num">${brl(num(getM(r,t.dev)))}</td>${M.reg.retencao?`<td class="num">${t.ret?brl(num(getM(r,t.ret))):'—'}</td>`:''}<td class="num">${brl(num(getM(r,t.pag)))}${ehProvTrib(t)?'<span class="prov-tag">provisão</span>':''}</td></tr>`).join('')}</tbody>
       <tfoot><tr><td>Total</td><td></td>${M.reg.retencao?`<td class="num">${brl(ret)}</td>`:''}<td class="num">${brl(imp)}</td></tr></tfoot></table></div>
       <a class="btn" href="#rateio">Ver rateio por centro de custo ↓</a></div></div>`;
 
@@ -1260,7 +1286,7 @@ function pintarMes(M,comp){
   const semDiv = lucroAp>0 && divid<=0;
   document.getElementById('slim').innerHTML=`<div class="slim">
     ${M.reg.retencao?`<div class="card stat"><span class="lbl">Retido na fonte</span><div class="v num">${brl(ret)}</div><div class="s">${ret?'já pago pelos tomadores':'nenhuma retenção no mês'}</div></div>`:''}
-    <div class="card stat"><span class="lbl">Carga efetiva</span><div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>
+    <div class="card stat"><span class="lbl">Carga efetiva</span><div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento — inclui retido + a pagar</div></div>
     <div class="card stat"><span class="lbl">Resultado líquido</span><div class="v num" style="color:var(--receita)">${brl(liq)}</div><div class="s">depois dos impostos</div></div>
     <button type="button" id="card-div" class="card stat card-click${semDiv?' div-alerta':''}"><span class="lbl">Dividendos distribuídos</span><div class="v num">${divid>0?brl(divid):'—'}</div><div class="s">${semDiv?'⚠ nenhuma distribuição informada':(divid>0?('de '+brl(lucroAp)+' de lucro apurado'):'nenhum valor informado')}</div><span class="stat-cta">${divid>0?'Editar distribuição':'Informar distribuição'} →</span></button></div>`;
   const cd=document.getElementById('card-div'); if(cd) cd.addEventListener('click',()=>abrirEditorDividendos(M,comp));
@@ -1269,7 +1295,12 @@ function pintarMes(M,comp){
     return `<div class="card prov-compact"><div class="prov-compact-head"><span class="lbl">Provisão IRPJ+CSLL · ${prov.tri}º trimestre de ${prov.ano}</span>
       <span class="prov-compact-venc">${prov.venc?'vence '+dParse(prov.venc).toLocaleDateString('pt-BR')+(dias!==null?(dias>=0?` · em ${dias}d`:' · vencida'):''):'sem guia projetada'}</span></div>
       <div class="prov-compact-meses">${prov.meses.map(x=>`<div class="pmes ${x.apurado?'':'futuro'}"><span class="pmes-label">${mesLabel(x.comp)} · ${x.apurado?'apurado':'estimado'}</span><span class="pmes-v num ${x.apurado?'':'est'}">${brl(x.v)}</span></div>`).join('')}</div>
-      <div class="prov-compact-total"><span>Total do trimestre</span><b class="num">${brl(prov.total)}</b></div></div>`; })():'';
+      <div class="prov-compose">
+        <div class="pc dev"><span class="k">Total devido</span><span class="val num">${brl(prov.devido)}</span><small>IRPJ + CSLL do trimestre</small></div>
+        <div class="pc ret"><span class="k">Retido na fonte</span><span class="val num">${brl(prov.retido)}</span><small>já pago pelos tomadores</small></div>
+        <div class="pc prov"><span class="k">Provisão a pagar</span><span class="val num">${brl(prov.total)}</span><small>reservar p/ a guia</small></div>
+      </div>
+      <div class="prov-formula">Total devido − Retido na fonte = Provisão a reservar para a guia trimestral</div></div>`; })():'';
 
   desenharRateio(M,comp,tot);
   desenharNotas(M,comp);
@@ -1325,14 +1356,32 @@ function desenharGuiasDoMes(M,comp){
     ${outras.map(it=>`<div class="outras-row"><i style="background:${corDaCategoria(it.categoria)}"></i><span>${esc(it.descricao)}</span><b class="num">${brl(it.v)}</b></div>`).join('')}</div>`:'';
 }
 
+/* Resumo de impostos de um centro (devido / retido / a pagar por tributo). */
+function detalheCentroHTML(M,x){
+  const cols=M.reg.retencao;
+  const tribs=M.tribs.filter(t=>num(x[t.dev])||(t.ret&&num(x[t.ret]))||num(x[t.pag]));
+  let dev=0,ret=0,pag=0;
+  const body=tribs.map(t=>{ const d=num(x[t.dev]),rt=t.ret?num(x[t.ret]):0,pg=num(x[t.pag]);
+    dev+=d;ret+=rt;pag+=pg;
+    const prov=(t.n==='IRPJ'||t.n==='CSLL')&&M.reg.provisaoTrimestral;
+    return `<tr><td>${t.n}</td><td class="num">${brl(d)}</td>${cols?`<td class="num">${t.ret?brl(rt):'—'}</td>`:''}<td class="num">${brl(pg)}${prov?'<span class="prov-tag">provisão</span>':''}</td></tr>`;
+  }).join('');
+  if(!body) return `<div class="rat-det-box" style="color:var(--muted);font-size:12.5px">Sem impostos neste mês.</div>`;
+  return `<div class="rat-det-box"><table class="rat-det-t">
+    <thead><tr><th>Tributo</th><th>Devido</th>${cols?'<th>Retido</th>':''}<th>A pagar</th></tr></thead>
+    <tbody>${body}</tbody>
+    <tfoot><tr><td>Total</td><td class="num">${brl(dev)}</td>${cols?`<td class="num">${brl(ret)}</td>`:''}<td class="num">${brl(pag)}</td></tr></tfoot></table></div>`;
+}
 function desenharRateio(M,comp,tot){
   const linhas=rateioParaComp(M,comp).filter(x=>num(x['Total (R$)'])>0||num(x['Nº NFs'])>0||M.impostos(x)>0)
     .sort((a,b)=>num(b['Total (R$)'])-num(a['Total (R$)']));
-  const tb=document.querySelector('#rat tbody');
+  const tb=document.querySelector('#rat tbody'); const colspanRat=M.reg.retencao?6:5;
   tb.innerHTML=linhas.map(x=>{ const nid=x.centro==='Não identificado'; const t=num(x['Total (R$)']); const sh=tot?t/tot:0;
-    return `<tr class="${nid?'nid':''}"${nid?' onclick="irParaPendencias()" style="cursor:pointer" title="Ver e identificar as notas sem centro"':''}><td><b style="font-weight:${nid?800:600}">${esc(x.centro)}${nid?' <span style="font-weight:600;text-decoration:underline;color:var(--alerta)">identificar ↓</span>':''}</b><div class="share"><i style="width:${(sh*100).toFixed(1)}%"></i></div></td>
-      <td class="r num">${x['Nº NFs']}</td><td class="r num">${brl(t)}<div style="font-size:11px;color:var(--muted)">${pct(sh)}</div></td>
-      <td class="r num">${brl(M.impostos(x))}</td>${M.reg.retencao?`<td class="r num">${brl(M.retido(x))}</td>`:''}<td class="r num">${brl(num(x['Resultado Líquido (R$)']))}</td></tr>`;
+    const cauda=`<td class="r num">${x['Nº NFs']}</td><td class="r num">${brl(t)}<div style="font-size:11px;color:var(--muted)">${pct(sh)}</div></td>
+      <td class="r num">${brl(M.impostos(x))}</td>${M.reg.retencao?`<td class="r num">${brl(M.retido(x))}</td>`:''}<td class="r num">${brl(num(x['Resultado Líquido (R$)']))}</td>`;
+    if(nid) return `<tr class="nid" onclick="irParaPendencias()" style="cursor:pointer" title="Ver e identificar as notas sem centro"><td><b style="font-weight:800">${esc(x.centro)} <span style="font-weight:600;text-decoration:underline;color:var(--alerta)">identificar ↓</span></b><div class="share"><i style="width:${(sh*100).toFixed(1)}%"></i></div></td>${cauda}</tr>`;
+    return `<tr class="rat-clic" onclick="this.classList.toggle('exp');this.nextElementSibling.classList.toggle('open')" title="Ver impostos deste centro (devido, retido e a pagar)"><td><b style="font-weight:600">${esc(x.centro)}<span class="car-c">▾</span></b><div class="share"><i style="width:${(sh*100).toFixed(1)}%"></i></div></td>${cauda}</tr>
+      <tr class="rat-det"><td colspan="${colspanRat}">${detalheCentroHTML(M,x)}</td></tr>`;
   }).join('')||`<tr><td colspan="6" style="color:var(--muted)">Sem rateio informado neste mês.</td></tr>`;
 
   const nidRow=linhas.find(x=>x.centro==='Não identificado'); const shareNid=nidRow&&tot?num(nidRow['Total (R$)'])/tot:0;
