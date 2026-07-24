@@ -59,6 +59,9 @@ td.col-id,td.col-nome{z-index:15}
 td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal);padding:6px 9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
 td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.25;padding:6px 9px;white-space:normal;box-shadow:2px 0 6px rgba(7,48,52,.07)}
 tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
+td.col-email{font-size:11.5px;padding:6px 9px;white-space:nowrap;max-width:210px;overflow:hidden;text-overflow:ellipsis}
+td.col-email a{color:var(--brand-teal);text-decoration:none}
+td.col-email a:hover{text-decoration:underline}
 .cel{display:flex;gap:4px;align-items:center}
 .cel input,.cel textarea,.cel select{font-family:var(--sans);font-size:12.5px;padding:6px 8px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
 .cel textarea{resize:both;min-height:34px;line-height:1.35}
@@ -241,8 +244,9 @@ function ordenar(arr){
     return dir==='desc'?-r:r;
   });
 }
-function filtradas(termo){const alvo=normTxt(termo);return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj).includes(alvo));}
+function filtradas(termo){const alvo=normTxt(termo);return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj+' '+(l.email||'')).includes(alvo));}
 function seta(key){return SORT.key===key?(SORT.dir==='asc'?' ▲':' ▼'):'';}
+function emailCel(e){e=String(e||'').trim();return e?`<a href="mailto:${esc(e)}" title="${esc(e)}">${esc(e)}</a>`:'<span style="color:var(--muted)">—</span>';}
 function celHTML(l,c){
   const v=l[c.k]==null?'':l[c.k];
   const abrir=(c.t==='url'&&/^https?:/i.test(v))?`<a class="abrir" href="${esc(v)}" target="_blank" rel="noopener" title="abrir">↗</a>`:'';
@@ -265,8 +269,9 @@ function desenhar(termo){
   const head='<thead><tr>'
     +'<th class="col-id" data-sort="id">ID'+seta('id')+'</th>'
     +'<th class="col-nome" data-sort="nome">Nome'+seta('nome')+'</th>'
+    +'<th class="col-email" data-sort="email" style="min-width:190px">E-mail'+seta('email')+'</th>'
     +COLS.map(c=>`<th data-sort="${c.k}" style="min-width:${c.w+16}px">${esc(c.label)}${seta(c.k)}</th>`).join('')+'</tr></thead>';
-  const body='<tbody>'+(arr.map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td><td class="col-nome">${esc(l.nome||'')}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+2}" style="padding:16px;color:var(--muted)">Nenhum cliente para esse filtro.</td></tr>`)+'</tbody>';
+  const body='<tbody>'+(arr.map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td><td class="col-nome">${esc(l.nome||'')}</td><td class="col-email">${emailCel(l.email)}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+3}" style="padding:16px;color:var(--muted)">Nenhum cliente para esse filtro.</td></tr>`)+'</tbody>';
   document.getElementById('tab').innerHTML=head+body;
 }
 function irPara(row,k){
@@ -289,7 +294,7 @@ function agendarSalvar(tr){
 async function salvar(row,id,campos){
   setSave('saving','Salvando…');
   try{
-    await postAcao({acao:'rest_salvar',row:+row,id,campos});
+    await postAcao({acao:'rest_salvar',row:+row,id,campos,cod:respAtual()});
     const l=LINHAS.find(x=>x.row==row);if(l)Object.keys(campos).forEach(k=>l[k]=campos[k]);
     setSave('ok','Salvo ✓ '+horaAgora());
     atualizarResumo();
