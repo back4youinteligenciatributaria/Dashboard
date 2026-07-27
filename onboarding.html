@@ -83,57 +83,88 @@
     // Produtos -> quais planilhas (só informativo na tela; a regra real está no backend)
     const PRODUTOS = ['Contabilidade','Controladoria','Equiparação','Agora Tem Especialistas','DP pessoa física','INSS'];
 
-    // Campos do Registro (col = nome EXATO da coluna). t: text|select|date|textarea. req: obrigatório.
-    const CAMPOS = [
-      {s:'Identificação', col:'Razão social da empresa', t:'text', req:true, full:true},
-      {s:'Identificação', col:'CNPJ ou CPF', t:'text', req:true},
-      {s:'Identificação', col:'Nome Fantasia', t:'text'},
-      {s:'Identificação', col:'Cidade', t:'text', req:true},
-      {s:'Identificação', col:'UF', t:'text', req:true, max:2, up:true},
-      {s:'Identificação', col:'Resumo', t:'textarea', full:true},
+    // ===== Formulário AUTO-CONSTRUÍDO a partir dos cabeçalhos VIVOS da aba "Registro" =====
+    // O backend (tipo=registro_campos) devolve as colunas atuais e o form cria um campo por
+    // coluna. As "dicas" (HINTS) só enfeitam colunas conhecidas (seção/tipo/obrigatório);
+    // coluna nova que você criar aparece como texto na seção "Outros" — sem mexer no código.
 
-      {s:'Empresa', col:'Data de Abertura', t:'date'},
-      {s:'Empresa', col:'Porte', t:'text'},
-      {s:'Empresa', col:'Natureza Jurídica', t:'text'},
-      {s:'Empresa', col:'Endereço', t:'text', full:true},
-      {s:'Empresa', col:'CNAEs', t:'textarea', full:true},
-      {s:'Empresa', col:'Registro na Junta', t:'text'},
-      {s:'Empresa', col:'Número de sócios', t:'text'},
-      {s:'Empresa', col:'Descrição sócios', t:'textarea', full:true},
-      {s:'Empresa', col:'Cadastro Municipal (número)', t:'text'},
-      {s:'Empresa', col:'CNES', t:'text'},
-      {s:'Empresa', col:'Link Form Diagnóstico', t:'text', full:true},
+    // Colunas gerenciadas pelo sistema — NÃO viram campo (chave normalizada).
+    const SKIP = ['id','nome','drive','produtos back4you','ativo'];
 
-      {s:'Fiscal / Contábil', col:'Regime', t:'select', opts:['','Lucro Presumido','Simples Nacional']},
-      {s:'Fiscal / Contábil', col:'Fator R?', t:'select', opts:['','Sim','Não']},
-      {s:'Fiscal / Contábil', col:'Equiparados', t:'text'},
-      {s:'Fiscal / Contábil', col:'ISS', t:'text'},
-      {s:'Fiscal / Contábil', col:'Livro caixa', t:'select', opts:['','Sim','Não']},
-      {s:'Fiscal / Contábil', col:'Procuração E-Cac', t:'select', opts:['','Sim','Não','Feita']},
-      {s:'Fiscal / Contábil', col:'Procuração SPE', t:'select', opts:['','Sim','Não','Feita']},
-      {s:'Fiscal / Contábil', col:'Contabilidade prévia', t:'text'},
-      {s:'Fiscal / Contábil', col:'Data de início da contabilidade', t:'date'},
-      {s:'Fiscal / Contábil', col:'Data de fim da contabilidade', t:'date'},
+    // Dicas por coluna (chave normalizada): s=seção, t=text|select|date|textarea, opts, full, req, role.
+    const HINTS = {
+      'razao social da empresa':{s:'Identificação',req:true,full:true,role:'razao'},
+      'cnpj ou cpf':{s:'Identificação',req:true,role:'cnpj'},
+      'nome fantasia':{s:'Identificação'},
+      'cidade':{s:'Identificação',req:true,role:'cidade'},
+      'resumo':{s:'Identificação',t:'textarea',full:true},
+      'cnes':{s:'Identificação'},
+      'link form diagnostico':{s:'Identificação',full:true},
+      'data de abertura':{s:'Empresa',t:'date'},
+      'porte':{s:'Empresa'},
+      'natureza juridica':{s:'Empresa'},
+      'endereco':{s:'Empresa',full:true},
+      'cnaes':{s:'Empresa',t:'textarea',full:true},
+      'registro na junta':{s:'Empresa'},
+      'numero de socios':{s:'Empresa'},
+      'descricao socios':{s:'Empresa',t:'textarea',full:true},
+      'cadastro municipal (numero)':{s:'Empresa'},
+      'regime':{s:'Fiscal / Contábil',t:'select',opts:['','Lucro Presumido','Simples Nacional']},
+      'fator r':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
+      'equiparados':{s:'Fiscal / Contábil'},
+      'iss':{s:'Fiscal / Contábil'},
+      'livro caixa':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
+      'procuracao e-cac':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Feita']},
+      'procuracao spe':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Feita']},
+      'contabilidade previa':{s:'Fiscal / Contábil'},
+      'data de inicio da contabilidade':{s:'Fiscal / Contábil',t:'date'},
+      'data de fim da contabilidade':{s:'Fiscal / Contábil',t:'date'},
+      'tem dpto pessoal':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+      'pro labore':{s:'Departamento Pessoal'},
+      '# de funcionarios':{s:'Departamento Pessoal'},
+      'adiantamento salarial':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+      'vale alimentacao':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+      'vale transporte':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+      'controle de ponto':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+      'funcionario de pessoa fisica':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+      'paga aluguel':{s:'Aluguel',t:'select',opts:['','Sim','Não']},
+      'aluguel para pf':{s:'Aluguel',t:'select',opts:['','Sim','Não']},
+      'pagamento aluguel':{s:'Aluguel'},
+      'valor do aluguel':{s:'Aluguel'},
+      'obs aluguel':{s:'Aluguel',t:'textarea',full:true}
+    };
+    const SEC_ORDER = ['Identificação','Empresa','Fiscal / Contábil','Departamento Pessoal','Aluguel','Outros'];
+    // Campo sintético UF: NÃO é coluna do Registro (vai só p/ o Config fiscal), mas é obrigatório.
+    const UF_FIELD = {s:'Identificação',col:'UF',t:'text',req:true,max:2,up:true,role:'uf'};
+    // Fallback: se o backend ainda não tiver "tipo=registro_campos" (ex.: não republicado ainda).
+    const CAMPOS_FALLBACK = ['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','CNES','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Procuração E-Cac','Procuração SPE','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Tem DPTO pessoal','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Aluguel para PF?','Pagamento Aluguel','Valor do Aluguel','Obs Aluguel'];
 
-      {s:'Departamento Pessoal', col:'Tem DPTO pessoal', t:'select', opts:['','Sim','Não']},
-      {s:'Departamento Pessoal', col:'Pró Labore', t:'text'},
-      {s:'Departamento Pessoal', col:'# de funcionários', t:'text'},
-      {s:'Departamento Pessoal', col:'Adiantamento salarial', t:'select', opts:['','Sim','Não']},
-      {s:'Departamento Pessoal', col:'Vale Alimentação', t:'select', opts:['','Sim','Não']},
-      {s:'Departamento Pessoal', col:'VALE TRANSPORTE', t:'select', opts:['','Sim','Não']},
-      {s:'Departamento Pessoal', col:'Controle de Ponto', t:'select', opts:['','Sim','Não']},
-      {s:'Departamento Pessoal', col:'Funcionário de pessoa física', t:'select', opts:['','Sim','Não']},
-
-      {s:'Aluguel', col:'Paga aluguel?', t:'select', opts:['','Sim','Não']},
-      {s:'Aluguel', col:'Aluguel para PF?', t:'select', opts:['','Sim','Não']},
-      {s:'Aluguel', col:'Pagamento Aluguel', t:'text'},
-      {s:'Aluguel', col:'Valor do Aluguel', t:'text'},
-      {s:'Aluguel', col:'Obs Aluguel', t:'textarea', full:true},
-    ];
+    // normaliza rótulo igual ao backend (sem acento, minúsculo, sem ?:. no fim)
+    function norm(s){ return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim().replace(/[?:.]+$/,''); }
 
     let PROX_ID = '';
-    const val = {};   // col -> valor
+    let CAMPOS = [];        // construído a partir dos cabeçalhos vivos (ou do fallback)
+    let ROLE = {};          // role (razao/cnpj/cidade/uf) -> nome EXATO da coluna
+    const val = {};         // col -> valor
     const prodSel = new Set();
+
+    // Monta os campos a partir da lista de cabeçalhos (ordena por seção; injeta UF após Cidade).
+    function montarCampos(headers){
+      const campos = []; ROLE = {};
+      (headers||[]).forEach(h=>{
+        const k = norm(h);
+        if(!k || SKIP.indexOf(k)>=0) return;            // colunas que o sistema gerencia
+        const hint = HINTS[k] || {s:'Outros'};
+        if(hint.role) ROLE[hint.role] = h;
+        campos.push({s:hint.s||'Outros', col:h, t:hint.t||'text', req:!!hint.req, full:!!hint.full, opts:hint.opts, ph:hint.ph||'', max:hint.max, up:!!hint.up});
+      });
+      ROLE.uf = 'UF';
+      const uf = Object.assign({}, UF_FIELD);
+      const iC = campos.findIndex(f=>norm(f.col)==='cidade');
+      if(iC>=0) campos.splice(iC+1,0,uf); else campos.push(uf);
+      const ord = f => { const i = SEC_ORDER.indexOf(f.s); return i<0?SEC_ORDER.length:i; };
+      return campos.map((f,i)=>(f._i=i,f)).sort((a,b)=> ord(a)-ord(b) || a._i-b._i);
+    }
 
     function campoHTML(f){
       const id='f_'+CAMPOS.indexOf(f);
@@ -173,7 +204,7 @@
         if(f&&f.up){ v=v.toUpperCase(); e.target.value=v; }
         val[e.target.dataset.col]=v;
         e.target.closest('.fld').classList.remove('miss');
-        if(e.target.dataset.col==='Razão social da empresa') atualizarNome();
+        if(e.target.dataset.col===ROLE.razao) atualizarNome();
       }));
       document.getElementById('limpar').addEventListener('click',()=>{ if(confirm('Limpar tudo?')) location.reload(); });
       document.getElementById('criar').addEventListener('click', criar);
@@ -181,16 +212,15 @@
     }
 
     function atualizarNome(){
-      const razao=(val['Razão social da empresa']||'').trim();
+      const razao=(val[ROLE.razao]||'').trim();
       document.getElementById('nomeprev').innerHTML='Nome: <b>'+esc((PROX_ID?PROX_ID+' ':'')+ (razao||'—'))+'</b>';
     }
 
     async function criar(){
       const msg=document.getElementById('msg'); msg.className='msg'; msg.textContent='';
-      // validação dos obrigatórios
-      const obrig=['Razão social da empresa','CNPJ ou CPF','Cidade','UF'];
+      // validação dos obrigatórios (marcados com req nas HINTS + UF)
       let faltou=false;
-      obrig.forEach(c=>{ const f=document.querySelector(`[data-fld="${CSS.escape(c)}"]`); if(!((val[c]||'').trim())){ if(f)f.classList.add('miss'); faltou=true; } });
+      CAMPOS.filter(f=>f.req).forEach(f=>{ const el=document.querySelector(`[data-fld="${CSS.escape(f.col)}"]`); if(!((val[f.col]||'').trim())){ if(el)el.classList.add('miss'); faltou=true; } });
       if(!prodSel.size){ document.getElementById('prods').closest('.sec').style.outline='2px solid var(--erro)'; faltou=true; }
       if(faltou){ msg.className='msg err'; msg.textContent='Preencha os campos obrigatórios (marcados com *).'; window.scrollTo({top:0,behavior:'smooth'}); return; }
 
@@ -240,13 +270,21 @@
       window.scrollTo({top:0});
     }
 
-    // boot: busca o próximo ID previsto (protegido pela chave)
+    // boot: busca o próximo ID previsto E os cabeçalhos vivos do Registro (ambos protegidos pela chave)
     (async ()=>{
-      try{
-        const d=await jsonp(API_URL+'?tipo=proximo_id&chave='+encodeURIComponent(CHAVE));
-        if(d && d.erro){ document.getElementById('wrap').innerHTML='<div class="lock"><h2>Acesso restrito</h2><p class="hint">'+esc(d.erro)+'</p></div>'; return; }
-        PROX_ID=(d&&d.id)||'';
-      }catch(e){ /* segue sem o preview */ }
+      let headers=null;
+      const [idRes, campRes] = await Promise.allSettled([
+        jsonp(API_URL+'?tipo=proximo_id&chave='+encodeURIComponent(CHAVE)),
+        jsonp(API_URL+'?tipo=registro_campos&chave='+encodeURIComponent(CHAVE))
+      ]);
+      if(idRes.status==='fulfilled' && idRes.value){
+        const d=idRes.value;
+        if(d.erro){ document.getElementById('wrap').innerHTML='<div class="lock"><h2>Acesso restrito</h2><p class="hint">'+esc(d.erro)+'</p></div>'; return; }
+        PROX_ID=d.id||'';
+      }
+      if(campRes.status==='fulfilled' && campRes.value && Array.isArray(campRes.value.campos) && campRes.value.campos.length)
+        headers=campRes.value.campos;   // backend novo -> monta pelos cabeçalhos vivos
+      CAMPOS = montarCampos(headers && headers.length ? headers : CAMPOS_FALLBACK);   // senão, fallback estático
       render();
     })();
   </script>
