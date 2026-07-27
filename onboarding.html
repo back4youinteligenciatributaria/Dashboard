@@ -90,12 +90,11 @@
       {s:'Identificação', col:'Nome Fantasia', t:'text'},
       {s:'Identificação', col:'Cidade', t:'text', req:true},
       {s:'Identificação', col:'UF', t:'text', req:true, max:2, up:true},
-      {s:'Identificação', col:'Contato', t:'text', ph:'e-mail(s) / telefone'},
       {s:'Identificação', col:'Resumo', t:'textarea', full:true},
 
       {s:'Empresa', col:'Data de Abertura', t:'date'},
-      {s:'Empresa', col:'Porte', t:'select', opts:['','Empresa de Pequeno Porte','Microempresa','Sem enquadramento']},
-      {s:'Empresa', col:'Natureza Jurídica', t:'select', opts:['','Empresário (Individual)','Pessoa física','Sociedade Empresária Limitada','Sociedade Simples Limitada','Sociedade Simples Pura']},
+      {s:'Empresa', col:'Porte', t:'text'},
+      {s:'Empresa', col:'Natureza Jurídica', t:'text'},
       {s:'Empresa', col:'Endereço', t:'text', full:true},
       {s:'Empresa', col:'CNAEs', t:'textarea', full:true},
       {s:'Empresa', col:'Registro na Junta', t:'text'},
@@ -105,19 +104,19 @@
       {s:'Empresa', col:'CNES', t:'text'},
       {s:'Empresa', col:'Link Form Diagnóstico', t:'text', full:true},
 
-      {s:'Fiscal / Contábil', col:'Regime', t:'select', opts:['','Lucro Presumido','Simples Nacional','Pessoa Física','N/A']},
-      {s:'Fiscal / Contábil', col:'Fator R?', t:'select', opts:['','DEFINIR','Sim']},
+      {s:'Fiscal / Contábil', col:'Regime', t:'select', opts:['','Lucro Presumido','Simples Nacional']},
+      {s:'Fiscal / Contábil', col:'Fator R?', t:'select', opts:['','Sim','Não']},
       {s:'Fiscal / Contábil', col:'Equiparados', t:'text'},
       {s:'Fiscal / Contábil', col:'ISS', t:'text'},
       {s:'Fiscal / Contábil', col:'Livro caixa', t:'select', opts:['','Sim','Não']},
-      {s:'Fiscal / Contábil', col:'Procuração E-Cac', t:'select', opts:['','Feita','Pendente']},
-      {s:'Fiscal / Contábil', col:'Procuração SPE', t:'select', opts:['','Feita','Pendente','Solicitado']},
+      {s:'Fiscal / Contábil', col:'Procuração E-Cac', t:'select', opts:['','Sim','Não','Feita']},
+      {s:'Fiscal / Contábil', col:'Procuração SPE', t:'select', opts:['','Sim','Não','Feita']},
       {s:'Fiscal / Contábil', col:'Contabilidade prévia', t:'text'},
       {s:'Fiscal / Contábil', col:'Data de início da contabilidade', t:'date'},
       {s:'Fiscal / Contábil', col:'Data de fim da contabilidade', t:'date'},
 
       {s:'Departamento Pessoal', col:'Tem DPTO pessoal', t:'select', opts:['','Sim','Não']},
-      {s:'Departamento Pessoal', col:'Pró Labore', t:'select', opts:['','Sim','Não','Perguntar','N/A']},
+      {s:'Departamento Pessoal', col:'Pró Labore', t:'text'},
       {s:'Departamento Pessoal', col:'# de funcionários', t:'text'},
       {s:'Departamento Pessoal', col:'Adiantamento salarial', t:'select', opts:['','Sim','Não']},
       {s:'Departamento Pessoal', col:'Vale Alimentação', t:'select', opts:['','Sim','Não']},
@@ -203,7 +202,14 @@
         const d=await r.json();
         if(d.erro) throw new Error(d.erro);
         sucesso(d);
-      }catch(e){ btn.disabled=false; btn.textContent='Criar cliente'; msg.className='msg err'; msg.textContent=(e.message||e)+''; }
+      }catch(e){
+        btn.disabled=false; btn.textContent='Criar cliente'; msg.className='msg err';
+        // "Failed to fetch": o servidor pode ter concluído mesmo assim (operação longa).
+        const rede=/failed to fetch|networkerror|load failed|timeout|rede/i.test(String(e.message||e));
+        msg.innerHTML = rede
+          ? 'A resposta não chegou (conexão/tempo). <b>O cliente pode já ter sido criado no servidor</b> — confira o Drive e a aba Registro <b>antes</b> de tentar de novo. ⚠️ Não clique em "Criar" de novo às cegas: cada tentativa gera um cliente NOVO (com o próximo ID) e novas pastas.'
+          : esc((e.message||e)+'');
+      }
     }
 
     function sucesso(d){
@@ -213,6 +219,13 @@
       if(pl.fiscal) links.push(`<a href="${esc(pl.fiscal)}" target="_blank" rel="noopener">📊 Planilha Fiscal</a>`);
       if(pl.equiparacao) links.push(`<a href="${esc(pl.equiparacao)}" target="_blank" rel="noopener">📊 Planilha Equiparação</a>`);
       if(pl.pessoal) links.push(`<a href="${esc(pl.pessoal)}" target="_blank" rel="noopener">📊 Planilha Departamento Pessoal</a>`);
+      const avisos=(d.avisos||[]).filter(Boolean);
+      const avisoHTML = avisos.length
+        ? `<div style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:11px 13px;font-size:12.5px;text-align:left;margin:4px 0 12px">
+             <b>Atenção:</b><br>${avisos.map(esc).join('<br>')}</div>`
+        : '';
+      const reg=d.registro||{};
+      const nGrav=(reg.gravadas||[]).length;
       document.getElementById('wrap').innerHTML=`
         <div class="ok-card">
           <div style="font-size:34px">✅</div>
@@ -220,7 +233,8 @@
           <div class="big">${esc(d.id)}</div>
           <div style="color:var(--ink-2);font-size:14px;margin-top:4px">${esc(d.nome||'')}</div>
           <div class="ok-links">${links.join('')||'<span class="hint">Nenhuma planilha gerada (confira os produtos).</span>'}</div>
-          <p class="hint">Já gravado nas abas <b>Links</b> e <b>Registro</b>. Os contatos/e-mails de acesso do cliente são cadastrados à parte, na planilha de Contatos.</p>
+          ${avisoHTML}
+          <p class="hint">Gravado nas abas <b>Links</b> e <b>Registro</b>${nGrav?` (${nGrav} campos no Registro)`:''}. Os contatos/e-mails de acesso do cliente são cadastrados à parte, na planilha de Contatos.</p>
           <button class="btn primary" onclick="location.reload()">Cadastrar outro cliente</button>
         </div>`;
       window.scrollTo({top:0});
