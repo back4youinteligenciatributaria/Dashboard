@@ -124,6 +124,10 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 .card{background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px}
 .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13.5px}
 .mini{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.info-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.ic-chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
+.ic-chip.ok{background:#E7F4EC;color:#2E7D52;border-color:#cfe6e2}
+.ic-chip.bad{background:#F8E3DF;color:var(--vermelho);border-color:#F0C9C1}
 </style>
 </head>
 <body>
@@ -297,6 +301,7 @@ function painelCliente(c){
       <span class="cli-id">${esc(c.id)}</span>
       <div class="cli-nome">${esc(c.nome||'(sem nome)')}${c.cnpj?`<div class="cli-cnpj">${esc(c.cnpj)}</div>`:''}</div>
     </div>
+    ${blocoInfo(c)}
     ${alertas?`<div class="alertas">${alertas}</div>`:''}
     ${drive?`<div class="linha"><span class="rot">Drive</span>${drive}</div>`:''}
     <div class="linha"><span class="rot">Planilhas</span>
@@ -327,6 +332,25 @@ function blocoCertificado(cert){
     .filter(x=>x[1]).map(x=>`<div class="cd-row"><span>${esc(x[0])}</span>${pillVenc(x[1])}</div>`).join('');
   if(!linhas) return '';
   return `<div class="linha"><span class="rot">Certificado / procurações</span></div><div class="cd">${linhas}</div>`;
+}
+function simNao(v){ const s=String(v==null?'':v).trim().toLowerCase(); if(!s) return null; if(/^(sim|s|true|verdadeiro|1|x|ativo|✓)$/.test(s)) return true; if(/^(n[aã]o|nao|n|false|falso|0|-|inativo)$/.test(s)) return false; return null; }
+function mesesAtivo(iso){ const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return null; const d=new Date(+m[1],+m[2]-1,+m[3]); let n=(hoje.getFullYear()-d.getFullYear())*12+(hoje.getMonth()-d.getMonth()); if(hoje.getDate()<d.getDate()) n--; return n<0?0:n; }
+function fmtMeses(n){ if(n==null) return ''; if(n<1) return 'menos de 1 mês'; const a=Math.floor(n/12),m=n%12,p=[]; if(a)p.push(a+(a>1?' anos':' ano')); if(m)p.push(m+(m>1?' meses':' mês')); return p.join(' e '); }
+function blocoInfo(c){
+  const r=c.registro; if(!r) return '';
+  const chips=[];
+  const at=simNao(r.ativo);
+  if(at===true) chips.push('<span class="ic-chip ok">Ativo</span>');
+  else if(at===false) chips.push('<span class="ic-chip bad">Inativo</span>');
+  else if(r.ativo) chips.push(`<span class="ic-chip">${esc(String(r.ativo))}</span>`);
+  if(r.regime) chips.push(`<span class="ic-chip">${esc(String(r.regime))}</span>`);
+  const fr=String(r.fator_r==null?'':r.fator_r).trim();
+  if(fr && !/^(n[aã]o|nao|0|-|false)$/i.test(fr)) chips.push('<span class="ic-chip">Fator R</span>');
+  const eq=String(r.equiparado==null?'':r.equiparado).trim();
+  if(eq && !/^(n[aã]o|nao|0|-|false)$/i.test(eq)) chips.push('<span class="ic-chip">Equiparado</span>');
+  const mm=mesesAtivo(r.inicio_contab);
+  if(mm!=null) chips.push(`<span class="ic-chip">cliente há ${esc(fmtMeses(mm))}</span>`);
+  return chips.length?`<div class="info-chips">${chips.join('')}</div>`:'';
 }
 function exSec(ic,titulo,body){ return `<div class="ex-sec"><div class="ex-tit">${ic} ${esc(titulo)}</div>${body}</div>`; }
 
