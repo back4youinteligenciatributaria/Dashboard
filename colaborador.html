@@ -96,6 +96,34 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(max-width:560px){.wrap{padding:16px 14px 60px}.centrais{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Dossiê do cliente (contatos, licenças, certificado, mestra, equiparação) */
+.extras{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.ex-sec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.ex-tit{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin-bottom:8px}
+.ex-load,.ex-erro,.ex-vazio{color:var(--muted);font-size:13px;padding:4px 0}
+.ex-erro{color:var(--vermelho)}
+.ex-lk{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none}
+.ex-lk:hover{text-decoration:underline}
+.ct-row{padding:7px 0;border-top:1px solid var(--line)}
+.ct-row:first-child{border-top:none}
+.ct-nome{font-weight:700;font-size:13.5px}
+.ct-meta{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.ct-meta a{color:var(--brand-teal);text-decoration:none}
+.tag-papel{font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;vertical-align:middle;margin-left:4px}
+.tag-papel.pr{background:#E7F4EC;color:#2E7D52}
+.tag-papel.sec{background:var(--surface-warm);color:var(--muted)}
+.cd{display:flex;flex-direction:column;gap:4px;margin-top:2px}
+.cd-row,.lic-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0}
+.lic-grid{display:flex;flex-direction:column;gap:2px}
+.lic-row span,.cd-row span{color:var(--ink-2)}
+.pill{font-size:11px;font-weight:700;border-radius:8px;padding:3px 9px;background:var(--surface-warm);color:var(--ink-2);white-space:nowrap}
+.pill.ok{background:#E7F4EC;color:#2E7D52}
+.pill.aten{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
+.pill.venc{background:#F8E3DF;color:var(--vermelho)}
+.card{background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13.5px}
+.mini{font-size:12.5px;color:var(--ink-2);margin-top:4px}
 </style>
 </head>
 <body>
@@ -143,23 +171,24 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-
 // Chave da equipe ("por ora sem senha"): o link já vem com ela. Troque aqui e no TEAM_KEY (Equipe.gs).
 const CHAVE_PADRAO = 'b4u-equipe-2026';
 
-// Planilhas centrais — atalhos fixos (edite aqui se algum link mudar).
-// Principais = botões diretos. Outros = agrupados num dropdown "Outros".
-const LINKS_PRINCIPAIS = [
-  {nome:'Registros de clientes', ic:'📇', url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=667079147#gid=667079147'},
-  {nome:'Controle de Licenças',  ic:'📜', url:'https://docs.google.com/spreadsheets/d/1burCu35PnytjjcpGzLZ_w0Y5nfVs9svC/edit?gid=777551400#gid=777551400'},
-  {nome:'Societária Mestra',     ic:'🏛️', url:'https://docs.google.com/spreadsheets/d/1xcmKoj1hORiFQLdrUDxBicZri-tOXkwFiyqVF1NUGUg/edit?gid=1875565821#gid=1875565821'},
-  {nome:'Contatos',              ic:'👥', url:'https://docs.google.com/spreadsheets/d/17Yrjylaj0b-fgaH-ujFjLkeT-G4egKzV8yEg4q4yrzE/edit?gid=1163717920#gid=1163717920'},
-  {nome:'Certificados Digitais', ic:'🔐', url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1519487343#gid=1519487343'},
-  {nome:'Equiparação Controle',  ic:'⚖️', url:'https://docs.google.com/spreadsheets/d/18wIzGZtwIaDOxvIfWdBNBcWKcLzbNgxRB3C2-r8ymzg/edit?gid=619398478#gid=619398478'}
+// Planilhas centrais — vêm DINAMICAMENTE da Config (tipo=links_equipe).
+// O fallback abaixo só é usado se a API não responder (mantém o painel funcionando).
+const CENTRAIS_FALLBACK = [
+  {nome:'Site Links',            url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1807029121#gid=1807029121'},
+  {nome:'Societária Mestra',     url:'https://docs.google.com/spreadsheets/d/1xcmKoj1hORiFQLdrUDxBicZri-tOXkwFiyqVF1NUGUg/edit?gid=1875565821#gid=1875565821'},
+  {nome:'Tickets',               url:'https://docs.google.com/spreadsheets/d/1ZQVgRsn5FwytaO7MyHLPATD88xQziUfZhOddV_I4j30/edit?gid=207987257#gid=207987257'},
+  {nome:'Contatos',              url:'https://docs.google.com/spreadsheets/d/17Yrjylaj0b-fgaH-ujFjLkeT-G4egKzV8yEg4q4yrzE/edit?gid=1163717920#gid=1163717920'},
+  {nome:'Feriados',              url:'https://docs.google.com/spreadsheets/d/1Gpn84rlS0fbd1j-gOxWZc8s3TJ6CzRYwrm-QsBZwhCI/edit?gid=59736689#gid=59736689'},
+  {nome:'Modelos',               url:'https://docs.google.com/spreadsheets/d/1NAzY_xSsdAYVwXZIy23dNXOkqLnt89UkFXPPeiEbHdI/edit?gid=1026418437#gid=1026418437'},
+  {nome:'Config Tributário',     url:'https://docs.google.com/spreadsheets/d/1JiOjIfTXrOZPGuD_i4zmjXXVTaqPLlKD1fDCcMrDU4k/edit?gid=1736790632#gid=1736790632'},
+  {nome:'Certificados Digitais', url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1519487343#gid=1519487343'},
+  {nome:'Equiparação Controle',  url:'https://docs.google.com/spreadsheets/d/18wIzGZtwIaDOxvIfWdBNBcWKcLzbNgxRB3C2-r8ymzg/edit?gid=619398478#gid=619398478'},
+  {nome:'Controle de Licenças',  url:'https://docs.google.com/spreadsheets/d/1burCu35PnytjjcpGzLZ_w0Y5nfVs9svC/edit?gid=777551400#gid=777551400'},
+  {nome:'Extratos Pendentes',    url:'https://docs.google.com/spreadsheets/d/1TFnX4AHZDkHbyapI7FDi3cCJB_RzqB0ySNQ4NBWaq54/edit?gid=1183432994#gid=1183432994'}
 ];
-const LINKS_OUTROS = [
-  {nome:'Site Links',          ic:'🗂️', url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1807029121#gid=1807029121'},
-  {nome:'Tickets',           ic:'🎫', url:'https://docs.google.com/spreadsheets/d/1ZQVgRsn5FwytaO7MyHLPATD88xQziUfZhOddV_I4j30/edit?gid=207987257#gid=207987257'},
-  {nome:'Feriados',          ic:'📅', url:'https://docs.google.com/spreadsheets/d/1Gpn84rlS0fbd1j-gOxWZc8s3TJ6CzRYwrm-QsBZwhCI/edit?gid=59736689#gid=59736689'},
-  {nome:'Modelos',           ic:'📄', url:'https://docs.google.com/spreadsheets/d/1NAzY_xSsdAYVwXZIy23dNXOkqLnt89UkFXPPeiEbHdI/edit?gid=1026418437#gid=1026418437'},
-  {nome:'Config Tributário', ic:'⚙️', url:'https://docs.google.com/spreadsheets/d/1JiOjIfTXrOZPGuD_i4zmjXXVTaqPLlKD1fDCcMrDU4k/edit?gid=1736790632#gid=1736790632'}
-];
+// ícone por nome (normalizado) e quais vão pro dropdown "Outros"
+const ICONE_CENTRAL={'site links':'🗂️','societaria mestra':'🏛️','tickets':'🎫','contatos':'👥','feriados':'📅','modelos':'📄','config tributario':'⚙️','certificados digitais':'🔐','equiparacao controle':'⚖️','controle de licencas':'📜','extratos pendentes':'🏦'};
+const CENTRAIS_NO_OUTROS=['site links','tickets','feriados','modelos','config tributario'];
 
 function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); const h=(location.hash||'').replace('#','').trim(); return q || h || CHAVE_PADRAO; }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -197,17 +226,24 @@ function lkPasta(rot, url){
   return '';
 }
 
-/* ---- Acesso rápido (independente da API) ---- */
-function botaoCentral(l){
-  return `<a class="central-lk" href="${esc(l.url)}" target="_blank" rel="noopener">
-       <span class="ic">${l.ic}</span><span>${esc(l.nome)}</span><span class="arw">›</span>
-     </a>`;
+/* ---- Acesso rápido: links centrais (Config, dinâmico) + fallback ---- */
+function iconeCentral(nome){ return ICONE_CENTRAL[normTxt(nome)] || '📄'; }
+function urlRegistros(validos){   // "Registros de clientes" = aba Registro do Site Links (deriva do link do Site Links)
+  const sl=validos.find(p=>normTxt(p.nome)==='site links');
+  if(sl && sl.url) return sl.url.replace(/gid=\d+/g,'gid=667079147');
+  return 'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=667079147#gid=667079147';
 }
-function pintarCentrais(){
-  const principais = LINKS_PRINCIPAIS.map(botaoCentral).join('');
-  const outros = LINKS_OUTROS.map(l=>
-    `<a href="${esc(l.url)}" target="_blank" rel="noopener"><span class="ic">${l.ic}</span>${esc(l.nome)}</a>`).join('');
-  document.getElementById('centrais').innerHTML = principais +
+function botaoCentral(l){
+  return `<a class="central-lk" href="${esc(l.url)}" target="_blank" rel="noopener"><span class="ic">${l.ic}</span><span>${esc(l.nome)}</span><span class="arw">›</span></a>`;
+}
+function pintarCentrais(pares){
+  const validos=(pares && pares.length ? pares : CENTRAIS_FALLBACK).filter(p=>p.url && /^https?:/.test(p.url));
+  const registros={nome:'Registros de clientes', url:urlRegistros(validos), ic:'📇'};
+  const diretos=[registros].concat(validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))<0)
+    .map(p=>({nome:p.nome, url:p.url, ic:iconeCentral(p.nome)})));
+  const outros=validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))>=0)
+    .map(p=>`<a href="${esc(p.url)}" target="_blank" rel="noopener"><span class="ic">${iconeCentral(p.nome)}</span>${esc(p.nome)}</a>`).join('');
+  document.getElementById('centrais').innerHTML = diretos.map(botaoCentral).join('') +
     `<div class="menu" id="menu-outros">
        <button type="button" class="central-lk" id="btn-outros" aria-expanded="false">
          <span class="ic">🗂️</span><span>Outros</span><span class="arw">▾</span>
@@ -270,7 +306,92 @@ function painelCliente(c){
       ${lkArea('Contábil',a.contabil,'📒')}
       ${lkArea('Pessoal',a.pessoal,'👥')}
     </div>
-  </div>`;
+    ${blocoCertificado(cert)}
+  </div>
+  <div class="extras" id="extras"></div>`;
+}
+
+/* ---- Dossiê do cliente (contatos, licenças, mestra, equiparação) ---- */
+function diasAte(iso){ const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return null; return Math.round((new Date(+m[1],+m[2]-1,+m[3])-hoje)/864e5); }
+function fmtBR(iso){ const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?`${m[3]}/${m[2]}/${m[1]}`:esc(iso||''); }
+function pillVenc(iso){
+  const d=diasAte(iso);
+  if(d===null) return iso?`<span class="pill">${esc(iso)}</span>`:'';
+  let cl='ok'; if(d<0)cl='venc'; else if(d<=60)cl='aten';
+  const t=fmtBR(iso)+(d<0?' · vencido':(d<=60?` · ${d}d`:''));
+  return `<span class="pill ${cl}">${t}</span>`;
+}
+function blocoCertificado(cert){
+  cert=cert||{};
+  const linhas=[['Certificado digital',cert.venc_certificado],['Procuração e-CAC',cert.venc_ecac],['Procuração SPE',cert.venc_spe]]
+    .filter(x=>x[1]).map(x=>`<div class="cd-row"><span>${esc(x[0])}</span>${pillVenc(x[1])}</div>`).join('');
+  if(!linhas) return '';
+  return `<div class="linha"><span class="rot">Certificado / procurações</span></div><div class="cd">${linhas}</div>`;
+}
+function exSec(ic,titulo,body){ return `<div class="ex-sec"><div class="ex-tit">${ic} ${esc(titulo)}</div>${body}</div>`; }
+
+function secContatos(list){
+  list=list||[];
+  const body=list.length?list.map(ct=>{
+    const mail=ct.email?`<a href="mailto:${esc(ct.email)}">${esc(ct.email)}</a>`:'';
+    const telRaw=(ct.telefone||'').replace(/\D/g,'');
+    const tel=ct.telefone?(telRaw.length>=10?`<a href="https://wa.me/55${telRaw}" target="_blank" rel="noopener">${esc(ct.telefone)}</a>`:esc(ct.telefone)):'';
+    const cod=ct.codigo?`<span class="pill">cód ${esc(ct.codigo)}</span>`:'';
+    const papel=`<span class="tag-papel ${ct.papel==='Principal'?'pr':'sec'}">${esc(ct.papel||'')}</span>`;
+    return `<div class="ct-row"><div class="ct-nome">${esc(ct.nome||'(sem nome)')}${papel}</div>
+      <div class="ct-meta">${[mail,tel].filter(Boolean).join(' · ')}${cod?' &nbsp; '+cod:''}</div></div>`;
+  }).join(''):'<div class="ex-vazio">Nenhum contato cadastrado.</div>';
+  return exSec('👥','Contatos',body);
+}
+function secLicencas(lic){
+  lic=lic||{};
+  let body;
+  if(!lic.encontrado){ body='<div class="ex-vazio">Sem registro na Controle de Licenças.</div>'; }
+  else if(lic.itens&&lic.itens.length){
+    body='<div class="lic-grid">'+lic.itens.map(it=>`<div class="lic-row"><span>${esc(it.licenca)}</span>${pillVenc(it.vence)}</div>`).join('')+'</div>';
+  } else {
+    const campos=(lic.campos||[]).slice(0,12).map(c=>`<div class="lic-row"><span>${esc(c.nome)}</span><b>${esc(c.valor)}</b></div>`).join('');
+    body=campos?('<div class="lic-grid">'+campos+'</div>'):'<div class="ex-vazio">Cliente encontrado, mas sem datas de vencimento reconhecidas.</div>';
+  }
+  return exSec('📜','Controle de licenças',body);
+}
+function secMestra(arr){
+  arr=arr||[]; if(!arr.length) return '';
+  const ch=encodeURIComponent(chaveAtual());
+  const body=arr.map(p=>{
+    const st=p.status_geral?`<span class="pill">${esc(p.status_geral)}</span>`:'';
+    const prox=p.prox_etapa?`<div class="mini">Próxima etapa: <b>${esc(p.prox_etapa.nome)}</b>${p.prox_etapa.status?` — ${esc(p.prox_etapa.status)}`:''}${p.prox_etapa.data_inicio?` (início ${fmtBR(p.prox_etapa.data_inicio)})`:''}</div>`:'';
+    const resp=p.responsavel?`<div class="mini">Responsável: ${esc(p.responsavel)}</div>`:'';
+    return `<div class="card"><div class="card-top"><b>${esc(p.processo||'(processo)')}</b>${st}</div>${prox}${resp}</div>`;
+  }).join('');
+  return exSec('🏛️','Alteração Societária (Mestra)',body+`<a class="ex-lk" href="societario-equipe.html?chave=${ch}" target="_blank" rel="noopener">Abrir na Mestra ›</a>`);
+}
+function proxPrazo(pairs){
+  let best=null;
+  pairs.forEach(pa=>{ const d=diasAte(pa[1]); if(d===null) return; if(!best||d<best.d) best={label:pa[0],iso:pa[1],d:d}; });
+  return best;
+}
+function secEquiparacao(arr){
+  arr=arr||[]; if(!arr.length) return '';
+  const body=arr.map(e=>{
+    const st=e.status?`<span class="pill">${esc(e.status)}</span>`:'';
+    const px=proxPrazo([['Adequação',e.prazo_adequacao],['Prelim.',e.prazo_prelim],['Apuração',e.prazo_apuracao],['Protocolo',e.prazo_protocolo],['Definitivo',e.prazo_def]]);
+    const proxHtml=px?`<div class="mini">Próximo prazo: <b>${esc(px.label)}</b> ${pillVenc(px.iso)}</div>`:'';
+    const tar=e.tarefas?`<div class="mini">Tarefas ativas: ${esc(e.tarefas)}</div>`:'';
+    const lkrow=e.link_drive&&/^https?:/.test(e.link_drive)?`<a class="ex-lk" href="${esc(e.link_drive)}" target="_blank" rel="noopener">Drive ›</a> `:'';
+    return `<div class="card"><div class="card-top"><b>${esc(e.nome||'Equiparação')}</b>${st}</div>${proxHtml}${tar}${lkrow}</div>`;
+  }).join('');
+  return exSec('⚖️','Equiparação (Controle)',body+`<a class="ex-lk" href="${esc(CONTROLE_URL)}" target="_blank" rel="noopener">Abrir Equiparação Controle ›</a>`);
+}
+function renderExtras(x){
+  return secContatos(x.contatos)+secLicencas(x.licencas)+secMestra(x.mestra)+secEquiparacao(x.equiparacao);
+}
+function carregarExtras(c){
+  const box=document.getElementById('extras'); if(!box) return;
+  box.innerHTML='<div class="ex-sec"><div class="ex-load"><span class="spin"></span> Carregando contatos, licenças e processos…</div></div>';
+  const u=API_URL+'?tipo=cliente_extras&id='+encodeURIComponent(c.id)+'&cnpj='+encodeURIComponent(c.cnpj||'')+'&chave='+encodeURIComponent(chaveAtual());
+  jsonp(u).then(x=>{ if(x.erro) throw new Error(x.erro); box.innerHTML=renderExtras(x); })
+    .catch(e=>{ box.innerHTML='<div class="ex-sec"><div class="ex-erro">Não consegui carregar os dados do cliente: '+esc(e.message||String(e))+'</div></div>'; });
 }
 
 /* ---- Combobox de clientes ---- */
@@ -309,6 +430,7 @@ function selecionar(c){
   $busca().value = c.id+' — '+(c.nome||'');
   fechar();
   $det().innerHTML = painelCliente(c);
+  carregarExtras(c);
 }
 function moverAtivo(passo){
   if($ops().hidden) { abrir(); return; }
@@ -340,7 +462,10 @@ function ligarCombo(){
 }
 
 function boot(){
-  pintarCentrais();
+  pintarCentrais();                 // render imediato (fallback)
+  jsonp(API_URL+'?tipo=links_equipe&chave='+encodeURIComponent(chaveAtual()))   // atualiza com os links vivos da Config
+    .then(d=>{ if(d && !d.erro && d.centrais && d.centrais.length) pintarCentrais(d.centrais); })
+    .catch(()=>{});
   pintarRestituicao();
   ligarCombo();
   const nc=document.getElementById('novo-cliente');
