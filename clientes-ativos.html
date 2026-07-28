@@ -112,15 +112,18 @@ function carregar(){
       render();})
     .catch(e=>{document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> e se o Web App foi republicado com <code>EquipeAtivos.gs</code>.</p></div>`;});
 }
-function combinaProduto(c){return !PROD||c.prodList.some(p=>p===PROD);}
+const PROD_PANEL=['Contabilidade','Controladoria'];   // universo do painel (só estes)
+function noUniverso(c){return c.prodList.some(p=>PROD_PANEL.indexOf(p)>=0);}
+function combinaProduto(c){ if(!noUniverso(c))return false; if(!PROD)return true; return c.prodList.indexOf(PROD)>=0; }
 function ativoEm(c,M){return c.iniIdx!=null && c.iniIdx<=M && (c.fimIdx==null || M<=c.fimIdx);}
 function mesesTimeline(){const arr=[];for(let M=STARTIDX;M<=ENDIDX;M++)arr.push(M);return arr;}
 
 function render(){
-  const opProd=['<span class="chip'+(!PROD?' on':'')+'" data-prod="">Todos</span>']
-    .concat(PRODUTOS.map(p=>`<span class="chip${p===PROD?' on':''}" data-prod="${esc(p)}">${esc(p)}</span>`)).join('');
+  const opProd=['<span class="chip'+(!PROD?' on':'')+'" data-prod="">Ambos</span>']
+    .concat(PROD_PANEL.map(p=>`<span class="chip${p===PROD?' on':''}" data-prod="${esc(p)}">${esc(p)}</span>`)).join('');
+  const universo=CLIENTES.filter(noUniverso).length;
   const ativosAgora=CLIENTES.filter(c=>combinaProduto(c)&&ativoEm(c,ENDIDX)).length;
-  document.getElementById('cnt').textContent=CLIENTES.length+' registros';
+  document.getElementById('cnt').textContent=universo+' clientes (contab./controlad.)';
   document.getElementById('app').innerHTML=`<div class="wrap">
     <div class="toggle">
       <button data-view="mes" class="${VIEW==='mes'?'on':''}">Por mês</button>
@@ -128,7 +131,7 @@ function render(){
     </div>
     <div class="chips">${opProd}</div>
     <div class="resumo-top">
-      <div><div class="lbl">Ativos em ${labelIdx(ENDIDX)}${PROD?' · '+esc(PROD):''}</div><div class="big">${ativosAgora}</div></div>
+      <div><div class="lbl">Ativos em ${labelIdx(ENDIDX)} · ${PROD?esc(PROD):'contab./controlad.'}</div><div class="big">${ativosAgora}</div></div>
       <div><div class="lbl">Competência</div><div class="dica">de mai/2025 até ${labelIdx(ENDIDX)}. Sem data de fim = ativo.</div></div>
     </div>
     <input class="busca" id="busca" type="search" placeholder="${VIEW==='mes'?'Buscar mês (ex.: jun, 2025-06, junho)…':'Buscar cliente por nome…'}">
@@ -183,7 +186,7 @@ function viewCliente(termo){
     const ativo = c.iniIdx!=null && (c.fimIdx==null || c.fimIdx>=ENDIDX) && c.iniIdx<=ENDIDX;
     let meses=0;for(let M=STARTIDX;M<=ENDIDX;M++)if(ativoEm(c,M))meses++;
     const prod=c.prodList.map(p=>`<span class="pchip">${esc(p)}</span>`).join('')||'<span class="pchip" style="background:#F2ECE4;color:#8A7D70;border-color:var(--line)">—</span>';
-    const fimTxt = c.iniIdx==null ? '<span class="bdg enc">sem contabilidade</span>'
+    const fimTxt = c.iniIdx==null ? '<span class="bdg enc">sem data de início</span>'
       : (c.fimIdx==null ? '<span class="bdg ativo">Ativo</span>' : ('encerrou '+fmtData(c.fimIdx)));
     return `<div class="cli"><div class="cli-main">
         <div class="cli-nome">${esc(c.nome||c.id)}</div>
