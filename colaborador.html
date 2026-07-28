@@ -291,14 +291,14 @@ function painelCliente(c){
   const alertas=[alertaVenc('Certificado', cert.venc_certificado), alertaVenc('e-CAC', cert.venc_ecac)].filter(Boolean).join('');
   const drive = c.drive && /^https?:/.test(c.drive)
     ? `<a class="lk drive" href="${esc(c.drive)}" target="_blank" rel="noopener"><span class="ic">📁</span>Drive do cliente</a>` : '';
-  const subs=[lkPasta('Recebidos',p.principal),lkPasta('Extratos',p.extratos),lkPasta('Notas fiscais',p.notas),lkPasta('Outros',p.outros)].filter(Boolean).join('');
+  // subpastas (Recebidos/Extratos/Notas/Outros) removidas do painel a pedido — só o Drive do cliente.
   return `<div class="cli">
     <div class="cli-top">
       <span class="cli-id">${esc(c.id)}</span>
       <div class="cli-nome">${esc(c.nome||'(sem nome)')}${c.cnpj?`<div class="cli-cnpj">${esc(c.cnpj)}</div>`:''}</div>
     </div>
     ${alertas?`<div class="alertas">${alertas}</div>`:''}
-    ${(drive||subs)?`<div class="linha"><span class="rot">Drive</span>${drive}${subs}</div>`:''}
+    ${drive?`<div class="linha"><span class="rot">Drive</span>${drive}</div>`:''}
     <div class="linha"><span class="rot">Planilhas</span>
       ${lkArea('Fiscal',a.fiscal,'📊')}
       ${lkArea('Equiparação',a.equiparacao,'⚖️')}
@@ -345,6 +345,7 @@ function secContatos(list){
 }
 function secLicencas(lic){
   lic=lic||{};
+  if(lic.desativado) return '';
   let body;
   if(!lic.encontrado){ body='<div class="ex-vazio">Sem registro na Controle de Licenças.</div>'; }
   else if(lic.itens&&lic.itens.length){
