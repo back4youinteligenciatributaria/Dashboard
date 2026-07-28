@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clientes ativos por mês — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
+.wrap{max-width:900px;margin:0 auto;padding:18px 20px 80px}
+.toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line-2);border-radius:999px;padding:3px;margin-bottom:12px}
+.toggle button{font-family:var(--sans);font-size:13.5px;font-weight:700;border:none;background:none;color:var(--ink-2);padding:8px 16px;border-radius:999px;cursor:pointer}
+.toggle button.on{background:var(--brand-teal);color:#fff}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.chip.on{background:var(--brand-euc);border-color:var(--brand-euc);color:#fff}
+.busca{width:100%;font-family:var(--sans);font-size:15px;padding:11px 15px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.resumo-top{background:linear-gradient(135deg,rgba(15,140,133,.12),rgba(63,166,128,.07));border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0 14px;display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.resumo-top .big{font-size:30px;font-weight:800;color:var(--brand-teal);line-height:1}
+.resumo-top .lbl{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.dica{font-size:12px;color:var(--muted);margin-top:2px}
+/* por mês */
+.mes{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.mes-h{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer}
+.mes-h:hover{background:var(--surface-warm)}
+.mes-nome{font-weight:800;width:96px;text-transform:capitalize;white-space:nowrap}
+.mes-atual{color:var(--brand-teal)}
+.barwrap{flex:1;background:var(--surface-warm);border-radius:6px;height:16px;overflow:hidden;border:1px solid var(--line)}
+.bar{height:100%;background:var(--brand-teal);border-radius:6px 0 0 6px}
+.mes-n{font-weight:800;min-width:40px;text-align:right}
+.chev{color:var(--line-2);font-weight:900;font-size:16px}
+.mes.open .chev{color:var(--brand-teal);transform:rotate(90deg)}
+.mes-lista{display:none;border-top:1px solid var(--line);background:var(--surface-warm);padding:8px 14px}
+.mes.open .mes-lista{display:block}
+.cli-item{padding:6px 4px;font-size:13px;border-bottom:1px dashed var(--line);display:flex;gap:8px;justify-content:space-between}
+.cli-item:last-child{border-bottom:none}
+.cli-item .pr{color:var(--muted);font-size:11.5px}
+/* por cliente */
+.cli{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.cli-main{flex:1;min-width:220px}
+.cli-nome{font-weight:700;font-size:14.5px}
+.cli-prod{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.pchip{font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px;background:#EAF4F1;color:#0c6b64;border:1px solid #cfe6e2}
+.cli-datas{text-align:right;font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.bdg{font-size:10.5px;font-weight:800;border-radius:7px;padding:3px 8px;display:inline-block}
+.bdg.ativo{background:#E7F4EC;color:#2E7D52}
+.bdg.enc{background:#F2ECE4;color:#8A7D70}
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
+.spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="barra">
+  <span class="logo">back<span class="y">4you</span></span>
+  <span class="tag">Clientes ativos / mês</span>
+  <span class="spacer"></span>
+  <span class="cnt" id="cnt"></span>
+  <a class="volta" id="volta" href="colaborador.html">← Painel</a>
+</div>
+<div id="app"><div class="state"><div class="spin"></div><p>Carregando registros…</p></div></div>
+
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+const CHAVE_PADRAO='b4u-equipe-2026';
+const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const INICIO_ANO=2025, INICIO_MES=5;   // maio/2025
+function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');const h=(location.hash||'').replace('#','').trim();return q||h||CHAVE_PADRAO;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
+
+function parseYM(s){
+  s=String(s==null?'':s).trim();if(!s)return null;
+  let m=s.match(/^(\d{4})-(\d{1,2})/);if(m)return idxYM(+m[1],+m[2]);
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return idxYM(+m[3],+m[2]);
+  m=s.toLowerCase().match(/([a-zç]{3})[a-zç.]*\/?\s*(\d{4})/);if(m){const mi=MES.indexOf(m[1]);if(mi>=0)return idxYM(+m[2],mi+1);}
+  return null;
+}
+function idxYM(y,mo){return y*12+(mo-1);}
+function labelIdx(idx){const y=Math.floor(idx/12),mo=idx%12;return MES[mo]+'/'+y;}
+
+let CLIENTES=[],PRODUTOS=[],VIEW='mes',PROD='',ENDIDX=0,STARTIDX=0;
+function carregar(){
+  return jsonp(API_URL+'?tipo=ativos_equipe&chave='+encodeURIComponent(chaveAtual()))
+    .then(d=>{if(d.erro)throw new Error(d.erro);
+      CLIENTES=(d.clientes||[]).map(c=>{
+        const pi=parseYM(c.inicio), pf=parseYM(c.fim);
+        return {id:c.id,nome:c.nome,produtos:c.produtos,prodList:String(c.produtos||'').split(',').map(x=>x.trim()).filter(Boolean),
+                iniIdx:pi,fimIdx:pf,inicio:c.inicio,fim:c.fim};
+      });
+      PRODUTOS=d.produtos||[];
+      const now=new Date();ENDIDX=idxYM(now.getFullYear(),now.getMonth()+1);STARTIDX=idxYM(INICIO_ANO,INICIO_MES);
+      render();})
+    .catch(e=>{document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> e se o Web App foi republicado com <code>EquipeAtivos.gs</code>.</p></div>`;});
+}
+function combinaProduto(c){return !PROD||c.prodList.some(p=>p===PROD);}
+function ativoEm(c,M){return c.iniIdx!=null && c.iniIdx<=M && (c.fimIdx==null || M<=c.fimIdx);}
+function mesesTimeline(){const arr=[];for(let M=STARTIDX;M<=ENDIDX;M++)arr.push(M);return arr;}
+
+function render(){
+  const opProd=['<span class="chip'+(!PROD?' on':'')+'" data-prod="">Todos</span>']
+    .concat(PRODUTOS.map(p=>`<span class="chip${p===PROD?' on':''}" data-prod="${esc(p)}">${esc(p)}</span>`)).join('');
+  const ativosAgora=CLIENTES.filter(c=>combinaProduto(c)&&ativoEm(c,ENDIDX)).length;
+  document.getElementById('cnt').textContent=CLIENTES.length+' registros';
+  document.getElementById('app').innerHTML=`<div class="wrap">
+    <div class="toggle">
+      <button data-view="mes" class="${VIEW==='mes'?'on':''}">Por mês</button>
+      <button data-view="cliente" class="${VIEW==='cliente'?'on':''}">Por cliente</button>
+    </div>
+    <div class="chips">${opProd}</div>
+    <div class="resumo-top">
+      <div><div class="lbl">Ativos em ${labelIdx(ENDIDX)}${PROD?' · '+esc(PROD):''}</div><div class="big">${ativosAgora}</div></div>
+      <div><div class="lbl">Competência</div><div class="dica">de mai/2025 até ${labelIdx(ENDIDX)}. Sem data de fim = ativo.</div></div>
+    </div>
+    <input class="busca" id="busca" type="search" placeholder="${VIEW==='mes'?'Buscar mês (ex.: jun, 2025-06, junho)…':'Buscar cliente por nome…'}">
+    <div id="conteudo" style="margin-top:12px"></div>
+  </div>`;
+  document.querySelectorAll('.toggle button').forEach(b=>b.addEventListener('click',()=>{VIEW=b.dataset.view;render();}));
+  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{PROD=c.dataset.prod;render();}));
+  document.getElementById('busca').addEventListener('input',e=>desenhar(e.target.value));
+  desenhar('');
+}
+function desenhar(termo){
+  const cont=document.getElementById('conteudo');
+  if(VIEW==='mes')cont.innerHTML=viewMes(termo);
+  else cont.innerHTML=viewCliente(termo);
+  if(VIEW==='mes')cont.querySelectorAll('.mes-h').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));
+}
+function viewMes(termo){
+  const alvo=normTxt(termo);
+  const meses=mesesTimeline().slice().reverse();   // mais recente primeiro
+  let max=1;
+  const dados=meses.map(M=>{
+    const lista=CLIENTES.filter(c=>combinaProduto(c)&&ativoEm(c,M));
+    if(lista.length>max)max=lista.length;
+    return {M:M,lista:lista};
+  });
+  const filtr=dados.filter(d=>{
+    if(!alvo)return true;
+    const y=Math.floor(d.M/12),mo=d.M%12;
+    const chave=MES[mo]+'/'+y+' '+('0'+(mo+1)).slice(-2)+'/'+y+' '+y+'-'+('0'+(mo+1)).slice(-2);
+    return normTxt(chave).includes(alvo);
+  });
+  if(!filtr.length)return '<div class="dica">Nenhum mês encontrado.</div>';
+  return filtr.map(d=>{
+    const pct=Math.round(d.lista.length/max*100);
+    const atual=d.M===ENDIDX?' mes-atual':'';
+    const itens=d.lista.slice().sort((a,b)=>normTxt(a.nome).localeCompare(normTxt(b.nome)))
+      .map(c=>`<div class="cli-item"><span>${esc(c.nome)}</span><span class="pr">${esc(c.produtos)}</span></div>`).join('')||'<div class="dica">Nenhum cliente ativo neste mês.</div>';
+    return `<div class="mes"><div class="mes-h">
+        <span class="mes-nome${atual}">${labelIdx(d.M)}</span>
+        <span class="barwrap"><span class="bar" style="width:${pct}%"></span></span>
+        <span class="mes-n">${d.lista.length}</span><span class="chev">›</span>
+      </div><div class="mes-lista">${itens}</div></div>`;
+  }).join('');
+}
+function fmtData(idx){return idx==null?'—':labelIdx(idx);}
+function viewCliente(termo){
+  const alvo=normTxt(termo);
+  const arr=CLIENTES.filter(c=>combinaProduto(c)&&(!alvo||normTxt(c.nome+' '+c.id).includes(alvo)))
+    .sort((a,b)=>normTxt(a.nome).localeCompare(normTxt(b.nome)));
+  if(!arr.length)return '<div class="dica">Nenhum cliente encontrado.</div>';
+  return arr.map(c=>{
+    const ativo = c.iniIdx!=null && (c.fimIdx==null || c.fimIdx>=ENDIDX) && c.iniIdx<=ENDIDX;
+    let meses=0;for(let M=STARTIDX;M<=ENDIDX;M++)if(ativoEm(c,M))meses++;
+    const prod=c.prodList.map(p=>`<span class="pchip">${esc(p)}</span>`).join('')||'<span class="pchip" style="background:#F2ECE4;color:#8A7D70;border-color:var(--line)">—</span>';
+    const fimTxt = c.iniIdx==null ? '<span class="bdg enc">sem contabilidade</span>'
+      : (c.fimIdx==null ? '<span class="bdg ativo">Ativo</span>' : ('encerrou '+fmtData(c.fimIdx)));
+    return `<div class="cli"><div class="cli-main">
+        <div class="cli-nome">${esc(c.nome||c.id)}</div>
+        <div class="cli-prod">${prod}</div>
+      </div>
+      <div class="cli-datas">
+        <div>início: <b>${fmtData(c.iniIdx)}</b></div>
+        <div style="margin-top:3px">${fimTxt}</div>
+        <div class="dica" style="margin-top:3px">${meses} ${meses===1?'mês':'meses'} na competência</div>
+      </div></div>`;
+  }).join('');
+}
+
+document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+carregar();
+</script>
+</body>
+</html>
