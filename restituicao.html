@@ -32,15 +32,17 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .busca{width:100%;font-family:var(--sans);font-size:15px;padding:11px 15px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .dica{font-size:12px;color:var(--muted);margin-top:7px}
-.resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 12px}
+.resumo{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 16px 12px}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .rhead{padding:10px 13px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
 .rcard.atrasada .rhead{background:#C0392B}.rcard.semana .rhead{background:#E8892E}.rcard.proxima .rhead{background:var(--brand-teal)}
+.rcard.cobrar .rhead{background:#007EB5}
 .rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:12px}
 .rlista{max-height:168px;overflow:auto;padding:6px}
 .tk{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:8px;cursor:pointer;font-size:12.5px}
 .tk:hover{background:var(--surface-warm)}
 .tk .d{font-weight:800;color:var(--ink);white-space:nowrap}
+.tk .d.sem{color:var(--muted);font-weight:700}
 .tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tk .tp{font-size:10.5px;font-weight:700;color:var(--muted)}
 .rvazio{color:var(--muted);font-size:12px;padding:10px 9px}
@@ -65,9 +67,12 @@ tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{backgrou
 .cel select{font-weight:600;cursor:pointer}
 .cel input:focus,.cel textarea:focus,.cel select:focus{outline:2px solid var(--brand-teal);outline-offset:0}
 .cel a.abrir{color:var(--brand-teal);text-decoration:none;font-weight:800;font-size:14px;flex:none}
-/* somente-leitura */
-.ro{padding:6px 8px;font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* somente-leitura — sem "..." : CNPJ e e-mails aparecem por extenso (para copiar) */
+.ro{padding:6px 8px;font-size:12.5px;color:var(--ink-2);white-space:normal;word-break:break-word;text-overflow:clip}
 .ro.roarea{white-space:pre-wrap;max-height:58px;overflow:auto;line-height:1.3;font-size:12px}
+.ro.romails{line-height:1.35}
+.ro.romails a{display:block;color:var(--brand-teal);text-decoration:none;font-weight:600}
+.ro.romails a:hover{text-decoration:underline}
 .robadge{display:inline-block;padding:4px 9px;border-radius:7px;font-size:11.5px;font-weight:800;white-space:nowrap}
 @keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
 .flash{animation:fl 1.7s ease}
@@ -76,6 +81,7 @@ tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}   /*
 .state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:1180px){.resumo{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:720px){.resumo{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -103,7 +109,8 @@ async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chav
 
 // ID e Nome são colunas CONGELADAS (fora de COLS). ro:1 = somente leitura.
 const COLS=[
-  {k:'cnpj',label:'CNPJ',t:'text',w:130,ro:1},
+  {k:'cnpj',label:'CNPJ',t:'text',w:160,ro:1},
+  {k:'email',label:'E-mail do cliente',t:'mails',w:210,ro:1},
   {k:'status',label:'STATUS',t:'select',opt:'status',w:180},
   {k:'link_drive',label:'Link do drive',t:'url',w:170,ro:1},
   {k:'natureza_juridica',label:'Natureza Jurídica',t:'text',w:150,ro:1},
@@ -112,6 +119,7 @@ const COLS=[
   {k:'estrategia',label:'Estratégia Equiparação',t:'area',w:260,ro:1},
   {k:'natureza_empresarial',label:'Natureza Empresarial',t:'text',w:150,ro:1},
   {k:'obs_status',label:'Observações (Status Geral)',t:'area',w:260},
+  {k:'espera_desde',label:'Esperando retorno desde',t:'text',w:130,sort:'date',dica:'dd/mm/aaaa'},
   {k:'rel_adequacao',label:'Relatório de Adequação',t:'select',opt:'rel_adequacao',w:160},
   {k:'prazo_adequacao',label:'Prazo Rel. Adequação',t:'text',w:120,sort:'date',ro:1},
   {k:'link_adequacao',label:'Link Rel. Adequação',t:'url',w:150},
@@ -133,6 +141,15 @@ const TAREFAS=[
   {k:'prazo_protocolo',stk:'protocolo',label:'Protocolo'},
   {k:'prazo_def',stk:'rel_def',label:'Rel. Exec. Definitivo'}
 ];
+// Etapas em que "Enviado ao cliente" = a bola está com o CLIENTE (não é atraso da
+// equipe): saem dos 3 quadros de prazo e entram em "Cobrar o cliente de retorno".
+// O Rel. Exec. Definitivo fica de fora de propósito (ali "Enviado ao cliente" = entregue).
+const ESPERA=[
+  {stk:'rel_adequacao',pk:'prazo_adequacao',label:'Rel. de Adequação'},
+  {stk:'rel_prelim',pk:'prazo_prelim',label:'Rel. Exec. Preliminar'},
+  {stk:'apuracao_nfs',pk:'prazo_apuracao',label:'Apuração NFs'}
+];
+const ESPERA_STK={};ESPERA.forEach(e=>ESPERA_STK[e.stk]=e);
 // opções EXATAS (aba Listas)
 const OPT={
   status:['Alteração de CS prévia','Perdido','PROTOCOLADO','INTERROMPIDO','PRÉ - PROTOCOLO','PROSPECTIVO SOMENTE','PROSPECTIVO SOMENTE PROTOCOLADO','PRÉ - ONBOARDING','COLETA DE DOCUMENTAÇÃO'],
@@ -157,6 +174,8 @@ const COR_N={};Object.keys(COR_RAW).forEach(k=>{COR_N[k]={};Object.keys(COR_RAW[
 function corDe(opt,val){const m=COR_N[opt];return m?(m[normTxt(val)]||''):'';}
 function textoContraste(hex){if(!hex)return '';const r=parseInt(hex.substr(1,2),16),g=parseInt(hex.substr(3,2),16),b=parseInt(hex.substr(5,2),16);return (0.299*r+0.587*g+0.114*b)<150?'#ffffff':'#10312f';}
 function statusConcluido(stk,v){const n=normTxt(v);if(!n)return false;if(/nao feito/.test(n))return false;if(/aprovad|finaliz|conclu|protocolado|^feito$/.test(n))return true;if(stk==='rel_def'&&/enviad. ao cliente/.test(n))return true;return false;}
+/** "Enviado ao cliente" / "Enviada ao cliente" = esperando retorno do cliente. */
+function aguardandoCliente(stk,v){return !!ESPERA_STK[stk]&&/enviad[oa] ao cliente/.test(normTxt(v));}
 function setSave(cls,txt){const el=document.getElementById('saveStatus');if(el){el.className='save-status '+(cls||'');el.textContent=txt||'';}}
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 const MES3={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
@@ -192,8 +211,8 @@ function render(){
   document.getElementById('tag').textContent='Restituição'+(RESPNOME?' · '+RESPNOME:'');
   document.getElementById('app').innerHTML=`
     <div class="topo">
-      <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome ou CNPJ…">
-      <div class="dica">Clique num cabeçalho para ordenar (A→Z / Z→A). Só os campos de status/observação/links/tarefas são editáveis — salvam sozinhos.</div>
+      <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome, CNPJ ou e-mail…">
+      <div class="dica">Clique num cabeçalho para ordenar (A→Z / Z→A). Só os campos de status/observação/links/tarefas são editáveis — salvam sozinhos. Etapa em <b>“Enviado ao cliente”</b> não conta como atrasada: aparece em <b>“Cobrar o cliente de retorno”</b>, com os dias corridos de espera (a data é carimbada sozinha e pode ser corrigida na coluna “Esperando retorno desde”).</div>
     </div>
     <div class="resumo" id="resumo"></div>
     <div class="tabela-wrap"><table id="tab"></table></div>`;
@@ -201,31 +220,67 @@ function render(){
   atualizarResumo();
   desenhar('');
 }
+/** Desde quando o cliente está devendo retorno naquela etapa:
+ *  1) coluna "Esperando retorno desde"  2) log (data em que virou "Enviado ao cliente")
+ *  3) prazo da etapa (aproximado)  4) nada. */
+function esperandoDesde(l,e){
+  let d=parseData(l.espera_desde);if(d)return{d:d,fonte:'coluna'};
+  const log=(l.espera_log||{})[e.stk];d=parseData(log);if(d)return{d:d,fonte:'log'};
+  d=parseData(l[e.pk]);if(d)return{d:d,fonte:'prazo'};
+  return{d:null,fonte:''};
+}
+function diasCorridos(de,ate){return Math.max(0,Math.round((meia(ate)-meia(de))/86400000));}
 function computeResumo(){
   const t0=meia(new Date()),dow=t0.getDay(),fimSemana=addDias(t0,(7-dow)%7),proxIni=addDias(fimSemana,1),proxFim=addDias(proxIni,6);
-  const b={atrasada:[],semana:[],proxima:[]};
-  baseRows().forEach(l=>TAREFAS.forEach(tf=>{
-    const d=parseData(l[tf.k]);if(!d)return;
-    if(statusConcluido(tf.stk,l[tf.stk]))return;
-    const dm=meia(d),g=dm.getTime();
-    const item={row:l.row,id:l.id,nome:l.nome,k:tf.k,label:tf.label,dataStr:fmtBR(dm),ord:g};
-    if(g<t0.getTime())b.atrasada.push(item);
-    else if(g<=fimSemana.getTime())b.semana.push(item);
-    else if(g>=proxIni.getTime()&&g<=proxFim.getTime())b.proxima.push(item);
-  }));
-  Object.keys(b).forEach(k=>b[k].sort((x,y)=>x.ord-y.ord));
+  const b={atrasada:[],semana:[],proxima:[],cobrar:[]};
+  baseRows().forEach(l=>{
+    TAREFAS.forEach(tf=>{
+      const d=parseData(l[tf.k]);if(!d)return;
+      if(statusConcluido(tf.stk,l[tf.stk]))return;
+      if(aguardandoCliente(tf.stk,l[tf.stk]))return;   // está com o cliente → vai para "Cobrar"
+      const dm=meia(d),g=dm.getTime();
+      const item={row:l.row,id:l.id,nome:l.nome,k:tf.k,label:tf.label,dataStr:fmtBR(dm),ord:g};
+      if(g<t0.getTime())b.atrasada.push(item);
+      else if(g<=fimSemana.getTime())b.semana.push(item);
+      else if(g>=proxIni.getTime()&&g<=proxFim.getTime())b.proxima.push(item);
+    });
+    ESPERA.forEach(e=>{
+      if(!aguardandoCliente(e.stk,l[e.stk]))return;
+      const r=esperandoDesde(l,e);
+      b.cobrar.push({row:l.row,id:l.id,nome:l.nome,k:e.stk,label:e.label,
+        dias:r.d?diasCorridos(r.d,t0):null,desde:r.d?fmtBR(r.d):'',fonte:r.fonte});
+    });
+  });
+  ['atrasada','semana','proxima'].forEach(k=>b[k].sort((x,y)=>x.ord-y.ord));
+  b.cobrar.sort((x,y)=>{                                  // do mais demorado ao menos
+    if(x.dias==null&&y.dias==null)return 0;
+    if(x.dias==null)return 1;
+    if(y.dias==null)return -1;
+    return y.dias-x.dias;
+  });
   return b;
 }
 function listaTk(arr){
   if(!arr.length)return '<div class="rvazio">Nada por aqui 🎉</div>';
   return arr.map(t=>`<div class="tk" data-goto="${t.row}" data-k="${t.k}"><span class="d">${esc(t.dataStr)}</span><span class="lb">${esc(t.id)} · ${esc(t.nome)}</span><span class="tp">${esc(t.label)}</span></div>`).join('');
 }
+function listaCobrar(arr){
+  if(!arr.length)return '<div class="rvazio">Ninguém devendo retorno 🎉</div>';
+  const FONTE={coluna:'data informada',log:'registrada no log',prazo:'aproximada (prazo da etapa)'};
+  return arr.map(t=>{
+    const quanto=t.dias==null?'—':(t.dias===0?'hoje':t.dias+'d');
+    const tit=t.id+' · '+t.nome+' — '+t.label+'\n'+(t.dias==null?'Sem data: preencha "Esperando retorno desde" nesta linha'
+      :('esperando desde '+t.desde+' ('+(FONTE[t.fonte]||'')+')'));
+    return `<div class="tk" data-goto="${t.row}" data-k="${t.k}" title="${esc(tit)}"><span class="d${t.dias==null?' sem':''}">${esc(quanto)}</span><span class="lb">${esc(t.id)} · ${esc(t.nome)}</span><span class="tp">${esc(t.label)}</span></div>`;
+  }).join('');
+}
 function atualizarResumo(){
   const b=computeResumo();
   document.getElementById('resumo').innerHTML=`
     <div class="rcard atrasada"><div class="rhead">Atrasadas <span class="n">${b.atrasada.length}</span></div><div class="rlista">${listaTk(b.atrasada)}</div></div>
     <div class="rcard semana"><div class="rhead">Esta semana (até domingo) <span class="n">${b.semana.length}</span></div><div class="rlista">${listaTk(b.semana)}</div></div>
-    <div class="rcard proxima"><div class="rhead">Próxima semana <span class="n">${b.proxima.length}</span></div><div class="rlista">${listaTk(b.proxima)}</div></div>`;
+    <div class="rcard proxima"><div class="rhead">Próxima semana <span class="n">${b.proxima.length}</span></div><div class="rlista">${listaTk(b.proxima)}</div></div>
+    <div class="rcard cobrar"><div class="rhead">Cobrar o cliente de retorno <span class="n">${b.cobrar.length}</span></div><div class="rlista">${listaCobrar(b.cobrar)}</div></div>`;
 }
 function ehNum(s){return /^\s*-?\d+([.,]\d+)?\s*$/.test(String(s));}
 function valCmp(a,b){if(ehNum(a)&&ehNum(b))return parseFloat(String(a).replace(',','.'))-parseFloat(String(b).replace(',','.'));return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});}
@@ -241,7 +296,7 @@ function ordenar(arr){
     return dir==='desc'?-r:r;
   });
 }
-function filtradas(termo){const alvo=normTxt(termo);return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj).includes(alvo));}
+function filtradas(termo){const alvo=normTxt(termo);return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj+' '+(l.email||'')).includes(alvo));}
 function seta(key){return SORT.key===key?(SORT.dir==='asc'?' ▲':' ▼'):'';}
 function celHTML(l,c){
   const v=l[c.k]==null?'':l[c.k];
@@ -250,13 +305,17 @@ function celHTML(l,c){
   if(c.ro){
     if(c.opt&&corDe(c.opt,v)){const cor=corDe(c.opt,v);campo=`<span class="robadge" style="background:${cor};color:${textoContraste(cor)}">${esc(v)}</span>`;}
     else if(c.t==='area')campo=`<div class="ro roarea" style="width:${c.w}px">${esc(v)}</div>`;
+    else if(c.t==='mails'){
+      const mails=String(v).split(/[,;\s]+/).map(x=>x.trim()).filter(x=>x.indexOf('@')>0);
+      campo=`<div class="ro romails" style="width:${c.w}px">`+(mails.length?mails.map(m=>`<a href="mailto:${esc(m)}">${esc(m)}</a>`).join(''):'—')+`</div>`;
+    }
     else campo=`<div class="ro" style="width:${c.w}px" title="${esc(v)}">${esc(v)}</div>`;
   }else if(c.t==='select'){
     const opts=OPT[c.opt].slice();if(v&&opts.indexOf(v)<0)opts.unshift(v);
     const cor=corDe(c.opt,v);const st=`width:${c.w}px`+(cor?`;background:${cor};color:${textoContraste(cor)};font-weight:700`:'');
     campo=`<select data-k="${c.k}" data-opt="${c.opt}" style="${st}"><option value=""${v===''?' selected':''}>—</option>`+opts.map(o=>`<option value="${esc(o)}"${o===v?' selected':''}>${esc(o)}</option>`).join('')+`</select>`;
   }else if(c.t==='area')campo=`<textarea data-k="${c.k}" style="width:${c.w}px">${esc(v)}</textarea>`;
-  else campo=`<input data-k="${c.k}" type="text" value="${esc(v)}" style="width:${c.w}px">`;
+  else campo=`<input data-k="${c.k}" type="text" value="${esc(v)}"${c.dica?` placeholder="${esc(c.dica)}"`:''} style="width:${c.w}px">`;
   return `<td><div class="cel" data-cell="${c.k}">${campo}${abrir}</div></td>`;
 }
 function desenhar(termo){
