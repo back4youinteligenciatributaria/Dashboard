@@ -177,7 +177,7 @@
   .viz{--surface-1:var(--surface);--text-primary:var(--ink-1);--text-secondary:var(--ink-2);
        --text-muted:var(--ink-3);--grid:#E4D9C9;
        --s1:#0F8C85;--s2:#E8892E;--s3:#3FA680;--s4:#C9A227;--s6:#8B2E22;
-       --cin:#3FA680;--ctax:#A8402C;--cfee:#E8892E;--ref:#8A7D70}
+       --cin:#3FA680;--ctax:#A8402C;--ctax-soft:#DFA79C;--cfee:#E8892E;--ref:#8A7D70}
   .viz{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:17px 19px;margin-top:14px}
   .viz h4{margin:0 0 2px;font-size:15px;font-weight:800}
   .viz .cap{color:var(--ink-3);font-size:12.5px;margin:0 0 12px}
@@ -288,7 +288,7 @@
       <div><label class="fl">Resposta do pedido adm. (meses)</label><input type="number" id="pAdm" value="4" min="1" max="24"></div>
       <div><label class="fl">Julgamento na DRJ (meses)</label><input type="number" id="pDrj" value="8" min="1" max="36"></div>
       <div><label class="fl">Julgamento no CARF (meses)</label><input type="number" id="pCarf" value="18" min="1" max="60"></div>
-      <div><label class="fl">Sentença no MS (meses)</label><input type="number" id="pSent" value="9" min="1" max="36"></div>
+      <div><label class="fl">Sentença no MS (meses)</label><input type="number" id="pSent" value="6" min="1" max="36"></div>
       <div><label class="fl">Trânsito após sentença (meses)</label><input type="number" id="pTran" value="14" min="1" max="48"></div>
       <div><label class="fl">Acórdão após recurso (meses)</label><input type="number" id="pAcor" value="14" min="1" max="48"></div>
       <div><label class="fl">Meses recuperáveis (de 60)</label><input type="number" id="pRetro" value="60" min="0" max="60"></div>
@@ -321,7 +321,10 @@
 <div class="close" id="close"></div>
 
 <h2 class="sec">Comparativo direto — MS favorável × MS desfavorável</h2>
-<p class="hint">Passe o mouse em qualquer barra ou marco para ver os números.</p>
+<p class="hint">O <b style="color:#C2704F">vermelho claro</b> é a janela do mandado de segurança: a base
+   reduzida conta como se valesse desde a impetração, e a diferença recolhida nesses meses fica travada
+   até o trânsito em julgado — é ela que a Modalidade C recupera. Passe o mouse em qualquer barra ou
+   marco para ver os números.</p>
 <div class="viz" id="comp"></div>
 
 <div class="tip" id="tip"></div>
@@ -343,7 +346,7 @@
    ESTADO
    ========================================================= */
 const S = { tipo:'emp', fat:300000, pct:90, desfav:'sem', choices:{} };
-const P = { alt:3, adm:4, drj:8, carf:18, sent:9, tran:14, acor:14, retro:60, selic:10.5,
+const P = { alt:3, adm:4, drj:8, carf:18, sent:6, tran:14, acor:14, retro:60, selic:10.5,
             pis:3.65, cbs:3.52, mcbs:6, pdIni:4, pdDist:'2,3,1,2,3,4,2,1,3,2',
             corr:true, adic:true };
 
@@ -1051,25 +1054,29 @@ function comparativo(){
   const valC = CE.temC ? CE.cVal / nC : 0;
 
   const fav = [], des = [];
+  /* Janela do mandado de segurança: da impetração até a base reduzida entrar em
+     uso. Nesses meses o cliente recolhe cheio, mas a diferença é recuperável
+     depois do trânsito — e a Modalidade C fica com 100% dela. Em vez de um pico
+     verde e um laranja que se anulam, a diferença aparece travada. */
   for(let m=0; m<=H; m++){
     const reduzido = (m >= mRed) && !(CE.reverte && m >= CE.mTransR);
-    const imposto = reduzido ? taxRed : taxFull;
+    const naJanela = CE.temC && m >= m0 && m < mRed;
+    const imposto = (reduzido || naJanela) ? taxRed : taxFull;
+    const travado = naJanela ? Math.max(0, taxFull - taxRed) : 0;
     // ---- favoravel
     const brutoA = PD.valorNoMes(m);
     const entA = 0.70*brutoA;                      // so o que cai na conta dele
-    const entC = (CE.temC && m > mTrans && m <= mTrans + nC) ? valC : 0;
     const honB = (CE.temB && m >= CE.mB0 && m < CE.mB0+9) ? E : 0;
-    const honC = entC;
-    fav.push({ m, ent:entA+entC, entA, entC, brutoA, retidoA:0.30*brutoA, imposto,
-               exito:honB+honC, honB, honC,
-               qtd:PD.qtdNoMes(m) + (entC?1:0),
-               sai:imposto+honB+honC, ref:taxFull });
+    fav.push({ m, ent:entA, entA, entC:0, brutoA, retidoA:0.30*brutoA, imposto, travado,
+               exito:honB, honB, honC:0,
+               qtd:PD.qtdNoMes(m),
+               sai:imposto+travado+honB, ref:taxFull });
     // ---- desfavoravel: nada reduz; entradas somente na versao "credito usufruido"
     const corta = m <= mRed;                       // a Receita para de deferir apos a denegatoria
     const dBruto = (S.desfav==='com' && corta) ? brutoA : 0;
     const dEnt = 0.70*dBruto;
     des.push({ m, ent:dEnt, entA:dEnt, entC:0, brutoA:dBruto, retidoA:0.30*dBruto,
-               imposto:taxFull, exito:0, honB:0, honC:0,
+               imposto:taxFull, travado:0, exito:0, honB:0, honC:0,
                qtd:(S.desfav==='com'&&corta)?PD.qtdNoMes(m):0,
                sai:taxFull, ref:taxFull });
   }
@@ -1099,6 +1106,7 @@ function comparativo(){
 const CIN  = {k:'ent', label:'Entra na conta do cliente', col:'var(--cin)'};
 const COUT = [
   {k:'imposto', label:'IRPJ + CSLL', col:'var(--ctax)'},
+  {k:'travado', label:'Travado até o trânsito', col:'var(--ctax-soft)'},
   {k:'exito',   label:'Êxito Back4You', col:'var(--cfee)'},
 ];
 
@@ -1108,7 +1116,8 @@ function renderComp(){
   const maxE = Math.max(...K.fav.concat(K.des).map(r=>r.ent), 1);
   const maxS = Math.max(...K.fav.concat(K.des).map(r=>r.sai), 1);
   const W = Math.max(LM + (K.H+1)*SW + 26, 700);
-  const UP = Math.max(26, Math.round((BAH-14) * maxE/(maxE+maxS))), DN = BAH-14-UP;
+  const UP = Math.max(26, Math.min(Math.round((BAH-14)*0.65),
+                     Math.round((BAH-14) * maxE/(maxE+maxS)))), DN = BAH-14-UP;
 
   function evLane(ev, y){
     let o = `<rect x="${LM-8}" y="${y}" width="${W-LM-6}" height="${EVH}" rx="6"
@@ -1169,6 +1178,7 @@ function renderComp(){
         <tr><td><i class="dot" style="background:${CIN.col}"></i>Entra na conta${r.qtd?' ('+r.qtd+' PER/DCOMP)':''}</td><td class="n">${brl(r.ent)}</td></tr>
         ${r.brutoA>0.5?`<tr><td style="color:var(--ink-3);padding-left:15px">restituição bruta ${brl(r.brutoA)}, já líquida do êxito de 30%</td><td class="n" style="color:var(--ink-3)">−${brl(r.retidoA)}</td></tr>`:''}
         ${COUT.map(sr=>(r[sr.k]||0)>0.5?`<tr><td><i class="dot" style="background:${sr.col}"></i>${sr.label}</td><td class="n">${brl(r[sr.k])}</td></tr>`:'').join('')}
+        ${r.travado>0.5?`<tr><td style="color:var(--ink-3);padding-left:15px">recolhido cheio agora porque o crédito só pode ser usado depois do trânsito; quando voltar, a Modalidade C fica com 100% desse valor</td><td></td></tr>`:''}
         <tr><td style="border-top:1px solid var(--rule);padding-top:5px"><b>Saldo do mês</b></td>
             <td class="n" style="border-top:1px solid var(--rule);padding-top:5px;color:${(r.ent-r.sai)>=0?'var(--good-ink)':'var(--ink-1)'}">${brl(r.ent-r.sai)}</td></tr>
         <tr><td style="color:var(--ink-3)">Pagaria hoje só de imposto</td><td class="n" style="color:var(--ink-3)">${brl(r.ref)}</td></tr></table>`;
@@ -1185,7 +1195,7 @@ function renderComp(){
   // ---------- linha acumulada: restituido + nao gasto, liquido de exito ----------
   let ac = 0;
   const curva = K.fav.map(r=>{
-    ac += r.ent + (r.ref - r.imposto) - r.exito;
+    ac += r.ent + (r.ref - r.imposto - r.travado) - r.exito;
     return { m:r.m, v:ac };
   });
   const acMax = Math.max(1, curva[curva.length-1].v);
@@ -1203,7 +1213,7 @@ function renderComp(){
   cur += `<path d="${curva.map((pt,i)=>(i?'L':'M')+cxOf(pt.m)+' '+cyOf(pt.v)).join(' ')} L ${cxOf(K.H)} ${cyOf(0)} L ${cxOf(0)} ${cyOf(0)} Z"
            fill="var(--cin)" fill-opacity=".10"/>`;
   // marcos: sentenca, fim de B e janela da Modalidade C
-  [[K.mRed,'sentença'],[K.mRed+9,'fim do êxito B'],[K.mTrans+1,'Modalidade C']].forEach(([mm,lb])=>{
+  [[K.mRed,'sentença'],[K.mRed+9,'fim do êxito B']].forEach(([mm,lb])=>{
     const pt = curva.find(x=>x.m===mm); if(!pt) return;
     cur += `<line x1="${cxOf(mm)}" y1="${cyOf(pt.v)}" x2="${cxOf(mm)}" y2="${cyOf(0)}"
              stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3" stroke-opacity=".5"/>`;
