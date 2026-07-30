@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador — Equiparação hospitalar | back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    /* paleta do site back4you */
+    --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
+    --brand-dark:#073034; --brand-euc:#3FA680;
+    --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+
+    /* nomes usados pelo simulador, mapeados na paleta do site */
+    --plane:var(--canvas);
+    --ink-1:#113D39; --ink-2:#3F5854; --ink-3:#8A7D70;
+    --rule:#E4D9C9; --ring:#E4D9C9; --line-2:#D6C3AC;
+    --brand:#0F8C85; --brand-ink:#fff;
+    --good:#2E7D52; --warning:#E8892E; --critical:#8B2E22;
+    --good-bg:#E7F4EC; --warning-bg:#FCEFE0; --critical-bg:#F8E3DF; --neutral-bg:#F2ECE4;
+    --good-ink:#2E7D52; --warning-ink:#9A5B12; --critical-ink:#8B2E22;
+    --good-br:#C9E4D3; --warn-br:#F0D6B4; --crit-br:#F0C9C1;
+    --fee-bg:#EAF4F1; --fee-br:#cfe6e2;
+    --laneA:#B0611C; --laneB:#0F8C85;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:0;background:var(--plane);color:var(--ink-1);
+       font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+  /* ---------- barra do site ---------- */
+  .barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;
+         align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+  .barra .logo{font-weight:800;font-size:17px;letter-spacing:-.02em}
+  .barra .logo .y{color:var(--brand-euc)}
+  .barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);
+              padding:5px 11px;border-radius:20px}
+  .barra .spacer{flex:1}
+  .barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
+  .barra a.volta:hover{color:#fff}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 70px}
+  header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  h1{font-size:22px;margin:0 0 5px;font-weight:800;letter-spacing:-.01em;line-height:1.25}
+  .sub{color:var(--ink-2);margin:0;max-width:74ch;font-size:13.5px}
+  .btn{flex:none;background:var(--surface);color:var(--ink-2);border:1px solid var(--line-2);
+       border-radius:999px;padding:8px 15px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+  .btn:hover{border-color:var(--brand);color:var(--brand)}
+  .btn.solid{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+
+  /* ---------- painel de entrada ---------- */
+  .panel{background:var(--surface);border:1px solid var(--ring);border-radius:14px;
+         padding:17px 19px;margin-top:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+  label.fl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+           color:var(--ink-3);font-weight:800;margin-bottom:6px}
+  .seg{display:flex;gap:0;border:1px solid var(--line-2);border-radius:9px;overflow:hidden}
+  .seg button{flex:1;background:transparent;border:0;padding:9px 6px;font:inherit;font-size:13.5px;
+              color:var(--ink-2);cursor:pointer;border-right:1px solid var(--line-2)}
+  .seg button:last-child{border-right:0}
+  .seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);font-weight:700}
+  input[type=number],input[type=text]{width:100%;background:var(--surface-warm);color:var(--ink-1);
+       border:1px solid var(--line-2);border-radius:9px;padding:9px 11px;font:inherit;font-size:14.5px}
+  input[type=number]:focus,input[type=text]:focus{outline:2px solid var(--brand);outline-offset:1px}
+  input[type=range]{width:100%;accent-color:var(--brand)}
+  .rngrow{display:flex;align-items:center;gap:11px}
+  .rngrow b{font-variant-numeric:tabular-nums;min-width:52px;text-align:right;font-size:15px;font-weight:700}
+  .hintline{color:var(--ink-3);font-size:12.5px;margin:7px 0 0}
+  details.prem{margin-top:15px;border-top:1px solid var(--rule);padding-top:13px}
+  details.prem summary{cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:.06em;
+                       color:var(--brand);font-weight:800}
+  .premgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:13px;margin-top:14px}
+  .premgrid label.fl{font-size:10.5px}
+  .chk{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:var(--ink-2);margin-top:12px}
+  .chk input{margin-top:3px;accent-color:var(--brand)}
+
+  /* ---------- tiras de numeros ---------- */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:16px}
+  .tile{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:13px 15px}
+  .tile .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:800}
+  .tile .v{font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums}
+  .tile .n{font-size:12px;color:var(--ink-3);margin-top:2px}
+  .tile.acc{border-left:4px solid var(--brand)}
+  .tile.warnt{border-left:4px solid var(--warning)}
+  .tile.critt{border-left:4px solid var(--critical)}
+
+  .banner{margin-top:16px;padding:13px 16px;border-radius:12px;font-size:13.5px;line-height:1.5;
+          border:1px solid transparent}
+  .banner.crit{background:var(--critical-bg);border-color:var(--crit-br);color:var(--critical-ink)}
+  .banner.warn{background:var(--warning-bg);border-color:var(--warn-br);color:var(--warning-ink)}
+  .banner.good{background:var(--good-bg);border-color:var(--good-br);color:var(--good-ink)}
+  .banner b{font-weight:700}
+
+  /* ---------- canvas / linha do tempo ---------- */
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2);
+         margin:30px 0 3px;font-weight:800;display:flex;align-items:center;gap:8px}
+  h2.sec::after{content:"";flex:1;height:1px;background:var(--rule)}
+  .hint{color:var(--ink-3);font-size:13px;margin:0 0 10px}
+  .scroller{overflow-x:auto;background:var(--surface);border:1px solid var(--ring);border-radius:14px;
+            padding:0 0 14px}
+  .canvas{position:relative}
+  .canvas svg.wires{position:absolute;inset:0;overflow:visible;pointer-events:none}
+
+  .ruler{position:absolute;top:0;left:0;height:34px;border-bottom:1px solid var(--rule)}
+  .tick{position:absolute;top:0;height:34px;border-left:1px dashed var(--rule);
+        font-size:11px;color:var(--ink-3);padding-left:5px;padding-top:9px;white-space:nowrap;font-weight:600}
+  .gline{position:absolute;top:34px;border-left:1px dashed var(--rule);opacity:.55}
+
+  .lanetag{position:absolute;left:8px;width:96px;font-size:10.5px;font-weight:800;line-height:1.25;
+           text-transform:uppercase;letter-spacing:.05em}
+  .lanetag.a{color:var(--laneA)}
+  .lanetag.b{color:var(--laneB)}
+  .lanetag small{display:block;font-size:10px;font-weight:600;letter-spacing:.02em;
+                 text-transform:none;color:var(--ink-3);margin-top:2px}
+  .laneband{position:absolute;left:112px;border-top:1px solid var(--rule)}
+
+  .nd{position:absolute;width:174px;background:var(--surface);border:1px solid var(--ring);
+      border-radius:11px;padding:10px 12px;box-shadow:0 1px 2px rgba(7,48,52,.05);
+      transition:opacity .22s ease, box-shadow .18s ease, transform .18s ease}
+  .nd .mo{font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--ink-3);
+          text-transform:uppercase;margin-bottom:3px}
+  .nd .t{font-size:13.5px;font-weight:700;line-height:1.28}
+  .nd .b{display:none}
+  .nd[data-tip]{cursor:help}
+  .nd.opt[data-tip]{cursor:pointer}
+  .nd.lA{border-left:4px solid var(--laneA)}
+  .nd.lB{border-left:4px solid var(--brand)}
+  .nd.good{border-left:4px solid var(--good);background:var(--good-bg)}
+  .nd.warn{border-left:4px solid var(--warning);background:var(--warning-bg)}
+  .nd.crit{border-left:4px solid var(--critical);background:var(--critical-bg)}
+  .nd.fee{border-left:4px solid var(--brand);background:var(--fee-bg)}
+  .nd.pre{border-left:4px solid var(--ink-3);background:var(--neutral-bg)}
+
+  .nd.opt{cursor:pointer}
+  .nd.opt::after{content:"clique";display:block;margin-top:6px;font-size:10px;
+                 font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand)}
+  .nd.opt.chosen::after{content:"✓ escolhido";color:var(--ink-3)}
+  .nd.opt:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(7,48,52,.12)}
+
+  .st-lit{opacity:1}
+  .st-pick{opacity:.72}
+  .st-ghost{opacity:.15;pointer-events:none}
+  .st-dead{opacity:.28;pointer-events:none}
+
+  .fee-pill{display:block;margin-top:7px;padding:5px 9px;border-radius:8px;font-size:11.5px;
+            font-weight:700;background:var(--good-bg);color:var(--good-ink);
+            border:1px solid var(--good-br);line-height:1.3}
+  .fee-pill em{display:block;font-style:normal;font-weight:600;font-size:10px;opacity:.85;margin-top:1px}
+  .fee-pill.no{background:var(--neutral-bg);color:var(--ink-2);border-color:var(--ring)}
+  .seg.mini{display:inline-flex;width:auto;margin-left:10px;vertical-align:middle}
+  .seg.mini button{padding:5px 11px;font-size:11.5px}
+
+  /* ---------- fecho ---------- */
+  .close{margin-top:24px;background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:19px 21px}
+  .close h3{margin:0 0 4px;font-size:17px;font-weight:800}
+  .close .cond{color:var(--ink-3);font-size:12.5px;margin:0 0 14px}
+  table.fee{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.fee th,table.fee td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+  table.fee th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:800}
+  table.fee td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
+  table.fee tr.tot td{border-bottom:0;border-top:2px solid var(--ink-1);font-weight:800;padding-top:11px}
+  .note{font-size:12.5px;color:var(--ink-3);margin-top:14px;line-height:1.55}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;
+        font-size:12px;font-weight:700;border:1px solid transparent;white-space:nowrap}
+  .c-good{background:var(--good-bg);color:var(--good-ink);border-color:var(--good-br)}
+  .c-warn{background:var(--warning-bg);color:var(--warning-ink);border-color:var(--warn-br)}
+  .c-crit{background:var(--critical-bg);color:var(--critical-ink);border-color:var(--crit-br)}
+  .c-none{background:var(--neutral-bg);color:var(--ink-2);border-color:var(--ring)}
+  .waiting{color:var(--ink-2);font-size:14px;background:var(--surface-warm);border:1px dashed var(--line-2);
+           border-radius:10px;padding:14px 16px}
+
+  /* ---------- fluxo de caixa trimestral ---------- */
+  .viz{--surface-1:var(--surface);--text-primary:var(--ink-1);--text-secondary:var(--ink-2);
+       --text-muted:var(--ink-3);--grid:#E4D9C9;
+       --s1:#0F8C85;--s2:#E8892E;--s3:#3FA680;--s4:#C9A227;--s6:#8B2E22;
+       --cin:#3FA680;--ctax:#A8402C;--cfee:#E8892E;--ref:#8A7D70}
+  .viz{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:17px 19px;margin-top:14px}
+  .viz h4{margin:0 0 2px;font-size:15px;font-weight:800}
+  .viz .cap{color:var(--ink-3);font-size:12.5px;margin:0 0 12px}
+  .vlegend{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 10px;align-items:center}
+  .vlegend span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
+  .sw{width:11px;height:11px;border-radius:3px;flex:none}
+  .sw.dash{width:18px;height:0;border-radius:0;border-top:2px dashed var(--ref)}
+  .vscroll{overflow-x:auto}
+  .viz svg{display:block}
+  .viz svg text{font-family:inherit}
+  .gl{stroke:var(--grid);stroke-width:1}
+  .axl{fill:var(--text-muted);font-size:10.5px}
+  .qlb{fill:var(--text-secondary);font-size:11px;font-weight:700}
+  .qhit{fill:transparent;cursor:default}
+  .qhit:hover ~ .qhl,.qg:hover .qhl{opacity:1}
+  .qhl{fill:var(--ink-1);opacity:0;transition:opacity .12s}
+  .tip{position:fixed;z-index:80;pointer-events:none;background:var(--surface);border:1px solid var(--line-2);
+       border-radius:10px;padding:10px 12px;font-size:12.5px;box-shadow:0 8px 26px rgba(7,48,52,.18);
+       max-width:270px;display:none}
+  .tip .th{font-weight:800;margin-bottom:6px;font-size:13px}
+  .tip table{border-collapse:collapse;width:100%}
+  .tip td{padding:2px 0;vertical-align:top}
+  .tip td.n{text-align:right;font-variant-numeric:tabular-nums;padding-left:12px;font-weight:700}
+  .tip .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+  details.tbl{margin-top:14px;border-top:1px solid var(--rule);padding-top:12px}
+  details.tbl summary{cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:.06em;
+                      color:var(--brand);font-weight:800}
+  table.q{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:12px}
+  table.q th,table.q td{padding:6px 8px;border-bottom:1px solid var(--rule);white-space:nowrap}
+  table.q th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);text-align:right}
+  table.q th:first-child,table.q td:first-child{text-align:left}
+  table.q td{text-align:right;font-variant-numeric:tabular-nums}
+  footer.fine{margin-top:26px;font-size:11.5px;color:var(--ink-3);line-height:1.6;max-width:96ch}
+
+  /* ---------- bloqueio por chave ---------- */
+  .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+         min-height:62vh;text-align:center;padding:0 24px}
+  .state h1{font-size:20px;font-weight:800}
+  .state p{color:var(--ink-3);font-size:14px;max-width:48ch}
+  .state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--ring);font-size:13px}
+  .cad{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);
+       display:flex;align-items:center;justify-content:center;font-size:20px}
+  @media(max-width:560px){.wrap{padding:16px 14px 60px}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="barra">
+  <span class="logo">back<span class="y">4you</span></span>
+  <span class="tag">Comercial · Simulador</span>
+  <span class="spacer"></span>
+  <a class="volta" id="volta" href="comercial.html">← Materiais</a>
+</div>
+
+<div id="gate" hidden>
+  <div class="state">
+    <div class="cad">🔒</div>
+    <h1>Acesso restrito</h1>
+    <p>Esta é uma área interna da equipe. Abra pelo hub do comercial, com a
+       <code>chave</code> no endereço.</p>
+  </div>
+</div>
+
+<div id="app" hidden>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Simulador comercial — Equiparação hospitalar</h1>
+    <p class="sub">Ajuste faturamento, % equiparável e premissas de prazo; depois clique no desfecho de
+       cada bifurcação para acender o caminho e ver os honorários e o caixa do cliente.</p>
+  </div>
+  <div style="display:flex;gap:8px;flex:none">
+    <button class="btn" id="reset">Reiniciar</button>
+  </div>
+</header>
+
+<!-- ============ ENTRADAS ============ -->
+<div class="panel">
+  <div class="grid">
+    <div>
+      <label class="fl">Tipo societário hoje</label>
+      <div class="seg" id="tipo">
+        <button data-v="emp" aria-pressed="true">Sociedade empresária</button>
+        <button data-v="sim" aria-pressed="false">Sociedade simples</button>
+      </div>
+      <p class="hintline" id="tipoHint"></p>
+    </div>
+    <div>
+      <label class="fl">Faturamento mensal estimado</label>
+      <input type="number" id="fat" value="300000" min="0" step="10000">
+      <p class="hintline">Receita bruta mensal total da pessoa jurídica.</p>
+    </div>
+    <div>
+      <label class="fl">% equiparável estimado</label>
+      <div class="rngrow">
+        <input type="range" id="pct" min="0" max="100" step="1" value="90">
+        <b id="pctv">90%</b>
+      </div>
+      <p class="hintline">Parcela da receita com natureza de serviço hospitalar.</p>
+    </div>
+  </div>
+
+  <details class="prem">
+    <summary>Premissas de prazo e cálculo</summary>
+    <div class="premgrid">
+      <div><label class="fl">Alteração societária (meses)</label><input type="number" id="pAlt" value="3" min="0" max="12"></div>
+      <div><label class="fl">Resposta do pedido adm. (meses)</label><input type="number" id="pAdm" value="4" min="1" max="24"></div>
+      <div><label class="fl">Julgamento na DRJ (meses)</label><input type="number" id="pDrj" value="8" min="1" max="36"></div>
+      <div><label class="fl">Julgamento no CARF (meses)</label><input type="number" id="pCarf" value="18" min="1" max="60"></div>
+      <div><label class="fl">Sentença no MS (meses)</label><input type="number" id="pSent" value="9" min="1" max="36"></div>
+      <div><label class="fl">Trânsito após sentença (meses)</label><input type="number" id="pTran" value="14" min="1" max="48"></div>
+      <div><label class="fl">Acórdão após recurso (meses)</label><input type="number" id="pAcor" value="14" min="1" max="48"></div>
+      <div><label class="fl">Meses recuperáveis (de 60)</label><input type="number" id="pRetro" value="60" min="0" max="60"></div>
+      <div><label class="fl">SELIC estimada (% a.a.)</label><input type="number" id="pSelic" value="10.5" min="0" max="30" step="0.5"></div>
+      <div><label class="fl">PIS + COFINS (%)</label><input type="number" id="pPis" value="3.65" min="0" max="15" step="0.05"></div>
+      <div><label class="fl">CBS efetiva (%)</label><input type="number" id="pCbs" value="3.52" min="0" max="20" step="0.01"></div>
+      <div><label class="fl">CBS plena a partir do mês</label><input type="number" id="pMcbs" value="6" min="0" max="60"></div>
+      <div><label class="fl">1º PER/DCOMP pago no mês</label><input type="number" id="pPdIni" value="4" min="1" max="36"></div>
+      <div style="grid-column:span 2"><label class="fl">Distribuição dos PER/DCOMP por mês</label>
+        <input type="text" id="pPdDist" value="2,3,1,2,3,4,2,1,3,2"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="cSelic" checked>
+      <span>Modalidade A e C incidem sobre o valor <b>corrigido</b> (nominal + SELIC). Desmarque para
+      cobrar apenas o nominal e devolver a correção ao cliente.</span></label>
+    <label class="chk"><input type="checkbox" id="cAdic" checked>
+      <span>Incluir o <b>adicional de 10% de IRPJ</b> sobre a base presumida que exceder R$ 20.000,00 por mês.</span></label>
+  </details>
+</div>
+
+<!-- ============ NUMEROS BASE ============ -->
+<div id="topo"></div>
+<div id="banners"></div>
+
+<!-- ============ LINHA DO TEMPO ============ -->
+<h2 class="sec">Linha do tempo e desfechos</h2>
+<p class="hint" id="flowHint">Tudo começa em cinza. Clique no desfecho de cada bifurcação para acender o caminho.</p>
+<div class="scroller"><div class="canvas" id="canvas"><svg class="wires" id="wires"></svg></div></div>
+
+<!-- ============ FECHO ============ -->
+<div class="close" id="close"></div>
+
+<h2 class="sec">Comparativo direto — MS favorável × MS desfavorável</h2>
+<p class="hint">Passe o mouse em qualquer barra ou marco para ver os números.</p>
+<div class="viz" id="comp"></div>
+
+<div class="tip" id="tip"></div>
+
+<footer class="fine">
+  Simulação de apoio comercial. Valores estimados a partir das premissas informadas, sem substituir
+  o diagnóstico técnico da Cláusula 1.2 do contrato nem o Termo de Oportunidade Identificada.
+  Não se formula pedido de medida liminar como regra: a antecipação pode apressar o juízo e
+  deteriorar a fundamentação da sentença. O mandado de segurança alcança apenas as competências
+  posteriores à impetração; os períodos anteriores são pleiteados na via administrativa, de forma
+  autônoma, para afastar a concomitância (Súmula 1 do CARF) e a vedação do artigo 170-A do Código
+  Tributário Nacional.
+</footer>
+
+</div>
+
+<script>
+/* =========================================================
+   ESTADO
+   ========================================================= */
+const S = { tipo:'emp', fat:300000, pct:90, desfav:'sem', choices:{} };
+const P = { alt:3, adm:4, drj:8, carf:18, sent:9, tran:14, acor:14, retro:60, selic:10.5,
+            pis:3.65, cbs:3.52, mcbs:6, pdIni:4, pdDist:'2,3,1,2,3,4,2,1,3,2',
+            corr:true, adic:true };
+
+const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const kbrl = v => {
+  const a=Math.abs(v), sg=v<0?'−':'';
+  if(a>=1e6) return sg+'R$ '+(a/1e6).toFixed(2).replace('.',',')+' mi';
+  if(a>=1000) return sg+'R$ '+Math.round(a/1000)+' mil';
+  return sg+'R$ '+Math.round(a);
+};
+const brl2 = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+
+/* =========================================================
+   CALCULO TRIBUTARIO
+   ========================================================= */
+function irpj(base){
+  return base*0.15 + (P.adic ? Math.max(0, base-20000)*0.10 : 0);
+}
+function carga(equip, outros, reduzido){
+  const bIR = reduzido ? equip*0.08 + outros*0.32 : (equip+outros)*0.32;
+  const bCS = reduzido ? equip*0.12 + outros*0.32 : (equip+outros)*0.32;
+  return irpj(bIR) + bCS*0.09;
+}
+function calc(){
+  const equip  = S.fat * S.pct/100;
+  const outros = S.fat - equip;
+  const cheia  = carga(equip, outros, false);
+  const reduz  = carga(equip, outros, true);
+  const E      = Math.max(0, cheia - reduz);            // economia mensal
+  const bIRc = (equip+outros)*0.32, bIRr = equip*0.08 + outros*0.32;
+  const bCSc = (equip+outros)*0.32, bCSr = equip*0.12 + outros*0.32;
+  const irpjCheia = irpj(bIRc), irpjRed = irpj(bIRr);
+  const csllCheia = bCSc*0.09,  csllRed = bCSr*0.09;
+  const iM     = (P.selic/100)/12;
+  // SELIC acumulada por soma simples (art. 39, §4º, da Lei 9.250/95)
+  const fatorSelic = n => iM * (n*(n+1)/2);             // aplicado sobre E de cada competência
+  return { equip, outros, cheia, reduz, E, iM, fatorSelic,
+           irpjCheia, irpjRed, csllCheia, csllRed };
+}
+
+/* =========================================================
+   MODELO DA LINHA DO TEMPO
+   ========================================================= */
+function modelo(){
+  const c = calc(), E = c.E;
+  const simples = S.tipo==='sim';
+  const m0 = simples ? P.alt : 0;                       // inicio efetivo dos pedidos
+  const retro = simples ? Math.min(P.retro, 60) : P.retro;
+
+  // ---- bases monetarias
+  const PD = agendaPD(E, c.iM, retro, m0, P.corr);
+  const baseRetroNom = PD.nominal;
+  const baseRetroSel = PD.selic;
+  const baseRetro    = PD.total;
+  const honA         = 0.30 * baseRetro;
+
+  const mesesB   = 9;
+  const honB     = mesesB * E;
+
+  // C = competencias entre a impetracao e o inicio da apuracao reduzida
+  const cMesesSentOK = P.sent;                          // aplica a base reduzida na sentenca
+  const cMesesRecurso = P.sent + P.acor;                // so aplica depois do acordao
+  const mRedSent   = m0 + P.sent;                       // base reduzida a partir da sentenca
+  const mTransSent = m0 + P.sent + P.tran;              // transito apos sentenca favoravel
+  const mRedRec    = m0 + P.sent + P.acor;              // base reduzida a partir do acordao/transito
+  const nCparc     = Math.max(1, Math.round(P.sent/3)); // trimestres de PER/DCOMP do periodo
+  const mCompSent  = mTransSent + Math.ceil(nCparc/2);  // meio da janela de compensacao
+  const mCompRec   = mRedRec   + Math.ceil(nCparc/2);
+  /* Modalidade C: cada competencia do curso do processo corrigida da sua
+     propria data ate o mes em que o credito e efetivamente compensado. */
+  const baseC = (n, mComp) => {
+    let v = 0;
+    for(let j=1; j<=n; j++){
+      const idade = P.corr ? Math.max(0, mComp - (m0 + j - 1)) : 0;
+      v += E * (1 + c.iM*idade);
+    }
+    return v;
+  };
+
+  /* ---------------- RAIA A — administrativa ---------------- */
+  let trilhaA;
+  if (retro === 0){
+    trilhaA = [{ id:'A0', month:m0, kind:'crit', title:'Sem retroativo',
+      body:'Nos últimos 60 meses a apuração foi feita como sociedade simples. A partir da Lei 11.727/2008 a base reduzida exige sociedade empresária, de modo que não há indébito a repetir. A Modalidade A não se aplica.',
+      fee:'Nada devido<em>sem êxito, sem honorário</em>', terminal:'A', aDue:false }];
+  } else {
+    trilhaA = [
+      { id:'A1', month:m0, kind:'lA', title:'Pedido de restituição',
+        body:'Pedido de restituição e compensação (PER/DCOMP) das '+retro+' competências recuperáveis. Base '+(P.corr?'corrigida':'nominal')+' estimada de '+brl(baseRetro)+'.'
+          + (simples ? ' Como a sociedade era formalmente simples no período, o pedido sustenta-se na organização empresarial de fato — e a prova dessa organização é o ponto decisivo.' : '') },
+      { type:'branch', key:'A', month:m0+P.adm, options:[
+        { id:'defer', label:'Deferimento / homologação', tag:'good',
+          body:'Crédito liberado para restituição ou compensação. O cliente usufrui do valor.',
+          fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30% · '+brl(honA)+'</em>',
+          then:[{ id:'A1f', month:m0+P.adm+1, kind:'fee', title:'Restituição na conta',
+                  body:'Devida no momento da efetivação do benefício, em até 48 horas, independentemente de revisão posterior da homologação (Cl. 7.4.2 do Anexo II).',
+                  fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30%</em>', terminal:'A', aDue:true }] },
+        { id:'indefer', label:'Indeferimento', tag:'crit',
+          body:'Despacho decisório nega o crédito. Abre-se a defesa administrativa inclusa no Termo.',
+          fee:'Defesa inclusa<em>sem custo adicional</em>',
+          then:[
+            { id:'A3', month:m0+P.adm+1, kind:'lA', title:'Defesa na DRJ',
+              body:'Defesa administrativa conduzida pela Back4You, sem honorário adicional (Cl. 2.3 do Anexo II).' },
+            { type:'branch', key:'ADRJ', month:m0+P.adm+1+P.drj, options:[
+              { id:'ok', label:'DRJ favorável', tag:'good',
+                body:'Crédito reconhecido na primeira instância administrativa.',
+                fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30%</em>',
+                then:[{ id:'A3f', month:m0+P.adm+2+P.drj, kind:'fee', title:'Restituição na conta',
+                        body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30%</em>', terminal:'A', aDue:true }] },
+              { id:'nao', label:'DRJ desfavorável', tag:'crit',
+                body:'Segue o recurso voluntário ao Conselho Administrativo de Recursos Fiscais.',
+                fee:'Defesa inclusa<em>sem custo adicional</em>',
+                then:[
+                  { id:'A4', month:m0+P.adm+2+P.drj, kind:'lA', title:'Recurso ao CARF',
+                    body:'Última instância administrativa compreendida no Termo, também sem honorário adicional.' },
+                  { type:'branch', key:'ACARF', month:m0+P.adm+2+P.drj+P.carf, options:[
+                    { id:'ok', label:'CARF favorável', tag:'good',
+                      body:'Crédito reconhecido em definitivo na esfera administrativa.',
+                      fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30%</em>',
+                      then:[{ id:'A4f', month:m0+P.adm+3+P.drj+P.carf, kind:'fee',
+                              title:'Restituição na conta',
+                              body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30%</em>', terminal:'A', aDue:true }] },
+                    { id:'nao', label:'CARF desfavorável', tag:'crit',
+                      body:'Crédito definitivamente não homologado na via administrativa.',
+                      fee:'Nada devido<em>sem êxito, sem honorário</em>',
+                      then:[{ id:'A5f', month:m0+P.adm+3+P.drj+P.carf, kind:'crit',
+                              title:'Crédito negado',
+                              body:'Sem benefício usufruído não há honorário de êxito. A via judicial para os períodos anteriores é objeto de cotação à parte (Cl. 3.1 do Anexo II).',
+                              fee:'Nada devido<em>sem êxito, sem honorário</em>', terminal:'A', aDue:false }] },
+                  ]}
+                ]}
+            ]}
+          ]}
+      ]}
+    ];
+  }
+
+  /* ---------------- RAIA B/C — judicial ---------------- */
+  const trilhaB = [
+    { id:'B1', month:m0, kind:'lB', title:'Mandado de segurança',
+      body:'Objeto limitado às competências posteriores à impetração. Sem pedido de liminar como regra.' },
+    { type:'branch', key:'B', month:m0+P.sent, options:[
+      { id:'sentOK', label:'Sentença favorável', tag:'good',
+        body:'Autoriza a apuração por 8% e 12% desde logo, por execução provisória (art. 14, §3º, da Lei 12.016/2009).',
+        fee:'Economia de '+brl(E)+'/mês<em>êxito de 100% nos 9 primeiros meses</em>',
+        then:[
+          { id:'B2', month:m0+P.sent, kind:'good', title:'Base reduzida em uso',
+            body:'Economia mensal de '+brl(E)+' a partir da primeira competência apurada após a sentença.' },
+          { id:'B3', month:m0+P.sent+1, kind:'fee', title:'Economia começa',
+            body:'100% da economia mensal apurada, por 9 meses, pagos nas mesmas datas de vencimento das guias — o desembolso total do cliente fica igual ao de antes.',
+            fee:'Depois do 9º mês a economia é 100% dele<em>êxito só nos 9 primeiros meses</em>' },
+          { type:'branch', key:'BT', month:m0+P.sent+P.tran, options:[
+            { id:'tOK', label:'Trânsito em julgado favorável', tag:'good',
+              body:'Direito consolidado. Abre a compensação das competências do curso do processo.',
+              fee:'Recupera o período do processo<em>êxito de 100%, uma única vez</em>',
+              then:[{ id:'B4f', month:m0+P.sent+P.tran+1, kind:'fee',
+                      title:'Período do processo recuperado',
+                      body:'100% do recuperado relativo às '+cMesesSentOK+' competências entre a impetração e o início da apuração reduzida, em até 30 dias de cada declaração de compensação.',
+                      fee:'Cliente recupera '+brl(baseC(cMesesSentOK, mCompSent))+'<em>êxito de 100% desse valor</em>', terminal:'BC', cMeses:cMesesSentOK, cVal:baseC(cMesesSentOK, mCompSent), bDue:true, cDue:true,
+                      mRed:mRedSent, mB0:mRedSent, mCredC:mTransSent }] },
+            { id:'tNAO', label:'Trânsito desfavorável (reforma)', tag:'crit',
+              body:'A sentença é reformada em grau recursal e o cliente recolhe os valores do período em que apurou pela base reduzida.',
+              fee:'Devolvemos o que foi cobrado<em>garantia de recomposição</em>',
+              then:[{ id:'B5f', month:m0+P.sent+P.tran+1, kind:'crit',
+                      title:'Garantia de recomposição',
+                      body:'A Back4You restitui integralmente a Modalidade B já cobrada, em 30 dias (Cl. 7.13). A Modalidade C não nasce. Sobre a Modalidade A já recebida incide a comunicação de risco de revisão da Cl. 7.12.',
+                      fee:'Cliente recebe de volta '+brl(honB)+'<em>garantia de recomposição</em>', terminal:'BC', cMeses:0, bDue:false, cDue:false, refundB:true, riscoA:true,
+                      mRed:mRedSent, mB0:mRedSent, reverte:true, mTransR:mTransSent }] },
+          ]}
+        ]},
+      { id:'sentNAO', label:'Sentença denegatória', tag:'crit',
+        body:'A cobertura do Termo alcança a sentença. A fase recursal é cotação à parte, com comunicação de encerramento em 5 dias úteis antes do fim do prazo (Cl. 3.3 do Anexo II).',
+        fee:'Nada devido<em>sem decisão favorável, sem honorário</em>',
+        then:[
+          { id:'B6', month:m0+P.sent, kind:'warn', title:'Recurso — cotação à parte',
+            body:'A Back4You apresenta orçamento com prognóstico, custo e prazo. O cliente decide seguir ou encerrar; o silêncio encerra a etapa.' },
+          { type:'branch', key:'BR', month:m0+P.sent+P.acor, options:[
+            { id:'rOK', label:'Acórdão favorável e trânsito', tag:'good',
+              body:'O resultado favorável chega em grau recursal. As modalidades permanecem devidas, ainda que a fase recursal tenha sido conduzida por outro profissional (Cl. 7.8).',
+              fee:'Economia de '+brl(E)+'/mês<em>êxito de 100% nos 9 primeiros meses</em>',
+              then:[
+                { id:'B7', month:m0+P.sent+P.acor, kind:'good', title:'Base reduzida em uso',
+                  body:'Economia mensal de '+brl(E)+', agora a partir do acórdão favorável.' },
+                { id:'B8f', month:m0+P.sent+P.acor+1, kind:'fee',
+                  title:'Economia e período recuperados',
+                  body:'A Modalidade B conta 9 meses a partir do trânsito em julgado (Cl. 7.5.3). A Modalidade C alcança as '+cMesesRecurso+' competências do curso do processo.',
+                  fee:'Cliente recupera '+brl(baseC(cMesesRecurso, mCompRec))+' + '+brl(E)+'/mês<em>êxito de 100% do período e dos 9 meses</em>',
+                  terminal:'BC', cMeses:cMesesRecurso, cVal:baseC(cMesesRecurso, mCompRec), bDue:true, cDue:true,
+                  mRed:mRedRec, mB0:mRedRec, mCredC:mRedRec }
+              ]},
+            { id:'rNAO', label:'Acórdão desfavorável e trânsito', tag:'crit',
+              body:'A tese é rejeitada em definitivo para este cliente.',
+              fee:'Nada devido<em>sem decisão favorável, sem honorário</em>',
+              then:[{ id:'B9f', month:m0+P.sent+P.acor+1, kind:'crit',
+                      title:'Tese rejeitada',
+                      body:'Sem decisão favorável não há economia a remunerar. Sobre a Modalidade A já recebida incide a comunicação de risco de revisão da Cl. 7.12, e a defesa de eventual revisão segue inclusa, com ciência de que a chance é remota.',
+                      fee:'Nada devido<em>sem êxito, sem honorário</em>', terminal:'BC', cMeses:0, bDue:false, cDue:false, riscoA:true,
+                      mRed:Infinity }] },
+          ]}
+        ]}
+    ]}
+  ];
+
+  const pre = simples ? [{ id:'P1', month:0, kind:'pre', title:'Alteração societária',
+      body:'Registro na Junta Comercial para que a forma acompanhe a organização empresarial já existente. Não é o que cria o direito: é o que elimina discussão futura. Leva cerca de '+P.alt+' meses e só depois dela se protocolam o pedido administrativo e o mandado de segurança.',
+      span:P.alt }] : [];
+
+  return { c, E, simples, m0, retro, baseRetroNom, baseRetroSel, baseRetro, honA, honB,
+           baseC, cMesesSentOK, cMesesRecurso, mRedSent, mTransSent, mRedRec,
+           nCparc, mCompSent, mCompRec, valCsent: baseC(cMesesSentOK, mCompSent), PD,
+           pre, trilhaA, trilhaB };
+}
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+const NODE_W=196, PX_M=54, PAD_L=112, PAD_T=44, ROW_GAP=24, COL_GAP=18;
+
+function layout(steps, lane, startRow){
+  const nodes=[], edges=[];
+  let maxRow=startRow;
+  function walk(list, row, parent, path){
+    let prev=parent;
+    for(const st of list){
+      if(st.type==='branch'){
+        st.options.forEach((op,i)=>{
+          const orow = (i===0)? row : ++maxRow;
+          const id = 'o:'+st.key+':'+op.id;
+          nodes.push({ id, row:orow, month:st.month, lane,
+                       title:op.label, body:op.body, kind:op.tag, fee:op.fee,
+                       opt:{bkey:st.key, oid:op.id}, path:path.slice() });
+          if(prev) edges.push({from:prev, to:id});
+          if(op.then && op.then.length)
+            walk(op.then, orow, id, path.concat([[st.key, op.id]]));
+        });
+        return;
+      }
+      const id='n:'+st.id;
+      nodes.push({ id, row, month:st.month, lane, title:st.title, body:st.body,
+                   kind:st.kind, fee:st.fee, span:st.span, terminal:st.terminal, meta:st,
+                   path:path.slice() });
+      if(prev) edges.push({from:prev,to:id});
+      prev=id;
+    }
+  }
+  walk(steps, startRow, null, []);
+  return {nodes, edges, maxRow};
+}
+
+/* estado visual de um no */
+function statusOf(n){
+  // caminho exigido pelos ancestrais
+  for(const [bkey,oid] of n.path){
+    const ch = S.choices[bkey];
+    if(ch === undefined) return 'ghost';   // bifurcacao ainda nao resolvida
+    if(ch !== oid) return 'dead';          // ramo abandonado
+  }
+  if(n.opt){
+    const ch = S.choices[n.opt.bkey];
+    if(ch === undefined) return 'pick';
+    return (ch === n.opt.oid) ? 'lit' : 'dead';
+  }
+  return 'lit';
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+const canvas = document.getElementById('canvas');
+const wires  = document.getElementById('wires');
+let M = null, NODES = [], EDGES = [], ROWS_A=[0,0], ROWS_B=[0,0];
+
+function render(){
+  M = modelo();
+
+  // ---- painel de abertura: barras comparativas + linha do tempo
+  renderTopo();
+
+  // ---- layout
+  const pre = layout(M.pre, 'P', 0);
+  const preRows = M.pre.length ? 1 : 0;
+  const la = layout(M.trilhaA, 'A', preRows);
+  const lb = layout(M.trilhaB, 'B', la.maxRow+1);
+  NODES = [...pre.nodes, ...la.nodes, ...lb.nodes];
+  EDGES = [...pre.edges, ...la.edges, ...lb.edges];
+  ROWS_A = [preRows, la.maxRow];
+  ROWS_B = [la.maxRow+1, lb.maxRow];
+
+  const maxMonth = Math.max(...NODES.map(n=>n.month)) + 5;
+  const totalRows = lb.maxRow;
+  const W = PAD_L + maxMonth*PX_M + NODE_W + 40;
+  canvas.style.width = W+'px';
+  wires.setAttribute('width', W);
+
+  // limpa (mantem o svg)
+  [...canvas.querySelectorAll('.nd,.tick,.gline,.lanetag,.laneband,.ruler')].forEach(e=>e.remove());
+
+  // regua
+  const ruler = document.createElement('div');
+  ruler.className='ruler'; ruler.style.width=W+'px'; canvas.appendChild(ruler);
+  const marca = document.createElement('div');
+  for(let m=0; m<=maxMonth; m+=3){
+    const x = PAD_L + m*PX_M;
+    const tk = document.createElement('div');
+    tk.className='tick'; tk.style.left=x+'px';
+    tk.textContent = m===0 ? 'mês 0' : 'mês '+m;
+    canvas.appendChild(tk);
+    const gl = document.createElement('div');
+    gl.className='gline'; gl.style.left=x+'px';
+    canvas.appendChild(gl);
+  }
+
+  // ---- relaxamento horizontal: parte do mes e empurra para nao sobrepor
+  NODES.forEach(n=>{ n.w = n.span ? Math.max(NODE_W, n.span*PX_M) : NODE_W;
+                     n.x = PAD_L + n.month*PX_M; });
+  const byId = {}; NODES.forEach(n=>byId[n.id]=n);
+  for(let it=0; it<40; it++){
+    let moved=false;
+    // separacao dentro da mesma linha
+    const linhas = {};
+    NODES.forEach(n=>{ (linhas[n.row] = linhas[n.row]||[]).push(n); });
+    Object.values(linhas).forEach(arr=>{
+      arr.sort((a,b)=>a.x-b.x);
+      for(let i=1;i<arr.length;i++){
+        const need = arr[i-1].x + arr[i-1].w + COL_GAP;
+        if(arr[i].x < need-0.5){ arr[i].x = need; moved=true; }
+      }
+    });
+    // pai antes do filho
+    for(const e of EDGES){
+      const a=byId[e.from], b=byId[e.to]; if(!a||!b) continue;
+      const need = a.x + a.w + COL_GAP;
+      if(b.x < need-0.5){ b.x = need; moved=true; }
+    }
+    if(!moved) break;
+  }
+
+  // nos
+  for(const n of NODES){
+    const el = document.createElement('div');
+    const st = statusOf(n);
+    const chosen = n.opt && S.choices[n.opt.bkey]===n.opt.oid;
+    el.className = 'nd '+(n.kind||'')+(n.opt?' opt':'')+(chosen?' chosen':'')+' st-'+st;
+    el.style.left = n.x+'px';
+    el.style.top  = PAD_T+'px';
+    el.dataset.row = n.row;
+    el.style.width = n.w+'px';
+    el.dataset.tip = n.body || '';
+    el.innerHTML = `<div class="mo">mês ${n.month}${n.span?'–'+(n.month+n.span):''}</div>
+      <div class="t">${n.title}</div>
+      ${n.fee?`<span class="fee-pill${/não devid|Devolução|Nada devido|não aplic/.test(n.fee)?' no':''}">${n.fee}</span>`:''}`;
+    if(n.opt) el.addEventListener('click', ()=>{
+      if(S.choices[n.opt.bkey]===n.opt.oid) delete S.choices[n.opt.bkey];
+      else S.choices[n.opt.bkey]=n.opt.oid;
+      // limpa escolhas orfas
+      const valid = new Set();
+      NODES.forEach(x=>{ if(x.opt) valid.add(x.opt.bkey); });
+      render();
+    });
+    el.dataset.id = n.id;
+    el.dataset.tipTitle = n.title;
+    canvas.appendChild(el);
+  }
+
+  // ---- reflow vertical: cada linha recebe a altura do seu no mais alto
+  const alt = {};
+  canvas.querySelectorAll('.nd').forEach(el=>{
+    const r = +el.dataset.row;
+    alt[r] = Math.max(alt[r]||0, el.offsetHeight);
+  });
+  const yRow = []; let acc = PAD_T;
+  for(let r=0; r<=totalRows; r++){ yRow[r] = acc; acc += (alt[r]||58) + ROW_GAP; }
+  canvas.querySelectorAll('.nd').forEach(el=>{ el.style.top = yRow[+el.dataset.row]+'px'; });
+
+  const Hfin = acc + 14;
+  canvas.style.height = Hfin+'px';
+  wires.setAttribute('height', Hfin);
+  wires.setAttribute('viewBox', `0 0 ${W} ${Hfin}`);
+  canvas.querySelectorAll('.gline').forEach(g=>{ g.style.height = (Hfin-PAD_T)+'px'; });
+
+  // faixas das raias, agora com as alturas reais
+  const faixas = [];
+  if(M.pre.length) faixas.push(['a','Pré-etapa','requisito legal',0]);
+  faixas.push(['a','Raia A','restituição administrativa · honorário A',ROWS_A[0]]);
+  faixas.push(['b','Raia B/C','mandado de segurança · honorários B e C',ROWS_B[0]]);
+  for(const [cls,lab,sub,r0] of faixas){
+    const y = yRow[r0] - 13;
+    const bd = document.createElement('div');
+    bd.className='laneband'; bd.style.top=y+'px'; bd.style.width=(W-PAD_L-8)+'px';
+    canvas.appendChild(bd);
+    const tg = document.createElement('div');
+    tg.className='lanetag '+cls; tg.style.top=(y+9)+'px';
+    tg.innerHTML = lab + '<small>'+sub+'</small>';
+    canvas.appendChild(tg);
+  }
+
+  drawWires();
+  renderClose();
+  renderComp();
+}
+
+function drawWires(){
+  const cr = canvas.getBoundingClientRect();
+  const box = {};
+  canvas.querySelectorAll('.nd').forEach(el=>{
+    const r = el.getBoundingClientRect();
+    box[el.dataset.id] = { x:r.left-cr.left, y:r.top-cr.top, w:r.width, h:r.height };
+  });
+  const stMap = {}; NODES.forEach(n=>stMap[n.id]=statusOf(n));
+  let out='';
+  for(const e of EDGES){
+    const a=box[e.from], b=box[e.to];
+    if(!a||!b) continue;
+    const st = stMap[e.to];
+    const op = st==='lit'?0.85 : st==='pick'?0.5 : st==='dead'?0.18 : 0.10;
+    const col = st==='lit' ? 'var(--brand)' : 'var(--ink-3)';
+    const x1=a.x+a.w, y1=a.y+Math.min(a.h/2,30), x2=b.x, y2=b.y+Math.min(b.h/2,30);
+    const mx = x1 + Math.max(14,(x2-x1)/2);
+    const d = (Math.abs(y1-y2)<3)
+      ? `M ${x1} ${y1} L ${x2} ${y2}`
+      : `M ${x1} ${y1} L ${mx} ${y1} L ${mx} ${y2} L ${x2} ${y2}`;
+    out += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${st==='lit'?2:1.4}"
+             stroke-opacity="${op}" stroke-linejoin="round"/>`;
+    out += `<circle cx="${x2}" cy="${y2}" r="${st==='lit'?3.2:2.4}" fill="${col}" fill-opacity="${op}"/>`;
+  }
+  wires.innerHTML = out;
+}
+
+/* =========================================================
+   FECHO
+   ========================================================= */
+function renderClose(){
+  const box = document.getElementById('close');
+  const term = NODES.filter(n=>n.terminal && statusOf(n)==='lit');
+  const tA = term.find(n=>n.terminal==='A');
+  const tBC = term.find(n=>n.terminal==='BC');
+
+  const pend = [];
+  if(M.retro>0 && !tA) pend.push('o desfecho da raia A (administrativa)');
+  if(!tBC) pend.push('o desfecho da raia B/C (judicial)');
+  if(pend.length){
+    box.innerHTML = `<h3>Resumo dos honorários</h3>
+      <p class="cond">Aparece quando os dois caminhos estiverem definidos.</p>
+      <div class="waiting">Falta escolher ${pend.join(' e ')}. Clique nos cartões em cinza da linha do tempo.</div>`;
+    return;
+  }
+
+  const E = M.E;
+  const aDue   = tA ? !!tA.meta.aDue : false;
+  const aRisco = tBC ? !!tBC.meta.riscoA : false;
+  const bDue   = tBC ? !!tBC.meta.bDue : false;
+  const cDue   = tBC ? !!tBC.meta.cDue : false;
+  const refund = tBC ? !!tBC.meta.refundB : false;
+  const cMes   = tBC ? (tBC.meta.cMeses||0) : 0;
+
+  const vA = aDue ? M.honA : 0;
+  const vB = bDue ? M.honB : 0;
+  const vC = cDue ? (tBC.meta.cVal||0) : 0;
+  const vRef = refund ? M.honB : 0;
+  const total = vA + vB + vC - vRef;
+
+  const clienteRetro = aDue ? M.baseRetro - vA : 0;
+  const clienteProc  = 0;
+  const ultimoMes = Math.max(...term.map(n=>n.month));
+
+  const est = (txt, cls) => `<span class="chip ${cls}">${txt}</span>`;
+  const linhas = [
+    ['Modalidade A — restituição retroativa', `${M.retro} competências`,
+      aDue ? (aRisco ? ['devida, com direito a devolução','c-warn'] : ['devida','c-good'])
+           : ['não devida','c-none']],
+    ['Modalidade B — 9 meses de economia', 'a partir da decisão favorável',
+      refund ? ['devolvida integralmente','c-crit'] : (bDue ? ['devida','c-good'] : ['não devida','c-none'])],
+    ['Modalidade C — período do processo', cDue ? `${cMes} competências` : 'depende do trânsito favorável',
+      cDue ? ['devida','c-good'] : ['não devida','c-none']],
+  ];
+
+  box.innerHTML = `
+    <h3>Situação dos honorários</h3>
+    <p class="cond">Raia A: ${tA?tA.title:'não aplicável'} · Raia B/C: ${tBC.title} ·
+       último marco no mês ${ultimoMes}</p>
+    <table class="fee">
+      <tr><th>Honorário de êxito</th><th>Base</th><th style="text-align:right">Situação</th></tr>
+      ${linhas.map(r=>`<tr><td><b>${r[0]}</b></td><td style="color:var(--ink-2)">${r[1]}</td>
+        <td style="text-align:right">${est(r[2][0],r[2][1])}</td></tr>`).join('')}
+    </table>
+    <div class="banner good" style="margin-top:16px">
+      <b>Zero a zero no pior caso.</b> Honorário só existe onde houve benefício efetivo. Desfazendo-se o
+      benefício, o honorário volta para o cliente na mesma proporção, em 30 dias.
+    </div>
+    ${aRisco?`<div class="banner crit" style="margin-top:12px"><b>Risco de revisão.</b>
+      Trânsito desfavorável com valores já restituídos. Em 10 dias comunicamos o risco e ele decide, por
+      escrito, entre manter ou reverter espontaneamente — reversão antes de procedimento fiscal afasta a
+      multa, pelo artigo 138 do Código Tributário Nacional.</div>`:''}
+    ${(aDue && !aRisco)?`<div class="banner warn" style="margin-top:12px"><b>Homologação em aberto.</b>
+      A Receita tem 5 anos para revisar a compensação. Se em algum momento ele tiver que devolver, a
+      Back4You devolve o honorário correspondente na mesma proporção — ele não paga duas vezes.</div>`:''}
+    ${cDue?`<p class="note">A Modalidade C vence em até 30 dias de cada declaração transmitida,
+      acompanhando o ritmo em que o crédito é absorvido.</p>`:''}`;
+}
+
+/* =========================================================
+   FLUXO DE CAIXA TRIMESTRAL
+   ========================================================= */
+const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const ANO0 = 2026, MES0 = 6;   // mes 0 = julho de 2026
+
+function trimestre(m){
+  const abs = MES0 + m, y = ANO0 + Math.floor(abs/12), mo = abs%12;
+  return { key:y+'-'+(Math.floor(mo/3)+1), label:(Math.floor(mo/3)+1)+'T'+String(y).slice(2), y, q:Math.floor(mo/3)+1 };
+}
+
+/* retangulo com o topo arredondado, ancorado na base */
+function rectTop(x,y,w,h,r){
+  if(h<=0) return '';
+  const rr = Math.min(r, h, w/2);
+  return `M ${x} ${y+h} L ${x} ${y+rr} Q ${x} ${y} ${x+rr} ${y} L ${x+w-rr} ${y} Q ${x+w} ${y} ${x+w} ${y+rr} L ${x+w} ${y+h} Z`;
+}
+
+function renderTopo(){
+  const c = M.c, E = M.E, m0 = M.m0;
+  const hoje = c.cheia, dep = c.reduz;
+  const PD = M.PD, primPag = PD.ultimo ? Math.min(...Object.keys(PD.porMes).map(Number)) : m0+P.pdIni;
+  const mRed = m0 + P.sent;
+
+  /* --- barras: carga mensal hoje x depois, na mesma escala --- */
+  const BW = 460, BH = 30, LB = 128;
+  const esc = v => (v/hoje)*(BW-LB-92);
+  const barra = (lab, v, col, sub) => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+      <div style="width:${LB}px;flex:none;font-size:12.5px;color:var(--ink-2)">${lab}</div>
+      <div style="height:${BH}px;width:${Math.max(4,esc(v))}px;background:${col};border-radius:0 5px 5px 0"></div>
+      <b style="font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap">${brl(v)}</b>
+      ${sub?`<span class="axl" style="font-size:11px">${sub}</span>`:''}
+    </div>`;
+
+  /* --- composicao da base retroativa --- */
+  const nom = M.baseRetroNom, sel = M.baseRetroSel, tot = M.baseRetro;
+  const pN = (nom/tot)*100;
+
+  /* --- marcos --- */
+  const marcos = [
+    ...(M.simples ? [{m:0, t:'Alteração societária', s:P.alt+' meses'}] : []),
+    {m:m0, t:'Pedidos de restituição', s:PD.n+' PER/DCOMP'},
+    {m:m0, t:'Impetração do MS', s:'efeitos daqui pra frente'},
+    {m:primPag, t:'1ª restituição em conta', s:brl(PD.valorNoMes(primPag))},
+    {m:mRed, t:'Base reduzida em uso', s:'sentença favorável'},
+  ];
+  const mMax = Math.max(mRed+2, 12);
+  const TW = 1080, TL = 12;
+  const tx = m => TL + (m/mMax)*(TW-TL-30);
+  // empurra os rotulos para a direita em duas fileiras, sem sobrepor
+  const fim2 = [-1e9,-1e9];
+  const pos = marcos.map((k,i)=>{
+    const w = Math.max(k.t.length, k.s.length+9) * 6.9;
+    const fila = i % 2;
+    let x = tx(k.m);
+    if(x < fim2[fila] + 14) x = fim2[fila] + 14;
+    fim2[fila] = x + w;
+    return {...k, x, fila};
+  });
+  let tl = '';
+  pos.forEach(k=>{
+    const xm = tx(k.m), yb = 48 + k.fila*36;
+    const col = k.t.indexOf('Base reduzida')===0 ? 'var(--cin)' : 'var(--brand)';
+    tl += `<path d="M ${xm} 26 L ${xm} ${yb-16} L ${k.x+3} ${yb-16}" fill="none" stroke="${col}"
+            stroke-width="1" stroke-opacity=".4" stroke-dasharray="3 3"/>`;
+    tl += `<circle cx="${xm}" cy="26" r="5.5" fill="var(--surface)" stroke="${col}" stroke-width="2.5"/>`;
+    tl += `<text x="${k.x}" y="${yb}" style="font-size:11.5px;font-weight:700;fill:var(--ink-1)">${k.t}</text>`;
+    tl += `<text x="${k.x}" y="${yb+13}" class="axl" style="font-size:10px">mês ${k.m} · ${k.s}</text>`;
+  });
+  const TH = 48 + 2*36 + 6;
+
+  document.getElementById('topo').innerHTML = `
+    <div class="viz" style="margin-top:16px">
+      <div style="display:grid;grid-template-columns:minmax(340px,1.1fr) minmax(280px,1fr);gap:26px">
+        <div>
+          <h4 style="margin-bottom:10px">Carga mensal de IRPJ e CSLL</h4>
+          ${barra('Hoje, a 32%', hoje, 'var(--ctax)')}
+          ${barra('Com 8% e 12%', dep, 'var(--cin)')}
+          <div style="margin-top:12px;padding-top:11px;border-top:1px solid var(--rule);display:flex;gap:26px">
+            <div><div class="k" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700">Economia por mês</div>
+              <div style="font-size:20px;font-weight:700;color:var(--good-ink)">${brl(E)}</div></div>
+            <div><div class="k" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700">Em 12 meses</div>
+              <div style="font-size:20px;font-weight:700;color:var(--good-ink)">${brl(E*12)}</div></div>
+          </div>
+        </div>
+        <div>
+          <h4 style="margin-bottom:10px">Base retroativa · ${M.retro} competências</h4>
+          <div style="display:flex;height:${BH}px;border-radius:5px;overflow:hidden;background:var(--neutral-bg)"
+               data-tip="Nominal de ${brl(nom)} mais SELIC de ${brl(sel)}, corrigida de cada competência até a data de recebimento."
+               data-tip-title="Base retroativa">
+            <div style="width:${pN}%;background:var(--cin)"></div>
+            <div style="width:${100-pN}%;background:var(--cfee)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px">
+            <span><i class="sw" style="background:var(--cin);display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px"></i>nominal ${brl(nom)}</span>
+            <span><i class="sw" style="background:var(--cfee);display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px"></i>SELIC ${brl(sel)}</span>
+          </div>
+          <div style="font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:12px">${brl(tot)}</div>
+          <div class="axl" style="font-size:11.5px">sobre ${brl(c.equip)} equiparáveis por mês</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--rule);margin-top:16px;padding-top:12px">
+        <div class="vscroll"><svg width="${TW}" height="${TH}" viewBox="0 0 ${TW} ${TH}">
+          <line x1="${TL}" y1="26" x2="${TW-14}" y2="26" stroke="var(--rule)" stroke-width="2"/>
+          ${tl}
+        </svg></div>
+      </div>
+    </div>`;
+}
+
+/* =========================================================
+   CRONOGRAMA DOS PER/DCOMP
+   ========================================================= */
+/* Lucro presumido e apurado trimestralmente: os 60 meses recuperaveis
+   equivalem a 20 declaracoes. Cada uma carrega a SELIC da sua propria idade,
+   somada de forma simples (art. 39, §4º, da Lei 9.250/95), de modo que as
+   competencias mais antigas valem mais. Valor sempre proporcional ao %
+   equiparavel, porque a economia mensal ja e apurada sobre essa parcela. */
+function agendaPD(E, iM, retro, m0, corr, inicio){
+  const n = Math.max(0, Math.round(retro/3));
+  const trims = [];
+  for(let k=1; k<=n; k++) trims.push({ k, idadeBase: 2 + 3*(n-k), nominal: 3*E });
+  trims.sort((a,b)=>b.idadeBase-a.idadeBase);                 // as mais antigas primeiro
+  const dist = String(P.pdDist).split(',').map(x=>Math.max(0, parseInt(x,10)||0));
+  const porMes = {};
+  let i = 0, off = 0;
+  while(i < trims.length && off <= 120){
+    const q = (off < dist.length) ? dist[off] : (dist[dist.length-1]||1);
+    const mes = (inicio===undefined ? m0 + P.pdIni : inicio) + off;
+    for(let j=0; j<q && i<trims.length; j++, i++){
+      const t = trims[i];
+      t.mes = mes;
+      t.idade = t.idadeBase + mes;                            // ate a data de recebimento
+      t.selic = corr ? t.nominal * iM * t.idade : 0;
+      t.valor = t.nominal + t.selic;
+      (porMes[mes] = porMes[mes] || []).push(t);
+    }
+    off++;
+  }
+  const total   = trims.reduce((a,t)=>a+t.valor, 0);
+  const nominal = trims.reduce((a,t)=>a+t.nominal, 0);
+  const ultimo  = Math.max(0, ...Object.keys(porMes).map(Number));
+  return { n, trims, porMes, total, nominal, selic: total-nominal, ultimo,
+           valorNoMes: m => (porMes[m]||[]).reduce((a,t)=>a+t.valor, 0),
+           qtdNoMes:   m => (porMes[m]||[]).length };
+}
+function cronoPD(){ return M.PD; }
+
+/* =========================================================
+   COMPARATIVO — 4 LINHAS DO TEMPO
+   ========================================================= */
+/* O cenario de cima segue os desfechos clicados no fluxograma.
+   Sem escolha alguma, assume deferimento na raia A e sentenca favoravel
+   com transito favoravel na raia B/C. */
+function cenario(){
+  const m0 = M.m0;
+  const tA  = NODES.find(n=>n.terminal==='A'  && statusOf(n)==='lit');
+  const tBC = NODES.find(n=>n.terminal==='BC' && statusOf(n)==='lit');
+  const optA = S.choices['A'];
+
+  let temCred = true, inicioPD = m0 + P.pdIni, rotA = 'restituição deferida';
+  if(tA){
+    temCred = !!tA.meta.aDue;
+    if(!temCred) rotA = 'restituição negada';
+    else if(optA === 'indefer'){
+      inicioPD = tA.month;
+      rotA = S.choices['ADRJ']==='ok' ? 'restituição só após a DRJ' : 'restituição só após o CARF';
+    }
+  }
+
+  let mRed = M.mRedSent, mB0 = M.mRedSent, temB = true, temC = true,
+      mCredC = M.mTransSent, cVal = M.valCsent, reverte = false, mTransR = M.mTransSent,
+      rotB = 'sentença favorável';
+  if(tBC){
+    const mb = tBC.meta;
+    temB = !!mb.bDue; temC = !!mb.cDue;
+    mRed = (mb.mRed === undefined) ? Infinity : mb.mRed;
+    mB0  = mb.bDue ? mb.mB0 : Infinity;
+    reverte = !!mb.reverte; mTransR = mb.mTransR;
+    cVal = mb.cVal || 0;
+    mCredC = (mb.mCredC !== undefined) ? mb.mCredC : Infinity;
+    rotB = tBC.title;
+  }
+  const PDc = temCred
+    ? agendaPD(M.E, M.c.iM, M.retro, m0, P.corr, inicioPD)
+    : { n:0, trims:[], porMes:{}, total:0, nominal:0, selic:0, ultimo:0,
+        valorNoMes:()=>0, qtdNoMes:()=>0 };
+  return { temCred, inicioPD, PDc, mRed, mB0, temB, temC, mCredC, cVal,
+           reverte, mTransR, rotA, rotB, escolhido: !!(tA || tBC) };
+}
+
+function comparativo(){
+  const c = M.c, E = M.E, m0 = M.m0;
+  const CE = cenario(), PD = CE.PDc;
+  const taxFull = c.irpjCheia + c.csllCheia;      // 32% sobre tudo
+  const taxRed  = c.irpjRed  + c.csllRed;         // 8%/12% na parcela equiparavel
+  const mAdm   = m0 + P.adm;
+  const mRed   = CE.mRed;
+  const mTrans = CE.mCredC;
+  const marcos0 = [isFinite(mRed)?mRed:0, isFinite(mTrans)?mTrans:0, PD.ultimo, m0+P.sent+P.tran];
+  const H = Math.min(80, Math.max(...marcos0) + 10);
+
+  const nC = M.nCparc;
+  const valC = CE.temC ? CE.cVal / nC : 0;
+
+  const fav = [], des = [];
+  for(let m=0; m<=H; m++){
+    const reduzido = (m >= mRed) && !(CE.reverte && m >= CE.mTransR);
+    const imposto = reduzido ? taxRed : taxFull;
+    // ---- favoravel
+    const brutoA = PD.valorNoMes(m);
+    const entA = 0.70*brutoA;                      // so o que cai na conta dele
+    const entC = (CE.temC && m > mTrans && m <= mTrans + nC) ? valC : 0;
+    const honB = (CE.temB && m >= CE.mB0 && m < CE.mB0+9) ? E : 0;
+    const honC = entC;
+    fav.push({ m, ent:entA+entC, entA, entC, brutoA, retidoA:0.30*brutoA, imposto,
+               exito:honB+honC, honB, honC,
+               qtd:PD.qtdNoMes(m) + (entC?1:0),
+               sai:imposto+honB+honC, ref:taxFull });
+    // ---- desfavoravel: nada reduz; entradas somente na versao "credito usufruido"
+    const corta = m <= mRed;                       // a Receita para de deferir apos a denegatoria
+    const dBruto = (S.desfav==='com' && corta) ? brutoA : 0;
+    const dEnt = 0.70*dBruto;
+    des.push({ m, ent:dEnt, entA:dEnt, entC:0, brutoA:dBruto, retidoA:0.30*dBruto,
+               imposto:taxFull, exito:0, honB:0, honC:0,
+               qtd:(S.desfav==='com'&&corta)?PD.qtdNoMes(m):0,
+               sai:taxFull, ref:taxFull });
+  }
+  const evFav = [
+    ...(M.simples ? [{m:0, t:'Alteração societária', k:'pre', d:'Adequação da forma ao fato, para eliminar discussão futura.'}] : []),
+    {m:m0,     t:'PER/DCOMP + MS', k:'lB', d:'Pedido administrativo dos '+PD.n+' trimestres e impetração do mandado de segurança, no mesmo mês.'},
+    ...(CE.temCred
+      ? [{m:CE.inicioPD, t:'1ª restituição cai', k:'good', d:'Começam a entrar as restituições em dinheiro, das competências mais antigas para as mais novas.'}]
+      : [{m:mAdm, t:'Restituição negada', k:'crit', d:'Sem crédito administrativo reconhecido, nada entra por essa via e a Modalidade A não é devida.'}]),
+    ...(isFinite(mRed) ? [{m:mRed, t:'Base reduzida em uso', k:'good', d:'O imposto cai de '+brl(taxFull)+' para '+brl(taxRed)+' por mês, por execução provisória do artigo 14, §3º, da Lei 12.016/2009.'}] : []),
+    ...(CE.temB ? [{m:CE.mB0+9, t:'Economia 100% dele', k:'fee', d:'Terminam os 9 meses da Modalidade B. Daí em diante a economia inteira fica com o cliente.'}] : []),
+    ...(CE.temC ? [{m:mTrans, t:'Trânsito favorável', k:'good', d:'Direito consolidado. O período do processo vira crédito recuperável.'}] : []),
+  ];
+  const evDes = [
+    ...(M.simples ? [{m:0, t:'Alteração societária', k:'pre', d:'Adequação da forma ao fato.'}] : []),
+    {m:m0,     t:'PER/DCOMP + MS', k:'lB', d:'Mesmo início do outro cenário.'},
+    {m:mRed,   t:'Sentença denegatória', k:'crit', d:'A cobertura do Termo alcança a sentença. A fase recursal é cotação à parte.'},
+    {m:mTrans, t:'Trânsito desfavorável', k:'crit', d:'Tese rejeitada. Nada é devido à Back4You.'},
+  ];
+  const totEntF = fav.reduce((a,r)=>a+r.ent,0), totSaiF = fav.reduce((a,r)=>a+r.sai,0);
+  const totRefF = fav.reduce((a,r)=>a+r.ref,0);
+  const totBrutoA = fav.reduce((a,r)=>a+r.brutoA,0);
+  return { fav, des, evFav, evDes, H, taxFull, taxRed, mRed, mTrans, mAdm, PD, CE,
+           totEntF, totSaiF, totRefF, totBrutoA, ganho: totEntF - totSaiF + totRefF };
+}
+
+const CIN  = {k:'ent', label:'Entra na conta do cliente', col:'var(--cin)'};
+const COUT = [
+  {k:'imposto', label:'IRPJ + CSLL', col:'var(--ctax)'},
+  {k:'exito',   label:'Êxito Back4You', col:'var(--cfee)'},
+];
+
+function renderComp(){
+  const K = comparativo();
+  const LM=118, SW=21, BW=8, EVH=30, BAH=196, GAP=10, TOPP=6;
+  const maxE = Math.max(...K.fav.concat(K.des).map(r=>r.ent), 1);
+  const maxS = Math.max(...K.fav.concat(K.des).map(r=>r.sai), 1);
+  const W = Math.max(LM + (K.H+1)*SW + 26, 700);
+  const UP = Math.max(26, Math.round((BAH-14) * maxE/(maxE+maxS))), DN = BAH-14-UP;
+
+  function evLane(ev, y){
+    let o = `<rect x="${LM-8}" y="${y}" width="${W-LM-6}" height="${EVH}" rx="6"
+              fill="var(--neutral-bg)" fill-opacity=".7"/>`;
+    /* mês pode vir Infinity (desfecho sem base reduzida): cx="Infinity" é SVG
+       inválido e o navegador desenha o marco em x=0, fora da raia. */
+    ev.filter(e=>isFinite(e.m)).forEach(e=>{
+      const mx = LM + e.m*SW;
+      const col = e.k==='good'?'var(--good)':e.k==='crit'?'var(--critical)':
+                  e.k==='fee'?'var(--brand)':'var(--ink-3)';
+      o += `<g class="evg" data-tip="${e.d.replace(/"/g,'&quot;')}" data-tip-title="${e.t}">
+        <circle cx="${mx}" cy="${y+EVH/2}" r="7" fill="var(--surface)" stroke="${col}" stroke-width="2"/>
+        <circle cx="${mx}" cy="${y+EVH/2}" r="3" fill="${col}"/>
+        <rect x="${mx-9}" y="${y}" width="18" height="${EVH}" fill="transparent"/></g>`;
+    });
+    return o;
+  }
+
+  let y = TOPP, out='';
+  const cen = [
+    {ev:K.evFav, d:K.fav, lab:K.CE.escolhido?'Escolhido':'Favorável', sub:K.CE.rotA},
+    {ev:K.evDes, d:K.des, lab:'Desfavorável', sub:'nada dá certo'},
+  ];
+  cen.forEach((C,ci)=>{
+    out += `<text x="4" y="${y+13}" class="qlb" style="font-size:12px">${C.lab}</text>`;
+    out += `<text x="4" y="${y+26}" class="axl" style="font-size:9.5px">${C.sub||'cenário'}</text>`;
+    out += evLane(C.ev, y);
+    y += EVH + 2;
+    const zero = y + UP;
+    out += `<line x1="${LM-8}" y1="${zero}" x2="${W-12}" y2="${zero}" stroke="var(--text-secondary)" stroke-opacity=".55"/>`;
+    out += `<text x="4" y="${zero-6}" class="axl" style="font-size:9.5px">entra</text>`;
+    out += `<text x="4" y="${zero+13}" class="axl" style="font-size:9.5px">sai</text>`;
+    // referencia: imposto de hoje
+    const yr = zero + (K.taxFull/maxS)*DN;
+    out += `<line x1="${LM}" y1="${yr}" x2="${W-12}" y2="${yr}" stroke="var(--ref)" stroke-width="1.5"
+             stroke-dasharray="4 4" stroke-opacity=".8"/>`;
+    if(!C.d.some(r=>r.ent>0.5)){
+      out += `<text x="${LM+(W-LM)/2}" y="${zero-UP/2}" class="axl" text-anchor="middle"
+               style="font-size:11px">nada entra na conta</text>`;
+    }
+    C.d.forEach(r=>{
+      const xc = LM + r.m*SW;
+      // entrada, para cima
+      if(r.ent > 0.5){
+        const h = (r.ent/maxE)*UP;
+        out += `<path d="${rectTop(xc+1, zero-h, BW, h, 3)}" fill="${CIN.col}"/>`;
+      }
+      // saidas, empilhadas para baixo
+      let acc = 0;
+      COUT.forEach((sr,j)=>{
+        const v = r[sr.k]||0; if(v<0.5) return;
+        const y0 = zero + (acc/maxS)*DN, hh = (v/maxS)*DN;
+        out += `<rect x="${xc-BW-1}" y="${y0}" width="${BW}" height="${Math.max(0.8,hh-1)}" fill="${sr.col}"/>`;
+        acc += v;
+      });
+      const tipo = ci===0?'MS favorável':'MS desfavorável';
+      const det = `<table>
+        <tr><td><i class="dot" style="background:${CIN.col}"></i>Entra na conta${r.qtd?' ('+r.qtd+' PER/DCOMP)':''}</td><td class="n">${brl(r.ent)}</td></tr>
+        ${r.brutoA>0.5?`<tr><td style="color:var(--ink-3);padding-left:15px">restituição bruta ${brl(r.brutoA)}, já líquida do êxito de 30%</td><td class="n" style="color:var(--ink-3)">−${brl(r.retidoA)}</td></tr>`:''}
+        ${COUT.map(sr=>(r[sr.k]||0)>0.5?`<tr><td><i class="dot" style="background:${sr.col}"></i>${sr.label}</td><td class="n">${brl(r[sr.k])}</td></tr>`:'').join('')}
+        <tr><td style="border-top:1px solid var(--rule);padding-top:5px"><b>Saldo do mês</b></td>
+            <td class="n" style="border-top:1px solid var(--rule);padding-top:5px;color:${(r.ent-r.sai)>=0?'var(--good-ink)':'var(--ink-1)'}">${brl(r.ent-r.sai)}</td></tr>
+        <tr><td style="color:var(--ink-3)">Pagaria hoje só de imposto</td><td class="n" style="color:var(--ink-3)">${brl(r.ref)}</td></tr></table>`;
+      out += `<rect x="${xc-SW/2}" y="${y}" width="${SW}" height="${BAH-14}" fill="transparent"
+               data-tip="${det.replace(/"/g,'&quot;')}" data-tip-title="${tipo} · mês ${r.m}"/>`;
+    });
+    y += BAH - 14 + 8;
+    for(let m=0; m<=K.H; m+=6){
+      out += `<text x="${LM+m*SW}" y="${y}" class="axl" text-anchor="middle" style="font-size:9.5px">m${m}</text>`;
+    }
+    y += GAP + 12;
+  });
+
+  // ---------- linha acumulada: restituido + nao gasto, liquido de exito ----------
+  let ac = 0;
+  const curva = K.fav.map(r=>{
+    ac += r.ent + (r.ref - r.imposto) - r.exito;
+    return { m:r.m, v:ac };
+  });
+  const acMax = Math.max(1, curva[curva.length-1].v);
+  const CH = 132, CTOP = 12;
+  const cxOf = m => LM + m*SW;
+  const cyOf = v => CTOP + (CH-30) - (v/acMax)*(CH-30);
+  let cur = '';
+  for(let i=0;i<=4;i++){
+    const v = acMax*i/4, yy = cyOf(v);
+    cur += `<line class="gl" x1="${LM}" y1="${yy}" x2="${W-12}" y2="${yy}"/>`;
+    cur += `<text x="${LM-8}" y="${yy+3.5}" class="axl" text-anchor="end" style="font-size:9px">${i===0?'0':kbrl(v)}</text>`;
+  }
+  cur += `<path d="${curva.map((pt,i)=>(i?'L':'M')+cxOf(pt.m)+' '+cyOf(pt.v)).join(' ')}"
+           fill="none" stroke="var(--cin)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  cur += `<path d="${curva.map((pt,i)=>(i?'L':'M')+cxOf(pt.m)+' '+cyOf(pt.v)).join(' ')} L ${cxOf(K.H)} ${cyOf(0)} L ${cxOf(0)} ${cyOf(0)} Z"
+           fill="var(--cin)" fill-opacity=".10"/>`;
+  // marcos: sentenca, fim de B e janela da Modalidade C
+  [[K.mRed,'sentença'],[K.mRed+9,'fim do êxito B'],[K.mTrans+1,'Modalidade C']].forEach(([mm,lb])=>{
+    const pt = curva.find(x=>x.m===mm); if(!pt) return;
+    cur += `<line x1="${cxOf(mm)}" y1="${cyOf(pt.v)}" x2="${cxOf(mm)}" y2="${cyOf(0)}"
+             stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3" stroke-opacity=".5"/>`;
+    cur += `<circle cx="${cxOf(mm)}" cy="${cyOf(pt.v)}" r="4" fill="var(--surface)" stroke="var(--cin)" stroke-width="2"/>`;
+    cur += `<text x="${cxOf(mm)}" y="${cyOf(0)+13}" class="axl" text-anchor="middle" style="font-size:9px">${lb}</text>`;
+  });
+  const fim = curva[curva.length-1];
+  cur += `<text x="${Math.min(W-14, cxOf(fim.m)+8)}" y="${cyOf(fim.v)+4}" text-anchor="end"
+           style="font-size:12px;font-weight:800;fill:var(--good-ink)">${brl(fim.v)}</text>`;
+  curva.forEach(pt=>{
+    cur += `<rect x="${cxOf(pt.m)-SW/2}" y="${CTOP}" width="${SW}" height="${CH-18}" fill="transparent"
+             data-tip="Somando o que já foi restituído, líquido do êxito, com o imposto que deixou de pagar até aqui: <b>${brl(pt.v)}</b>. A curva nunca cai — nos meses da Modalidade C o que entra e o que sai se anulam, e a economia mensal continua somando."
+             data-tip-title="Benefício acumulado · mês ${pt.m}"/>`;
+  });
+
+  const leg = `<span><i class="sw" style="background:${CIN.col}"></i>${CIN.label}</span>`
+    + COUT.map(sr=>`<span><i class="sw" style="background:${sr.col}"></i>${sr.label}</span>`).join('')
+    + `<span><i class="sw dash"></i>imposto de hoje</span>`;
+
+  document.getElementById('comp').innerHTML =
+    `<div class="vlegend">${leg}
+      <span style="margin-left:auto">Raia desfavorável:
+      <span class="seg mini" id="segDes">
+        <button data-v="sem" aria-pressed="${S.desfav!=='com'}">crédito não confirmado</button>
+        <button data-v="com" aria-pressed="${S.desfav==='com'}">crédito já usufruído</button>
+      </span></span></div>
+     <div class="vscroll"><svg width="${W}" height="${y}" viewBox="0 0 ${W} ${y}">${out}</svg></div>
+     <div style="border-top:1px solid var(--rule);margin-top:14px;padding-top:12px">
+       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+         <div><b style="font-size:13.5px">Benefício acumulado do cliente</b>
+           <span class="axl" style="display:block;font-size:11.5px">restituição recebida + imposto que deixou de pagar, já descontado o êxito</span></div>
+       </div>
+       <div class="vscroll"><svg width="${W}" height="${CH}" viewBox="0 0 ${W} ${CH}">${cur}</svg></div>
+     </div>
+     <div class="tiles" style="margin-top:14px">
+       <div class="tile acc" data-tip="Já líquido do êxito. A restituição bruta dos ${K.PD.n} trimestres é de ${brl(K.totBrutoA)}; 30% ficam com a Back4You e ${brl(K.totBrutoA*0.7)} caem na conta do cliente, somados ao período do processo." data-tip-title="Entra na conta">
+         <div class="k">Entra na conta</div><div class="v">${brl(K.totEntF)}</div><div class="n">${K.CE.temCred?'líquido, dos '+K.PD.n+' PER/DCOMP':'sem restituição neste desfecho'}</div></div>
+       <div class="tile acc" data-tip="Diferença entre o que ele teria pago só de imposto sem fazer nada e o que efetivamente sai, somada ao que entra." data-tip-title="Ganho no período">
+         <div class="k">Ganho no período</div><div class="v">${brl(K.ganho)}</div><div class="n">contra não fazer nada</div></div>
+       <div class="tile acc" data-tip="Do 10º mês após a sentença em diante a economia é integralmente do cliente." data-tip-title="Economia perpétua">
+         <div class="k">Depois, por mês</div><div class="v">${brl(M.E)}</div><div class="n">100% dele, sem honorário</div></div>
+     </div>`;
+
+  document.querySelectorAll('#segDes button').forEach(b=>{
+    b.addEventListener('click',()=>{ S.desfav = b.dataset.v; renderComp(); });
+  });
+}
+
+/* =========================================================
+   LIGACOES DE UI
+   ========================================================= */
+document.querySelectorAll('#tipo button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#tipo button').forEach(x=>x.setAttribute('aria-pressed', x===b));
+    S.tipo = b.dataset.v;
+    const rt = document.getElementById('pRetro');
+    rt.value = 60; P.retro = 60;
+    S.choices = {};
+    render();
+  });
+});
+document.getElementById('fat').addEventListener('input',e=>{ S.fat=+e.target.value||0; render(); });
+document.getElementById('pct').addEventListener('input',e=>{
+  S.pct=+e.target.value; document.getElementById('pctv').textContent=S.pct+'%'; render();
+});
+const premMap = {pAlt:'alt',pAdm:'adm',pDrj:'drj',pCarf:'carf',pSent:'sent',pTran:'tran',
+                 pAcor:'acor',pRetro:'retro',pSelic:'selic',pPis:'pis',pCbs:'cbs',pMcbs:'mcbs',pPdIni:'pdIni'};
+Object.keys(premMap).forEach(id=>{
+  document.getElementById(id).addEventListener('input',e=>{ P[premMap[id]] = +e.target.value||0; render(); });
+});
+document.getElementById('pPdDist').addEventListener('input',e=>{ P.pdDist=e.target.value; render(); });
+document.getElementById('cSelic').addEventListener('change',e=>{ P.corr=e.target.checked; render(); });
+document.getElementById('cAdic').addEventListener('change',e=>{ P.adic=e.target.checked; render(); });
+document.getElementById('reset').addEventListener('click',()=>{ S.choices={}; render(); });
+// tooltip global: o texto some da tela e volta no hover
+const gtip = document.getElementById('tip');
+document.addEventListener('mousemove', ev=>{
+  const el = ev.target.closest('[data-tip]');
+  if(!el || !el.dataset.tip){ if(!gtip.dataset.chart) gtip.style.display='none'; return; }
+  gtip.dataset.chart='';
+  gtip.innerHTML = `<div class="th">${el.dataset.tipTitle || ''}</div>${el.dataset.tip}`;
+  gtip.style.display='block';
+  const w=gtip.offsetWidth, h=gtip.offsetHeight;
+  gtip.style.left = Math.min(window.innerWidth-w-12, Math.max(8, ev.clientX+16))+'px';
+  gtip.style.top  = Math.max(8, Math.min(window.innerHeight-h-10, ev.clientY-h-12))+'px';
+});
+window.addEventListener('resize', drawWires);
+
+/* =========================================================
+   CHAVE DA EQUIPE
+   ========================================================= */
+const CHAVE_OK='b4u-equipe-2026';
+function chaveAtual(){
+  const q=new URLSearchParams(location.search).get('chave');
+  const h=(location.hash||'').replace('#','').trim();
+  return (q||h||'').trim();
+}
+(function boot(){
+  const ch=chaveAtual();
+  if(ch!==CHAVE_OK){ document.getElementById('gate').hidden=false; return; }
+  document.getElementById('app').hidden=false;
+  document.getElementById('volta').href='comercial.html?chave='+encodeURIComponent(ch);
+  render();
+})();
+</script>
+</div>
+</body>
+</html>

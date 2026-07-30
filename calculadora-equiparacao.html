@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora — Equiparação hospitalar | back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
+  --good-bg:#E7F4EC;--good-ink:#2E7D52;--good-br:#C9E4D3;
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+svg{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- barra do site ---------- */
+.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:800;font-size:17px;letter-spacing:-.02em}
+.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .spacer{flex:1}
+.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
+.barra a.volta:hover{color:#fff}
+
+.wrap{max-width:1060px;margin:0 auto;padding:0 20px}
+.section-wrap{max-width:1060px;margin:0 auto;padding:0 20px}
+
+/* ---------- faixa de topo ---------- */
+.topbar{background:var(--brand-euc);color:#06302b;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 16px;text-align:center}
+.topbar p{font-size:12.5px;font-weight:600}
+.topbar strong{font-weight:800}
+.topbar-dot{width:6px;height:6px;border-radius:50%;background:#06302b;opacity:.45;flex:none}
+
+/* ---------- hero ---------- */
+.hero{position:relative;overflow:hidden;background:var(--brand-dark);color:#fff;padding:44px 0 40px}
+.hero-bg-circle{position:absolute;border-radius:50%;pointer-events:none}
+.hero-bg-circle-1{width:420px;height:420px;background:rgba(63,166,128,.13);top:-170px;right:-110px}
+.hero-bg-circle-2{width:300px;height:300px;background:rgba(15,140,133,.16);bottom:-160px;left:-90px}
+.hero-inner{position:relative;max-width:1060px;margin:0 auto;padding:0 20px;text-align:center}
+.badge-top{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#cfe6e2;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:6px 13px}
+.badge-top svg{font-size:14px}
+.hero h1{font-size:33px;font-weight:800;line-height:1.22;letter-spacing:-.02em;margin:16px 0 0}
+.hero h1 .hi-teal{color:var(--brand-euc)}
+.hero h1 .hi-pill{display:inline-block;background:var(--brand-euc);color:#06302b;border-radius:10px;padding:1px 12px}
+.hero-subtitle{color:#cfe6e2;font-size:14.5px;max-width:70ch;margin:16px auto 0;line-height:1.6}
+.hero-subtitle strong{color:#fff;font-weight:700}
+.hero-stats{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:20px;margin-top:24px}
+.stat-item{display:flex;flex-direction:column;gap:2px}
+.stat-item .n{font-size:17px;font-weight:800;color:#fff}
+.stat-item .l{font-size:11.5px;color:#9fc4bf;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.stat-div{width:1px;height:32px;background:rgba(255,255,255,.18)}
+
+/* ---------- trust bar ---------- */
+.trust-bar{background:var(--surface);border-bottom:1px solid var(--line)}
+.trust-inner{max-width:1060px;margin:0 auto;padding:13px 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 26px}
+.trust-item{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.trust-icon{width:22px;height:22px;flex:none;border-radius:50%;background:var(--good-bg);color:var(--good-ink);display:flex;align-items:center;justify-content:center}
+.trust-icon svg{font-size:12px}
+
+/* ---------- secoes ---------- */
+.main-section,.how-section,.info-links-section,.cta-section{padding:34px 0}
+.section-eyebrow{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--brand-teal);text-align:center}
+.section-title{font-size:24px;font-weight:800;letter-spacing:-.01em;text-align:center;margin-top:6px}
+.section-desc{color:var(--ink-2);font-size:13.5px;text-align:center;margin-top:6px}
+
+/* ---------- info links ---------- */
+.info-links-grid{max-width:1060px;margin:0 auto;padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));gap:12px}
+.info-link-card{position:relative;display:flex;flex-direction:column;gap:7px;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 17px;transition:border-color .12s,transform .1s,box-shadow .12s}
+.info-link-card:hover{border-color:var(--brand-teal);transform:translateY(-1px);box-shadow:0 6px 18px rgba(7,48,52,.09)}
+.ilc-icon{width:36px;height:36px;border-radius:10px;background:var(--surface-warm);border:1px solid var(--line);color:var(--brand-teal);display:flex;align-items:center;justify-content:center}
+.ilc-icon svg{font-size:17px}
+.ilc-tag{align-self:flex-start;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#0c6b64;background:#EAF4F1;border:1px solid #cfe6e2;border-radius:20px;padding:3px 9px}
+.ilc-title{font-size:14.5px;font-weight:700;line-height:1.3}
+.ilc-desc{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ilc-arrow{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:4px;font-size:12.5px;font-weight:700;color:var(--brand-teal)}
+.ilc-arrow svg{font-size:13px}
+.info-link-card:hover .ilc-arrow svg{transform:translateX(2px)}
+
+/* ---------- card da calculadora ---------- */
+.calc-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:20px;box-shadow:0 6px 22px rgba(7,48,52,.06)}
+.calc-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 19px;background:var(--brand-dark);color:#fff}
+.calc-card-header .htitle{font-size:15.5px;font-weight:800}
+.calc-card-header .hsub{font-size:12.5px;color:#9fc4bf;margin-top:3px}
+.live-badge{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#cfe6e2;background:rgba(255,255,255,.10);border-radius:999px;padding:5px 11px;flex:none}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--brand-euc);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.calc-body{padding:19px}
+.inputs-grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:760px){.inputs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.field-card{background:var(--surface-warm);border:1px solid var(--line);border-radius:12px;padding:14px 15px}
+.field-card:focus-within{border-color:var(--brand-teal)}
+.field-label{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:13px}
+.field-label .fl-text{font-size:13px;font-weight:700;line-height:1.3}
+.field-label .fl-hint{font-size:11.5px;color:var(--muted)}
+.field-val{font-size:16px;font-weight:800;color:var(--brand-teal);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;
+  background:linear-gradient(90deg,var(--brand-teal) var(--fill,0%),var(--line-2) var(--fill,0%));cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:19px;height:19px;border-radius:50%;
+  background:#fff;border:3px solid var(--brand-teal);box-shadow:0 1px 4px rgba(7,48,52,.22);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;background:#fff;
+  border:3px solid var(--brand-teal);box-shadow:0 1px 4px rgba(7,48,52,.22);cursor:pointer}
+input[type=range]:disabled{opacity:.5;cursor:not-allowed}
+
+.switch-card{display:flex;align-items:center;gap:12px;background:var(--surface-warm);border:1px solid var(--line);border-radius:12px;padding:14px 15px;cursor:pointer}
+.switch-card input{position:absolute;opacity:0;width:0;height:0}
+.track{position:relative;width:42px;height:23px;border-radius:999px;background:var(--line-2);flex:none;transition:background .15s}
+.thumb{position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(7,48,52,.25);transition:transform .15s}
+.switch-card input:checked+.track{background:var(--brand-teal)}
+.switch-card input:checked+.track .thumb{transform:translateX(19px)}
+.switch-lbl{font-size:12.5px;color:var(--ink-2);line-height:1.45}
+.switch-lbl strong{color:var(--brand-teal);font-weight:700}
+
+.acoes{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+.btn-acao{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:13.5px;font-weight:700;
+  border-radius:999px;padding:11px 18px;cursor:pointer;text-decoration:none;border:1px solid var(--line-2);
+  background:var(--surface);color:var(--ink-2)}
+.btn-acao:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
+.btn-acao.solid{background:var(--brand-teal);border-color:transparent;color:#fff}
+.btn-acao.solid:hover{background:#0c7a74;color:#fff}
+.btn-acao svg{font-size:15px}
+
+/* ---------- KPIs ---------- */
+.kpis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:18px}
+.kpi{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line-2);border-radius:12px;padding:14px 15px}
+.kpi-1{border-left-color:var(--muted)}
+.kpi-2{border-left-color:var(--brand-teal)}
+.kpi-3{border-left-color:var(--brand-euc)}
+.kpi-4{border-left-color:var(--amber)}
+.kpi .k-icon{color:var(--muted);font-size:15px;margin-bottom:6px}
+.kpi .k-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.kpi .k-value{font-size:23px;font-weight:800;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi-3 .k-value,.kpi-4 .k-value{color:var(--good-ink)}
+
+.kpi-recover{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-top:12px;
+  background:var(--good-bg);border:1px solid var(--good-br);border-radius:12px;padding:16px 18px}
+.kpi-recover .kr-eyebrow{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--good-ink)}
+.kpi-recover .kr-title{font-size:13.5px;font-weight:600;color:var(--ink);margin-top:4px;max-width:56ch;line-height:1.45}
+.kpi-recover .kr-value{font-size:28px;font-weight:800;letter-spacing:-.02em;color:var(--good-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.premissas{margin-top:16px;border-top:1px solid var(--line);padding-top:13px}
+.premissas summary{cursor:pointer;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--brand-teal)}
+.premissas .txt{font-size:12.5px;color:var(--ink-2);line-height:1.65;margin-top:11px}
+.premissas .txt b{color:var(--ink)}
+.premissas ul{margin:8px 0 0 18px}
+.premissas li{margin-bottom:4px}
+
+/* ---------- como funciona ---------- */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:20px}
+.how-step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.how-step-num{width:32px;height:32px;border-radius:10px;background:var(--brand-teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.how-step:nth-child(2) .how-step-num{background:var(--brand-euc)}
+.how-step:nth-child(3) .how-step-num{background:var(--amber)}
+.how-step h3{font-size:15px;font-weight:700;margin-top:12px}
+.how-step p{font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.55}
+
+/* ---------- CTA ---------- */
+.cta-card{max-width:1060px;margin:0 auto;background:var(--brand-dark);color:#fff;border-radius:16px;padding:24px 26px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.cta-card .cta-txt h2{font-size:20px;font-weight:800;letter-spacing:-.01em}
+.cta-card .cta-txt p{color:#cfe6e2;font-size:13.5px;margin-top:6px;max-width:60ch}
+.cta-card .cta-txt p strong{color:#fff;font-weight:700}
+.cta-btns{display:flex;gap:9px;flex-wrap:wrap;flex:none}
+.btn-wa,.btn-sim{display:inline-flex;align-items:center;gap:9px;text-decoration:none;font-weight:800;font-size:14px;border-radius:999px;padding:13px 20px;white-space:nowrap}
+.btn-wa{background:var(--brand-euc);color:#06302b}
+.btn-wa:hover{background:#4ab68f}
+.btn-sim{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.22)}
+.btn-sim:hover{background:rgba(255,255,255,.18)}
+.btn-wa svg,.btn-sim svg{font-size:17px}
+
+/* ---------- prova social ---------- */
+.proof-bar{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.proof-inner{max-width:1060px;margin:0 auto;padding:14px 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 18px}
+.proof-stars{display:flex;gap:2px;color:var(--amber)}
+.proof-stars svg{font-size:14px;fill:var(--amber);stroke:none}
+.proof-text{font-size:12.5px;color:var(--ink-2)}
+.proof-text strong{color:var(--ink);font-weight:700}
+.proof-sep{width:1px;height:16px;background:var(--line-2)}
+
+footer.fine{max-width:1060px;margin:0 auto;padding:24px 20px 70px;font-size:11.5px;color:var(--muted);line-height:1.65}
+
+/* ---------- aviso de copia ---------- */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:90;background:var(--brand-dark);color:#fff;
+  font-size:13px;font-weight:600;padding:11px 18px;border-radius:999px;box-shadow:0 8px 26px rgba(7,48,52,.28);display:none}
+
+/* ---------- bloqueio por chave ---------- */
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:62vh;text-align:center;padding:0 24px}
+.state h1{font-size:20px;font-weight:800}
+.state p{color:var(--muted);font-size:14px;max-width:48ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
+.cad{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-size:20px}
+
+@media(max-width:640px){
+  .hero h1{font-size:26px}
+  .hero{padding:32px 0 30px}
+  .kpi .k-value{font-size:20px}
+  .kpi-recover .kr-value{font-size:24px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="barra">
+  <span class="logo">back<span class="y">4you</span></span>
+  <span class="tag">Comercial · Calculadora</span>
+  <span class="spacer"></span>
+  <a class="volta" id="volta" href="comercial.html">← Materiais</a>
+</div>
+
+<div id="gate" hidden>
+  <div class="state">
+    <div class="cad">🔒</div>
+    <h1>Acesso restrito</h1>
+    <p>Esta é uma área interna da equipe. Abra pelo hub do comercial, com a
+       <code>chave</code> no endereço.</p>
+  </div>
+</div>
+
+<main id="app" hidden>
+
+  <!-- FAIXA DE TOPO -->
+  <div class="topbar">
+    <div class="topbar-dot"></div>
+    <p><strong>Benefício previsto em lei desde 1995</strong> — mais de 500.000 clínicas já utilizam a Equiparação Hospitalar</p>
+    <div class="topbar-dot"></div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg-circle hero-bg-circle-1"></div>
+    <div class="hero-bg-circle hero-bg-circle-2"></div>
+    <div class="hero-inner">
+      <div class="badge-top">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Calculadora · resultado ao vivo
+      </div>
+
+      <h1>
+        Descubra quanto a clínica<br>
+        pode <span class="hi-teal">economizar</span> com<br>
+        <span class="hi-pill">Equiparação Hospitalar</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        A <strong>Equiparação Hospitalar</strong> reduz legalmente a base de IRPJ e CSLL para clínicas
+        que realizam procedimentos além de consultas simples. Ajuste os controles e mostre o impacto
+        no caixa do cliente.
+      </p>
+
+      <div class="hero-stats">
+        <div class="stat-item"><span class="n">+500 mil</span><span class="l">Clínicas aplicando</span></div>
+        <div class="stat-div"></div>
+        <div class="stat-item"><span class="n">Desde 1995</span><span class="l">Previsto em lei</span></div>
+        <div class="stat-div"></div>
+        <div class="stat-item"><span class="n">100% legal</span><span class="l">Lucro Presumido</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST BAR -->
+  <div class="trust-bar">
+    <div class="trust-inner">
+      <div class="trust-item">
+        <div class="trust-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        Sem risco tributário
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        Nada é enviado para fora
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        Resultado em segundos
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        Especialistas contábeis
+      </div>
+    </div>
+  </div>
+
+  <!-- CALCULADORA -->
+  <section class="main-section">
+    <div class="section-wrap">
+      <p class="section-eyebrow">Simulação personalizada</p>
+      <h2 class="section-title">Calcule a economia agora</h2>
+      <p class="section-desc">Ajuste os valores abaixo e veja o resultado em tempo real</p>
+
+      <div class="calc-card" id="calc-b4u">
+        <div class="calc-card-header">
+          <div>
+            <div class="htitle">Calculadora de Equiparação Hospitalar</div>
+            <div class="hsub">Estimativa no regime do Lucro Presumido (IRPJ, CSLL, PIS, COFINS, ISS)</div>
+          </div>
+          <div class="live-badge"><div class="live-dot"></div>Ao vivo</div>
+        </div>
+
+        <div class="calc-body">
+          <div class="inputs-grid">
+
+            <div class="field-card">
+              <div class="field-label">
+                <div>
+                  <div class="fl-text">ISS do município (%)</div>
+                  <span class="fl-hint">Imposto Sobre Serviços</span>
+                </div>
+                <div class="field-val" id="iss-val">2%</div>
+              </div>
+              <input id="iss" type="range" min="2" max="5" step="1" value="2" aria-label="ISS (%)">
+            </div>
+
+            <label class="switch-card">
+              <input id="assumir2" type="checkbox">
+              <span class="track"><span class="thumb"></span></span>
+              <span class="switch-lbl">Não sei o ISS do município<br><strong>→ usar 2% (São Paulo)</strong></span>
+            </label>
+
+            <div class="field-card">
+              <div class="field-label">
+                <div>
+                  <div class="fl-text">Faturamento mensal médio</div>
+                  <span class="fl-hint">Receita bruta da clínica</span>
+                </div>
+                <div class="field-val" id="fat-val">R$&nbsp;200 mil</div>
+              </div>
+              <input id="fat" type="range" min="0" max="1000000" step="5000" value="200000" aria-label="Faturamento mensal (R$)">
+            </div>
+
+            <div class="field-card">
+              <div class="field-label">
+                <div>
+                  <div class="fl-text">% da receita em consultas simples</div>
+                  <span class="fl-hint">Sem procedimentos, exames ou cirurgias</span>
+                </div>
+                <div class="field-val" id="consultas-val">20%</div>
+              </div>
+              <input id="consultas" type="range" min="0" max="100" step="5" value="20" aria-label="% de consultas">
+            </div>
+
+          </div>
+
+          <div class="acoes">
+            <button type="button" class="btn-acao solid" id="btn-copiar">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar resumo
+            </button>
+            <a class="btn-acao" id="btn-wa-topo" href="#" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              Mandar no WhatsApp
+            </a>
+            <button type="button" class="btn-acao" id="btn-reset">
+              <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/></svg>
+              Reiniciar
+            </button>
+          </div>
+
+          <div class="kpis-grid">
+            <div class="kpi kpi-1">
+              <div class="k-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <div class="k-label">Alíquota total estimada</div>
+              <div class="k-value" id="aliq-total">—</div>
+            </div>
+            <div class="kpi kpi-2">
+              <div class="k-icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+              <div class="k-label">Redução de IRPJ e CSLL</div>
+              <div class="k-value" id="aliquota">—</div>
+            </div>
+            <div class="kpi kpi-3">
+              <div class="k-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+              <div class="k-label">Economia mensal</div>
+              <div class="k-value" id="econ-mensal">—</div>
+            </div>
+            <div class="kpi kpi-4">
+              <div class="k-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+              <div class="k-label">Economia anual</div>
+              <div class="k-value" id="econ-anual">—</div>
+            </div>
+          </div>
+
+          <div class="kpi-recover">
+            <div class="kr-left">
+              <div class="kr-eyebrow">Potencial de recuperação histórica</div>
+              <div class="kr-title">Além de pagar menos, é possível recuperar em conta o que foi pago nos últimos 5 anos</div>
+            </div>
+            <div class="kr-value" id="pot-5">—</div>
+          </div>
+
+          <details class="premissas">
+            <summary>Como a conta é feita</summary>
+            <div class="txt">
+              <ul>
+                <li><b>Base presumida.</b> Sem equiparação, 32% da receita para IRPJ e CSLL. Com equiparação,
+                    a parcela equiparável entra a <b>8%</b> (IRPJ) e <b>12%</b> (CSLL); as consultas simples
+                    seguem a 32%.</li>
+                <li><b>Alíquotas.</b> IRPJ 15% + adicional de 10% sobre a base presumida que passar de
+                    R$ 20.000 no mês; CSLL 9%; PIS 0,65% e COFINS 3% sobre a receita; ISS conforme o município.</li>
+                <li><b>Economia mensal.</b> Estimada em <b>5,4% da receita equiparável</b> — a diferença de
+                    carga entre apurar a 32% e apurar a 8% e 12%.</li>
+                <li><b>Últimos 5 anos.</b> Economia anual × 5, sem correção pela SELIC. Na proposta o valor
+                    corrigido aparece no simulador da linha do tempo.</li>
+              </ul>
+              Estimativa de apoio comercial: não substitui o diagnóstico técnico nem o Termo de
+              Oportunidade Identificada.
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFERENCIAS -->
+  <section class="info-links-section">
+    <div class="section-wrap">
+      <p class="section-eyebrow">Para mandar depois da conversa</p>
+      <h2 class="section-title">Materiais de apoio</h2>
+      <p class="section-desc">Links públicos do site, para enviar ao cliente</p>
+    </div>
+    <div class="info-links-grid" style="margin-top:20px">
+
+      <a href="https://back4you.com.br/quais-cnaes-podem-fazer-equiparacao-hospitalar/" class="info-link-card" target="_blank" rel="noopener">
+        <div class="ilc-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
+        <span class="ilc-tag">Elegibilidade</span>
+        <div class="ilc-title">CNAEs e atividades que se qualificam</div>
+        <div class="ilc-desc">Quais códigos de atividade permitem o enquadramento na Equiparação Hospitalar.</div>
+        <span class="ilc-arrow">Abrir <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </a>
+
+      <a href="https://back4you.com.br/requisitos-equiparacao-hospitalar-guia-completo/" class="info-link-card" target="_blank" rel="noopener">
+        <div class="ilc-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <span class="ilc-tag">Requisitos</span>
+        <div class="ilc-title">Guia completo de requisitos</div>
+        <div class="ilc-desc">Todos os critérios que a clínica precisa atender para ter o benefício aprovado.</div>
+        <span class="ilc-arrow">Abrir <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </a>
+
+      <a href="https://back4you.com.br/como-fazer-a-equiparacao-hospitalar/" class="info-link-card" target="_blank" rel="noopener">
+        <div class="ilc-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <span class="ilc-tag">Processo</span>
+        <div class="ilc-title">Passo a passo da Back4You</div>
+        <div class="ilc-desc">Como funciona a metodologia de implantação do benefício na clínica.</div>
+        <span class="ilc-arrow">Abrir <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </a>
+
+      <a href="https://back4you.com.br/o-que-e-equiparacao-hospitalar/" class="info-link-card" target="_blank" rel="noopener">
+        <div class="ilc-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <span class="ilc-tag">Base legal</span>
+        <div class="ilc-title">Fundamentos legais do benefício</div>
+        <div class="ilc-desc">A legislação que garante a Equiparação Hospitalar desde 1995 para serviços médicos.</div>
+        <span class="ilc-arrow">Abrir <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- COMO FUNCIONA -->
+  <section class="how-section">
+    <div class="section-wrap">
+      <p class="section-eyebrow">Como funciona</p>
+      <h2 class="section-title">Simples, legal e seguro</h2>
+      <p class="section-desc">O processo em 3 passos</p>
+      <div class="how-grid">
+        <div class="how-step">
+          <div class="how-step-num">1</div>
+          <h3>Simular a economia</h3>
+          <p>Faturamento e perfil da clínica na mão, a estimativa sai em segundos com base na legislação vigente.</p>
+        </div>
+        <div class="how-step">
+          <div class="how-step-num">2</div>
+          <h3>Diagnóstico técnico</h3>
+          <p>A equipe analisa o caso concreto, confirma a elegibilidade e apresenta o plano com prazos e honorários.</p>
+        </div>
+        <div class="how-step">
+          <div class="how-step-num">3</div>
+          <h3>Começar a economizar</h3>
+          <p>A Equiparação Hospitalar entra na apuração e o cliente passa a recolher menos IRPJ e CSLL.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-card">
+      <div class="cta-txt">
+        <h2>Quer aprofundar com o cliente?</h2>
+        <p>Abra o <strong>simulador da linha do tempo</strong> para mostrar prazos, desfechos e honorários por modalidade — ou continue a conversa no WhatsApp.</p>
+      </div>
+      <div class="cta-btns">
+        <a href="simulador-equiparacao.html" class="btn-sim" id="cta-simulador">
+          <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Abrir o simulador
+        </a>
+        <a href="#" class="btn-wa" id="cta-whatsapp" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          Falar no WhatsApp
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROVA SOCIAL -->
+  <div class="proof-bar">
+    <div class="proof-inner">
+      <div class="proof-stars">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <p class="proof-text"><strong>+500 clínicas</strong> já economizaram</p>
+      <div class="proof-sep"></div>
+      <p class="proof-text">Benefício previsto em lei · <strong>100% regularizado</strong></p>
+      <div class="proof-sep"></div>
+      <p class="proof-text">Especialistas em <strong>contabilidade médica</strong></p>
+    </div>
+  </div>
+
+  <footer class="fine">
+    Uso interno da equipe Back4You. Estimativa de apoio comercial calculada a partir das premissas do
+    Lucro Presumido informadas nesta página; não substitui o diagnóstico técnico do caso concreto nem o
+    Termo de Oportunidade Identificada. Os números não são enviados a nenhum servidor — ficam apenas
+    nesta tela.
+  </footer>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ chave da equipe ============ */
+const CHAVE_OK='b4u-equipe-2026';
+function chaveAtual(){
+  const q=new URLSearchParams(location.search).get('chave');
+  const h=(location.hash||'').replace('#','').trim();
+  return (q||h||'').trim();
+}
+
+/* ============ WhatsApp ============ */
+const WA_NUMBER='5512981723773';
+const WA_MSG='Olá! Gostaria de saber mais sobre a equiparação hospitalar!';
+const WA_URL=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_MSG)}`;
+
+/* ============ formatos ============ */
+const $ = s => document.querySelector(s);
+const nfBRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const nfPct = new Intl.NumberFormat('pt-BR',{style:'percent',minimumFractionDigits:2,maximumFractionDigits:2});
+const num = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?0:n; };
+
+const PADRAO={iss:2,fat:200000,consultas:20};
+const state={iss:.02,fat:200000,consultas:.20,equip:.80,aliquota_total:0,reducao:0,em:0,ea:0,p5:0};
+
+/* ============ cálculo (idêntico ao da página pública) ============ */
+function ircsRate(equip,fat){
+  const ib=.32*(1-equip)+.08*equip;
+  const cb=.32*(1-equip)+.12*equip;
+  const irpj=ib*.15;
+  const ad=(fat>0&&ib*fat>20000)?((ib*fat-20000)*.10)/fat:0;
+  const csll=cb*.09;
+  return irpj+ad+csll;
+}
+function totalRate(equip,fat,iss){
+  const ib=.32*(1-equip)+.08*equip;
+  const cb=.32*(1-equip)+.12*equip;
+  const irpj=ib*.15;
+  const ad=(fat>0&&ib*fat>20000)?((ib*fat-20000)*.10)/fat:0;
+  const csll=cb*.09;
+  return iss+.0065+.03+csll+irpj+ad;
+}
+
+function hydrateFromInputs(){
+  const issEl=$('#iss');
+  let issVal=.02;
+  if($('#assumir2').checked){
+    issVal=.02; issEl.value='2'; issEl.disabled=true;
+  } else {
+    issEl.disabled=false;
+    issVal=Math.min(5,Math.max(2,num(issEl.value)))/100;
+  }
+  state.iss=issVal;
+  state.fat=Math.max(0,num($('#fat').value));
+  const consPct=Math.min(100,Math.max(0,num($('#consultas').value)));
+  state.consultas=consPct/100;
+  state.equip=Math.max(0,1-consPct/100);
+  updateLabels();
+  paintFill($('#iss'),2,5);
+  paintFill($('#fat'),0,1000000);
+  paintFill($('#consultas'),0,100);
+}
+
+function calc(){
+  hydrateFromInputs();
+  const aliqTotal=Math.max(totalRate(state.equip,state.fat,state.iss),0);
+  state.aliquota_total=aliqTotal;
+  $('#aliq-total').textContent=nfPct.format(aliqTotal);
+
+  const baseIRCS=ircsRate(0,state.fat);
+  const currIRCS=ircsRate(state.equip,state.fat);
+  state.reducao=(baseIRCS>0)?(baseIRCS-currIRCS)/baseIRCS:0;
+  $('#aliquota').textContent=nfPct.format(state.reducao);
+
+  const em=state.fat*.054*state.equip;
+  state.em=Math.max(em,0); state.ea=Math.max(em*12,0); state.p5=Math.max(em*60,0);
+  $('#econ-mensal').textContent=nfBRL.format(state.em);
+  $('#econ-anual').textContent=nfBRL.format(state.ea);
+  $('#pot-5').textContent=nfBRL.format(state.p5);
+}
+
+function updateLabels(){
+  $('#iss-val').textContent=`${Math.round((state.iss||0)*100)}%`;
+  $('#fat-val').textContent = state.fat>=1000
+    ? 'R$ '+(state.fat/1000).toLocaleString('pt-BR',{maximumFractionDigits:0})+' mil'
+    : nfBRL.format(state.fat||0);
+  $('#consultas-val').textContent=`${Math.round((state.consultas||0)*100)}%`;
+}
+
+function paintFill(el,min,max){
+  if(!el) return;
+  const fill=((num(el.value)-min)/(max-min))*100;
+  el.style.setProperty('--fill',`${Math.max(0,Math.min(100,fill))}%`);
+}
+
+/* ============ resumo para copiar ============ */
+function resumo(){
+  const pctEquip=Math.round(state.equip*100);
+  return [
+    'Equiparação Hospitalar — estimativa (Back4You)',
+    '',
+    `Faturamento mensal: ${nfBRL.format(state.fat)}`,
+    `Receita equiparável: ${pctEquip}%  (consultas simples: ${Math.round(state.consultas*100)}%)`,
+    `ISS do município: ${Math.round(state.iss*100)}%`,
+    '',
+    `Alíquota total estimada: ${nfPct.format(state.aliquota_total)}`,
+    `Redução de IRPJ e CSLL: ${nfPct.format(state.reducao)}`,
+    `Economia mensal: ${nfBRL.format(state.em)}`,
+    `Economia anual: ${nfBRL.format(state.ea)}`,
+    `Potencial dos últimos 5 anos: ${nfBRL.format(state.p5)}`,
+    '',
+    'Estimativa de apoio comercial no Lucro Presumido; não substitui o diagnóstico técnico.'
+  ].join('\n');
+}
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.style.display='block';
+  clearTimeout(toast._t); toast._t=setTimeout(()=>{t.style.display='none';},2200);
+}
+function copiar(){
+  const txt=resumo();
+  const ok=()=>toast('Resumo copiado');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(ok).catch(()=>fallback(txt,ok));
+  } else fallback(txt,ok);
+}
+function fallback(txt,ok){
+  const ta=document.createElement('textarea');
+  ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); ok(); }
+  catch(e){ toast('Não consegui copiar — selecione manualmente'); }
+  ta.remove();
+}
+
+/* ============ boot ============ */
+function boot(){
+  const ch=chaveAtual();
+  if(ch!==CHAVE_OK){ document.getElementById('gate').hidden=false; return; }
+  document.getElementById('app').hidden=false;
+  document.getElementById('volta').href='comercial.html?chave='+encodeURIComponent(ch);
+
+  [$('#cta-whatsapp'),$('#btn-wa-topo')].forEach(a=>{ if(a) a.href=WA_URL; });
+  $('#cta-simulador').href='simulador-equiparacao.html?chave='+encodeURIComponent(ch);
+
+  $('#assumir2').checked=false;
+  $('#iss').disabled=false;
+  $('#iss').value=String(PADRAO.iss);
+
+  ['iss','fat','consultas','assumir2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input',calc);
+  });
+  $('#btn-copiar').addEventListener('click',copiar);
+  $('#btn-reset').addEventListener('click',()=>{
+    $('#assumir2').checked=false;
+    $('#iss').disabled=false; $('#iss').value=String(PADRAO.iss);
+    $('#fat').value=String(PADRAO.fat);
+    $('#consultas').value=String(PADRAO.consultas);
+    calc();
+  });
+
+  calc();
+}
+boot();
+</script>
+</body>
+</html>

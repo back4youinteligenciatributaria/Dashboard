@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Análise tributária — Simples × Lucro Presumido | back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --vermelho:#8B2E22;--vermelho-bg:#F8E3DF;--vermelho-line:#F0C9C1;
+  --good-bg:#E7F4EC;--good-ink:#2E7D52;--good-br:#C9E4D3;
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:800;font-size:17px;letter-spacing:-.02em}
+.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .spacer{flex:1}
+.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
+.barra a.volta:hover{color:#fff}
+
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 80px}
+header.top h1{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.25}
+header.top .sub{color:var(--ink-2);font-size:13.5px;margin-top:6px;max-width:88ch}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px 19px;margin-top:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+label.fl{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800;margin-bottom:6px}
+label.fl small{display:block;text-transform:none;letter-spacing:0;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+input[type=number],input[type=text],select{width:100%;background:var(--surface-warm);color:var(--ink);
+  border:1px solid var(--line-2);border-radius:9px;padding:9px 11px;font:inherit;font-size:14.5px}
+input:focus,select:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.opts{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--ink-2);cursor:pointer;max-width:50ch}
+.chk input{margin-top:2px;accent-color:var(--brand-teal);flex:none}
+.acoes{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+.btn{display:inline-flex;align-items:center;gap:7px;font-family:inherit;font-size:13.5px;font-weight:700;
+  border-radius:999px;padding:10px 17px;cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2)}
+.btn:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
+.btn.solid{background:var(--brand-teal);border-color:transparent;color:#fff}
+.btn.solid:hover{background:#0c7a74}
+
+.veredito{margin-top:16px;border-radius:14px;padding:18px 20px;border:1px solid var(--good-br);background:var(--good-bg)}
+.veredito .eyebrow{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--good-ink)}
+.veredito h2{font-size:21px;font-weight:800;margin-top:5px;letter-spacing:-.01em}
+.veredito .det{font-size:13.5px;color:var(--ink-2);margin-top:7px;max-width:80ch}
+.veredito.alerta{background:var(--amber-soft);border-color:var(--amber-line)}
+.veredito.alerta .eyebrow{color:#9A5B12}
+
+.avisos{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.aviso{font-size:12.5px;line-height:1.5;border-radius:10px;padding:11px 14px;border:1px solid var(--amber-line);background:var(--amber-soft);color:#7a4a10}
+.aviso.bad{border-color:var(--vermelho-line);background:var(--vermelho-bg);color:var(--vermelho)}
+.aviso b{font-weight:800}
+
+.sec-tit{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin:26px 0 11px;display:flex;align-items:center;gap:8px}
+.sec-tit::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---------- barras ---------- */
+.barras{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px 19px}
+.brow{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+.brow:last-child{margin-bottom:0}
+.brow .rot{width:190px;flex:none;font-size:12.5px;font-weight:700;line-height:1.25}
+.brow .rot small{display:block;font-weight:600;color:var(--muted);font-size:11px}
+.btrack{flex:1;height:26px;background:var(--surface-warm);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex}
+.btrack i{height:100%;display:block}
+.brow .val{width:132px;flex:none;text-align:right;font-size:14.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.brow .pct{width:60px;flex:none;text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.brow.melhor .val{color:var(--good-ink)}
+.legenda{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.legenda span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2)}
+.sw{width:11px;height:11px;border-radius:3px;flex:none}
+
+/* ---------- tabela ---------- */
+.tabwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table.cmp{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+table.cmp th,table.cmp td{padding:9px 13px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+table.cmp th:first-child,table.cmp td:first-child{text-align:left;white-space:normal;min-width:230px}
+table.cmp thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800;background:var(--surface-warm);position:sticky;top:0}
+table.cmp thead th.win{color:var(--good-ink);background:var(--good-bg)}
+table.cmp tr.grupo td{background:var(--surface-warm);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+table.cmp tr.sub td:first-child{padding-left:26px;color:var(--ink-2)}
+table.cmp tr.tot td{font-weight:800;border-top:2px solid var(--ink);border-bottom:none;font-size:14px}
+table.cmp tr.tot td.win{color:var(--good-ink)}
+table.cmp tr.pct td{color:var(--muted);font-size:12px;border-top:none}
+table.cmp td.na{color:var(--muted)}
+table.cmp .nota-lin{display:block;font-size:11px;color:var(--muted);font-weight:600;white-space:normal}
+
+details.prem{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 18px}
+details.prem summary{cursor:pointer;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--brand-teal)}
+details.prem .corpo{font-size:12.5px;color:var(--ink-2);line-height:1.65;margin-top:12px}
+details.prem h4{font-size:13px;font-weight:800;color:var(--ink);margin:14px 0 5px}
+details.prem ul{margin:0 0 0 18px}
+details.prem li{margin-bottom:4px}
+details.prem code{background:var(--surface-warm);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:11.5px}
+details.prem table.p{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+details.prem table.p th,details.prem table.p td{padding:5px 9px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+details.prem table.p th:first-child,details.prem table.p td:first-child{text-align:left}
+details.prem table.p th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+footer.fine{margin-top:26px;font-size:11.5px;color:var(--muted);line-height:1.65}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:90;background:var(--brand-dark);color:#fff;
+  font-size:13px;font-weight:600;padding:11px 18px;border-radius:999px;box-shadow:0 8px 26px rgba(7,48,52,.28);display:none}
+
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:62vh;text-align:center;padding:0 24px}
+.state h1{font-size:20px;font-weight:800}
+.state p{color:var(--muted);font-size:14px;max-width:48ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
+.cad{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-size:20px}
+@media(max-width:640px){.brow .rot{width:120px}.brow .val{width:104px;font-size:13px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="barra">
+  <span class="logo">back<span class="y">4you</span></span>
+  <span class="tag">Comercial · Análise tributária</span>
+  <span class="spacer"></span>
+  <a class="volta" id="volta" href="comercial.html">← Materiais</a>
+</div>
+
+<div id="gate" hidden>
+  <div class="state">
+    <div class="cad">🔒</div>
+    <h1>Acesso restrito</h1>
+    <p>Esta é uma área interna da equipe. Abra pelo hub do comercial, com a
+       <code>chave</code> no endereço.</p>
+  </div>
+</div>
+
+<div id="app" hidden>
+<div class="wrap">
+
+<header class="top">
+  <h1>Análise tributária — Simples Nacional × Lucro Presumido × Equiparação</h1>
+  <p class="sub">Compara a carga mensal dos três caminhos no mesmo faturamento, incluindo o que sai da
+     empresa (tributos e encargos) e o que sai do sócio (INSS, IRRF do pró-labore e retenção sobre
+     dividendos). Parâmetros de 2026 — todos abertos em “Premissas e base legal”.</p>
+</header>
+
+<!-- ============ ENTRADAS ============ -->
+<div class="panel">
+  <div class="grid">
+    <div>
+      <label class="fl">Faturamento mensal<small>receita bruta de serviços</small></label>
+      <input type="number" id="fat" value="200000" min="0" step="5000">
+    </div>
+    <div>
+      <label class="fl">Folha CLT mensal<small>salários brutos, sem encargos</small></label>
+      <input type="number" id="folha" value="30000" min="0" step="1000">
+    </div>
+    <div>
+      <label class="fl">Pró-labore mensal<small>total dos sócios</small></label>
+      <input type="number" id="prolab" value="1621" min="0" step="500">
+    </div>
+    <div>
+      <label class="fl">Nº de sócios<small>para dividir o lucro</small></label>
+      <input type="number" id="socios" value="2" min="1" max="20" step="1">
+    </div>
+    <div>
+      <label class="fl">Anexo do Simples<small>como enquadrar a atividade</small></label>
+      <select id="anexo">
+        <option value="auto" selected>Saúde — III ou V pelo fator R</option>
+        <option value="III">Anexo III (sempre)</option>
+        <option value="V">Anexo V (sempre)</option>
+        <option value="IV">Anexo IV (advocacia, limpeza, construção)</option>
+      </select>
+    </div>
+    <div>
+      <label class="fl">ISS do município (%)<small>alíquota sobre a receita</small></label>
+      <input type="number" id="iss" value="2" min="0" max="5" step="0.5">
+    </div>
+    <div>
+      <label class="fl">% equiparável<small>receita com natureza hospitalar</small></label>
+      <input type="number" id="equip" value="80" min="0" max="100" step="5">
+    </div>
+    <div>
+      <label class="fl">RAT ajustado (%)<small>RAT × FAP, só sobre a folha</small></label>
+      <input type="number" id="rat" value="3" min="0" max="6" step="0.5">
+    </div>
+    <div>
+      <label class="fl">Terceiros (%)<small>só sobre a folha; 0 no Simples</small></label>
+      <input type="number" id="terceiros" value="5.8" min="0" max="8" step="0.1">
+    </div>
+    <div>
+      <label class="fl">ISS fixo (R$/mês)<small>uniprofissional; 0 = usa o %</small></label>
+      <input type="number" id="issfixo" value="0" min="0" step="100">
+    </div>
+  </div>
+
+  <div class="opts">
+    <label class="chk"><input type="checkbox" id="cAjuste" checked>
+      <span>Ajustar o pró-labore para o <b>fator R chegar a 28%</b> no Simples (mantém o pró-labore digitado no Lucro Presumido).</span></label>
+    <label class="chk"><input type="checkbox" id="cLC224" checked>
+      <span>Aplicar o acréscimo de 10% na presunção sobre a receita anual acima de R$ 5 mi (<b>LC 224/2025</b>).</span></label>
+    <label class="chk"><input type="checkbox" id="cRedutor" checked>
+      <span>Aplicar o <b>redutor do IRPF</b> da Lei 15.270/2025 no pró-labore.</span></label>
+    <label class="chk"><input type="checkbox" id="cDiv" checked>
+      <span>Retenção de <b>10% sobre dividendos</b> acima de R$ 50 mil por sócio no mês.</span></label>
+    <label class="chk"><input type="checkbox" id="cPF" checked>
+      <span>Somar no total o que sai <b>do sócio</b> (INSS e IRRF), não só o que sai da empresa.</span></label>
+  </div>
+
+  <div class="acoes">
+    <button type="button" class="btn solid" id="btn-copiar">Copiar resumo</button>
+    <button type="button" class="btn" id="btn-reset">Reiniciar</button>
+  </div>
+</div>
+
+<div id="veredito"></div>
+<div class="avisos" id="avisos"></div>
+
+<div class="sec-tit">Carga mensal total</div>
+<div class="barras" id="barras"></div>
+
+<div class="sec-tit">Abertura linha a linha</div>
+<div class="tabwrap"><table class="cmp" id="tabela"></table></div>
+
+<details class="prem">
+  <summary>Premissas e base legal (2026)</summary>
+  <div class="corpo" id="premissas"></div>
+</details>
+
+<footer class="fine">
+  Uso interno. Estimativa de apoio comercial a partir de um faturamento mensal médio; a apuração real
+  depende do RBT12 mês a mês, da folha efetiva dos 12 meses anteriores, do ISS do município e da
+  escrituração contábil. Não substitui o diagnóstico técnico do caso concreto.
+</footer>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CHAVE DA EQUIPE
+   ========================================================= */
+const CHAVE_OK='b4u-equipe-2026';
+function chaveAtual(){
+  const q=new URLSearchParams(location.search).get('chave');
+  const h=(location.hash||'').replace('#','').trim();
+  return (q||h||'').trim();
+}
+
+/* =========================================================
+   PARÂMETROS 2026  (tudo o que muda de ano fica aqui)
+   ========================================================= */
+const P = {
+  ano: 2026,
+  salarioMinimo: 1621.00,          // Decreto 12.797/2025
+  tetoINSS: 8475.55,               // Portaria Interministerial MPS/MF 13/2026
+  aliqCI: 0.11,                    // sócio contribuinte individual, descontado na fonte
+  // IRRF mensal — Lei 15.191/2025 (mantida em 2026)
+  irrf: [
+    {ate: 2428.80,  aliq: 0,     ded: 0},
+    {ate: 2826.65,  aliq: 0.075, ded: 182.16},
+    {ate: 3751.05,  aliq: 0.15,  ded: 394.16},
+    {ate: 4664.68,  aliq: 0.225, ded: 675.49},
+    {ate: Infinity, aliq: 0.275, ded: 908.73}
+  ],
+  descontoSimplificado: 607.20,
+  // Redutor do IRPF — Lei 15.270/2025, art. 3º-A, desde 01/01/2026
+  redutor: {isencaoAte: 5000.00, fimAte: 7350.00, a: 978.62, b: 0.133145},
+  // Simples Nacional — LC 123/2006 (redação da LC 155/2016), inalteradas em 2026
+  anexos: {
+    III: [[180000,.060,0],[360000,.112,9360],[720000,.135,17640],[1800000,.160,35640],[3600000,.210,125640],[4800000,.330,648000]],
+    IV:  [[180000,.045,0],[360000,.090,8100],[720000,.102,12420],[1800000,.140,39780],[3600000,.220,183780],[4800000,.330,828000]],
+    V:   [[180000,.155,0],[360000,.180,4500],[720000,.195,9900],[1800000,.205,17100],[3600000,.230,62100],[4800000,.305,540000]]
+  },
+  limiteSN: 4800000, sublimiteISS: 3600000, fatorR: 0.28,
+  // Lucro Presumido
+  presuncao: {irNormal:.32, irHosp:.08, csNormal:.32, csHosp:.12},
+  irpj: .15, adicional: .10, limiteAdicionalMes: 20000, csll: .09,
+  pis: .0065, cofins: .03,
+  lc224: {fator: 1.10, receitaAnual: 5000000},   // acréscimo de 10% na presunção
+  // Encargos patronais
+  cpp: .20, fgts: .08,
+  // Dividendos — Lei 15.270/2025, art. 6º-A
+  dividendo: {limiteMes: 50000, aliq: .10}
+};
+
+const brl  = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const brl2 = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+const pct  = v => (v||0).toLocaleString('pt-BR',{style:'percent',minimumFractionDigits:2,maximumFractionDigits:2});
+const num  = id => { const n=parseFloat(String(document.getElementById(id).value).replace(',','.')); return isNaN(n)?0:n; };
+const chk  = id => document.getElementById(id).checked;
+
+/* =========================================================
+   PEÇAS DE CÁLCULO
+   ========================================================= */
+/* IRRF mensal do pró-labore. base = rendimento - deduções; bruto = rendimento
+   tributável do mês (é ele que dispara o redutor da Lei 15.270). */
+function irrfTabela(base){
+  for(const f of P.irrf) if(base<=f.ate) return Math.max(0, base*f.aliq - f.ded);
+  return 0;
+}
+function irrfProlabore(bruto, inss, usarRedutor){
+  if(bruto<=0) return 0;
+  // a lei permite o desconto simplificado em vez das deduções legais: usa o menor imposto
+  const porDeducoes   = irrfTabela(Math.max(0, bruto - inss));
+  const porSimplificado = irrfTabela(Math.max(0, bruto - P.descontoSimplificado));
+  let imposto = Math.min(porDeducoes, porSimplificado);
+  if(usarRedutor){
+    const R = P.redutor;
+    if(bruto <= R.isencaoAte) imposto = 0;
+    else if(bruto <= R.fimAte) imposto = Math.max(0, imposto - Math.max(0, R.a - R.b*bruto));
+  }
+  return imposto;
+}
+function inssSocio(prolabPorSocio){ return P.aliqCI * Math.min(prolabPorSocio, P.tetoINSS); }
+
+/* INSS e IRRF são por pessoa: o teto do INSS e as faixas do IRRF valem para cada
+   sócio, não para o pró-labore somado. Divide, calcula, multiplica de volta. */
+function pessoaFisica(prolabTotal, socios, usarRedutor){
+  const n = Math.max(1, socios);
+  const porSocio = prolabTotal/n;
+  const inss1 = inssSocio(porSocio);
+  const irrf1 = irrfProlabore(porSocio, inss1, usarRedutor);
+  return {porSocio, inss: inss1*n, irrf: irrf1*n, inss1, irrf1};
+}
+
+/* Alíquota efetiva do Simples: (RBT12 × nominal − dedução) / RBT12 */
+function aliqEfetivaSN(rbt12, anexo){
+  const faixas = P.anexos[anexo];
+  const f = faixas.find(x=>rbt12<=x[0]) || faixas[faixas.length-1];
+  return (rbt12*f[1] - f[2]) / rbt12;
+}
+/* Massa salarial dos 12 meses (FS12), a partir dos valores mensais.
+   Manual do PGDAS-D: remunerações a PF pelo trabalho (inclui pró-labore, 13º e
+   férias) + CPP e FGTS efetivamente recolhidos. Nos anexos III e V a CPP está
+   dentro do DAS, então só o FGTS entra. */
+function fs12(folha, prolab, anexo){
+  const remun = folha*13 + folha/36 + prolab*12;      // 12 meses + 13º + 1/3 de férias
+  const fgts  = P.fgts * (folha*13 + folha/36);
+  const cpp   = (anexo==='IV') ? P.cpp*(folha*13 + folha/36 + prolab*12) : 0;
+  return remun + fgts + cpp;
+}
+/* Pró-labore mensal que faz o fator R bater 28% */
+function prolaboreParaFatorR(fat, folha, anexo){
+  const rbt12 = fat*12, meta = P.fatorR*rbt12;
+  const semProlab = fs12(folha, 0, anexo);
+  const porReal   = (fs12(folha, 1, anexo) - semProlab);   // quanto cada R$1 de pró-labore soma na FS12
+  if(porReal<=0) return 0;
+  return Math.max(0, (meta - semProlab)/porReal);
+}
+
+/* Presunção com o acréscimo da LC 224/2025 na parcela acima de R$ 5 mi/ano */
+function presumido(fat, aliqBase, usarLC224){
+  if(!usarLC224) return fat*aliqBase;
+  const limiteMes = P.lc224.receitaAnual/12;
+  const dentro = Math.min(fat, limiteMes), fora = Math.max(0, fat - limiteMes);
+  return dentro*aliqBase + fora*aliqBase*P.lc224.fator;
+}
+
+/* =========================================================
+   REGIMES
+   ========================================================= */
+function regimeSimples(E){
+  const rbt12 = E.fat*12;
+  const anexoEsc = E.anexo;
+  let anexo = anexoEsc==='auto' ? 'III' : anexoEsc;
+  let prolab = E.prolab, ajustado=false, fr=null;
+
+  /* o ajuste do pró-labore só faz sentido quando o alvo é o Anexo III */
+  if(anexoEsc==='auto' || anexoEsc==='III'){
+    const necessario = prolaboreParaFatorR(E.fat, E.folha, 'III');
+    if(E.ajustaFatorR && necessario > E.prolab){ prolab = necessario; ajustado=true; }
+  }
+  if(anexoEsc==='auto'){
+    fr = rbt12>0 ? fs12(E.folha, prolab, 'III')/rbt12 : 0;
+    anexo = fr >= P.fatorR ? 'III' : 'V';
+    if(anexo==='V') fr = rbt12>0 ? fs12(E.folha, prolab, 'V')/rbt12 : 0;
+  } else {
+    fr = rbt12>0 ? fs12(E.folha, prolab, anexo)/rbt12 : 0;
+  }
+  /* Anexo III forçado com fator R abaixo de 28% é enquadramento inválido */
+  const anexoForcadoInvalido = (anexoEsc==='III' && rbt12>0 && fr < P.fatorR);
+
+  const excedeLimite = rbt12 > P.limiteSN;
+  const aliq = rbt12>0 ? aliqEfetivaSN(Math.min(rbt12, P.limiteSN), anexo) : 0;
+  const das  = E.fat * aliq;
+
+  // CPP: dentro do DAS nos anexos III e V; fora no IV. Terceiros nunca (LC 123, art. 13, §3º).
+  const cppFolha  = anexo==='IV' ? P.cpp*E.folha : 0;
+  const cppProlab = anexo==='IV' ? P.cpp*prolab  : 0;
+  const rat       = anexo==='IV' ? (E.rat/100)*E.folha : 0;
+  const terceiros = 0;
+  const fgts      = P.fgts*E.folha;
+
+  const PF = pessoaFisica(prolab, E.socios, E.redutor);
+  const inss = PF.inss, irrf = PF.irrf;
+
+  return montar({
+    nome:'Simples Nacional', detalhe:'Anexo '+anexo+(anexoEsc==='auto'?' (pelo fator R)':''),
+    receita:[['DAS — guia única', das, 'alíquota efetiva de '+pct(aliq)+' sobre o RBT12 de '+brl(rbt12)]],
+    patronal:[['CPP 20% — folha', cppFolha, anexo==='IV'?null:'dentro do DAS'],
+              ['CPP 20% — pró-labore', cppProlab, anexo==='IV'?null:'dentro do DAS'],
+              ['RAT ajustado', rat, anexo==='IV'?null:'dentro do DAS'],
+              ['Terceiros', terceiros, 'não devido no Simples'],
+              ['FGTS 8%', fgts, null]],
+    prolab, inss, irrf, PF, E, anexo, fatorR:fr, ajustado, excedeLimite, anexoForcadoInvalido, aliqReceita:aliq
+  });
+}
+
+function regimeLP(E, equipPct, rotulo){
+  const eq = Math.max(0, Math.min(1, equipPct/100));
+  const aliqIR = P.presuncao.irNormal*(1-eq) + P.presuncao.irHosp*eq;
+  const aliqCS = P.presuncao.csNormal*(1-eq) + P.presuncao.csHosp*eq;
+  const baseIR = presumido(E.fat, aliqIR, E.lc224);
+  const baseCS = presumido(E.fat, aliqCS, E.lc224);
+
+  const irpj = baseIR*P.irpj;
+  const adic = Math.max(0, baseIR - P.limiteAdicionalMes)*P.adicional;
+  const csll = baseCS*P.csll;
+  const pis  = E.fat*P.pis;
+  const cof  = E.fat*P.cofins;
+  const iss  = E.issFixo>0 ? E.issFixo : E.fat*(E.iss/100);
+
+  const cppFolha  = P.cpp*E.folha;
+  const cppProlab = P.cpp*E.prolab;
+  const rat       = (E.rat/100)*E.folha;
+  const terceiros = (E.terceiros/100)*E.folha;
+  const fgts      = P.fgts*E.folha;
+
+  const PF = pessoaFisica(E.prolab, E.socios, E.redutor);
+  const inss = PF.inss, irrf = PF.irrf;
+
+  return montar({
+    nome: rotulo, detalhe: eq>0 ? pct(eq)+' da receita a 8% e 12%' : 'presunção de 32% em tudo',
+    receita:[
+      ['IRPJ 15%', irpj, 'base presumida de '+brl(baseIR)+' ('+pct(aliqIR)+')'],
+      ['Adicional de IRPJ 10%', adic, 'sobre o que passa de '+brl(P.limiteAdicionalMes)+'/mês'],
+      ['CSLL 9%', csll, 'base presumida de '+brl(baseCS)+' ('+pct(aliqCS)+')'],
+      ['PIS 0,65%', pis, null],
+      ['COFINS 3%', cof, null],
+      ['ISS', iss, E.issFixo>0 ? 'valor fixo informado' : E.iss+'% sobre a receita']
+    ],
+    patronal:[['CPP 20% — folha', cppFolha, null],
+              ['CPP 20% — pró-labore', cppProlab, null],
+              ['RAT ajustado', rat, 'não incide sobre pró-labore'],
+              ['Terceiros', terceiros, 'só sobre a folha de empregados'],
+              ['FGTS 8%', fgts, null]],
+    prolab:E.prolab, inss, irrf, PF, E, equip:eq
+  });
+}
+
+/* Fecha as contas de um regime: dividendos, totais e percentuais */
+function montar(r){
+  const E=r.E;
+  const somaRec = r.receita.reduce((a,x)=>a+x[1],0);
+  const somaPat = r.patronal.reduce((a,x)=>a+x[1],0);
+
+  // sobra de caixa depois de folha, pró-labore, encargos e tributos → distribuível
+  const custoFolha = E.folha + r.prolab + somaPat;
+  const sobra = Math.max(0, E.fat - custoFolha - somaRec);
+  const porSocio = sobra/Math.max(1,E.socios);
+  /* Lei 15.270/2025: 10% na fonte quando a mesma PJ paga a mesma PF mais de
+     R$ 50 mil no mês. A leitura predominante é que, passando do limite, incide
+     sobre o total pago no mês — não só sobre o excedente. */
+  const irrfDiv = (E.dividendo && porSocio > P.dividendo.limiteMes)
+    ? porSocio*P.dividendo.aliq*Math.max(1,E.socios) : 0;
+
+  const pf = r.inss + r.irrf + irrfDiv;
+  const totalEmpresa = somaRec + somaPat;
+  const total = totalEmpresa + (E.somarPF ? pf : 0);
+
+  return Object.assign(r, {
+    somaRec, somaPat, sobra, porSocio, irrfDiv, pf, totalEmpresa, total,
+    sobreFat: E.fat>0 ? total/E.fat : 0
+  });
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+function entradas(){
+  return {
+    fat:num('fat'), folha:num('folha'), prolab:num('prolab'), socios:Math.max(1,num('socios')),
+    anexo:document.getElementById('anexo').value, iss:num('iss'), equip:num('equip'),
+    rat:num('rat'), terceiros:num('terceiros'), issFixo:num('issfixo'),
+    ajustaFatorR:chk('cAjuste'), lc224:chk('cLC224'), redutor:chk('cRedutor'),
+    dividendo:chk('cDiv'), somarPF:chk('cPF')
+  };
+}
+
+var ULTIMO=null; window.ULTIMO=null;
+
+function calcular(){
+  const E=entradas();
+  const sn = regimeSimples(E);
+  const lp = regimeLP(E, 0, 'Lucro Presumido');
+  const eq = regimeLP(E, E.equip, 'LP com equiparação');
+  const lista = E.equip>0 ? [sn,lp,eq] : [sn,lp];
+  lista.forEach(r=>{ r.viavel = !r.excedeLimite; });
+  const viaveis = lista.filter(r=>r.viavel);
+  const melhor = viaveis.reduce((a,b)=> b.total < a.total ? b : a, viaveis[0]);
+  ULTIMO={E,sn,lp,eq,lista,melhor}; window.ULTIMO=ULTIMO;
+  pintarVeredito(ULTIMO); pintarAvisos(ULTIMO); pintarBarras(ULTIMO); pintarTabela(ULTIMO); pintarPremissas(ULTIMO);
+}
+
+function pintarVeredito(X){
+  const {E,melhor,lista}=X;
+  const outros=lista.filter(r=>r!==melhor && r.viavel).sort((a,b)=>a.total-b.total);
+  const box=document.getElementById('veredito');
+  if(!melhor){ box.className='veredito alerta'; box.innerHTML='<div class="eyebrow">Sem regime viável</div><h2>Faturamento acima do limite do Simples</h2>'; return; }
+  const seg=outros[0];
+  const dif=seg? seg.total-melhor.total : 0;
+  box.className='veredito'+(melhor===X.sn?'':'');
+  box.innerHTML=`
+    <div class="eyebrow">Melhor enquadramento nesta simulação</div>
+    <h2>${melhor.nome} — ${brl(melhor.total)}/mês</h2>
+    <p class="det">
+      ${pct(melhor.sobreFat)} do faturamento de ${brl(E.fat)}.
+      ${seg?`Economiza <b>${brl(dif)}/mês</b> (${brl(dif*12)}/ano) contra ${seg.nome}, que sai por ${brl(seg.total)}.`:''}
+      ${E.equip>0 && melhor===X.eq ? ` A equiparação sozinha vale ${brl(X.lp.total - X.eq.total)}/mês contra o Lucro Presumido comum.`:''}
+    </p>`;
+}
+
+function pintarAvisos(X){
+  const {E,sn}=X; const av=[];
+  const rbt12=E.fat*12;
+  if(sn.excedeLimite) av.push(['bad','<b>Fora do Simples.</b> O RBT12 estimado de '+brl(rbt12)+' passa do limite de '+brl(P.limiteSN)+'. A coluna do Simples fica só como referência.']);
+  else if(rbt12 > P.sublimiteISS) av.push(['','<b>Acima do sublimite.</b> Com RBT12 de '+brl(rbt12)+' (limite de '+brl(P.sublimiteISS)+'), o ISS sai do DAS e é recolhido direto ao município — o DAS desta coluna não considera esse desmembramento.']);
+  if(sn.ajustado) av.push(['','<b>Pró-labore ajustado no Simples.</b> Para o fator R chegar a 28% seria preciso pagar '+brl(sn.prolab)+'/mês de pró-labore (você digitou '+brl(E.prolab)+'). O Lucro Presumido segue com o valor digitado.']);
+  if(sn.anexoForcadoInvalido) av.push(['bad','<b>Anexo III forçado sem fator R.</b> Com esta folha e este pró-labore o fator R fica em '+pct(sn.fatorR)+', abaixo dos 28% — a empresa seria tributada pelo <b>Anexo V</b>, mais caro. Marque o ajuste do pró-labore ou troque o anexo para “pelo fator R”.']);
+  if(E.anexo==='auto' && sn.anexo==='V') av.push(['','<b>Caiu no Anexo V.</b> O fator R ficou em '+pct(sn.fatorR)+', abaixo de 28%. Aumentar a folha ou o pró-labore leva a empresa para o Anexo III.']);
+  if(E.prolab>0 && E.prolab < P.salarioMinimo) av.push(['','<b>Pró-labore abaixo do salário mínimo</b> ('+brl2(P.salarioMinimo)+' em 2026). O sócio que trabalha na empresa deve receber ao menos um mínimo.']);
+  if(E.lc224 && E.fat*12 > P.lc224.receitaAnual) av.push(['','<b>Acréscimo da LC 224/2025 aplicado.</b> A presunção sobe 10% na parcela da receita anual acima de '+brl(P.lc224.receitaAnual)+'. A regra está em vigor, mas é discutida nas ADIs 7920 e 7936 — cliente com medida judicial própria pode não recolher o acréscimo.']);
+  if(E.dividendo && X.melhor && X.melhor.porSocio > P.dividendo.limiteMes) av.push(['','<b>Retenção sobre dividendos.</b> A distribuição por sócio passa de '+brl(P.dividendo.limiteMes)+'/mês, então incide o IRRF de 10% da Lei 15.270/2025. Está aplicado sobre o total distribuído no mês — leitura predominante, ainda sem ato normativo expresso da Receita.']);
+  document.getElementById('avisos').innerHTML=av.map(a=>`<div class="aviso ${a[0]}">${a[1]}</div>`).join('');
+}
+
+const COR={rec:'#8B2E22', pat:'#E8892E', pf:'#0F8C85'};
+function pintarBarras(X){
+  const {lista,melhor}=X;
+  const max=Math.max(...lista.map(r=>r.total),1);
+  const linhas=lista.map(r=>{
+    const w=v=>(v/max*100);
+    const pf=r.E.somarPF?r.pf:0;
+    return `<div class="brow ${r===melhor?'melhor':''}">
+      <div class="rot">${r.nome}<small>${r.detalhe}${r.viavel?'':' · fora do limite'}</small></div>
+      <div class="btrack">
+        <i style="width:${w(r.somaRec)}%;background:${COR.rec}"></i>
+        <i style="width:${w(r.somaPat)}%;background:${COR.pat}"></i>
+        <i style="width:${w(pf)}%;background:${COR.pf}"></i>
+      </div>
+      <div class="val">${brl(r.total)}</div>
+      <div class="pct">${pct(r.sobreFat)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('barras').innerHTML = linhas + `<div class="legenda">
+    <span><i class="sw" style="background:${COR.rec}"></i>Tributos sobre a receita</span>
+    <span><i class="sw" style="background:${COR.pat}"></i>Encargos sobre folha e pró-labore</span>
+    <span><i class="sw" style="background:${COR.pf}"></i>Sai do sócio (INSS, IRRF, dividendos)</span>
+  </div>`;
+}
+
+function pintarTabela(X){
+  const {lista,melhor,E}=X;
+  const cols=lista.length;
+  const cel=(r,v,nota)=> `<td class="${v===0?'na':''}">${v===0?'—':brl(v)}${nota?`<span class="nota-lin">${nota}</span>`:''}</td>`;
+  // linhas de receita: união dos rótulos preservando a ordem de cada regime
+  function bloco(titulo, chave){
+    const rots=[]; lista.forEach(r=>r[chave].forEach(l=>{ if(!rots.includes(l[0])) rots.push(l[0]); }));
+    let out=`<tr class="grupo"><td>${titulo}</td>${'<td></td>'.repeat(cols)}</tr>`;
+    rots.forEach(rot=>{
+      out+=`<tr class="sub"><td>${rot}</td>`;
+      lista.forEach(r=>{
+        const l=r[chave].find(x=>x[0]===rot);
+        out += l ? cel(r,l[1],l[2]) : '<td class="na">—</td>';
+      });
+      out+='</tr>';
+    });
+    return out;
+  }
+  let html=`<thead><tr><th>Item</th>${lista.map(r=>`<th class="${r===melhor?'win':''}">${r.nome}<br><span style="font-weight:600;text-transform:none;letter-spacing:0">${r.detalhe}</span></th>`).join('')}</tr></thead><tbody>`;
+  html+=bloco('Tributos sobre a receita','receita');
+  html+=`<tr class="sub"><td><b>Subtotal — receita</b></td>${lista.map(r=>`<td><b>${brl(r.somaRec)}</b></td>`).join('')}</tr>`;
+  html+=bloco('Encargos sobre folha e pró-labore','patronal');
+  html+=`<tr class="sub"><td><b>Subtotal — encargos</b></td>${lista.map(r=>`<td><b>${brl(r.somaPat)}</b></td>`).join('')}</tr>`;
+  html+=`<tr class="grupo"><td>Pessoa física do sócio</td>${'<td></td>'.repeat(cols)}</tr>`;
+  html+=`<tr class="sub"><td>Pró-labore considerado</td>${lista.map(r=>`<td>${brl(r.prolab)}</td>`).join('')}</tr>`;
+  html+=`<tr class="sub"><td>Pró-labore por sócio</td>${lista.map(r=>`<td>${brl(r.PF.porSocio)}</td>`).join('')}</tr>`;
+  html+=`<tr class="sub"><td>INSS do sócio (11% até o teto)</td>${lista.map(r=>cel(r,r.inss, E.socios>1?brl(r.PF.inss1)+' × '+E.socios+' sócios':null)).join('')}</tr>`;
+  html+=`<tr class="sub"><td>IRRF do pró-labore</td>${lista.map(r=>cel(r,r.irrf, E.socios>1&&r.PF.irrf1>0?brl(r.PF.irrf1)+' × '+E.socios+' sócios':null)).join('')}</tr>`;
+  html+=`<tr class="sub"><td>IRRF 10% sobre dividendos</td>${lista.map(r=>cel(r,r.irrfDiv)).join('')}</tr>`;
+  html+=`<tr class="sub"><td>Sobra distribuível por sócio</td>${lista.map(r=>`<td>${brl(r.porSocio)}</td>`).join('')}</tr>`;
+  html+=`<tr class="tot"><td>Carga mensal total${E.somarPF?'':' (só a empresa)'}</td>${lista.map(r=>`<td class="${r===melhor?'win':''}">${brl(r.total)}</td>`).join('')}</tr>`;
+  html+=`<tr class="pct"><td>Sobre o faturamento</td>${lista.map(r=>`<td>${pct(r.sobreFat)}</td>`).join('')}</tr>`;
+  html+=`<tr class="pct"><td>No ano</td>${lista.map(r=>`<td>${brl(r.total*12)}</td>`).join('')}</tr>`;
+  html+='</tbody>';
+  document.getElementById('tabela').innerHTML=html;
+}
+
+function pintarPremissas(X){
+  const {sn,E}=X;
+  const tab=(nome,arr)=>`<table class="p"><tr><th>RBT12 até</th><th>Alíquota</th><th>Dedução</th></tr>`+
+    arr.map(f=>`<tr><td>${brl(f[0])}</td><td>${pct(f[1])}</td><td>${f[2]?brl(f[2]):'—'}</td></tr>`).join('')+'</table>';
+  document.getElementById('premissas').innerHTML=`
+    <h4>Valores de 2026</h4>
+    <ul>
+      <li>Salário mínimo <code>${brl2(P.salarioMinimo)}</code> (Decreto 12.797/2025) · teto do INSS
+          <code>${brl2(P.tetoINSS)}</code> (Portaria Interministerial MPS/MF 13/2026).</li>
+      <li>Sócio com pró-labore: contribuinte individual, <b>11% descontados na fonte</b> até o teto
+          (máximo de ${brl2(P.aliqCI*P.tetoINSS)}/mês) — art. 30, §4º, da Lei 8.212/91.</li>
+      <li>IRRF do pró-labore pela tabela da Lei 15.191/2025, com o <b>redutor da Lei 15.270/2025</b>
+          desde 01/01/2026: rendimento até ${brl(P.redutor.isencaoAte)} zera o imposto e, de
+          ${brl(P.redutor.isencaoAte)} a ${brl(P.redutor.fimAte)}, o redutor é
+          <code>${brl2(P.redutor.a)} − ${String(P.redutor.b).replace('.',',')} × rendimento</code>.
+          O gatilho é o rendimento bruto do mês, não a base após o INSS.</li>
+      <li>Entre as deduções legais e o desconto simplificado de ${brl2(P.descontoSimplificado)}, usa-se o
+          que resultar em menos imposto.</li>
+    </ul>
+
+    <h4>Simples Nacional</h4>
+    <ul>
+      <li>Alíquota efetiva = <code>(RBT12 × nominal − dedução) ÷ RBT12</code>; o DAS do mês é essa alíquota
+          sobre a receita do mês. Aqui o RBT12 é estimado como <b>faturamento mensal × 12</b>.</li>
+      <li><b>Fator R</b> = FS12 ÷ RBT12; ≥ 28% vai para o Anexo III, abaixo para o V (LC 123, art. 18,
+          §§ 5º-J e 5º-M). A FS12 soma remunerações do trabalho (salários, <b>pró-labore</b>, 13º e o 1/3
+          de férias) mais a CPP e o FGTS <b>efetivamente recolhidos</b> — nos Anexos III e V a CPP está
+          dentro do DAS, então só o FGTS entra. Nesta simulação o fator R ficou em
+          <b>${pct(sn.fatorR||0)}</b>.</li>
+      <li>Nos Anexos III e V a CPP patronal está no DAS e <b>não há contribuição a terceiros</b>
+          (LC 123, art. 13, §3º). No Anexo IV a CPP é recolhida fora do DAS.</li>
+      <li>Tabelas em vigor desde 2018 e <b>inalteradas em 2026</b>:</li>
+    </ul>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:6px">
+      <div><b style="font-size:12px">Anexo III</b>${tab('III',P.anexos.III)}</div>
+      <div><b style="font-size:12px">Anexo IV</b>${tab('IV',P.anexos.IV)}</div>
+      <div><b style="font-size:12px">Anexo V</b>${tab('V',P.anexos.V)}</div>
+    </div>
+
+    <h4>Lucro Presumido</h4>
+    <ul>
+      <li>Presunção de <b>32%</b> para serviços em geral; <b>8% de IRPJ e 12% de CSLL</b> na parcela com
+          natureza de serviço hospitalar (art. 15, §1º, III, "a", e art. 20 da Lei 9.249/95, com a redação
+          da Lei 11.727/2008) — exige sociedade empresária e atendimento às normas da ANVISA.</li>
+      <li>IRPJ 15% + adicional de 10% sobre a base presumida que exceder
+          ${brl(P.limiteAdicionalMes)}/mês (${brl(P.limiteAdicionalMes*3)}/trimestre); CSLL 9%;
+          PIS 0,65% e COFINS 3% cumulativos.</li>
+      <li><b>LC 224/2025 + IN RFB 2.306/2026:</b> acréscimo de 10% nos percentuais de presunção sobre a
+          parcela da receita bruta anual acima de ${brl(P.lc224.receitaAnual)} (8% → 8,8%, 12% → 13,2%,
+          32% → 35,2%). IRPJ desde 01/01/2026 e CSLL desde 01/04/2026. Em vigor, mas com as ADIs
+          7920 e 7936 pendentes no STF e liminares individuais concedidas.</li>
+      <li>Encargos patronais: CPP 20% sobre a folha <b>e</b> sobre o pró-labore (art. 22, I e III, da Lei
+          8.212/91). <b>RAT e terceiros só incidem sobre a folha de empregados</b>, não sobre pró-labore
+          (art. 22, II). FGTS 8% sobre a folha, igual nos dois regimes.</li>
+    </ul>
+
+    <h4>Dividendos e o que fica de fora</h4>
+    <ul>
+      <li><b>IRRF de 10%</b> quando a mesma empresa paga a mesma pessoa física mais de
+          ${brl(P.dividendo.limiteMes)} de lucros no mesmo mês (art. 6º-A da Lei 15.270/2025, desde
+          01/01/2026). Aplicado aqui sobre o total distribuído no mês — leitura predominante, sem ato
+          normativo expresso; se a Receita firmar a incidência só sobre o excedente, o número cai.</li>
+      <li><b>IRPFM não entra nesta tela.</b> O imposto mínimo da pessoa física é <b>anual</b>, incide a
+          partir de ${brl(600000)} de renda no ano com alíquota de <code>(renda ÷ 60.000) − 10</code>
+          até 10% em ${brl(1200000)}, e é apurado na declaração (primeira vez no exercício 2027).
+          Uma visão mensal não o representa.</li>
+      <li><b>CBS e IBS em 2026 não saem do caixa.</b> As alíquotas-teste (0,9% e 0,1%) são compensadas
+          com o PIS/COFINS do período e o recolhimento é dispensado para quem cumpre as obrigações
+          acessórias (art. 348 da LC 214/2025). PIS e COFINS continuam integrais, e o Simples está fora
+          das alíquotas-teste.</li>
+      <li>A “sobra distribuível” é o caixa que resta depois de folha, pró-labore, encargos e tributos —
+          não é o lucro contábil. Distribuição isenta acima do lucro presumido depende de escrituração
+          contábil que comprove lucro maior.</li>
+      <li>Fica de fora: 13º e férias como desembolso, IRPJ/CSLL do Lucro Real, retenções de ISS e de
+          IRRF sobre notas de PJ tomadora, e ICMS/IPI (não se aplicam a serviços).</li>
+    </ul>`;
+}
+
+/* =========================================================
+   RESUMO PARA COPIAR
+   ========================================================= */
+function resumo(){
+  const X=ULTIMO; if(!X) return '';
+  const L=[`Análise tributária — Back4You (parâmetros de ${P.ano})`,'',
+    `Faturamento mensal: ${brl(X.E.fat)}`,
+    `Folha CLT: ${brl(X.E.folha)} · pró-labore informado: ${brl(X.E.prolab)} · sócios: ${X.E.socios}`,
+    `ISS: ${X.E.issFixo>0?brl(X.E.issFixo)+' fixo':X.E.iss+'%'} · % equiparável: ${X.E.equip}%`,''];
+  X.lista.forEach(r=>{
+    L.push(`${r.nome} (${r.detalhe}): ${brl(r.total)}/mês — ${pct(r.sobreFat)} do faturamento`);
+    L.push(`   receita ${brl(r.somaRec)} · encargos ${brl(r.somaPat)} · sócio ${brl(r.pf)}`);
+  });
+  L.push('', `Melhor: ${X.melhor.nome} — ${brl(X.melhor.total)}/mês (${brl(X.melhor.total*12)}/ano)`);
+  if(X.sn.fatorR!=null) L.push(`Fator R da simulação: ${pct(X.sn.fatorR)}`);
+  L.push('', 'Estimativa de apoio comercial; não substitui o diagnóstico técnico.');
+  return L.join('\n');
+}
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
+  clearTimeout(toast._t); toast._t=setTimeout(()=>{t.style.display='none';},2200);
+}
+function copiar(){
+  const txt=resumo(), ok=()=>toast('Resumo copiado');
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok).catch(()=>fb(txt,ok));
+  else fb(txt,ok);
+}
+function fb(txt,ok){
+  const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); ok(); }catch(e){ toast('Não consegui copiar'); }
+  ta.remove();
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+const PADRAO={fat:200000,folha:30000,prolab:1621,socios:2,anexo:'auto',iss:2,equip:80,rat:3,terceiros:5.8,issfixo:0};
+function boot(){
+  const ch=chaveAtual();
+  if(ch!==CHAVE_OK){ document.getElementById('gate').hidden=false; return; }
+  document.getElementById('app').hidden=false;
+  document.getElementById('volta').href='comercial.html?chave='+encodeURIComponent(ch);
+
+  ['fat','folha','prolab','socios','anexo','iss','equip','rat','terceiros','issfixo',
+   'cAjuste','cLC224','cRedutor','cDiv','cPF'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){ el.addEventListener('input',calcular); el.addEventListener('change',calcular); }
+  });
+  document.getElementById('btn-copiar').addEventListener('click',copiar);
+  document.getElementById('btn-reset').addEventListener('click',()=>{
+    Object.keys(PADRAO).forEach(k=>{ document.getElementById(k).value=PADRAO[k]; });
+    ['cAjuste','cLC224','cRedutor','cDiv','cPF'].forEach(k=>document.getElementById(k).checked=true);
+    calcular();
+  });
+  calcular();
+}
+boot();
+</script>
+</body>
+</html>

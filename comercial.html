@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comercial — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:800;font-size:17px;letter-spacing:-.02em}
+.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .spacer{flex:1}
+.barra .cnt{font-size:12px;color:#bcd;opacity:.9}
+.wrap{max-width:960px;margin:0 auto;padding:22px 20px 80px}
+
+.intro{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:22px}
+.intro h1{font-size:19px;font-weight:800;letter-spacing:-.01em}
+.intro p{color:var(--ink-2);font-size:13.5px;margin-top:6px;max-width:78ch}
+
+.sec-tit{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin:2px 0 12px;display:flex;align-items:center;gap:8px}
+.sec-tit::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.mats{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.mat{position:relative;display:flex;flex-direction:column;gap:7px;text-decoration:none;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 17px;
+  transition:border-color .12s,transform .1s,box-shadow .12s}
+.mat:hover{border-color:var(--brand-teal);transform:translateY(-1px);box-shadow:0 6px 18px rgba(7,48,52,.09)}
+.mat-top{display:flex;align-items:center;gap:10px}
+.mat-ic{font-size:20px;width:38px;height:38px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:var(--surface-warm);border:1px solid var(--line);border-radius:10px}
+.mat-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+  color:#0c6b64;background:#EAF4F1;border:1px solid #cfe6e2;border-radius:20px;padding:3px 9px}
+.mat-nome{font-size:15px;font-weight:700;line-height:1.3}
+.mat-desc{font-size:13px;color:var(--ink-2);line-height:1.5}
+.mat-pe{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:6px;font-size:12.5px;font-weight:700;color:var(--brand-teal)}
+.mat-pe .arw{font-weight:900}
+.mat.breve{opacity:.65;pointer-events:none;border-style:dashed}
+.mat.breve .mat-tag{color:var(--muted);background:var(--surface-warm);border-color:var(--line)}
+.mat.breve .mat-pe{color:var(--muted)}
+
+.nota{margin-top:22px;background:var(--surface-warm);border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:12.5px;color:var(--ink-2);line-height:1.6}
+.nota b{color:var(--ink)}
+
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:62vh;text-align:center;padding:0 24px}
+.state h1{font-size:20px;font-weight:800}
+.state p{color:var(--muted);font-size:14px;max-width:48ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
+.cad{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-size:20px}
+@media(max-width:560px){.wrap{padding:16px 14px 60px}.mats{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="barra">
+  <span class="logo">back<span class="y">4you</span></span>
+  <span class="tag">Comercial</span>
+  <span class="spacer"></span>
+  <span class="cnt" id="cnt"></span>
+</div>
+
+<div id="app" hidden>
+  <div class="wrap">
+    <div class="intro">
+      <h1>Materiais do comercial</h1>
+      <p>Ferramentas de apoio à venda. Abra em tela cheia na reunião ou compartilhe a tela —
+         todos os números são estimativas a partir das premissas informadas e não substituem o
+         diagnóstico técnico.</p>
+    </div>
+
+    <div class="sec-tit">Equiparação hospitalar</div>
+    <div class="mats" id="mats"></div>
+
+    <div class="nota">
+      <b>Uso interno.</b> Estas páginas não são indexadas por buscadores e só abrem com a chave da
+      equipe no endereço. Ao mandar o link para alguém do time, copie o endereço inteiro (com
+      <code>?chave=…</code>).
+    </div>
+  </div>
+</div>
+
+<div id="gate" hidden>
+  <div class="state">
+    <div class="cad">🔒</div>
+    <h1>Acesso restrito</h1>
+    <p>Esta é uma área interna da equipe. Abra pelo link do painel do colaborador, com a
+       <code>chave</code> no endereço.</p>
+  </div>
+</div>
+
+<script>
+const CHAVE_OK='b4u-equipe-2026';
+
+/* Materiais do comercial — para acrescentar um novo, basta uma linha aqui.
+   breve:true deixa o cartão visível, em cinza e sem link (em produção). */
+const MATERIAIS=[
+  {ic:'📈', tag:'Simulador', href:'simulador-equiparacao.html',
+   nome:'Simulador — linha do tempo e honorários',
+   desc:'Duas raias em paralelo (restituição administrativa e mandado de segurança). O vendedor clica em cada desfecho e acende o caminho, com prazos em meses, honorários por modalidade e o fluxo de caixa trimestral contra o imposto de hoje.',
+   pe:'Abrir simulador'},
+  {ic:'🧮', tag:'Calculadora', href:'calculadora-equiparacao.html',
+   nome:'Calculadora de economia',
+   desc:'Três controles — ISS do município, faturamento mensal e % em consultas simples — e a resposta ao vivo: alíquota total, redução de IRPJ e CSLL, economia mensal e anual e o potencial dos últimos 5 anos.',
+   pe:'Abrir calculadora'},
+  {ic:'⚖️', tag:'Comparativo', href:'analise-tributaria.html',
+   nome:'Análise tributária — Simples × Presumido × Equiparação',
+   desc:'Qual regime sai mais barato para o cliente, com fator R, pró-labore, encargos de folha, INSS e IRRF do sócio e retenção sobre dividendos. Parâmetros de 2026 abertos, com base legal linha a linha.',
+   pe:'Abrir comparativo'}
+];
+
+function chaveAtual(){
+  const q=new URLSearchParams(location.search).get('chave');
+  const h=(location.hash||'').replace('#','').trim();
+  return (q||h||'').trim();
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function cartao(m,ch){
+  const href=m.breve?null:(m.href+'?chave='+encodeURIComponent(ch));
+  const tag=`<span class="mat-tag">${esc(m.breve?'em breve':m.tag)}</span>`;
+  const corpo=`<div class="mat-top"><span class="mat-ic">${esc(m.ic)}</span>${tag}</div>
+    <div class="mat-nome">${esc(m.nome)}</div>
+    <div class="mat-desc">${esc(m.desc)}</div>
+    <div class="mat-pe">${esc(m.breve?'em preparação':(m.pe||'Abrir'))}<span class="arw">›</span></div>`;
+  return m.breve
+    ? `<div class="mat breve">${corpo}</div>`
+    : `<a class="mat" href="${esc(href)}">${corpo}</a>`;
+}
+
+function boot(){
+  const ch=chaveAtual();
+  if(ch!==CHAVE_OK){ document.getElementById('gate').hidden=false; return; }
+  document.getElementById('app').hidden=false;
+  const disponiveis=MATERIAIS.filter(m=>!m.breve).length;
+  document.getElementById('cnt').textContent=disponiveis+(disponiveis===1?' material':' materiais');
+  document.getElementById('mats').innerHTML=MATERIAIS.map(m=>cartao(m,ch)).join('');
+}
+boot();
+</script>
+</body>
+</html>
