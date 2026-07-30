@@ -32,11 +32,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .busca{width:100%;font-family:var(--sans);font-size:15px;padding:11px 15px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .dica{font-size:12px;color:var(--muted);margin-top:7px}
-.resumo{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 16px 12px}
+.resumo{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:10px;padding:0 16px 12px}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .rhead{padding:10px 13px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
 .rcard.atrasada .rhead{background:#C0392B}.rcard.semana .rhead{background:#E8892E}.rcard.proxima .rhead{background:var(--brand-teal)}
-.rcard.cobrar .rhead{background:#007EB5}
+.rcard.adiante .rhead{background:#6B8486}.rcard.cobrar .rhead{background:#007EB5}
 .rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:12px}
 .rlista{max-height:168px;overflow:auto;padding:6px}
 .tk{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:8px;cursor:pointer;font-size:12.5px}
@@ -81,7 +81,6 @@ tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}   /*
 .state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-@media(max-width:1180px){.resumo{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:720px){.resumo{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -136,6 +135,7 @@ const COLS=[
   {k:'tarefas',label:'Tarefas Ativas',t:'area',w:260}
 ];
 const TAREFAS=[
+  {k:'prazo_adequacao',stk:'rel_adequacao',label:'Rel. de Adequação'},
   {k:'prazo_prelim',stk:'rel_prelim',label:'Rel. Exec. Preliminar'},
   {k:'prazo_apuracao',stk:'apuracao_nfs',label:'Apuração NFs'},
   {k:'prazo_protocolo',stk:'protocolo',label:'Protocolo'},
@@ -189,6 +189,8 @@ function parseData(s){
 function meia(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function addDias(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
 function fmtBR(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}
+/** dd/mm; acrescenta /aa quando não é do ano corrente (importa no quadro "Mais adiante"). */
+function fmtBRano(d){return fmtBR(d)+(d.getFullYear()!==new Date().getFullYear()?('/'+String(d.getFullYear()).slice(-2)):'');}
 
 let LINHAS=[],RESPNOME='',SORT={key:'id',dir:'asc'};
 function telaChave(titulo,msg){
@@ -232,17 +234,18 @@ function esperandoDesde(l,e){
 function diasCorridos(de,ate){return Math.max(0,Math.round((meia(ate)-meia(de))/86400000));}
 function computeResumo(){
   const t0=meia(new Date()),dow=t0.getDay(),fimSemana=addDias(t0,(7-dow)%7),proxIni=addDias(fimSemana,1),proxFim=addDias(proxIni,6);
-  const b={atrasada:[],semana:[],proxima:[],cobrar:[]};
+  const b={atrasada:[],semana:[],proxima:[],adiante:[],cobrar:[]};
   baseRows().forEach(l=>{
     TAREFAS.forEach(tf=>{
       const d=parseData(l[tf.k]);if(!d)return;
       if(statusConcluido(tf.stk,l[tf.stk]))return;
       if(aguardandoCliente(tf.stk,l[tf.stk]))return;   // está com o cliente → vai para "Cobrar"
       const dm=meia(d),g=dm.getTime();
-      const item={row:l.row,id:l.id,nome:l.nome,k:tf.k,label:tf.label,dataStr:fmtBR(dm),ord:g};
+      const item={row:l.row,id:l.id,nome:l.nome,k:tf.k,label:tf.label,dataStr:fmtBRano(dm),ord:g};
       if(g<t0.getTime())b.atrasada.push(item);
       else if(g<=fimSemana.getTime())b.semana.push(item);
-      else if(g>=proxIni.getTime()&&g<=proxFim.getTime())b.proxima.push(item);
+      else if(g<=proxFim.getTime())b.proxima.push(item);
+      else b.adiante.push(item);                       // nada mais some da vista
     });
     ESPERA.forEach(e=>{
       if(!aguardandoCliente(e.stk,l[e.stk]))return;
@@ -251,7 +254,7 @@ function computeResumo(){
         dias:r.d?diasCorridos(r.d,t0):null,desde:r.d?fmtBR(r.d):'',fonte:r.fonte});
     });
   });
-  ['atrasada','semana','proxima'].forEach(k=>b[k].sort((x,y)=>x.ord-y.ord));
+  ['atrasada','semana','proxima','adiante'].forEach(k=>b[k].sort((x,y)=>x.ord-y.ord));
   b.cobrar.sort((x,y)=>{                                  // do mais demorado ao menos
     if(x.dias==null&&y.dias==null)return 0;
     if(x.dias==null)return 1;
@@ -262,7 +265,7 @@ function computeResumo(){
 }
 function listaTk(arr){
   if(!arr.length)return '<div class="rvazio">Nada por aqui 🎉</div>';
-  return arr.map(t=>`<div class="tk" data-goto="${t.row}" data-k="${t.k}"><span class="d">${esc(t.dataStr)}</span><span class="lb">${esc(t.id)} · ${esc(t.nome)}</span><span class="tp">${esc(t.label)}</span></div>`).join('');
+  return arr.map(t=>`<div class="tk" data-goto="${t.row}" data-k="${t.k}" title="${esc(t.id+' · '+t.nome+' — '+t.label+'\nprazo '+t.dataStr)}"><span class="d">${esc(t.dataStr)}</span><span class="lb">${esc(t.id)} · ${esc(t.nome)}</span><span class="tp">${esc(t.label)}</span></div>`).join('');
 }
 function listaCobrar(arr){
   if(!arr.length)return '<div class="rvazio">Ninguém devendo retorno 🎉</div>';
@@ -280,6 +283,7 @@ function atualizarResumo(){
     <div class="rcard atrasada"><div class="rhead">Atrasadas <span class="n">${b.atrasada.length}</span></div><div class="rlista">${listaTk(b.atrasada)}</div></div>
     <div class="rcard semana"><div class="rhead">Esta semana (até domingo) <span class="n">${b.semana.length}</span></div><div class="rlista">${listaTk(b.semana)}</div></div>
     <div class="rcard proxima"><div class="rhead">Próxima semana <span class="n">${b.proxima.length}</span></div><div class="rlista">${listaTk(b.proxima)}</div></div>
+    <div class="rcard adiante"><div class="rhead">Mais adiante <span class="n">${b.adiante.length}</span></div><div class="rlista">${listaTk(b.adiante)}</div></div>
     <div class="rcard cobrar"><div class="rhead">Cobrar o cliente de retorno <span class="n">${b.cobrar.length}</span></div><div class="rlista">${listaCobrar(b.cobrar)}</div></div>`;
 }
 function ehNum(s){return /^\s*-?\d+([.,]\d+)?\s*$/.test(String(s));}
