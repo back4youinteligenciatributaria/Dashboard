@@ -106,7 +106,9 @@ tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}   /*
 const API_URL='https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 const CHAVE_PADRAO='b4u-equipe-2026';
 function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');return q?q.trim():CHAVE_PADRAO;}
-function respAtual(){return decodeURIComponent((location.hash||'').replace(/^#/,'')).trim();}
+// Código do colaborador: aceita ?cod= (vindo do painel) e também o #hash
+// (formato antigo dos atalhos por pessoa). Vira a coluna "Colaborador" da aba log.
+function respAtual(){const q=(new URLSearchParams(location.search).get('cod')||'').trim();if(q)return q;try{return decodeURIComponent((location.hash||'').replace(/^#/,'')).trim();}catch(e){return (location.hash||'').replace(/^#/,'').trim();}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
 function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}

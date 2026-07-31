@@ -113,7 +113,21 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 .tag-papel{font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;vertical-align:middle;margin-left:4px}
 .tag-papel.pr{background:#E7F4EC;color:#2E7D52}
 .tag-papel.sec{background:var(--surface-warm);color:var(--muted)}
+.aviso-off{background:var(--amber-soft);border:1px solid #F0D6B4;border-left:3px solid var(--amber);
+  border-radius:8px;padding:8px 11px;margin-bottom:9px;font-size:12.5px;color:#8a5117;font-weight:600}
+.quem{display:flex;align-items:center;gap:6px;font-size:12px;color:#cfe6e2;font-weight:600}
+.quem select{font-family:inherit;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:5px 10px;cursor:pointer}
+.quem select option{color:#113D39;background:#fff}
+@media(max-width:640px){.quem span{display:none}}
 .cd{display:flex;flex-direction:column;gap:4px;margin-top:2px}
+.cd-val{color:var(--ink)!important;font-weight:700;font-size:12.5px;text-align:right}
+.cd-obs{font-size:12px;line-height:1.4;color:var(--ink-2);background:var(--surface-warm);
+  border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:8px;padding:7px 9px;margin-top:2px}
+.cd-obs b{color:var(--amber);font-size:10.5px;letter-spacing:.4px;text-transform:uppercase;display:block;margin-bottom:2px}
+.cd-edit{align-self:flex-start;margin-top:4px;font-size:11px;font-weight:800;text-decoration:none;
+  color:var(--brand-teal);border:1px solid var(--line-2);border-radius:999px;padding:3px 10px;background:var(--surface)}
+.cd-edit:hover{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
 .cd-row,.lic-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0}
 .lic-grid{display:flex;flex-direction:column;gap:2px}
 .lic-row span,.cd-row span{color:var(--ink-2)}
@@ -135,12 +149,17 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
   <span class="logo">back<span class="y">4you</span></span>
   <span class="tag">Painel da equipe</span>
   <span class="spacer"></span>
+  <label class="quem" title="Aparece na coluna Colaborador do histórico de alterações">
+    <span>Você:</span>
+    <select id="quem-sou"></select>
+  </label>
   <span class="cnt" id="cnt"></span>
 </div>
 
 <div class="wrap">
   <!-- ACESSO RÁPIDO — planilhas centrais (funciona mesmo sem a API) -->
   <div class="sec-tit">Acesso rápido — planilhas centrais</div>
+  <div class="aviso-off" id="aviso-centrais" hidden>⚠️ Sem resposta da Config — mostrando a lista guardada no painel. Um link trocado recentemente pode não estar aqui.</div>
   <div class="centrais" id="centrais"></div>
 
   <!-- FERRAMENTAS DA EQUIPE -->
@@ -150,9 +169,9 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
     <a class="central-lk" id="fp-ativos" href="clientes-ativos.html"><span class="ic">📈</span><span>Clientes ativos / mês</span><span class="arw">›</span></a>
     <a class="central-lk" id="fp-comercial" href="comercial.html"><span class="ic">📣</span><span>Comercial — materiais</span><span class="arw">›</span></a>
     <div class="menu" id="menu-restituicao"></div>
-    <!-- Contatos (gerir & permissões) oculto por ora — reative quando quiser:
+    <a class="central-lk" id="fp-registro" href="registro.html"><span class="ic">📇</span><span>Registros de clientes</span><span class="arw">›</span></a>
+    <a class="central-lk" id="fp-certificados" href="certificados.html"><span class="ic">🔐</span><span>Certificados e procurações</span><span class="arw">›</span></a>
     <a class="central-lk" id="fp-contatos" href="contatos-equipe.html"><span class="ic">👥</span><span>Contatos — gerir &amp; permissões</span><span class="arw">›</span></a>
-    -->
   </div>
 
   <!-- CLIENTES — busca com dropdown -->
@@ -160,7 +179,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
   <div class="combo">
     <div class="combo-row">
       <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar cliente por ID, nome ou CNPJ…">
-      <a class="btn-novo" id="novo-cliente" href="onboarding.html">+ Novo cliente</a>
+      <a class="btn-novo" id="novo-cliente" href="registro.html">+ Novo cliente</a>
     </div>
     <div class="opcoes" id="opcoes" hidden></div>
     <div class="dica" id="dica"><span class="spin"></span> Carregando clientes…</div>
@@ -177,7 +196,10 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-
 const CHAVE_PADRAO = 'b4u-equipe-2026';
 
 // Planilhas centrais — vêm DINAMICAMENTE da Config (tipo=links_equipe).
-// O fallback abaixo só é usado se a API não responder (mantém o painel funcionando).
+// CENTRAIS_VIVOS guarda o que a Config devolveu; enquanto estiver vazio, a tela usa
+// a CÓPIA DE EMERGÊNCIA abaixo e mostra um aviso — assim ninguém confia num link
+// velho sem perceber. Essa cópia existe só para o painel não morrer se a API cair.
+let CENTRAIS_VIVOS=null;
 const CENTRAIS_FALLBACK = [
   {nome:'Site Links',            url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1807029121#gid=1807029121'},
   {nome:'Societária Mestra',     url:'https://docs.google.com/spreadsheets/d/1xcmKoj1hORiFQLdrUDxBicZri-tOXkwFiyqVF1NUGUg/edit?gid=1875565821#gid=1875565821'},
@@ -186,16 +208,26 @@ const CENTRAIS_FALLBACK = [
   {nome:'Feriados',              url:'https://docs.google.com/spreadsheets/d/1Gpn84rlS0fbd1j-gOxWZc8s3TJ6CzRYwrm-QsBZwhCI/edit?gid=59736689#gid=59736689'},
   {nome:'Modelos',               url:'https://docs.google.com/spreadsheets/d/1NAzY_xSsdAYVwXZIy23dNXOkqLnt89UkFXPPeiEbHdI/edit?gid=1026418437#gid=1026418437'},
   {nome:'Config Tributário',     url:'https://docs.google.com/spreadsheets/d/1JiOjIfTXrOZPGuD_i4zmjXXVTaqPLlKD1fDCcMrDU4k/edit?gid=1736790632#gid=1736790632'},
-  {nome:'Certificados Digitais', url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1519487343#gid=1519487343'},
+  {nome:'Certificados e Procurações', url:'https://docs.google.com/spreadsheets/d/1BYpw0mOMMSrC-L5lW1H0IU_rjbBmj3DBeyew7m8w2T8/edit?gid=1519487343#gid=1519487343'},
   {nome:'Equiparação Controle',  url:'https://docs.google.com/spreadsheets/d/18wIzGZtwIaDOxvIfWdBNBcWKcLzbNgxRB3C2-r8ymzg/edit?gid=619398478#gid=619398478'},
   {nome:'Controle de Licenças',  url:'https://docs.google.com/spreadsheets/d/1burCu35PnytjjcpGzLZ_w0Y5nfVs9svC/edit?gid=777551400#gid=777551400'},
   {nome:'Extratos Pendentes',    url:'https://docs.google.com/spreadsheets/d/1TFnX4AHZDkHbyapI7FDi3cCJB_RzqB0ySNQ4NBWaq54/edit?gid=1183432994#gid=1183432994'}
 ];
 // ícone por nome (normalizado) e quais vão pro dropdown "Outros"
-const ICONE_CENTRAL={'site links':'🗂️','societaria mestra':'🏛️','tickets':'🎫','contatos':'👥','feriados':'📅','modelos':'📄','config tributario':'⚙️','certificados digitais':'🔐','equiparacao controle':'⚖️','controle de licencas':'📜','extratos pendentes':'🏦'};
+const ICONE_CENTRAL={'site links':'🗂️','societaria mestra':'🏛️','tickets':'🎫','contatos':'👥','feriados':'📅','modelos':'📄','config tributario':'⚙️','certificados e procuracoes':'🔐','certificados digitais':'🔐','equiparacao controle':'⚖️','controle de licencas':'📜','extratos pendentes':'🏦'};
 const CENTRAIS_NO_OUTROS=['site links','tickets','feriados','modelos','config tributario'];
 
 function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); const h=(location.hash||'').replace('#','').trim(); return q || h || CHAVE_PADRAO; }
+/* Quem está mexendo. Vai como ?cod= para as páginas de edição e vira a coluna
+   "Colaborador" da aba log de cada planilha. Fica na URL (nada de armazenamento
+   no navegador) — assim o atalho de cada um já abre identificado. */
+function codAtual(){ return (new URLSearchParams(location.search).get('cod')||'').trim(); }
+function comChave(base){
+  const u=base.split('#')[0].split('?')[0];
+  let q='?chave='+encodeURIComponent(chaveAtual());
+  if(codAtual()) q+='&cod='+encodeURIComponent(codAtual());
+  return u+q;
+}
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function normTxt(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
 function jsonp(url){
@@ -242,7 +274,9 @@ function botaoCentral(l){
   return `<a class="central-lk" href="${esc(l.url)}" target="_blank" rel="noopener"><span class="ic">${l.ic}</span><span>${esc(l.nome)}</span><span class="arw">›</span></a>`;
 }
 function pintarCentrais(pares){
-  const validos=(pares && pares.length ? pares : CENTRAIS_FALLBACK).filter(p=>p.url && /^https?:/.test(p.url));
+  if(pares && pares.length) CENTRAIS_VIVOS=pares;
+  const offline=!(pares && pares.length);
+  const validos=(offline?CENTRAIS_FALLBACK:pares).filter(p=>p.url && /^https?:/.test(p.url));
   const registros={nome:'Registros de clientes', url:urlRegistros(validos), ic:'📇'};
   const diretos=[registros].concat(validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))<0)
     .map(p=>({nome:p.nome, url:p.url, ic:iconeCentral(p.nome)})));
@@ -262,6 +296,9 @@ function pintarCentrais(pares){
     pop.hidden = !abrir;
     btn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
   });
+  // Enquanto a Config não responder, deixa claro que os links são a cópia local.
+  const av=document.getElementById('aviso-centrais');
+  if(av) av.hidden=!offline;
 }
 function fecharOutros(){
   const pop=document.getElementById('pop-outros'), btn=document.getElementById('btn-outros');
@@ -274,17 +311,42 @@ const LINKS_RESTITUICAO=[
   {nome:'Kareane', code:'853176'},
   {nome:'MFBD',    code:'031029'}
 ];
-const CONTROLE_URL='https://docs.google.com/spreadsheets/d/18wIzGZtwIaDOxvIfWdBNBcWKcLzbNgxRB3C2-r8ymzg/edit?gid=619398478#gid=619398478';
+// O link do Controle sai da Config (chave "Equiparacao Controle"), igual aos outros.
+// A constante abaixo é só a cópia de emergência de quando a API não responde.
+const CONTROLE_URL_FALLBACK='https://docs.google.com/spreadsheets/d/18wIzGZtwIaDOxvIfWdBNBcWKcLzbNgxRB3C2-r8ymzg/edit?gid=619398478#gid=619398478';
+function urlControle(){
+  const p=(CENTRAIS_VIVOS||[]).find(x=>normTxt(x.nome).indexOf('equiparacao controle')>=0);
+  return (p && p.url) || CONTROLE_URL_FALLBACK;
+}
 function pintarRestituicao(){
   const menu=document.getElementById('menu-restituicao'); if(!menu) return;
   const ch=encodeURIComponent(chaveAtual());
   const pessoas=LINKS_RESTITUICAO.map(p=>
     `<a href="restituicao.html?chave=${ch}#${encodeURIComponent(p.code)}" target="_blank" rel="noopener"><span class="ic">💸</span>${esc(p.nome)}</a>`).join('');
-  const controle=`<a href="${esc(CONTROLE_URL)}" target="_blank" rel="noopener"><span class="ic">⚖️</span>Controle (planilha)</a>`;
+  const controle=`<a href="${esc(urlControle())}" target="_blank" rel="noopener"><span class="ic">⚖️</span>Controle (planilha)</a>`;
   menu.innerHTML=`<button type="button" class="central-lk" id="btn-restituicao" aria-expanded="false"><span class="ic">💸</span><span>Restituição</span><span class="arw">▾</span></button><div class="menu-pop" id="pop-restituicao" hidden>${pessoas}${controle}</div>`;
   const btn=document.getElementById('btn-restituicao'), pop=document.getElementById('pop-restituicao');
   btn.addEventListener('click', e=>{ e.stopPropagation(); const abrir=pop.hidden; pop.hidden=!abrir; btn.setAttribute('aria-expanded',abrir?'true':'false'); });
 }
+/* Seletor "Você:" — usa a mesma lista de colaboradores da restituição.
+   Trocar reescreve a URL (sem recarregar) e repropaga o código nos atalhos. */
+function montarQuemSou(){
+  const sel=document.getElementById('quem-sou'); if(!sel) return;
+  const atual=codAtual();
+  sel.innerHTML='<option value="">não identificado</option>'+
+    LINKS_RESTITUICAO.map(p=>`<option value="${esc(p.code)}"${p.code===atual?' selected':''}>${esc(p.nome)}</option>`).join('');
+  sel.addEventListener('change',()=>{
+    const u=new URL(location.href);
+    if(sel.value) u.searchParams.set('cod',sel.value); else u.searchParams.delete('cod');
+    history.replaceState(null,'',u.toString());
+    const nc=document.getElementById('novo-cliente');
+    if(nc) nc.href=comChave('registro.html');
+    ['fp-societario','fp-ativos','fp-comercial','fp-contatos','fp-registro','fp-certificados']
+      .forEach(id=>{const el=document.getElementById(id);if(el)el.href=comChave(el.getAttribute('href'));});
+    pintarRestituicao();
+  });
+}
+
 function fecharRestituicao(){
   const pop=document.getElementById('pop-restituicao'), btn=document.getElementById('btn-restituicao');
   if(pop && !pop.hidden){ pop.hidden=true; btn.setAttribute('aria-expanded','false'); }
@@ -312,7 +374,7 @@ function painelCliente(c){
       ${lkArea('Contábil',a.contabil,'📒')}
       ${lkArea('Pessoal',a.pessoal,'👥')}
     </div>
-    ${blocoCertificado(cert)}
+    ${blocoCertificado(cert,c.id)}
   </div>
   <div class="extras" id="extras"></div>`;
 }
@@ -327,12 +389,19 @@ function pillVenc(iso){
   const t=fmtBR(iso)+(d<0?' · vencido':(d<=60?` · ${d}d`:''));
   return `<span class="pill ${cl}">${t}</span>`;
 }
-function blocoCertificado(cert){
+function blocoCertificado(cert,id){
   cert=cert||{};
-  const linhas=[['Certificado digital',cert.venc_certificado],['Procuração e-CAC',cert.venc_ecac],['Procuração SPE',cert.venc_spe]]
+  const datas=[['Certificado digital',cert.venc_certificado],['Procuração e-CAC',cert.venc_ecac],['Procuração SPE',cert.venc_spe]]
     .filter(x=>x[1]).map(x=>`<div class="cd-row"><span>${esc(x[0])}</span>${pillVenc(x[1])}</div>`).join('');
-  if(!linhas) return '';
-  return `<div class="linha"><span class="rot">Certificado / procurações</span></div><div class="cd">${linhas}</div>`;
+  const resp=String(cert.responsavel||'').trim();
+  const obs=String(cert.obs||'').trim();
+  const linhaResp=resp?`<div class="cd-row"><span>Responsável legal</span><span class="cd-val">${esc(resp)}</span></div>`:'';
+  const linhaObs=obs?`<div class="cd-obs"><b>Obs. interna</b>${esc(obs)}</div>`:'';
+  // atalho para editar essa linha na página de certificados (já abre filtrado no cliente)
+  const editar=`<a class="cd-edit" href="${esc(comChave('certificados.html'))}&q=${encodeURIComponent(id||'')}" target="_blank" rel="noopener">✎ editar</a>`;
+  if(!datas && !linhaResp && !linhaObs)
+    return `<div class="linha"><span class="rot">Certificado / procurações</span></div><div class="cd"><div class="cd-row"><span style="color:var(--muted)">sem dados preenchidos</span></div>${editar}</div>`;
+  return `<div class="linha"><span class="rot">Certificado / procurações</span></div><div class="cd">${linhaResp}${datas}${linhaObs}${editar}</div>`;
 }
 function simNao(v){ const s=String(v==null?'':v).trim().toLowerCase(); if(!s) return null; if(/^(sim|s|true|verdadeiro|1|x|ativo|✓)$/.test(s)) return true; if(/^(n[aã]o|nao|n|false|falso|0|-|inativo)$/.test(s)) return false; return null; }
 function mesesAtivo(iso){ const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return null; const d=new Date(+m[1],+m[2]-1,+m[3]); let n=(hoje.getFullYear()-d.getFullYear())*12+(hoje.getMonth()-d.getMonth()); if(hoje.getDate()<d.getDate()) n--; return n<0?0:n; }
@@ -490,13 +559,15 @@ function ligarCombo(){
 function boot(){
   pintarCentrais();                 // render imediato (fallback)
   jsonp(API_URL+'?tipo=links_equipe&chave='+encodeURIComponent(chaveAtual()))   // atualiza com os links vivos da Config
-    .then(d=>{ if(d && !d.erro && d.centrais && d.centrais.length) pintarCentrais(d.centrais); })
+    .then(d=>{ if(d && !d.erro && d.centrais && d.centrais.length){ pintarCentrais(d.centrais); pintarRestituicao(); } })
     .catch(()=>{});
   pintarRestituicao();
   ligarCombo();
+  montarQuemSou();
   const nc=document.getElementById('novo-cliente');
-  if(nc) nc.href='onboarding.html?chave='+encodeURIComponent(chaveAtual());
-  ['fp-societario','fp-ativos','fp-comercial'].forEach(id=>{const el=document.getElementById(id);if(el)el.href=el.getAttribute('href').split('?')[0]+'?chave='+encodeURIComponent(chaveAtual());});
+  if(nc) nc.href=comChave('registro.html');
+  ['fp-societario','fp-ativos','fp-comercial','fp-contatos','fp-registro','fp-certificados']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.href=comChave(el.getAttribute('href'));});
 
   jsonp(API_URL+'?tipo=equipe&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{

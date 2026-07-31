@@ -14,6 +14,7 @@
   --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
   --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
+  --verde:#2E9D5F;--verde-2:#25804C;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -38,6 +39,8 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .btn.pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
 .btn.green{background:#1F9D57;border-color:#1F9D57;color:#fff;border-radius:999px}
 .btn.mini{padding:7px 11px;font-size:12.5px}
+.btn.add{background:var(--verde);border-color:var(--verde);color:#fff}
+.btn.add:hover{background:var(--verde-2);border-color:var(--verde-2);color:#fff}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
 .dica{font-size:12px;color:var(--muted);margin-top:7px}
 .lista{margin-top:12px;display:flex;flex-direction:column;gap:10px}
@@ -54,6 +57,9 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .bdg.ok{background:#E7F4EC;color:#2E7D52}
 .bdg.agu{background:#EEF1F0;color:#5B6B67;border:1px solid var(--line)}
 .bdg.na{background:#F2ECE4;color:#8A7D70}
+.bdg.dur{background:var(--brand-dark);color:#fff;border:1px solid var(--brand-dark);font-size:11px;font-weight:800}
+.bdg.dur.ok{background:var(--verde);border-color:var(--verde);color:#fff}
+.bdg.dur.na{background:#F2ECE4;border:1px solid var(--line);color:var(--muted);font-weight:700}
 .chev{color:var(--line-2);font-weight:900;font-size:18px;margin-top:2px}
 .editor{border-top:1px solid var(--line);padding:15px;display:none;background:var(--surface-warm)}
 .proc.open .editor{display:block}
@@ -70,9 +76,19 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .log.vazio{color:var(--muted);font-style:italic}
 .addobs{display:flex;gap:8px;margin-top:7px;align-items:flex-start}
 .addobs textarea{flex:1;min-height:40px}
-.etapa{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:10px}
+.etapa{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:0;margin-bottom:10px;overflow:hidden}
+.etapa.aberta{border-color:var(--line-2)}
+.etapa-h{width:100%;display:flex;gap:9px;align-items:center;flex-wrap:wrap;text-align:left;background:none;border:0;padding:11px 12px;font-family:var(--sans);color:var(--ink);cursor:pointer}
+.etapa-h:hover{background:var(--surface-warm)}
+.etapa-h:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.etapa-chev{flex:none;width:12px;color:var(--brand-euc);font-weight:900;font-size:13px}
+.etapa-titulo{flex:1;min-width:130px;font-size:16px;font-weight:800;color:var(--ink);line-height:1.25}
+.etapa.vazia .etapa-titulo{font-size:13.5px;font-weight:700;color:var(--muted)}
+.etapa-datas{font-size:11.5px;font-weight:600;color:var(--muted)}
+.etapa-body{display:none;padding:12px;border-top:1px solid var(--line)}
+.etapa.aberta .etapa-body{display:block}
 .etapa-top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-.etapa-n{font-size:10.5px;font-weight:800;color:#fff;background:var(--brand-euc);border-radius:6px;padding:3px 7px;white-space:nowrap}
+.etapa-n{flex:none;font-size:10.5px;font-weight:800;color:#fff;background:var(--brand-euc);border-radius:6px;padding:3px 7px;white-space:nowrap}
 .barra-salvar{position:sticky;bottom:0;background:var(--surface-warm);padding-top:12px;margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .msg{font-size:13px;font-weight:600}
 .msg.ok{color:#2E7D52}.msg.err{color:var(--vermelho)}
@@ -119,12 +135,92 @@ const API_URL='https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK
 const CHAVE_PADRAO='b4u-equipe-2026';
 const STATUS=['','Aguardando','Em andamento','Concluído','Não se aplica'];
 function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');const h=(location.hash||'').replace('#','').trim();return q||h||CHAVE_PADRAO;}
+// Código do colaborador (?cod=) — vira a coluna "Colaborador" da aba log.
+// Aqui o hash já é fallback da chave, então só lemos o parâmetro.
+function codAtual(){return (new URLSearchParams(location.search).get('cod')||'').trim();}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
 function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
-async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
+async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual(),cod:codAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 function selectHTML(cls,val){return `<select class="${cls}">`+STATUS.map(o=>`<option value="${esc(o)}"${normTxt(o)===normTxt(val)?' selected':''}>${o||'—'}</option>`).join('')+`</select>`;}
 function bdgStatus(s){const n=normTxt(s);let cl='agu';if(/conclu|finaliz|encerr/.test(n))cl='ok';else if(/andamento/.test(n))cl='and';else if(/nao se aplica|não se aplica/.test(n))cl='na';return `<span class="bdg ${cl}">${esc(s||'—')}</span>`;}
+
+/* ===== duração do processo =====
+   A planilha é mista: a data pode vir como yyyy-MM-dd (célula Data) ou como texto
+   livre ("03/2026", "março/2026", "mar/26", "2026"). Quando só temos mês/ano (ou só o
+   ano), estimamos o dia 1 e marcamos o resultado com "~". */
+const MESES_ABREV={jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
+const RE_CONCLUIDO=/conclu|finaliz|encerrad/;
+function pad2(n){return String(n).padStart(2,'0');}
+function ano4(a){return a<100?2000+a:a;}
+function fmtData(d){return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear();}
+function parseDataFlex(v){
+  const bruto=String(v==null?'':v).trim();
+  const t=normTxt(bruto);
+  if(!t)return null;
+  let m;
+  // yyyy-MM-dd (com ou sem hora)
+  m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return {d:new Date(+m[1],+m[2]-1,+m[3]),est:false,rot:pad2(+m[3])+'/'+pad2(+m[2])+'/'+m[1],orig:bruto};
+  // dd/mm/aaaa
+  m=t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  if(m){const a=ano4(+m[3]);return {d:new Date(a,+m[2]-1,+m[1]),est:false,rot:pad2(+m[1])+'/'+pad2(+m[2])+'/'+a,orig:bruto};}
+  // mm/aaaa
+  m=t.match(/^(\d{1,2})[\/.-](\d{4})$/);
+  if(m&&+m[1]>=1&&+m[1]<=12)return {d:new Date(+m[2],+m[1]-1,1),est:true,rot:pad2(+m[1])+'/'+m[2],orig:bruto};
+  // mm/aa
+  m=t.match(/^(\d{1,2})[\/.-](\d{2})$/);
+  if(m&&+m[1]>=1&&+m[1]<=12){const a=ano4(+m[2]);return {d:new Date(a,+m[1]-1,1),est:true,rot:pad2(+m[1])+'/'+a,orig:bruto};}
+  // nome do mês + ano: "março/2026", "mar 26", "março de 2026"
+  const tn=t.replace(/\s+de\s+/g,'/').replace(/[\s.\-]+/g,'/');
+  m=tn.match(/^([a-z]{3,9})\/?(\d{2,4})$/);
+  if(m){const mm=MESES_ABREV[m[1].slice(0,3)];if(mm){const a=ano4(+m[2]);return {d:new Date(a,mm-1,1),est:true,rot:pad2(mm)+'/'+a,orig:bruto};}}
+  // só o ano
+  m=t.match(/^(\d{4})$/);
+  if(m)return {d:new Date(+m[1],0,1),est:true,rot:'01/'+m[1],orig:bruto};
+  return null;
+}
+function fmtDuracao(dias){
+  const d=Math.max(0,Math.round(dias));
+  if(d===0)return 'hoje';
+  if(d<30)return d===1?'1 dia':d+' dias';
+  const anos=Math.floor(d/365),resto=d-anos*365,meses=Math.floor(resto/30),rd=resto-meses*30;
+  const partes=[];
+  if(anos)partes.push(anos===1?'1 ano':anos+' anos');
+  if(meses)partes.push(meses===1?'1 mês':meses+' meses');
+  if(!anos&&rd)partes.push(rd===1?'1 dia':rd+' dias');
+  if(!partes.length)partes.push(anos===1?'1 ano':anos+' anos');
+  return partes.join(' e ');
+}
+function etapasOrdenadas(p){return (p.etapas||[]).filter(Boolean).slice().sort((a,b)=>(+a.n||0)-(+b.n||0));}
+function primeiroInicio(p){for(const e of etapasOrdenadas(p)){const r=parseDataFlex(e.data_inicio);if(r)return r;}return null;}
+function ultimoFim(p){const arr=etapasOrdenadas(p).reverse();for(const e of arr){const r=parseDataFlex(e.data_fim);if(r)return r;}return null;}
+function procConcluido(p){
+  if(RE_CONCLUIDO.test(normTxt(p.status_geral)))return true;
+  const nomeadas=(p.etapas||[]).filter(e=>e&&String(e.nome||'').trim());
+  return nomeadas.length>0&&nomeadas.every(e=>RE_CONCLUIDO.test(normTxt(e.status)));
+}
+function duracaoHTML(p){
+  const ini=primeiroInicio(p);
+  if(!ini)return `<span class="bdg dur na" title="Nenhuma etapa tem data de início preenchida.">⏱ sem data de início</span>`;
+  const concluido=procConcluido(p);
+  const fimR=concluido?ultimoFim(p):null;
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const fim=fimR?fimR.d:hoje;
+  const dias=Math.max(0,Math.round((fim-ini.d)/86400000));
+  const estimado=!!(ini.est||(fimR&&fimR.est));
+  const dicas=[];
+  if(ini.est)dicas.push('início estimado no dia 1 de '+ini.rot+' (planilha: '+ini.orig+')');
+  if(fimR&&fimR.est)dicas.push('fim estimado no dia 1 de '+fimR.rot+' (planilha: '+fimR.orig+')');
+  dicas.push('De '+fmtData(ini.d)+' até '+(fimR?fmtData(fim):'hoje, '+fmtData(hoje)));
+  const rotulo=(estimado?'~':'')+fmtDuracao(dias)+(concluido?' (concluído)':' (em andamento)');
+  return `<span class="bdg dur ${concluido?'ok':''}" title="${esc(dicas.join(' · '))}">⏱ ${esc(rotulo)}</span>`;
+}
+function metaHTML(p){
+  const nEt=(p.etapas||[]).filter(e=>e&&e.nome).length;
+  const nOk=(p.etapas||[]).filter(e=>e&&e.nome&&RE_CONCLUIDO.test(normTxt(e.status))).length;
+  return duracaoHTML(p)+bdgStatus(p.status_geral)+`<span class="bdg agu">${nOk}/${nEt} etapas ok</span>`+(p.codigo_processo?`<span class="bdg na">${esc(p.codigo_processo)}</span>`:'');
+}
 
 let PROCS=[];
 function carregar(){
@@ -139,7 +235,7 @@ function render(){
     <div class="topo"><div class="linha-topo">
       <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome, código, processo ou status…">
       <button class="btn green" id="novo">+ Novo processo</button>
-    </div><div class="dica">Clique num processo para editar. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar".</div></div>
+    </div><div class="dica">Clique num processo para editar. Dentro dele, clique no nome da etapa para abrir os detalhes. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar".</div></div>
     <div class="lista" id="lista"></div></div>`;
   desenhar('');
   document.getElementById('busca').addEventListener('input',e=>desenhar(e.target.value));
@@ -153,25 +249,46 @@ function desenhar(termo){
   lista.innerHTML=arr.map(cardHTML).join('')||'<div class="dica">Nenhum processo encontrado.</div>';
 }
 function cardHTML(p){
-  const nEt=p.etapas.filter(e=>e.nome).length;
-  const nOk=p.etapas.filter(e=>e.nome&&/conclu|finaliz|encerr/.test(normTxt(e.status))).length;
   return `<div class="proc" data-row="${p.row}">
     <div class="proc-h" data-toggle="${p.row}">
       <span class="pid">${esc(p.id)}</span>
       <div class="pmain">
         <div class="pnome">${esc(p.nome||'(sem nome)')}</div>
         <div class="pproc">${esc(p.processo||'')}</div>
-        <div class="pmeta">${bdgStatus(p.status_geral)}<span class="bdg agu">${nOk}/${nEt} etapas ok</span>${p.codigo_processo?`<span class="bdg na">${esc(p.codigo_processo)}</span>`:''}</div>
+        <div class="pmeta">${metaHTML(p)}</div>
       </div>
       <span class="chev">›</span>
     </div>
     <div class="editor" id="ed-${p.row}"></div>
   </div>`;
 }
+function rotuloData(v){
+  const bruto=String(v==null?'':v).trim();
+  if(!bruto)return '';
+  const r=parseDataFlex(bruto);
+  return r?r.rot:bruto;   // não deu para ler? mostra como está na planilha
+}
+function resumoDatasEtapa(ini,fim){
+  const bits=[];
+  const a=rotuloData(ini),b=rotuloData(fim);
+  if(a)bits.push('início '+a);
+  if(b)bits.push('fim '+b);
+  return bits.join(' · ');
+}
 function etapaHTML(p,e){
   const log=e.obs_interna||'';
-  return `<div class="etapa" data-n="${e.n}">
-    <div class="etapa-top"><span class="etapa-n">Etapa ${e.n}</span>
+  const nome=String(e.nome||'').trim();
+  const vazia=!nome;   // slot ainda não preenchido: fica aberto, como era antes, mas discreto
+  return `<div class="etapa${vazia?' vazia aberta':''}" data-n="${e.n}">
+    <button type="button" class="etapa-h" data-etapa-toggle="${e.n}" aria-expanded="${vazia?'true':'false'}">
+      <span class="etapa-chev" aria-hidden="true">${vazia?'▾':'▸'}</span>
+      <span class="etapa-n">Etapa ${e.n}</span>
+      <span class="etapa-titulo">${esc(nome||'Etapa sem nome')}</span>
+      ${bdgStatus(e.status)}
+      <span class="etapa-datas">${esc(resumoDatasEtapa(e.data_inicio,e.data_fim))}</span>
+    </button>
+    <div class="etapa-body">
+    <div class="etapa-top">
       <input class="e-nome" style="flex:1;font-weight:700;padding:7px 10px;border:1px solid var(--line-2);border-radius:8px" value="${esc(e.nome)}" placeholder="Nome da etapa"></div>
     <div class="grid2">
       <div class="fld"><label>Status</label>${selectHTML('e-status',e.status)}</div>
@@ -181,8 +298,28 @@ function etapaHTML(p,e){
     <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Observações internas da etapa</label>
     <div class="log ${log?'':'vazio'}" data-etlog="${e.n}">${log?esc(log):'Sem observações.'}</div>
     <div class="addobs"><textarea data-etobs="${e.n}" placeholder="Nova observação (entra com a data de hoje)"></textarea>
-      <button class="btn mini" data-addet="${e.n}">Adicionar</button></div>
+      <button class="btn mini add" data-addet="${e.n}">Adicionar</button></div>
+    </div>
   </div>`;
+}
+// abre/fecha a etapa. O corpo só some por CSS: os inputs continuam no DOM, então
+// coletar()/salvar continuam funcionando igual.
+function alternarEtapa(btn){
+  const bloco=btn.closest('.etapa');if(!bloco)return;
+  const aberta=bloco.classList.toggle('aberta');
+  btn.setAttribute('aria-expanded',aberta?'true':'false');
+  const ch=btn.querySelector('.etapa-chev');if(ch)ch.textContent=aberta?'▾':'▸';
+  if(aberta){const inp=bloco.querySelector('.e-nome');if(inp&&!inp.value.trim())inp.focus();}
+}
+// mantém o cabeçalho da etapa em dia enquanto o usuário digita
+function sincronizarEtapa(campo){
+  const bloco=campo.closest('.etapa');if(!bloco)return;
+  const v=cls=>{const el=bloco.querySelector(cls);return el?el.value:'';};
+  const nome=v('.e-nome').trim();
+  const tit=bloco.querySelector('.etapa-titulo');if(tit)tit.textContent=nome||'Etapa sem nome';
+  bloco.classList.toggle('vazia',!nome);
+  const bdg=bloco.querySelector('.etapa-h .bdg');if(bdg)bdg.outerHTML=bdgStatus(v('.e-status'));
+  const dt=bloco.querySelector('.etapa-datas');if(dt)dt.textContent=resumoDatasEtapa(v('.e-ini'),v('.e-fim'));
 }
 function editorHTML(p){
   const etv=[];for(let n=1;n<=p._visN;n++)etv.push(p.etapas[n-1]);
@@ -197,7 +334,7 @@ function editorHTML(p){
     <div class="sub">Observações internas (geral)</div>
     <div class="log ${glog?'':'vazio'}" data-glog>${glog?esc(glog):'Sem observações.'}</div>
     <div class="addobs"><textarea data-gobs placeholder="Nova observação (entra com a data de hoje)"></textarea>
-      <button class="btn mini" data-addgeral>Adicionar</button></div>
+      <button class="btn mini add" data-addgeral>Adicionar</button></div>
 
     <div class="sub">Etapas</div>
     <div data-etapas>${etv.map(e=>etapaHTML(p,e)).join('')}</div>
@@ -253,7 +390,7 @@ async function salvarAuto(row,dados){
     dados.etapas.forEach(e=>{const alvo=p.etapas[e.n-1];if(alvo){alvo.nome=e.nome;alvo.status=e.status;alvo.data_inicio=e.data_inicio;alvo.data_fim=e.data_fim;}});
     setMsg(row,'msg ok','Salvo ✓ '+horaAgora());
     const h=document.querySelector(`.proc[data-row="${row}"] .pmeta`);
-    if(h){const nEt=p.etapas.filter(e=>e.nome).length,nOk=p.etapas.filter(e=>e.nome&&/conclu|finaliz|encerr/.test(normTxt(e.status))).length;h.innerHTML=bdgStatus(p.status_geral)+`<span class="bdg agu">${nOk}/${nEt} etapas ok</span>`+(p.codigo_processo?`<span class="bdg na">${esc(p.codigo_processo)}</span>`:'');}
+    if(h)h.innerHTML=metaHTML(p);
     const nome=document.querySelector(`.proc[data-row="${row}"] .pnome`);if(nome)nome.textContent=p.nome||'(sem nome)';
   }catch(e){setMsg(row,'msg err','Não salvou: '+(e.message||e));}
 }
@@ -268,7 +405,7 @@ async function addObs(row,btn,tipo,n){
     if(tipo==='geral'){p.observacoes_internas=d.valor;const log=ed.querySelector('[data-glog]');log.textContent=d.valor;log.classList.remove('vazio');}
     else{p.etapas[n-1].obs_interna=d.valor;const log=ed.querySelector(`[data-etlog="${n}"]`);log.textContent=d.valor;log.classList.remove('vazio');}
     ta.value='';ta.scrollIntoView({block:'nearest'});
-  }catch(e){alert('Não consegui salvar a observação: '+(e.message||e));}
+  }catch(e){setMsg(p.row,'msg err','Não consegui salvar a observação: '+(e.message||e));}
   btn.disabled=false;btn.textContent=txtOrig;
 }
 function addEtapa(row){const p=PROCS.find(x=>x.row==row);if(p._visN>=10)return;p._visN++;reabrir(row);}
@@ -291,6 +428,7 @@ async function criarNovo(btn){
 
 // eventos (delegação)
 document.addEventListener('click',e=>{
+  const et=e.target.closest('[data-etapa-toggle]');if(et){alternarEtapa(et);return;}
   const tg=e.target.closest('[data-toggle]');if(tg){abrirEditor(tg.dataset.toggle);return;}
   const ag=e.target.closest('[data-addgeral]');if(ag){addObs(ag.closest('.proc').dataset.row,ag,'geral');return;}
   const ae=e.target.closest('[data-addet]');if(ae){addObs(ae.closest('.proc').dataset.row,ae,'etapa',+ae.dataset.addet);return;}
@@ -304,7 +442,13 @@ document.addEventListener('change',e=>{
   const ed=e.target.closest('.editor');if(!ed)return;
   const f=e.target;if(!f.matches||!f.matches('input,select,textarea'))return;
   if(f.matches('[data-gobs],[data-etobs]'))return;   // as observações têm botão próprio (log com data)
+  if(f.closest('.etapa'))sincronizarEtapa(f);
   const proc=e.target.closest('.proc');if(proc)agendarSalvar(proc.dataset.row);
+});
+// enquanto digita, o cabeçalho recolhido da etapa acompanha nome/datas
+document.addEventListener('input',e=>{
+  const f=e.target;
+  if(f&&f.matches&&f.matches('.etapa .e-nome,.etapa .e-ini,.etapa .e-fim'))sincronizarEtapa(f);
 });
 
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());

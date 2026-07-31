@@ -7,75 +7,158 @@
 <title>Contatos (equipe) — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
   --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
+  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --vermelho:#C0392B;--verde:#2E9D5F;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+
+/* ---------- barra ---------- */
+.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
 .barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
 .barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
-.barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
-.wrap{max-width:1080px;margin:0 auto;padding:18px 20px 80px}
-.topo{position:sticky;top:52px;z-index:40;background:var(--canvas);padding:12px 0 10px}
-.linha-topo{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
-.busca{flex:1;min-width:200px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd;white-space:nowrap}
+.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
+.save-status{font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:20px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
+.save-status:empty{display:none}
+.save-status.saving{background:var(--amber);color:#fff}
+.save-status.ok{background:var(--verde);color:#fff}
+.save-status.err{background:var(--vermelho);color:#fff}
+
+/* ---------- topo ---------- */
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px 80px}
+.topo{position:sticky;top:52px;z-index:45;background:var(--canvas);padding:12px 0 8px}
+.linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.grupo{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.grupo .rot{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.busca{flex:1;min-width:230px;font-family:var(--sans);font-size:14px;padding:11px 16px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-select.filtro{font-family:var(--sans);font-size:13.5px;padding:10px 12px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
-.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font-weight:700;font-size:13.5px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+.chip{font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
+.chip:hover{border-color:var(--brand-teal)}
+.chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:6px;font-size:11px}
+.chip.on .n{background:rgba(255,255,255,.25)}
+.chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
+.chip.falta.on{background:var(--amber);border-color:var(--amber)}
+.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font-weight:700;font-size:13.5px;padding:9px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
 .btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
 .btn.pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
-.btn.green{background:#1F9D57;border-color:#1F9D57;color:#fff;border-radius:999px}
-.btn.mini{padding:6px 10px;font-size:12px}
+.btn.green{background:var(--verde);border-color:var(--verde);color:#fff;border-radius:999px}
+.btn.mini{padding:6px 11px;font-size:12px;border-radius:8px}
 .btn.danger{color:var(--vermelho);border-color:var(--amber-line)}
+.btn.danger:hover{border-color:var(--vermelho)}
+.btn.solido-danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
-.dica{font-size:12px;color:var(--muted);margin-top:7px}
-.lista{margin-top:12px;display:flex;flex-direction:column;gap:9px}
-.ct{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.ct-main{flex:1;min-width:200px}
-.ct-nome{font-size:14.5px;font-weight:700}
-.ct-cli{font-size:11px;font-weight:700;color:#fff;background:var(--brand-teal);border-radius:6px;padding:2px 7px;margin-right:6px}
-.ct-sub{font-size:12.5px;color:var(--ink-2);margin-top:3px;word-break:break-word}
-.ct-sub a{color:var(--brand-teal)}
-.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
-.chip{font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px;background:#EAF4F1;color:#0c6b64;border:1px solid #cfe6e2}
-.papel{font-size:10.5px;font-weight:800;border-radius:6px;padding:3px 8px}
-.papel.pri{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
-.papel.sec{background:#EEF1F0;color:#5B6B67;border:1px solid var(--line)}
-.ct-acoes{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dica{font-size:11.5px;color:var(--muted);padding:0 0 8px}
+
+/* ---------- resumo ---------- */
+.resumo{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:0 0 14px}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.rhead{padding:9px 13px;font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
+.rcard.semp .rhead{background:var(--vermelho)}
+.rcard.semmail .rhead{background:var(--amber)}
+.rcard.semtel .rhead{background:var(--brand-teal)}
+.rcard.semct .rhead{background:#6B8486}
+.rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:11.5px}
+.rlista{max-height:152px;overflow:auto;padding:5px}
+.tk{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12px}
+.tk:hover{background:var(--surface-warm)}
+.tk .d{font-weight:800;white-space:nowrap;color:var(--brand-teal)}
+.tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk .tp{font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
+.rvazio{color:var(--muted);font-size:12px;padding:9px}
+
+/* ---------- lista de clientes ---------- */
+.lista{display:flex;flex-direction:column;gap:8px}
+.cli{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.cli.on{border-color:var(--brand-teal);box-shadow:0 3px 14px rgba(7,48,52,.08)}
+.cli-h{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:var(--surface);border:0;
+  font-family:var(--sans);font-size:14px;color:var(--ink);padding:11px 13px;cursor:pointer;flex-wrap:wrap}
+.cli-h:hover{background:var(--surface-warm)}
+.cli.on .cli-h{background:var(--surface-warm);border-bottom:1px solid var(--line)}
+.chev{color:var(--brand-teal);font-size:12px;width:12px;flex:none}
+.cid{font-weight:800;font-size:12.5px;color:#fff;background:var(--brand-teal);border-radius:7px;padding:3px 9px;white-space:nowrap}
+.cnome{font-weight:700;font-size:13.5px;flex:1;min-width:120px;line-height:1.25}
+.cnome i{color:var(--muted);font-weight:600}
+.sinais{display:flex;gap:5px;flex-wrap:wrap}
+.sn{font-size:10px;font-weight:800;letter-spacing:.2px;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.sn.alerta{background:#F7DFDC;color:var(--vermelho);border:1px solid #E0BDB8}
+.sn.amb{background:var(--amber-soft);color:#8a5117;border:1px solid var(--amber-line)}
+.sn.cinza{background:#EEE9E2;color:var(--muted);border:1px solid var(--line)}
+.qtd{font-size:11.5px;font-weight:800;color:var(--muted);white-space:nowrap}
+.cli-b{padding:10px 12px 12px;display:flex;flex-direction:column;gap:9px;background:var(--canvas)}
+.vazio{font-size:12.5px;color:var(--muted);padding:6px 2px}
+.add-linha{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.dica-in{font-size:11px;color:var(--muted)}
+
+/* ---------- contato ---------- */
+.ctt{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:10px 11px;display:flex;flex-direction:column;gap:8px}
+.ctt.match{border-color:var(--brand-teal);box-shadow:inset 3px 0 0 var(--brand-teal)}
+.campos{display:grid;grid-template-columns:1.2fr 1.4fr .9fr .8fr;gap:8px}
+.cp{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cp>span{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.in{font-family:var(--sans);font-size:13px;padding:7px 9px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);width:100%}
+.in:focus{outline:2px solid var(--brand-teal);outline-offset:0}
+.in.falho{border-color:var(--amber);background:#FFFCF7}
+.areas-linha{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.rot-a{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
+.achip{font-family:var(--sans);font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 11px;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--muted)}
+.achip:hover{border-color:var(--brand-teal);color:var(--ink)}
+.achip.on{background:#E1F0EE;border-color:#9ecfca;color:#0b6c66}
+.achip.trava{cursor:default;opacity:.85}
+.achip.trava:hover{border-color:#9ecfca}
+.nota{font-size:11px;color:var(--muted);font-style:italic;margin-left:4px}
+.rodape{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:8px}
+.ro{font-size:11.5px;color:var(--ink-2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ro b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--surface-warm);border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--ink)}
+.lk{font-family:var(--sans);font-size:11px;font-weight:800;color:var(--brand-teal);background:none;border:0;border-bottom:1px dashed var(--brand-teal);
+  cursor:pointer;padding:0;text-decoration:none}
+.lk.ok{color:var(--verde);border-color:var(--verde)}
+.rodape .sp{flex:1}
+.rm{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.conf{font-size:11.5px;font-weight:700;color:var(--vermelho)}
+mark{background:#FFF3B0;color:inherit;border-radius:3px;padding:0 2px}
+.cli.destaque{box-shadow:0 0 0 3px #FFF3B0;transition:box-shadow .4s ease}
+
+/* ---------- estados / modal ---------- */
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:50vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:52ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-.modal{position:fixed;inset:0;background:rgba(7,48,52,.45);display:none;align-items:center;justify-content:center;z-index:80;padding:18px}
+.modal{position:fixed;inset:0;background:rgba(7,48,52,.45);display:none;align-items:center;justify-content:center;z-index:90;padding:18px}
 .modal.on{display:flex}
-.modal-card{background:var(--surface);border-radius:16px;padding:20px;max-width:520px;width:100%;max-height:92vh;overflow:auto}
+.modal-card{background:var(--surface);border-radius:16px;padding:20px;max-width:560px;width:100%;max-height:92vh;overflow:auto}
 .modal-card h2{font-size:17px;margin-bottom:12px}
 .fld{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
-.fld label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.fld label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .fld input,.fld select{font-family:var(--sans);font-size:14px;padding:9px 11px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);width:100%}
 .fld input:focus,.fld select:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-.areas-box{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.area-ck{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface-warm);cursor:pointer}
-.area-ck input{width:16px;height:16px}
-.msg{font-size:13px;font-weight:600;margin-top:4px}
-.msg.ok{color:#2E7D52}.msg.err{color:var(--vermelho)}
+.fld input[readonly]{background:var(--surface-warm);color:var(--ink-2)}
+.hint{font-size:11.5px;font-weight:700;color:var(--muted);min-height:16px}
+.hint.ok{color:var(--verde)}.hint.err{color:var(--vermelho)}
+.msg{font-size:13px;font-weight:700}
+.msg.err{color:var(--vermelho)}
 .acoes-modal{display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap}
-@media(max-width:600px){.areas-box{grid-template-columns:1fr}.wrap{padding:14px 12px 70px}}
+@media(max-width:820px){.campos{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.campos{grid-template-columns:1fr}.resumo{grid-template-columns:1fr}.barra .tag{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="barra">
   <span class="logo">back<span class="y">4you</span></span>
-  <span class="tag">Contatos · equipe</span>
+  <span class="tag">👥 Contatos · equipe</span>
   <span class="spacer"></span>
+  <span class="save-status" id="saveStatus"></span>
   <span class="cnt" id="cnt"></span>
   <a class="volta" id="volta" href="colaborador.html">← Painel</a>
 </div>
@@ -83,16 +166,21 @@ select.filtro{font-family:var(--sans);font-size:13.5px;padding:10px 12px;border-
 
 <div class="modal" id="modal"><div class="modal-card">
   <h2 id="m-titulo">Novo contato</h2>
-  <div class="fld"><label>Cliente *</label><select id="m-cli"></select></div>
-  <div class="fld"><label>Nome</label><input id="m-nome" placeholder="Nome do contato"></div>
-  <div class="fld"><label>E-mail</label><input id="m-email" type="email" placeholder="email@exemplo.com"></div>
-  <div class="fld"><label>Telefone / WhatsApp</label><input id="m-tel" placeholder="55DDD9…"></div>
-  <div class="fld"><label>Papel</label><select id="m-papel"><option>Principal</option><option>Secundário</option></select></div>
-  <div class="fld"><label>Áreas (permissões) <span id="m-areas-hint" style="font-weight:500;text-transform:none;color:var(--muted)"></span></label>
-    <div class="areas-box" id="m-areas"></div></div>
+  <div class="fld">
+    <label for="m-cli">Cliente</label>
+    <input id="m-cli" list="dl-clientes" autocomplete="off" placeholder="Digite o ID ou o nome — ex.: 250033 · Padaria">
+    <datalist id="dl-clientes"></datalist>
+    <div class="hint" id="m-cli-hint"></div>
+  </div>
+  <div class="fld"><label for="m-nome">Nome</label><input id="m-nome" placeholder="Nome do contato"></div>
+  <div class="fld"><label for="m-email">E-mail</label><input id="m-email" type="email" placeholder="email@exemplo.com"></div>
+  <div class="fld"><label for="m-tel">Telefone / WhatsApp</label><input id="m-tel" placeholder="55DDD9…"></div>
+  <div class="fld"><label for="m-papel">Papel</label><select id="m-papel"><option>Secundário</option><option>Principal</option></select></div>
+  <div class="fld"><label>Áreas que esse contato enxerga</label>
+    <div class="areas-linha" id="m-areas"></div></div>
   <div class="acoes-modal">
-    <button class="btn pri" id="m-salvar">Salvar</button>
-    <button class="btn" id="m-cancelar">Cancelar</button>
+    <button class="btn pri" id="m-add" type="button">Adicionar contato</button>
+    <button class="btn" id="m-cancelar" type="button">Cancelar</button>
     <span class="msg" id="m-msg"></span>
   </div>
 </div></div>
@@ -101,140 +189,514 @@ select.filtro{font-family:var(--sans);font-size:13.5px;padding:10px 12px;border-
 const API_URL='https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 const CHAVE_PADRAO='b4u-equipe-2026';
 const AREAS=[['fiscal','Fiscal'],['contabil','Contábil'],['pessoal','Pessoal'],['societario','Societário'],['equiparacao','Equiparação'],['financeiro','Financeiro']];
-const MAX_MOSTRAR=600;
-function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');const h=(location.hash||'').replace('#','').trim();return q||h||CHAVE_PADRAO;}
+const MAX_CLI=400;          // teto de clientes desenhados de uma vez
+const LIMITE_AUTO=25;       // até quantos clientes a busca abre sozinha
+
+function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');return q?q.trim():CHAVE_PADRAO;}
+/* o que vem depois do # é o CÓDIGO do colaborador — vai no log de auditoria */
+// Código do colaborador: aceita ?cod= (vindo do painel) e também o #hash
+// (formato antigo dos atalhos por pessoa). Vira a coluna "Colaborador" da aba log.
+function respAtual(){const q=(new URLSearchParams(location.search).get('cod')||'').trim();if(q)return q;try{return decodeURIComponent((location.hash||'').replace(/^#/,'')).trim();}catch(e){return (location.hash||'').replace(/^#/,'').trim();}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+function normTxt(s){return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
 function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 
-let CONTATOS=[],CLIENTES=[],NOME={},editRow=null;
-function carregar(){
-  return jsonp(API_URL+'?tipo=contatos_equipe&chave='+encodeURIComponent(chaveAtual()))
-    .then(d=>{if(d.erro)throw new Error(d.erro);CONTATOS=d.contatos||[];CLIENTES=d.clientes||[];NOME={};CLIENTES.forEach(c=>NOME[c.id]=c.nome);render();})
-    .catch(e=>{document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> no endereço e se o Web App foi republicado com <code>EquipeContatos.gs</code> e as rotas novas.</p></div>`;});
-}
-function nomeCli(id){return NOME[id]?NOME[id]:'';}
-function render(){
-  document.getElementById('cnt').textContent=CONTATOS.length+' contatos';
-  const opCli=['<option value="">Todos os clientes</option>'].concat(CLIENTES.map(c=>`<option value="${esc(c.id)}">${esc(c.id)} — ${esc(c.nome)}</option>`)).join('');
-  const opArea=['<option value="">Todas as áreas</option>'].concat(AREAS.map(a=>`<option value="${a[0]}">${a[1]}</option>`)).join('');
-  document.getElementById('app').innerHTML=`<div class="wrap">
-    <div class="topo"><div class="linha-topo">
-      <input class="busca" id="busca" type="search" placeholder="Buscar por nome, e-mail, telefone, ID ou cliente…">
-      <select class="filtro" id="f-cli">${opCli}</select>
-      <select class="filtro" id="f-papel"><option value="">Todos os papéis</option><option value="principal">Principal</option><option value="secundario">Secundário</option></select>
-      <select class="filtro" id="f-area">${opArea}</select>
-      <button class="btn green" id="novo">+ Novo contato</button>
-    </div><div class="dica" id="dica"></div></div>
-    <div class="lista" id="lista"></div></div>`;
-  ['busca','f-cli','f-papel','f-area'].forEach(id=>document.getElementById(id).addEventListener('input',desenhar));
-  document.getElementById('novo').addEventListener('click',()=>abrirModal(null));
-  desenhar();
-}
-function filtrar(){
-  const q=normTxt(document.getElementById('busca').value);
-  const fc=document.getElementById('f-cli').value;
-  const fp=document.getElementById('f-papel').value;
-  const fa=document.getElementById('f-area').value;
-  return CONTATOS.filter(c=>{
-    if(fc&&String(c.cliente_id)!==fc)return false;
-    if(fp&&normTxt(c.papel)!==fp)return false;
-    if(fa&&!c.areas[fa])return false;
-    if(q&&!normTxt(c.cliente_id+' '+nomeCli(c.cliente_id)+' '+c.nome+' '+c.email+' '+c.telefone).includes(q))return false;
-    return true;
+/* ---------------- estado ---------------- */
+let CONTATOS=[],CLIENTES=[],NOME={},GRUPOS=[];
+let ABERTOS=new Set();
+let FILTRO='todos';   // todos | sem_principal | sem_email | sem_tel | sem_contato
+let AREA='';          // '' = todas
+let TERMO='';
+let MODAL_AREAS={};
+
+/* ---------------- agrupamento ---------------- */
+function nomeCli(id){const n=NOME[String(id)];return n?n:'';}
+function agrupar(){
+  const map=new Map();
+  CLIENTES.forEach(c=>map.set(String(c.id),{id:String(c.id),nome:c.nome||'',contatos:[],orfa:false}));
+  CONTATOS.forEach(c=>{
+    const id=String(c.cliente_id==null?'':c.cliente_id);
+    if(!map.has(id))map.set(id,{id:id,nome:nomeCli(id),contatos:[],orfa:true});
+    map.get(id).contatos.push(c);
   });
+  GRUPOS=Array.from(map.values());
+  GRUPOS.forEach(g=>g.contatos.sort((a,b)=>
+    (a.papel==='Principal'?0:1)-(b.papel==='Principal'?0:1) ||
+    normTxt(a.nome||a.email).localeCompare(normTxt(b.nome||b.email),'pt')));
+  GRUPOS.sort((a,b)=>String(a.id).localeCompare(String(b.id),'pt',{numeric:true}));
 }
-function desenhar(){
-  const arr=filtrar().sort((a,b)=>String(a.cliente_id).localeCompare(String(b.cliente_id),'pt',{numeric:true})||normTxt(a.nome).localeCompare(normTxt(b.nome)));
-  const lista=document.getElementById('lista');
-  document.getElementById('dica').textContent=arr.length+' resultado(s)'+(arr.length>MAX_MOSTRAR?` — mostrando os primeiros ${MAX_MOSTRAR}, refine a busca`:'');
-  lista.innerHTML=arr.slice(0,MAX_MOSTRAR).map(cardHTML).join('')||'<div class="dica">Nenhum contato encontrado.</div>';
+function grupoDe(id){return GRUPOS.find(g=>g.id===String(id));}
+function contatoDe(row){return CONTATOS.find(c=>String(c.row)===String(row));}
+
+/* ---------------- sinais ---------------- */
+function temPrincipal(g){return g.contatos.some(c=>c.papel==='Principal');}
+function faltaPrincipal(g){return g.contatos.length>0&&!temPrincipal(g);}
+function nSemEmail(g){return g.contatos.filter(c=>!String(c.email||'').trim()).length;}
+function nSemTel(g){return g.contatos.filter(c=>!String(c.telefone||'').trim()).length;}
+
+/* ---------------- filtros e busca ---------------- */
+function passaArea(g){return !AREA||g.contatos.some(c=>c.areas&&c.areas[AREA]);}
+function passaSit(g,f){
+  const k=f==null?FILTRO:f;
+  if(k==='sem_principal')return faltaPrincipal(g);
+  if(k==='sem_email')return nSemEmail(g)>0;
+  if(k==='sem_tel')return nSemTel(g)>0;
+  if(k==='sem_contato')return g.contatos.length===0;
+  return true;
 }
-function cardHTML(c){
-  const areas=c.papel==='Principal'?'<span class="chip">Acesso total</span>':AREAS.filter(a=>c.areas[a[0]]).map(a=>`<span class="chip">${a[1]}</span>`).join('')||'<span class="chip" style="background:#F2ECE4;color:#8A7D70;border-color:var(--line)">sem áreas</span>';
-  const sub=[c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:'',c.telefone?esc(c.telefone):'',c.codigo?`código hoje: <b>${esc(c.codigo)}</b>`:''].filter(Boolean).join(' · ');
-  return `<div class="ct" data-row="${c.row}">
-    <div class="ct-main">
-      <div class="ct-nome"><span class="ct-cli">${esc(c.cliente_id)}${nomeCli(c.cliente_id)?' · '+esc(nomeCli(c.cliente_id)):''}</span>${esc(c.nome||'(sem nome)')}
-        <span class="papel ${c.papel==='Principal'?'pri':'sec'}" style="margin-left:6px">${esc(c.papel)}</span></div>
-      ${sub?`<div class="ct-sub">${sub}</div>`:''}
-      <div class="chips">${areas}</div>
+function bateContato(c,t){return !!t&&normTxt([c.nome,c.email,c.telefone].join(' ')).includes(t);}
+function bateCliente(g,t){return !!t&&normTxt(g.id+' '+g.nome).includes(t);}
+function passaBusca(g,t){return !t||bateCliente(g,t)||g.contatos.some(c=>bateContato(c,t));}
+function visiveis(){const t=normTxt(TERMO);return GRUPOS.filter(g=>passaArea(g)&&passaSit(g)&&passaBusca(g,t));}
+
+/* destaca o trecho encontrado sem quebrar acentos */
+function hl(txt,t){
+  const s=String(txt==null?'':txt);
+  if(!t)return esc(s);
+  let n='';const map=[];
+  for(let i=0;i<s.length;i++){
+    const c=s[i].normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+    for(let j=0;j<c.length;j++){n+=c[j];map.push(i);}
+  }
+  const i0=n.indexOf(t);
+  if(i0<0)return esc(s);
+  const a=map[i0],b=(i0+t.length<map.length?map[i0+t.length]:s.length);
+  return esc(s.slice(0,a))+'<mark>'+esc(s.slice(a,b))+'</mark>'+esc(s.slice(b));
+}
+
+/* ---------------- HTML ---------------- */
+function areasHTML(c){
+  const pr=c.papel==='Principal';
+  const chips=AREAS.map(a=>`<button type="button" class="achip${(pr||c.areas[a[0]])?' on':''}${pr?' trava':''}" data-a="${a[0]}"${pr?' disabled':''}>${a[1]}</button>`).join('');
+  return `<span class="rot-a">Áreas</span>${chips}`+(pr?'<span class="nota">Principal enxerga todas as áreas</span>':'');
+}
+function btnRemover(c){return `<button class="btn mini danger" type="button" data-del="${esc(c.row)}">Remover</button>`;}
+function contatoHTML(c,t){
+  const pr=c.papel==='Principal';
+  const semMail=!String(c.email||'').trim(),semTel=!String(c.telefone||'').trim();
+  return `<div class="ctt${bateContato(c,t)?' match':''}" data-row="${esc(c.row)}">
+    <div class="campos">
+      <label class="cp"><span>Nome</span><input class="in" data-k="nome" value="${esc(c.nome||'')}" placeholder="Nome do contato"></label>
+      <label class="cp"><span>E-mail</span><input class="in${semMail?' falho':''}" data-k="email" type="email" value="${esc(c.email||'')}" placeholder="email@exemplo.com"></label>
+      <label class="cp"><span>Telefone / WhatsApp</span><input class="in${semTel?' falho':''}" data-k="telefone" value="${esc(c.telefone||'')}" placeholder="55DDD9…"></label>
+      <label class="cp"><span>Papel</span><select class="in" data-k="papel">
+        <option${pr?' selected':''}>Principal</option><option${pr?'':' selected'}>Secundário</option></select></label>
     </div>
-    <div class="ct-acoes">
-      ${c.link?`<a class="btn mini" href="${esc(c.link)}" target="_blank" rel="noopener">Abrir</a>`:''}
-      <button class="btn mini" data-edit="${c.row}">Editar</button>
-      <button class="btn mini danger" data-del="${c.row}">Remover</button>
+    <div class="areas-linha" data-areas>${areasHTML(c)}</div>
+    <div class="rodape">
+      ${c.codigo?`<span class="ro">código de hoje <b>${esc(c.codigo)}</b><button class="lk" type="button" data-copy="${esc(c.codigo)}">copiar</button></span>`:''}
+      ${c.link?`<span class="ro">link de acesso <button class="lk" type="button" data-copy="${esc(c.link)}">copiar</button>
+        <a class="lk" href="${esc(c.link)}" target="_blank" rel="noopener">abrir ↗</a></span>`:''}
+      <span class="sp"></span>
+      <span class="rm" data-rm>${btnRemover(c)}</span>
     </div>
   </div>`;
 }
+function cabecalhoHTML(g,t){
+  const n=g.contatos.length;
+  const sinais=[];
+  if(n===0)sinais.push('<span class="sn cinza">sem contato</span>');
+  else if(!temPrincipal(g))sinais.push('<span class="sn alerta">falta Principal</span>');
+  const se=nSemEmail(g),st=nSemTel(g);
+  if(se)sinais.push(`<span class="sn amb">${se} sem e-mail</span>`);
+  if(st)sinais.push(`<span class="sn cinza">${st} sem telefone</span>`);
+  if(g.orfa)sinais.push('<span class="sn cinza">fora do Site Links</span>');
+  return `<span class="chev">${ABERTOS.has(g.id)?'▾':'▸'}</span>
+    <span class="cid">${g.id?hl(g.id,t):'sem ID'}</span>
+    <span class="cnome">${g.nome?hl(g.nome,t):'<i>sem nome no Site Links</i>'}</span>
+    <span class="sinais">${sinais.join('')}</span>
+    <span class="qtd">${n} ${n===1?'contato':'contatos'}</span>`;
+}
+function grupoHTML(g,t){
+  const aberto=ABERTOS.has(g.id);
+  const corpo=aberto?`<div class="cli-b">
+      ${g.contatos.map(c=>contatoHTML(c,t)).join('')||'<div class="vazio">Nenhum contato cadastrado para este cliente.</div>'}
+      <div class="add-linha">
+        <button class="btn mini pri" type="button" data-add="${esc(g.id)}">+ Adicionar contato</button>
+        <span class="dica-in">O que você digitar aqui grava direto na planilha.</span>
+      </div></div>`:'';
+  return `<div class="cli${aberto?' on':''}" data-cli="${esc(g.id)}">
+    <button class="cli-h" type="button" data-toggle="${esc(g.id)}">${cabecalhoHTML(g,t)}</button>${corpo}</div>`;
+}
 
-// ---- modal add/editar ----
-function pintarAreas(marcadas,principal){
-  document.getElementById('m-areas').innerHTML=AREAS.map(a=>`<label class="area-ck"><input type="checkbox" class="ck-area" value="${a[0]}"${marcadas&&marcadas[a[0]]?' checked':''}${principal?' checked disabled':''}>${a[1]}</label>`).join('');
+/* ---------------- desenho ---------------- */
+function desenharChips(){
+  const porArea=GRUPOS.filter(passaArea);
+  const cSit=(k)=>porArea.filter(g=>passaSit(g,k)).length;
+  const c=(k,rot,n,extra)=>`<button class="chip ${extra||''} ${FILTRO===k?'on':''}" data-f="${k}">${rot}<span class="n">${n}</span></button>`;
+  document.getElementById('chipsSit').innerHTML=
+    '<span class="rot">Situação</span>'+
+    c('todos','Todos',cSit('todos'))+
+    c('sem_principal','Sem contato Principal',cSit('sem_principal'),'alerta')+
+    c('sem_email','Sem e-mail',cSit('sem_email'),'falta')+
+    c('sem_tel','Sem telefone',cSit('sem_tel'))+
+    c('sem_contato','Sem nenhum contato',cSit('sem_contato'));
+
+  const porSit=GRUPOS.filter(g=>passaSit(g));
+  const nArea=k=>porSit.filter(g=>g.contatos.some(x=>x.areas&&x.areas[k])).length;
+  document.getElementById('chipsArea').innerHTML=
+    '<span class="rot">Área</span>'+
+    `<button class="chip ${AREA===''?'on':''}" data-area="">Todas<span class="n">${porSit.length}</span></button>`+
+    AREAS.map(a=>`<button class="chip ${AREA===a[0]?'on':''}" data-area="${a[0]}">${a[1]}<span class="n">${nArea(a[0])}</span></button>`).join('');
 }
-function refletirPapel(){
-  const pr=document.getElementById('m-papel').value==='Principal';
-  document.getElementById('m-areas-hint').textContent=pr?'(Principal acessa todas as áreas)':'(marque as áreas do secundário)';
-  const marc={};document.querySelectorAll('.ck-area').forEach(ck=>marc[ck.value]=ck.checked);
-  pintarAreas(pr?null:marc,pr);
+function desenharResumo(){
+  const semP=GRUPOS.filter(faltaPrincipal);
+  const semC=GRUPOS.filter(g=>g.contatos.length===0);
+  const semE=[],semT=[];
+  GRUPOS.forEach(g=>g.contatos.forEach(c=>{
+    if(!String(c.email||'').trim())semE.push({g:g,c:c});
+    if(!String(c.telefone||'').trim())semT.push({g:g,c:c});
+  }));
+  const itemCli=g=>`<div class="tk" data-goto="${esc(g.id)}"><span class="d">${esc(g.id||'—')}</span>
+    <span class="lb">${esc(g.nome||'(sem nome)')}</span><span class="tp">${g.contatos.length} ct</span></div>`;
+  const itemCtt=x=>`<div class="tk" data-goto="${esc(x.g.id)}"><span class="d">${esc(x.g.id||'—')}</span>
+    <span class="lb">${esc(x.c.nome||x.c.email||'(sem nome)')}</span><span class="tp">${esc(x.g.nome||'')}</span></div>`;
+  const card=(cls,titulo,lista,render)=>`<div class="rcard ${cls}">
+    <div class="rhead"><span>${titulo}</span><span class="n">${lista.length}</span></div>
+    <div class="rlista">${lista.length?lista.slice(0,80).map(render).join(''):'<div class="rvazio">Nada por aqui 🎉</div>'}</div></div>`;
+  document.getElementById('resumo').innerHTML=
+    card('semp','Clientes sem contato Principal',semP,itemCli)+
+    card('semmail','Contatos sem e-mail',semE,itemCtt)+
+    card('semtel','Contatos sem telefone',semT,itemCtt)+
+    card('semct','Clientes sem nenhum contato',semC,itemCli);
 }
-function abrirModal(row){
-  editRow=row;
-  const cli=document.getElementById('m-cli');
-  cli.innerHTML=CLIENTES.map(c=>`<option value="${esc(c.id)}">${esc(c.id)} — ${esc(c.nome)}</option>`).join('');
-  document.getElementById('m-msg').textContent='';
-  if(row){
-    const c=CONTATOS.find(x=>x.row==row);
-    document.getElementById('m-titulo').textContent='Editar contato';
-    cli.value=c.cliente_id;cli.disabled=true;
-    document.getElementById('m-nome').value=c.nome||'';
-    document.getElementById('m-email').value=c.email||'';
-    document.getElementById('m-tel').value=c.telefone||'';
-    document.getElementById('m-papel').value=c.papel;
-    pintarAreas(c.areas,c.papel==='Principal');
-  }else{
-    document.getElementById('m-titulo').textContent='Novo contato';
-    cli.disabled=false;cli.value=CLIENTES.length?CLIENTES[0].id:'';
-    ['m-nome','m-email','m-tel'].forEach(i=>document.getElementById(i).value='');
-    document.getElementById('m-papel').value='Secundário';
-    pintarAreas({},false);
+function desenharLista(){
+  const t=normTxt(TERMO);
+  const arr=visiveis();
+  const corte=arr.slice(0,MAX_CLI);
+  document.getElementById('lista').innerHTML=corte.map(g=>grupoHTML(g,t)).join('')||
+    '<div class="vazio">Nenhum cliente com esse filtro ou busca.</div>';
+  const nCt=arr.reduce((s,g)=>s+g.contatos.length,0);
+  document.getElementById('dica').innerHTML=
+    `${arr.length} cliente(s) · ${nCt} contato(s) na visão atual`+
+    (arr.length>MAX_CLI?` — mostrando os ${MAX_CLI} primeiros, refine a busca.`:'')+
+    ' · Clique no cliente para abrir. Código e link são fórmulas da planilha: dá para copiar, não para editar.';
+}
+function atualizarCabecalho(id){
+  const g=grupoDe(id);if(!g)return;
+  const el=document.querySelector('.cli[data-cli="'+CSS.escape(String(id))+'"] .cli-h');
+  if(el)el.innerHTML=cabecalhoHTML(g,normTxt(TERMO));
+}
+function desenharContagem(){
+  const nCli=GRUPOS.filter(g=>g.contatos.length>0).length;
+  document.getElementById('cnt').textContent=CONTATOS.length+' contatos · '+nCli+' clientes';
+}
+function redesenhar(){desenharContagem();desenharChips();desenharResumo();desenharLista();}
+
+/* ---------------- salvar (auto, com debounce) ---------------- */
+const SUJOS=new Map();   // row -> timer
+function setSave(cl,txt){const el=document.getElementById('saveStatus');el.className='save-status '+(cl||'');el.textContent=txt||'';}
+function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function areasSel(c){return AREAS.filter(a=>c.areas[a[0]]).map(a=>a[0]);}
+function agendarSalvar(row,ms){
+  const c=contatoDe(row);if(!c)return;
+  if(!String(c.nome||'').trim()&&!String(c.email||'').trim()){
+    clearTimeout(SUJOS.get(String(row)));SUJOS.delete(String(row));
+    setSave('err','Não salvou: informe ao menos nome ou e-mail.');return;
   }
-  refletirPapel();
+  clearTimeout(SUJOS.get(String(row)));
+  SUJOS.set(String(row),setTimeout(()=>salvarContato(row),ms==null?700:ms));
+  setSave('saving','Salvando…');
+}
+async function salvarContato(row){
+  const k=String(row);
+  clearTimeout(SUJOS.get(k));SUJOS.delete(k);
+  const c=contatoDe(row);if(!c)return;
+  const nome=String(c.nome||'').trim(),email=String(c.email||'').trim();
+  if(!nome&&!email){setSave('err','Não salvou: informe ao menos nome ou e-mail.');return;}
+  try{
+    setSave('saving','Salvando…');
+    await postAcao({
+      acao:'contato_salvar',row:c.row,cliente_id:c.cliente_id,
+      nome:nome,email:email,telefone:String(c.telefone||'').trim(),
+      papel:c.papel,areas:areasSel(c),email_atual:c._email0||'',
+      cliente:nomeCli(c.cliente_id),cod:respAtual()
+    });
+    c._email0=email;                       // a linha agora é este e-mail
+    setSave('ok','Salvo ✓ '+horaAgora());
+    atualizarCabecalho(c.cliente_id);desenharChips();desenharResumo();desenharContagem();
+  }catch(e){setSave('err','Não salvou: '+(e.message||e));}
+}
+async function flushPendentes(){
+  const rows=Array.from(SUJOS.keys());
+  for(const r of rows){await salvarContato(r);}
+}
+
+/* ---------------- adicionar / remover ---------------- */
+function preencherDatalist(){
+  document.getElementById('dl-clientes').innerHTML=
+    CLIENTES.map(c=>`<option value="${esc(c.id+' · '+(c.nome||''))}"></option>`).join('');
+}
+function resolverCliente(txt){
+  const s=String(txt||'').trim();
+  if(!s)return '';
+  const idPart=s.split('·')[0].trim();
+  if(Object.prototype.hasOwnProperty.call(NOME,idPart))return idPart;
+  if(Object.prototype.hasOwnProperty.call(NOME,s))return s;
+  const n=normTxt(s);
+  const exato=CLIENTES.filter(c=>normTxt(c.id+' · '+c.nome)===n||normTxt(c.nome)===n);
+  if(exato.length===1)return String(exato[0].id);
+  const parcial=CLIENTES.filter(c=>normTxt(c.id+' '+c.nome).includes(n));
+  if(parcial.length===1)return String(parcial[0].id);
+  return '';
+}
+function validarCliModal(){
+  const el=document.getElementById('m-cli'),h=document.getElementById('m-cli-hint');
+  const id=resolverCliente(el.value);
+  if(!el.value.trim()){h.className='hint';h.textContent='Comece a digitar o ID ou o nome.';return '';}
+  if(id){h.className='hint ok';h.textContent='✓ '+id+(nomeCli(id)?' · '+nomeCli(id):'');}
+  else{h.className='hint err';h.textContent='Não achei esse cliente — escolha um da lista.';}
+  return id;
+}
+function pintarAreasModal(){
+  const pr=document.getElementById('m-papel').value==='Principal';
+  document.getElementById('m-areas').innerHTML=
+    AREAS.map(a=>`<button type="button" class="achip${(pr||MODAL_AREAS[a[0]])?' on':''}${pr?' trava':''}" data-ma="${a[0]}"${pr?' disabled':''}>${a[1]}</button>`).join('')+
+    (pr?'<span class="nota">Principal enxerga todas as áreas</span>':'');
+}
+function abrirModal(idCliente){
+  MODAL_AREAS={};
+  const cli=document.getElementById('m-cli');
+  cli.value=idCliente?(idCliente+(nomeCli(idCliente)?' · '+nomeCli(idCliente):'')):'';
+  cli.readOnly=!!idCliente;
+  document.getElementById('m-titulo').textContent=idCliente?('Novo contato · '+idCliente+(nomeCli(idCliente)?' · '+nomeCli(idCliente):'')):'Novo contato';
+  ['m-nome','m-email','m-tel'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('m-papel').value='Secundário';
+  document.getElementById('m-msg').textContent='';
+  validarCliModal();
+  pintarAreasModal();
   document.getElementById('modal').classList.add('on');
+  setTimeout(()=>document.getElementById(idCliente?'m-nome':'m-cli').focus(),40);
 }
-function fecharModal(){document.getElementById('modal').classList.remove('on');editRow=null;}
-async function salvarModal(btn){
-  const cli=document.getElementById('m-cli').value;
-  const papel=document.getElementById('m-papel').value;
-  const areas=[...document.querySelectorAll('.ck-area:checked')].map(ck=>ck.value);
+function fecharModal(){document.getElementById('modal').classList.remove('on');}
+async function adicionarContato(btn){
   const msg=document.getElementById('m-msg');
-  if(!cli){msg.className='msg err';msg.textContent='Escolha o cliente.';return;}
-  const obj={acao:'contato_salvar',cliente_id:cli,nome:document.getElementById('m-nome').value.trim(),email:document.getElementById('m-email').value.trim(),telefone:document.getElementById('m-tel').value.trim(),papel,areas};
-  if(editRow)obj.row=editRow;
+  const id=validarCliModal();
+  if(!id){msg.className='msg err';msg.textContent='Escolha o cliente.';return;}
+  const nome=document.getElementById('m-nome').value.trim();
+  const email=document.getElementById('m-email').value.trim();
+  if(!nome&&!email){msg.className='msg err';msg.textContent='Informe ao menos nome ou e-mail.';return;}
+  const papel=document.getElementById('m-papel').value;
+  const areas=papel==='Principal'?AREAS.map(a=>a[0]):AREAS.filter(a=>MODAL_AREAS[a[0]]).map(a=>a[0]);
   btn.disabled=true;msg.className='msg';msg.textContent='Salvando…';
-  try{await postAcao(obj);fecharModal();await carregar();}
-  catch(e){msg.className='msg err';msg.textContent=e.message||e;btn.disabled=false;}
+  try{
+    await flushPendentes();
+    await postAcao({
+      acao:'contato_salvar',cliente_id:id,nome:nome,email:email,
+      telefone:document.getElementById('m-tel').value.trim(),
+      papel:papel,areas:areas,
+      cliente:nomeCli(id),cod:respAtual()
+    });
+    fecharModal();
+    ABERTOS.add(String(id));
+    setSave('ok','Contato adicionado ✓ '+horaAgora());
+    await carregar(false);
+    irPara(id);
+  }catch(e){msg.className='msg err';msg.textContent=e.message||e;}
+  finally{btn.disabled=false;}
 }
-async function remover(row,btn){
-  const c=CONTATOS.find(x=>x.row==row);
-  if(!confirm('Remover o contato "'+(c.nome||c.email||'')+'" do cliente '+c.cliente_id+'?'))return;
-  btn.disabled=true;btn.textContent='…';
-  try{await postAcao({acao:'contato_remover',row,email:c.email});await carregar();}
-  catch(e){alert('Não consegui remover: '+(e.message||e));btn.disabled=false;btn.textContent='Remover';}
+function pedirConfirmacao(row){
+  const c=contatoDe(row);if(!c)return;
+  const box=document.querySelector('.ctt[data-row="'+CSS.escape(String(row))+'"] [data-rm]');
+  if(!box)return;
+  const quem=c.nome||c.email||'este contato';
+  box.innerHTML=`<span class="conf">Remover ${esc(quem)}?</span>
+    <button class="btn mini solido-danger" type="button" data-delok="${esc(row)}">Sim, remover</button>
+    <button class="btn mini" type="button" data-delno="${esc(row)}">Cancelar</button>`;
+}
+function cancelarConfirmacao(row){
+  const c=contatoDe(row);if(!c)return;
+  const box=document.querySelector('.ctt[data-row="'+CSS.escape(String(row))+'"] [data-rm]');
+  if(box)box.innerHTML=btnRemover(c);
+}
+async function removerContato(row){
+  const c=contatoDe(row);if(!c)return;
+  const box=document.querySelector('.ctt[data-row="'+CSS.escape(String(row))+'"] [data-rm]');
+  if(box)box.innerHTML='<span class="conf">Removendo…</span>';
+  const id=c.cliente_id;
+  try{
+    await flushPendentes();
+    await postAcao({acao:'contato_remover',row:c.row,email:c.email,cliente:nomeCli(id),cod:respAtual()});
+    setSave('ok','Contato removido ✓ '+horaAgora());
+    await carregar(false);   // as linhas de todo mundo mudam: recarrega tudo
+  }catch(e){
+    setSave('err','Não removi: '+(e.message||e));
+    if(box)box.innerHTML=btnRemover(c);
+  }
 }
 
-document.addEventListener('click',e=>{
-  const ed=e.target.closest('[data-edit]');if(ed){abrirModal(+ed.dataset.edit);return;}
-  const dl=e.target.closest('[data-del]');if(dl){remover(+dl.dataset.del,dl);return;}
-  if(e.target.id==='m-salvar')salvarModal(e.target);
-  if(e.target.id==='m-cancelar')fecharModal();
-  if(e.target.id==='modal')fecharModal();
+/* ---------------- navegação ---------------- */
+function irPara(id){
+  const alvo=String(id);
+  const achar=()=>document.querySelector('.cli[data-cli="'+CSS.escape(alvo)+'"]');
+  ABERTOS.add(alvo);
+  if(!achar()||!visiveis().some(g=>g.id===alvo)){
+    FILTRO='todos';AREA='';TERMO='';
+    const b=document.getElementById('busca');if(b)b.value='';
+  }
+  redesenhar();
+  const el=achar();if(!el)return;
+  el.scrollIntoView({block:'center',behavior:'smooth'});
+  el.classList.add('destaque');setTimeout(()=>el.classList.remove('destaque'),2600);
+}
+function aplicarBusca(){
+  const t=normTxt(TERMO);
+  ABERTOS.clear();
+  if(t){
+    const arr=visiveis();
+    if(arr.length<=LIMITE_AUTO)arr.forEach(g=>ABERTOS.add(g.id));
+  }
+  redesenhar();
+}
+
+/* ---------------- eventos ---------------- */
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(el.id==='busca'){TERMO=el.value;aplicarBusca();return;}
+  if(el.id==='m-cli'){validarCliModal();return;}
+  if(!el.dataset||!el.dataset.k||el.dataset.k==='papel')return;
+  const ctt=el.closest('.ctt');if(!ctt)return;
+  const c=contatoDe(ctt.dataset.row);if(!c)return;
+  c[el.dataset.k]=el.value;
+  el.classList.toggle('falho',(el.dataset.k==='email'||el.dataset.k==='telefone')&&!el.value.trim());
+  agendarSalvar(c.row);
 });
-document.addEventListener('change',e=>{if(e.target.id==='m-papel')refletirPapel();});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.id==='m-papel'){pintarAreasModal();return;}
+  if(!el.dataset||!el.dataset.k)return;
+  const ctt=el.closest('.ctt');if(!ctt)return;
+  const c=contatoDe(ctt.dataset.row);if(!c)return;
+  if(el.dataset.k==='papel'){
+    trocarPapel(c,el.value);
+    const box=ctt.querySelector('[data-areas]');if(box)box.innerHTML=areasHTML(c);
+  }else{
+    c[el.dataset.k]=el.value;
+  }
+  agendarSalvar(c.row,150);   // saiu do campo: grava logo
+});
+function trocarPapel(c,novo){
+  if(novo==='Principal'){
+    if(c.papel!=='Principal')c._prev=Object.assign({},c.areas);
+    c.papel='Principal';
+    AREAS.forEach(a=>c.areas[a[0]]=true);
+  }else{
+    c.papel='Secundário';
+    if(c._prev){AREAS.forEach(a=>c.areas[a[0]]=!!c._prev[a[0]]);c._prev=null;}
+  }
+}
+document.addEventListener('click',e=>{
+  const cp=e.target.closest('[data-copy]');
+  if(cp){copiar(cp.dataset.copy,cp);return;}
+  const ac=e.target.closest('.achip[data-a]');
+  if(ac&&!ac.disabled){
+    const ctt=ac.closest('.ctt');const c=contatoDe(ctt.dataset.row);if(!c)return;
+    const k=ac.dataset.a;
+    c.areas[k]=!c.areas[k];
+    ac.classList.toggle('on',!!c.areas[k]);
+    agendarSalvar(c.row,400);
+    return;
+  }
+  const ma=e.target.closest('.achip[data-ma]');
+  if(ma&&!ma.disabled){
+    const k=ma.dataset.ma;MODAL_AREAS[k]=!MODAL_AREAS[k];
+    ma.classList.toggle('on',!!MODAL_AREAS[k]);return;
+  }
+  const tg=e.target.closest('[data-toggle]');
+  if(tg){
+    const id=tg.dataset.toggle;
+    if(ABERTOS.has(id))ABERTOS.delete(id);else ABERTOS.add(id);
+    const g=grupoDe(id),el=tg.closest('.cli');
+    if(g&&el)el.outerHTML=grupoHTML(g,normTxt(TERMO));else desenharLista();
+    return;
+  }
+  const ad=e.target.closest('[data-add]');
+  if(ad){abrirModal(ad.dataset.add);return;}
+  const dl=e.target.closest('[data-del]');
+  if(dl){pedirConfirmacao(dl.dataset.del);return;}
+  const ok=e.target.closest('[data-delok]');
+  if(ok){removerContato(ok.dataset.delok);return;}
+  const no=e.target.closest('[data-delno]');
+  if(no){cancelarConfirmacao(no.dataset.delno);return;}
+  const cf=e.target.closest('.chip[data-f]');
+  if(cf){FILTRO=cf.dataset.f;redesenhar();return;}
+  const ca=e.target.closest('.chip[data-area]');
+  if(ca){AREA=ca.dataset.area;redesenhar();return;}
+  const tk=e.target.closest('.tk[data-goto]');
+  if(tk){irPara(tk.dataset.goto);return;}
+  if(e.target.closest('#novo')){abrirModal('');return;}
+  if(e.target.closest('#abrirTodos')){visiveis().slice(0,MAX_CLI).forEach(g=>ABERTOS.add(g.id));desenharLista();return;}
+  if(e.target.closest('#fecharTodos')){ABERTOS.clear();desenharLista();return;}
+  if(e.target.id==='m-add'){adicionarContato(e.target);return;}
+  if(e.target.id==='m-cancelar'||e.target.id==='modal'){fecharModal();return;}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&document.getElementById('modal').classList.contains('on'))fecharModal();
+});
 
+/* ---------------- copiar ---------------- */
+function copiar(txt,btn){
+  const original=btn.textContent;
+  const feito=()=>{btn.textContent='copiado ✓';btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=original;btn.classList.remove('ok');},1400);};
+  const manual=()=>{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');feito();}catch(err){btn.textContent='copie manualmente';}
+    ta.remove();
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(feito).catch(manual);
+  else manual();
+}
+
+/* ---------------- carregar ---------------- */
+function layout(){
+  return `<div class="wrap">
+    <div class="topo">
+      <div class="linha">
+        <input class="busca" id="busca" type="search" placeholder="Buscar por ID, cliente, contato, e-mail ou telefone…" value="${esc(TERMO)}">
+        <button class="btn green" id="novo" type="button">+ Adicionar contato</button>
+        <button class="btn mini" id="abrirTodos" type="button">Abrir todos</button>
+        <button class="btn mini" id="fecharTodos" type="button">Fechar todos</button>
+      </div>
+      <div class="linha"><div class="grupo" id="chipsSit"></div></div>
+      <div class="linha"><div class="grupo" id="chipsArea"></div></div>
+      <div class="dica" id="dica"></div>
+    </div>
+    <div class="resumo" id="resumo"></div>
+    <div class="lista" id="lista"></div>
+  </div>`;
+}
+async function carregar(primeira){
+  try{
+    const d=await jsonp(API_URL+'?tipo=contatos_equipe&chave='+encodeURIComponent(chaveAtual()));
+    if(d&&d.erro)throw new Error(d.erro);
+    CONTATOS=(d.contatos||[]).map(c=>Object.assign(
+      {nome:'',email:'',telefone:'',papel:'Secundário',codigo:'',link:''},c,
+      {cliente_id:String(c.cliente_id==null?'':c.cliente_id),areas:Object.assign({},c.areas||{}),
+       // e-mail como estava na planilha quando carregamos: o backend usa isso para
+       // conferir que a linha ainda é este contato antes de gravar (linhas sobem
+       // quando alguém remove um contato noutra aba do navegador).
+       _email0:String(c.email==null?'':c.email).trim()}));
+    CLIENTES=(d.clientes||[]).map(c=>({id:String(c.id),nome:String(c.nome||'')}));
+    NOME={};CLIENTES.forEach(c=>NOME[c.id]=c.nome);
+    agrupar();
+    if(primeira){document.getElementById('app').innerHTML=layout();}
+    preencherDatalist();
+    redesenhar();
+  }catch(e){
+    if(primeira){
+      document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1>
+        <p>${esc(e.message||e)}</p>
+        <p>Confira a <code>chave</code> no endereço e se o Web App foi republicado com <code>EquipeContatos.gs</code>.</p></div>`;
+    }else{
+      setSave('err','Não consegui recarregar: '+(e.message||e));
+    }
+  }
+}
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
-carregar();
+carregar(true);
 </script>
 </body>
 </html>

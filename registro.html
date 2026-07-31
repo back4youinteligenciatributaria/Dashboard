@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registros de clientes (equipe) — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#C0392B;--verde:#2E9D5F;
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ---------- barra superior (igual às páginas irmãs) ---------- */
+.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px;white-space:nowrap}
+.barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd;white-space:nowrap}
+.barra a.volta,.barra a.plan{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.barra a.plan{border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 11px}
+.save-status{font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:20px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
+.save-status:empty{display:none}
+.save-status.saving{background:var(--amber);color:#fff}.save-status.ok{background:var(--verde);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
+
+/* ---------- topo: busca + chips ---------- */
+.topo{padding:14px 16px 6px}
+.linha-busca{display:flex;gap:9px;align-items:center;margin-bottom:10px}
+.busca{flex:1;min-width:0;font-family:var(--sans);font-size:15px;padding:12px 17px;border-radius:26px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.btn-novo{flex:none;font-family:var(--sans);font-size:14px;font-weight:800;border:0;border-radius:26px;padding:12px 20px;cursor:pointer;background:var(--verde);color:#fff;white-space:nowrap;text-decoration:none}
+.btn-novo:hover{background:#268550}
+.chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.chip{font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
+.chip:hover{border-color:var(--brand-teal)}
+.chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.chip.falta.on{background:var(--amber);border-color:var(--amber)}
+.chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:6px;font-size:11px}
+.chip.on .n{background:rgba(255,255,255,.25)}
+.dica{font-size:11.5px;color:var(--muted);padding:8px 16px 0}
+
+/* ---------- lista de clientes ---------- */
+.lista{padding:12px 16px 48px;display:flex;flex-direction:column;gap:8px}
+.cli{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.cli.aberto{border-color:var(--brand-teal);box-shadow:0 5px 20px rgba(7,48,52,.10)}
+.cli-head{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:0;padding:11px 13px;cursor:pointer;font-family:var(--sans);color:inherit;flex-wrap:wrap}
+.cli-head:hover{background:var(--surface-warm)}
+.cli-id{font-weight:800;color:var(--brand-teal);font-size:13.5px;white-space:nowrap;min-width:54px}
+.cli-nome{font-weight:700;font-size:14px;flex:1 1 200px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cli-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end;flex:2 1 260px;min-width:0}
+.mt{font-size:11px;font-weight:700;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line);border-radius:999px;padding:2px 9px;white-space:nowrap;max-width:250px;overflow:hidden;text-overflow:ellipsis}
+.mt.vazio{color:var(--muted);font-weight:600;background:transparent;border-style:dashed}
+.pill{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap;letter-spacing:.2px}
+.pill.sim{background:#E6F3EC;color:#1f6b45;border:1px solid #BFE0CD}
+.pill.nao{background:#EEE9E2;color:var(--muted);border:1px solid var(--line)}
+.chev{flex:none;color:var(--muted);font-size:19px;font-weight:800;transition:transform .15s;line-height:1}
+.cli.aberto .chev{transform:rotate(90deg);color:var(--brand-teal)}
+
+/* ---------- dropdown com o cadastro completo ---------- */
+.corpo{border-top:1px solid var(--line);background:var(--surface-warm);padding:13px 13px 16px}
+.gsec{margin-bottom:13px}
+.gsec:last-of-type{margin-bottom:6px}
+.gsec h3{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark);display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.gsec h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--brand-teal);flex:none}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fld{display:flex;flex-direction:column;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld>label,.fld>.lbl{font-size:11px;font-weight:800;color:var(--ink-2);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fld>label .req,.fld>.lbl .req{color:var(--amber)}
+.fld .cad{font-size:9.5px;font-weight:800;color:var(--muted);letter-spacing:.3px}
+.fld input,.fld select,.fld textarea{font-family:var(--sans);font-size:13px;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);width:100%}
+.fld textarea{resize:vertical;min-height:42px;line-height:1.35}
+.fld select{font-weight:600;cursor:pointer}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:0}
+.fld .ro{font-size:13px;padding:8px 10px;border:1px dashed var(--line-2);border-radius:8px;background:#EFE8DE;color:var(--ink-2);
+  min-height:38px;word-break:break-word;display:flex;align-items:center;gap:7px;cursor:not-allowed}
+.fld .ro .cad-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fld .ro a{color:var(--brand-teal);text-decoration:none;font-weight:800;flex:none;cursor:pointer}
+.rodape{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px;font-size:11.5px;color:var(--muted)}
+.rodape .lk{color:var(--brand-teal);text-decoration:none;font-weight:800;font-size:12px}
+.ign{background:var(--amber-soft);border:1px solid var(--amber-line);color:#8a5117;border-radius:9px;padding:8px 11px;font-size:11.5px;font-weight:700;margin-bottom:10px}
+.ign:empty{display:none}
+
+/* ---------- modal de cliente novo ---------- */
+.modal[hidden]{display:none}
+.modal{position:fixed;inset:0;z-index:90;background:rgba(7,48,52,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto}
+.modal-box{background:var(--canvas);border-radius:16px;width:100%;max-width:860px;overflow:hidden;box-shadow:0 20px 60px rgba(7,48,52,.35)}
+.modal-top{position:sticky;top:0;z-index:2;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:10px;padding:13px 16px}
+.modal-top b{font-size:15px;font-weight:800}
+.modal-top .spacer{flex:1}
+.modal-top button{font-family:var(--sans);font-size:20px;font-weight:800;line-height:1;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:999px;width:32px;height:32px;cursor:pointer}
+.modal-body{padding:16px}
+.modal .grid{grid-template-columns:repeat(2,1fr)}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:12px}
+.sec>h2{font-size:13px;font-weight:800;margin:0 0 11px;color:var(--brand-dark);display:flex;align-items:center;gap:8px}
+.sec>h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--brand-teal)}
+.idcard{background:linear-gradient(135deg,rgba(15,140,133,.12),rgba(63,166,128,.07));border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:12px}
+.idcard .lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.idcard .idval{font-size:25px;font-weight:800;color:var(--brand-teal);letter-spacing:1px}
+.idcard .nome{font-size:13.5px;color:var(--ink-2);margin-top:3px}
+.prods{display:flex;flex-wrap:wrap;gap:8px}
+.prod{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line-2);border-radius:999px;padding:8px 13px;cursor:pointer;user-select:none}
+.prod input{accent-color:var(--brand-teal);width:16px;height:16px}
+.prod.on{background:rgba(15,140,133,.10);border-color:var(--brand-teal);color:var(--brand-dark)}
+.hint{font-size:11.5px;color:var(--muted);margin-top:8px}
+.fld.miss input,.fld.miss select,.fld.miss textarea{border-color:var(--vermelho);background:#fdf3f1}
+.btn{font-family:var(--sans);font-size:14px;font-weight:800;border:1px solid var(--line-2);border-radius:999px;padding:11px 20px;cursor:pointer;background:var(--surface);color:var(--ink)}
+.btn.primary{background:var(--verde);color:#fff;border-color:transparent}
+.btn.primary:hover{background:#268550}
+.btn.primary:disabled{opacity:.6;cursor:default}
+.foot{display:flex;gap:10px;align-items:center;margin-top:6px}
+.foot .btn.primary{flex:1}
+.msg{font-size:13px;font-weight:700;min-height:18px;margin:8px 0}
+.msg.err{color:var(--vermelho)}
+.ok-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center}
+.ok-card h1{font-size:20px;margin:6px 0}
+.ok-card .big{font-size:30px;font-weight:800;color:var(--brand-teal);letter-spacing:1px}
+.ok-links{display:flex;flex-direction:column;gap:8px;margin:15px 0;text-align:left}
+.ok-links a{background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:11px 13px;text-decoration:none;color:var(--brand-dark);font-weight:700;font-size:13.5px}
+.avisos{background:var(--amber-soft);border:1px solid var(--amber-line);color:#8a5117;border-radius:10px;padding:11px 13px;font-size:12.5px;text-align:left;margin:4px 0 12px}
+
+/* ---------- estados ---------- */
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:48vh;text-align:center;padding:0 24px}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:52ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
+.spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.vazio{padding:30px 16px;text-align:center;color:var(--muted);font-size:14px}
+@keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
+.flash{animation:fl 1.8s ease}
+
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){
+  .barra .tag,.barra .cnt{display:none}
+  .cli-meta{justify-content:flex-start;flex-basis:100%;order:3}
+  .cli-nome{flex-basis:auto}
+  .linha-busca{flex-wrap:wrap}
+  .busca{flex-basis:100%}
+  .btn-novo{flex:1;text-align:center}
+}
+@media(max-width:600px){.grid,.modal .grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="barra">
+  <span class="logo">back<span class="y">4you</span></span>
+  <span class="tag">📇 Registros de clientes</span>
+  <span class="spacer"></span>
+  <span class="save-status" id="saveStatus"></span>
+  <span class="cnt" id="cnt"></span>
+  <a class="plan" id="plan" href="#" target="_blank" rel="noopener" hidden>Planilha ↗</a>
+  <a class="volta" id="volta" href="colaborador.html">← Painel</a>
+</div>
+
+<div id="app"><div class="state"><div class="spin"></div><p>Carregando os registros de clientes…</p></div></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-top"><b>Novo cliente</b><span class="spacer"></span><button type="button" id="fechaModal" title="Fechar">×</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+const CHAVE_PADRAO='b4u-equipe-2026';
+function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');return q?q.trim():CHAVE_PADRAO;}
+/* o que vem depois do # é o CÓDIGO do colaborador — vai no log, na coluna "Colaborador" */
+// Código do colaborador: aceita ?cod= (vindo do painel) e também o #hash
+// (formato antigo dos atalhos por pessoa). Vira a coluna "Colaborador" da aba log.
+function codAtual(){const q=(new URLSearchParams(location.search).get('cod')||'').trim();if(q)return q;try{return decodeURIComponent((location.hash||'').replace(/^#/,'')).trim();}catch(e){return (location.hash||'').replace(/^#/,'').trim();}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
+async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
+/* normaliza rótulo de coluna igual ao backend (sem acento, minúsculo, sem ?:. no fim) */
+function norm(s){return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim().replace(/[?:.]+$/,'');}
+function setSave(cl,txt,tit){const el=document.getElementById('saveStatus');el.className='save-status '+(cl||'');el.textContent=txt||'';el.title=tit||'';}
+function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+
+/* ===================================================================
+   Campos do cadastro — os mesmos do onboarding.html
+   O formulário é AUTO-CONSTRUÍDO a partir dos cabeçalhos VIVOS da aba
+   "Registro". As HINTS só enfeitam colunas conhecidas (seção/tipo/
+   obrigatório); coluna nova que a equipe criar na planilha aparece
+   sozinha, como texto, na seção "Outros".
+   =================================================================== */
+
+/* Produtos -> quais planilhas (só informativo na tela; a regra real está no backend) */
+const PRODUTOS=['Contabilidade','Controladoria','Equiparação','Agora Tem Especialistas','DP pessoa física','INSS'];
+
+/* Colunas gerenciadas pelo sistema — NÃO viram campo no form de cliente novo. */
+const SKIP=['id','nome','drive','produtos back4you','ativo'];
+
+/* Dicas por coluna (chave normalizada): s=seção, t=text|select|date|textarea, opts, full, req, role. */
+const HINTS={
+  'razao social da empresa':{s:'Identificação',req:true,full:true,role:'razao'},
+  'cnpj ou cpf':{s:'Identificação',req:true,role:'cnpj'},
+  'nome fantasia':{s:'Identificação'},
+  'cidade':{s:'Identificação',req:true,role:'cidade'},
+  'resumo':{s:'Identificação',t:'textarea',full:true},
+  'cnes':{s:'Identificação'},
+  'link form diagnostico':{s:'Identificação',full:true},
+  'data de abertura':{s:'Empresa',t:'date'},
+  'porte':{s:'Empresa'},
+  'natureza juridica':{s:'Empresa'},
+  'endereco':{s:'Empresa',full:true},
+  'cnaes':{s:'Empresa',t:'textarea',full:true},
+  'registro na junta':{s:'Empresa'},
+  'numero de socios':{s:'Empresa'},
+  'descricao socios':{s:'Empresa',t:'textarea',full:true},
+  'cadastro municipal (numero)':{s:'Empresa'},
+  'regime':{s:'Fiscal / Contábil',t:'select',opts:['','Lucro Presumido','Simples Nacional'],role:'regime'},
+  'fator r':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
+  'equiparados':{s:'Fiscal / Contábil'},
+  'iss':{s:'Fiscal / Contábil'},
+  'livro caixa':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
+  'procuracao e-cac':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Feita']},
+  'procuracao spe':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Feita']},
+  'contabilidade previa':{s:'Fiscal / Contábil'},
+  'data de inicio da contabilidade':{s:'Fiscal / Contábil',t:'date',role:'inicio'},
+  'data de fim da contabilidade':{s:'Fiscal / Contábil',t:'date'},
+  'tem dpto pessoal':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+  'pro labore':{s:'Departamento Pessoal'},
+  '# de funcionarios':{s:'Departamento Pessoal'},
+  'adiantamento salarial':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+  'vale alimentacao':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+  'vale transporte':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+  'controle de ponto':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+  'funcionario de pessoa fisica':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+  'paga aluguel':{s:'Aluguel',t:'select',opts:['','Sim','Não']},
+  'aluguel para pf':{s:'Aluguel',t:'select',opts:['','Sim','Não']},
+  'pagamento aluguel':{s:'Aluguel'},
+  'valor do aluguel':{s:'Aluguel'},
+  'obs aluguel':{s:'Aluguel',t:'textarea',full:true}
+};
+/* Colunas que o sistema gerencia: não entram no form de cliente novo, mas aparecem
+   no cadastro (as travadas, só de leitura). */
+const HINTS_SISTEMA={
+  'id':{s:'Identificação',role:'id'},
+  'nome':{s:'Identificação',full:true,role:'nome'},
+  'ativo':{s:'Identificação',t:'select',opts:['','Sim','Não'],role:'ativo'},
+  'drive':{s:'Identificação',full:true,role:'drive'},
+  'produtos back4you':{s:'Identificação',full:true,role:'produtos'}
+};
+const SEC_ORDER=['Identificação','Empresa','Fiscal / Contábil','Departamento Pessoal','Aluguel','Outros'];
+/* Campo sintético UF: NÃO é coluna do Registro (vai só p/ o Config fiscal), mas é obrigatório. */
+const UF_FIELD={s:'Identificação',col:'UF',t:'text',req:true,max:2,up:true,role:'uf'};
+/* Fallback: se o backend não devolver os cabeçalhos (ex.: Web App não republicado). */
+const CAMPOS_FALLBACK=['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','CNES','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Procuração E-Cac','Procuração SPE','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Tem DPTO pessoal','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Aluguel para PF?','Pagamento Aluguel','Valor do Aluguel','Obs Aluguel'];
+
+/* Motivo de cada coluna travada (vira o title do campo somente-leitura). */
+const MOTIVO_TRAVA={
+  'id':'O ID é a chave do cadastro — não muda depois de criado.',
+  'drive':'A pasta do Drive é criada no cadastro do cliente (botão “+ Novo cliente”).',
+  'produtos back4you':'Os produtos definem quais planilhas o cliente tem — mudam no cadastro, não aqui.'
+};
+function motivoTrava(col){return MOTIVO_TRAVA[norm(col)]||'Coluna mantida pelo sistema — não dá para editar por aqui.';}
+
+/**
+ * Monta os campos a partir dos cabeçalhos vivos.
+ * modo 'novo'    -> form de cliente novo: pula as colunas do sistema e injeta UF depois de Cidade.
+ * modo 'edicao'  -> cadastro completo: TODAS as colunas (as travadas entram só de leitura).
+ */
+function montarCampos(headers,modo){
+  const campos=[],roles={},edicao=(modo==='edicao');
+  const dicas=edicao?Object.assign({},HINTS,HINTS_SISTEMA):HINTS;
+  (headers||[]).forEach(h=>{
+    const k=norm(h);
+    if(!k)return;
+    if(!edicao&&SKIP.indexOf(k)>=0)return;            // colunas que o sistema gerencia
+    const hint=dicas[k]||{s:'Outros'};
+    if(hint.role)roles[hint.role]=h;
+    campos.push({s:hint.s||'Outros',col:h,t:hint.t||'text',req:!edicao&&!!hint.req,full:!!hint.full,opts:hint.opts,ph:hint.ph||'',max:hint.max,up:!!hint.up});
+  });
+  if(!edicao){
+    roles.uf='UF';
+    const uf=Object.assign({},UF_FIELD);
+    const iC=campos.findIndex(f=>norm(f.col)==='cidade');
+    if(iC>=0)campos.splice(iC+1,0,uf);else campos.push(uf);
+  }
+  const ord=f=>{const i=SEC_ORDER.indexOf(f.s);return i<0?SEC_ORDER.length:i;};
+  const lista=campos.map((f,i)=>(f._i=i,f)).sort((a,b)=>ord(a)-ord(b)||a._i-b._i);
+  lista.roles=roles;
+  return lista;
+}
+
+/* ===================================================================
+   Estado da lista
+   =================================================================== */
+let COLUNAS=[],TRAVADAS=new Set(),CLIENTES=[],META={},CAMPOS_EDIT=[],COL={};
+let ABERTOS=new Set(),FILTRO='todos',TERMO='';
+
+function ehTravada(col){return TRAVADAS.has(norm(col));}
+function valorDe(cli,col){return col?String((cli.valores||{})[col]||'').trim():'';}
+/** Acha o nome EXATO da coluna a partir de apelidos normalizados (exato e depois "contém"). */
+function colDe(alts){
+  for(const a of alts){const c=COLUNAS.find(x=>norm(x)===a);if(c)return c;}
+  for(const a of alts){const c=COLUNAS.find(x=>norm(x).indexOf(a)>=0);if(c)return c;}
+  return '';
+}
+function mapearColunas(){
+  COL={
+    nome:colDe(['nome']),
+    ativo:colDe(['ativo']),
+    cnpj:colDe(['cnpj ou cpf','cnpj/cpf','cnpj']),
+    razao:colDe(['razao social da empresa','razao social']),
+    fantasia:colDe(['nome fantasia']),
+    cidade:colDe(['cidade']),
+    regime:colDe(['regime']),
+    produtos:colDe(['produtos back4you','produtos']),
+    drive:colDe(['drive']),
+    inicio:colDe(['data de inicio da contabilidade'])
+  };
+}
+function simNao(v){const s=normTxt(v);if(!s)return null;
+  if(/^(sim|s|true|verdadeiro|1|x|ativo)$/.test(s))return true;
+  if(/^(nao|n|false|falso|0|-|inativo)$/.test(s))return false;return null;}
+function ativoDe(cli){return simNao(cli.ativo||valorDe(cli,COL.ativo));}
+
+/* ---------------- filtros ---------------- */
+const FILTROS=[
+  {k:'todos',rot:'Todos',fn:()=>true},
+  {k:'ativos',rot:'Ativos',fn:c=>ativoDe(c)===true,dep:'ativo'},
+  {k:'inativos',rot:'Inativos',fn:c=>ativoDe(c)===false,dep:'ativo'},
+  {k:'sem_cnpj',rot:'Sem CNPJ',fn:c=>!valorDe(c,COL.cnpj),dep:'cnpj',cls:'falta'},
+  {k:'sem_regime',rot:'Sem regime',fn:c=>!valorDe(c,COL.regime),dep:'regime',cls:'falta'},
+  {k:'sem_inicio',rot:'Sem data de início da contabilidade',fn:c=>!valorDe(c,COL.inicio),dep:'inicio',cls:'falta'},
+  {k:'sem_produtos',rot:'Sem produtos',fn:c=>!valorDe(c,COL.produtos),dep:'produtos',cls:'falta'},
+  {k:'sem_drive',rot:'Sem pasta no Drive',fn:c=>!valorDe(c,COL.drive),dep:'drive',cls:'falta'}
+];
+function filtrosVivos(){return FILTROS.filter(f=>!f.dep||COL[f.dep]);}
+function fnFiltro(k){const f=FILTROS.find(x=>x.k===k);return f?f.fn:(()=>true);}
+function chaveBusca(cli){
+  if(cli._b==null)cli._b=normTxt([cli.id,cli.nome,valorDe(cli,COL.cnpj),valorDe(cli,COL.razao),valorDe(cli,COL.fantasia),valorDe(cli,COL.cidade)].join(' '));
+  return cli._b;
+}
+function visiveis(){
+  const fn=fnFiltro(FILTRO),termo=normTxt(TERMO);
+  return CLIENTES.filter(c=>fn(c)&&(!termo||chaveBusca(c).includes(termo)));
+}
+
+/* ---------------- lista ---------------- */
+function metaHTML(cli){
+  const its=[];
+  const add=(col,rot)=>{if(!col)return;const v=valorDe(cli,col);
+    its.push(`<span class="mt${v?'':' vazio'}" title="${esc(rot+': '+(v||'em branco'))}">${esc(v||('sem '+rot.toLowerCase()))}</span>`);};
+  add(COL.cnpj,'CNPJ');add(COL.regime,'Regime');add(COL.produtos,'Produtos');
+  const at=ativoDe(cli);
+  if(at!==null)its.push(`<span class="pill ${at?'sim':'nao'}">${at?'Ativo':'Inativo'}</span>`);
+  return its.join('');
+}
+function cabecaHTML(cli){
+  return `<button type="button" class="cli-head" aria-expanded="${ABERTOS.has(cli.id)?'true':'false'}">
+      <span class="cli-id">${esc(cli.id)}</span>
+      <span class="cli-nome">${esc(cli.nome||'(sem nome)')}</span>
+      <span class="cli-meta">${metaHTML(cli)}</span>
+      <span class="chev">›</span>
+    </button>`;
+}
+function campoEditHTML(cli,f){
+  const col=f.col,v=valorDe(cli,col);
+  const rot=`<span class="lbl">${esc(col)}${ehTravada(col)?' <span class="cad">🔒</span>':''}</span>`;
+  let ctrl;
+  if(ehTravada(col)){
+    const link=/^https?:/i.test(v)?`<a href="${esc(v)}" target="_blank" rel="noopener" title="abrir">↗</a>`:'';
+    ctrl=`<div class="ro" title="${esc(motivoTrava(col))}"><span class="cad-txt">${esc(v||'—')}</span>${link}</div>`;
+  }else if(f.t==='select'){
+    const opts=(f.opts||['','Sim','Não']).slice();
+    if(v&&opts.indexOf(v)<0)opts.splice(1,0,v);
+    ctrl=`<select data-ecol="${esc(col)}">`+opts.map(o=>`<option value="${esc(o)}"${o===v?' selected':''}>${o?esc(o):'—'}</option>`).join('')+`</select>`;
+  }else if(f.t==='textarea'){
+    ctrl=`<textarea data-ecol="${esc(col)}" rows="2">${esc(v)}</textarea>`;
+  }else if(f.t==='date'&&(!v||/^\d{4}-\d{2}-\d{2}$/.test(v))){
+    ctrl=`<input type="date" data-ecol="${esc(col)}" value="${esc(v)}">`;
+  }else{
+    /* coluna de data com texto livre (ex.: "a definir") continua editável como texto */
+    ctrl=`<input type="text" data-ecol="${esc(col)}" value="${esc(v)}"${f.t==='date'?' placeholder="aaaa-mm-dd"':''}>`;
+  }
+  return `<div class="fld ${f.full?'full':''}">${rot}${ctrl}</div>`;
+}
+function corpoHTML(cli){
+  const secs=SEC_ORDER.filter(s=>CAMPOS_EDIT.some(f=>f.s===s));
+  const blocos=secs.map(sc=>`<div class="gsec"><h3><span class="dot"></span>${esc(sc)}</h3>
+      <div class="grid">${CAMPOS_EDIT.filter(f=>f.s===sc).map(f=>campoEditHTML(cli,f)).join('')}</div></div>`).join('');
+  const drive=valorDe(cli,COL.drive);
+  return `<div class="corpo" data-id="${esc(cli.id)}">
+    <div class="ign" id="ign_${esc(cli.id)}"></div>
+    ${blocos||'<div class="vazio">Esse cliente não tem colunas para mostrar.</div>'}
+    <div class="rodape">
+      <span>As alterações salvam sozinhas. Campos com 🔒 são mantidos pelo sistema.</span>
+      ${/^https?:/i.test(drive)?`<a class="lk" href="${esc(drive)}" target="_blank" rel="noopener">📁 Pasta no Drive ↗</a>`:''}
+      ${META.planilha_url?`<a class="lk" href="${esc(META.planilha_url)}" target="_blank" rel="noopener">Planilha ↗</a>`:''}
+    </div>
+  </div>`;
+}
+function desenharChips(){
+  const html=filtrosVivos().map(f=>{
+    const n=CLIENTES.filter(f.fn).length;
+    return `<button type="button" class="chip ${f.cls||''} ${FILTRO===f.k?'on':''}" data-f="${f.k}">${esc(f.rot)}<span class="n">${n}</span></button>`;
+  }).join('');
+  document.getElementById('chips').innerHTML=html;
+}
+function desenharLista(){
+  const arr=visiveis();
+  document.getElementById('cnt').textContent=arr.length+' de '+CLIENTES.length+' clientes';
+  const el=document.getElementById('lista');
+  if(!arr.length){
+    el.innerHTML=`<div class="vazio">${CLIENTES.length?'Nenhum cliente com esse filtro ou essa busca.':'A aba Registro está vazia.'}</div>`;
+    return;
+  }
+  el.innerHTML=arr.map(c=>`<div class="cli${ABERTOS.has(c.id)?' aberto':''}" data-id="${esc(c.id)}">${cabecaHTML(c)}${ABERTOS.has(c.id)?corpoHTML(c):''}</div>`).join('');
+}
+function redesenhar(){desenharChips();desenharLista();}
+
+function clientePorId(id){return CLIENTES.find(c=>String(c.id)===String(id));}
+function alternar(id,forcar){
+  const cli=clientePorId(id);if(!cli)return;
+  const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
+  const abrir=forcar==null?!ABERTOS.has(id):!!forcar;
+  const corpo=no.querySelector('.corpo');
+  if(abrir){
+    ABERTOS.add(id);no.classList.add('aberto');
+    if(!corpo)no.insertAdjacentHTML('beforeend',corpoHTML(cli));
+  }else{
+    ABERTOS.delete(id);no.classList.remove('aberto');
+    if(corpo)corpo.remove();
+  }
+  const bt=no.querySelector('.cli-head');if(bt)bt.setAttribute('aria-expanded',abrir?'true':'false');
+}
+function irPara(id){
+  if(!document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`)){
+    FILTRO='todos';TERMO='';const b=document.getElementById('busca');if(b)b.value='';redesenhar();
+  }
+  const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
+  alternar(id,true);
+  no.scrollIntoView({block:'center',behavior:'smooth'});
+  no.classList.add('flash');setTimeout(()=>no.classList.remove('flash'),1800);
+}
+
+/* ---------------- salvar (auto-save com debounce) ---------------- */
+const SUJOS=new Map();   // id -> {timer, colunas:Set}
+function agendarSalvar(id,coluna,ms){
+  let s=SUJOS.get(id);
+  if(!s){s={timer:null,colunas:new Set()};SUJOS.set(id,s);}
+  s.colunas.add(coluna);
+  clearTimeout(s.timer);
+  s.timer=setTimeout(()=>salvar(id),ms==null?700:ms);
+  setSave('saving','Alterado…');
+}
+async function salvar(id){
+  const s=SUJOS.get(id);if(!s)return;
+  SUJOS.delete(id);
+  const cli=clientePorId(id);if(!cli)return;
+  const campos={};s.colunas.forEach(c=>campos[c]=cli.valores[c]==null?'':cli.valores[c]);
+  const ign=document.getElementById('ign_'+id);
+  try{
+    setSave('saving','Salvando…');
+    const r=await postAcao({acao:'registro_salvar',id:cli.id,cliente:cli.nome||'',cod:codAtual(),campos});
+    const ignoradas=(r&&r.ignoradas||[]).filter(Boolean);
+    setSave('ok','Salvo ✓ '+horaAgora()+(ignoradas.length?' · '+ignoradas.length+' ignorada'+(ignoradas.length>1?'s':''):''),
+      ignoradas.length?('Não gravadas: '+ignoradas.join(', ')):'');
+    if(ign)ign.innerHTML=ignoradas.length?('Não gravei: <b>'+ignoradas.map(esc).join('</b>, <b>')+'</b> — coluna travada ou que não existe mais na planilha.'):'';
+    /* o nome pode ter mudado: reflete no cabeçalho e na busca */
+    cli.nome=valorDe(cli,COL.nome)||cli.nome;
+    if(COL.ativo)cli.ativo=valorDe(cli,COL.ativo);
+    cli._b=null;
+    atualizarCabeca(id);
+    desenharChips();
+  }catch(e){setSave('err','Não salvou: '+(e.message||e),String(e.message||e));}
+}
+function atualizarCabeca(id){
+  const cli=clientePorId(id);if(!cli)return;
+  const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
+  const nm=no.querySelector('.cli-nome');if(nm)nm.textContent=cli.nome||'(sem nome)';
+  const mt=no.querySelector('.cli-meta');if(mt)mt.innerHTML=metaHTML(cli);
+}
+
+/* ===================================================================
+   Cliente novo — o formulário do onboarding, dentro desta página
+   =================================================================== */
+let NOVO_CAMPOS=[],NOVO_ROLE={},PROX_ID='',criando=false;
+const novoVal={};
+const prodSel=new Set();
+
+function campoHTML(f,i){
+  const id='f_'+i;
+  const req=f.req?'<span class="req">*</span>':'';
+  let inner;
+  if(f.t==='select'){inner=`<select id="${id}" data-col="${esc(f.col)}">${(f.opts||[]).map(o=>`<option value="${esc(o)}">${o?esc(o):'—'}</option>`).join('')}</select>`;}
+  else if(f.t==='textarea'){inner=`<textarea id="${id}" data-col="${esc(f.col)}" rows="2" placeholder="${esc(f.ph||'')}"></textarea>`;}
+  else{inner=`<input id="${id}" data-col="${esc(f.col)}" type="${f.t==='date'?'date':'text'}" ${f.max?`maxlength="${f.max}"`:''} placeholder="${esc(f.ph||'')}">`;}
+  return `<div class="fld ${f.full?'full':''}" data-fld="${esc(f.col)}"><label for="${id}">${esc(f.col)} ${req}</label>${inner}</div>`;
+}
+function renderNovo(){
+  const secs=SEC_ORDER.filter(s=>NOVO_CAMPOS.some(f=>f.s===s));
+  let html=`
+    <div class="idcard">
+      <div class="lbl">Próximo ID previsto</div>
+      <div class="idval" id="idprev">${esc(PROX_ID||'…')}</div>
+      <div class="nome" id="nomeprev">Nome: <b>—</b></div>
+    </div>
+    <div class="sec">
+      <h2><span class="dot"></span>Produtos Back4you <span class="req" style="color:var(--amber)">*</span></h2>
+      <div class="prods" id="prods">${PRODUTOS.map(p=>`<label class="prod"><input type="checkbox" value="${esc(p)}"> ${esc(p)}</label>`).join('')}</div>
+      <p class="hint">Os produtos definem quais planilhas serão criadas: <b>Equiparação</b> → planilha de Equiparação · <b>Contabilidade/Controladoria</b> → Fiscal + Contábil + DP · <b>DP pessoa física</b> → DP. INSS e Agora Tem Especialistas não geram planilha por ora.</p>
+    </div>`;
+  secs.forEach(sc=>{
+    html+=`<div class="sec"><h2><span class="dot"></span>${esc(sc)}</h2><div class="grid">${NOVO_CAMPOS.map((f,i)=>f.s===sc?campoHTML(f,i):'').join('')}</div></div>`;
+  });
+  html+=`<div class="msg" id="msg"></div>
+    <div class="foot"><button class="btn" id="cancelar" type="button">Cancelar</button><button class="btn primary" id="criar" type="button">Criar cliente</button></div>`;
+  const body=document.getElementById('modalBody');
+  body.innerHTML=html;
+  body.querySelectorAll('#prods input').forEach(c=>c.addEventListener('change',e=>{
+    const l=e.target.closest('.prod');
+    if(e.target.checked){prodSel.add(e.target.value);l.classList.add('on');}else{prodSel.delete(e.target.value);l.classList.remove('on');}
+  }));
+  body.querySelectorAll('[data-col]').forEach(el=>el.addEventListener('input',e=>{
+    let v=e.target.value;const f=NOVO_CAMPOS[+e.target.id.slice(2)];
+    if(f&&f.up){v=v.toUpperCase();e.target.value=v;}
+    novoVal[e.target.dataset.col]=v;
+    e.target.closest('.fld').classList.remove('miss');
+    if(e.target.dataset.col===NOVO_ROLE.razao)atualizarNomePrev();
+  }));
+  document.getElementById('cancelar').addEventListener('click',fecharModal);
+  document.getElementById('criar').addEventListener('click',criarCliente);
+  atualizarNomePrev();
+}
+function atualizarNomePrev(){
+  const el=document.getElementById('nomeprev');if(!el)return;
+  const razao=(novoVal[NOVO_ROLE.razao]||'').trim();
+  el.innerHTML='Nome: <b>'+esc((PROX_ID?PROX_ID+' ':'')+(razao||'—'))+'</b>';
+}
+function abrirModal(){
+  NOVO_CAMPOS=montarCampos(COLUNAS.length?COLUNAS:CAMPOS_FALLBACK,'novo');
+  NOVO_ROLE=NOVO_CAMPOS.roles||{};
+  Object.keys(novoVal).forEach(k=>delete novoVal[k]);
+  prodSel.clear();
+  document.getElementById('modal').hidden=false;
+  document.body.style.overflow='hidden';
+  renderNovo();
+  if(!PROX_ID){
+    jsonp(API_URL+'?tipo=proximo_id&chave='+encodeURIComponent(chaveAtual()))
+      .then(d=>{if(d&&!d.erro&&d.id){PROX_ID=d.id;const i=document.getElementById('idprev');if(i)i.textContent=PROX_ID;atualizarNomePrev();}})
+      .catch(()=>{});
+  }
+}
+function fecharModal(){
+  if(criando)return;
+  document.getElementById('modal').hidden=true;
+  document.body.style.overflow='';
+}
+async function criarCliente(){
+  const msg=document.getElementById('msg');msg.className='msg';msg.textContent='';
+  let faltou=false;
+  NOVO_CAMPOS.filter(f=>f.req).forEach(f=>{
+    const el=document.querySelector(`#modalBody [data-fld="${CSS.escape(f.col)}"]`);
+    if(!((novoVal[f.col]||'').trim())){if(el)el.classList.add('miss');faltou=true;}
+  });
+  if(!prodSel.size){document.getElementById('prods').closest('.sec').style.outline='2px solid var(--vermelho)';faltou=true;}
+  if(faltou){msg.className='msg err';msg.textContent='Preencha os campos obrigatórios (marcados com *).';
+    document.querySelector('#modalBody .miss,#modalBody .sec').scrollIntoView({block:'center',behavior:'smooth'});return;}
+
+  const btn=document.getElementById('criar');btn.disabled=true;btn.textContent='Criando… (até ~1 min)';
+  criando=true;
+  msg.className='msg';msg.textContent='Criando pastas no Drive e planilhas… não feche a página.';
+  setSave('saving','Criando cliente…');
+  try{
+    const d=await postAcao({acao:'onboard',produtos:[...prodSel],registro:novoVal,cod:codAtual()});
+    criando=false;
+    setSave('ok','Cliente '+(d.id||'')+' criado ✓ '+horaAgora());
+    sucessoNovo(d);
+  }catch(e){
+    criando=false;
+    btn.disabled=false;btn.textContent='Criar cliente';msg.className='msg err';
+    setSave('err','Não criou o cliente');
+    /* "Failed to fetch": o servidor pode ter concluído mesmo assim (operação longa). */
+    const rede=/failed to fetch|networkerror|load failed|não respondeu|alcançar|timeout|rede/i.test(String(e.message||e));
+    msg.innerHTML=rede
+      ? 'A resposta não chegou (conexão/tempo). <b>O cliente pode já ter sido criado no servidor</b> — feche, atualize a lista e confira <b>antes</b> de tentar de novo. ⚠️ Não clique em "Criar" de novo às cegas: cada tentativa gera um cliente NOVO (com o próximo ID) e novas pastas.'
+      : esc((e.message||e)+'');
+  }
+}
+function sucessoNovo(d){
+  const pl=d.planilhas||{},links=[];
+  if(d.pasta)links.push(`<a href="${esc(d.pasta)}" target="_blank" rel="noopener">📁 Pasta do cliente no Drive</a>`);
+  if(pl.fiscal)links.push(`<a href="${esc(pl.fiscal)}" target="_blank" rel="noopener">📊 Planilha Fiscal</a>`);
+  if(pl.equiparacao)links.push(`<a href="${esc(pl.equiparacao)}" target="_blank" rel="noopener">📊 Planilha Equiparação</a>`);
+  if(pl.pessoal)links.push(`<a href="${esc(pl.pessoal)}" target="_blank" rel="noopener">📊 Planilha Departamento Pessoal</a>`);
+  const avisos=(d.avisos||[]).filter(Boolean);
+  document.getElementById('modalBody').innerHTML=`
+    <div class="ok-card">
+      <div style="font-size:34px">✅</div>
+      <h1>Cliente criado!</h1>
+      <div class="big">${esc(d.id||'')}</div>
+      <div style="color:var(--ink-2);font-size:14px;margin-top:4px">${esc(d.nome||'')}</div>
+      <div class="ok-links">${links.join('')||'<span class="hint">Nenhuma planilha gerada (confira os produtos).</span>'}</div>
+      ${avisos.length?`<div class="avisos"><b>Atenção:</b><br>${avisos.map(esc).join('<br>')}</div>`:''}
+      <p class="hint">Gravado nas abas <b>Links</b> e <b>Registro</b>. Os contatos/e-mails de acesso do cliente são cadastrados à parte, na planilha de Contatos.</p>
+      <div class="foot" style="margin-top:14px">
+        <button class="btn" id="outro" type="button">Cadastrar outro</button>
+        <button class="btn primary" id="verCad" type="button">Ver o cadastro de ${esc(d.id||'')}</button>
+      </div>
+    </div>`;
+  PROX_ID='';
+  const irVer=()=>{fecharModal();if(clientePorId(d.id))irPara(d.id);else carregar({expandir:d.id});};
+  document.getElementById('verCad').addEventListener('click',irVer);
+  document.getElementById('outro').addEventListener('click',()=>{carregar({silencioso:true});abrirModal();});
+  /* já recarrega a lista por baixo, para o cliente novo estar lá quando fechar */
+  carregar({expandir:d.id,silencioso:true});
+}
+
+/* ===================================================================
+   Eventos
+   =================================================================== */
+document.addEventListener('click',e=>{
+  const head=e.target.closest('.cli-head');
+  if(head){const no=head.closest('.cli');if(no)alternar(no.dataset.id);return;}
+  const chip=e.target.closest('.chip[data-f]');
+  if(chip){FILTRO=chip.dataset.f;redesenhar();return;}
+  if(e.target.closest('#btnNovo')){abrirModal();return;}
+  if(e.target.closest('#fechaModal')){fecharModal();return;}
+  if(e.target.id==='modal'){fecharModal();return;}
+});
+function anotar(el){
+  const corpo=el.closest('.corpo');if(!corpo)return;
+  const cli=clientePorId(corpo.dataset.id);if(!cli)return;
+  const col=el.dataset.ecol;
+  /* 'input' e 'change' disparam os dois no mesmo campo — não salva duas vezes à toa */
+  if(cli.valores[col]===el.value&&!SUJOS.has(cli.id))return;
+  cli.valores[col]=el.value;
+  if(COL.nome&&col===COL.nome){cli.nome=el.value;atualizarCabeca(cli.id);}
+  agendarSalvar(cli.id,col,el.tagName==='SELECT'||el.type==='date'?250:700);
+}
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
+document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!document.getElementById('modal').hidden){fecharModal();return;}
+  if(e.key==='/'&&e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'){
+    const b=document.getElementById('busca');if(b){e.preventDefault();b.focus();b.select();}
+  }
+});
+
+/* ===================================================================
+   Carregar
+   =================================================================== */
+function layout(){
+  return `<div class="topo">
+    <div class="linha-busca">
+      <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por ID, nome, CNPJ, cidade…">
+      <button class="btn-novo" id="btnNovo" type="button">+ Novo cliente</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="dica">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho na aba <b>Registro</b>${META.aba&&META.aba!=='Registro'?' ('+esc(META.aba)+')':''}. Cliente novo nasce pelo botão verde — ele cria as pastas e as planilhas antes de gravar.</div>
+  <div class="lista" id="lista"></div>`;
+}
+async function carregar(op){
+  op=op||{};
+  if(!op.silencioso)setSave('saving','Carregando…');
+  try{
+    const d=await jsonp(API_URL+'?tipo=registro_equipe&chave='+encodeURIComponent(chaveAtual()));
+    if(d&&d.erro)throw new Error(d.erro);
+    META=d;
+    COLUNAS=d.colunas||[];
+    TRAVADAS=new Set((d.travadas||[]).map(norm));
+    CLIENTES=(d.clientes||[]).map(c=>Object.assign({},c,{id:String(c.id||''),valores:c.valores||{}}));
+    mapearColunas();
+    CAMPOS_EDIT=montarCampos(COLUNAS,'edicao');
+    if(op.expandir)ABERTOS.add(String(op.expandir));
+    const busca=document.getElementById('busca');
+    const termoAtual=busca?busca.value:TERMO;
+    document.getElementById('app').innerHTML=layout();
+    const nb=document.getElementById('busca');
+    nb.value=op.expandir?'':(termoAtual||'');
+    TERMO=nb.value;
+    nb.addEventListener('input',e=>{TERMO=e.target.value;desenharLista();});
+    const pl=document.getElementById('plan');
+    if(d.planilha_url){pl.href=d.planilha_url;pl.hidden=false;}
+    redesenhar();
+    if(!op.silencioso)setSave('','');
+    if(op.expandir){irPara(String(op.expandir));}
+    else if(!op.silencioso&&window.innerWidth>760)nb.focus();
+  }catch(e){
+    const m=String(e.message||e);
+    setSave('err','Erro: '+m,m);
+    /* recarga em segundo plano não pode derrubar a lista que já está na tela */
+    if(op.silencioso&&document.getElementById('lista'))return;
+    if(/chave/i.test(m)){
+      document.getElementById('app').innerHTML=`<div class="state"><div style="font-size:36px">🔒</div><h1>Acesso restrito</h1><p>${esc(m)}</p><p>Abra pelo painel da equipe, com <code>?chave=</code> no endereço.</p></div>`;
+    }else{
+      document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(m)}</p>
+        <p>Confira se o Web App foi republicado com <code>EquipeRegistro.gs</code> e se a planilha <b>Site Links</b> tem a aba <code>Registro</code>.</p></div>`;
+    }
+  }
+}
+document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+carregar();
+</script>
+</body>
+</html>
