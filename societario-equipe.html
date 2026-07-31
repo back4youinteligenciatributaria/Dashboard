@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Guia nova por padrão: link clicado não tira o colaborador de onde ele estava. -->
+<base target="_blank">
 <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -43,6 +45,29 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .btn.add:hover{background:var(--verde-2);border-color:var(--verde-2);color:#fff}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
 .dica{font-size:12px;color:var(--muted);margin-top:7px}
+/* filtros e ordenação — mesmo padrão de chips já usado em certificados.html */
+.linha-filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:9px}
+.grupo{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.grupo .rot{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.chip{font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
+.chip:hover{border-color:var(--brand-teal)}
+.chip:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:6px;font-size:11px}
+.chip.on .n{background:rgba(255,255,255,.25)}
+.chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
+.chip.falta.on{background:var(--amber);border-color:var(--amber)}
+.chip.feito.on{background:var(--verde);border-color:var(--verde)}
+.chip .seta{margin-left:5px;font-size:10px;opacity:.9}
+.vazio-filtro{background:var(--surface);border:1px dashed var(--line-2);border-radius:12px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--muted);font-size:13.5px}
+/* no celular cada faixa de chips vira uma tira que rola de lado, para o topo
+   não engolir a tela */
+@media(max-width:620px){
+  .linha-filtros{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-top:7px}
+  .linha-filtros::-webkit-scrollbar{display:none}
+  .grupo{flex-wrap:nowrap}
+  .chip,.grupo .rot{white-space:nowrap}
+}
 .lista{margin-top:12px;display:flex;flex-direction:column;gap:10px}
 .proc{background:var(--surface);border:1px solid var(--line);border-radius:13px;overflow:hidden}
 .proc-h{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;cursor:pointer}
@@ -103,16 +128,21 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .modal-card h2{font-size:17px;margin-bottom:12px}
 @media(max-width:620px){.grid2{grid-template-columns:1fr}.wrap{padding:14px 12px 70px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Todo link abre em guia nova (<base target="_blank">) — o colaborador nunca
+   perde a tela em que estava. Logo e "← Painel" são a exceção: são o gesto de
+   VOLTAR, então trocam a guia atual (target="_self"). */
+.barra a.logo{color:inherit;text-decoration:none;cursor:pointer}
+.barra a.logo:hover{opacity:.82}
 </style>
 </head>
 <body>
 <div class="barra">
-  <span class="logo">back<span class="y">4you</span></span>
+  <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag">Societário · equipe</span>
   <span class="spacer"></span>
   <span class="save-status" id="saveStatus"></span>
   <span class="cnt" id="cnt"></span>
-  <a class="volta" id="volta" href="colaborador.html">← Painel</a>
+  <a class="volta" id="volta" href="colaborador.html" target="_self">← Painel</a>
 </div>
 <div id="app"><div class="state"><div class="spin"></div><p>Carregando processos…</p></div></div>
 
@@ -200,22 +230,37 @@ function procConcluido(p){
   const nomeadas=(p.etapas||[]).filter(e=>e&&String(e.nome||'').trim());
   return nomeadas.length>0&&nomeadas.every(e=>RE_CONCLUIDO.test(normTxt(e.status)));
 }
-function duracaoHTML(p){
+function calcDuracao(p){
   const ini=primeiroInicio(p);
-  if(!ini)return `<span class="bdg dur na" title="Nenhuma etapa tem data de início preenchida.">⏱ sem data de início</span>`;
+  if(!ini)return null;                       // sem data de início não dá para medir
   const concluido=procConcluido(p);
   const fimR=concluido?ultimoFim(p):null;
   const hoje=new Date();hoje.setHours(0,0,0,0);
   const fim=fimR?fimR.d:hoje;
-  const dias=Math.max(0,Math.round((fim-ini.d)/86400000));
-  const estimado=!!(ini.est||(fimR&&fimR.est));
-  const dicas=[];
-  if(ini.est)dicas.push('início estimado no dia 1 de '+ini.rot+' (planilha: '+ini.orig+')');
-  if(fimR&&fimR.est)dicas.push('fim estimado no dia 1 de '+fimR.rot+' (planilha: '+fimR.orig+')');
-  dicas.push('De '+fmtData(ini.d)+' até '+(fimR?fmtData(fim):'hoje, '+fmtData(hoje)));
-  const rotulo=(estimado?'~':'')+fmtDuracao(dias)+(concluido?' (concluído)':' (em andamento)');
-  return `<span class="bdg dur ${concluido?'ok':''}" title="${esc(dicas.join(' · '))}">⏱ ${esc(rotulo)}</span>`;
+  return {ini,fimR,fim,hoje,concluido,dias:Math.max(0,Math.round((fim-ini.d)/86400000)),estimado:!!(ini.est||(fimR&&fimR.est))};
 }
+function duracaoHTML(p){
+  const c=calcDuracao(p);
+  if(!c)return `<span class="bdg dur na" title="Nenhuma etapa tem data de início preenchida.">⏱ sem data de início</span>`;
+  const dicas=[];
+  if(c.ini.est)dicas.push('início estimado no dia 1 de '+c.ini.rot+' (planilha: '+c.ini.orig+')');
+  if(c.fimR&&c.fimR.est)dicas.push('fim estimado no dia 1 de '+c.fimR.rot+' (planilha: '+c.fimR.orig+')');
+  dicas.push('De '+fmtData(c.ini.d)+' até '+(c.fimR?fmtData(c.fim):'hoje, '+fmtData(c.hoje)));
+  const rotulo=(c.estimado?'~':'')+fmtDuracao(c.dias)+(c.concluido?' (concluído)':' (em andamento)');
+  return `<span class="bdg dur ${c.concluido?'ok':''}" title="${esc(dicas.join(' · '))}">⏱ ${esc(rotulo)}</span>`;
+}
+/* última movimentação = maior data (início ou fim) entre todas as etapas */
+function ultimaMov(p){
+  let melhor=null;
+  for(const e of etapasOrdenadas(p)){
+    for(const v of [e.data_inicio,e.data_fim]){
+      const r=parseDataFlex(v);
+      if(r&&(!melhor||r.d>melhor.d))melhor=r;
+    }
+  }
+  return melhor;
+}
+function diasDesde(d){const h=new Date();h.setHours(0,0,0,0);return Math.floor((h-d)/86400000);}
 function metaHTML(p){
   const nEt=(p.etapas||[]).filter(e=>e&&e.nome).length;
   const nOk=(p.etapas||[]).filter(e=>e&&e.nome&&RE_CONCLUIDO.test(normTxt(e.status))).length;
@@ -228,25 +273,185 @@ function carregar(){
     .then(d=>{if(d.erro)throw new Error(d.erro);PROCS=(d.processos||[]).map(p=>{p._visN=p.etapas.reduce((m,e)=>e.nome?e.n:m,0);return p;});render();})
     .catch(e=>{document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> no endereço e se o Web App foi republicado com os arquivos <code>EquipeSocietario.gs</code> e as rotas novas.</p></div>`;});
 }
+/* ===== filtros, ordenação e busca =====
+   Os três combinam: o chip de situação e a ordenação sempre trabalham em cima do
+   que a busca deixou passar. Nada disso mexe no salvamento: redesenhar a lista
+   fecha o editor aberto, exatamente como a busca já fazia antes — e o autosave
+   captura os campos no evento "change" (que dispara no blur, antes do clique),
+   então nada digitado se perde. */
+const PARADO_DIAS=30;
+let BUSCA='';
+let FILTRO='todos';
+let SORT={k:'dur',dir:'desc'};   // padrão: mais tempo em aberto no topo
+const ORDENS=[
+  {k:'dur',rot:'Tempo',dica:'Duração do processo — o mesmo número do badge ⏱. Sem data de início vai para o fim da lista.'},
+  {k:'mov',rot:'Última movimentação',dica:'Data mais recente entre as etapas (início ou fim).'},
+  {k:'id',rot:'ID',dica:'ID do cliente.'},
+  {k:'nome',rot:'Cliente',dica:'Nome / razão social.'},
+  {k:'status',rot:'Status geral',dica:'Em andamento primeiro, concluídos por último.'}
+];
+const DIR_ROT={dur:['menor duração','maior duração'],mov:['movimentação mais antiga','movimentação mais recente'],id:['ID crescente','ID decrescente'],nome:['A → Z','Z → A'],status:['em andamento primeiro','concluídos por último']};
+function dirPadrao(k){return (k==='dur'||k==='mov')?'desc':'asc';}
+function rotuloDir(){const par=DIR_ROT[SORT.k]||['crescente','decrescente'];return (SORT.dir==='asc'?'▲ ':'▼ ')+par[SORT.dir==='asc'?0:1];}
+/* chave única do status: sem acento, sem caixa e sem espaço sobrando —
+   assim "Concluído" e "concluido " viram o mesmo chip. */
+function chaveStatus(s){return normTxt(s).replace(/\s+/g,' ');}
+function pesoStatus(k){
+  if(!k)return 5;                              // sem status vai depois de tudo
+  if(/andamento/.test(k))return 0;
+  if(/aguard|pendente|analis|protocol|exig/.test(k))return 1;
+  if(RE_CONCLUIDO.test(k))return 4;
+  if(/nao se aplica|cancel|desist|arquiv/.test(k))return 3;
+  return 2;
+}
+/* calculado uma vez por desenho e reaproveitado em filtro, contagem e ordem */
+function resumoProc(p){
+  const c=calcDuracao(p),mov=ultimaMov(p);
+  return {
+    conc:procConcluido(p),
+    dias:c?c.dias:null,
+    mov:mov?mov.d.getTime():null,
+    paradoDias:mov?diasDesde(mov.d):null,
+    semResp:!String((p.extras&&p.extras.responsavel)||'').trim(),
+    stk:chaveStatus(p.status_geral)
+  };
+}
+/* lista de status montada a partir dos dados, na ordem que a equipe usa */
+function statusDisponiveis(){
+  const mapa=new Map();
+  PROCS.forEach(p=>{
+    const bruto=String(p.status_geral==null?'':p.status_geral).replace(/\s+/g,' ').trim();
+    const k=chaveStatus(bruto);
+    if(!k)return;                              // vazio tem o chip "Sem status"
+    const it=mapa.get(k)||{k,rot:bruto,vars:new Map()};
+    it.vars.set(bruto,(it.vars.get(bruto)||0)+1);
+    mapa.set(k,it);
+  });
+  // o chip mostra a grafia mais usada na planilha (empate: a que tem maiúscula/acento)
+  const nota=v=>(v!==v.toLowerCase()?1:0)+(/[áâãàéêíóôõúüç]/i.test(v)?1:0);
+  return [...mapa.values()].map(it=>{
+    let melhor=it.rot,mc=-1;
+    it.vars.forEach((c,v)=>{if(c>mc||(c===mc&&nota(v)>nota(melhor))){melhor=v;mc=c;}});
+    return {k:it.k,rot:melhor};
+  }).sort((a,b)=>pesoStatus(a.k)-pesoStatus(b.k)||a.rot.localeCompare(b.rot,'pt'));
+}
+function passaBusca(p,alvo){
+  return !alvo||normTxt(p.id+' '+p.nome+' '+p.codigo_processo+' '+p.processo+' '+p.status_geral).includes(alvo);
+}
+function passaFiltro(p,r,f){
+  switch(f){
+    case 'todos':return true;
+    case 'aberto':return !r.conc;
+    case 'concluido':return r.conc;
+    // parado = ainda em aberto e sem nenhuma data de etapa nos últimos 30 dias.
+    // Quem não tem data nenhuma cai em "Sem datas", não aqui.
+    case 'parado':return !r.conc&&r.paradoDias!=null&&r.paradoDias>PARADO_DIAS;
+    case 'semdata':return r.mov==null;
+    case 'semresp':return r.semResp;
+    case 'semstatus':return !r.stk;
+    default:return f.slice(0,3)==='st:'?r.stk===f.slice(3):true;
+  }
+}
+function valorOrd(p,r,k){
+  if(k==='dur')return r.dias;
+  if(k==='mov')return r.mov;
+  if(k==='id')return String(p.id==null?'':p.id).trim()||null;
+  if(k==='nome')return String(p.nome||'').trim()||null;
+  if(k==='status')return r.stk?pesoStatus(r.stk)+'|'+r.stk:null;
+  return null;
+}
+function ordenar(itens){
+  const dir=SORT.dir==='asc'?1:-1;
+  return itens.map((it,i)=>({it,i,v:valorOrd(it.p,it.r,SORT.k)}))
+    .sort((a,b)=>{
+      const na=a.v==null,nb=b.v==null;
+      if(na!==nb)return na?1:-1;                // sem informação sempre no fim
+      if(!na){
+        const c=(typeof a.v==='number'&&typeof b.v==='number')
+          ?a.v-b.v
+          :String(a.v).localeCompare(String(b.v),'pt',{numeric:true,sensitivity:'base'});
+        if(c)return c*dir;
+      }
+      return String(a.it.p.id).localeCompare(String(b.it.p.id),'pt',{numeric:true})||a.i-b.i;
+    })
+    .map(x=>x.it);
+}
+function baseBusca(){
+  const alvo=normTxt(BUSCA);
+  return PROCS.filter(p=>passaBusca(p,alvo)).map(p=>({p,r:resumoProc(p)}));
+}
+function chipHTML(k,rot,n,dica,extra){
+  return `<button type="button" class="${['chip',extra||'',FILTRO===k?'on':''].filter(Boolean).join(' ')}" data-f="${esc(k)}" title="${esc(dica||'')}">${esc(rot)}<span class="n">${n}</span></button>`;
+}
+function desenharChips(base){
+  const conta=f=>base.filter(x=>passaFiltro(x.p,x.r,f)).length;
+  const semStatus=conta('semstatus');
+  let sit=`<span class="rot">Status geral</span>`+chipHTML('todos','Todos',base.length,'Todos os processos (respeitando a busca).');
+  statusDisponiveis().forEach(s=>{sit+=chipHTML('st:'+s.k,s.rot,conta('st:'+s.k),'Status Geral: '+s.rot);});
+  if(semStatus)sit+=chipHTML('semstatus','Sem status',semStatus,'Processos com o Status Geral em branco.','falta');
+  document.getElementById('chipsStatus').innerHTML=sit;
+  document.getElementById('chipsAtalho').innerHTML=
+    `<span class="rot">Atalhos</span>`+
+    chipHTML('aberto','Em aberto',conta('aberto'),'Tudo que ainda não está concluído.')+
+    chipHTML('concluido','Concluídos',conta('concluido'),'Processos concluídos.','feito')+
+    chipHTML('parado','Parados há +'+PARADO_DIAS+' dias',conta('parado'),'Em aberto e sem nenhuma data de etapa mexida nos últimos '+PARADO_DIAS+' dias.','alerta')+
+    chipHTML('semdata','Sem datas',conta('semdata'),'Nenhuma etapa com data de início ou de finalização.','falta')+
+    chipHTML('semresp','Sem responsável',conta('semresp'),'Campo Responsável (Extra 34) em branco.','falta');
+  document.getElementById('chipsOrd').innerHTML=
+    `<span class="rot">Ordenar por</span>`+
+    ORDENS.map(o=>{
+      const on=SORT.k===o.k;
+      return `<button type="button" class="chip${on?' on':''}" data-ord="${o.k}" title="${esc(o.dica+' Clique de novo para inverter.')}">${esc(o.rot)}${on?`<span class="seta">${SORT.dir==='asc'?'▲':'▼'}</span>`:''}</button>`;
+    }).join('')+
+    `<span class="rot" style="margin-left:2px">${esc(rotuloDir())}</span>`;
+}
+// contagens dos chips depois de um salvamento, sem tocar na lista (o editor aberto continua aberto)
+function atualizarChips(){if(document.getElementById('chipsStatus'))desenharChips(baseBusca());}
+function chipFocado(){
+  const el=document.activeElement;
+  if(!el||!el.classList||!el.classList.contains('chip'))return '';
+  return el.dataset.f?'f:'+el.dataset.f:(el.dataset.ord?'o:'+el.dataset.ord:'');
+}
+function restaurarFoco(chave){
+  if(!chave)return;
+  const v=chave.slice(2),attr=chave[0]==='f'?'data-f':'data-ord';
+  const el=document.querySelector('.chip['+attr+'="'+(window.CSS&&CSS.escape?CSS.escape(v):v)+'"]');
+  if(el)el.focus();
+}
+function vazioHTML(){
+  const filtrando=FILTRO!=='todos'||!!BUSCA.trim();
+  return `<div class="vazio-filtro"><div>${filtrando?'Nenhum processo com esse filtro.':'Nenhum processo na planilha ainda.'}</div>`+
+    (filtrando?`<button type="button" class="btn mini" id="limparF">Limpar filtro e busca</button>`:'')+
+    `</div>`;
+}
 function render(){
   const app=document.getElementById('app');
-  document.getElementById('cnt').textContent=PROCS.length+' processos';
   app.innerHTML=`<div class="wrap">
-    <div class="topo"><div class="linha-topo">
-      <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome, código, processo ou status…">
-      <button class="btn green" id="novo">+ Novo processo</button>
-    </div><div class="dica">Clique num processo para editar. Dentro dele, clique no nome da etapa para abrir os detalhes. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar".</div></div>
+    <div class="topo">
+      <div class="linha-topo">
+        <input class="busca" id="busca" type="search" value="${esc(BUSCA)}" placeholder="Buscar por ID, nome, código, processo ou status…">
+        <button class="btn green" id="novo">+ Novo processo</button>
+      </div>
+      <div class="linha-filtros"><div class="grupo" id="chipsStatus"></div></div>
+      <div class="linha-filtros"><div class="grupo" id="chipsAtalho"></div></div>
+      <div class="linha-filtros"><div class="grupo" id="chipsOrd"></div></div>
+      <div class="dica">Filtro, busca e ordenação funcionam juntos. Clique num processo para editar. Dentro dele, clique no nome da etapa para abrir os detalhes. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar".</div>
+    </div>
     <div class="lista" id="lista"></div></div>`;
-  desenhar('');
-  document.getElementById('busca').addEventListener('input',e=>desenhar(e.target.value));
+  desenhar();
+  document.getElementById('busca').addEventListener('input',e=>{BUSCA=e.target.value;desenhar();});
   document.getElementById('novo').addEventListener('click',abrirNovo);
 }
-function desenhar(termo){
-  const alvo=normTxt(termo);
+function desenhar(){
+  const foco=chipFocado();
+  const base=baseBusca();
+  const arr=ordenar(base.filter(x=>passaFiltro(x.p,x.r,FILTRO)));
+  desenharChips(base);
   const lista=document.getElementById('lista');
-  const arr=PROCS.filter(p=>!alvo||normTxt(p.id+' '+p.nome+' '+p.codigo_processo+' '+p.processo+' '+p.status_geral).includes(alvo))
-    .sort((a,b)=>String(a.id).localeCompare(String(b.id),'pt',{numeric:true}));
-  lista.innerHTML=arr.map(cardHTML).join('')||'<div class="dica">Nenhum processo encontrado.</div>';
+  if(lista)lista.innerHTML=arr.map(x=>cardHTML(x.p)).join('')||vazioHTML();
+  const cnt=document.getElementById('cnt');
+  if(cnt)cnt.textContent=arr.length+' de '+PROCS.length+' processos';
+  restaurarFoco(foco);
 }
 function cardHTML(p){
   return `<div class="proc" data-row="${p.row}">
@@ -392,6 +597,7 @@ async function salvarAuto(row,dados){
     const h=document.querySelector(`.proc[data-row="${row}"] .pmeta`);
     if(h)h.innerHTML=metaHTML(p);
     const nome=document.querySelector(`.proc[data-row="${row}"] .pnome`);if(nome)nome.textContent=p.nome||'(sem nome)';
+    try{atualizarChips();}catch(_){}   // contagem dos chips em dia; a lista fica como está
   }catch(e){setMsg(row,'msg err','Não salvou: '+(e.message||e));}
 }
 async function addObs(row,btn,tipo,n){
@@ -420,7 +626,7 @@ async function criarNovo(btn){
   btn.disabled=true;msg.className='msg';msg.textContent='Criando…';
   try{
     const d=await postAcao({acao:'soc_novo',id,nome:document.getElementById('n-nome').value.trim(),codigo_processo:document.getElementById('n-cod').value.trim(),processo:proc,status_geral:document.getElementById('n-stg').value});
-    fecharNovo();await carregar();
+    fecharNovo();FILTRO='todos';BUSCA='';await carregar();   // o processo novo não pode nascer escondido por um filtro
     const el=document.querySelector(`.proc[data-row="${d.row}"]`);if(el){el.scrollIntoView({block:'center'});abrirEditor(d.row);}
   }catch(e){msg.className='msg err';msg.textContent=e.message||e;}
   btn.disabled=false;
@@ -428,6 +634,11 @@ async function criarNovo(btn){
 
 // eventos (delegação)
 document.addEventListener('click',e=>{
+  const cf=e.target.closest('.chip[data-f]');
+  if(cf){FILTRO=cf.dataset.f;desenhar();return;}
+  const co=e.target.closest('.chip[data-ord]');
+  if(co){const k=co.dataset.ord;if(SORT.k===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.k=k;SORT.dir=dirPadrao(k);}desenhar();return;}
+  if(e.target.closest('#limparF')){FILTRO='todos';BUSCA='';const b=document.getElementById('busca');if(b)b.value='';desenhar();return;}
   const et=e.target.closest('[data-etapa-toggle]');if(et){alternarEtapa(et);return;}
   const tg=e.target.closest('[data-toggle]');if(tg){abrirEditor(tg.dataset.toggle);return;}
   const ag=e.target.closest('[data-addgeral]');if(ag){addObs(ag.closest('.proc').dataset.row,ag,'geral');return;}
@@ -453,6 +664,37 @@ document.addEventListener('input',e=>{
 
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
 carregar();
+</script>
+<script>
+/* Logo = home do colaborador, levando a chave (e o código de quem está usando).
+   Roda depois dos scripts da página, quando o "← Painel" já foi montado. */
+(function(){
+  var lg = document.getElementById('logo-home');
+  if (lg) {
+    var aplica = function () {
+      var vt = document.getElementById('volta');
+      var href = (vt && vt.getAttribute('href')) || '';
+      if (!href || href === 'colaborador.html') {
+        try { href = 'colaborador.html?chave=' + encodeURIComponent(chaveAtual()); }
+        catch (e) { href = 'colaborador.html'; }
+        try {
+          var c = (typeof respAtual === 'function') ? respAtual()
+                : (typeof codAtual === 'function') ? codAtual() : '';
+          if (c) href += '&cod=' + encodeURIComponent(c);
+        } catch (e) {}
+      }
+      lg.setAttribute('href', href);
+    };
+    aplica();
+    setTimeout(aplica, 0);
+  }
+  /* Com <base target="_blank">, um href="#" abriria uma guia em branco.
+     (é o caso do "Planilha ↗" antes da API responder) */
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('a[href="#"]');
+    if (a) e.preventDefault();
+  }, true);
+})();
 </script>
 </body>
 </html>

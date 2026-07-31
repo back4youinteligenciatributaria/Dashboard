@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Guia nova por padrão: link clicado não tira o colaborador de onde ele estava. -->
+<base target="_blank">
 <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -106,17 +108,22 @@ textarea{resize:vertical;min-height:34px;line-height:1.35}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(max-width:720px){.resumo{grid-template-columns:1fr}.barra .tag,.barra .cnt{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Todo link abre em guia nova (<base target="_blank">) — o colaborador nunca
+   perde a tela em que estava. Logo e "← Painel" são a exceção: são o gesto de
+   VOLTAR, então trocam a guia atual (target="_self"). */
+.barra a.logo{color:inherit;text-decoration:none;cursor:pointer}
+.barra a.logo:hover{opacity:.82}
 </style>
 </head>
 <body>
 <div class="barra">
-  <span class="logo">back<span class="y">4you</span></span>
+  <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag">🔐 Certificados e procurações</span>
   <span class="spacer"></span>
   <span class="save-status" id="saveStatus"></span>
   <span class="cnt" id="cnt"></span>
   <a class="plan" id="plan" href="#" target="_blank" rel="noopener">Planilha ↗</a>
-  <a class="volta" id="volta" href="colaborador.html">← Painel</a>
+  <a class="volta" id="volta" href="colaborador.html" target="_self">← Painel</a>
 </div>
 <div id="app"><div class="state"><div class="spin"></div><p>Carregando certificados…</p></div></div>
 
@@ -141,7 +148,15 @@ const DOCS=[
   {k:'venc_spe',curto:'SPE',label:'Venc. procuração SPE'}
 ];
 let LINHAS=[], META={};
-let FILTRO='todos';          // todos | falta | vencidos | d30 | d60 | d90 | semlinha
+/* ?f=<filtro> na URL abre a página já filtrada (deep-link vindo do painel
+   do colaborador). Só aceita os valores que o FILTRO realmente conhece —
+   qualquer outra coisa cai em 'todos'. */
+const FILTROS_OK=['todos','falta','vencidos','d30','d60','d90','semlinha'];
+function filtroDaURL(){
+  const f=(new URLSearchParams(location.search).get('f')||'').trim().toLowerCase();
+  return FILTROS_OK.indexOf(f)>=0?f:'todos';
+}
+let FILTRO=filtroDaURL();    // todos | falta | vencidos | d30 | d60 | d90 | semlinha
 let DOC='todos';             // todos | venc_certificado | venc_ecac | venc_spe
 let SO_ATIVOS=true;
 let SORT={key:'urgencia',dir:'asc'};
@@ -443,6 +458,37 @@ async function carregar(){
 }
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
 carregar();
+</script>
+<script>
+/* Logo = home do colaborador, levando a chave (e o código de quem está usando).
+   Roda depois dos scripts da página, quando o "← Painel" já foi montado. */
+(function(){
+  var lg = document.getElementById('logo-home');
+  if (lg) {
+    var aplica = function () {
+      var vt = document.getElementById('volta');
+      var href = (vt && vt.getAttribute('href')) || '';
+      if (!href || href === 'colaborador.html') {
+        try { href = 'colaborador.html?chave=' + encodeURIComponent(chaveAtual()); }
+        catch (e) { href = 'colaborador.html'; }
+        try {
+          var c = (typeof respAtual === 'function') ? respAtual()
+                : (typeof codAtual === 'function') ? codAtual() : '';
+          if (c) href += '&cod=' + encodeURIComponent(c);
+        } catch (e) {}
+      }
+      lg.setAttribute('href', href);
+    };
+    aplica();
+    setTimeout(aplica, 0);
+  }
+  /* Com <base target="_blank">, um href="#" abriria uma guia em branco.
+     (é o caso do "Planilha ↗" antes da API responder) */
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('a[href="#"]');
+    if (a) e.preventDefault();
+  }, true);
+})();
 </script>
 </body>
 </html>

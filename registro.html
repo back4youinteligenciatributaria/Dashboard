@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Guia nova por padrão: link clicado não tira o colaborador de onde ele estava. -->
+<base target="_blank">
 <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -45,6 +47,36 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:6px;font-size:11px}
 .chip.on .n{background:rgba(255,255,255,.25)}
 .dica{font-size:11.5px;color:var(--muted);padding:8px 16px 0}
+
+/* ---------- ordenação ---------- */
+.chips .rot{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px;align-self:center}
+.ord-row{margin-top:7px}
+.chip .ord{margin-left:5px;font-size:10px;opacity:.9}
+.ord-info{font-size:11.5px;color:var(--muted);font-weight:700;margin-top:7px}
+.ord-info b{color:var(--ink-2)}
+
+/* ---------- selo de completude ---------- */
+.selo{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap;letter-spacing:.2px;
+  background:#EEF3F1;color:#4a6360;border:1px solid #D9E5E2;cursor:help}
+.selo.ok{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.selo.alerta{background:var(--amber-soft);color:#8a5117;border-color:var(--amber-line)}
+
+/* ---------- cards de resumo (mesmo padrão do certificados.html) ---------- */
+.resumo{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:10px 16px 0}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.rhead{padding:9px 13px;font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
+.rcard.incompletos .rhead{background:var(--amber)}
+.rcard.semdado .rhead{background:#6B8486}
+.rcard.semdado2 .rhead{background:var(--brand-teal)}
+.rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:11.5px}
+.rlista{max-height:158px;overflow:auto;padding:5px}
+.tk{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12px}
+.tk:hover{background:var(--surface-warm)}
+.tk .d{font-weight:800;white-space:nowrap;color:var(--brand-teal)}
+.tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk .tp{font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
+.rvazio{color:var(--muted);font-size:12px;padding:9px}
+@media(max-width:760px){.resumo{grid-template-columns:1fr}}
 
 /* ---------- lista de clientes ---------- */
 .lista{padding:12px 16px 48px;display:flex;flex-direction:column;gap:8px}
@@ -147,17 +179,22 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 }
 @media(max-width:600px){.grid,.modal .grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Todo link abre em guia nova (<base target="_blank">) — o colaborador nunca
+   perde a tela em que estava. Logo e "← Painel" são a exceção: são o gesto de
+   VOLTAR, então trocam a guia atual (target="_self"). */
+.barra a.logo{color:inherit;text-decoration:none;cursor:pointer}
+.barra a.logo:hover{opacity:.82}
 </style>
 </head>
 <body>
 <div class="barra">
-  <span class="logo">back<span class="y">4you</span></span>
+  <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag">📇 Registros de clientes</span>
   <span class="spacer"></span>
   <span class="save-status" id="saveStatus"></span>
   <span class="cnt" id="cnt"></span>
   <a class="plan" id="plan" href="#" target="_blank" rel="noopener" hidden>Planilha ↗</a>
-  <a class="volta" id="volta" href="colaborador.html">← Painel</a>
+  <a class="volta" id="volta" href="colaborador.html" target="_self">← Painel</a>
 </div>
 
 <div id="app"><div class="state"><div class="spin"></div><p>Carregando os registros de clientes…</p></div></div>
@@ -299,6 +336,131 @@ function montarCampos(headers,modo){
 let COLUNAS=[],TRAVADAS=new Set(),CLIENTES=[],META={},CAMPOS_EDIT=[],COL={};
 let ABERTOS=new Set(),FILTRO='todos',TERMO='';
 
+/* ===================================================================
+   Completude do cadastro — a regra do selo "N campos vazios"
+   -------------------------------------------------------------------
+   Entram na conta só as colunas EDITÁVEIS do cadastro. Ficam de fora:
+   · as travadas (🔒) — o sistema é quem preenche;
+   · "Data de fim da contabilidade" — em branco ali quer dizer contrato
+     em andamento, não buraco no cadastro;
+   · "Ativo" — é situação do cliente, não campo de cadastro;
+   · toda coluna preenchida por menos de 20% dos clientes (coluna de
+     exceção: CNES, obs de aluguel e afins). O corte sai dos próprios
+     dados que vieram, então se ajusta sozinho quando a equipe cria uma
+     coluna nova ou passa a usar uma que estava parada.
+   O selo fica âmbar quando falta mais de um terço dos campos esperados
+   (mínimo de 3), que é quando o cadastro deixa de ser "quase pronto".
+   =================================================================== */
+const FORA_DA_CONTA=['data de fim da contabilidade','ativo'];
+const PISO_USO=0.2;
+let COLS_COMPLETUDE=[],LIMIAR_VAZIOS=99;
+function calcularCompletude(){
+  const base=CLIENTES.length||1;
+  COLS_COMPLETUDE=COLUNAS.filter(col=>{
+    const k=norm(col);
+    if(!k||ehTravada(col)||FORA_DA_CONTA.indexOf(k)>=0)return false;
+    let preenchidas=0;
+    CLIENTES.forEach(c=>{if(valorDe(c,col))preenchidas++;});
+    return preenchidas/base>=PISO_USO;
+  });
+  LIMIAR_VAZIOS=Math.max(3,Math.ceil(COLS_COMPLETUDE.length/3));
+  CLIENTES.forEach(c=>{c._v=null;});
+}
+function vaziasDe(cli){return COLS_COMPLETUDE.filter(col=>!valorDe(cli,col));}
+function vaziosDe(cli){if(cli._v==null)cli._v=vaziasDe(cli).length;return cli._v;}
+function tituloSelo(cli){
+  const f=vaziasDe(cli);
+  const tot=COLS_COMPLETUDE.length;
+  if(!f.length)return 'Os '+tot+' campos considerados estão preenchidos.';
+  return 'Em branco: '+f.slice(0,12).join(', ')+(f.length>12?' e mais '+(f.length-12):'')+' — de '+tot+' campos considerados.';
+}
+function seloHTML(cli){
+  if(!COLS_COMPLETUDE.length)return '';
+  const n=vaziosDe(cli);
+  const cl=n===0?'ok':(n>=LIMIAR_VAZIOS?'alerta':'');
+  const txt=n===0?'cadastro completo':(n+(n===1?' campo vazio':' campos vazios'));
+  return `<span class="selo ${cl}" title="${esc(tituloSelo(cli))}">${txt}</span>`;
+}
+
+/* ---------------- ordenação ---------------- */
+const ORDENS=[
+  {k:'id',rot:'ID',asc:'do menor para o maior',desc:'do maior para o menor'},
+  {k:'nome',rot:'Nome',asc:'A → Z',desc:'Z → A'},
+  {k:'inicio',rot:'Início da contabilidade',asc:'mais antigo primeiro',desc:'mais novo primeiro',dep:'inicio'},
+  {k:'ativo',rot:'Ativo/Inativo',asc:'ativos primeiro',desc:'inativos primeiro',dep:'ativo'},
+  {k:'vazios',rot:'Campos vazios',asc:'mais incompleto primeiro',desc:'mais completo primeiro'}
+];
+let ORDEM='id',DIR='asc';
+function ordensVivas(){return ORDENS.filter(o=>!o.dep||COL[o.dep]);}
+function porId(a,b){return String(a.id).localeCompare(String(b.id),'pt',{numeric:true});}
+/* aceita aaaa-mm-dd e dd/mm/aaaa; texto livre ("a definir") conta como sem data */
+function chaveInicio(cli){
+  const v=valorDe(cli,COL.inicio);
+  let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return (+m[1])*10000+(+m[2])*100+(+m[3]);
+  m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m)return (+m[3])*10000+(+m[2])*100+(+m[1]);
+  return null;
+}
+function ordenar(arr){
+  const d=DIR==='asc'?1:-1;
+  return arr.sort((a,b)=>{
+    if(ORDEM==='nome')return normTxt(a.nome).localeCompare(normTxt(b.nome),'pt')*d||porId(a,b);
+    if(ORDEM==='inicio'){
+      const x=chaveInicio(a),y=chaveInicio(b);
+      if(x==null&&y==null)return porId(a,b);
+      if(x==null)return 1;                       /* sem data fica sempre no fim */
+      if(y==null)return -1;
+      return (x-y)*d||porId(a,b);
+    }
+    if(ORDEM==='ativo'){
+      const rank=c=>{const p=ativoDe(c);return p===true?0:p===false?1:2;};
+      const ra=rank(a),rb=rank(b);
+      if(ra===2||rb===2)return ra===rb?porId(a,b):ra-rb;   /* sem informação no fim */
+      return (ra-rb)*d||porId(a,b);
+    }
+    if(ORDEM==='vazios')return (vaziosDe(b)-vaziosDe(a))*d||porId(a,b);
+    return porId(a,b)*d;
+  });
+}
+function desenharOrdem(){
+  const box=document.getElementById('ordChips');if(!box)return;
+  const vivas=ordensVivas();
+  if(!vivas.some(o=>o.k===ORDEM)){ORDEM='id';DIR='asc';}
+  box.innerHTML='<span class="rot">Ordenar por</span>'+vivas.map(o=>
+    `<button type="button" class="chip ${ORDEM===o.k?'on':''}" data-s="${o.k}">${esc(o.rot)}${ORDEM===o.k?`<span class="ord">${DIR==='asc'?'▲':'▼'}</span>`:''}</button>`).join('');
+  const at=vivas.find(o=>o.k===ORDEM)||vivas[0];
+  const info=document.getElementById('ordInfo');
+  if(info&&at)info.innerHTML='Ordenado por <b>'+esc(at.rot)+'</b> — '+esc(DIR==='asc'?at.asc:at.desc)+'. Clicar de novo no mesmo critério inverte.';
+}
+
+/* ---------------- cards de resumo ---------------- */
+function itemResumo(cli,tp){
+  return `<div class="tk" data-goto="${esc(cli.id)}" title="Abrir o cadastro de ${esc(cli.nome||cli.id)}">
+    <span class="d">${esc(cli.id)}</span><span class="lb">${esc(cli.nome||'(sem nome)')}</span>
+    <span class="tp">${esc(tp)}</span></div>`;
+}
+function cardResumo(cls,titulo,tit,lista,render){
+  return `<div class="rcard ${cls}"><div class="rhead" title="${esc(tit)}"><span>${esc(titulo)}</span><span class="n">${lista.length}</span></div>
+    <div class="rlista">${lista.length?lista.slice(0,60).map(render).join(''):'<div class="rvazio">Nada por aqui 🎉</div>'}</div></div>`;
+}
+function desenharResumo(){
+  const el=document.getElementById('resumo');if(!el)return;
+  /* cadastro pela metade de cliente inativo não é tarefa de ninguém: fica fora dos cards */
+  const base=CLIENTES.filter(c=>ativoDe(c)!==false);
+  const incompletos=base.filter(c=>vaziosDe(c)>0).sort((a,b)=>vaziosDe(b)-vaziosDe(a)||porId(a,b));
+  const cards=[cardResumo('incompletos','Cadastros mais incompletos',
+    'Clientes que não estão marcados como inativos, do mais vazio para o mais completo. Clique para abrir o cadastro.',
+    incompletos,c=>itemResumo(c,vaziosDe(c)+' vazios'))];
+  if(COL.cnpj)cards.push(cardResumo('semdado','Sem CNPJ ou CPF',
+    'Clientes não inativos sem CNPJ/CPF na aba Registro.',
+    base.filter(c=>!valorDe(c,COL.cnpj)),c=>itemResumo(c,'sem CNPJ')));
+  if(COL.inicio)cards.push(cardResumo('semdado2','Sem data de início',
+    'Clientes não inativos sem data de início da contabilidade.',
+    base.filter(c=>!valorDe(c,COL.inicio)),c=>itemResumo(c,'sem início')));
+  el.innerHTML=cards.join('');
+}
+
 function ehTravada(col){return TRAVADAS.has(norm(col));}
 function valorDe(cli,col){return col?String((cli.valores||{})[col]||'').trim():'';}
 /** Acha o nome EXATO da coluna a partir de apelidos normalizados (exato e depois "contém"). */
@@ -345,7 +507,7 @@ function chaveBusca(cli){
 }
 function visiveis(){
   const fn=fnFiltro(FILTRO),termo=normTxt(TERMO);
-  return CLIENTES.filter(c=>fn(c)&&(!termo||chaveBusca(c).includes(termo)));
+  return ordenar(CLIENTES.filter(c=>fn(c)&&(!termo||chaveBusca(c).includes(termo))));
 }
 
 /* ---------------- lista ---------------- */
@@ -356,7 +518,8 @@ function metaHTML(cli){
   add(COL.cnpj,'CNPJ');add(COL.regime,'Regime');add(COL.produtos,'Produtos');
   const at=ativoDe(cli);
   if(at!==null)its.push(`<span class="pill ${at?'sim':'nao'}">${at?'Ativo':'Inativo'}</span>`);
-  return its.join('');
+  its.push(seloHTML(cli));
+  return its.filter(Boolean).join('');
 }
 function cabecaHTML(cli){
   return `<button type="button" class="cli-head" aria-expanded="${ABERTOS.has(cli.id)?'true':'false'}">
@@ -419,7 +582,7 @@ function desenharLista(){
   }
   el.innerHTML=arr.map(c=>`<div class="cli${ABERTOS.has(c.id)?' aberto':''}" data-id="${esc(c.id)}">${cabecaHTML(c)}${ABERTOS.has(c.id)?corpoHTML(c):''}</div>`).join('');
 }
-function redesenhar(){desenharChips();desenharLista();}
+function redesenhar(){desenharChips();desenharOrdem();desenharResumo();desenharLista();}
 
 function clientePorId(id){return CLIENTES.find(c=>String(c.id)===String(id));}
 function alternar(id,forcar){
@@ -472,9 +635,9 @@ async function salvar(id){
     /* o nome pode ter mudado: reflete no cabeçalho e na busca */
     cli.nome=valorDe(cli,COL.nome)||cli.nome;
     if(COL.ativo)cli.ativo=valorDe(cli,COL.ativo);
-    cli._b=null;
+    cli._b=null;cli._v=null;
     atualizarCabeca(id);
-    desenharChips();
+    desenharChips();desenharResumo();
   }catch(e){setSave('err','Não salvou: '+(e.message||e),String(e.message||e));}
 }
 function atualizarCabeca(id){
@@ -627,6 +790,12 @@ document.addEventListener('click',e=>{
   if(head){const no=head.closest('.cli');if(no)alternar(no.dataset.id);return;}
   const chip=e.target.closest('.chip[data-f]');
   if(chip){FILTRO=chip.dataset.f;redesenhar();return;}
+  const ord=e.target.closest('.chip[data-s]');
+  if(ord){const k=ord.dataset.s;
+    if(ORDEM===k)DIR=(DIR==='asc'?'desc':'asc');else{ORDEM=k;DIR='asc';}
+    desenharOrdem();desenharLista();return;}
+  const tk=e.target.closest('.tk[data-goto]');
+  if(tk){irPara(tk.dataset.goto);return;}
   if(e.target.closest('#btnNovo')){abrirModal();return;}
   if(e.target.closest('#fechaModal')){fecharModal();return;}
   if(e.target.id==='modal'){fecharModal();return;}
@@ -660,8 +829,11 @@ function layout(){
       <button class="btn-novo" id="btnNovo" type="button">+ Novo cliente</button>
     </div>
     <div class="chips" id="chips"></div>
+    <div class="chips ord-row" id="ordChips"></div>
+    <div class="ord-info" id="ordInfo"></div>
   </div>
-  <div class="dica">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho na aba <b>Registro</b>${META.aba&&META.aba!=='Registro'?' ('+esc(META.aba)+')':''}. Cliente novo nasce pelo botão verde — ele cria as pastas e as planilhas antes de gravar.</div>
+  <div class="dica">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho na aba <b>Registro</b>${META.aba&&META.aba!=='Registro'?' ('+esc(META.aba)+')':''}. Cliente novo nasce pelo botão verde — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Os cards ignoram quem está inativo.</div>
+  <div class="resumo" id="resumo"></div>
   <div class="lista" id="lista"></div>`;
 }
 async function carregar(op){
@@ -675,6 +847,7 @@ async function carregar(op){
     TRAVADAS=new Set((d.travadas||[]).map(norm));
     CLIENTES=(d.clientes||[]).map(c=>Object.assign({},c,{id:String(c.id||''),valores:c.valores||{}}));
     mapearColunas();
+    calcularCompletude();
     CAMPOS_EDIT=montarCampos(COLUNAS,'edicao');
     if(op.expandir)ABERTOS.add(String(op.expandir));
     const busca=document.getElementById('busca');
@@ -705,6 +878,37 @@ async function carregar(op){
 }
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
 carregar();
+</script>
+<script>
+/* Logo = home do colaborador, levando a chave (e o código de quem está usando).
+   Roda depois dos scripts da página, quando o "← Painel" já foi montado. */
+(function(){
+  var lg = document.getElementById('logo-home');
+  if (lg) {
+    var aplica = function () {
+      var vt = document.getElementById('volta');
+      var href = (vt && vt.getAttribute('href')) || '';
+      if (!href || href === 'colaborador.html') {
+        try { href = 'colaborador.html?chave=' + encodeURIComponent(chaveAtual()); }
+        catch (e) { href = 'colaborador.html'; }
+        try {
+          var c = (typeof respAtual === 'function') ? respAtual()
+                : (typeof codAtual === 'function') ? codAtual() : '';
+          if (c) href += '&cod=' + encodeURIComponent(c);
+        } catch (e) {}
+      }
+      lg.setAttribute('href', href);
+    };
+    aplica();
+    setTimeout(aplica, 0);
+  }
+  /* Com <base target="_blank">, um href="#" abriria uma guia em branco.
+     (é o caso do "Planilha ↗" antes da API responder) */
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('a[href="#"]');
+    if (a) e.preventDefault();
+  }, true);
+})();
 </script>
 </body>
 </html>
