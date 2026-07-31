@@ -393,6 +393,112 @@ table.rat{min-width:560px} table.nf{min-width:620px}
   .dv-row{grid-template-columns:1fr auto}
   .dv-in{width:120px}
 }
+
+/* ═════════ Indicadores — bloco recolhido (o painel já é denso: nasce fechado) ═════════ */
+.bloco{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);margin:22px 0 4px;overflow:hidden}
+.bloco>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:16px 20px}
+.bloco>summary::-webkit-details-marker{display:none}
+.bloco>summary::marker{content:''}
+.bloco>summary:hover{background:var(--surface-warm)}
+.bloco>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.bloco[open]>summary{background:var(--surface-warm);border-bottom:1px solid var(--line)}
+.bloco-ico{flex-shrink:0;width:34px;height:34px;border-radius:var(--radius-sm);background:var(--receita-soft);
+  color:var(--brand-teal);display:flex;align-items:center;justify-content:center}
+.bloco-ico svg{width:18px;height:18px}
+.bloco-t{flex:1;min-width:0}
+.bloco-t b{display:block;font-size:var(--fs-4);font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.bloco-t span{display:block;font-size:var(--fs-2);color:var(--muted);margin-top:2px;line-height:1.45}
+.chev{flex-shrink:0;width:20px;height:20px;color:var(--muted);transition:transform .22s ease}
+.bloco[open]>summary .chev{transform:rotate(180deg)}
+.bloco-body{padding:16px 20px 20px}
+
+.ind-card{padding:18px 20px;margin-bottom:14px}
+.ind-card:last-child{margin-bottom:0}
+.ind-h>b{display:block;font-size:var(--fs-4);font-weight:700;letter-spacing:-.01em}
+.ind-h>span{display:block;font-size:var(--fs-2);color:var(--muted);margin-top:3px;line-height:1.45;max-width:78ch}
+.ind-h>span b{color:var(--ink-2);font-weight:800}
+.ind-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin:14px 0}
+.ind-tile{background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px;min-width:0}
+.ind-tile .v{font-size:var(--fs-5);font-weight:800;letter-spacing:-.02em;margin-top:6px;
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ind-tile .s{font-size:var(--fs-2);color:var(--muted);margin-top:4px;line-height:1.4}
+/* Variação: a COR segue a polaridade do indicador (imposto subindo é ruim, receita
+   subindo é boa) — nunca o sinal. E nunca vai sozinha: tem seta + palavra. */
+.ind-var{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px;
+  font-size:var(--fs-2);font-weight:800;padding:3px 9px;border-radius:var(--radius-sm);font-variant-numeric:tabular-nums}
+.ind-var em{font-style:normal;font-weight:600}
+.ind-var.bom{background:#E7F4EC;color:#16713E}
+.ind-var.ruim{background:#F7E4E1;color:#9B2C1D}
+.ind-var.igual{background:#EFE7DA;color:var(--ink-2)}
+.ind-var.sem{background:transparent;color:var(--muted);font-weight:600;padding-left:0}
+.ind-chart{margin-top:4px}
+.ind-chart h4{font-size:var(--fs-3);font-weight:700;margin-bottom:2px}
+.ind-chart .sub{font-size:var(--fs-2);color:var(--muted);margin-bottom:10px;line-height:1.45}
+.ind-vazio{background:var(--surface-warm);border:1px dashed var(--line-2);border-radius:var(--radius);
+  padding:14px 16px;font-size:var(--fs-3);color:var(--ink-2);line-height:1.55}
+.ind-vazio b{color:var(--ink)}
+
+/* Medidor de progresso (limite do Simples / Fator R): barra, nunca rosca de 2 fatias */
+.meter{margin-top:12px}
+.meter-bar{position:relative;height:14px;border-radius:var(--radius-pill);background:#EFE7DA;border:1px solid var(--line);overflow:hidden}
+.meter-fill{position:absolute;inset:0 auto 0 0;border-radius:var(--radius-pill)}
+.meter-mark{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.6}
+.meter-legs{display:flex;justify-content:space-between;gap:12px;margin-top:7px;font-size:var(--fs-1);color:var(--muted);font-weight:600}
+.meter-nota{font-size:var(--fs-1);color:var(--muted);margin-top:5px;line-height:1.45}
+.selo-status{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-2);font-weight:800;padding:3px 10px;border-radius:var(--radius-pill)}
+.selo-status.bom{background:#E7F4EC;color:#16713E}
+.selo-status.atencao{background:#FBF0DD;color:#8A5A0B}
+.selo-status.ruim{background:#F7E4E1;color:#9B2C1D}
+
+/* Comparativo período a período */
+table.cmp{width:100%;border-collapse:collapse;font-size:var(--fs-3)}
+table.cmp th{text-align:right;font-size:var(--fs-1);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;padding:0 8px 7px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+table.cmp th:first-child{text-align:left;padding-left:0}
+table.cmp td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;font-variant-numeric:tabular-nums}
+table.cmp td:first-child{text-align:left;font-weight:600;padding-left:0}
+table.cmp tbody tr:last-child td{border-bottom:none}
+table.cmp .cmp-c{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+table.cmp .cmp-v{font-weight:800;white-space:nowrap}
+table.cmp .ind-var{margin-top:0}
+
+/* "Como calculamos" — cada número auditável sem sair da página */
+details.como{margin-top:14px;border-top:1px dashed var(--line-2);padding-top:10px}
+details.como>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  font-size:var(--fs-2);font-weight:700;color:var(--brand-teal)}
+details.como>summary::-webkit-details-marker{display:none}
+details.como>summary::marker{content:''}
+details.como>summary:hover{color:var(--brand-dark)}
+details.como>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
+details.como>summary .car{transition:transform .18s}
+details.como[open]>summary .car{transform:rotate(180deg)}
+.como-body{margin-top:10px;background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px}
+.como-f{font-size:var(--fs-3);font-weight:700;color:var(--ink);line-height:1.5;margin-bottom:8px}
+.como-l{display:flex;justify-content:space-between;gap:12px;font-size:var(--fs-2);color:var(--ink-2);
+  padding:5px 0;border-top:1px solid var(--line)}
+.como-l:first-of-type{border-top:none}
+.como-l b{font-variant-numeric:tabular-nums;color:var(--ink);text-align:right;min-width:0}
+.como-l span{min-width:0}
+.como-fonte{font-size:var(--fs-1);color:var(--muted);margin-top:9px;line-height:1.5}
+@media(max-width:600px){
+  .bloco>summary{padding:14px 15px}.bloco-body{padding:14px 15px 18px}
+  .ind-card{padding:15px 15px}
+  .ind-tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .ind-tile{padding:12px 12px}.ind-tile .v{font-size:var(--fs-4)}
+  /* No celular a tabela vira um cartão por indicador — ninguém rola tabela de lado. */
+  table.cmp{display:block;font-size:var(--fs-2)}
+  table.cmp thead{display:none}
+  table.cmp tbody,table.cmp tr,table.cmp td{display:block;width:100%}
+  table.cmp tr{border:1px solid var(--line);border-radius:var(--radius);padding:11px 13px;margin-bottom:10px}
+  table.cmp td{border:none;padding:5px 0;display:flex;justify-content:space-between;align-items:baseline;gap:12px;text-align:left}
+  table.cmp td:first-child{font-size:var(--fs-3);font-weight:800;padding:0 0 7px;margin-bottom:5px;border-bottom:1px solid var(--line);display:block}
+  table.cmp td[data-c]::before{content:attr(data-c);font-size:var(--fs-1);color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.05em;flex:1;min-width:0}
+  table.cmp .cmp-c{align-items:flex-end;flex-shrink:0}
+  table.cmp tbody tr:last-child td{border-bottom:none}
+  table.cmp tbody tr:last-child td:first-child{border-bottom:1px solid var(--line)}
+}
+@media(max-width:380px){.ind-tiles{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1220,6 +1326,16 @@ function render(M){
       <div class="card chart"><h3>Composição do mês</h3><div class="sub" id="c3sub"></div><div class="cbox" style="height:170px"><canvas id="c3"></canvas></div><div class="pie-legend" id="c3-lg"></div></div>
     </div>`);
 
+  // Indicadores: dashboards comparativos. Nasce FECHADO — o painel já é denso.
+  appendAll(wrap,`<details class="bloco" id="bloco-ind">
+      <summary>
+        <span class="bloco-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+        <span class="bloco-t"><b>Indicadores</b><span>Faturamento, carga tributária e comparativos com os meses anteriores — com a conta de cada número</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="bloco-body" id="ind-body"></div>
+    </details>`);
+
   appendAll(wrap,`<div class="sec-head" id="rateio"><div><h2>Rateio por centro de custo</h2><p id="rat-sub"></p></div></div>
     <div class="rateio-grid">
       <div class="card" style="padding:18px 20px"><div class="table-scroll"><table class="rat" id="rat">
@@ -1254,6 +1370,9 @@ function render(M){
   atalhosDeBusca('nf-search',()=>{NF_BUSCA='';desenharNotas(M,SEL);});
   document.getElementById('nf-pend').addEventListener('click',()=>{NF_PEND=!NF_PEND;desenharNotas(M,SEL);});
   document.getElementById('nf-ano').addEventListener('click',()=>{NF_ANO=!NF_ANO;desenharNotas(M,SEL);});
+  // Gráficos dos indicadores: só na primeira abertura (canvas 0x0 dentro de <details> fechado não renderiza)
+  const detInd=document.getElementById('bloco-ind');
+  if(detInd) detInd.addEventListener('toggle',()=>{ if(detInd.open && !IND.charts) desenharIndCharts(M,SEL); });
 
   pintarMes(M,SEL);
   computarPendencias(M);                                        // banner de pendências + resumo p/ a home
@@ -1330,6 +1449,7 @@ function pintarMes(M,comp){
 
   desenharRateio(M,comp,tot);
   desenharNotas(M,comp);
+  pintarIndicadores(M,comp);
 
   if(CHARTS){
     CHARTS.c1.data.datasets[0].backgroundColor=M.empresa.map(r2=>r2.competencia===comp?PAL.iss:'#D9CDBB'); CHARTS.c1.update('none');
@@ -1663,6 +1783,468 @@ function desenharGraficos(M){
   const c3=new Chart(document.getElementById('c3'),{type:'doughnut',data:{labels:M.tribs.map(t=>t.n),datasets:[{data:M.tribs.map(()=>0),backgroundColor:M.tribs.map(t=>t.c),borderWidth:0}]},options:donut});
   const c5=new Chart(document.getElementById('c5'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:0}]},options:donut});
   return {c1,c2,c3,c5};
+}
+
+/* ═══════════════════ INDICADORES (dashboards comparativos) ═══════════════════
+   Bloco recolhido — o painel já é denso, então nada disto aparece sem o cliente pedir.
+   Regras de gráfico aplicadas aqui:
+   • NUNCA dois eixos y no mesmo gráfico. Reais e percentual viram gráficos separados
+     (ou um número). Alinhar duas escalas diferentes inventa uma correlação que não existe.
+   • Séries categóricas na ordem fixa já validada (SLOT). Status (bom/atenção/ruim)
+     sempre com rótulo ou ícone junto — cor nunca sozinha.
+   • Polaridade: a cor da seta segue o INDICADOR (faturamento subindo é bom, imposto
+     subindo é ruim), não o sinal da variação.
+   • Sem dado → estado vazio honesto, nunca um gráfico zerado.
+   • Cada card tem "Como calculamos": a fórmula em português e os componentes com valor. */
+const SLOT=['#009488','#B4530F','#6B4FA0','#7A8B3D'];
+const SLOT_SOFT=['rgba(0,148,136,.34)','rgba(180,83,15,.34)'];   // mesma cor, só mais clara: destaque do mês escolhido
+const AREA_SOFT='rgba(0,148,136,.14)';                            // preenchimento sob a linha do acumulado
+const ST={bom:'#2E9D5F',atencao:'#E8892E',ruim:'#C0392B'};
+const SIMPLES_LIMITE=4800000, SIMPLES_SUBLIMITE=3600000;   // teto e sublimite anuais (LC 123/2006)
+const FONTE_IND={family:'Montserrat',size:11};
+const IND={charts:null};
+
+/* Reais abreviado para eixo/rótulo: "R$ 120 mil", "R$ 1,2 mi". Nunca notação científica. */
+function brlCurto(v){
+  const n=Number(v)||0, a=Math.abs(n), s=n<0?'-':'';
+  const f=(x,d)=>x.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:d});
+  if(a>=1e9) return s+'R$ '+f(a/1e9,1)+' bi';
+  if(a>=1e6) return s+'R$ '+f(a/1e6,1)+' mi';
+  if(a>=1e3) return s+'R$ '+f(a/1e3,a<1e4?1:0)+' mil';
+  return s+'R$ '+f(a,0);
+}
+const mesExtenso=c=>{const [a,m]=String(c).split('-'); return (MESES_L[+m-1]||'')+' de '+a;};
+const compMenos=(c,k)=>{const [a,m]=String(c).split('-').map(Number); return compDe(new Date(a,m-1-k,1));};
+const ehSimples=M=>/simples/i.test(String((M.cfg||{}).regime||''));
+const ppTxt=d=>(Math.abs(d)*100).toFixed(1).replace('.',',')+' p.p.';
+const relTxt=d=>(Math.abs(d)*100).toFixed(1).replace('.',',')+'%';
+
+/** Um mês do painel virado indicador. Mês sem fechamento vira null (não zero):
+    "zero" e "ainda não fechamos" são coisas diferentes e não podem virar a mesma barra. */
+function linhaInd(M,c){
+  const r=M.porComp[c];
+  const receita=r?num(getM(r,'Total (R$)')):0;
+  // Só há "imposto" se a planilha traz a coluna do tributo do regime. Sem coluna,
+  // o certo é dizer que não temos — e não estampar R$ 0,00 / carga de 0%.
+  const temImp=!!r&&M.tribs.some(t=>temMetrica(r,t.pag));
+  const imposto=temImp?M.impostos(r):null;
+  const tem=!!r&&(receita>0||(imposto||0)>0);
+  return {comp:c, tem,
+    receita: tem?receita:null,
+    imposto: tem?imposto:null,
+    carga: (tem&&receita>0&&imposto!=null)?imposto/receita:null,
+    liquido: (r&&temMetrica(r,'Resultado Líquido (R$)'))?num(getM(r,'Resultado Líquido (R$)')):null};
+}
+/* Colunas possíveis da folha de salários no fechamento (insumo do Fator R). getM compara
+   sem diferenciar maiúsculas/espaços. Se nenhuma existir, o Fator R fica em estado vazio —
+   não estimamos folha a partir de FGTS/INSS nem de nada parecido. */
+const COLS_FOLHA=['Folha de salários (R$)','Folha (R$)','Folha de pagamento (R$)','Total da folha (R$)'];
+function folhaDoMes(M,c){
+  const r=M.porComp[c]; if(!r) return null;
+  for(const k of COLS_FOLHA) if(temMetrica(r,k)) return num(getM(r,k));
+  return null;
+}
+
+/** Modelo dos indicadores para a competência escolhida: janela de 13 meses,
+    acumulado do ano (e do mesmo período do ano anterior) e a base móvel de 12 meses. */
+function modeloInd(M,comp){
+  const jan=[]; for(let i=12;i>=0;i--) jan.push(linhaInd(M,compMenos(comp,i)));
+  const p=jan.findIndex(x=>x.tem);
+  const S=p<0?[]:jan.slice(p);                       // corta os meses vazios do começo da janela
+  S.forEach((x,i)=>{ const base=i>0?S[i-1]:linhaInd(M,compMenos(x.comp,1));
+    x.cresc=(x.receita!=null&&base.receita!=null&&base.receita>0)?(x.receita/base.receita-1):null; });
+  const comDado=S.filter(x=>x.tem);
+  const mediaRec=comDado.length?comDado.reduce((s,x)=>s+x.receita,0)/comDado.length:null;
+  const cargas=comDado.filter(x=>x.carga!=null);
+  const mediaCarga=cargas.length?cargas.reduce((s,x)=>s+x.carga,0)/cargas.length:null;
+  const melhor=comDado.slice().sort((a,b)=>b.receita-a.receita)[0]||null;
+  const ano=Number(String(comp).slice(0,4)), mesN=Number(String(comp).slice(5,7));
+  const serieAno=[], serieAnoAnt=[];
+  for(let m=1;m<=mesN;m++){ const mm=String(m).padStart(2,'0');
+    serieAno.push(linhaInd(M,ano+'-'+mm)); serieAnoAnt.push(linhaInd(M,(ano-1)+'-'+mm)); }
+  const soma=(arr,k)=>arr.reduce((s,x)=>s+(x[k]||0),0);
+  // imposto acumulado só existe se ALGUM mês trouxe imposto — senão fica null (sem dado)
+  const somaImp=arr=>arr.some(x=>x.imposto!=null)?soma(arr,'imposto'):null;
+  const fecha=(o)=>{ o.carga=(o.receita>0&&o.imposto!=null)?o.imposto/o.receita:null; return o; };
+  const acum=fecha({lista:serieAno, meses:serieAno.filter(x=>x.tem).length,
+    receita:soma(serieAno,'receita'), imposto:somaImp(serieAno)});
+  const acumAnt=fecha({meses:serieAnoAnt.filter(x=>x.tem).length,
+    receita:soma(serieAnoAnt,'receita'), imposto:somaImp(serieAnoAnt)});
+  const r12=[]; for(let i=11;i>=0;i--) r12.push(linhaInd(M,compMenos(comp,i)));
+  const doze={lista:r12, meses:r12.filter(x=>x.tem).length, receita:soma(r12,'receita')};
+  return {comp, S, comDado, atual:linhaInd(M,comp), ant:linhaInd(M,compMenos(comp,1)),
+    anoAnt:linhaInd(M,compMenos(comp,12)), mediaRec, mediaCarga, melhor, acum, acumAnt, doze, ano, mesN};
+}
+
+/** Fator R = folha de 12 meses ÷ faturamento de 12 meses. Só vira número com os 12
+    meses completos dos DOIS lados; menos que isso é estado vazio, nunca estimativa. */
+function fatorRInd(M,D){
+  const meses=D.doze.lista.map(x=>({comp:x.comp, receita:x.receita, folha:folhaDoMes(M,x.comp)}));
+  const comFolha=meses.filter(x=>x.folha!=null);
+  const folha12=comFolha.reduce((s,x)=>s+x.folha,0);
+  const cheio=comFolha.length===12 && D.doze.meses===12 && D.doze.receita>0;
+  return {mesesFolha:comFolha.length, mesesReceita:D.doze.meses, folha12, receita12:D.doze.receita,
+    fator: cheio?folha12/D.doze.receita:null};
+}
+
+/** Variação com POLARIDADE. tipo 'rel' = variação percentual; tipo 'pp' = pontos
+    percentuais (comparar dois percentuais em % relativo confunde: 10% → 11,5% não é "subiu 15%"). */
+function badgeVar(atual, base, pol, refTxt, tipo){
+  const ref=refTxt?(' '+refTxt):'';
+  if(atual==null) return '';                    // o próprio número já está como "—": não há o que comparar
+  if(base==null) return `<span class="ind-var sem">sem base para comparar</span>`;
+  let d, txt;
+  if(tipo==='pp'){ d=atual-base; txt=ppTxt(d); }
+  else {
+    if(Math.abs(base)<1e-9) return `<span class="ind-var sem">sem base para comparar</span>`;
+    d=(atual-base)/Math.abs(base); txt=relTxt(d);
+  }
+  if(Math.abs(d)<0.0005) return `<span class="ind-var igual">= <em>igual${ref?(' a'+ref):''}</em></span>`;
+  const estado=((d>0)===(pol>0))?'bom':'ruim';
+  return `<span class="ind-var ${estado}">${d>0?'▲':'▼'} ${txt} <em>${estado==='bom'?'melhor':'pior'}${ref?(' que'+ref):''}</em></span>`;
+}
+function indTile(lbl,valor,badge,sub){
+  return `<div class="ind-tile"><span class="lbl">${esc(lbl)}</span><div class="v num">${valor}</div>`+
+    (badge||'')+(sub?`<div class="s">${sub}</div>`:'')+`</div>`;
+}
+function comoBox(formula,linhas,fonte){
+  return `<details class="como"><summary>Como calculamos <span class="car">▾</span></summary>
+    <div class="como-body"><p class="como-f">${formula}</p>
+      ${linhas.map(l=>`<div class="como-l"><span>${l[0]}</span><b>${l[1]}</b></div>`).join('')}
+      <p class="como-fonte">${fonte}</p></div></details>`;
+}
+function semSerie(txt){ return `<div class="ind-vazio">${txt}</div>`; }
+const FONTE_PADRAO='Vem do fechamento mensal da sua planilha fiscal — os mesmos números das seções acima desta página. Meses ainda não fechados não entram na conta.';
+
+/* ---------- o HTML do bloco (refeito a cada troca de competência) ---------- */
+function htmlIndicadores(M,comp){
+  const D=modeloInd(M,comp);
+  if(!D.S.length) return semSerie('<b>Ainda não temos meses fechados para comparar.</b><br>Assim que o primeiro mês for fechado, os indicadores aparecem aqui.');
+  const nomeMes=mesExtenso(comp);
+  const refAnt=D.ant.tem?MESES_L[+D.ant.comp.slice(5,7)-1]:'';
+  const partes=[cardFaturamento(M,D,nomeMes,refAnt), cardImpostos(M,D,nomeMes,refAnt),
+                cardAcumulado(M,D), cardComparativo(M,D)];
+  if(ehSimples(M)){ partes.push(cardLimiteSimples(M,D)); partes.push(cardFatorR(M,D)); }
+  return partes.join('');
+}
+
+function cardFaturamento(M,D,nomeMes,refAnt){
+  const a=D.atual, temSerie=D.comDado.length>=2;
+  const tiles=[
+    indTile('Faturamento de '+nomeMes, a.receita==null?'—':brl(a.receita),
+      badgeVar(a.receita,D.ant.receita,1,refAnt,'rel'),
+      a.receita==null?'este mês ainda não foi fechado':'soma das notas emitidas no mês'),
+    indTile('Média dos meses exibidos', D.mediaRec==null?'—':brl(D.mediaRec), '',
+      D.comDado.length+(D.comDado.length===1?' mês com movimento':' meses com movimento')),
+    indTile('Melhor mês da série', D.melhor?brl(D.melhor.receita):'—', '',
+      D.melhor?('foi em '+mesExtenso(D.melhor.comp)):'ainda sem histórico')
+  ].join('');
+  const graficos=temSerie?`<div class="charts">
+      <div class="ind-chart"><h4>Faturamento mês a mês</h4>
+        <div class="sub">Em reais. O mês escolhido no topo da página aparece em destaque.</div>
+        <div class="cbox"><canvas id="ind1"></canvas></div></div>
+      <div class="ind-chart"><h4>Crescimento de um mês para o outro</h4>
+        <div class="sub">Em percentual, cada mês comparado com o mês anterior. Acima da linha do zero, cresceu.</div>
+        <div class="legend"><span><i style="background:${ST.bom}"></i>▲ cresceu</span><span><i style="background:${ST.ruim}"></i>▼ caiu</span></div>
+        <div class="cbox"><canvas id="ind2"></canvas></div></div>
+    </div>`
+    :semSerie('<b>Ainda não dá para desenhar a evolução.</b><br>Com um mês fechado só temos o número acima — o gráfico aparece a partir do segundo mês.');
+  const como=comoBox(
+    'Faturamento do mês = soma do valor bruto de todas as notas emitidas na competência.<br>Crescimento = (faturamento do mês − faturamento do mês anterior) ÷ faturamento do mês anterior.',
+    [['Faturamento de '+nomeMes, a.receita==null?'sem fechamento':brl(a.receita)],
+     ['Faturamento de '+(D.ant.tem?mesExtenso(D.ant.comp):'mês anterior'), D.ant.receita==null?'sem fechamento':brl(D.ant.receita)],
+     ['Diferença', (a.receita!=null&&D.ant.receita!=null)?brl(a.receita-D.ant.receita):'—'],
+     ['Crescimento', (a.receita!=null&&D.ant.receita)?((a.receita>=D.ant.receita?'+':'−')+relTxt(a.receita/D.ant.receita-1)):'—']],
+    FONTE_PADRAO);
+  return `<div class="card ind-card"><div class="ind-h"><b>Faturamento e crescimento</b>
+    <span>Quanto a empresa faturou em cada mês e o quanto isso mudou de um mês para o outro.</span></div>
+    <div class="ind-tiles">${tiles}</div>${graficos}${como}</div>`;
+}
+
+function cardImpostos(M,D,nomeMes,refAnt){
+  const a=D.atual, r=M.porComp[D.comp];
+  const temImposto=D.S.some(x=>x.imposto!=null);
+  const temSerie=D.comDado.length>=2 && temImposto;
+  const visiveis=r?M.tribs.filter(t=>temMetrica(r,t.pag)):[];
+  const tiles=[
+    indTile('Impostos de '+nomeMes, a.imposto==null?'—':brl(a.imposto),
+      badgeVar(a.imposto,D.ant.imposto,-1,refAnt,'rel'),
+      a.imposto==null?'ainda não temos a apuração deste mês':'total a pagar desta competência'),
+    indTile('Carga tributária', a.carga==null?'—':pct(a.carga),
+      badgeVar(a.carga,D.ant.carga,-1,refAnt,'pp'),
+      a.carga==null?'depende do imposto apurado':'quanto do faturamento virou imposto'),
+    indTile('Média da carga', D.mediaCarga==null?'—':pct(D.mediaCarga), '',
+      D.mediaCarga==null?'sem meses com carga calculada':'nos meses exibidos abaixo')
+  ].join('');
+  const graficos=temSerie?`<div class="charts">
+      <div class="ind-chart"><h4>Impostos mês a mês</h4>
+        <div class="sub">Em reais, o total a pagar de cada competência.</div>
+        <div class="cbox"><canvas id="ind3"></canvas></div></div>
+      <div class="ind-chart"><h4>Carga tributária mês a mês</h4>
+        <div class="sub">Em percentual do faturamento. Fica em um gráfico separado de propósito: reais e percentual no mesmo desenho fazem parecer que um explica o outro.</div>
+        <div class="legend"><span><i style="background:${SLOT[1]}"></i>carga do mês</span><span><i style="background:repeating-linear-gradient(90deg,${PAL.muted} 0 3px,transparent 3px 6px)"></i>média do período (linha tracejada)</span></div>
+        <div class="cbox"><canvas id="ind4"></canvas></div></div>
+    </div>`
+    :semSerie(temImposto
+      ? '<b>Ainda não dá para desenhar a evolução da carga.</b><br>Ela aparece assim que houver um segundo mês fechado.'
+      : '<b>Ainda não temos os impostos apurados nesta planilha.</b><br>Sem o valor do tributo do seu regime não dá para calcular carga tributária — e preferimos não mostrar um gráfico zerado no lugar.');
+  const linhas=visiveis.map(t=>[esc(t.n)+' a pagar', brl(num(getM(r,t.pag)))]);
+  linhas.push(['Total de impostos', a.imposto==null?'—':brl(a.imposto)]);
+  linhas.push(['Faturamento do mês', a.receita==null?'—':brl(a.receita)]);
+  linhas.push(['Carga tributária', a.carga==null?'—':pct(a.carga)]);
+  const como=comoBox('Carga tributária = total de impostos a pagar do mês ÷ faturamento do mês.',
+    linhas, FONTE_PADRAO+' O que os tomadores já retiveram na fonte está descontado do "a pagar".');
+  return `<div class="card ind-card"><div class="ind-h"><b>Impostos e carga tributária</b>
+    <span>Quanto saiu em imposto e qual fatia do que você faturou isso representa.</span></div>
+    <div class="ind-tiles">${tiles}</div>${graficos}${como}</div>`;
+}
+
+function cardAcumulado(M,D){
+  const A=D.acum, B=D.acumAnt, ateMes=MESES_L[D.mesN-1], temAnt=B.meses>0;
+  const semAno=`<span class="ind-var sem">não temos ${D.ano-1} na planilha</span>`;
+  const tiles=[
+    indTile('Faturamento no ano', brl(A.receita),
+      temAnt?badgeVar(A.receita,B.receita,1,String(D.ano-1),'rel'):semAno,
+      'de janeiro a '+ateMes+' · '+A.meses+(A.meses===1?' mês fechado':' meses fechados')),
+    indTile('Impostos no ano', A.imposto==null?'—':brl(A.imposto),
+      temAnt?badgeVar(A.imposto,B.imposto,-1,String(D.ano-1),'rel'):'',
+      A.imposto==null?'ainda não temos os impostos deste período':'mesmo período'),
+    indTile('Carga do ano', A.carga==null?'—':pct(A.carga),
+      temAnt?badgeVar(A.carga,B.carga,-1,String(D.ano-1),'pp'):'', 'imposto ÷ faturamento acumulados')
+  ].join('');
+  const temSerie=A.lista.filter(x=>x.tem).length>=2;
+  const comImp=A.imposto!=null;
+  const grafico=temSerie?`<div class="ind-chart"><h4>Como o ano vai somando</h4>
+      <div class="sub">${comImp?'Faturamento e imposto acumulados desde janeiro. Os dois estão em reais, na mesma escala — por isso cabem no mesmo gráfico.':'Faturamento acumulado desde janeiro. O imposto não entra porque ainda não temos a apuração nesta planilha.'}</div>
+      ${comImp?`<div class="legend"><span><i style="background:${SLOT[0]}"></i>faturamento acumulado</span><span><i style="background:${SLOT[1]}"></i>imposto acumulado</span></div>`:''}
+      <div class="cbox"><canvas id="ind5"></canvas></div></div>`
+    :semSerie('<b>O acumulado deste ano ainda tem um mês só.</b><br>A curva aparece quando houver dois ou mais meses fechados em '+D.ano+'.');
+  const como=comoBox(
+    'Acumulado do ano = soma dos meses já fechados, de janeiro até '+ateMes+'.<br>Carga do ano = impostos acumulados ÷ faturamento acumulado.',
+    [['Meses fechados em '+D.ano, String(A.meses)],
+     ['Faturamento acumulado', brl(A.receita)],
+     ['Impostos acumulados', A.imposto==null?'não temos esse dado':brl(A.imposto)],
+     ['Carga do ano', A.carga==null?'—':pct(A.carga)],
+     ['Mesmo período de '+(D.ano-1), temAnt?(brl(B.receita)+' faturados'):'não temos esse ano na planilha']],
+    FONTE_PADRAO);
+  return `<div class="card ind-card"><div class="ind-h"><b>No ano até agora</b>
+    <span>O ano somado até ${esc(ateMes)} — e como ele se compara com o mesmo período do ano passado.</span></div>
+    <div class="ind-tiles">${tiles}</div>${grafico}${como}</div>`;
+}
+
+function cardComparativo(M,D){
+  const a=D.atual, ant=D.ant, aa=D.anoAnt;
+  const cab=[mesExtenso(D.comp), ant.tem?mesExtenso(ant.comp):'mês anterior',
+             aa.tem?mesExtenso(aa.comp):('mesmo mês em '+(D.ano-1))];
+  // data-c leva o nome da coluna para dentro da célula: no celular a tabela vira
+  // um cartão por indicador e cada valor continua sabendo a que período pertence.
+  const linha=(rot,fmt,pol,tipo,k)=>{
+    const va=a[k];
+    const cel=(v,rotCol)=> v==null
+      ? `<td data-c="${esc(rotCol)}"><span class="cmp-c"><span class="ind-var sem">ainda não temos</span></span></td>`
+      : `<td data-c="${esc(rotCol)}"><span class="cmp-c"><span class="cmp-v">${fmt(v)}</span>${badgeVar(va,v,pol,'',tipo)}</span></td>`;
+    return `<tr><td>${rot}</td><td data-c="${esc(cab[0])}"><span class="cmp-c"><span class="cmp-v">${va==null?'—':fmt(va)}</span></span></td>${cel(ant[k],cab[1])}${cel(aa[k],cab[2])}</tr>`;
+  };
+  const corpo=[linha('Faturamento',brl,1,'rel','receita'),
+               linha('Impostos a pagar',brl,-1,'rel','imposto'),
+               linha('Carga tributária',pct,-1,'pp','carga'),
+               linha('Resultado líquido',brl,1,'rel','liquido')].join('');
+  const como=comoBox(
+    'Cada seta compara o mês escolhido com a coluna onde ela está.<br>A cor segue o indicador, não o sinal: faturamento subindo é bom (verde); imposto e carga subindo é ruim (vermelho).',
+    [['Mês escolhido', mesExtenso(D.comp)],
+     ['Mês anterior', ant.tem?mesExtenso(ant.comp):'sem fechamento'],
+     ['Mesmo mês do ano anterior', aa.tem?mesExtenso(aa.comp):'não temos esse mês na planilha'],
+     ['Carga tributária', 'comparada em pontos percentuais (p.p.), não em variação relativa']],
+    FONTE_PADRAO+' "Resultado líquido" é o que sobra do faturamento depois dos impostos do mês.');
+  return `<div class="card ind-card"><div class="ind-h"><b>Comparativo período a período</b>
+    <span>O mesmo indicador contra o mês anterior e contra o mesmo mês do ano passado. As setas comparam ${esc(mesExtenso(D.comp))} com a coluna em que estão.</span></div>
+    <div class="table-scroll" style="margin-top:14px"><table class="cmp">
+      <thead><tr><th>Indicador</th><th>${esc(cab[0])}</th><th>${esc(cab[1])}</th><th>${esc(cab[2])}</th></tr></thead>
+      <tbody>${corpo}</tbody></table></div>${como}</div>`;
+}
+
+function cardLimiteSimples(M,D){
+  const cheio=D.doze.meses===12;
+  const base=cheio?D.doze.receita:D.acum.receita;
+  const rotBase=cheio?'faturamento dos últimos 12 meses':('faturamento acumulado de '+D.ano);
+  if(!(base>0)) return `<div class="card ind-card"><div class="ind-h"><b>Limite do Simples Nacional</b>
+    <span>Quanto do teto anual de faturamento já foi usado.</span></div>
+    ${semSerie('<b>Ainda não temos faturamento para medir o limite.</b><br>Ele aparece assim que houver meses fechados.')}</div>`;
+  const uso=base/SIMPLES_LIMITE, usoSub=base/SIMPLES_SUBLIMITE;
+  const st=uso>=1?'ruim':(uso>=0.8?'atencao':'bom');
+  const rot={bom:'✓ Dentro do limite',atencao:'⚠ Perto do teto',ruim:'✕ Acima do teto'}[st];
+  const cor={bom:ST.bom,atencao:ST.atencao,ruim:ST.ruim}[st];
+  const aviso=cheio?'':semSerie('Temos '+D.doze.meses+' dos 12 meses na planilha, então esta medida usa o acumulado de '+D.ano+'. Com os 12 meses completos ela passa a ser o cálculo oficial (RBT12).');
+  const como=comoBox('Uso do limite = '+rotBase+' ÷ R$ 4.800.000,00 (teto anual do Simples Nacional).',
+    [[rotBase.charAt(0).toUpperCase()+rotBase.slice(1), brl(base)],
+     ['Teto anual do Simples', brl(SIMPLES_LIMITE)],
+     ['Sublimite de ICMS/ISS', brl(SIMPLES_SUBLIMITE)],
+     ['Uso do teto', pct(uso)],
+     ['Uso do sublimite', pct(usoSub)],
+     ['Quanto ainda cabe no teto', brl(Math.max(0,SIMPLES_LIMITE-base))]],
+    'Teto e sublimite são os valores da Lei Complementar 123/2006. Empresa aberta no meio do ano tem limite proporcional aos meses de atividade — nesse caso, use este número como referência e confirme com a gente.');
+  return `<div class="card ind-card"><div class="ind-h"><b>Limite do Simples Nacional</b>
+    <span>Quanto do teto anual de faturamento já foi usado. Passar do teto tira a empresa do regime.</span></div>
+    <div class="ind-tiles">
+      ${indTile('Faturamento na base',brl(base),'',rotBase)}
+      ${indTile('Uso do teto',pct(uso),`<span class="selo-status ${st}">${rot}</span>`,'de '+brl(SIMPLES_LIMITE)+' por ano')}
+      ${uso>=1
+        ? indTile('Passou do teto em',brl(base-SIMPLES_LIMITE),'','fale com a gente: o desenquadramento tem regras de prazo')
+        : indTile('Ainda cabe',brl(SIMPLES_LIMITE-base),'','antes de estourar o teto')}
+    </div>
+    <div class="meter">
+      <div class="meter-bar"><i class="meter-fill" style="width:${Math.min(100,uso*100).toFixed(1)}%;background:${cor}"></i><i class="meter-mark" style="left:${(SIMPLES_SUBLIMITE/SIMPLES_LIMITE*100).toFixed(1)}%"></i></div>
+      <div class="meter-legs"><span>R$ 0</span><span>teto ${brlCurto(SIMPLES_LIMITE)}</span></div>
+      <div class="meter-nota">O traço vertical marca o sublimite de ICMS/ISS (${brlCurto(SIMPLES_SUBLIMITE)}): passar dele muda a forma de recolher esses dois impostos, mas não tira a empresa do Simples.</div>
+    </div>${aviso}${como}</div>`;
+}
+
+function cardFatorR(M,D){
+  const F=fatorRInd(M,D);
+  const explica=`O Fator R decide em qual anexo do Simples a empresa é tributada: <b>28% ou mais</b> vai para o
+    <b>Anexo III</b>, de alíquotas menores; <b>abaixo de 28%</b> cai no <b>Anexo V</b>, que costuma pagar bem mais
+    sobre o mesmo faturamento. Ele compara o gasto com folha (salários, pró-labore e encargos) com o faturamento,
+    sempre nos últimos 12 meses.`;
+  if(F.fator==null){
+    const detalhe=F.mesesFolha===0
+      ? 'Ainda não temos o valor da folha de salários dentro da planilha fiscal — a folha é apurada no Departamento Pessoal e não chega até aqui.'
+      : ('Temos folha em '+F.mesesFolha+' dos 12 meses e faturamento em '+F.mesesReceita+'. O Fator R só faz sentido com os 12 meses completos dos dois lados, então preferimos não estimar.');
+    return `<div class="card ind-card"><div class="ind-h"><b>Fator R</b><span>${explica}</span></div>
+      ${semSerie('<b>Ainda não temos os dados para calcular o seu Fator R.</b><br>'+detalhe+' Quando a folha passar a vir nesta planilha, o indicador liga sozinho — você não precisa fazer nada.')}
+      ${comoBox('Fator R = folha dos últimos 12 meses ÷ faturamento dos últimos 12 meses.',
+        [['Faturamento dos últimos 12 meses', F.mesesReceita===12?brl(F.receita12):(F.mesesReceita+' de 12 meses na planilha')],
+         ['Folha dos últimos 12 meses', F.mesesFolha===12?brl(F.folha12):'não temos esse dado aqui'],
+         ['Corte que muda de anexo','28%']],
+        'Anexo III e Anexo V são tabelas de alíquota do Simples Nacional. Trocar de anexo muda quanto se paga de imposto sobre o mesmo faturamento — por isso o Fator R merece acompanhamento mês a mês.')}</div>`;
+  }
+  const ok=F.fator>=0.28, st=ok?'bom':'atencao', rot=ok?'✓ Anexo III':'⚠ Anexo V';
+  return `<div class="card ind-card"><div class="ind-h"><b>Fator R</b><span>${explica}</span></div>
+    <div class="ind-tiles">
+      ${indTile('Fator R (12 meses)',pct(F.fator),`<span class="selo-status ${st}">${rot}</span>`, ok?'acima do corte de 28%':'abaixo do corte de 28%')}
+      ${indTile('Folha de 12 meses',brl(F.folha12),'','salários, pró-labore e encargos')}
+      ${indTile('Faturamento de 12 meses',brl(F.receita12),'','base do cálculo')}
+    </div>
+    <div class="meter">
+      <div class="meter-bar"><i class="meter-fill" style="width:${Math.min(100,F.fator*100).toFixed(1)}%;background:${ok?ST.bom:ST.atencao}"></i><i class="meter-mark" style="left:28%"></i></div>
+      <div class="meter-legs"><span>0%</span><span>100%</span></div>
+      <div class="meter-nota">O traço vertical marca o corte de 28%: a partir dele a empresa é tributada pelo Anexo III.</div>
+    </div>
+    ${comoBox('Fator R = folha dos últimos 12 meses ÷ faturamento dos últimos 12 meses.',
+      [['Folha dos últimos 12 meses', brl(F.folha12)],
+       ['Faturamento dos últimos 12 meses', brl(F.receita12)],
+       ['Fator R', pct(F.fator)],
+       ['Corte que muda de anexo','28%'],
+       ['Anexo aplicável', ok?'Anexo III':'Anexo V']],
+      'Anexo III e Anexo V são tabelas de alíquota do Simples Nacional. Ficar logo abaixo dos 28% costuma valer uma conversa: às vezes ajustar o pró-labore muda o anexo e reduz o imposto dentro da lei.')}</div>`;
+}
+
+/* ---------- gráficos do bloco (criados só com o bloco aberto) ---------- */
+function destruirIndCharts(){
+  if(!IND.charts) return;
+  Object.keys(IND.charts).forEach(k=>{ try{ IND.charts[k].destroy(); }catch(e){} });
+  IND.charts=null;
+}
+function eixoInd(fmtY){
+  return {x:{grid:{display:false},border:{color:PAL.line},
+      ticks:{color:PAL.muted,font:FONTE_IND,maxRotation:0,autoSkip:true,maxTicksLimit:8}},
+    y:{beginAtZero:true,grid:{color:'#EDE4D6',drawTicks:false},border:{display:false},
+      ticks:{color:PAL.muted,font:FONTE_IND,maxTicksLimit:5,padding:6,callback:fmtY}}};
+}
+function tipInd(comps,fmt,rotulo){
+  return {backgroundColor:PAL.petroleo,padding:10,cornerRadius:6,
+    titleFont:{family:'Montserrat',size:12,weight:'600'},bodyFont:FONTE_IND,
+    displayColors:true,boxWidth:8,boxHeight:8,
+    callbacks:{title:it=>mesExtenso(comps[it[0].dataIndex]),
+      label:c=>' '+(c.dataset.label||rotulo)+': '+(c.parsed.y==null?'sem fechamento':fmt(c.parsed.y))}};
+}
+function desenharIndCharts(M,comp){
+  destruirIndCharts();
+  if(typeof Chart==='undefined') return;
+  const D=modeloInd(M,comp);
+  const comps=D.S.map(x=>x.comp), labels=comps.map(mesLabel);
+  const ch={};
+  try{
+    const e1=document.getElementById('ind1');
+    if(e1) ch.ind1=new Chart(e1,{type:'bar',
+      data:{labels,datasets:[{label:'Faturamento',data:D.S.map(x=>x.receita),
+        backgroundColor:D.S.map(x=>x.comp===comp?SLOT[0]:SLOT_SOFT[0]),
+        borderRadius:{topLeft:4,topRight:4},maxBarThickness:26,borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:450},
+        plugins:{legend:{display:false},tooltip:tipInd(comps,brl,'Faturamento')},
+        scales:eixoInd(v=>brlCurto(v))}});
+
+    const e2=document.getElementById('ind2');
+    if(e2) ch.ind2=new Chart(e2,{type:'bar',
+      data:{labels,datasets:[{label:'Crescimento',data:D.S.map(x=>x.cresc==null?null:x.cresc*100),
+        backgroundColor:D.S.map(x=>x.cresc==null?'rgba(0,0,0,0)':(x.cresc>=0?ST.bom:ST.ruim)),
+        borderRadius:3,maxBarThickness:26,borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:450},
+        plugins:{legend:{display:false},
+          tooltip:tipInd(comps,v=>(v>=0?'+':'−')+relTxt(v/100),'Crescimento')},
+        scales:{x:eixoInd(v=>v).x,
+          y:{grid:{color:c=>(c.tick&&c.tick.value===0)?'#C7B9A4':'#EDE4D6',drawTicks:false},
+            border:{display:false},
+            ticks:{color:PAL.muted,font:FONTE_IND,maxTicksLimit:5,padding:6,
+              callback:v=>(v>0?'+':'')+Math.round(v)+'%'}}}}});
+
+    const e3=document.getElementById('ind3');
+    if(e3) ch.ind3=new Chart(e3,{type:'bar',
+      data:{labels,datasets:[{label:'Impostos',data:D.S.map(x=>x.imposto),
+        backgroundColor:D.S.map(x=>x.comp===comp?SLOT[1]:SLOT_SOFT[1]),
+        borderRadius:{topLeft:4,topRight:4},maxBarThickness:26,borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:450},
+        plugins:{legend:{display:false},tooltip:tipInd(comps,brl,'Impostos')},
+        scales:eixoInd(v=>brlCurto(v))}});
+
+    const e4=document.getElementById('ind4');
+    if(e4) ch.ind4=new Chart(e4,{type:'line',
+      data:{labels,datasets:[
+        {type:'line',label:'Carga do mês',data:D.S.map(x=>x.carga==null?null:x.carga*100),
+          borderColor:SLOT[1],backgroundColor:SLOT[1],borderWidth:2,tension:.25,
+          pointRadius:3,pointHoverRadius:6,spanGaps:false},
+        {type:'line',label:'Média do período',data:D.S.map(()=>D.mediaCarga==null?null:D.mediaCarga*100),
+          borderColor:PAL.muted,backgroundColor:PAL.muted,borderWidth:1.5,borderDash:[6,4],
+          pointRadius:0,pointHoverRadius:0,tension:0}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:450},
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false},tooltip:tipInd(comps,v=>relTxt(v/100),'Carga')},
+        scales:{x:eixoInd(v=>v).x,
+          y:{beginAtZero:true,grid:{color:'#EDE4D6',drawTicks:false},border:{display:false},
+            ticks:{color:PAL.muted,font:FONTE_IND,maxTicksLimit:5,padding:6,
+              callback:v=>(Math.round(v*10)/10).toLocaleString('pt-BR')+'%'}}}}});
+
+    const e5=document.getElementById('ind5');
+    if(e5){
+      const A=D.acum.lista, compsA=A.map(x=>x.comp), labelsA=compsA.map(mesLabel);
+      let accR=0, accI=0;
+      const accRec=A.map(x=>{ accR+=x.receita||0; return accR; });
+      const accImp=A.map(x=>{ accI+=x.imposto||0; return accI; });
+      const comImp=D.acum.imposto!=null;      // sem apuração de imposto, a linha some (não vira uma reta em zero)
+      ch.ind5=new Chart(e5,{type:'line',
+        data:{labels:labelsA,datasets:[
+          // order maior = desenhado antes (atrás): a área do faturamento não pode
+          // lavar a cor da linha de imposto, que é mais fina e passa por dentro dela.
+          {type:'line',label:'Faturamento acumulado',data:accRec,borderColor:SLOT[0],order:2,
+            backgroundColor:AREA_SOFT,fill:'origin',borderWidth:2,tension:.2,pointRadius:3,pointHoverRadius:6,
+            pointBackgroundColor:SLOT[0],pointBorderColor:'#fff',pointBorderWidth:1.5},
+          {type:'line',label:'Imposto acumulado',data:comImp?accImp:accImp.map(()=>null),borderColor:SLOT[1],order:1,
+            backgroundColor:'rgba(0,0,0,0)',borderWidth:2,tension:.2,pointRadius:3,pointHoverRadius:6,
+            pointBackgroundColor:SLOT[1],pointBorderColor:'#fff',pointBorderWidth:1.5}]},
+        options:{responsive:true,maintainAspectRatio:false,animation:{duration:450},
+          interaction:{mode:'index',intersect:false},
+          plugins:{legend:{display:false},tooltip:tipInd(compsA,brl,'Acumulado')},
+          scales:eixoInd(v=>brlCurto(v))}});
+    }
+  }catch(e){ if(window.console&&console.warn) console.warn('Indicadores: gráfico indisponível.',e); }
+  IND.charts=Object.keys(ch).length?ch:null;
+}
+
+function pintarIndicadores(M,comp){
+  const box=document.getElementById('ind-body'); if(!box) return;
+  destruirIndCharts();
+  box.innerHTML=htmlIndicadores(M,comp);
+  const det=document.getElementById('bloco-ind');
+  if(det&&det.open) desenharIndCharts(M,comp);
 }
 
 // Sem login (falta id/código) volta ao index; com login, mostra aviso amigável e não redireciona

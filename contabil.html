@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contábil — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* PALETA CANÔNICA — igual nas outras páginas do cliente. Não redeclare tons aqui. */
+  --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
+  --ink:#113D39; --ink-2:#3F5854; --muted:#6E6256; --line:#E4D9C9; --line-2:#D6C3AC;
+  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-euc:#3FA680;
+  --amber:#E8892E; --amber-txt:#B05F12; --vermelho:#C0392B; --verde:#2E9D5F;
+  /* Escala tipográfica — 6 passos, sem meio pixel. */
+  --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
+  /* Raios — 12 padrão, 16 para caixas grandes, 999 só para pílulas. */
+  --radius-sm:8px; --radius:12px; --radius-lg:16px; --radius-pill:999px;
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+  --receita:var(--brand-teal); --receita-soft:#DBEFEC;
+  --g-ok:#2E9D5F;  --g-ok-soft:#E7F4EC;  --g-ok-txt:#16713E;
+  --g-and:#E8892E; --g-and-soft:#FCEEDF; --g-and-txt:#9A5410;
+  --g-enc:#C0392B; --g-enc-soft:#F7E4E1; --g-enc-txt:#96271B;
+  /* Slots categóricos — ordem fixa, já validada por contraste. */
+  --slot1:#009488; --slot2:#B4530F; --slot3:#6B4FA0; --slot4:#7A8B3D;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:var(--fs-4);line-height:1.55;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.lbl{font-size:var(--fs-1);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 72px}
+
+header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:var(--b4u-bar-h,0px);z-index:30}
+.bar{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;line-height:1}
+.logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
+.brand-sub{font-size:var(--fs-4);color:var(--brand-teal);font-weight:700;margin-top:2px}
+.spacer{flex:1}
+.badge-topo{font-size:var(--fs-1);font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:5px 12px;border-radius:var(--radius-pill)}
+
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:32px 0 14px}
+.sec-head h2{font-size:var(--fs-4);font-weight:700;letter-spacing:-.01em}
+.sec-head p{font-size:var(--fs-3);color:var(--muted)}
+
+/* ════════ Selo de EXEMPLO — permanente enquanto o modo estiver ativo ════════ */
+.selo{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-1);font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;padding:3px 9px;border-radius:var(--radius-pill);background:#FCEEDF;color:var(--amber-txt);
+  border:1px solid #F0D9A8;white-space:nowrap;vertical-align:middle}
+.heroi .selo{background:rgba(255,255,255,.20);color:#fff;border-color:rgba(255,255,255,.42)}
+.faixa-demo{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;max-width:1180px;margin:0 auto;
+  padding:10px 24px 12px;color:#6B5326;font-size:var(--fs-2);line-height:1.45}
+header.demo{background:#FFF6E9;border-bottom-color:#F0D9A8}
+.faixa-demo b{color:#5A4413;font-weight:800}
+.faixa-demo .fd-txt{flex:1;min-width:200px}
+.faixa-btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);font-family:var(--sans);
+  font-size:var(--fs-2);font-weight:700;padding:8px 14px;border-radius:var(--radius-pill);cursor:pointer;white-space:nowrap}
+.faixa-btn:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
+@media(max-width:640px){.faixa-demo{padding:9px 14px 11px}}
+
+/* ════════ Topo: número-herói + fila de indicadores ════════ */
+.heroi{margin:24px 0 0;padding:28px 26px 24px;border:none;border-radius:var(--radius-lg);color:#fff;
+  background:linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);box-shadow:0 18px 38px -18px rgba(6,48,51,.6)}
+.heroi .lbl{color:rgba(255,255,255,.82)}
+.heroi-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.heroi-v{font-size:48px;font-weight:800;letter-spacing:-.03em;line-height:1.04;margin-top:8px;
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+@media(min-width:720px){.heroi-v{font-size:56px}}
+@media(max-width:420px){.heroi-v{font-size:34px}}
+.heroi-v.neg{color:#FFC9C2}
+.heroi-sub{font-size:var(--fs-4);color:rgba(255,255,255,.9);margin-top:10px;line-height:1.5;max-width:54ch}
+.heroi-sub b{color:#fff;font-weight:800}
+.heroi-pe{font-size:var(--fs-2);color:rgba(255,255,255,.78);margin-top:14px}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-top:14px}
+.tile{padding:16px 18px}
+.tile .v{font-size:clamp(15px,4.2vw,24px);font-weight:800;letter-spacing:-.02em;margin-top:7px;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile .s{font-size:var(--fs-2);color:var(--muted);margin-top:4px;line-height:1.45}
+.tile-ok .v{color:var(--g-ok-txt)}
+.tile-ruim .v{color:var(--g-enc-txt)}
+@media(max-width:640px){.tiles{grid-template-columns:1fr 1fr;gap:10px}.tile{padding:14px 12px}}
+@media(max-width:359px){.tiles{grid-template-columns:1fr}}
+
+/* seta de variação — a COR segue a polaridade do indicador, não o sinal do número */
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-2);font-weight:700;margin-top:5px;
+  font-variant-numeric:tabular-nums}
+.delta.bom{color:var(--g-ok-txt)} .delta.ruim{color:var(--g-enc-txt)} .delta.neutro{color:var(--muted)}
+.delta i{font-style:normal;font-size:var(--fs-1)}
+
+/* ════════ Blocos recolhidos ════════ */
+.bloco{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden}
+.bloco>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:17px 20px}
+.bloco>summary::-webkit-details-marker{display:none}
+.bloco>summary::marker{content:''}
+.bloco>summary:hover{background:var(--surface-warm)}
+.bloco>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.bloco[open]>summary{background:var(--surface-warm);border-bottom:1px solid var(--line)}
+.bloco-t{flex:1;min-width:0}
+.bloco-t b{display:block;font-size:var(--fs-4);font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.bloco-t span{display:block;font-size:var(--fs-2);color:var(--muted);margin-top:2px;line-height:1.45}
+.chev{flex-shrink:0;width:20px;height:20px;color:var(--muted);transition:transform .22s ease}
+.bloco[open]>summary .chev{transform:rotate(180deg)}
+.bloco-body{padding:16px 20px 22px}
+.bloco-nota{font-size:var(--fs-2);color:var(--ink-2);line-height:1.55;background:var(--surface-warm);
+  border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:14px}
+.bloco-nota b{color:var(--ink)}
+@media(max-width:640px){.bloco>summary{padding:15px 15px;gap:10px}.bloco-body{padding:14px 15px 18px}}
+
+/* ════════ Gráficos ════════ */
+.chart{padding:20px 22px 16px}
+.graf-titulo{font-size:var(--fs-4);font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.graf-sub{font-size:var(--fs-2);color:var(--muted);margin-bottom:14px;line-height:1.45}
+.cbox-alto{position:relative;height:300px}
+.cbox{position:relative;height:230px}
+.cbox-baixo{position:relative;height:150px}
+@media(max-width:640px){.cbox-alto{height:250px}.cbox{height:210px}}
+.leg{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px}
+.leg-item{display:flex;align-items:center;gap:8px;font-size:var(--fs-2);color:var(--ink-2);font-weight:600}
+.leg-sw{display:inline-block;width:22px;height:11px;border-radius:3px;flex-shrink:0}
+.leg-sw.linha{height:0;border-top:3px solid var(--brand-dark);border-radius:0}
+.leg-item b{color:var(--ink);font-variant-numeric:tabular-nums}
+.sem-grafico{font-size:var(--fs-3);color:var(--muted);background:var(--surface-warm);border:1px dashed var(--line-2);
+  border-radius:var(--radius-sm);padding:18px;text-align:center;line-height:1.6}
+
+/* ════════ Tabelas (DRE e Balanço) ════════ */
+.tab-rol{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:var(--radius)}
+table.tab{width:100%;border-collapse:collapse;font-size:var(--fs-3);background:var(--surface)}
+table.tab th,table.tab td{padding:9px 12px;text-align:right;white-space:nowrap;border-top:1px solid var(--line)}
+table.tab thead th{position:sticky;top:0;background:var(--surface-warm);z-index:2;font-size:var(--fs-1);
+  text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;border-top:none}
+table.tab th.conta,table.tab td.conta{text-align:left;white-space:normal;min-width:190px;position:sticky;left:0;
+  background:var(--surface);z-index:1}
+table.tab thead th.conta{background:var(--surface-warm);z-index:3}
+table.tab tbody tr:hover td{background:var(--surface-warm)}
+table.tab tbody tr:hover td.conta{background:var(--surface-warm)}
+.c-nome{font-weight:600;color:var(--ink);display:block;line-height:1.35}
+.c-tec{display:block;font-size:var(--fs-1);color:var(--muted);font-weight:600;margin-top:1px}
+tr.n1 td.conta{padding-left:26px} tr.n2 td.conta{padding-left:40px}
+tr.n1 .c-nome,tr.n2 .c-nome{font-weight:400;color:var(--ink-2)}
+tr.total td{font-weight:800;background:#FAF5EE}
+tr.total td.conta{background:#FAF5EE}
+tr.total .c-nome{font-weight:800;color:var(--ink)}
+tr.destaque td{background:var(--receita-soft);border-top:2px solid var(--brand-teal)}
+tr.destaque td.conta{background:var(--receita-soft)}
+tr.destaque .c-nome{color:var(--brand-dark)}
+td.v{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+td.v.saida{color:var(--slot2)}
+td.v.zero{color:var(--line-2)}
+td.av{font-variant-numeric:tabular-nums;color:var(--muted);font-size:var(--fs-2)}
+.tab-legenda{font-size:var(--fs-2);color:var(--muted);margin-top:10px;line-height:1.5}
+@media(max-width:640px){table.tab th,table.tab td{padding:8px 9px}table.tab th.conta,table.tab td.conta{min-width:158px}}
+
+/* barra de proporção (parte-de-um-todo) */
+.prop{display:flex;height:16px;border-radius:var(--radius-pill);overflow:hidden;background:#EFE6D6;border:1px solid var(--line)}
+.prop i{display:block;height:100%}
+
+/* ════════ Indicadores ════════ */
+.ind-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px}
+.ind{padding:16px 18px;background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius)}
+.ind-v{font-size:var(--fs-6);font-weight:800;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.ind-s{font-size:var(--fs-2);color:var(--ink-2);margin-top:6px;line-height:1.5}
+.como{margin-top:11px;border-top:1px dashed var(--line-2);padding-top:9px}
+.como>summary{list-style:none;cursor:pointer;font-size:var(--fs-2);font-weight:700;color:var(--brand-teal);
+  display:flex;align-items:center;gap:6px}
+.como>summary::-webkit-details-marker{display:none}
+.como>summary::marker{content:''}
+.como>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
+.como[open]>summary .chev-mini{transform:rotate(180deg)}
+.chev-mini{width:14px;height:14px;transition:transform .2s}
+.formula{margin-top:8px;font-size:var(--fs-2);color:var(--ink-2);line-height:1.65}
+.formula code{display:block;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:9px 11px;margin:6px 0;font-family:var(--sans);font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums;white-space:normal;overflow-wrap:anywhere}
+
+/* ════════ Estados ════════ */
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
+.state p{color:var(--muted);font-size:var(--fs-4);max-width:44ch}
+.spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.vazio-card{margin-top:26px;padding:34px 30px;border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--line)}
+.vazio-ico{width:56px;height:56px;border-radius:var(--radius);background:var(--receita-soft);color:var(--brand-teal);
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.vazio-ico svg{width:30px;height:30px}
+.vazio-card h2{font-size:var(--fs-5);font-weight:800;letter-spacing:-.01em}
+.vazio-card p{font-size:var(--fs-4);color:var(--ink-2);line-height:1.6;margin-top:8px;max-width:56ch}
+.vazio-lista{list-style:none;margin:18px 0 0;display:grid;gap:9px}
+.vazio-lista li{display:flex;gap:10px;align-items:flex-start;font-size:var(--fs-3);color:var(--ink-2);line-height:1.5}
+.vazio-lista .mk{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--receita-soft);color:var(--brand-teal);
+  display:flex;align-items:center;justify-content:center;font-size:var(--fs-1);font-weight:800;margin-top:1px}
+.vazio-acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;font-family:var(--sans);font-weight:700;
+  font-size:var(--fs-3);padding:12px 20px;border-radius:var(--radius-pill);text-decoration:none;transition:background .15s}
+.btn.primario{background:var(--brand-teal);color:#fff} .btn.primario:hover{background:#0c756f}
+.btn.secundario{background:var(--canvas);color:var(--ink-2);border:1px solid var(--line-2)}
+.btn.secundario:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
+.aviso{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;margin-top:14px;background:#FFF6E9;
+  border:1px solid #F0D9A8;border-radius:var(--radius-sm);color:#6B5326;font-size:var(--fs-2);line-height:1.55}
+.aviso .ai{font-size:var(--fs-4);line-height:1.2;color:var(--amber-txt);flex-shrink:0}
+.aviso b{color:#5A4413}
+
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:var(--fs-2);color:var(--muted);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media(max-width:640px){.wrap{padding:0 14px 60px}.sec-head{margin:22px 0 10px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<!--B4U:START-->
+<style id="b4u-oculta-chamado">/* "Abrir chamado" oculto por ora (topo #b4u-open e rodape #ac-abrir) */ #b4u-open,#ac-abrir,#b4u-help{display:none!important}</style>
+<script>window.B4U = { area:'contabil' };</script>
+<!-- ═══════════ back4you · cabeçalho + chamados (compartilhado) ═══════════
+     Bloco único, autocontido e com prefixo .b4u- (não conflita com o CSS da
+     página). Cole logo depois de <body>, e ANTES dele defina:
+        <script>window.B4U = { area:'fiscal' };</script>
+     area = área padrão do chamado desta página
+        (fiscal | dpto_pessoal | contabil | societario | equiparacao | outros)
+     home:true  -> esconde o botão "Início" (usar só no index).
+     Para reaproveitar em todas as páginas, mantenha este bloco IDÊNTICO. ─── -->
+<style>
+.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;
+  padding:10px 18px;background:var(--brand-dark);color:#fff;box-shadow:0 2px 12px rgba(7,48,52,.20);
+  font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+.b4u-bar .b4u-logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;margin-right:auto;
+  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1}
+.b4u-bar .b4u-logo .y{color:var(--brand-euc)}
+.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;
+  font-family:inherit;font-weight:600;font-size:var(--fs-3);padding:8px 13px;border-radius:var(--radius-sm);
+  text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
+.b4u-btn svg{width:16px;height:16px;flex-shrink:0}
+.b4u-btn .b4u-lbl{color:inherit;text-transform:none;letter-spacing:normal;font-size:var(--fs-3)}
+.b4u-btn:active{transform:translateY(1px)}
+.b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
+.b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
+.b4u-btn.wa{background:#25D366;color:#fff}
+.b4u-btn.wa:hover{background:#20bd5a}
+.b4u-btn.call{background:var(--brand-teal);color:#fff}
+.b4u-btn.call:hover{background:#0c756f}
+.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+  padding:0;border:0;cursor:pointer;border-radius:var(--radius-sm);background:rgba(255,255,255,.10);color:#fff;
+  transition:background .15s}
+.b4u-icobtn:hover{background:rgba(255,255,255,.18)}
+.b4u-icobtn svg{width:17px;height:17px}
+@media(max-width:640px){
+  .b4u-bar{gap:7px;padding:9px 12px}
+  .b4u-btn .b4u-lbl{display:none}
+  .b4u-btn{padding:9px 11px}
+}
+.b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
+  display:none;align-items:flex-end;justify-content:center;
+  font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+.b4u-ov.on{display:flex}
+@media(min-width:640px){.b4u-ov{align-items:center;padding:24px}}
+.b4u-modal{position:relative;z-index:1010;background:var(--surface);color:var(--ink);width:100%;max-width:520px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+@media(min-width:640px){.b4u-modal{border-radius:var(--radius-lg)}}
+.b4u-modal h3{font-size:var(--fs-5);font-weight:800;padding:18px 20px 3px;letter-spacing:-.01em}
+.b4u-modal .b4u-sub{font-size:var(--fs-2);color:#6E6256;padding:0 20px 10px;line-height:1.5}
+.b4u-fld{padding:7px 20px}
+.b4u-fld label{display:block;font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin-bottom:5px}
+.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:var(--fs-4);
+  padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink)}
+.b4u-fld textarea{min-height:120px;resize:vertical;line-height:1.5}
+.b4u-fld select:focus,.b4u-fld input:focus,.b4u-fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px;border-color:transparent}
+.b4u-err{color:var(--vermelho);font-size:var(--fs-2);padding:2px 20px 0;min-height:16px}
+.b4u-foot{display:flex;gap:10px;padding:14px 20px 20px;position:sticky;bottom:0;background:var(--surface)}
+.b4u-foot .b4u-btn{flex:1;justify-content:center;padding:12px}
+.b4u-foot .primary{background:var(--brand-teal);color:#fff}
+.b4u-foot .primary:hover{background:#0c756f}
+.b4u-foot .primary[disabled]{opacity:.6;cursor:default}
+.b4u-foot .cancel{background:var(--canvas);color:var(--ink-2)}
+.b4u-foot .cancel:hover{background:#e8dccb}
+.b4u-ok{padding:30px 22px;text-align:center}
+.b4u-ok .chk{width:56px;height:56px;border-radius:50%;background:#E7F4EC;color:var(--verde);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.b4u-ok .chk svg{width:30px;height:30px}
+.b4u-ok h3{font-size:var(--fs-5);font-weight:800;margin-bottom:6px}
+.b4u-ok p{font-size:var(--fs-3);color:var(--ink-2);line-height:1.55;max-width:40ch;margin:0 auto 20px}
+/* Skeleton (carregando) — barras cinza com brilho passando */
+.b4u-skel{display:block;border-radius:var(--radius-sm);background:#EADFCE;
+  background-image:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.65) 50%,rgba(255,255,255,0) 100%);
+  background-size:180px 100%;background-repeat:no-repeat;animation:b4ushine 1.15s ease-in-out infinite}
+@keyframes b4ushine{0%{background-position:-120px 0}100%{background-position:calc(100% + 120px) 0}}
+@media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
+/* Puxar para atualizar (mobile) */
+.b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
+  height:0;overflow:hidden;color:var(--brand-teal);z-index:1500;pointer-events:none;
+  font-family:'Montserrat',system-ui,sans-serif;font-size:var(--fs-2);font-weight:700;gap:8px}
+.b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:var(--brand-teal);border-radius:50%}
+.b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
+@keyframes b4uspin{to{transform:rotate(360deg)}}
+</style>
+<script>
+(function(){
+  var CFG = window.B4U || {};
+  if (CFG.__ready) return;
+
+  var WA = '5511937173906';                        // +55 11 93717-3906
+  var API_FALLBACK = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+  function api(){ try{ if(typeof API_URL==='string' && API_URL) return API_URL; }catch(e){} return API_FALLBACK; }
+
+  var AREAS = [
+    ['fiscal','Fiscal'], ['dpto_pessoal','Departamento Pessoal'], ['contabil','Contábil'],
+    ['societario','Societário'], ['equiparacao','Equiparação'], ['outros','Outros / reportar erro']
+  ];
+  // tipo -> [rótulo, esqueleto de mensagem]
+  var TIPOS = {
+    livre:            ['Chamado livre', ''],
+    solicitar_nf:     ['Solicitar nota fiscal', 'Solicito a emissão de uma nota fiscal.\n\nTomador (cliente):\nValor:\nDescrição do serviço:\nData desejada:'],
+    duvida:           ['Tirar uma dúvida', 'Minha dúvida é:\n\n'],
+    ferias:           ['Solicitar férias', 'Solicito a programação de férias.\n\nColaborador:\nInício desejado:\nDias:\nObservações:'],
+    previa_admissao:  ['Prévia de admissão', 'Estou avaliando uma contratação (prévia, ainda sem formalizar).\n\nCargo cogitado:\nFaixa salarial:\nObservações:'],
+    contratacao:      ['Formalizar admissão', 'Quero formalizar uma contratação.\n\nNome do colaborador:\nCargo:\nSalário:\nData de início:\nObservações:'],
+    previa_rescisao:  ['Prévia de rescisão', 'Estou avaliando desligar um colaborador (prévia).\n\nColaborador:\nMotivo:\nObservações:'],
+    rescisao:         ['Formalizar desligamento', 'Quero formalizar um desligamento.\n\nColaborador:\nMotivo:\nData prevista:\nAviso (trabalhado/indenizado):\nObservações:']
+  };
+  var ORDEM_TIPOS = ['livre','solicitar_nf','duvida','ferias','previa_admissao','contratacao','previa_rescisao','rescisao'];
+  // Tipo do DOCUMENTO anexado -> define para qual PASTA (programa) o arquivo vai.
+  // As chaves batem com o backend (COLUNA_POR_TIPO_DOC); a pasta vem do Site Links.
+  var DOCTIPOS = [
+    ['principal','Documentos recebidos (geral)'],
+    ['extratos','Extratos bancários'],
+    ['notas','Notas fiscais e comprovantes'],
+    ['outros','Outros']
+  ];
+  // O tipo de solicitação DEPENDE da área (não faz sentido pedir férias em Equiparação).
+  var TIPOS_POR_AREA = {
+    fiscal:       ['livre','solicitar_nf','duvida'],
+    dpto_pessoal: ['livre','ferias','previa_admissao','contratacao','previa_rescisao','rescisao','duvida'],
+    contabil:     ['livre','duvida'],
+    societario:   ['livre','duvida'],
+    equiparacao:  ['livre','duvida'],
+    outros:       ['livre','duvida']
+  };
+  function tiposDaArea(area){ return TIPOS_POR_AREA[area] || TIPOS_POR_AREA.outros; }
+  function opcoesTipo(area, sel){
+    return tiposDaArea(area).map(function(t){
+      return '<option value="'+t+'"'+(t===sel?' selected':'')+'>'+esc(TIPOS[t][0])+'</option>';
+    }).join('');
+  }
+
+  // ---- id/código a partir da URL (?id=&codigo= ou #id-codigo) -------------
+  function idc(){
+    var qs = new URLSearchParams(location.search);
+    var id = qs.get('id')||'', cod = qs.get('codigo')||'';
+    if(!id){
+      var h = (location.hash||'').replace('#','').trim();
+      var m = h.match(/^(\d+)-(.+)$/); var s = h.match(/^(\d+)$/);
+      if(m){ id=m[1]; cod=m[2]; } else if(s){ id=s[1]; }
+    }
+    return { id:String(id).replace(/\D/g,''), codigo:String(cod).trim() };
+  }
+  function jsonp(url){
+    return new Promise(function(ok,fail){
+      var cb='b4ucb_'+Math.random().toString(36).slice(2);
+      var s=document.createElement('script');
+      var t=setTimeout(function(){ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
+      function limpa(){ clearTimeout(t); try{delete window[cb];}catch(e){window[cb]=undefined;} s.remove(); }
+      window[cb]=function(d){ limpa(); ok(d); };
+      s.onerror=function(){ limpa(); fail(new Error('Não consegui alcançar a API.')); };
+      s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+      document.body.appendChild(s);
+    });
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  var IC = {
+    home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
+    wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>',
+    chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/></svg>',
+    help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>',
+    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>'
+  };
+
+  var C = idc();
+  var linkHome = 'index.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var linkTickets = 'meustickets.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
+
+  // ---- barra fixa ----------------------------------------------------------
+  var bar = document.createElement('div');
+  bar.className = 'b4u-bar';
+  bar.innerHTML =
+    '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
+    (CFG.home ? '' :
+      '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
+    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
+    '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
+    '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
+  document.body.insertBefore(bar, document.body.firstChild);
+  // publica a altura da barra p/ os cabeçalhos internos grudarem logo abaixo dela
+  function medirBarra(){ document.documentElement.style.setProperty('--b4u-bar-h', bar.offsetHeight + 'px'); }
+  medirBarra();
+  window.addEventListener('resize', medirBarra);
+  window.addEventListener('load', medirBarra);
+
+  // ---- modal ---------------------------------------------------------------
+  var ov = document.createElement('div');
+  ov.className = 'b4u-ov';
+  document.body.appendChild(ov);
+
+  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; }
+
+  function abrir(opts){
+    opts = opts || {};
+    var areaSel = opts.area || CFG.area || 'outros';
+    var tipoSel = opts.tipo || 'livre';
+    if (tiposDaArea(areaSel).indexOf(tipoSel) < 0) tipoSel = tiposDaArea(areaSel)[0];   // tipo válido p/ a área
+    ov.innerHTML =
+      '<div class="b4u-modal" role="dialog" aria-modal="true" aria-label="Abrir chamado">' +
+        '<h3>Abrir um chamado</h3>' +
+        '<div class="b4u-sub">Registramos aqui e retornamos em até 48h úteis. Você pode acompanhar em “Meus chamados”.</div>' +
+        '<div class="b4u-fld"><label for="b4u-area">Área</label><select id="b4u-area">' +
+          AREAS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===areaSel?' selected':'')+'>'+esc(a[1])+'</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="b4u-fld"><label for="b4u-tipo">Tipo de solicitação</label><select id="b4u-tipo">' +
+          opcoesTipo(areaSel, tipoSel) +
+        '</select></div>' +
+        '<div class="b4u-fld"><label for="b4u-assunto">Assunto</label><input id="b4u-assunto" maxlength="120" placeholder="Resumo em uma linha"></div>' +
+        '<div class="b4u-fld"><label for="b4u-msg">Mensagem</label><textarea id="b4u-msg" placeholder="Descreva o que você precisa…"></textarea></div>' +
+        '<div class="b4u-fld"><label for="b4u-file">Anexo <span style="font-weight:400;color:#6E6256">(opcional · até 10 MB)</span></label>' +
+          '<input type="file" id="b4u-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.xls,.xlsx,.csv,.txt,.xml,.ofx,.zip"></div>' +
+        '<div class="b4u-fld" id="b4u-tipodoc-wrap" style="display:none">' +
+          '<label for="b4u-tipodoc">Tipo do documento</label><select id="b4u-tipodoc">' +
+            DOCTIPOS.map(function(d){ return '<option value="'+d[0]+'">'+esc(d[1])+'</option>'; }).join('') +
+          '</select>' +
+          '<div class="b4u-sub" style="padding:6px 0 0">Enviamos seu arquivo direto para a pasta certa do seu programa.</div>' +
+        '</div>' +
+        '<div class="b4u-err" id="b4u-erro"></div>' +
+        '<div class="b4u-foot">' +
+          '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
+          '<button type="button" class="b4u-btn primary" id="b4u-send">Enviar chamado</button>' +
+        '</div>' +
+      '</div>';
+    ov.classList.add('on');
+    var selTipo = ov.querySelector('#b4u-tipo');
+    var txt = ov.querySelector('#b4u-msg');
+    function aplicaSkeleton(force){
+      var esq = TIPOS[selTipo.value] ? TIPOS[selTipo.value][1] : '';
+      if(force || !txt.value.trim()) txt.value = esq;
+    }
+    aplicaSkeleton(true);
+    selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
+    // trocar a ÁREA repovoa os tipos válidos para ela
+    ov.querySelector('#b4u-area').addEventListener('change', function(){
+      selTipo.innerHTML = opcoesTipo(this.value, selTipo.value);
+      aplicaSkeleton(true);
+    });
+    ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
+    ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
+    ov.querySelector('#b4u-send').addEventListener('click', enviar);
+    // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
+    var fileEl = ov.querySelector('#b4u-file');
+    var tdWrap = ov.querySelector('#b4u-tipodoc-wrap');
+    fileEl.addEventListener('change', function(){
+      tdWrap.style.display = (fileEl.files && fileEl.files.length) ? 'block' : 'none';
+    });
+    ov.querySelector('#b4u-assunto').focus();
+  }
+
+  function enviar(){
+    var cc = idc();
+    var erroEl = ov.querySelector('#b4u-erro');
+    var btn = ov.querySelector('#b4u-send');
+    erroEl.textContent = '';
+    if(!cc.id || !cc.codigo){ erroEl.textContent = 'Abra o painel pelo seu link (com ID e código) para enviar um chamado.'; return; }
+    var area = ov.querySelector('#b4u-area').value;
+    var tipo = ov.querySelector('#b4u-tipo').value;
+    var assunto = ov.querySelector('#b4u-assunto').value.trim();
+    var msg = ov.querySelector('#b4u-msg').value.trim();
+    if(!msg){ erroEl.textContent = 'Escreva a mensagem do chamado.'; return; }
+    var fileEl = ov.querySelector('#b4u-file');
+    var file = fileEl && fileEl.files && fileEl.files[0];
+    if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    if(file){
+      // COM arquivo -> POST (JSONP/GET não comporta base64)
+      var reader = new FileReader();
+      reader.onload = function(){
+        var base64 = String(reader.result||'').split(',')[1] || '';
+        var tdEl = ov.querySelector('#b4u-tipodoc');
+        var tipoDoc = (tdEl && tdEl.value) ? tdEl.value : 'principal';
+        var body = JSON.stringify({ id:cc.id, codigo:cc.codigo, acao:'ticket_anexo',
+          area:area, tipo:tipo, assunto:assunto, mensagem:msg, tipo_documento:tipoDoc,
+          arquivo_nome:file.name, arquivo_tipo:file.type, arquivo_base64:base64 });
+        fetch(api(), { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if(d && d.erro) throw new Error(d.erro); sucesso(); })
+          .catch(falhou);
+      };
+      reader.onerror = function(){ falhou(new Error('Não consegui ler o arquivo.')); };
+      reader.readAsDataURL(file);
+      return;
+    }
+    // SEM arquivo -> JSONP como sempre
+    var qs = new URLSearchParams({ id:cc.id, codigo:cc.codigo, acao:'ticket',
+      area:area, tipo:tipo, assunto:assunto, mensagem:msg });
+    jsonp(api()+'?'+qs.toString()).then(function(d){
+      if(d && d.erro) throw new Error(d.erro);
+      sucesso();
+    }).catch(falhou);
+  }
+
+  function sucesso(){
+    ov.innerHTML =
+      '<div class="b4u-modal">' +
+        '<div class="b4u-ok">' +
+          '<div class="chk">'+IC.chk+'</div>' +
+          '<h3>Chamado registrado</h3>' +
+          '<p>Recebemos sua solicitação e retornamos em até 48h úteis. Em breve o acompanhamento também chegará por e-mail.</p>' +
+          '<div class="b4u-foot" style="position:static;padding:0">' +
+            '<button type="button" class="b4u-btn cancel" id="b4u-fecha">Fechar</button>' +
+            '<a class="b4u-btn primary" id="b4u-ir-tickets" href="'+esc(linkTickets)+'">Ir para meus chamados</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    ov.querySelector('#b4u-fecha').addEventListener('click', fecharModal);
+    // Se já estou em meus chamados, trocar só o hash não recarrega — força o reload
+    // para o novo chamado aparecer. Em outra página, navega normalmente.
+    ov.querySelector('#b4u-ir-tickets').addEventListener('click', function(e){
+      if (/meustickets\.html/i.test(location.pathname)){
+        e.preventDefault();
+        if (C.id) location.hash = C.id + (C.codigo ? '-'+C.codigo : '');
+        location.reload();
+      }
+    });
+  }
+
+  bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
+  bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
+
+  // ---- Puxar para atualizar (mobile) --------------------------------------
+  // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
+  // depois do limiar. Não atrapalha a rolagem normal.
+  (function(){
+    var ind=document.createElement('div'); ind.className='b4u-ptr';
+    ind.innerHTML='<span class="ring"></span><span class="txt">Puxe para atualizar</span>';
+    document.body.appendChild(ind);
+    var y0=null, dist=0, LIM=70, ativo=false;
+    function topo(){ return (window.scrollY||document.documentElement.scrollTop||0)<=0; }
+    window.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1 || !topo() || (ov&&ov.classList.contains('on'))){ y0=null; return; }
+      y0=e.touches[0].clientY; ativo=true;
+    },{passive:true});
+    window.addEventListener('touchmove',function(e){
+      if(!ativo||y0===null) return;
+      dist=e.touches[0].clientY - y0;
+      if(dist<=0){ ind.style.height='0'; return; }
+      if(!topo()){ ativo=false; ind.style.height='0'; return; }
+      var h=Math.min(dist*0.5, LIM+20); ind.style.height=h+'px';
+      ind.querySelector('.txt').textContent = dist>LIM?'Solte para atualizar':'Puxe para atualizar';
+    },{passive:true});
+    window.addEventListener('touchend',function(){
+      if(!ativo){ return; } ativo=false;
+      if(dist>LIM){ ind.classList.add('spin'); ind.style.height=(LIM)+'px'; ind.querySelector('.txt').textContent='Atualizando…'; setTimeout(function(){ location.reload(); },150); }
+      else { ind.style.height='0'; }
+      y0=null; dist=0;
+    });
+  })();
+
+  window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
+    skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
+      var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
+      return g.join(''); } };
+})();
+</script>
+<!-- ═══════════ fim do bloco compartilhado back4you ═══════════ -->
+<!--B4U:END-->
+
+<div id="app">
+  <div class="state">
+    <div class="spin" role="status" aria-label="Carregando"></div>
+    <p>Carregando o painel contábil…</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PAINEL CONTÁBIL DO CLIENTE — DRE + Balanço Patrimonial
+   --------------------------------------------------------------------------
+   ATENÇÃO (07/2026): ainda NÃO existe planilha contábil para nenhum cliente.
+   A rota já existe no Roteador.gs (COLUNA_POR_TIPO.contabil = 'Contábil' e
+   'contabil' está em TIPOS_COM_PAINEL), mas montar(id,codigo,'contabil') ainda
+   cai no montarFiscal. Portanto esta página tem de dar conta de TRÊS mundos:
+
+     1) A planilha existe e a rota devolve DRE/Balanço  -> painel completo.
+     2) A rota devolve outra coisa (hoje, o payload fiscal) ou o cliente está
+        no índice "sem link de contabil" -> ESTADO VAZIO explicando, sem
+        gráfico zerado e sem erro feio.
+     3) A equipe quer mostrar ao cliente como vai ficar -> MODO EXEMPLO
+        (?demo=1), com selo permanente em tudo o que é dado fictício.
+
+   CONTRATO ESPERADO de ?tipo=contabil (o normalizador abaixo é tolerante:
+   aceita as variações prováveis de quem for montar a planilha):
+
+   {
+     id, atualizado_em,
+     config: { razao_social, cnpj, regime, ... },
+     contabil: {                          // ou tudo direto na raiz
+       meses: ['2026-01','2026-02', ...], // opcional — deduzido das linhas
+       dre: [                             // linhas da DRE (ordem livre)
+         { conta:'Receita Bruta', valores:{ '2026-01':512624, '2026-02':... } },
+         { conta:'(-) Custos',    valores:{ ... } }, ...
+       ],
+       balanco: {                         // ou array com campo bloco:'ativo'
+         ativo:   [ { conta:'Caixa e Equivalentes', valores:{...} }, ... ],
+         passivo: [ { conta:'Fornecedores a Pagar', valores:{...} }, ... ]
+       }
+     }
+   }
+
+   CONVENÇÃO DE SINAL (a lição nº 1 da referência): deduções, custos, despesas
+   e provisões chegam NEGATIVOS. Se vierem positivos, o normalizador inverte —
+   senão as margens estouram 100% (foi exatamente o bug dos dados demo da
+   Nucont, com margem líquida de 194%).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Paleta dos gráficos.
+   SEMÂNTICA fixa (encoding por significado, não por ordem de série):
+     entra/receita = slot1 · sai/custos = slot2 · despesas = slot3 ·
+     outros = slot4 · resultado/total = petróleo.
+   Os 4 slots categóricos estão na ordem validada. */
+const PAL = { petroleo:'#113D39', escuro:'#073034', teal:'#0F8C85', muted:'#6E6256',
+  line:'#E4D9C9', line2:'#D6C3AC', grade:'#EDE4D6',
+  slot1:'#009488', slot2:'#B4530F', slot3:'#6B4FA0', slot4:'#7A8B3D',
+  ok:'#2E9D5F', okTxt:'#16713E', ruim:'#C0392B', ruimTxt:'#96271B', amberTxt:'#B05F12' };
+const COR = { entra:PAL.slot1, sai:PAL.slot2, despesa:PAL.slot3, outros:PAL.slot4, resultado:PAL.escuro };
+const FONTE = { family:'Montserrat', size:11 };
+const TEM_CHART = (typeof Chart !== 'undefined');
+
+/* ───────────────────────── utilitários ───────────────────────── */
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => {
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  if (v == null || v === '') return 0;
+  let s = String(v).trim().replace(/\s/g,'').replace(/^R\$/i,'');
+  let neg = /^\(.*\)$/.test(s) || /^-/.test(s);          // (1.234,56) = negativo, como na DRE
+  s = s.replace(/[()\-]/g,'');
+  if (s.indexOf(',') > -1) s = s.replace(/\./g,'').replace(',','.');   // 1.234,56 -> 1234.56
+  const n = parseFloat(s);
+  if (!isFinite(n)) return 0;
+  return neg ? -n : n;
+};
+const brl = v => (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+/* Sem centavos — em tabela de 13 colunas o centavo só atrapalha a leitura. */
+const brl0 = v => { const n = Math.round(Number(v)||0);
+  return (n<0 ? '−' : '') + 'R$ ' + Math.abs(n).toLocaleString('pt-BR',{maximumFractionDigits:0}); };
+/* Reais abreviado para eixos: "R$ 120 mil", "R$ 1,2 mi". Nunca notação científica. */
+function brlCurto(v){
+  const n = Number(v)||0, a = Math.abs(n), s = n<0 ? '−' : '';
+  const f = (x,d) => x.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:d});
+  if (a >= 1e9) return s+'R$ '+f(a/1e9,1)+' bi';
+  if (a >= 1e6) return s+'R$ '+f(a/1e6,1)+' mi';
+  if (a >= 1e3) return s+'R$ '+f(a/1e3, a<1e4?1:0)+' mil';
+  return s+'R$ '+f(a,0);
+}
+const pctBR = (v,casas) => (Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:casas==null?1:casas,maximumFractionDigits:casas==null?1:casas}) + '%';
+const numBR = (v,casas) => (Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:casas==null?2:casas,maximumFractionDigits:casas==null?2:casas});
+const MES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MES_LONGO = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const mesExtenso = k => { const p = String(k).split('-'); return (MES_LONGO[(+p[1]||1)-1]||'') + ' de ' + p[0]; };
+const mesCurtoLbl = k => { const p = String(k).split('-'); return (MES_CURTO[(+p[1]||1)-1]||'') + '/' + String(p[0]).slice(2); };
+const normTxt = s => String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()
+  .replace(/[()=±+]/g,' ').replace(/[^a-z0-9%\/ ]/g,' ').replace(/\s+/g,' ').trim();
+const el = h => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
+function appendAll(parent, h){
+  const t = document.createElement('template'); t.innerHTML = h.trim();
+  Array.from(t.content.children).forEach(n => parent.appendChild(n));
+}
+/* Desenha só quando o bloco abre — canvas 0x0 dentro de <details> fechado não renderiza. */
+function desenharAoAbrir(idBloco, fn){
+  const d = document.getElementById(idBloco); if (!d) return;
+  const roda = () => { if (d.dataset.drawn) return; d.dataset.drawn = '1';
+    try { fn(); } catch(e){ console.warn('Gráfico indisponível:', e); } };
+  if (d.open) roda();
+  d.addEventListener('toggle', () => { if (d.open) roda(); });
+}
+
+/* ───────────── identidade (id + código na URL) e transporte ───────────── */
+function getIdCodigo(){
+  const qs = new URLSearchParams(location.search);
+  let id = qs.get('id') || '';
+  let codigo = qs.get('codigo') || '';
+  const h = location.hash.replace('#','').trim();
+  if (!id){
+    const comCodigo = h.match(/^(\d+)-(.+)$/);
+    const soId = h.match(/^(\d+)$/);
+    if (comCodigo) { id = comCodigo[1]; codigo = comCodigo[2]; }
+    else if (soId) { id = soId[1]; }
+  }
+  return { id: id.replace(/\D/g,''), codigo: codigo.trim() };
+}
+/* Modo exemplo: ?demo=1 na busca OU "&demo" depois do hash (#123-COD&demo). */
+function querDemo(){
+  const qs = new URLSearchParams(location.search);
+  const v = (qs.get('demo') || '').toLowerCase();
+  if (v === '1' || v === 'sim' || v === 'true') return true;
+  return /(^|[&?])demo(=1|=sim|=true)?($|&)/i.test(location.hash || '');
+}
+function urlComDemo(ligar){
+  const u = new URL(location.href);
+  u.searchParams.delete('demo');
+  u.hash = (u.hash || '').replace(/([&?])demo(=[^&]*)?/ig,'').replace(/[&?]$/,'');
+  if (ligar) u.searchParams.set('demo','1');
+  return u.toString();
+}
+function jsonp(url){
+  return new Promise((ok,fail)=>{
+    const cb = 'cb_'+Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    const t = setTimeout(()=>{ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
+    function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
+    window[cb] = d => { limpa(); ok(d); };
+    s.onerror = () => { limpa(); fail(new Error('Não consegui alcançar a API.')); };
+    s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+let IDENTIDADE = { id:'', codigo:'' };
+const DEMO = querDemo();
+
+/* ══════════════ ESTRUTURA DA DRE (PARTE II da referência) ══════════════
+   nome  = como o cliente lê   ·   tec = o termo do contador (vai no title)
+   nivel = recuo   ·   tipo:'total' = linha de fechamento
+   sinal = -1 quando a linha é obrigatoriamente uma SAÍDA (usado para
+   normalizar o sinal do que vier da planilha).                          */
+const DRE = [
+  { k:'receita_bruta',      nome:'Faturamento total',                    tec:'Receita Bruta',                      nivel:0, tipo:'total', sinal:1  },
+  { k:'deducoes',           nome:'Impostos e devoluções sobre o faturamento', tec:'(-) Deduções da Receita Bruta', nivel:0, sinal:-1 },
+  { k:'cancelamentos',      nome:'Notas canceladas e devolvidas',        tec:'(-) Cancelamentos e Devoluções',     nivel:1, sinal:-1 },
+  { k:'impostos_receita',   nome:'Impostos que saem direto do faturamento', tec:'(-) Impostos Sobre Receita',      nivel:1, sinal:-1 },
+  { k:'receita_liquida',    nome:'Faturamento depois dos impostos',      tec:'(=) Receita Líquida',                nivel:0, tipo:'total', sinal:1  },
+  { k:'custos',             nome:'Custos para entregar o serviço',       tec:'(-) Custos',                         nivel:0, sinal:-1 },
+  { k:'custos_variaveis',   nome:'Custos que variam com o movimento',    tec:'(-) Custos Variáveis',               nivel:1, sinal:-1 },
+  { k:'cmv',                nome:'Materiais e serviços aplicados',       tec:'(-) CMV e CSP',                      nivel:2, sinal:-1 },
+  { k:'custos_pessoal',     nome:'Equipe que faz a entrega',             tec:'(-) Custos com Pessoal',             nivel:1, sinal:-1 },
+  { k:'depreciacao_custo',  nome:'Desgaste de máquinas e equipamentos',  tec:'(-) Depreciação',                    nivel:1, sinal:-1 },
+  { k:'outros_custos',      nome:'Outros custos',                        tec:'(-) Outros Custos',                  nivel:1, sinal:-1 },
+  { k:'lucro_bruto',        nome:'Sobra depois dos custos',              tec:'(=) Lucro Bruto',                    nivel:0, tipo:'total', sinal:1  },
+  { k:'despesas',           nome:'Despesas para manter a empresa de pé', tec:'(-) Despesas Operacionais',          nivel:0, sinal:-1 },
+  { k:'desp_ga',            nome:'Administração (aluguel, luz, sistemas)', tec:'(-) Despesas Gerais e Administrativas', nivel:1, sinal:-1 },
+  { k:'desp_pessoal',       nome:'Equipe administrativa e pró-labore',   tec:'(-) Despesas com Pessoal',           nivel:1, sinal:-1 },
+  { k:'desp_trib',          nome:'Taxas e impostos fora do faturamento', tec:'(-) Despesas Tributárias',           nivel:1, sinal:-1 },
+  { k:'desp_outras',        nome:'Outras despesas',                      tec:'(-) Outras Despesas Operacionais',   nivel:1, sinal:-1 },
+  { k:'ebitda',             nome:'Resultado só da operação',             tec:'(=) EBITDA',                         nivel:0, tipo:'total', sinal:1  },
+  { k:'dep_amort',          nome:'Desgaste de bens e softwares',         tec:'(-) Depreciação e Amortização',      nivel:0, sinal:-1 },
+  { k:'ebit',               nome:'Resultado da operação já com o desgaste', tec:'(=) EBIT',                        nivel:0, tipo:'total', sinal:1  },
+  { k:'result_fin',         nome:'Juros pagos e rendimentos recebidos',  tec:'(±) Resultado Financeiro',           nivel:0, sinal:0  },
+  { k:'rec_fin',            nome:'Rendimentos de aplicações',            tec:'(+) Receitas Financeiras',           nivel:1, sinal:1  },
+  { k:'desp_fin',           nome:'Juros e tarifas de banco',             tec:'(-) Despesas Financeiras',           nivel:1, sinal:-1 },
+  { k:'outras_rd',          nome:'Outras entradas e saídas',             tec:'(±) Outras Receitas e Despesas',     nivel:0, sinal:0  },
+  { k:'lair',               nome:'Resultado antes do imposto de renda',  tec:'(=) LAIR',                           nivel:0, tipo:'total', sinal:1  },
+  { k:'provisao_ir',        nome:'Imposto de renda e CSLL sobre o lucro', tec:'(-) Provisão IR e CSLL',            nivel:0, sinal:-1 },
+  { k:'lucro_liquido',      nome:'Quanto sobrou no fim',                 tec:'(=) Lucro Líquido',                  nivel:0, tipo:'total', destaque:true, sinal:1 }
+];
+/* Grafias que a planilha pode trazer para cada linha (já normalizadas por normTxt). */
+const DRE_ALIAS = {
+  receita_bruta:['receita bruta','receita operacional bruta','receita bruta total','faturamento','faturamento bruto','receita'],
+  deducoes:['deducoes da receita bruta','deducoes','deducoes sobre a receita','deducoes da receita'],
+  cancelamentos:['cancelamentos devolucoes','cancelamentos e devolucoes','cancelamentos','devolucoes'],
+  impostos_receita:['impostos sobre receita','impostos sobre a receita','impostos sobre vendas','impostos sobre faturamento','simples nacional'],
+  receita_liquida:['receita liquida','receita operacional liquida'],
+  custos:['custos','custo total','custos totais','cpv','custo dos produtos e servicos vendidos'],
+  custos_variaveis:['custos variaveis'],
+  cmv:['cmv e csp','cmv','csp','custo das mercadorias vendidas','outros cmv e csp'],
+  custos_pessoal:['custos com pessoal','custo com pessoal','custos com salarios'],
+  depreciacao_custo:['depreciacao'],
+  outros_custos:['outros custos'],
+  lucro_bruto:['lucro bruto','resultado bruto'],
+  despesas:['despesas operacionais','despesas','total de despesas','despesas totais'],
+  desp_ga:['despesas gerais e administrativas','despesas administrativas','despesas gerais','g a'],
+  desp_pessoal:['despesas com pessoal','pro labore','despesas com salarios'],
+  desp_trib:['despesas tributarias'],
+  desp_outras:['outras despesas operacionais','outras despesas','despesas diversas'],
+  ebitda:['ebitda','lajida'],
+  dep_amort:['depreciacao e amortizacao','amortizacao'],
+  ebit:['ebit','lajir','resultado operacional'],
+  result_fin:['resultado financeiro'],
+  rec_fin:['receitas financeiras','receita financeira'],
+  desp_fin:['despesas financeiras','despesa financeira'],
+  outras_rd:['outras receitas e despesas','outras receitas e outras despesas','outras receitas operacionais'],
+  lair:['lair','lucro antes do ir','resultado antes do ir','lucro antes dos tributos'],
+  provisao_ir:['provisao ir e csll','provisao para ir e csll','provisao ir','irpj e csll','ir e csll'],
+  lucro_liquido:['lucro liquido','resultado liquido','resultado do periodo','lucro prejuizo do periodo']
+};
+
+/* ══════════════ ESTRUTURA DO BALANÇO (PARTE II da referência) ══════════════ */
+const BP_ATIVO = [
+  { k:'ativo',                 nome:'Tudo o que a empresa tem',            tec:'Ativo',                            nivel:0, tipo:'total' },
+  { k:'ativo_circulante',      nome:'De curto prazo (até 12 meses)',       tec:'Ativo Circulante',                 nivel:1, tipo:'sub' },
+  { k:'caixa',                 nome:'Dinheiro em caixa e no banco',        tec:'Caixa e Equivalentes',             nivel:2 },
+  { k:'clientes',              nome:'O que os clientes ainda vão pagar',   tec:'Clientes a Receber',               nivel:2 },
+  { k:'estoque',               nome:'Estoque',                             tec:'Estoque',                          nivel:2 },
+  { k:'adiant_forn',           nome:'Adiantado a fornecedores',            tec:'Adiantamento a Fornecedores',      nivel:2 },
+  { k:'outros_ativos_op',      nome:'Outros valores a receber',            tec:'Outros Ativos Operacionais',       nivel:2 },
+  { k:'mutuos',                nome:'Emprestado a sócios e empresas ligadas', tec:'Mútuos e Partes Relacionadas',  nivel:2 },
+  { k:'antecip_div',           nome:'Lucros antecipados aos sócios',       tec:'Antecipação de Dividendos',        nivel:2 },
+  { k:'outros_ativos_nao_op',  nome:'Outros bens e direitos',              tec:'Outros Ativos Não Operacionais',   nivel:2 },
+  { k:'ativo_nao_circulante',  nome:'De longo prazo (mais de 12 meses)',   tec:'Ativo Não Circulante',             nivel:1, tipo:'sub' },
+  { k:'imobilizado',           nome:'Máquinas, móveis e imóveis',          tec:'Imobilizado',                      nivel:2 },
+  { k:'mutuos_nc',             nome:'Emprestado a ligadas (longo prazo)',  tec:'Mútuos / Partes Relacionadas',     nivel:2 },
+  { k:'outros_anc',            nome:'Outros bens de longo prazo',          tec:'Outros Ativos Não Circulantes',    nivel:2 }
+];
+const BP_PASSIVO = [
+  { k:'passivo_pl',            nome:'Tudo o que a empresa deve + o que é dos sócios', tec:'Passivo + Patrimônio Líquido', nivel:0, tipo:'total' },
+  { k:'passivo_circulante',    nome:'A pagar em até 12 meses',             tec:'Passivo Circulante',               nivel:1, tipo:'sub' },
+  { k:'passivos_fin',          nome:'Bancos e cartões',                    tec:'Passivos Financeiros',             nivel:2 },
+  { k:'fornecedores',          nome:'Fornecedores',                        tec:'Fornecedores a Pagar',             nivel:2 },
+  { k:'obrig_fiscais',         nome:'Impostos a pagar',                    tec:'Obrigações Fiscais',               nivel:2 },
+  { k:'obrig_trab',            nome:'Salários e encargos a pagar',         tec:'Obrigações Trabalhistas',          nivel:2 },
+  { k:'prov_trab',             nome:'Férias e 13º já provisionados',       tec:'Provisões Trabalhistas',           nivel:2 },
+  { k:'adiant_cli',            nome:'Clientes que pagaram adiantado',      tec:'Adiantamento de Clientes',         nivel:2 },
+  { k:'outros_passivos_op',    nome:'Outras contas a pagar',               tec:'Outros Passivos Operacionais',     nivel:2 },
+  { k:'passivo_nao_circulante',nome:'A pagar depois de 12 meses',          tec:'Passivo Não Circulante',           nivel:1, tipo:'sub' },
+  { k:'emprestimos',           nome:'Empréstimos e financiamentos',        tec:'Empréstimos e Financiamentos',     nivel:2 },
+  { k:'mutuos_pnc',            nome:'Dívidas com sócios e ligadas',        tec:'Mútuos / Partes Relacionadas',     nivel:2 },
+  { k:'outros_pnc',            nome:'Outras dívidas longas',               tec:'Outros Passivos Não Circulantes',  nivel:2 },
+  { k:'pl',                    nome:'O que é dos sócios',                  tec:'Patrimônio Líquido',               nivel:1, tipo:'sub' },
+  { k:'capital_social',        nome:'Dinheiro que os sócios colocaram',    tec:'Capital Social',                   nivel:2 },
+  { k:'lucros_acum',           nome:'Lucros que ficaram na empresa',       tec:'Lucros e Prejuízos Acumulados',    nivel:2 },
+  { k:'lucros_distrib',        nome:'Lucros já retirados pelos sócios',    tec:'(-) Lucros Distribuídos',          nivel:2 },
+  { k:'outros_pl',             nome:'Outras contas dos sócios',            tec:'Outros PL',                        nivel:2 },
+  { k:'resultado_exerc',       nome:'Resultado acumulado do ano',          tec:'Resultado do Exercício',           nivel:2 }
+];
+const BP_ALIAS_ATIVO = {
+  ativo:['ativo','ativo total','total do ativo'],
+  ativo_circulante:['ativo circulante','circulante'],
+  caixa:['caixa e equivalentes','caixa','disponibilidades','bancos','caixa e bancos'],
+  clientes:['clientes a receber','contas a receber','clientes'],
+  estoque:['estoque','estoques'],
+  adiant_forn:['adiantamento a fornecedores','adiantamentos a fornecedores'],
+  outros_ativos_op:['outros ativos operacionais'],
+  mutuos:['mutuos e partes relacionadas','partes relacionadas'],
+  antecip_div:['antecipacao de dividendos'],
+  outros_ativos_nao_op:['outros ativos nao operacionais'],
+  ativo_nao_circulante:['ativo nao circulante','nao circulante'],
+  imobilizado:['imobilizado','imobilizado e intangivel','intangivel','investimentos'],
+  mutuos_nc:['mutuos / partes relacionadas','mutuos partes relacionadas nao circulante'],
+  outros_anc:['outros ativos nao circulantes','realizavel a longo prazo']
+};
+const BP_ALIAS_PASSIVO = {
+  passivo_pl:['passivo patrimonio liquido','passivo e patrimonio liquido','passivo total','total do passivo','passivo'],
+  passivo_circulante:['passivo circulante'],
+  passivos_fin:['passivos financeiros','emprestimos de curto prazo'],
+  fornecedores:['fornecedores a pagar','fornecedores'],
+  obrig_fiscais:['obrigacoes fiscais','impostos a recolher','tributos a recolher'],
+  obrig_trab:['obrigacoes trabalhistas','salarios a pagar'],
+  prov_trab:['provisoes trabalhistas','provisao de ferias e 13'],
+  adiant_cli:['adiantamento de clientes','adiantamentos de clientes'],
+  outros_passivos_op:['outros passivos operacionais'],
+  passivo_nao_circulante:['passivo nao circulante','exigivel a longo prazo'],
+  emprestimos:['emprestimos e financiamentos','financiamentos'],
+  mutuos_pnc:['mutuos / partes relacionadas','mutuos partes relacionadas passivo'],
+  outros_pnc:['outros passivos nao circulantes'],
+  pl:['patrimonio liquido','pl'],
+  capital_social:['capital social'],
+  lucros_acum:['lucros e prejuizos acumulados','lucros acumulados','prejuizos acumulados'],
+  lucros_distrib:['lucros distribuidos','lucros distribuidos aos socios','dividendos distribuidos'],
+  outros_pl:['outros pl','reservas','reserva de lucros'],
+  resultado_exerc:['resultado do exercicio','lucro do exercicio']
+};
+function inverterAlias(mapa){
+  const out = {};
+  Object.keys(mapa).forEach(k => (mapa[k]||[]).forEach(a => { if (out[a] == null) out[a] = k; }));
+  return out;
+}
+const DRE_POR_NOME     = inverterAlias(DRE_ALIAS);
+const ATIVO_POR_NOME   = inverterAlias(BP_ALIAS_ATIVO);
+const PASSIVO_POR_NOME = inverterAlias(BP_ALIAS_PASSIVO);
+
+/* ═════════════════ NORMALIZAÇÃO DO QUE VEM DA API ═════════════════ */
+const RE_MES = /^(\d{4})[-\/]?(\d{2})$/;
+function chaveMes(v){
+  const s = String(v==null?'':v).trim();
+  let m = s.match(RE_MES);
+  if (m) return m[1] + '-' + m[2];
+  m = s.match(/^(\d{2})[-\/](\d{4})$/);                    // MM/AAAA
+  if (m) return m[2] + '-' + m[1];
+  m = s.match(/^(\d{4})-(\d{2})-\d{2}/);                   // AAAA-MM-DD
+  if (m) return m[1] + '-' + m[2];
+  return '';
+}
+/* Uma linha da planilha -> { nome, valores:{ 'AAAA-MM': número } }. Aceita
+   valores num sub-objeto (valores/meses/periodos) ou direto na própria linha. */
+function lerLinha(item, nomeChave){
+  if (item == null) return null;
+  const nome = String(nomeChave != null ? nomeChave
+    : (item.conta || item.linha || item.nome || item.descricao || item.rotulo || '')).trim();
+  const valores = {};
+  const fonte = item.valores || item.meses || item.periodos || item.competencias || item;
+  if (Array.isArray(fonte)){
+    fonte.forEach(v => { const k = chaveMes(v && (v.competencia || v.mes || v.periodo)); if (k) valores[k] = num(v.valor != null ? v.valor : v.total); });
+  } else if (typeof fonte === 'object'){
+    Object.keys(fonte).forEach(kk => { const k = chaveMes(kk); if (k) valores[k] = num(fonte[kk]); });
+  }
+  if (!nome && !Object.keys(valores).length) return null;
+  return { nome, valores };
+}
+function listaDeLinhas(bruto, nomeChave){
+  if (!bruto) return [];
+  if (Array.isArray(bruto)) return bruto.map(x => lerLinha(x)).filter(Boolean);
+  if (typeof bruto === 'object'){
+    return Object.keys(bruto).map(k => lerLinha(bruto[k], k)).filter(Boolean);
+  }
+  return [];
+}
+/* Casa a linha com uma das linhas canônicas. Sem chute: só bate o que é igual
+   depois de normalizar — o que não bate vira "outra linha da planilha". */
+function casar(nome, dicionario){
+  const n = normTxt(nome);
+  if (!n) return '';
+  if (dicionario[n]) return dicionario[n];
+  const semPrefixo = n.replace(/^(total( de| do| da)?|sub total|subtotal)\s+/,'');
+  return dicionario[semPrefixo] || '';
+}
+
+function normalizarContabil(raw){
+  const C = (raw && (raw.contabil || raw.contabilidade)) || raw || {};
+  const linhasDRE = listaDeLinhas(C.dre || C.DRE || C.demonstrativo || C.resultado);
+  let brutoBal = C.balanco || C.balanço || C.balancete || C.bp || null;
+  let linhasAtivo = [], linhasPassivo = [], sobrasBal = [];
+  if (Array.isArray(brutoBal)){
+    brutoBal.map(x => ({ raw:x, l:lerLinha(x) })).forEach(o => {
+      if (!o.l) return;
+      const bloco = normTxt(o.raw && (o.raw.bloco || o.raw.grupo || o.raw.lado) || '');
+      if (bloco.indexOf('ativo') === 0) linhasAtivo.push(o.l);
+      else if (bloco) linhasPassivo.push(o.l);
+      else sobrasBal.push(o.l);
+    });
+    /* Sem campo "bloco": decide pelo próprio nome da conta. */
+    sobrasBal.forEach(l => {
+      if (casar(l.nome, ATIVO_POR_NOME)) linhasAtivo.push(l);
+      else if (casar(l.nome, PASSIVO_POR_NOME)) linhasPassivo.push(l);
+    });
+  } else if (brutoBal && typeof brutoBal === 'object'){
+    linhasAtivo   = listaDeLinhas(brutoBal.ativo || brutoBal.ativos);
+    linhasPassivo = listaDeLinhas(brutoBal.passivo || brutoBal.passivos ||
+      (brutoBal.passivo_pl || brutoBal.passivo_e_pl));
+    if (brutoBal.patrimonio_liquido || brutoBal.pl){
+      linhasPassivo = linhasPassivo.concat(listaDeLinhas(brutoBal.patrimonio_liquido || brutoBal.pl));
+    }
+  }
+
+  /* meses presentes em qualquer linha, em ordem */
+  const setMeses = {};
+  [].concat(linhasDRE, linhasAtivo, linhasPassivo).forEach(l =>
+    Object.keys(l.valores).forEach(k => { setMeses[k] = true; }));
+  (C.meses || C.competencias || []).forEach(m => { const k = chaveMes(m); if (k) setMeses[k] = true; });
+  const meses = Object.keys(setMeses).sort();
+
+  /* linha canônica -> série por mês (com o sinal já arrumado) */
+  function montarBloco(linhas, dicionario, estrutura){
+    const serie = {}, extras = [];
+    let sinalCorrigido = false;
+    const porK = {};
+    linhas.forEach(l => {
+      const k = casar(l.nome, dicionario);
+      if (!k){ if (Object.keys(l.valores).length) extras.push(l); return; }
+      porK[k] = porK[k] || { valores:{} };
+      Object.keys(l.valores).forEach(m => { porK[k].valores[m] = (porK[k].valores[m]||0) + l.valores[m]; });
+    });
+    estrutura.forEach(def => {
+      const achou = porK[def.k];
+      if (!achou) return;
+      const s = {};
+      meses.forEach(m => {
+        let v = achou.valores[m];
+        if (v == null) return;
+        if (def.sinal === -1 && v > 0){ v = -v; sinalCorrigido = true; }   // custo/despesa sempre negativo
+        s[m] = v;
+      });
+      if (Object.keys(s).length) serie[def.k] = s;
+    });
+    return { serie, extras, sinalCorrigido };
+  }
+
+  const dreB   = montarBloco(linhasDRE,   DRE_POR_NOME,     DRE);
+  const ativoB = montarBloco(linhasAtivo, ATIVO_POR_NOME,   BP_ATIVO);
+  const passB  = montarBloco(linhasPassivo, PASSIVO_POR_NOME, BP_PASSIVO);
+
+  derivarDRE(dreB.serie, meses);
+  derivarBalanco(ativoB.serie, passB.serie, meses);
+
+  const temDRE = meses.length > 0 && !!(dreB.serie.receita_bruta || dreB.serie.receita_liquida || dreB.serie.lucro_liquido);
+  const temBP  = meses.length > 0 && !!(ativoB.serie.ativo || passB.serie.passivo_pl);
+  return {
+    meses, dre:dreB.serie, ativo:ativoB.serie, passivo:passB.serie,
+    extras: [].concat(dreB.extras, ativoB.extras, passB.extras),
+    sinalCorrigido: dreB.sinalCorrigido, temDRE, temBP,
+    temDados: temDRE || temBP
+  };
+}
+
+/* Preenche o que a planilha não trouxer, na ordem em que uma linha depende da
+   outra. As fórmulas são as da PARTE II, com a convenção de sinal arrumada. */
+function derivarDRE(S, meses){
+  const g = (k,m) => (S[k] && S[k][m] != null) ? S[k][m] : null;
+  const soma = (m, ks) => { let t = 0, achou = false;
+    ks.forEach(k => { const v = g(k,m); if (v != null){ t += v; achou = true; } });
+    return achou ? t : null; };
+  const por = (k,m,v) => { if (v == null || !isFinite(v)) return; S[k] = S[k] || {}; if (S[k][m] == null) S[k][m] = v; };
+  meses.forEach(m => {
+    por('deducoes',        m, soma(m, ['cancelamentos','impostos_receita']));
+    por('custos',          m, soma(m, ['custos_variaveis','custos_pessoal','depreciacao_custo','outros_custos']));
+    por('despesas',        m, soma(m, ['desp_ga','desp_pessoal','desp_trib','desp_outras']));
+    por('result_fin',      m, soma(m, ['rec_fin','desp_fin']));
+    // Receita Líquida = Receita Bruta + Deduções (deduções negativas)
+    if (g('receita_liquida',m) == null && g('receita_bruta',m) != null)
+      por('receita_liquida', m, g('receita_bruta',m) + (g('deducoes',m)||0));
+    // e o caminho inverso: só a líquida na planilha? deduz a bruta
+    if (g('receita_bruta',m) == null && g('receita_liquida',m) != null)
+      por('receita_bruta', m, g('receita_liquida',m) - (g('deducoes',m)||0));
+    // Lucro Bruto = Receita Líquida + Custos
+    if (g('lucro_bruto',m) == null && g('receita_liquida',m) != null)
+      por('lucro_bruto', m, g('receita_liquida',m) + (g('custos',m)||0));
+    // EBITDA = Lucro Bruto + Despesas − Depreciação que está dentro dos custos
+    if (g('ebitda',m) == null && g('lucro_bruto',m) != null)
+      por('ebitda', m, g('lucro_bruto',m) + (g('despesas',m)||0) - (g('depreciacao_custo',m)||0));
+    // EBIT = EBITDA + Depreciação e Amortização
+    if (g('ebit',m) == null && g('ebitda',m) != null)
+      por('ebit', m, g('ebitda',m) + (g('dep_amort',m)||0));
+    // LAIR = EBIT + Resultado Financeiro + Outras
+    if (g('lair',m) == null && g('ebit',m) != null)
+      por('lair', m, g('ebit',m) + (g('result_fin',m)||0) + (g('outras_rd',m)||0));
+    // Lucro Líquido = LAIR + Provisão IR/CSLL (negativa)
+    if (g('lucro_liquido',m) == null && g('lair',m) != null)
+      por('lucro_liquido', m, g('lair',m) + (g('provisao_ir',m)||0));
+  });
+}
+function derivarBalanco(A, P, meses){
+  const gr = (S,k,m) => (S[k] && S[k][m] != null) ? S[k][m] : null;
+  const somaS = (S,m,ks) => { let t = 0, achou = false;
+    ks.forEach(k => { const v = gr(S,k,m); if (v != null){ t += v; achou = true; } });
+    return achou ? t : null; };
+  const porS = (S,k,m,v) => { if (v == null || !isFinite(v)) return; S[k] = S[k] || {}; if (S[k][m] == null) S[k][m] = v; };
+  meses.forEach(m => {
+    porS(A,'ativo_circulante', m, somaS(A,m,['caixa','clientes','estoque','adiant_forn','outros_ativos_op','mutuos','antecip_div','outros_ativos_nao_op']));
+    porS(A,'ativo_nao_circulante', m, somaS(A,m,['imobilizado','mutuos_nc','outros_anc']));
+    porS(A,'ativo', m, somaS(A,m,['ativo_circulante','ativo_nao_circulante']));
+    porS(P,'passivo_circulante', m, somaS(P,m,['passivos_fin','fornecedores','obrig_fiscais','obrig_trab','prov_trab','adiant_cli','outros_passivos_op']));
+    porS(P,'passivo_nao_circulante', m, somaS(P,m,['emprestimos','mutuos_pnc','outros_pnc']));
+    porS(P,'pl', m, somaS(P,m,['capital_social','lucros_acum','lucros_distrib','outros_pl','resultado_exerc']));
+    porS(P,'passivo_pl', m, somaS(P,m,['passivo_circulante','passivo_nao_circulante','pl']));
+  });
+}
+
+/* ═════════════════════════ DADOS DE EXEMPLO ═════════════════════════
+   Empresa FICTÍCIA. Sai no MESMO formato do contrato acima, de propósito:
+   o modo exemplo passa pelo mesmo normalizador e pelas mesmas telas, então
+   o que a equipe mostra é exatamente o que o cliente vai ver quando a
+   planilha existir. Números coerentes (custos e despesas negativos, balanço
+   fechando Ativo = Passivo + PL) — nada de margem de 194%. */
+function dadosExemplo(){
+  const hoje = new Date();
+  const meses = [];
+  for (let i = 12; i >= 1; i--){
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+    meses.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  }
+  const saz = [1.00,0.96,1.04,1.08,1.02,0.88,0.93,1.01,1.10,1.06,1.12,1.15];
+  const w = i => ((i*37) % 11 - 5) / 1000;          // variação determinística, ±0,5 p.p.
+  const dre = {}, ativo = {}, passivo = {};
+  const põe = (obj,k,m,v) => { obj[k] = obj[k] || {}; obj[k][m] = Math.round(v); };
+
+  meses.forEach((m,i) => {
+    const rb = 430000 * saz[i] * (1 + 0.012*i);
+    const impostos      = -rb * (0.1147 + w(i));
+    const cancelamentos = -rb * 0.004;
+    const rl  = rb + impostos + cancelamentos;
+    const cmv        = -rb * (0.381 + w(i+3));
+    const cPessoal   = -rb * (0.142 + w(i+5));
+    const deprec     = -rb * 0.010;
+    const custos     = cmv + cPessoal + deprec;
+    const lb  = rl + custos;
+    const dGA        = -rb * (0.093 + w(i+1));
+    const dPessoal   = -rb * (0.061 + w(i+7));
+    const dTrib      = -rb * 0.021;
+    const dOutras    = -rb * (0.028 + w(i+9));
+    const despesas   = dGA + dPessoal + dTrib + dOutras;
+    const ebitda = lb + despesas - deprec;
+    const amort  = -rb * 0.002;
+    const depAmort = deprec + amort;
+    const ebit = ebitda + depAmort;
+    const recFin  =  rb * 0.004;
+    const despFin = -rb * 0.009;
+    const resFin  = recFin + despFin;
+    const outras  =  rb * 0.003;
+    const lair = ebit + resFin + outras;
+    const provIR = 0;                       // Simples Nacional: o imposto já saiu do faturamento
+    const ll = lair + provIR;
+
+    põe(dre,'receita_bruta',m,rb);          põe(dre,'cancelamentos',m,cancelamentos);
+    põe(dre,'impostos_receita',m,impostos);  põe(dre,'cmv',m,cmv);
+    põe(dre,'custos_pessoal',m,cPessoal);    põe(dre,'depreciacao_custo',m,deprec);
+    põe(dre,'desp_ga',m,dGA);                põe(dre,'desp_pessoal',m,dPessoal);
+    põe(dre,'desp_trib',m,dTrib);            põe(dre,'desp_outras',m,dOutras);
+    põe(dre,'dep_amort',m,depAmort);         põe(dre,'rec_fin',m,recFin);
+    põe(dre,'desp_fin',m,despFin);           põe(dre,'outras_rd',m,outras);
+    põe(dre,'provisao_ir',m,provIR);
+    // as linhas de fechamento vão explícitas: é o que uma planilha real traria
+    põe(dre,'receita_liquida',m,rl);  põe(dre,'custos',m,custos);   põe(dre,'lucro_bruto',m,lb);
+    põe(dre,'despesas',m,despesas);   põe(dre,'ebitda',m,ebitda);   põe(dre,'ebit',m,ebit);
+    põe(dre,'result_fin',m,resFin);   põe(dre,'lair',m,lair);       põe(dre,'lucro_liquido',m,ll);
+
+    /* Balanço: saldos de fechamento. Montado na ordem em que a contabilidade
+       de verdade acontece — o patrimônio cresce com o lucro que fica na
+       empresa, e o CAIXA é o que fecha a conta. Assim o balanço BATE por
+       construção (Ativo = Passivo + PL), sem número forçado. */
+    const clientes = rb * 0.52;
+    const estoque  = 21000 + i * 380;
+    const adiantF  = 7400;
+    const outrosOp = 12500;
+    const imob     = 412000 - i * 3300;
+    const outrosNC = 31000;
+    const fornec   = rb * 0.16;
+    const oFiscais = rb * 0.09;
+    const oTrab    = rb * 0.11;
+    const provTrab = 84000 + i * 900;
+    const pFin     = 38000;
+    const outrosPO = 24000;
+    const emprest  = 214000 - i * 4200;
+    const capital  = 150000;
+    const somaAte = filtro => meses.slice(0,i+1).filter(filtro).reduce((s,mm) => s + (dre.lucro_liquido[mm]||0), 0);
+    const resTotal  = somaAte(() => true);                                  // tudo o que a janela acumulou
+    const resExerc  = somaAte(mm => mm.slice(0,4) === m.slice(0,4));        // só o ano corrente
+    const lucrosAcum = 180000 + (resTotal - resExerc);                      // anos anteriores viram lucro acumulado
+    const distrib    = -Math.round(resTotal * 0.6);                         // os sócios retiram 60% do lucro
+    const pl = capital + Math.round(lucrosAcum) + Math.round(resExerc) + distrib;
+    const passivoSemPL = Math.round(fornec)+Math.round(oFiscais)+Math.round(oTrab)+provTrab+pFin+outrosPO+emprest;
+    const naoCaixa = Math.round(clientes)+estoque+adiantF+outrosOp+imob+outrosNC;
+    const caixa = pl + passivoSemPL - naoCaixa;                             // o caixa fecha o balanço
+
+    põe(ativo,'caixa',m,caixa);            põe(ativo,'clientes',m,clientes);
+    põe(ativo,'estoque',m,estoque);        põe(ativo,'adiant_forn',m,adiantF);
+    põe(ativo,'outros_ativos_op',m,outrosOp);
+    põe(ativo,'imobilizado',m,imob);       põe(ativo,'outros_anc',m,outrosNC);
+    põe(passivo,'fornecedores',m,fornec);   põe(passivo,'obrig_fiscais',m,oFiscais);
+    põe(passivo,'obrig_trab',m,oTrab);      põe(passivo,'prov_trab',m,provTrab);
+    põe(passivo,'passivos_fin',m,pFin);     põe(passivo,'outros_passivos_op',m,outrosPO);
+    põe(passivo,'emprestimos',m,emprest);   põe(passivo,'capital_social',m,capital);
+    põe(passivo,'lucros_acum',m,lucrosAcum); põe(passivo,'lucros_distrib',m,distrib);
+    põe(passivo,'resultado_exerc',m,resExerc);
+  });
+
+  /* devolve no formato do contrato — conta -> { 'AAAA-MM': valor } */
+  const paraLinhas = (serie, estrutura) => estrutura.filter(d => serie[d.k]).map(d => ({ conta:d.tec, valores:serie[d.k] }));
+  return {
+    id: IDENTIDADE.id || '000000',
+    atualizado_em: new Date().toISOString(),
+    exemplo: true,
+    config: { razao_social:'Clínica Exemplo Ltda (empresa fictícia)', cnpj:'00.000.000/0001-00', regime:'Simples Nacional' },
+    contabil: { meses, dre: paraLinhas(dre, DRE),
+      balanco: { ativo: paraLinhas(ativo, BP_ATIVO), passivo: paraLinhas(passivo, BP_PASSIVO) } }
+  };
+}
+
+/* ═══════════════ PREPARO PARA A TELA ═══════════════ */
+const V  = (S,k,m) => (S && S[k] && S[k][m] != null) ? S[k][m] : null;
+const V0 = (S,k,m) => { const x = V(S,k,m); return x == null ? 0 : x; };
+function acumular(S, k, meses){
+  let t = 0, achou = false;
+  meses.forEach(m => { const x = V(S,k,m); if (x != null){ t += x; achou = true; } });
+  return achou ? t : null;
+}
+function preparar(raw){
+  const N = normalizarContabil(raw);
+  const cfg = (raw && raw.config) || {};
+  const meses = N.meses;
+  const comMovimento = meses.filter(m => V(N.dre,'receita_bruta',m) != null || V(N.dre,'lucro_liquido',m) != null);
+  const mesesBP = meses.filter(m => V(N.ativo,'ativo',m) != null || V(N.passivo,'passivo_pl',m) != null);
+  const ultimo   = comMovimento.length ? comMovimento[comMovimento.length-1] : (meses[meses.length-1] || '');
+  const anterior = comMovimento.length > 1 ? comMovimento[comMovimento.length-2] : '';
+  const ultimoBP = mesesBP.length ? mesesBP[mesesBP.length-1] : '';
+  const antBP    = mesesBP.length > 1 ? mesesBP[mesesBP.length-2] : '';
+  return {
+    id: (raw && raw.id) || IDENTIDADE.id, cfg, atualizado_em: raw && raw.atualizado_em,
+    exemplo: !!(raw && raw.exemplo),
+    meses, mesesFluxo: comMovimento, mesesBP, ultimo, anterior, ultimoBP, antBP,
+    dre: N.dre, ativo: N.ativo, passivo: N.passivo, extras: N.extras,
+    sinalCorrigido: N.sinalCorrigido, temDRE: N.temDRE, temBP: N.temBP, temDados: N.temDados
+  };
+}
+
+/* Variação contra o mês anterior. A COR segue a POLARIDADE do indicador
+   (despesa subindo é ruim, receita subindo é boa), nunca o sinal do número. */
+function htmlDelta(atual, anterior, polaridade, quando, sufixo){
+  if (atual == null || anterior == null || !isFinite(anterior) || anterior === 0) return '';
+  const d = (atual - anterior) / Math.abs(anterior);
+  if (!isFinite(d)) return '';
+  const quase = Math.abs(d) < 0.005;
+  const bom = d > 0 ? polaridade > 0 : polaridade < 0;
+  const classe = quase || polaridade === 0 ? 'neutro' : (bom ? 'bom' : 'ruim');
+  const seta = quase ? '=' : (d > 0 ? '▲' : '▼');
+  const txt = quase ? 'estável' : pctBR(Math.abs(d*100), 1);
+  const t = 'Comparado com ' + (quando || 'o mês anterior') + (sufixo ? ' · ' + sufixo : '');
+  return '<div class="delta ' + classe + '" title="' + esc(t) + '"><i>' + seta + '</i>' + txt + '</div>';
+}
+
+/* ═══════════════ TELA ═══════════════ */
+const IC_CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>';
+const IC_CHEV_MINI = '<svg class="chev-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>';
+const SELO = '<span class="selo" title="Estes números são de uma empresa fictícia, só para demonstração.">exemplo</span>';
+const selo = () => DEMO ? SELO : '';
+
+function htmlCabecalho(M){
+  const nome = (M && M.cfg && M.cfg.razao_social) || 'Contábil';
+  const sub = (M && M.cfg && M.cfg.cnpj) ? 'CNPJ ' + esc(M.cfg.cnpj) : (M && M.id ? 'cliente ' + esc(M.id) : '');
+  return '<header' + (DEMO ? ' class="demo"' : '') + '>' +
+    '<div class="bar">' +
+      '<div>' +
+        '<div class="logo"><span class="b">back</span><span class="y">4you</span></div>' +
+        '<div class="brand-sub">' + esc(nome) + (sub ? ' · ' + sub : '') + '</div>' +
+      '</div>' +
+      '<div class="spacer"></div>' +
+      '<span class="badge-topo">Contábil</span>' +
+    '</div>' +
+    (DEMO ? '<div class="faixa-demo">' + SELO +
+        '<span class="fd-txt"><b>Você está vendo um exemplo.</b> Os números são de uma empresa ' +
+        'fictícia — nada aqui é da sua empresa.</span>' +
+        '<button type="button" class="faixa-btn" id="sair-demo">Sair do exemplo</button>' +
+      '</div>' : '') +
+    '</header>';
+}
+function ligarSairDemo(){
+  const b = document.getElementById('sair-demo');
+  if (b) b.addEventListener('click', () => { location.href = urlComDemo(false); });
+}
+
+function render(M){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  if (DEMO) document.title = '[EXEMPLO] Contábil — back4you';
+  appendAll(app, htmlCabecalho(M));
+  const wrap = el('<div class="wrap"></div>');
+  app.appendChild(wrap);
+
+  const D = M.dre, m = M.ultimo, ant = M.anterior;
+  const rl   = V(D,'receita_liquida', m);
+  const ll   = V(D,'lucro_liquido', m);
+  const rb   = V(D,'receita_bruta', m);
+  const llAnt = ant ? V(D,'lucro_liquido', ant) : null;
+  const rlAnt = ant ? V(D,'receita_liquida', ant) : null;
+  const margem = (ll != null && rb) ? (ll / rb * 100) : null;
+  const margemAnt = (llAnt != null && ant && V(D,'receita_bruta',ant)) ? (llAnt / V(D,'receita_bruta',ant) * 100) : null;
+  const caixa = M.ultimoBP ? V(M.ativo,'caixa', M.ultimoBP) : null;
+  const caixaAnt = M.antBP ? V(M.ativo,'caixa', M.antBP) : null;
+  const positivo = (ll || 0) >= 0;
+  const acumLL = acumular(D,'lucro_liquido', M.mesesFluxo);
+  const periodo = M.mesesFluxo.length
+    ? mesExtenso(M.mesesFluxo[0]) + ' a ' + mesExtenso(M.mesesFluxo[M.mesesFluxo.length-1])
+    : '';
+
+  /* ─────────── 1) O NÚMERO QUE IMPORTA ─────────── */
+  let subHeroi;
+  if (ll == null){
+    subHeroi = 'Ainda não recebemos o resultado fechado deste mês.';
+  } else if (positivo){
+    subHeroi = 'É o que a empresa faturou menos tudo o que ela gastou em ' + esc(mesExtenso(m)) + '.' +
+      (margem != null ? ' De cada <b>R$ 100</b> faturados, sobraram <b>' + brl(margem) + '</b>.' : '');
+  } else {
+    subHeroi = 'Em ' + esc(mesExtenso(m)) + ' a empresa gastou mais do que faturou. ' +
+      'Vale olhar com calma a lista de custos e despesas aqui embaixo.';
+  }
+  appendAll(wrap, '' +
+    '<div class="heroi">' +
+      '<div class="heroi-top"><span class="lbl">' + (positivo ? 'Quanto sobrou em ' : 'Quanto faltou em ') + esc(m ? mesExtenso(m) : 'aberto') + '</span>' + selo() + '</div>' +
+      '<div class="heroi-v num' + (positivo ? '' : ' neg') + '">' + (ll == null ? '—' : brl(Math.abs(ll))) + '</div>' +
+      '<div class="heroi-sub">' + subHeroi + '</div>' +
+      (periodo ? '<div class="heroi-pe">Período no painel: ' + esc(periodo) +
+        (acumLL != null ? ' · no total do período ' + (acumLL >= 0 ? 'sobraram ' : 'faltaram ') + '<b>' + brl(Math.abs(acumLL)) + '</b>' : '') +
+        '</div>' : '') +
+    '</div>');
+
+  /* ─────────── 2) A FILA DE INDICADORES ─────────── */
+  const quando = ant ? mesExtenso(ant) : 'o mês anterior';
+  const tSaidas = (rl != null && ll != null) ? (rl - ll) : null;
+  appendAll(wrap, '' +
+    '<div class="tiles">' +
+      '<div class="card stat tile">' +
+        '<span class="lbl">Faturamento</span>' +
+        '<div class="v num">' + (rl == null ? '—' : brl(rl)) + '</div>' +
+        htmlDelta(rl, rlAnt, 1, quando) +
+        '<div class="s" title="Receita Líquida: o faturamento do mês depois de descontar os impostos que saem direto da nota.">o que entrou, já sem os impostos</div>' +
+      '</div>' +
+      '<div class="card stat tile ' + (ll == null ? '' : (positivo ? 'tile-ok' : 'tile-ruim')) + '">' +
+        '<span class="lbl">' + (positivo ? 'Sobrou' : 'Faltou') + '</span>' +
+        '<div class="v num">' + (ll == null ? '—' : brl(Math.abs(ll))) + '</div>' +
+        htmlDelta(ll, llAnt, 1, quando) +
+        '<div class="s" title="Lucro Líquido: o resultado do mês depois de todos os custos, despesas e impostos.">o que ficou no fim do mês</div>' +
+      '</div>' +
+      '<div class="card stat tile">' +
+        '<span class="lbl">Margem</span>' +
+        '<div class="v num">' + (margem == null ? '—' : pctBR(margem,1)) + '</div>' +
+        htmlDelta(margem, margemAnt, 1, quando) +
+        '<div class="s" title="Margem líquida: o resultado dividido pelo faturamento total do mês.">quanto sobra de cada R$ 100 faturados</div>' +
+      '</div>' +
+      (caixa != null
+        ? '<div class="card stat tile">' +
+            '<span class="lbl">Em caixa</span>' +
+            '<div class="v num">' + brl(caixa) + '</div>' +
+            htmlDelta(caixa, caixaAnt, 1, M.antBP ? mesExtenso(M.antBP) : quando) +
+            '<div class="s" title="Caixa e Equivalentes: saldo em caixa, conta corrente e aplicações de liquidez imediata.">dinheiro em caixa e no banco</div>' +
+          '</div>'
+        : '<div class="card stat tile">' +
+            '<span class="lbl">Saiu no mês</span>' +
+            '<div class="v num">' + (tSaidas == null ? '—' : brl(tSaidas)) + '</div>' +
+            '<div class="s">custos, despesas e impostos somados</div>' +
+          '</div>') +
+    '</div>');
+
+  /* ─────────── 3) O ÚNICO GRÁFICO DA PRIMEIRA TELA ─────────── */
+  appendAll(wrap, '' +
+    '<div class="card chart" id="card-evolucao" style="margin-top:16px">' +
+      '<div class="graf-titulo">Como foi cada mês' + selo() + '</div>' +
+      '<div class="graf-sub">As barras são o que entrou (já sem os impostos). A linha é o que sobrou no fim de cada mês.</div>' +
+      '<div class="cbox-alto"><canvas id="g-evolucao" role="img" aria-label="Faturamento e resultado mês a mês"></canvas></div>' +
+      '<div class="leg" id="g-evolucao-lg"></div>' +
+    '</div>');
+
+  /* ─────────── 4) O DETALHE, RECOLHIDO ─────────── */
+  appendAll(wrap, '<div class="sec-head"><div><h2>Detalhes, se você quiser ver</h2>' +
+    '<p>Começa tudo fechado. Toque em qualquer linha para abrir.</p></div></div>');
+
+  if (M.temDRE) appendAll(wrap, blocoDRE(M));
+  if (M.temBP)  appendAll(wrap, blocoBalanco(M));
+  appendAll(wrap, blocoIndicadores(M));
+  if (M.mesesFluxo.length > 1) appendAll(wrap, blocoMeses(M));
+
+  wrap.appendChild(el('<footer>' +
+    '<span>' + (DEMO ? 'Dados de exemplo — empresa fictícia' :
+      'Atualizado em ' + esc(new Date(M.atualizado_em || Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}))) + '</span>' +
+    '<span>Dúvida em algum número? Fale com a gente pelo WhatsApp.</span>' +
+  '</footer>'));
+
+  ligarSairDemo();
+  try { graficoEvolucao(M); } catch(e){ console.warn('Gráfico principal indisponível:', e); }
+  desenharAoAbrir('bloco-dre',     () => graficoCascata(M));
+  desenharAoAbrir('bloco-balanco', () => graficoBalanco(M));
+  desenharAoAbrir('bloco-meses',   () => graficoMeses(M));
+}
+
+/* ─────────────────────── tabela em cascata (DRE) ─────────────────────── */
+function celulaValor(v, def){
+  if (v == null) return '<td class="v zero">—</td>';
+  const cls = 'v' + (v < 0 ? ' saida' : (v === 0 ? ' zero' : ''));
+  return '<td class="' + cls + '">' + esc(brl0(v)) + '</td>';
+}
+function blocoDRE(M){
+  const D = M.dre, meses = M.mesesFluxo.length ? M.mesesFluxo : M.meses;
+  const baseAV = acumular(D,'receita_bruta', meses) || 0;
+  const linhas = DRE.filter(def => D[def.k]);
+  const corpo = linhas.map(def => {
+    const acum = acumular(D, def.k, meses);
+    const av = (baseAV && acum != null) ? (acum / baseAV * 100) : null;
+    return '<tr class="n' + def.nivel + (def.tipo === 'total' ? ' total' : '') + (def.destaque ? ' destaque' : '') + '">' +
+      '<td class="conta"><span class="c-nome">' + esc(def.nome) + '</span>' +
+        '<span class="c-tec" title="' + esc('Nome contábil: ' + def.tec) + '">' + esc(def.tec) + '</span></td>' +
+      celulaValor(acum, def) +
+      '<td class="av">' + (av == null ? '—' : pctBR(av,1)) + '</td>' +
+      meses.map(m => celulaValor(V(D, def.k, m), def)).join('') +
+    '</tr>';
+  }).join('');
+
+  const rbAcum = baseAV;
+  const llAcum = acumular(D,'lucro_liquido', meses);
+  const resumo = 'faturou ' + brlCurto(rbAcum) + ' no período · ' +
+    ((llAcum||0) >= 0 ? 'sobraram ' : 'faltaram ') + brlCurto(Math.abs(llAcum||0));
+
+  const extrasDRE = (M.extras||[]).filter(l => Object.keys(l.valores).length);
+  return '<details class="bloco" id="bloco-dre">' +
+    '<summary><div class="bloco-t"><b>De onde veio e para onde foi o dinheiro</b>' +
+      '<span>' + esc(resumo) + '</span></div>' + (DEMO ? SELO : '') + IC_CHEV + '</summary>' +
+    '<div class="bloco-body">' +
+      '<div class="bloco-nota">Esta é a <b>DRE</b> — o nome técnico de "conta do mês". Ela começa no faturamento ' +
+        'e vai descontando, em degraus, tudo o que a empresa gastou, até chegar no que sobrou. ' +
+        'Valores com <b>−</b> são saídas.</div>' +
+      '<div class="graf-titulo">Os degraus do mês' + selo() + '</div>' +
+      '<div class="graf-sub">' + esc(M.ultimo ? mesExtenso(M.ultimo) : '') + ' — do faturamento até o que sobrou.</div>' +
+      '<div class="cbox"><canvas id="g-cascata" role="img" aria-label="Do faturamento até o resultado do mês"></canvas></div>' +
+      '<div class="leg" id="g-cascata-lg"></div>' +
+      '<div class="graf-titulo" style="margin-top:26px">Linha por linha</div>' +
+      '<div class="graf-sub">Acumulado do período e depois mês a mês. Arraste a tabela para o lado para ver todos os meses.</div>' +
+      '<div class="tab-rol"><table class="tab">' +
+        '<thead><tr>' +
+          '<th class="conta">Conta</th><th>Acumulado</th>' +
+          '<th title="Análise vertical: quanto essa linha representa do faturamento total do período.">% do faturamento</th>' +
+          meses.map(m => '<th>' + esc(mesCurtoLbl(m)) + '</th>').join('') +
+        '</tr></thead><tbody>' + corpo + '</tbody>' +
+      '</table></div>' +
+      '<div class="tab-legenda">Os valores com <b>−</b> na frente são saídas de dinheiro. ' +
+        'A coluna <b>% do faturamento</b> mostra o peso de cada linha sobre tudo o que a empresa faturou no período.</div>' +
+      (M.sinalCorrigido ? '<div class="aviso"><span class="ai">⚠︎</span><div>Algumas linhas de custo ou despesa vieram da planilha com sinal positivo. ' +
+        'Para as contas fecharem, o painel as tratou como <b>saída</b>.</div></div>' : '') +
+      (extrasDRE.length ? '<details class="como" style="margin-top:16px"><summary>' + IC_CHEV_MINI +
+        'Outras ' + extrasDRE.length + ' linha(s) da planilha que não entram nesta estrutura</summary>' +
+        '<div class="formula">' + extrasDRE.map(l => esc(l.nome)).join(' · ') + '</div></details>' : '') +
+    '</div></details>';
+}
+
+/* ─────────────────────── Balanço Patrimonial ─────────────────────── */
+function tabelaBP(estrutura, S, mes, total){
+  const linhas = estrutura.filter(def => S[def.k]);
+  if (!linhas.length) return '';
+  return '<div class="tab-rol"><table class="tab"><thead><tr>' +
+      '<th class="conta">Conta</th><th>Saldo</th>' +
+      '<th title="Análise vertical: quanto essa conta representa do total.">% do total</th>' +
+    '</tr></thead><tbody>' +
+    linhas.map(def => {
+      const v = V(S, def.k, mes);
+      const av = (total && v != null) ? (v / total * 100) : null;
+      return '<tr class="n' + def.nivel + (def.tipo === 'total' ? ' total' : '') + (def.tipo === 'sub' ? ' total' : '') + '">' +
+        '<td class="conta"><span class="c-nome">' + esc(def.nome) + '</span>' +
+          '<span class="c-tec" title="' + esc('Nome contábil: ' + def.tec) + '">' + esc(def.tec) + '</span></td>' +
+        celulaValor(v, def) +
+        '<td class="av">' + (av == null ? '—' : pctBR(av,0)) + '</td>' +
+      '</tr>';
+    }).join('') + '</tbody></table></div>';
+}
+function blocoBalanco(M){
+  const m = M.ultimoBP;
+  const ativo = V(M.ativo,'ativo',m), passivoPL = V(M.passivo,'passivo_pl',m);
+  const pc = V(M.passivo,'passivo_circulante',m), pnc = V(M.passivo,'passivo_nao_circulante',m);
+  const pl = V(M.passivo,'pl',m);
+  const deve = (pc||0) + (pnc||0);
+  const dif = (ativo != null && passivoPL != null) ? (ativo - passivoPL) : null;
+  const fecha = dif != null && Math.abs(dif) <= Math.max(1, Math.abs(ativo||0) * 0.005);
+  const resumo = 'tem ' + brlCurto(ativo||0) + ' · deve ' + brlCurto(deve) + ' · dos sócios ' + brlCurto(pl||0);
+
+  return '<details class="bloco" id="bloco-balanco">' +
+    '<summary><div class="bloco-t"><b>O que a empresa tem e o que ela deve</b>' +
+      '<span>' + esc(resumo) + '</span></div>' + (DEMO ? SELO : '') + IC_CHEV + '</summary>' +
+    '<div class="bloco-body">' +
+      '<div class="bloco-nota">Isto é o <b>Balanço Patrimonial</b> — uma fotografia da empresa em ' +
+        esc(m ? mesExtenso(m) : '') + '. De um lado, tudo o que ela tem (o <b>Ativo</b>). ' +
+        'Do outro, de quem é esse dinheiro: parte é de terceiros (o que ela <b>deve</b>) e parte é dos sócios ' +
+        '(o <b>Patrimônio Líquido</b>). Os dois lados têm de dar o mesmo valor.</div>' +
+      '<div class="cbox-baixo"><canvas id="g-balanco" role="img" aria-label="Ativo comparado a passivo e patrimônio líquido"></canvas></div>' +
+      '<div class="leg" id="g-balanco-lg"></div>' +
+      (dif == null ? '' : (fecha
+        ? '<div class="tab-legenda" style="margin-top:12px">✓ Os dois lados fecham no mesmo valor — o balanço está consistente.</div>'
+        : '<div class="aviso"><span class="ai">⚠︎</span><div><b>Os dois lados não fecharam.</b> ' +
+          'Há uma diferença de ' + esc(brl0(Math.abs(dif))) + ' entre o que a empresa tem e a soma do que ela deve com o que é dos sócios. ' +
+          'Nossa equipe contábil revisa isso — se este número for para alguma decisão, confirme com a gente antes.</div></div>')) +
+      '<div class="graf-titulo" style="margin-top:26px">O que a empresa tem</div>' +
+      '<div class="graf-sub">Saldos em ' + esc(m ? mesExtenso(m) : '') + '.</div>' +
+      tabelaBP(BP_ATIVO, M.ativo, m, ativo) +
+      '<div class="graf-titulo" style="margin-top:22px">O que ela deve e o que é dos sócios</div>' +
+      '<div class="graf-sub">Mesma data, o outro lado da fotografia.</div>' +
+      tabelaBP(BP_PASSIVO, M.passivo, m, passivoPL) +
+    '</div></details>';
+}
+
+/* ─────────────────────── Indicadores ─────────────────────── */
+function calcularIndicadores(M){
+  const D = M.dre, m = M.ultimo, ant = M.anterior, b = M.ultimoBP, bAnt = M.antBP;
+  const f = (fn, mes, mesBP) => { try { return fn(mes, mesBP); } catch(e){ return null; } };
+  const margemLiquida = (mm) => { const rb = V(D,'receita_bruta',mm), ll = V(D,'lucro_liquido',mm);
+    return (rb && ll != null) ? ll/rb*100 : null; };
+  const margemBruta = (mm) => { const rb = V(D,'receita_bruta',mm), lb = V(D,'lucro_bruto',mm);
+    return (rb && lb != null) ? lb/rb*100 : null; };
+  const pesoDespesas = (mm) => { const rb = V(D,'receita_bruta',mm), dp = V(D,'despesas',mm);
+    return (rb && dp != null) ? Math.abs(dp)/rb*100 : null; };
+  const liquidez = (mm) => { const ac = V(M.ativo,'ativo_circulante',mm), pc = V(M.passivo,'passivo_circulante',mm);
+    return (ac != null && pc) ? ac/pc : null; };
+  const endividamento = (mm) => { const at = V(M.ativo,'ativo',mm),
+    pc = V(M.passivo,'passivo_circulante',mm), pnc = V(M.passivo,'passivo_nao_circulante',mm);
+    return (at && (pc != null || pnc != null)) ? ((pc||0)+(pnc||0))/at*100 : null; };
+
+  const rb = V(D,'receita_bruta',m), ll = V(D,'lucro_liquido',m), lb = V(D,'lucro_bruto',m), dp = V(D,'despesas',m);
+  const ac = b ? V(M.ativo,'ativo_circulante',b) : null, pc = b ? V(M.passivo,'passivo_circulante',b) : null;
+  const at = b ? V(M.ativo,'ativo',b) : null, pnc = b ? V(M.passivo,'passivo_nao_circulante',b) : null;
+
+  return [
+    { k:'margem_liq', nome:'Quanto sobra de cada R$ 100', curto:'margem', tec:'Margem líquida', pol:1, unidade:'%',
+      valor:f(margemLiquida,m), antes:ant?f(margemLiquida,ant):null, quando: ant ? mesExtenso(ant) : '',
+      leitura: v => v == null ? '' : (v >= 15 ? 'Folga confortável.' : v >= 5 ? 'Sobra apertada, mas positiva.' : v >= 0 ? 'Sobra muito pequena — qualquer imprevisto vira prejuízo.' : 'O mês fechou no vermelho.'),
+      formula:'quanto sobrou no mês ÷ faturamento total × 100',
+      conta: (ll != null && rb) ? '(' + brl0(ll) + ' ÷ ' + brl0(rb) + ') × 100 = ' + pctBR(ll/rb*100,1) : '' },
+    { k:'margem_bruta', nome:'Sobra depois só dos custos', curto:'margem bruta', tec:'Margem bruta', pol:1, unidade:'%',
+      valor:f(margemBruta,m), antes:ant?f(margemBruta,ant):null, quando: ant ? mesExtenso(ant) : '',
+      leitura: v => v == null ? '' : 'É o que sobra antes de pagar a estrutura da empresa (aluguel, administração, impostos fora da nota).',
+      formula:'sobra depois dos custos ÷ faturamento total × 100',
+      conta: (lb != null && rb) ? '(' + brl0(lb) + ' ÷ ' + brl0(rb) + ') × 100 = ' + pctBR(lb/rb*100,1) : '' },
+    { k:'peso_despesas', nome:'Peso das despesas', curto:'despesas', tec:'Despesas sobre a receita', pol:-1, unidade:'%',
+      valor:f(pesoDespesas,m), antes:ant?f(pesoDespesas,ant):null, quando: ant ? mesExtenso(ant) : '',
+      leitura: v => v == null ? '' : 'De cada R$ 100 faturados, ' + numBR(v,0) + ' vão para manter a empresa de pé. Quanto menor, melhor.',
+      formula:'despesas para manter a empresa ÷ faturamento total × 100',
+      conta: (dp != null && rb) ? '(' + brl0(Math.abs(dp)) + ' ÷ ' + brl0(rb) + ') × 100 = ' + pctBR(Math.abs(dp)/rb*100,1) : '' },
+    { k:'liquidez', nome:'Fôlego para as contas do ano', curto:'fôlego de caixa', tec:'Liquidez corrente', pol:1, unidade:'x',
+      valor:f(liquidez,b), antes:bAnt?f(liquidez,bAnt):null, quando: bAnt ? mesExtenso(bAnt) : '',
+      leitura: v => v == null ? '' : (v >= 1.5 ? 'Para cada R$ 1 a pagar nos próximos 12 meses, a empresa tem R$ ' + numBR(v,2) + ' a receber. Situação folgada.'
+        : v >= 1 ? 'Para cada R$ 1 a pagar, há R$ ' + numBR(v,2) + ' a receber. Dá, mas sem folga.'
+        : 'Para cada R$ 1 a pagar no curto prazo, há só R$ ' + numBR(v,2) + '. Atenção ao caixa.'),
+      formula:'o que a empresa tem de curto prazo ÷ o que ela deve de curto prazo',
+      conta: (ac != null && pc) ? brl0(ac) + ' ÷ ' + brl0(pc) + ' = ' + numBR(ac/pc,2) : '' },
+    { k:'endividamento', nome:'Quanto do que ela tem é de terceiros', curto:'endividamento', tec:'Endividamento', pol:-1, unidade:'%',
+      valor:f(endividamento,b), antes:bAnt?f(endividamento,bAnt):null, quando: bAnt ? mesExtenso(bAnt) : '',
+      leitura: v => v == null ? '' : (v < 50 ? 'A maior parte do que a empresa tem é dos sócios. Dívida sob controle.'
+        : v < 80 ? 'Boa parte do que a empresa tem ainda é de terceiros (bancos, fornecedores, impostos).'
+        : 'Quase tudo o que a empresa tem já está comprometido com terceiros.'),
+      formula:'(o que deve no curto prazo + o que deve no longo prazo) ÷ tudo o que a empresa tem × 100',
+      conta: (at && (pc != null || pnc != null)) ? '(' + brl0(pc||0) + ' + ' + brl0(pnc||0) + ') ÷ ' + brl0(at) + ' × 100 = ' + pctBR(((pc||0)+(pnc||0))/at*100,1) : '' }
+  ].filter(i => i.valor != null);
+}
+function formatarIndicador(i){
+  if (i.valor == null) return '—';
+  if (i.unidade === '%') return pctBR(i.valor,1);
+  if (i.unidade === 'x') return numBR(i.valor,2);
+  return brl(i.valor);
+}
+function blocoIndicadores(M){
+  const inds = calcularIndicadores(M);
+  if (!inds.length) return '';
+  const resumo = inds.slice(0,3).map(i => (i.curto || i.nome) + ' ' + formatarIndicador(i)).join(' · ');
+  return '<details class="bloco" id="bloco-indicadores">' +
+    '<summary><div class="bloco-t"><b>Os números que resumem a saúde da empresa</b>' +
+      '<span>' + esc(resumo) + '</span></div>' + (DEMO ? SELO : '') + IC_CHEV + '</summary>' +
+    '<div class="bloco-body">' +
+      '<div class="bloco-nota">Cada quadro abaixo tem um <b>"como calculamos"</b>. Abra para ver a conta ' +
+        'em português, com os números do mês. Nada aqui é caixa-preta.</div>' +
+      '<div class="ind-grid">' + inds.map(i =>
+        '<div class="ind">' +
+          '<span class="lbl" title="' + esc('Nome técnico: ' + i.tec) + '">' + esc(i.nome) + '</span>' +
+          '<div class="ind-v num">' + esc(formatarIndicador(i)) + '</div>' +
+          htmlDelta(i.valor, i.antes, i.pol, i.quando) +
+          '<div class="ind-s">' + esc(i.leitura(i.valor)) + '</div>' +
+          '<details class="como"><summary>' + IC_CHEV_MINI + 'Como calculamos</summary>' +
+            '<div class="formula">' + esc(i.tec) + ' = ' + esc(i.formula) +
+              (i.conta ? '<code>' + esc(i.conta) + '</code>' : '') +
+            '</div>' +
+          '</details>' +
+        '</div>').join('') + '</div>' +
+    '</div></details>';
+}
+
+/* ─────────────────────── Evolução mês a mês ─────────────────────── */
+function blocoMeses(M){
+  const D = M.dre, meses = M.mesesFluxo;
+  const linhas = meses.map(m => {
+    const rl = V(D,'receita_liquida',m), ll = V(D,'lucro_liquido',m);
+    const custos = V0(D,'custos',m), desp = V0(D,'despesas',m);
+    const saidas = (rl != null && ll != null) ? (rl - ll) : (Math.abs(custos) + Math.abs(desp));
+    const base = V(D,'receita_bruta',m) || rl;         // mesma base do resto do painel
+    const mg = (base && ll != null) ? ll/base*100 : null;
+    return { m, rl, ll, saidas, mg };
+  });
+  const comLL = linhas.filter(l => l.ll != null);
+  let melhor = null, pior = null;
+  comLL.forEach(l => { if (!melhor || l.ll > melhor.ll) melhor = l; if (!pior || l.ll < pior.ll) pior = l; });
+  const resumo = meses.length + ' meses' +
+    (melhor ? ' · melhor foi ' + mesCurtoLbl(melhor.m) + ' (' + brlCurto(melhor.ll) + ')' : '') +
+    (pior && melhor && pior.m !== melhor.m ? ' · pior foi ' + mesCurtoLbl(pior.m) + ' (' + brlCurto(pior.ll) + ')' : '');
+
+  return '<details class="bloco" id="bloco-meses">' +
+    '<summary><div class="bloco-t"><b>Mês a mês, lado a lado</b>' +
+      '<span>' + esc(resumo) + '</span></div>' + (DEMO ? SELO : '') + IC_CHEV + '</summary>' +
+    '<div class="bloco-body">' +
+      '<div class="bloco-nota">Aqui dá para ver o padrão: em que meses a empresa fatura mais, ' +
+        'em que meses gasta mais e como o que sobra se comporta ao longo do ano.</div>' +
+      '<div class="graf-titulo">Para onde foi o dinheiro' + selo() + '</div>' +
+      '<div class="graf-sub">Cada barra é tudo o que saiu no mês, separado por tipo de gasto.</div>' +
+      '<div class="cbox"><canvas id="g-meses" role="img" aria-label="Custos e despesas por mês"></canvas></div>' +
+      '<div class="leg" id="g-meses-lg"></div>' +
+      '<div class="tab-rol" style="margin-top:20px"><table class="tab"><thead><tr>' +
+        '<th class="conta">Mês</th><th>Entrou</th><th>Saiu</th><th>Sobrou</th><th>Margem</th>' +
+      '</tr></thead><tbody>' +
+      linhas.map(l => '<tr>' +
+        '<td class="conta"><span class="c-nome">' + esc(mesExtenso(l.m)) + '</span></td>' +
+        '<td class="v">' + (l.rl == null ? '—' : esc(brl0(l.rl))) + '</td>' +
+        '<td class="v saida">' + (l.saidas == null ? '—' : esc(brl0(-Math.abs(l.saidas)))) + '</td>' +
+        '<td class="v" style="font-weight:800;color:' + ((l.ll||0) >= 0 ? 'var(--g-ok-txt)' : 'var(--g-enc-txt)') + '">' +
+          (l.ll == null ? '—' : esc(brl0(l.ll))) + '</td>' +
+        '<td class="av">' + (l.mg == null ? '—' : pctBR(l.mg,1)) + '</td>' +
+      '</tr>').join('') + '</tbody></table></div>' +
+    '</div></details>';
+}
+
+/* ═══════════════════════════ GRÁFICOS ═══════════════════════════
+   Regras seguidas aqui, sem exceção:
+   · NUNCA dois eixos y. Quando duas séries têm unidades diferentes, ou vão
+     em gráficos separados, ou uma delas vira número/tabela.
+   · Nada de pizza/rosca para comparar 2 fatias ou valores próximos.
+   · Parte-de-um-todo (Ativo × Passivo+PL) = barra empilhada horizontal.
+   · Grade recessiva, marcas finas, eixo em R$ abreviado, tudo em pt-BR.
+   · Legenda em HTML sempre que houver 2 séries ou mais.                    */
+function tooltipBase(extra){
+  return Object.assign({
+    backgroundColor:PAL.petroleo, padding:11, cornerRadius:6, displayColors:false,
+    titleFont:{family:'Montserrat', size:12, weight:'700'},
+    bodyFont:{family:'Montserrat', size:12}, bodySpacing:4,
+    footerFont:{family:'Montserrat', size:11, weight:'600'}
+  }, extra||{});
+}
+/* Grade recessiva, com a linha do zero um pouco mais firme (leitura de negativos). */
+const gradeY = { color: c => (c.tick && c.tick.value === 0) ? PAL.line2 : PAL.grade, drawTicks:false };
+/* Marca d'água diagonal: nenhum gráfico de exemplo sai daqui parecendo dado real. */
+const PLUG_EXEMPLO = {
+  id:'marcaExemplo',
+  afterDatasetsDraw(chart){
+    if (!DEMO || !chart.chartArea) return;
+    const A = chart.chartArea, ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(A.left, A.top, A.right-A.left, A.bottom-A.top); ctx.clip();
+    ctx.translate((A.left+A.right)/2, (A.top+A.bottom)/2);
+    ctx.rotate(-22 * Math.PI/180);
+    ctx.font = '800 15px Montserrat, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(176,95,18,.13)';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const passoX = 240, passoY = 88, larg = A.right-A.left, alt = A.bottom-A.top;
+    const nx = Math.ceil(larg/passoX)+2, ny = Math.ceil(alt/passoY)+2;
+    for (let i = -nx; i <= nx; i++) for (let j = -ny; j <= ny; j++)
+      ctx.fillText('EXEMPLO', i*passoX + (j%2 ? passoX/2 : 0), j*passoY);
+    ctx.restore();
+  }
+};
+function semGrafico(idCanvas, msg){
+  const cv = document.getElementById(idCanvas); if (!cv) return;
+  const caixa = cv.parentElement; if (!caixa) return;
+  caixa.style.height = 'auto';
+  caixa.innerHTML = '<div class="sem-grafico">' + esc(msg) + '</div>';
+}
+function legenda(id, itens){
+  const lg = document.getElementById(id); if (!lg) return;
+  lg.innerHTML = itens.map(it => '<span class="leg-item"><i class="leg-sw' + (it.linha ? ' linha' : '') + '"' +
+    (it.linha ? ' style="border-top-color:' + it.cor + '"' : ' style="background:' + it.cor + '"') + '></i>' +
+    esc(it.nome) + (it.valor ? ' <b>' + esc(it.valor) + '</b>' : '') + '</span>').join('');
+}
+
+/* 1 — "Como foi cada mês": barras (entrou) + linha (sobrou). MESMA unidade,
+       MESMO eixo. É o jeito honesto de mostrar as duas coisas juntas. */
+function graficoEvolucao(M){
+  const D = M.dre, meses = M.mesesFluxo.length ? M.mesesFluxo : M.meses;
+  if (!TEM_CHART) return semGrafico('g-evolucao','Não consegui carregar o gráfico agora. Os números continuam completos nas tabelas abaixo.');
+  if (meses.length < 2){
+    return semGrafico('g-evolucao','Ainda há só um mês de contabilidade no painel — um gráfico de um ponto só não diz nada. ' +
+      'A partir do segundo mês fechado, a linha do tempo aparece aqui.');
+  }
+  const entrou  = meses.map(m => V(D,'receita_liquida',m));
+  const sobrou  = meses.map(m => V(D,'lucro_liquido',m));
+  const cv = document.getElementById('g-evolucao'); if (!cv) return;
+  new Chart(cv, {
+    data:{ labels: meses.map(mesCurtoLbl), datasets:[
+      { type:'bar', label:'Entrou', data:entrou, backgroundColor:COR.entra, borderWidth:0, maxBarThickness:42, order:2 },
+      { type:'line', label:'Sobrou', data:sobrou, borderColor:COR.resultado, backgroundColor:COR.resultado,
+        borderWidth:2.5, tension:0, pointRadius:3, pointHoverRadius:6, pointBackgroundColor:'#fff',
+        pointBorderColor:COR.resultado, pointBorderWidth:2, order:1 }
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:500},
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:false },
+        tooltip: tooltipBase({ callbacks:{
+          title: it => mesExtenso(meses[it[0].dataIndex]),
+          label: c => ' ' + (c.dataset.label === 'Entrou' ? 'Entrou (sem impostos): ' : 'Sobrou no fim: ') +
+            (c.parsed.y == null ? '—' : brl(c.parsed.y)),
+          footer: it => { const i = it[0].dataIndex, e = entrou[i], s = sobrou[i];
+            return (e && s != null) ? 'Margem: ' + pctBR(s/e*100,1) : ''; }
+        } }) },
+      scales:{
+        x:{ grid:{ display:false }, border:{ color:PAL.line },
+          ticks:{ color:PAL.muted, font:FONTE, maxRotation:0, autoSkip:true, maxTicksLimit:12 } },
+        y:{ grid:gradeY, border:{ display:false },
+          ticks:{ color:PAL.muted, font:FONTE, maxTicksLimit:5, padding:8, callback:v => brlCurto(v) } }
+      }
+    },
+    plugins:[PLUG_EXEMPLO]
+  });
+  const totE = entrou.reduce((s,v)=>s+(v||0),0), totS = sobrou.reduce((s,v)=>s+(v||0),0);
+  legenda('g-evolucao-lg', [
+    { cor:COR.entra, nome:'Entrou (barras)', valor: brlCurto(totE) + ' no período' },
+    { cor:COR.resultado, nome:'Sobrou (linha)', valor: brlCurto(totS) + ' no período', linha:true }
+  ]);
+}
+
+/* 2 — Cascata da DRE: do faturamento até o que sobrou, em degraus.
+       Barras flutuantes ([início, fim]) — waterfall de verdade, sem gambiarra. */
+function graficoCascata(M){
+  const D = M.dre, m = M.ultimo;
+  if (!TEM_CHART || !m) return semGrafico('g-cascata','O detalhe mês a mês está na tabela logo abaixo.');
+  const rb = V(D,'receita_bruta',m), ded = V0(D,'deducoes',m), cus = V0(D,'custos',m),
+        des = V0(D,'despesas',m), ll = V(D,'lucro_liquido',m);
+  if (rb == null || ll == null) return semGrafico('g-cascata','A tabela abaixo mostra as linhas que temos deste mês.');
+  const outros = ll - (rb + ded + cus + des);       // juros, desgaste, IR e o que mais houver
+  const passos = [
+    { rot:'Faturou',  tipo:'total', valor: rb, expl:'Tudo o que a empresa faturou no mês.' },
+    { rot:'Impostos', tipo:'sai',   valor: ded, expl:'Impostos que saem direto da nota, cancelamentos e devoluções.' },
+    { rot:'Custos',   tipo:'sai',   valor: cus, expl:'O que foi preciso gastar para entregar o serviço.' },
+    { rot:'Despesas', tipo:'sai',   valor: des, expl:'O que mantém a empresa de pé: administração, taxas, estrutura.' },
+    { rot:'Outros',   tipo:'mix',   valor: outros, expl:'Juros, rendimentos, desgaste de bens e imposto sobre o lucro.' },
+    { rot:'Sobrou',   tipo:'total', valor: ll, expl:'O que ficou no fim do mês.' }
+  ];
+  let acc = 0;
+  const dados = [], cores = [];
+  passos.forEach(p => {
+    if (p.tipo === 'total'){ dados.push([0, p.valor]); acc = p.valor; }
+    else { dados.push([acc, acc + p.valor]); acc += p.valor; }
+    cores.push(p.tipo === 'total' ? (p.valor < 0 ? PAL.ruim : COR.resultado)
+      : (p.valor < 0 ? COR.sai : COR.entra));
+  });
+  const cv = document.getElementById('g-cascata'); if (!cv) return;
+  new Chart(cv, {
+    type:'bar',
+    data:{ labels: passos.map(p => p.rot), datasets:[{ label:'Degraus do mês', data:dados,
+      backgroundColor:cores, borderWidth:0, maxBarThickness:56 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:500},
+      plugins:{ legend:{ display:false },
+        tooltip: tooltipBase({ callbacks:{
+          title: it => passos[it[0].dataIndex].rot,
+          label: c => { const p = passos[c.dataIndex];
+            return ' ' + (p.tipo === 'total' ? brl(p.valor) : (p.valor < 0 ? '− ' : '+ ') + brl(Math.abs(p.valor))); },
+          footer: it => passos[it[0].dataIndex].expl
+        } }) },
+      scales:{
+        x:{ grid:{ display:false }, border:{ color:PAL.line },
+          ticks:{ color:PAL.muted, font:{family:'Montserrat', size:10, weight:'700'}, maxRotation:0, autoSkip:false } },
+        y:{ grid:gradeY, border:{ display:false },
+          ticks:{ color:PAL.muted, font:FONTE, maxTicksLimit:5, padding:8, callback:v => brlCurto(v) } }
+      }
+    },
+    plugins:[PLUG_EXEMPLO]
+  });
+  const temSaida = passos.some(p => p.tipo !== 'total' && p.valor < 0);
+  const temEntrada = passos.some(p => p.tipo !== 'total' && p.valor > 0);
+  legenda('g-cascata-lg', [{ cor:COR.resultado, nome:'Ponto de partida e de chegada' }]
+    .concat(temSaida ? [{ cor:COR.sai, nome:'O que saiu' }] : [])
+    .concat(temEntrada ? [{ cor:COR.entra, nome:'O que entrou' }] : []));
+}
+
+/* 3 — Balanço: parte-de-um-todo -> barra EMPILHADA HORIZONTAL (nunca pizza).
+       As duas barras dividem a mesma escala: dá para ver de olho se fecham. */
+function graficoBalanco(M){
+  const m = M.ultimoBP;
+  if (!TEM_CHART || !m) return semGrafico('g-balanco','As tabelas abaixo trazem os saldos conta a conta.');
+  const ac = V0(M.ativo,'ativo_circulante',m), anc = V0(M.ativo,'ativo_nao_circulante',m);
+  const pc = V0(M.passivo,'passivo_circulante',m), pnc = V0(M.passivo,'passivo_nao_circulante',m),
+        pl = V0(M.passivo,'pl',m);
+  const L = ['O que tem', 'De quem é'];
+  const ds = [
+    { label:'Curto prazo (até 12 meses)', data:[ac, null],  cor:COR.entra },
+    { label:'Longo prazo',                data:[anc, null], cor:PAL.escuro },
+    { label:'Deve em até 12 meses',       data:[null, pc],  cor:COR.sai },
+    { label:'Deve depois de 12 meses',    data:[null, pnc], cor:COR.despesa },
+    { label:'É dos sócios',               data:[null, pl],  cor:COR.outros }
+  ];
+  const cv = document.getElementById('g-balanco'); if (!cv) return;
+  new Chart(cv, {
+    type:'bar',
+    data:{ labels:L, datasets: ds.map(d => ({ label:d.label, data:d.data, backgroundColor:d.cor,
+      borderWidth:0, barThickness:34 })) },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:{duration:500},
+      plugins:{ legend:{ display:false },
+        tooltip: tooltipBase({ callbacks:{
+          title: it => it[0].label === 'O que tem' ? 'Tudo o que a empresa tem' : 'De quem é esse dinheiro',
+          label: c => c.parsed.x == null ? '' : ' ' + c.dataset.label + ': ' + brl(c.parsed.x) } }) },
+      scales:{
+        x:{ stacked:true, beginAtZero:true, grid:gradeY, border:{ display:false },
+          ticks:{ color:PAL.muted, font:FONTE, maxTicksLimit:4, callback:v => brlCurto(v) } },
+        y:{ stacked:true, grid:{ display:false }, border:{ color:PAL.line },
+          ticks:{ color:PAL.muted, font:{family:'Montserrat', size:12, weight:'700'} } }
+      }
+    },
+    plugins:[PLUG_EXEMPLO]
+  });
+  legenda('g-balanco-lg', ds.filter(d => (d.data[0]||d.data[1])).map(d => ({
+    cor:d.cor, nome:d.label, valor: brlCurto(d.data[0] != null ? d.data[0] : d.data[1]) })));
+}
+
+/* 4 — "Para onde foi o dinheiro": empilhada só onde há decomposição real
+       de um total (custos + despesas + outras saídas = tudo o que saiu). */
+function graficoMeses(M){
+  const D = M.dre, meses = M.mesesFluxo;
+  if (!TEM_CHART || meses.length < 2) return semGrafico('g-meses','A tabela abaixo mostra mês a mês.');
+  const abs = (k,m) => Math.max(0, -V0(D,k,m));
+  const custos = meses.map(m => abs('custos',m));
+  const desp   = meses.map(m => abs('despesas',m));
+  const outras = meses.map((m,i) => {
+    const rl = V(D,'receita_liquida',m), ll = V(D,'lucro_liquido',m);
+    if (rl == null || ll == null) return 0;
+    return Math.max(0, (rl - ll) - custos[i] - desp[i]);
+  });
+  const cv = document.getElementById('g-meses'); if (!cv) return;
+  const ds = [
+    { label:'Custos', data:custos, cor:COR.sai },
+    { label:'Despesas', data:desp, cor:COR.despesa },
+    { label:'Juros, desgaste e IR', data:outras, cor:COR.outros }
+  ];
+  new Chart(cv, {
+    type:'bar',
+    data:{ labels: meses.map(mesCurtoLbl), datasets: ds.map(d => ({ label:d.label, data:d.data,
+      backgroundColor:d.cor, borderWidth:0, stack:'s', maxBarThickness:42 })) },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:500},
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:false },
+        tooltip: tooltipBase({ callbacks:{
+          title: it => mesExtenso(meses[it[0].dataIndex]),
+          label: c => ' ' + c.dataset.label + ': ' + brl(c.parsed.y),
+          footer: it => { const i = it[0].dataIndex;
+            const total = it.reduce((s,x)=>s+(x.parsed.y||0),0), ll = V(D,'lucro_liquido',meses[i]);
+            return 'Saiu no mês: ' + brl(total) + (ll != null ? '\nSobrou: ' + brl(ll) : ''); }
+        } }) },
+      scales:{
+        x:{ stacked:true, grid:{ display:false }, border:{ color:PAL.line },
+          ticks:{ color:PAL.muted, font:FONTE, maxRotation:0, autoSkip:true, maxTicksLimit:12 } },
+        y:{ stacked:true, beginAtZero:true, grid:gradeY, border:{ display:false },
+          ticks:{ color:PAL.muted, font:FONTE, maxTicksLimit:5, padding:8, callback:v => brlCurto(v) } }
+      }
+    },
+    plugins:[PLUG_EXEMPLO]
+  });
+  legenda('g-meses-lg', ds.map((d,i) => ({ cor:d.cor, nome:d.label,
+    valor: brlCurto(d.data.reduce((s,v)=>s+v,0)) })));
+}
+
+/* ═══════════════ ESTADO VAZIO — ainda não há planilha contábil ═══════════════
+   O dono sabe que a planilha não existe. Enquanto não existir, a página não
+   pode mostrar gráfico zerado nem tela de erro: mostra o que ela VAI mostrar,
+   e oferece o modo exemplo para a equipe demonstrar ao cliente. */
+function estadoVazio(M){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  appendAll(app, htmlCabecalho(M || { cfg:{}, id:IDENTIDADE.id }));
+  const wrap = el('<div class="wrap"></div>');
+  app.appendChild(wrap);
+  const linkDemo = urlComDemo(true);
+  appendAll(wrap, '' +
+    '<div class="vazio-card">' +
+      '<div class="vazio-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">' +
+        '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h3M8 17h6"/></svg></div>' +
+      '<h2>A contabilidade desta empresa ainda não está no painel</h2>' +
+      '<p>Não é erro nem falta de acesso: a parte contábil desta empresa ainda não foi ligada aqui. ' +
+        'Assim que ela for, esta página passa a mostrar, mês a mês:</p>' +
+      '<ul class="vazio-lista">' +
+        '<li><span class="mk">1</span><span><b>Quanto entrou, quanto saiu e quanto sobrou</b> — o resultado do mês em degraus, do faturamento até a sobra.</span></li>' +
+        '<li><span class="mk">2</span><span><b>O que a empresa tem e o que ela deve</b> — dinheiro em caixa, contas a receber, dívidas e o que é dos sócios.</span></li>' +
+        '<li><span class="mk">3</span><span><b>Margem, fôlego de caixa e endividamento</b> — cada um com a conta explicada em português.</span></li>' +
+        '<li><span class="mk">4</span><span><b>A evolução mês a mês</b> — para enxergar o padrão do ano, não só a foto de hoje.</span></li>' +
+      '</ul>' +
+      '<div class="vazio-acoes">' +
+        '<a class="btn primario" href="' + esc(linkDemo) + '">Ver um exemplo de como fica</a>' +
+        '<a class="btn secundario" href="https://wa.me/5511937173906" target="_blank" rel="noopener">Falar com a gente</a>' +
+      '</div>' +
+      '<div class="aviso"><span class="ai">ⓘ</span><div>O exemplo usa números de uma <b>empresa fictícia</b>, ' +
+        'só para mostrar o formato. Ele fica marcado como exemplo em todas as telas.</div></div>' +
+    '</div>');
+  wrap.appendChild(el('<footer><span>Painel contábil · back4you</span>' +
+    '<span>Quer antecipar a contabilidade aqui? Fale com o seu contato na back4you.</span></footer>'));
+  ligarSairDemo();
+}
+
+/* Em subpágina, sem login volta ao index; com id+código mostra aviso amigável. */
+function erro(msg){
+  var ic = getIdCodigo(), id = ic.id, codigo = ic.codigo;
+  if (!id || !codigo){ location.replace('index.html' + (id ? ('#'+id+(codigo?'-'+codigo:'')) : (location.hash||''))); return; }
+  var volta = 'index.html#' + id + (codigo ? ('-'+codigo) : '');
+  document.body.innerHTML =
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;'
+   +'font-family:\'Montserrat\',system-ui,-apple-system,sans-serif;background:#F1E7DC;color:#113D39">'
+   +'<div style="max-width:440px;text-align:center;background:#FFFFFF;border:1px solid #E4D9C9;'
+   +'border-radius:16px;padding:32px 28px;box-shadow:0 6px 24px rgba(7,48,52,.06)">'
+   +'<div style="font-size:24px;line-height:1;margin-bottom:10px">📄</div>'
+   +'<h2 style="margin:0 0 8px;font-size:19px">Não foi possível carregar suas informações agora.</h2>'
+   +'<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:#3F5854">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#0F8C85;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:15px">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#0F8C85;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
+   +'</div></div>';
+}
+
+/* "sem link de contabil" (Indice.gs) e parentes: não é erro do cliente —
+   é a planilha que ainda não existe. Vai para o estado vazio. */
+const RE_SEM_PLANILHA = /sem\s+link\s+de\s+cont|link\s+de\s+cont[aá]bil|planilha\s+de\s+cont|sem\s+planilha|n[ãa]o\s+configurad/i;
+
+async function carregar(){
+  const { id, codigo } = getIdCodigo();
+  IDENTIDADE = { id, codigo };
+  if (DEMO) return dadosExemplo();
+  if (!id) throw new Error('Informe o ID do cliente no final do endereço.');
+  if (!codigo) throw new Error('Informe também o código de acesso, no formato #482913-CODIGO.');
+  const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=contabil';
+  const d = await jsonp(url);
+  if (d && d.erro) throw new Error(d.erro);
+  return d;
+}
+
+(async function(){
+  try {
+    const raw = await carregar();
+    const M = preparar(raw);
+    /* Enquanto a rota não devolver DRE/Balanço (hoje ela cai no payload fiscal),
+       isto aqui é o caminho normal — e tem de ser digno, não uma tela de erro. */
+    if (!M.temDados){ estadoVazio(M); return; }
+    render(M);
+  } catch (e) {
+    const msg = (e && e.message) || String(e);
+    if (RE_SEM_PLANILHA.test(msg)){ estadoVazio(null); return; }
+    erro(msg);
+  }
+})();
+</script>
+</body>
+</html>

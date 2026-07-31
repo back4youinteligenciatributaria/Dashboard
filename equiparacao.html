@@ -21,9 +21,16 @@
   --radius-sm:8px; --radius:12px; --radius-lg:16px; --radius-pill:999px;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
   --receita:var(--brand-teal); --receita-soft:#DBEFEC;
-  --andamento:#A7715D; --andamento-soft:#F1E1D8;
-  --neutro:#5E9C8C; --neutro-soft:#E1EEE9;
-  --encerrado:#8E2B20; --encerrado-soft:#F3DEDB;
+  /* Situação do pedido — cores de STATUS. Nunca aparecem sozinhas: sempre com rótulo. */
+  --g-ok:#2E9D5F;  --g-ok-soft:#E7F4EC;  --g-ok-txt:#16713E;
+  --g-and:#E8892E; --g-and-soft:#FCEEDF; --g-and-txt:#9A5410;
+  --g-neu:#6B4FA0; --g-neu-soft:#EFEAF6; --g-neu-txt:#4F3A78;
+  --g-enc:#C0392B; --g-enc-soft:#F7E4E1; --g-enc-txt:#96271B;
+  --andamento:var(--g-and); --andamento-soft:var(--g-and-soft);
+  --neutro:var(--g-neu); --neutro-soft:var(--g-neu-soft);
+  --encerrado:var(--g-enc); --encerrado-soft:var(--g-enc-soft);
+  /* Slots categóricos (IRPJ, CSLL…) — ordem fixa, já validada. */
+  --slot1:#009488; --slot2:#B4530F; --slot3:#6B4FA0; --slot4:#7A8B3D;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -57,54 +64,31 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .docs-chave--destaque .doc-chave-icone svg{width:26px;height:26px}
 .docs-chave--destaque .doc-chave-nome{font-size:var(--fs-4);color:#fff}
 .docs-chave--destaque .doc-chave-abrir{font-size:var(--fs-2);color:rgba(255,255,255,.85)}
-.secao-mob{border:none;background:none;margin:32px 0 0;padding:0}
-.secao-mob>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
-.secao-mob>summary::-webkit-details-marker{display:none}
-.secao-mob>summary::marker{content:''}
-.secao-mob .sec-head{margin:0;flex:1}
-.secao-mob-chev{width:20px;height:20px;color:var(--muted);flex-shrink:0;transition:transform .2s}
-.secao-mob[open] .secao-mob-chev{transform:rotate(180deg)}
-.secao-mob-body{margin-top:14px}
-@media(min-width:641px){.secao-mob>summary{cursor:default;pointer-events:none}.secao-mob-chev{display:none}}
 
-.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:28px 0 22px}
-.stat{padding:18px 18px}
+.stat{padding:18px 18px;border-radius:var(--radius)}
 .stat .v{font-size:var(--fs-6);font-weight:800;letter-spacing:-.02em;margin-top:6px}
 .stat .s{font-size:var(--fs-2);color:var(--muted);margin-top:4px}
-.stat{border-radius:var(--radius)}
-.stat .v{font-weight:800}
-.stat.destaque{background:linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);border:none;box-shadow:0 14px 30px -12px rgba(6,48,51,.55)}
-.stat.destaque .lbl,.stat.destaque .s{color:rgba(255,255,255,.8)}
-.stat.destaque .v{color:#fff}
 
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:32px 0 14px}
 .sec-head h2{font-size:var(--fs-4);font-weight:700;letter-spacing:-.01em}
 .sec-head p{font-size:var(--fs-3);color:var(--muted)}
 
-.charts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:900px){.charts{grid-template-columns:1fr}}
 .chart{padding:20px 22px 16px}
 .chart h3{font-size:var(--fs-4);font-weight:700;margin-bottom:2px}
 .chart .sub{font-size:var(--fs-2);color:var(--muted);margin-bottom:14px}
 .cbox{position:relative;height:220px}
-.pie-legend{margin-top:10px}
-.pie-legend-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:var(--fs-2)}
-.pie-legend-row:first-child{border-top:none}
-.pie-legend-row i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
-.pie-legend-row span{flex:1;color:var(--ink-2)}
 
 @media(max-width:640px){
   .wrap{padding:0 14px 60px}
-  .hero>*,.charts>*,.docs-chave>*{min-width:0}
+  .tiles>*,.docs-chave>*{min-width:0}
   .sec-head{margin:22px 0 10px}.sec-head h2{font-size:var(--fs-4)}
-  .hero{gap:12px}.stat .v{font-size:var(--fs-5)}
 }
 
 .status-chip{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-1);font-weight:700;padding:3px 9px;border-radius:var(--radius-sm);white-space:nowrap}
-.status-andamento{background:var(--andamento-soft);color:var(--andamento)}
-.status-concluido{background:var(--receita-soft);color:var(--receita)}
-.status-neutro{background:var(--neutro-soft);color:var(--neutro)}
-.status-encerrado{background:var(--encerrado-soft);color:var(--encerrado)}
+.status-andamento{background:var(--g-and-soft);color:var(--g-and-txt)}
+.status-concluido{background:var(--g-ok-soft);color:var(--g-ok-txt)}
+.status-neutro{background:var(--g-neu-soft);color:var(--g-neu-txt)}
+.status-encerrado{background:var(--g-enc-soft);color:var(--g-enc-txt)}
 
 .lista{padding:8px 24px}
 .item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
@@ -131,11 +115,10 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 /* ════════ Dropdowns (accordion nativo <details>) ════════ */
 .acc{display:flex;flex-direction:column;gap:10px;margin-top:2px}
 .acc-item{background:var(--surface);border:1px solid var(--line);border-left-width:4px;border-radius:var(--radius);overflow:hidden;transition:border-color .15s,box-shadow .15s}
-.acc-item.andamento{border-left-color:var(--andamento)}
-.acc-item.concluido{border-left-color:var(--receita)}
-.acc-item.neutro{border-left-color:var(--neutro)}
-.acc-item.encerrado{border-left-color:var(--encerrado)}
-.acc-item.acc-all{border-left-color:var(--brand-dark)}
+.acc-item.andamento{border-left-color:var(--g-and)}
+.acc-item.concluido{border-left-color:var(--g-ok)}
+.acc-item.neutro{border-left-color:var(--g-neu)}
+.acc-item.encerrado{border-left-color:var(--g-enc)}
 .acc-item[open]{box-shadow:0 12px 30px -14px rgba(6,48,51,.35)}
 .acc-item>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:13px;padding:15px 18px}
 .acc-item>summary::-webkit-details-marker{display:none}
@@ -149,7 +132,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .acc-val{flex-shrink:0;text-align:right;display:flex;flex-direction:column;gap:0}
 .acc-val .v{font-size:var(--fs-5);font-weight:800;letter-spacing:-.02em;color:var(--ink)}
 .acc-val .k{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
-.acc-item.concluido .acc-val .v{color:var(--receita)}
+.acc-item.concluido .acc-val .v{color:var(--g-ok-txt)}
 .chev{flex-shrink:0;width:18px;height:18px;color:var(--muted);transition:transform .22s ease}
 .acc-item[open] .chev{transform:rotate(180deg)}
 .acc-body{padding:4px 18px 16px;border-top:1px solid var(--line)}
@@ -167,10 +150,10 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 /* ── "detalhamento completo": cada PER/DCOMP num dropdown próprio ── */
 .pacc{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .pitem{border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface)}
-.pitem.andamento{border-left-color:var(--andamento)}
-.pitem.concluido{border-left-color:var(--receita)}
-.pitem.neutro{border-left-color:var(--neutro)}
-.pitem.encerrado{border-left-color:var(--encerrado)}
+.pitem.andamento{border-left-color:var(--g-and)}
+.pitem.concluido{border-left-color:var(--g-ok)}
+.pitem.neutro{border-left-color:var(--g-neu)}
+.pitem.encerrado{border-left-color:var(--g-enc)}
 .pitem>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:11px;padding:12px 14px}
 .pitem>summary::-webkit-details-marker{display:none}
 .pitem>summary:hover{background:var(--surface-warm)}
@@ -178,7 +161,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .pitem-main{flex:1;min-width:0;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .pitem-title{font-size:var(--fs-3);font-weight:800;color:var(--ink);letter-spacing:-.01em}
 .pitem-val{flex-shrink:0;font-size:var(--fs-3);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em;color:var(--ink)}
-.pitem.concluido .pitem-val{color:var(--receita)}
+.pitem.concluido .pitem-val{color:var(--g-ok-txt)}
 .pitem>summary .chev{width:16px;height:16px}
 .pitem[open]>summary .chev{transform:rotate(180deg)}
 .pitem-body{padding:2px 14px 14px;border-top:1px solid var(--line)}
@@ -189,13 +172,6 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .pcard-grid .num{font-variant-numeric:tabular-nums}
 .pcard-expl{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line-2);font-size:var(--fs-2);color:var(--ink-2);line-height:1.5}
 
-/* hero — cores por situação */
-.stat.stat-aprovado{background:linear-gradient(135deg,#EAF7EF,#F6FBF8);border-color:#CDE8D7}
-.stat.stat-aprovado .lbl{color:#3C7A57}
-.stat.stat-aprovado .v{color:var(--verde)}
-.stat.stat-analise{background:linear-gradient(135deg,#FCF3DC,#FEFAF1);border-color:#EFDDAE}
-.stat.stat-analise .lbl{color:#977519}
-.stat.stat-analise .v{color:#B9791A}
 
 /* alerta de pagamento recente (±30 dias) */
 .alerta-pgto{display:flex;align-items:center;gap:14px;margin:20px 0 2px;padding:15px 18px;border-radius:var(--radius-lg);
@@ -214,8 +190,8 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .mini:hover{background:var(--surface-warm)}
 .mini:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
 .mini-datas{display:block;width:100%;font-size:var(--fs-1);color:var(--muted);margin-top:3px}
-.mini-datas .prev{color:#B9791A;font-weight:700}
-.mini-datas .pago{color:var(--verde);font-weight:700}
+.mini-datas .prev{color:var(--g-and-txt);font-weight:700}
+.mini-datas .pago{color:var(--g-ok-txt);font-weight:700}
 
 /* pill "pago" nas situações concluídas recentes */
 .pill-pago{font-size:var(--fs-1);font-weight:800;padding:3px 9px;border-radius:var(--radius-pill);background:#1F9D57;color:#fff;white-space:nowrap}
@@ -246,29 +222,87 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .pitem.flash{animation:b4uflash 1.8s ease}
 @keyframes b4uflash{0%,22%{background:#DBEFEC}100%{background:var(--surface)}}
 
-/* Panorama — barra "quanto já voltou" */
-.recup{margin-bottom:16px;padding:20px 22px}
-.recup-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
-.recup-v{font-size:var(--fs-5);font-weight:800;letter-spacing:-.02em;color:var(--verde);margin-top:4px}
-.recup-de{font-size:var(--fs-2);font-weight:600;color:var(--muted)}
-.recup-pct{font-size:var(--fs-6);font-weight:800;color:var(--verde);letter-spacing:-.02em;line-height:1}
-.recup-bar{height:16px;border-radius:var(--radius-pill);background:#EFE6D6;overflow:hidden;border:1px solid var(--line)}
-.recup-fill{height:100%;border-radius:var(--radius-pill);background:linear-gradient(90deg,var(--brand-euc),var(--verde))}
-.recup-legs{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;font-size:var(--fs-2);color:var(--ink-2);font-weight:600}
-.recup-legs i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
-.recup-legs .dot-ap{background:#1F9D57}.recup-legs .dot-an{background:#B9791A}
-
-/* Panorama — espaçamento dos cards em largura total */
-.charts{margin-bottom:16px}
 .chart-full{margin-bottom:16px}
 
-/* Panorama — funil de etapas */
-.funil{display:flex;flex-direction:column;gap:10px;margin-top:8px}
-.funil-row{display:flex;align-items:center;gap:12px}
-.funil-bar{height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;padding:0 14px;min-width:110px;color:#fff;font-weight:800;font-size:var(--fs-3);box-shadow:0 8px 18px -12px rgba(6,48,51,.6)}
-.funil-bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.funil-meta{font-size:var(--fs-2);color:var(--ink-2);font-weight:700;white-space:nowrap}
-.funil-meta b{color:var(--ink);font-size:var(--fs-4)}
+/* ════════ Topo: número-herói + fila de indicadores ════════ */
+.heroi{margin:24px 0 0;padding:28px 26px 24px;border:none;border-radius:var(--radius-lg);color:#fff;
+  background:linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);box-shadow:0 18px 38px -18px rgba(6,48,51,.6)}
+.heroi .lbl{color:rgba(255,255,255,.82)}
+.heroi-v{font-size:48px;font-weight:800;letter-spacing:-.03em;line-height:1.04;margin-top:8px;
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+@media(min-width:720px){.heroi-v{font-size:56px}}
+@media(max-width:420px){.heroi-v{font-size:34px}}
+.heroi-sub{font-size:var(--fs-4);color:rgba(255,255,255,.9);margin-top:10px;line-height:1.5;max-width:52ch}
+.heroi-sub b{color:#fff;font-weight:800}
+.heroi-bar{height:12px;margin-top:18px;border-radius:var(--radius-pill);background:rgba(255,255,255,.20);overflow:hidden}
+.heroi-fill{height:100%;border-radius:var(--radius-pill);background:#8FE3B4}
+.heroi-legs{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:10px;font-size:var(--fs-2);color:rgba(255,255,255,.9);font-weight:600}
+.heroi-legs i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:middle}
+.heroi-legs .l-rec{background:#8FE3B4}
+.heroi-legs .l-fal{background:rgba(255,255,255,.30)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-top:14px}
+.tile{padding:16px 18px}
+.tile .v{font-size:clamp(15px,4.2vw,24px);font-weight:800;letter-spacing:-.02em;margin-top:7px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow-wrap:normal}
+.tile .s{font-size:var(--fs-2);color:var(--muted);margin-top:4px;line-height:1.45}
+.tile-ok .v{color:var(--g-ok-txt)}
+.tile-prev .v{color:var(--g-and-txt)}
+@media(max-width:640px){.tiles{grid-template-columns:1fr 1fr;gap:10px}.tile{padding:14px 12px}}
+@media(max-width:359px){.tiles{grid-template-columns:1fr}}
+
+/* ════════ Blocos recolhidos — detalhe só se o cliente pedir ════════ */
+.bloco{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden}
+.bloco>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:17px 20px}
+.bloco>summary::-webkit-details-marker{display:none}
+.bloco>summary::marker{content:''}
+.bloco>summary:hover{background:var(--surface-warm)}
+.bloco>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.bloco[open]>summary{background:var(--surface-warm);border-bottom:1px solid var(--line)}
+.bloco-t{flex:1;min-width:0}
+.bloco-t b{display:block;font-size:var(--fs-4);font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.bloco-t span{display:block;font-size:var(--fs-2);color:var(--muted);margin-top:2px;line-height:1.45}
+.bloco>summary .chev{width:20px;height:20px}
+.bloco[open]>summary .chev{transform:rotate(180deg)}
+.bloco-body{padding:16px 20px 20px}
+.bloco-body>.acc{margin-top:14px}
+.bloco-nota{font-size:var(--fs-2);color:var(--ink-2);line-height:1.55;background:var(--surface-warm);
+  border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:14px}
+@media(max-width:640px){.bloco>summary{padding:15px 15px}.bloco-body{padding:14px 15px 18px}}
+
+/* ════════ Gráficos: alturas por tipo ════════ */
+.cbox-alto{position:relative;height:300px}
+.cbox-fino{position:relative;height:34px;margin:6px 0 2px}
+.cbox-fino canvas{border-radius:var(--radius-sm)}
+.cbox-anos{position:relative}
+@media(max-width:640px){.cbox-alto{height:250px}}
+.graf-titulo{font-size:var(--fs-4);font-weight:700;margin-bottom:2px}
+.graf-sub{font-size:var(--fs-2);color:var(--muted);margin-bottom:14px;line-height:1.45}
+
+/* legenda em HTML (controlamos traço/hachura, não só a cor) */
+.leg{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:14px}
+.leg-item{display:flex;align-items:center;gap:9px;font-size:var(--fs-2);color:var(--ink-2);font-weight:600}
+.leg-sw{display:inline-block;width:26px;height:12px;border-radius:3px;flex-shrink:0;vertical-align:middle}
+.leg-sw.solida{background:rgba(46,157,95,.28);border:2px solid var(--g-ok)}
+.leg-sw.tracejada{border:2px dashed var(--g-and);
+  background:repeating-linear-gradient(45deg,rgba(232,137,46,.28) 0 3px,transparent 3px 6px)}
+.leg-sw.chapada{border-radius:3px}
+.leg-item b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* barra de proporção (de onde vem o crédito) */
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-bottom:16px}
+.duo>div{padding:15px 16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface-warm);min-width:0}
+.duo .k{font-size:var(--fs-1);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.duo .v{font-size:var(--fs-5);font-weight:800;letter-spacing:-.02em;margin-top:5px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.duo .p{font-size:var(--fs-2);color:var(--muted);margin-top:3px}
+.duo .k i{width:12px;height:12px;border-radius:3px}
+.prop{display:flex;height:16px;border-radius:var(--radius-pill);overflow:hidden;background:#EFE6D6;border:1px solid var(--line)}
+.prop i{display:block;height:100%}
+
+/* clique nas legendas/linhas que filtram a tabela */
+.leg-fil{cursor:pointer;border:0;background:none;font-family:var(--sans);text-align:left;padding:0}
+.leg-fil:hover .leg-item,.leg-fil:hover{color:var(--brand-teal)}
+.leg-fil:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
 
 @media(max-width:560px){
   .acc-item>summary{flex-wrap:wrap;gap:10px 12px;padding:14px 15px}
@@ -670,8 +704,16 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 
-const PAL = { teal:'#0F8C85', eucalipto2:'#3FA680', couro:'#A7715D', vinho:'#8E2B20',
-  petroleo:'#113D39', muted:'#6E6256', line:'#E4D9C9', neutro:'#5E9C8C', bege:'#CBA88F' };
+/* Paleta dos gráficos.
+   SLOTS = séries categóricas (IRPJ, CSLL…), em ordem fixa e já validada por contraste.
+   STATUS = recebido / previsto / encerrado — nunca usados como par categórico,
+   e nunca aparecem sem rótulo ou ícone junto. */
+const PAL = { petroleo:'#113D39', muted:'#6E6256', line:'#E4D9C9', grade:'#EDE4D6',
+  slot1:'#009488', slot2:'#B4530F', slot3:'#6B4FA0', slot4:'#7A8B3D',
+  ok:'#2E9D5F', okTxt:'#16713E', okSoft:'rgba(46,157,95,.22)',
+  and:'#E8892E', andTxt:'#9A5410', andSoft:'rgba(232,137,46,.22)',
+  neu:'#6B4FA0', enc:'#C0392B' };
+const SLOTS = [PAL.slot1, PAL.slot2, PAL.slot3, PAL.slot4];
 
 /** Grupo visual de cada situação oficial do PER/DCOMP + explicação (parafraseada da Receita Federal). */
 const STATUS_INFO = {
@@ -692,8 +734,11 @@ const STATUS_INFO = {
   'Cancelado': {grupo:'encerrado', txt:'O PER/DCOMP foi cancelado a pedido do próprio contribuinte.'},
   'Retificado': {grupo:'encerrado', txt:'O PER/DCOMP foi substituído por outro, retificado a pedido do contribuinte.'},
 };
-const GRUPO_COR = {andamento:PAL.couro, concluido:PAL.teal, neutro:PAL.neutro, encerrado:PAL.vinho};
+const GRUPO_COR = {andamento:PAL.and, concluido:PAL.ok, neutro:PAL.neu, encerrado:PAL.enc};
 const GRUPO_NOME = {andamento:'Em andamento', concluido:'Concluído', neutro:'Concluído (aguardando comunicado)', encerrado:'Encerrado sem crédito'};
+/* Como explicar cada grupo para quem não é contador. */
+const GRUPO_LEIGO = {andamento:'A Receita ainda está analisando', concluido:'Aprovado — pago ou com data marcada',
+  neutro:'Análise terminou, falta o comunicado', encerrado:'Encerrado, sem crédito'};
 
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* Atalhos de teclado: "/" foca a busca, "Esc" limpa. Fica quieto quando a pessoa
@@ -721,9 +766,50 @@ function atalhosDeBusca(idCampo, aoLimpar, aoFocar){
 }
 const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
 const pct = v => (v*100).toFixed(2).replace('.',',')+'%';
+const pctInt = v => Math.round(v*100)+'%';
 const num = v => Number(v)||0;
+/* Reais abreviado para eixos e rótulos: "R$ 120 mil", "R$ 1,2 mi". Nunca notação científica. */
+function brlCurto(v){
+  const n = Number(v)||0, a = Math.abs(n), s = n<0 ? '-' : '';
+  const f = (x,d) => x.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:d});
+  if (a >= 1e9) return s+'R$ '+f(a/1e9,1)+' bi';
+  if (a >= 1e6) return s+'R$ '+f(a/1e6,1)+' mi';
+  if (a >= 1e3) return s+'R$ '+f(a/1e3, a<1e4?1:0)+' mil';
+  return s+'R$ '+f(a,0);
+}
+const MES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MES_LONGO = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+/* 'AAAA-MM' -> "março de 2025" */
+const mesExtenso = k => { const [a,m] = String(k).split('-'); return MES_LONGO[(+m||1)-1] + ' de ' + a; };
+const plural = (n, um, muitos) => n === 1 ? um : muitos;
+/* Abre todos os <details> acima de um elemento (deep-link continua funcionando dentro dos blocos). */
+function abrirDetalhesAte(alvo){
+  let n = alvo;
+  while (n){
+    const d = n.closest ? n.closest('details') : null;
+    if (!d) break;
+    d.open = true;
+    n = d.parentElement;
+  }
+}
+/* Hachura diagonal para o que ainda é "previsto" — diferencia sem depender só da cor. */
+function hachura(ctx, cor, alfa){
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 8;
+    const x = c.getContext('2d'); if (!x || !ctx) return cor;
+    x.strokeStyle = cor; x.globalAlpha = (alfa == null ? 0.5 : alfa); x.lineWidth = 2;
+    x.beginPath();
+    x.moveTo(0,8); x.lineTo(8,0);
+    x.moveTo(-2,2); x.lineTo(2,-2);
+    x.moveTo(6,10); x.lineTo(10,6);
+    x.stroke();
+    return ctx.createPattern(c,'repeat') || cor;
+  } catch(e){ return cor; }
+}
 const dBR = s => {
   if(!s) return '—';
+  if (s instanceof Date) return isNaN(s.getTime()) ? '—'
+    : String(s.getDate()).padStart(2,'0')+'/'+String(s.getMonth()+1).padStart(2,'0')+'/'+s.getFullYear();
   const str = String(s).trim();
   let m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);   // AAAA-MM-DD (com ou sem hora)
   if (m) return `${m[3]}/${m[2]}/${m[1]}`;
@@ -842,6 +928,30 @@ const DOCS_CHAVE = [
   { nome: 'Relatório Executivo Definitivo', icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8.5 12.5l2.4 2.4 4.6-5"/></svg>' },
 ];
 
+/* As três perguntas do cliente: quanto já recebi, quanto ainda vem, quando.
+   "Recebido" = pagamento com data já passada. "A receber" = aprovado com data marcada
+   no futuro. "Em análise" = ainda sem data, valor corrigido pela SELIC. */
+function resumoCliente(P){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const pagos = [], agendados = [], analise = [], encerrados = [];
+  let recebido = 0, aReceber = 0, emAnalise = 0, encerrado = 0;
+  (P||[]).forEach(p => {
+    const d = p.data_pagamento ? parseData(p.data_pagamento) : null;
+    if (d && d <= hoje){ pagos.push(p); recebido += valorPedido(p); }
+    else if (d){ agendados.push(p); aReceber += valorPedido(p); }
+    // cancelado, retificado ou não admitido: não traz dinheiro e não pode entrar na soma
+    // (o retificado, em especial, já foi substituído por outro pedido — contaria duas vezes)
+    else if (p._grupo === 'encerrado'){ encerrados.push(p); encerrado += num(p.valor_atualizado); }
+    else { analise.push(p); emAnalise += num(p.valor_atualizado); }
+  });
+  const datasFuturas = agendados.map(p => parseData(p.data_pagamento)).filter(Boolean).sort((a,b)=>a-b);
+  return { hoje, pagos, agendados, analise, encerrados, recebido, aReceber, emAnalise, encerrado,
+    aindaVem: aReceber + emAnalise,
+    totalEsperado: recebido + aReceber + emAnalise,
+    totalPedido: (P||[]).reduce((s,p)=>s+num(p.valor_atualizado),0),
+    proxima: datasFuturas.length ? datasFuturas[0] : null };
+}
+
 function render(M){
   const app = document.getElementById('app');
   app.innerHTML = '';
@@ -850,7 +960,7 @@ function render(M){
     <header><div class="bar">
       <div>
         <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
-        <div class="brand-sub">${M.cfg.razao_social || 'Equiparação hospitalar'} · ${M.cfg.cnpj ? 'CNPJ ' + M.cfg.cnpj : 'cliente ' + M.id}</div>
+        <div class="brand-sub">${esc(M.cfg.razao_social || 'Equiparação hospitalar')} · ${M.cfg.cnpj ? 'CNPJ ' + esc(M.cfg.cnpj) : 'cliente ' + esc(M.id)}</div>
       </div>
       <div class="spacer"></div>
       <span class="badge-topo">Equiparação hospitalar</span>
@@ -862,191 +972,226 @@ function render(M){
   const semPedidos = !((M.pedidos || []).length);
   // Estimativa (memória de cálculo): só entra quando ainda NÃO há PER/DCOMP transmitido
   // e a aba de memória tem dados. Se tiver pedidos, a memória some; se não tiver nem
-  // pedidos nem memória, a página fica como sempre foi (estado vazio original).
+  // pedidos nem memória, a página fica no estado vazio.
   const temMemoria = semPedidos && M.memoria && M.memoria.tem_dados && (M.memoria.periodos||[]).length;
 
   const docsDisponiveis = DOCS_CHAVE
     .map(d => ({ ...d, link: (M.documentos||[]).find(x => x.documento === d.nome && x.link && String(x.link).trim()) }))
     .filter(d => d.link);
-  if (docsDisponiveis.length){
-    appendAll(wrap, `<div class="docs-chave${semPedidos ? ' docs-chave--destaque' : ''}">${docsDisponiveis.map(d => `
-      <a class="card doc-chave-card" href="${d.link.link}" target="_blank" rel="noopener">
+  const htmlDocsChave = destaque => `<div class="docs-chave${destaque ? ' docs-chave--destaque' : ''}">${docsDisponiveis.map(d => `
+      <a class="card doc-chave-card" href="${esc(String(d.link.link).trim())}" target="_blank" rel="noopener">
         <div class="doc-chave-icone">${d.icone}</div>
-        <div><div class="doc-chave-nome">${d.nome}</div><div class="doc-chave-abrir">Abrir ↗</div></div>
-      </a>`).join('')}</div>`);
-  }
+        <div><div class="doc-chave-nome">${esc(d.nome)}</div><div class="doc-chave-abrir">Abrir ↗</div></div>
+      </a>`).join('')}</div>`;
+  // Sem pedidos, os relatórios são o conteúdo principal — sobem para o topo.
+  DESTACADOS = docsDisponiveis.map(d => d.nome);
+  if (docsDisponiveis.length && semPedidos) appendAll(wrap, htmlDocsChave(true));
 
   const P = M.pedidos;
-  const totSolicitado = P.reduce((s,p)=>s+num(p.valor_solicitado),0);
-  const totAtualizado = P.reduce((s,p)=>s+num(p.valor_atualizado),0);
-  const concluidos = P.filter(p=>p._concluido);
-  const totAprovado = concluidos.reduce((s,p)=>s+num(p.valor_aprovado),0);
-  const pendentes = P.filter(p=>!p._concluido);
-  const totPendente = pendentes.reduce((s,p)=>s+num(p.valor_atualizado),0);
+  const R = resumoCliente(P);
 
+  // ─────────── 1) O NÚMERO QUE IMPORTA ───────────
   if (P.length){
-    wrap.appendChild(el(`
-    <div class="hero">
-      <div class="card stat">
-        <span class="lbl">Pedidos transmitidos</span>
-        <div class="v num">${P.length}</div>
-        <div class="s">${concluidos.length} concluído${concluidos.length===1?'':'s'} · ${pendentes.length} em andamento</div>
+    const jaRecebeu = R.recebido > 0;
+    // Tudo fecha na mesma conta: recebido + a receber + em análise = o total mostrado.
+    const pctRec = R.totalEsperado ? Math.min(100, Math.round(R.recebido / R.totalEsperado * 100)) : 0;
+    let sub;
+    if (jaRecebeu && R.aindaVem > 0){
+      sub = `Ainda devem entrar <b>${brl(R.aindaVem)}</b>` +
+        (R.proxima ? ` — o próximo depósito está previsto para <b>${dBR(R.proxima)}</b>.` : `, conforme a Receita for liberando.`);
+    } else if (jaRecebeu){
+      sub = `Todos os pedidos já foram pagos. Não há mais valores em aberto.`;
+    } else {
+      sub = `Nada foi depositado ainda` +
+        (R.proxima ? ` — o primeiro depósito está previsto para <b>${dBR(R.proxima)}</b>.` : `. Seus pedidos ainda estão na fila da Receita.`);
+    }
+    appendAll(wrap, `
+      <div class="heroi">
+        <span class="lbl">${jaRecebeu ? 'Você já recebeu' : 'Crédito que você tem a receber'}</span>
+        <div class="heroi-v">${brl(jaRecebeu ? R.recebido : R.aindaVem)}</div>
+        <div class="heroi-sub">${sub}</div>
+        ${(R.totalEsperado && jaRecebeu) ? `
+        <div class="heroi-bar"><div class="heroi-fill" style="width:${Math.max(jaRecebeu?2:0, pctRec)}%"></div></div>
+        <div class="heroi-legs">
+          <span><i class="l-rec"></i>Já recebido · ${brl(R.recebido)} (${pctRec}%)</span>
+          <span><i class="l-fal"></i>Falta receber · ${brl(R.aindaVem)}</span>
+        </div>` : ''}
       </div>
-      <div class="card stat">
-        <span class="lbl">Total solicitado</span>
-        <div class="v num">${brl(totSolicitado)}</div>
-        <div class="s">valor original, sem correção</div>
-      </div>
-      <div class="card stat">
-        <span class="lbl">Total atualizado</span>
-        <div class="v num">${brl(totAtualizado)}</div>
-        <div class="s">solicitado + SELIC acumulada</div>
-      </div>
-      <div class="card stat stat-aprovado">
-        <span class="lbl">Já aprovado</span>
-        <div class="v num">${brl(totAprovado)}</div>
-        <div class="s">valor fechado pela Receita</div>
-      </div>
-      <div class="card stat stat-analise">
-        <span class="lbl">Ainda em análise</span>
-        <div class="v num">${brl(totPendente)}</div>
-        <div class="s">estimativa, sujeita a confirmação</div>
-      </div>
-    </div>`));
+
+      <div class="tiles">
+        <div class="card stat tile tile-ok">
+          <span class="lbl">Já recebido</span>
+          <div class="v num">${brl(R.recebido)}</div>
+          <div class="s">${R.pagos.length ? `${R.pagos.length} ${plural(R.pagos.length,'depósito já caiu','depósitos já caíram')} na conta` : 'nenhum depósito até agora'}</div>
+        </div>
+        <div class="card stat tile tile-prev">
+          <span class="lbl">A receber</span>
+          <div class="v num">${brl(R.aReceber)}</div>
+          <div class="s">${R.agendados.length ? `${R.agendados.length} ${plural(R.agendados.length,'pedido aprovado, com data','pedidos aprovados, com data')}` : 'nenhum pagamento agendado ainda'}</div>
+        </div>
+        <div class="card stat tile">
+          <span class="lbl">Em análise</span>
+          <div class="v num">${brl(R.emAnalise)}</div>
+          <div class="s">${R.analise.length ? `${R.analise.length} ${plural(R.analise.length,'pedido esperando','pedidos esperando')} a Receita decidir` : 'nada pendente de decisão'}</div>
+        </div>
+        <div class="card stat tile">
+          <span class="lbl">Crédito total</span>
+          <div class="v num">${brl(R.totalEsperado)}</div>
+          <div class="s" title="Os valores já vêm corrigidos pela SELIC, o juro oficial que o governo aplica enquanto o pedido espera.">${R.pagos.length + R.agendados.length + R.analise.length} ${plural(R.pagos.length + R.agendados.length + R.analise.length,'pedido em jogo','pedidos em jogo')}, já com correção</div>
+        </div>
+      </div>`);
   }
 
   // banner de pagamento recente (preenchido por construirAlertaPagamento)
   wrap.appendChild(el('<div id="alerta-pagamento"></div>'));
 
-  // 0) ESTIMATIVA — só quando ainda não há PER/DCOMP, mas há memória de cálculo.
+  // ─────────── 2) O ÚNICO GRÁFICO DA PRIMEIRA TELA ───────────
+  if (P.length){
+    appendAll(wrap, `
+      <div class="card chart chart-full" id="card-tempo" style="margin-top:16px">
+        <h3>Quando o dinheiro entra</h3>
+        <div class="sub">Quanto já entrou na sua conta, somado mês a mês — e o que ainda está previsto.</div>
+        <div class="cbox-alto"><canvas id="c5"></canvas></div>
+        <div class="leg" id="c5-lg"></div>
+      </div>`);
+  }
+
+  // ─────────── 3) ESTIMATIVA (quando ainda não há pedido enviado) ───────────
   if (temMemoria){
     const MEM = M.memoria;
     const pctEleg = (MEM.pct_elegivel != null && MEM.pct_elegivel !== '')
       ? (MEM.pct_elegivel <= 1 ? MEM.pct_elegivel*100 : MEM.pct_elegivel) : null;
     appendAll(wrap, `
-      <div class="sec-head"><div><h2>Estimativa de crédito</h2><p>Prévia calculada a partir da memória de cálculo — ainda não há PER/DCOMP transmitido.</p></div></div>
-      <div class="card aviso-estimativa">
-        <span class="ae-ico">⚠︎</span>
-        <div><b>Valores estimativos e preliminares.</b> A recomposição da base presumida (IRPJ 32%→8%, CSLL 32%→12%) foi aplicada sobre a parcela de receita elegível${pctEleg!=null?` (${pct(pctEleg/100)})`:''} informada pelo cliente. A apuração definitiva depende da análise nota a nota de cada competência — os números finais podem variar.</div>
+      <div class="heroi">
+        <span class="lbl">Crédito que estimamos recuperar</span>
+        <div class="heroi-v">${brl(MEM.total_geral)}</div>
+        <div class="heroi-sub">Ainda não enviamos nenhum pedido à Receita. Este é o valor calculado a partir do seu faturamento — é uma <b>prévia</b>, e o número final pode mudar.</div>
       </div>
-      <div class="hero">
-        <div class="card stat destaque">
-          <span class="lbl">Crédito potencial estimado</span>
-          <div class="v num">${brl(MEM.total_geral)}</div>
-          <div class="s">IRPJ + CSLL · sem atualização SELIC</div>
-        </div>
-        <div class="card stat">
+      <div class="card aviso-estimativa" style="margin-top:14px">
+        <span class="ae-ico">⚠︎</span>
+        <div><b>Valores estimativos e preliminares.</b> Refizemos a conta do imposto sobre a parcela do seu faturamento que dá direito ao benefício${pctEleg!=null?` (${pctInt(pctEleg/100)} do total)`:''}. A conta definitiva depende da análise nota a nota — os números finais podem variar.</div>
+      </div>
+      <div class="tiles">
+        <div class="card stat tile">
           <span class="lbl">IRPJ estimado</span>
           <div class="v num">${brl(MEM.total_irpj)}</div>
-          <div class="s">recomposição da base 32% → 8%</div>
+          <div class="s" title="IRPJ é o imposto de renda da empresa.">imposto de renda da empresa</div>
         </div>
-        <div class="card stat">
+        <div class="card stat tile">
           <span class="lbl">CSLL estimada</span>
           <div class="v num">${brl(MEM.total_csll)}</div>
-          <div class="s">recomposição da base 32% → 12%</div>
+          <div class="s" title="CSLL é a contribuição sobre o lucro da empresa.">contribuição sobre o lucro</div>
         </div>
-        <div class="card stat">
+        <div class="card stat tile">
           <span class="lbl">Períodos analisados</span>
           <div class="v num">${(MEM.periodos||[]).length}</div>
-          <div class="s">${pctEleg!=null?`${pct(pctEleg/100)} da receita elegível`:'trimestres da memória'}</div>
+          <div class="s">${pctEleg!=null?`${pctInt(pctEleg/100)} do faturamento dá direito`:'trimestres revisados'}</div>
         </div>
       </div>
-      <div class="charts">
-        <div class="card chart">
-          <h3>Crédito estimado por período</h3>
-          <div class="sub">Diferença entre o tributo recolhido (32%) e o recalculado com equiparação, por trimestre.</div>
-          <div class="cbox"><canvas id="mc1"></canvas></div>
-          <div class="pie-legend" id="mc1-lg"></div>
-        </div>
-        <div class="card chart">
-          <h3>IRPJ × CSLL</h3>
-          <div class="sub">Como o crédito potencial se divide entre os dois tributos.</div>
-          <div class="cbox"><canvas id="mc2"></canvas></div>
-          <div class="pie-legend" id="mc2-lg"></div>
-        </div>
-      </div>`);
-  }
-
-  // 1) PER/DCOMPs agrupados por situação (dropdowns por categoria).
-  //    Quando estamos mostrando a estimativa (temMemoria), pulamos o cartão vazio.
-  if (P.length || !temMemoria){
-  appendAll(wrap, `
-    <div class="sec-head"><div><h2>Pedidos por situação</h2><p>${P.length ? 'Agrupados pela situação oficial na Receita — toque para abrir cada grupo.' : 'Acompanhe aqui cada PER/DCOMP.'}</p></div></div>
-    ${P.length ? `<div class="acc" id="pedidos-status"></div>` : `<div class="card"><div class="vazio">
-        Nenhum pedido de equiparação transmitido ainda. Se o seu CNPJ ainda estiver passando por alguma alteração societária os seus pedidos ainda não vão aparecer aqui. Enquanto isso verifique a relação de documentos e memórias de cálculo acima.<br>
-        Se você acredita que isso pode ser um engano, <a href="https://wa.me/5511937173906" target="_blank" rel="noopener">entre em contato com o atendimento</a>.
-      </div></div>`}`);
-  }
-
-  if (P.length){
-    // 2) Panorama (gráficos) — fica acima do detalhamento
-    appendAll(wrap, `
-      <details class="secao-mob" id="panorama-det">
-        <summary class="secao-mob-sum">
-          <div class="sec-head"><div><h2>Panorama</h2><p>Como os pedidos se distribuem hoje.</p></div></div>
-          <svg class="secao-mob-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      <div class="sec-head"><div><h2>Detalhes, se você quiser ver</h2><p>Começa tudo fechado. Toque para abrir.</p></div></div>
+      <details class="bloco" id="bloco-tributos">
+        <summary>
+          <div class="bloco-t"><b>De onde vem o crédito</b><span>IRPJ ${brlCurto(MEM.total_irpj)} · CSLL ${brlCurto(MEM.total_csll)}</span></div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </summary>
-        <div class="secao-mob-body">
-          <div class="card recup" id="recup"></div>
-          <div class="charts">
-            <div class="card chart">
-              <h3>Situação dos pedidos</h3>
-              <div class="sub">Valor atualizado (com SELIC) somado por grupo de situação. Clique para filtrar.</div>
-              <div class="cbox"><canvas id="c1"></canvas></div>
-              <div class="pie-legend" id="c1-lg"></div>
-            </div>
-            <div class="card chart">
-              <h3>Valores por ano</h3>
-              <div class="sub">Total pleiteado (atualizado com SELIC) e quanto já foi aprovado, por ano. Clique para filtrar.</div>
-              <div class="cbox"><canvas id="c4"></canvas></div>
-              <div class="pie-legend" id="c4-lg"></div>
-            </div>
-          </div>
-          <div class="card chart chart-full">
-            <h3>Linha do tempo de pagamentos</h3>
-            <div class="sub">Quanto já foi creditado (verde) e o que está previsto (amarelo), por mês.</div>
-            <div class="cbox"><canvas id="c5"></canvas></div>
-            <div class="pie-legend" id="c5-lg"></div>
-          </div>
-          <div class="card chart chart-full">
-            <h3>Etapas dos pedidos</h3>
-            <div class="sub">Do que foi transmitido até o que já foi pago — com o valor em cada fase.</div>
-            <div class="funil" id="funil"></div>
-          </div>
+        <div class="bloco-body">
+          <div class="bloco-nota">São dois impostos diferentes: <b>IRPJ</b> (imposto de renda da empresa) e <b>CSLL</b> (contribuição sobre o lucro). O crédito é a soma dos dois.</div>
+          <div id="tributos-bloco"></div>
+          <div class="graf-titulo" style="margin-top:22px">Trimestre a trimestre</div>
+          <div class="graf-sub">Quanto de crédito cada trimestre gerou.</div>
+          <div class="cbox"><canvas id="mc1"></canvas></div>
+          <div class="leg" id="mc1-lg"></div>
         </div>
       </details>`);
-
-    // 3) Detalhamento completo — filtro/busca + um dropdown por PER/DCOMP
-    appendAll(wrap, `
-      <div class="sec-head"><div><h2>Detalhamento completo</h2><p>Filtre, busque e abra cada PER/DCOMP individualmente.</p></div></div>
-      <div class="acc" id="pedidos-detalhe"></div>`);
   }
 
+  // ─────────── 4) TUDO O MAIS, RECOLHIDO ───────────
+  if (P.length){
+    const cont = {};
+    P.forEach(p => { cont[p._grupo] = (cont[p._grupo]||0) + 1; });
+    const resumoSit = GRUPO_ORDEM_VIS.filter(g => cont[g]).map(g => {
+      const n = cont[g];
+      const nome = {concluido:plural(n,'aprovado','aprovados'), andamento:plural(n,'em análise','em análise'),
+        neutro:'aguardando o comunicado', encerrado:plural(n,'encerrado','encerrados')}[g];
+      return `${n} ${nome}`;
+    }).join(' · ');
+
+    const anosPres = [...new Set(P.map(p => p._comp.ano).filter(Boolean))].sort();
+    const resumoAnos = anosPres.length
+      ? (anosPres.length === 1 ? `só ${anosPres[0]}` : `de ${anosPres[0]} a ${anosPres[anosPres.length-1]} · ${anosPres.length} anos`)
+      : 'sem ano identificado';
+
+    const resumoTrib = tributosDosPedidos(P).map(t => `${t.nome} ${brlCurto(t.valor)}`).join(' · ') || 'sem separação por imposto';
+
+    appendAll(wrap, `
+      <div class="sec-head"><div><h2>Detalhes, se você quiser ver</h2><p>Começa tudo fechado. Toque em qualquer linha para abrir.</p></div></div>
+
+      <details class="bloco" id="bloco-situacoes">
+        <summary>
+          <div class="bloco-t"><b>Como está cada pedido</b><span>${esc(resumoSit)}</span></div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="bloco-body">
+          <div class="bloco-nota">Cada pedido passa por etapas na Receita. A barra mostra quanto dinheiro está em cada etapa — toque numa faixa para ver os pedidos dela. Pedidos <b>encerrados</b> (cancelados ou substituídos por outro) aparecem aqui, mas não entram na conta do que você tem a receber.</div>
+          <div class="cbox-fino"><canvas id="c1"></canvas></div>
+          <div class="leg" id="c1-lg"></div>
+          <div class="acc" id="pedidos-status"></div>
+        </div>
+      </details>
+
+      <details class="bloco" id="bloco-tributos">
+        <summary>
+          <div class="bloco-t"><b>De onde vem o crédito</b><span>${esc(resumoTrib)}</span></div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="bloco-body">
+          <div class="bloco-nota">São dois impostos diferentes: <b>IRPJ</b> (imposto de renda da empresa) e <b>CSLL</b> (contribuição sobre o lucro). O crédito é a soma dos dois.</div>
+          <div id="tributos-bloco"></div>
+        </div>
+      </details>
+
+      <details class="bloco" id="bloco-anos">
+        <summary>
+          <div class="bloco-t"><b>Ano a ano</b><span>${esc(resumoAnos)}</span></div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="bloco-body">
+          <div class="bloco-nota">Cada barra é um ano do seu faturamento. A parte cheia já foi aprovada; a hachurada ainda está com a Receita. Toque numa barra para ver só aquele ano.</div>
+          <div class="cbox-anos"><canvas id="c4"></canvas></div>
+          <div class="leg" id="c4-lg"></div>
+        </div>
+      </details>
+
+      <div class="acc" id="pedidos-detalhe"></div>`);
+  } else if (!temMemoria){
+    appendAll(wrap, `
+      <div class="sec-head"><div><h2>Seus pedidos</h2><p>Acompanhe aqui cada pedido enviado à Receita.</p></div></div>
+      <div class="card"><div class="vazio">
+        Nenhum pedido de equiparação enviado ainda. Se o seu CNPJ ainda estiver passando por alguma alteração societária, os seus pedidos ainda não vão aparecer aqui.<br>
+        Se você acredita que isso pode ser um engano, <a href="https://wa.me/5511937173906" target="_blank" rel="noopener">entre em contato com o atendimento</a>.
+      </div></div>`);
+  }
+
+  // ─────────── 5) DOCUMENTOS, NO FIM ───────────
+  if (docsDisponiveis.length && !semPedidos) appendAll(wrap, `<div class="sec-head"><div><h2>Seus relatórios</h2><p>Os documentos principais do seu processo.</p></div></div>${htmlDocsChave(false)}`);
+
   appendAll(wrap, `
-    <div class="sec-head"><div><h2>Documentos</h2><p>Relatórios deste cliente e modelos de referência.</p></div></div>
-    <div class="card lista" id="documentos-equip"></div>`);
+    <div id="secao-docs">
+      <div class="sec-head"><div><h2>Todos os documentos</h2><p>Relatórios deste cliente e modelos de referência.</p></div></div>
+      <div class="card lista" id="documentos-equip"></div>
+    </div>`);
 
   wrap.appendChild(el(`<footer>
       <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
     </footer>`));
 
-  // --- dropdowns de pedidos ---
+  // --- conteúdo dos dropdowns ---
   construirDetalheTodos(M);      // primeiro: os deep-links do resumo/banner precisam da lista pronta
   construirResumoStatus(M);
   construirAlertaPagamento(M);
 
   desenharDocumentos(M, []);
-  if (P.length){
-    const pdet = document.getElementById('panorama-det');
-    const draw = () => { try { desenharGraficos(M); } catch (e) { console.warn('Gráficos indisponíveis:', e); } };
-    if (pdet && window.matchMedia('(max-width:640px)').matches){
-      // mobile: Panorama começa fechado; desenha os gráficos só ao abrir (evita canvas 0x0)
-      pdet.addEventListener('toggle', () => { if (pdet.open && !pdet.dataset.drawn){ pdet.dataset.drawn = '1'; draw(); } });
-    } else {
-      if (pdet) pdet.open = true;   // desktop: sempre aberto
-      draw();
-    }
-  }
+  if (P.length){ try { desenharGraficos(M); } catch (e) { console.warn('Gráficos indisponíveis:', e); } }
   if (temMemoria){ try { desenharMemoria(M); } catch (e) { console.warn('Estimativa indisponível:', e); } }
 }
 
@@ -1082,6 +1227,8 @@ function humanizarDias(d){
 }
 
 const GRUPO_ORDER = ['andamento','neutro','concluido','encerrado'];
+/* Ordem em que o cliente lê: primeiro a boa notícia, depois o que ainda espera. */
+const GRUPO_ORDEM_VIS = ['concluido','andamento','neutro','encerrado'];
 
 /* Dropdown 1 — PER/DCOMPs agrupados por situação padronizada.
    Só entram os status oficiais da Receita (STATUS_INFO) que realmente existem. */
@@ -1107,7 +1254,7 @@ function construirResumoStatus(M){
     return itens.every(p => p._concluido) ? 'concluido' : canon;
   };
   chaves.sort((a,b) => {
-    const d = GRUPO_ORDER.indexOf(grupoDe(a)) - GRUPO_ORDER.indexOf(grupoDe(b));
+    const d = GRUPO_ORDEM_VIS.indexOf(grupoDe(a)) - GRUPO_ORDEM_VIS.indexOf(grupoDe(b));
     if (d) return d;
     return grupos[b].length - grupos[a].length || a.localeCompare(b);
   });
@@ -1275,7 +1422,7 @@ function sincronizarControles(){
 /* Aplica um conjunto de filtros do zero, abre o detalhamento e rola até ele. */
 function filtrarDetalhe(patch, scroll){
   Object.assign(FILTRO, { busca:'', ano:'', situacao:'', pagamento:'' }, patch || {});
-  const outer = document.getElementById('det-outer'); if (outer) outer.open = true;
+  const outer = document.getElementById('det-outer'); if (outer) abrirDetalhesAte(outer);
   sincronizarControles();
   renderListaDetalhe();
   if (scroll !== false){ const el = document.getElementById('pedidos-detalhe'); if (el) el.scrollIntoView({ behavior:'smooth', block:'start' }); }
@@ -1283,7 +1430,7 @@ function filtrarDetalhe(patch, scroll){
 /* Deep-link para um PER/DCOMP específico: limpa filtros, abre e destaca o pedido. */
 function irParaPedido(numero){
   Object.assign(FILTRO, { busca:'', ano:'', situacao:'', pagamento:'' });
-  const outer = document.getElementById('det-outer'); if (outer) outer.open = true;
+  const outer = document.getElementById('det-outer'); if (outer) abrirDetalhesAte(outer);
   sincronizarControles();
   renderListaDetalhe();
   const alvo = document.querySelector('#det-lista .pitem[data-key="' + String(numero).replace(/"/g,'\\"') + '"]');
@@ -1310,18 +1457,18 @@ function construirDetalheTodos(M){
     + '<optgroup label="Situação (Receita)">' + statusPres.map(s => `<option value="s:${esc(s)}">${esc(s)}</option>`).join('') + '</optgroup>';
   const lupa = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>';
 
+  const nAnos = anos.length;
+  const resumo = `${DETPEDIDOS.length} ${plural(DETPEDIDOS.length,'pedido','pedidos')}`
+    + (nAnos ? ` · ${nAnos===1 ? anos[0] : anos[0]+' a '+anos[nAnos-1]}` : '')
+    + ' · com busca e filtros';
   box.innerHTML = `
-    <details class="acc-item acc-all" id="det-outer">
+    <details class="bloco" id="det-outer">
       <summary>
-        <span class="acc-dot" style="background:${PAL.petroleo}"></span>
-        <span class="acc-head-main">
-          <span class="acc-head-title">Todos os PER/DCOMPs em detalhe</span>
-          <span class="acc-head-sub">Filtre, busque e abra cada pedido individualmente</span>
-        </span>
-        <span class="acc-val"><span class="v num">${DETPEDIDOS.length}</span><span class="k">pedidos</span></span>
+        <div class="bloco-t"><b>Todos os pedidos</b><span>${esc(resumo)}</span></div>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
-      <div class="acc-body">
+      <div class="bloco-body">
+        <div class="bloco-nota">Cada linha é um pedido enviado à Receita (o <b title="PER/DCOMP é o formulário oficial em que se pede a devolução do imposto pago a mais.">PER/DCOMP</b>). Toque em uma para ver os valores e as datas dela.</div>
         <div class="det-barra">
           <button type="button" class="det-fbtn" id="det-fbtn" aria-expanded="false" aria-controls="det-painel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
@@ -1402,190 +1549,386 @@ function construirAlertaPagamento(M){
   box.querySelector('#alerta-pgto-btn').addEventListener('click', () => filtrarDetalhe({ pagamento:'recente' }));
 }
 
-function desenharGraficos(M){
-  const P = M.pedidos;
-  const donutOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
-    plugins:{legend:{display:false},
-      tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
-        bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}};
-  const barOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500},
-    plugins:{legend:{display:false}, tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
-      bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y)}}},
-    scales:{x:{grid:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11}}},
-      y:{grid:{color:'#EDE4D6'}, border:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11},
-        callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
-
-  // c1: situação — soma do VALOR atualizado por grupo, não quantidade de pedidos
-  const porGrupo = {};
-  P.forEach(p=>{ porGrupo[p._grupo] = (porGrupo[p._grupo]||0) + num(p.valor_atualizado); });
-  const gruposUsados = Object.keys(porGrupo);
-  try {
-    new Chart(document.getElementById('c1'), {
-      type:'doughnut',
-      data:{labels:gruposUsados.map(g=>GRUPO_NOME[g]), datasets:[{data:gruposUsados.map(g=>porGrupo[g]),
-        backgroundColor:gruposUsados.map(g=>GRUPO_COR[g]), borderWidth:0}]},
-      options:{...donutOpts,
-        onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
-        onClick:(e,els)=>{ if(els.length) filtrarDetalhe({situacao:'g:'+gruposUsados[els[0].index]}); }}
-    });
-  } catch(e){ console.warn('Gráfico "Situação dos pedidos" indisponível:', e); }
-  const c1lg = document.getElementById('c1-lg');
-  c1lg.innerHTML = gruposUsados.map(g=>
-    `<div class="pie-legend-row" data-g="${g}" style="cursor:pointer"><i style="background:${GRUPO_COR[g]}"></i><span>${GRUPO_NOME[g]}</span><b class="num">${brl(porGrupo[g])}</b></div>`
-  ).join('');
-  c1lg.querySelectorAll('.pie-legend-row').forEach(row => row.addEventListener('click', () => filtrarDetalhe({ situacao:'g:'+row.dataset.g })));
-
-  // c4: VALORES POR ANO — barra marrom (total pleiteado) com a verde (aprovado) sobreposta.
-  // "Aprovado" usa o MESMO critério do hero "Já aprovado": só conta quem já tem data de pagamento.
-  const aprovadoDe = p => {
-    if (!p._concluido) return 0;   // p._concluido === !!p.data_pagamento
-    return num(p.valor_aprovado) > 0 ? num(p.valor_aprovado) : num(p.valor_atualizado);
-  };
-  const porAno = {};
-  P.forEach(p=>{
-    const ano = p._comp.ano || 0;
-    porAno[ano] = porAno[ano] || {total:0, aprovado:0};
-    porAno[ano].total += num(p.valor_atualizado);
-    porAno[ano].aprovado += aprovadoDe(p);
-  });
-  const anos = Object.keys(porAno).sort();
-  const totalGeral = anos.reduce((s,a)=>s+porAno[a].total,0);
-  const aprovadoGeral = anos.reduce((s,a)=>s+porAno[a].aprovado,0);
-  try {
-    new Chart(document.getElementById('c4'), {
-      type:'bar',
-      data:{labels:anos, datasets:[
-        // barra grande marrom (total) ao fundo; barra verde (aprovado) sobreposta e mais estreita
-        {label:'Total pleiteado', data:anos.map(a=>porAno[a].total), backgroundColor:PAL.couro,
-          borderRadius:4, categoryPercentage:0.7, barPercentage:0.9, grouped:false, order:2},
-        {label:'Aprovado', data:anos.map(a=>porAno[a].aprovado), backgroundColor:PAL.eucalipto2,
-          borderRadius:4, categoryPercentage:0.7, barPercentage:0.5, grouped:false, order:1},
-      ]},
-      options:{...barOpts,
-        onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
-        onClick:(e,els)=>{ if(els.length) filtrarDetalhe({ano:String(anos[els[0].index])}); },
-        plugins:{...barOpts.plugins, legend:{display:false}, tooltip:{...barOpts.plugins.tooltip}}}
-    });
-  } catch(e){ console.warn('Gráfico "Valores por ano" indisponível:', e); }
-  document.getElementById('c4-lg').innerHTML =
-    `<div class="pie-legend-row"><i style="background:${PAL.couro}"></i><span>Total pleiteado</span><b class="num">${brl(totalGeral)}</b></div>` +
-    `<div class="pie-legend-row"><i style="background:${PAL.eucalipto2}"></i><span>Aprovado</span><b class="num">${brl(aprovadoGeral)}</b></div>`;
-
-  const hoje = new Date(); hoje.setHours(0,0,0,0);
-  const concl = P.filter(p => p._concluido);
-
-  // --- "Quanto já voltou": barra de progresso aprovado ÷ pleiteado ---
-  const totAtual = P.reduce((s,p)=>s+num(p.valor_atualizado),0);
-  const totAprov = concl.reduce((s,p)=>s+(num(p.valor_aprovado)||num(p.valor_atualizado)),0);
-  const pctRec = totAtual ? Math.min(100, Math.round(totAprov/totAtual*100)) : 0;
-  const recup = document.getElementById('recup');
-  if (recup) recup.innerHTML = `
-    <div class="recup-top">
-      <div>
-        <span class="lbl">Quanto já voltou</span>
-        <div class="recup-v num">${brl(totAprov)} <span class="recup-de">de ${brl(totAtual)} pleiteados</span></div>
-      </div>
-      <div class="recup-pct num">${pctRec}%</div>
-    </div>
-    <div class="recup-bar"><div class="recup-fill" style="width:${Math.max(2,pctRec)}%"></div></div>
-    <div class="recup-legs">
-      <span><i class="dot-ap"></i>Já aprovado · ${brl(totAprov)}</span>
-      <span><i class="dot-an"></i>Falta aprovar · ${brl(totAtual-totAprov)}</span>
-    </div>`;
-
-  // --- Linha do tempo de pagamentos (recebido x previsto, por mês) ---
-  const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  const porMesPag = {};
-  P.forEach(p=>{
-    if (!p.data_pagamento) return;
-    const d = parseData(p.data_pagamento); if (!d) return;
-    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    (porMesPag[key] = porMesPag[key] || {v:0, fut:false}).v += num(p.valor_aprovado)||num(p.valor_atualizado);
-    if (d > hoje) porMesPag[key].fut = true;
-  });
-  const mesesPag = Object.keys(porMesPag).sort();
-  const c5 = document.getElementById('c5');
-  if (c5 && mesesPag.length){
-    const labels = mesesPag.map(m=>{ const [a,mm]=m.split('-'); return MES[+mm-1]+'/'+a.slice(2); });
-    try {
-      new Chart(c5, {
-        type:'bar',
-        data:{labels, datasets:[{data:mesesPag.map(m=>porMesPag[m].v),
-          backgroundColor:mesesPag.map(m=>porMesPag[m].fut?'#B9791A':'#1F9D57'), borderRadius:6, maxBarThickness:54}]},
-        options:{...barOpts, plugins:{...barOpts.plugins, legend:{display:false},
-          tooltip:{...barOpts.plugins.tooltip, callbacks:{label:c=>' '+brl(c.parsed.y)}}}}
-      });
-    } catch(e){ console.warn('Gráfico "Linha do tempo" indisponível:', e); }
-    const recebido = mesesPag.filter(m=>!porMesPag[m].fut).reduce((s,m)=>s+porMesPag[m].v,0);
-    const previsto = mesesPag.filter(m=>porMesPag[m].fut).reduce((s,m)=>s+porMesPag[m].v,0);
-    document.getElementById('c5-lg').innerHTML =
-      (recebido>0 ? `<div class="pie-legend-row"><i style="background:#1F9D57"></i><span>Recebido</span><b class="num">${brl(recebido)}</b></div>` : '') +
-      (previsto>0 ? `<div class="pie-legend-row"><i style="background:#B9791A"></i><span>Previsto</span><b class="num">${brl(previsto)}</b></div>` : '');
-  } else {
-    const card = c5 ? c5.closest('.card') : null; if (card) card.remove();
-  }
-
-  // --- Funil de etapas (valor em cada fase) ---
-  const pagos = P.filter(p=>{ const d = parseData(p.data_pagamento); return d && d <= hoje; });
-  const somaAtual = arr => arr.reduce((s,p)=>s+num(p.valor_atualizado),0);
-  const somaAprov = arr => arr.reduce((s,p)=>s+(num(p.valor_aprovado)||num(p.valor_atualizado)),0);
-  const etapas = [
-    {nome:'Transmitidos',      n:P.length,     v:somaAtual(P),     cor:PAL.petroleo},
-    {nome:'Análise concluída', n:concl.length, v:somaAtual(concl), cor:PAL.teal},
-    {nome:'Pagos',             n:pagos.length, v:somaAprov(pagos), cor:'#1F9D57'},
-  ];
-  const baseV = etapas[0].v || 1;
-  const funil = document.getElementById('funil');
-  if (funil) funil.innerHTML = etapas.map(e=>{
-    const w = Math.max(16, Math.round(e.v/baseV*100));
-    return `<div class="funil-row">
-        <div class="funil-bar" style="width:${w}%;background:${e.cor}"><span>${e.nome}</span></div>
-        <div class="funil-meta"><b>${e.n}</b> · ${brl(e.v)}</div>
-      </div>`;
-  }).join('');
+/* ═══════════════════════ Gráficos ═══════════════════════
+   Regras: uma pergunta por gráfico, marcas finas, grade recessiva, um só eixo y,
+   legenda sempre que houver duas séries, e nada que dependa só da cor. */
+const FONTE = { family:'Montserrat', size:11 };
+function tooltipBase(extra){
+  return Object.assign({
+    backgroundColor:PAL.petroleo, padding:11, cornerRadius:6, displayColors:false,
+    titleFont:{family:'Montserrat', size:12, weight:'700'},
+    bodyFont:{family:'Montserrat', size:12}, bodySpacing:4
+  }, extra||{});
 }
 
-/* Gráficos da ESTIMATIVA (memória de cálculo) — só rodam quando não há PER/DCOMP. */
+/* Linha vertical marcando HOJE, com etiqueta. */
+const PLUG_HOJE = {
+  id:'linhaHoje',
+  afterDatasetsDraw(chart){
+    const i = chart.$hojeIdx;
+    if (i == null || !chart.chartArea) return;
+    const s = chart.scales.x, n = (chart.data.labels||[]).length;
+    if (!s || !n) return;
+    const a0 = Math.max(0, Math.min(n-1, Math.floor(i)));
+    const a1 = Math.max(0, Math.min(n-1, a0+1));
+    const p0 = s.getPixelForValue(a0), p1 = s.getPixelForValue(a1);
+    const x = (a1 === a0) ? p0 : p0 + (i - a0) * (p1 - p0);
+    const A = chart.chartArea, ctx = chart.ctx;
+    if (x < A.left || x > A.right) return;
+    ctx.save();
+    ctx.setLineDash([5,4]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#9C8E7E';
+    ctx.beginPath(); ctx.moveTo(x, A.top); ctx.lineTo(x, A.bottom); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '700 11px Montserrat, system-ui, sans-serif';
+    const t = 'hoje', w = ctx.measureText(t).width + 14;
+    let bx = Math.min(Math.max(x - w/2, A.left), A.right - w);
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#D6C3AC'; ctx.lineWidth = 1;
+    const by = A.top - 23, h = 18, r = 5;
+    ctx.beginPath();
+    ctx.moveTo(bx+r, by); ctx.arcTo(bx+w, by, bx+w, by+h, r); ctx.arcTo(bx+w, by+h, bx, by+h, r);
+    ctx.arcTo(bx, by+h, bx, by, r); ctx.arcTo(bx, by, bx+w, by, r); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6E6256'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(t, bx + w/2, by + h/2 + .5);
+    ctx.restore();
+  }
+};
+
+/* Rótulo direto do valor já aprovado, na ponta da barra verde. */
+const PLUG_ROTULO_APROVADO = {
+  id:'rotuloAprovado',
+  afterDatasetsDraw(chart){
+    const meta = chart.getDatasetMeta(0);
+    if (!meta || meta.hidden || !chart.chartArea) return;
+    const A = chart.chartArea, ctx = chart.ctx, dados = chart.data.datasets[0].data;
+    ctx.save();
+    ctx.font = '800 11px Montserrat, system-ui, sans-serif';
+    ctx.textBaseline = 'middle';
+    meta.data.forEach((bar, i) => {
+      const v = Number(dados[i])||0; if (!v) return;
+      const t = brlCurto(v), w = ctx.measureText(t).width;
+      const dentro = (bar.x - A.left) > w + 20;
+      ctx.textAlign = dentro ? 'right' : 'left';
+      ctx.fillStyle = dentro ? '#FFFFFF' : PAL.petroleo;
+      let x = dentro ? bar.x - 10 : bar.x + 9;
+      if (!dentro && x + w > A.right) x = Math.max(A.left + 4, A.right - w);
+      ctx.fillText(t, x, bar.y);
+    });
+    ctx.restore();
+  }
+};
+
+/* Desenha só quando o bloco abre — canvas 0x0 dentro de <details> fechado não renderiza. */
+function desenharAoAbrir(idBloco, fn){
+  const d = document.getElementById(idBloco); if (!d) return;
+  const roda = () => { if (d.dataset.drawn) return; d.dataset.drawn = '1';
+    try { fn(); } catch(e){ console.warn('Gráfico indisponível:', e); } };
+  if (d.open) roda();
+  d.addEventListener('toggle', () => { if (d.open) roda(); });
+}
+
+function desenharGraficos(M){
+  graficoQuandoEntra(M);                                     // o único visível de saída
+  blocoDeOndeVem(document.getElementById('tributos-bloco'), tributosDosPedidos(M.pedidos));
+  desenharAoAbrir('bloco-situacoes', () => graficoSituacoes(M));
+  desenharAoAbrir('bloco-anos',      () => graficoAnos(M));
+}
+
+/* ───────── 1. "Quando o dinheiro entra" — acumulado no tempo ───────── */
+function mesChave(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function mesesEntre(k1, k2){
+  const [a1,m1] = k1.split('-').map(Number), [a2,m2] = k2.split('-').map(Number);
+  return (a2-a1)*12 + (m2-m1);
+}
+function serieDePagamentos(P){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const soma = {}, futuro = {};
+  P.forEach(p => {
+    if (!p.data_pagamento) return;
+    const d = parseData(p.data_pagamento); if (!d) return;
+    const k = mesChave(d);
+    soma[k] = (soma[k]||0) + valorPedido(p);
+    if (d > hoje) futuro[k] = true;
+  });
+  const chaves = Object.keys(soma).sort();
+  if (!chaves.length) return null;
+  const hojeK = mesChave(hoje);
+  let ini = chaves[0], fim = chaves[chaves.length-1];
+  // estica até o mês de hoje só se ele estiver perto — senão o eixo fica cheio de meses vazios
+  if (hojeK < ini && mesesEntre(hojeK, ini) <= 12) ini = hojeK;
+  if (hojeK > fim && mesesEntre(fim, hojeK) <= 12) fim = hojeK;
+  const lista = []; let [ay,am] = ini.split('-').map(Number);
+  const [fy,fm] = fim.split('-').map(Number);
+  for (let g=0; g<600 && (ay<fy || (ay===fy && am<=fm)); g++){
+    lista.push(ay+'-'+String(am).padStart(2,'0'));
+    am++; if (am>12){ am=1; ay++; }
+  }
+  const mensal = lista.map(k => soma[k]||0);
+  let acc = 0; const acum = mensal.map(v => (acc += v));
+  let corte = -1;
+  lista.forEach((k,i) => { if (k <= hojeK && !futuro[k]) corte = i; });
+  const idxHoje = lista.indexOf(hojeK);
+  const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).getDate();
+  return { lista, mensal, acum, corte, meses: chaves.length,
+    hojeIdx: idxHoje >= 0 ? idxHoje + (hoje.getDate()-1)/diasNoMes : null,
+    recebido: mensal.reduce((s,v,i)=> s + (i<=corte ? v : 0), 0),
+    previsto: mensal.reduce((s,v,i)=> s + (i> corte ? v : 0), 0) };
+}
+
+function graficoQuandoEntra(M){
+  const card = document.getElementById('card-tempo'); if (!card) return;
+  const cv = document.getElementById('c5'); if (!cv) return;
+  const S = serieDePagamentos(M.pedidos);
+  const R = resumoCliente(M.pedidos);
+
+  // Menos de dois meses com dado: um número diz mais do que um gráfico de um ponto só.
+  if (!S || S.meses < 2){
+    const unico = S ? S.lista[S.lista.findIndex((k,i)=>S.mensal[i]>0)] : null;
+    const recebeu = S && S.corte >= 0 && S.recebido > 0;
+    card.innerHTML = `
+      <h3>Quando o dinheiro entra</h3>
+      <div class="sub">Ainda não há meses suficientes para uma linha do tempo. Assim que houver mais de um pagamento, o gráfico aparece aqui.</div>
+      <div class="tiles" style="margin-top:6px">
+        <div class="card stat tile ${recebeu ? 'tile-ok' : 'tile-prev'}">
+          <span class="lbl">${unico ? (recebeu ? 'Pagamento recebido' : 'Pagamento previsto') : 'Nenhuma data ainda'}</span>
+          <div class="v num">${brl(unico ? (S.recebido + S.previsto) : R.emAnalise)}</div>
+          <div class="s">${unico ? `em ${esc(mesExtenso(unico))}` : 'a Receita ainda não marcou data para nenhum pedido'}</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const rotulos = S.lista.map(k => { const [a,m] = k.split('-'); return MES_CURTO[(+m)-1]+'/'+a.slice(2); });
+  const ctx = cv.getContext ? cv.getContext('2d') : null;
+  const datasets = [];
+  if (S.corte >= 0){
+    datasets.push({ label:'Já recebido', data: S.acum.map((v,i)=> i<=S.corte ? v : null),
+      borderColor:PAL.ok, backgroundColor:PAL.okSoft, fill:'origin', borderWidth:2.5, tension:0,
+      pointRadius:3, pointHoverRadius:6, pointBackgroundColor:PAL.ok, pointBorderColor:'#fff', pointBorderWidth:1.5 });
+  }
+  if (S.corte < S.lista.length-1){
+    datasets.push({ label:'Ainda previsto', data: S.acum.map((v,i)=> i>=Math.max(0,S.corte) ? v : null),
+      borderColor:PAL.and, backgroundColor:hachura(ctx, PAL.and, .45), fill:'origin',
+      borderWidth:2.5, borderDash:[7,5], tension:0,
+      pointRadius:3, pointHoverRadius:6, pointStyle:'rectRot', pointBackgroundColor:'#fff',
+      pointBorderColor:PAL.and, pointBorderWidth:2 });
+  }
+  const primeiroComValor = i => {
+    for (let d=0; d<datasets.length; d++){ if (datasets[d].data[i] != null) return d; }
+    return -1;
+  };
+
+  try {
+    const ch = new Chart(cv, {
+      type:'line',
+      data:{ labels:rotulos, datasets },
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:{duration:500},
+        interaction:{ mode:'index', intersect:false },
+        layout:{ padding:{ top:27 } },   // espaço para a etiqueta "hoje" ficar acima da área do gráfico
+        plugins:{
+          legend:{ display:false },
+          tooltip: tooltipBase({
+            filter: it => it.parsed && it.parsed.y != null && it.datasetIndex === primeiroComValor(it.dataIndex),
+            callbacks:{
+              title: it => mesExtenso(S.lista[it[0].dataIndex]) + (it[0].dataIndex > S.corte ? ' · previsto' : ''),
+              label: c => {
+                const linhas = [];
+                const entrou = S.mensal[c.dataIndex];
+                if (entrou > 0) linhas.push((c.dataIndex > S.corte ? ' Deve entrar no mês: ' : ' Entrou no mês: ') + brl(entrou));
+                else linhas.push(' Nada previsto para este mês');
+                linhas.push(' Total acumulado: ' + brl(S.acum[c.dataIndex]));
+                return linhas;
+              }
+            }
+          })
+        },
+        scales:{
+          x:{ grid:{ display:false }, border:{ color:PAL.line },
+            ticks:{ color:PAL.muted, font:FONTE, maxRotation:0, autoSkip:true, maxTicksLimit:9 } },
+          y:{ beginAtZero:true, grid:{ color:PAL.grade, drawTicks:false }, border:{ display:false },
+            ticks:{ color:PAL.muted, font:FONTE, maxTicksLimit:5, padding:8, callback:v => brlCurto(v) } }
+        }
+      },
+      plugins:[PLUG_HOJE]
+    });
+    ch.$hojeIdx = S.hojeIdx;
+    ch.update('none');
+  } catch(e){ console.warn('Gráfico "Quando o dinheiro entra" indisponível:', e); }
+
+  const lg = document.getElementById('c5-lg');
+  if (lg) lg.innerHTML =
+    (S.recebido > 0 ? `<span class="leg-item"><i class="leg-sw solida"></i>Já recebido <b>${brl(S.recebido)}</b></span>` : '') +
+    (S.previsto > 0 ? `<span class="leg-item"><i class="leg-sw tracejada"></i>Ainda previsto (linha tracejada) <b>${brl(S.previsto)}</b></span>` : '') +
+    (S.hojeIdx != null ? `<span class="leg-item" style="color:var(--muted)">A linha pontilhada em pé marca hoje.</span>` : '');
+}
+
+/* ───────── 2. "Como está cada pedido" — barra empilhada horizontal ───────── */
+function graficoSituacoes(M){
+  const P = M.pedidos;
+  const porGrupo = {};
+  P.forEach(p => { porGrupo[p._grupo] = (porGrupo[p._grupo]||0) + valorPedido(p); });
+  const gs = GRUPO_ORDEM_VIS.filter(g => porGrupo[g]);
+  const total = gs.reduce((s,g)=>s+porGrupo[g], 0) || 1;
+  const cv = document.getElementById('c1');
+  if (cv) try {
+    new Chart(cv, {
+      type:'bar',
+      data:{ labels:[''], datasets: gs.map(g => ({
+        label: GRUPO_NOME[g], data:[porGrupo[g]], backgroundColor: GRUPO_COR[g], borderWidth:0,
+        barPercentage:1, categoryPercentage:1 })) },
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:{duration:500},
+        layout:{ padding:0 },
+        plugins:{ legend:{ display:false },
+          tooltip: tooltipBase({ callbacks:{ title:()=>[],
+            label: c => ' ' + c.dataset.label + ': ' + brl(c.parsed.x)
+              + ' (' + Math.round(c.parsed.x/total*100) + '%)' } }) },
+        // min/max fixos: sem isso o Chart.js arredonda a escala e a barra não fecha a largura
+        scales:{ x:{ stacked:true, display:false, grid:{display:false}, min:0, max:total },
+                 y:{ stacked:true, display:false, grid:{display:false} } },
+        onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
+        onClick:(e,els)=>{ if(els.length) filtrarDetalhe({ situacao:'g:'+gs[els[0].datasetIndex] }); }
+      }
+    });
+  } catch(e){ console.warn('Gráfico "Como está cada pedido" indisponível:', e); }
+
+  const lg = document.getElementById('c1-lg');
+  if (lg){
+    lg.innerHTML = gs.map(g => `
+      <button type="button" class="leg-fil" data-g="${g}" title="Ver só estes pedidos — ${esc(GRUPO_LEIGO[g]||'')}">
+        <span class="leg-item"><i class="leg-sw chapada" style="background:${GRUPO_COR[g]}"></i>${esc(GRUPO_NOME[g])} <b>${brl(porGrupo[g])}</b></span>
+      </button>`).join('');
+    lg.querySelectorAll('.leg-fil').forEach(b =>
+      b.addEventListener('click', () => filtrarDetalhe({ situacao:'g:'+b.dataset.g })));
+  }
+}
+
+/* ───────── 3. "Ano a ano" — empilhada horizontal, aprovado + o que falta ───────── */
+function graficoAnos(M){
+  const P = M.pedidos;
+  const porAno = {};
+  P.forEach(p => {
+    if (!p._concluido && p._grupo === 'encerrado') return;   // mesma conta do topo da página
+    const ano = p._comp.ano || 0;
+    porAno[ano] = porAno[ano] || { total:0, aprovado:0 };
+    porAno[ano].total += valorPedido(p);
+    if (p._concluido) porAno[ano].aprovado += valorPedido(p);
+  });
+  const anos = Object.keys(porAno).sort();
+  const totalGeral = anos.reduce((s,a)=>s+porAno[a].total, 0);
+  const aprovGeral = anos.reduce((s,a)=>s+porAno[a].aprovado, 0);
+
+  const cv = document.getElementById('c4');
+  if (cv){
+    const caixa = cv.parentElement;
+    if (caixa) caixa.style.height = Math.max(120, anos.length*44 + 46) + 'px';
+    const ctx = cv.getContext ? cv.getContext('2d') : null;
+    try {
+      new Chart(cv, {
+        type:'bar',
+        data:{ labels: anos.map(a => a === '0' ? 'sem ano' : a), datasets:[
+          { label:'Já aprovado', data: anos.map(a => porAno[a].aprovado),
+            backgroundColor: PAL.ok, borderWidth:0, barThickness:22 },
+          { label:'Ainda com a Receita', data: anos.map(a => Math.max(0, porAno[a].total - porAno[a].aprovado)),
+            backgroundColor: hachura(ctx, PAL.and, .5), borderColor: PAL.and, borderWidth:1, barThickness:22 }
+        ]},
+        options:{
+          indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:{duration:500},
+          layout:{ padding:{ right:14 } },
+          plugins:{ legend:{ display:false },
+            tooltip: tooltipBase({ mode:'index', intersect:false, callbacks:{
+              label: c => ' ' + c.dataset.label + ': ' + brl(c.parsed.x),
+              footer: it => 'Total do ano: ' + brl(porAno[anos[it[0].dataIndex]].total) } }) },
+          scales:{
+            x:{ stacked:true, beginAtZero:true, grid:{ color:PAL.grade, drawTicks:false }, border:{display:false},
+              ticks:{ color:PAL.muted, font:FONTE, maxTicksLimit:4, callback:v => brlCurto(v) } },
+            y:{ stacked:true, grid:{ display:false }, border:{ color:PAL.line },
+              ticks:{ color:PAL.muted, font:{family:'Montserrat', size:12, weight:'700'} } }
+          },
+          onHover:(e,els)=>{ if(e.native&&e.native.target) e.native.target.style.cursor = els.length?'pointer':'default'; },
+          onClick:(e,els)=>{ if(els.length) filtrarDetalhe({ ano:String(anos[els[0].index]) }); }
+        },
+        plugins:[PLUG_ROTULO_APROVADO]
+      });
+    } catch(e){ console.warn('Gráfico "Ano a ano" indisponível:', e); }
+  }
+
+  const lg = document.getElementById('c4-lg');
+  if (lg) lg.innerHTML =
+    `<span class="leg-item"><i class="leg-sw chapada" style="background:${PAL.ok}"></i>Já aprovado <b>${brl(aprovGeral)}</b></span>` +
+    `<span class="leg-item"><i class="leg-sw tracejada"></i>Ainda com a Receita <b>${brl(Math.max(0, totalGeral - aprovGeral))}</b></span>`;
+}
+
+/* ───────── 4. "De onde vem o crédito" — dois valores + barra de proporção ───────── */
+function tributosDosPedidos(P){
+  const soma = {};
+  (P||[]).forEach(p => {
+    if (!p._concluido && p._grupo === 'encerrado') return;   // não entra na conta do que há a receber
+    soma[p.tributo] = (soma[p.tributo]||0) + valorPedido(p);
+  });
+  return Object.keys(soma).sort((a,b)=>soma[b]-soma[a]).map(nome => ({ nome, valor: soma[nome] }));
+}
+const EXPL_TRIBUTO = {
+  IRPJ:'Imposto de Renda da Pessoa Jurídica — o imposto de renda da empresa.',
+  CSLL:'Contribuição Social sobre o Lucro Líquido — uma contribuição cobrada sobre o lucro.'
+};
+function blocoDeOndeVem(alvo, itens){
+  if (!alvo) return;
+  itens = (itens||[]).filter(i => i.valor > 0);
+  if (!itens.length){ alvo.innerHTML = '<div class="det-vazio">Ainda não há valores separados por imposto.</div>'; return; }
+  const total = itens.reduce((s,i)=>s+i.valor, 0) || 1;
+  const parte = i => Math.round(i.valor/total*100);
+  alvo.innerHTML = `
+    <div class="duo">${itens.map((it,i)=>`
+      <div>
+        <div class="k"><i class="leg-sw chapada" style="width:12px;height:12px;margin-right:7px;background:${SLOTS[i%4]}"></i>${esc(it.nome)}</div>
+        <div class="v num">${brl(it.valor)}</div>
+        <div class="p"${EXPL_TRIBUTO[it.nome] ? ` title="${esc(EXPL_TRIBUTO[it.nome])}"` : ''}>${parte(it)}% do crédito</div>
+      </div>`).join('')}
+    </div>
+    <div class="prop" role="img" aria-label="Divisão do crédito: ${esc(itens.map(it=>it.nome+' '+parte(it)+'%').join(', '))}">
+      ${itens.map((it,i)=>`<i style="width:${(it.valor/total*100).toFixed(1)}%;background:${SLOTS[i%4]}"></i>`).join('')}
+    </div>
+    <div class="leg"><span class="leg-item" style="color:var(--muted)">A barra mostra o peso de cada imposto no total de ${brl(total)}.</span></div>`;
+}
+
+/* ───────── Estimativa (memória de cálculo) — só quando não há pedido enviado ───────── */
 function desenharMemoria(M){
   const MEM = M.memoria; if (!MEM || !(MEM.periodos||[]).length) return;
-  const IRPJ_COR = PAL.teal, CSLL_COR = PAL.couro;
-  const per = MEM.periodos.slice().sort((a,b)=>prepararCompetencia(a.ref).ord - prepararCompetencia(b.ref).ord);
-  const rotulo = p => { const c = prepararCompetencia(p.ref); return c.ord ? `${c.tri}T/${String(c.ano).slice(2)}` : (p.ref || '—'); };
-
-  const barOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:500},
-    plugins:{legend:{display:false}, tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
-      bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y)}}},
-    scales:{x:{stacked:true, grid:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11}}},
-      y:{stacked:true, grid:{color:'#EDE4D6'}, border:{display:false}, ticks:{color:PAL.muted, font:{family:'Montserrat',size:11},
-        callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
-
-  const mc1 = document.getElementById('mc1');
-  if (mc1) new Chart(mc1, {
-    type:'bar',
-    data:{labels:per.map(rotulo), datasets:[
-      {label:'IRPJ', data:per.map(p=>num(p.credito_irpj)), backgroundColor:IRPJ_COR, borderRadius:4, stack:'s', maxBarThickness:46},
-      {label:'CSLL', data:per.map(p=>num(p.credito_csll)), backgroundColor:CSLL_COR, borderRadius:4, stack:'s', maxBarThickness:46},
-    ]},
-    options:barOpts
+  blocoDeOndeVem(document.getElementById('tributos-bloco'), [
+    { nome:'IRPJ', valor:num(MEM.total_irpj) },
+    { nome:'CSLL', valor:num(MEM.total_csll) }
+  ]);
+  desenharAoAbrir('bloco-tributos', () => {
+    const per = MEM.periodos.slice().sort((a,b)=>prepararCompetencia(a.ref).ord - prepararCompetencia(b.ref).ord);
+    const rotulo = p => { const c = prepararCompetencia(p.ref); return c.ord ? `${c.tri}T/${String(c.ano).slice(2)}` : (p.ref || '—'); };
+    const cv = document.getElementById('mc1');
+    if (cv) new Chart(cv, {
+      type:'bar',
+      data:{ labels: per.map(rotulo), datasets:[
+        { label:'IRPJ', data: per.map(p=>num(p.credito_irpj)), backgroundColor:SLOTS[0], borderWidth:0, stack:'s', maxBarThickness:44 },
+        { label:'CSLL', data: per.map(p=>num(p.credito_csll)), backgroundColor:SLOTS[1], borderWidth:0, stack:'s', maxBarThickness:44 }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:{duration:500},
+        interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ display:false },
+          tooltip: tooltipBase({ callbacks:{
+            label: c => ' ' + c.dataset.label + ': ' + brl(c.parsed.y),
+            footer: it => 'Total do trimestre: ' + brl(it.reduce((s,i)=>s+(i.parsed.y||0),0)) } }) },
+        scales:{
+          x:{ stacked:true, grid:{display:false}, border:{color:PAL.line}, ticks:{ color:PAL.muted, font:FONTE, maxRotation:0, autoSkip:true } },
+          y:{ stacked:true, beginAtZero:true, grid:{ color:PAL.grade, drawTicks:false }, border:{display:false},
+            ticks:{ color:PAL.muted, font:FONTE, maxTicksLimit:5, callback:v => brlCurto(v) } }
+        }
+      }
+    });
+    const lg = document.getElementById('mc1-lg');
+    if (lg) lg.innerHTML =
+      `<span class="leg-item"><i class="leg-sw chapada" style="background:${SLOTS[0]}"></i>IRPJ <b>${brl(MEM.total_irpj)}</b></span>` +
+      `<span class="leg-item"><i class="leg-sw chapada" style="background:${SLOTS[1]}"></i>CSLL <b>${brl(MEM.total_csll)}</b></span>`;
   });
-  const lg1 = document.getElementById('mc1-lg');
-  if (lg1) lg1.innerHTML =
-    `<div class="pie-legend-row"><i style="background:${IRPJ_COR}"></i><span>IRPJ</span><b class="num">${brl(MEM.total_irpj)}</b></div>` +
-    `<div class="pie-legend-row"><i style="background:${CSLL_COR}"></i><span>CSLL</span><b class="num">${brl(MEM.total_csll)}</b></div>`;
-
-  const mc2 = document.getElementById('mc2');
-  if (mc2) new Chart(mc2, {
-    type:'doughnut',
-    data:{labels:['IRPJ','CSLL'], datasets:[{data:[num(MEM.total_irpj), num(MEM.total_csll)],
-      backgroundColor:[IRPJ_COR, CSLL_COR], borderWidth:0}]},
-    options:{responsive:true, maintainAspectRatio:false, animation:{duration:500}, cutout:'60%',
-      plugins:{legend:{display:false}, tooltip:{backgroundColor:PAL.petroleo, padding:10, cornerRadius:6,
-        bodyFont:{family:'Montserrat',size:12}, callbacks:{label:c=>' '+c.label+': '+brl(c.parsed)}}}}
-  });
-  const lg2 = document.getElementById('mc2-lg');
-  if (lg2) lg2.innerHTML =
-    `<div class="pie-legend-row"><i style="background:${IRPJ_COR}"></i><span>IRPJ</span><b class="num">${brl(MEM.total_irpj)}</b></div>` +
-    `<div class="pie-legend-row"><i style="background:${CSLL_COR}"></i><span>CSLL</span><b class="num">${brl(MEM.total_csll)}</b></div>`;
 }
 
 async function carregarModelos(){
@@ -1605,15 +1948,23 @@ function normTxt(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u03
 
 /** Junta os documentos específicos deste cliente (Relatório de Adequação Jurídica etc.)
     com os modelos genéricos da categoria Equiparação (Modelo de emissão de NF etc.). */
+let DESTACADOS = [];
 function desenharDocumentos(M, modelos){
   const box = document.getElementById('documentos-equip');
   if (!box) return;
   const doCategoria = (modelos||[]).filter(m => normTxt(m.categoria) === normTxt('Equiparação'));
-  const todos = [...(M.documentos||[]), ...doCategoria].filter(d => d.link && String(d.link).trim());
-  if (!todos.length){ box.innerHTML = '<div class="vazio" style="padding:16px 0;text-align:center;color:var(--muted)">Nenhum documento cadastrado ainda.</div>'; return; }
+  const todos = [...(M.documentos||[]), ...doCategoria]
+    .filter(d => d.link && String(d.link).trim())
+    .filter(d => DESTACADOS.indexOf(d.documento) < 0);   // já aparecem como cartão em destaque
+  if (!todos.length){
+    // se tudo já está em destaque acima, a seção inteira sai de cena
+    const sec = document.getElementById('secao-docs');
+    if (DESTACADOS.length && sec){ sec.remove(); return; }
+    box.innerHTML = '<div class="vazio" style="padding:16px 0;text-align:center;color:var(--muted)">Nenhum documento cadastrado ainda.</div>'; return;
+  }
   box.innerHTML = todos.map(d=>{
-    const nome = d.documento;
-    const link = String(d.link).trim();
+    const nome = esc(d.documento);
+    const link = esc(String(d.link).trim());
     return `<div class="item">
       <div><div class="nome">${nome}</div>${d.categoria?`<div class="cat">Modelo padrão</div>`:''}</div>
       <a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>
