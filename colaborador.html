@@ -134,11 +134,6 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 #bloco-centrais[hidden]{display:none}
 .aviso-off{background:var(--amber-soft);border:1px solid #F0D6B4;border-left:3px solid var(--amber);
   border-radius:8px;padding:8px 11px;margin-bottom:9px;font-size:12.5px;color:#8a5117;font-weight:600}
-.quem{display:flex;align-items:center;gap:6px;font-size:12px;color:#cfe6e2;font-weight:600}
-.quem select{font-family:inherit;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:5px 10px;cursor:pointer}
-.quem select option{color:#113D39;background:#fff}
-@media(max-width:640px){.quem span{display:none}}
 .cd{display:flex;flex-direction:column;gap:4px;margin-top:2px}
 .cd-val{color:var(--ink)!important;font-weight:700;font-size:12.5px;text-align:right}
 .cd-obs{font-size:12px;line-height:1.4;color:var(--ink-2);background:var(--surface-warm);
@@ -161,9 +156,56 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 .ic-chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
 .ic-chip.ok{background:#E7F4EC;color:#2E7D52;border-color:#cfe6e2}
 .ic-chip.bad{background:#F8E3DF;color:var(--vermelho);border-color:#F0C9C1}
-/* Selo de pendência no card da ferramenta (só onde o dado já está carregado) */
-.fer-selo{margin-left:auto;font-size:11px;font-weight:800;white-space:nowrap;
+/* ---- Ferramentas da equipe: o centro do painel ----
+   Cards grandes, com ícone em destaque, nome forte e uma linha do que se faz ali.
+   As planilhas centrais continuam discretas de propósito — é o contraste entre as
+   duas seções que deixa a hierarquia da página evidente. */
+.fer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:26px;align-items:stretch}
+@media(max-width:880px){.fer-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.fer-grid{grid-template-columns:1fr}}
+.fer-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;width:100%;height:100%;
+  text-align:left;text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  padding:15px 16px 16px;color:var(--ink);font-family:var(--sans);font-size:15px;cursor:pointer;
+  box-shadow:0 1px 2px rgba(7,48,52,.04);transition:border-color .14s,transform .12s,box-shadow .14s}
+.fer-card:hover{border-color:var(--brand-teal);transform:translateY(-2px);box-shadow:0 10px 24px rgba(7,48,52,.11)}
+.fer-card:focus-visible{outline:2px solid var(--brand-teal);outline-offset:3px}
+.fer-cab{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:10px}
+.fer-ic{margin-right:auto;flex:none;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:20px;line-height:1;background:var(--surface-warm);border:1px solid var(--line);
+  transition:background .14s,border-color .14s}
+.fer-card:hover .fer-ic{background:#EAF4F1;border-color:#cfe6e2}
+.fer-nome{font-size:14.5px;font-weight:700;line-height:1.25;letter-spacing:-.01em;color:var(--ink)}
+.fer-desc{font-size:12.5px;font-weight:400;line-height:1.4;color:var(--ink-2);margin-top:4px}
+.fer-arw{flex:none;font-size:13px;font-weight:900;color:var(--line-2);transition:color .14s,transform .15s}
+.fer-card:hover .fer-arw{color:var(--brand-teal)}
+button.fer-card[aria-expanded="true"]{border-color:var(--brand-teal)}
+button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal);transform:rotate(180deg)}
+/* Selo de pendência: no topo do card, ao lado da seta (só onde o dado já está carregado). */
+.fer-selo{flex:none;font-size:11px;font-weight:800;white-space:nowrap;
   background:#F8E3DF;color:var(--vermelho);border:1px solid #F0C9C1;border-radius:999px;padding:2px 8px}
+/* Restituição é um card de menu: o dropdown precisa passar por cima dos cards
+   vizinhos (o hover deles cria contexto de empilhamento por causa do transform). */
+.fer-grid .menu{display:flex;flex-direction:column}
+.fer-grid .menu>.fer-card{flex:1}
+.fer-grid .menu.aberto{z-index:40}
+
+/* Status do cliente: chip de destaque, três estados (Ativo / Em inativação / Inativo). */
+.info-chips{align-items:center;gap:7px}
+.st-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.01em;
+  padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:var(--surface-warm);color:var(--muted)}
+.st-chip::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--line-2)}
+.st-chip.ok{background:#E7F4EC;color:#276B47;border-color:#BFE0CD}
+.st-chip.ok::before{background:#2E7D52}
+.st-chip.aten{background:var(--amber-soft);color:#8A5117;border-color:var(--amber-line)}
+.st-chip.aten::before{background:var(--amber)}
+.st-chip.bad{background:#F8E3DF;color:var(--vermelho);border-color:#F0C9C1}
+.st-chip.bad::before{background:var(--vermelho)}
+/* Início da contabilidade: a data é o protagonista, o tempo decorrido vem em segundo plano. */
+.chip-inicio{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;
+  border-radius:20px;background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
+.chip-inicio b{font-weight:800;color:var(--ink);font-size:12px}
+.chip-inicio .sec{font-weight:600;color:var(--muted)}
+.chip-inicio.vazio{color:var(--muted);font-weight:600}
 /* Todo link abre em guia nova (<base target="_blank">) — o colaborador nunca
    perde a tela em que estava. Logo e "← Painel" são a exceção: são o gesto de
    VOLTAR, então trocam a guia atual (target="_self"). */
@@ -176,10 +218,6 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
   <span class="logo">back<span class="y">4you</span></span>
   <span class="tag">Painel da equipe</span>
   <span class="spacer"></span>
-  <label class="quem" title="Aparece na coluna Colaborador do histórico de alterações">
-    <span>Você:</span>
-    <select id="quem-sou"></select>
-  </label>
   <span class="cnt" id="cnt"></span>
 </div>
 
@@ -191,7 +229,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
            placeholder="Buscar ferramenta…  (ex.: licença, e-CAC, contato, alvará)">
     <span class="fer-cnt" id="fer-cnt"></span>
   </div>
-  <div class="centrais" id="ferramentas"></div>
+  <div class="fer-grid" id="ferramentas"></div>
   <div class="fer-vazio" id="fer-vazio" hidden>Nenhuma ferramenta com esse termo.</div>
 
   <!-- PLANILHAS CENTRAIS — atalho para as planilhas cruas, recolhido -->
@@ -230,7 +268,7 @@ const CHAVE_PADRAO = 'b4u-equipe-2026';
 // velho sem perceber. Essa cópia existe só para o painel não morrer se a API cair.
 let CENTRAIS_VIVOS=null;
 const CENTRAIS_FALLBACK = [
-  {nome:'Site Links',            url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=1807029121#gid=1807029121'},
+  {nome:'Registro Clientes',     url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=667079147#gid=667079147'},
   {nome:'Societária Mestra',     url:'https://docs.google.com/spreadsheets/d/1xcmKoj1hORiFQLdrUDxBicZri-tOXkwFiyqVF1NUGUg/edit?gid=1875565821#gid=1875565821'},
   {nome:'Tickets',               url:'https://docs.google.com/spreadsheets/d/1ZQVgRsn5FwytaO7MyHLPATD88xQziUfZhOddV_I4j30/edit?gid=207987257#gid=207987257'},
   {nome:'Contatos',              url:'https://docs.google.com/spreadsheets/d/17Yrjylaj0b-fgaH-ujFjLkeT-G4egKzV8yEg4q4yrzE/edit?gid=1163717920#gid=1163717920'},
@@ -243,13 +281,14 @@ const CENTRAIS_FALLBACK = [
   {nome:'Extratos Pendentes',    url:'https://docs.google.com/spreadsheets/d/1TFnX4AHZDkHbyapI7FDi3cCJB_RzqB0ySNQ4NBWaq54/edit?gid=1183432994#gid=1183432994'}
 ];
 // ícone por nome (normalizado) e quais vão pro dropdown "Outros"
-const ICONE_CENTRAL={'site links':'🗂️','societaria mestra':'🏛️','tickets':'🎫','contatos':'👥','feriados':'📅','modelos':'📄','config tributario':'⚙️','certificados e procuracoes':'🔐','certificados digitais':'🔐','equiparacao controle':'⚖️','controle de licencas':'📜','extratos pendentes':'🏦'};
-const CENTRAIS_NO_OUTROS=['site links','tickets','feriados','modelos','config tributario'];
+const ICONE_CENTRAL={'site links':'🗂️','registro clientes':'🗂️','societaria mestra':'🏛️','tickets':'🎫','contatos':'👥','feriados':'📅','modelos':'📄','config tributario':'⚙️','certificados e procuracoes':'🔐','certificados digitais':'🔐','equiparacao controle':'⚖️','controle de licencas':'📜','extratos pendentes':'🏦'};
+const CENTRAIS_NO_OUTROS=['site links','registro clientes','tickets','feriados','modelos','config tributario'];
 
 function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); const h=(location.hash||'').replace('#','').trim(); return q || h || CHAVE_PADRAO; }
-/* Quem está mexendo. Vai como ?cod= para as páginas de edição e vira a coluna
-   "Colaborador" da aba log de cada planilha. Fica na URL (nada de armazenamento
-   no navegador) — assim o atalho de cada um já abre identificado. */
+/* Quem está mexendo. Vem do ?cod= na URL, é repassado para as páginas de edição e
+   vira a coluna "Colaborador" da aba log de cada planilha. Sem ?cod= o log grava
+   só "equipe"; para sair o nome, cada pessoa usa um atalho com o próprio código
+   (colaborador.html?chave=…&cod=985911), como já é feito na restituição. */
 function codAtual(){ return (new URLSearchParams(location.search).get('cod')||'').trim(); }
 function comChave(base){
   const u=base.split('#')[0].split('?')[0];
@@ -294,8 +333,11 @@ function lkPasta(rot, url){
 
 /* ---- Acesso rápido: links centrais (Config, dinâmico) + fallback ---- */
 function iconeCentral(nome){ return ICONE_CENTRAL[normTxt(nome)] || '📄'; }
-function urlRegistros(validos){   // "Registros de clientes" = aba Registro do Site Links (deriva do link do Site Links)
-  const sl=validos.find(p=>normTxt(p.nome)==='site links');
+// A planilha do cadastro se chamava "Site Links" e virou "Registro Clientes" na
+// Config — os dois nomes são aceitos enquanto a troca não termina.
+const NOMES_REGISTRO=['registro clientes','site links'];
+function urlRegistros(validos){   // aba Registro, derivada do link dessa planilha
+  const sl=validos.find(p=>NOMES_REGISTRO.includes(normTxt(p.nome)));
   if(sl && sl.url) return sl.url.replace(/gid=\d+/g,'gid=667079147');
   return 'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=667079147#gid=667079147';
 }
@@ -367,36 +409,50 @@ function pintarRestituicao(){
   const pessoas=LINKS_RESTITUICAO.map(p=>
     `<a href="restituicao.html?chave=${ch}#${encodeURIComponent(p.code)}" target="_blank" rel="noopener"><span class="ic">💸</span>${esc(p.nome)}</a>`).join('');
   const controle=`<a href="${esc(urlControle())}" target="_blank" rel="noopener"><span class="ic">⚖️</span>Controle (planilha)</a>`;
-  menu.innerHTML=`<button type="button" class="central-lk" id="btn-restituicao" aria-expanded="false"><span class="ic">💸</span><span>Restituição</span><span class="arw">▾</span></button><div class="menu-pop" id="pop-restituicao" hidden>${pessoas}${controle}</div>`;
+  const fer=FERRAMENTAS.filter(f=>f.id==='menu-restituicao')[0]||{};
+  menu.innerHTML=`<button type="button" class="fer-card" id="btn-restituicao" aria-expanded="false">
+      <span class="fer-cab"><span class="fer-ic">💸</span><span class="fer-arw">▾</span></span>
+      <span class="fer-nome">Restituição</span>
+      <span class="fer-desc">${esc(fer.desc||'')}</span>
+    </button><div class="menu-pop" id="pop-restituicao" hidden>${pessoas}${controle}</div>`;
   const btn=document.getElementById('btn-restituicao'), pop=document.getElementById('pop-restituicao');
-  btn.addEventListener('click', e=>{ e.stopPropagation(); const abrir=pop.hidden; pop.hidden=!abrir; btn.setAttribute('aria-expanded',abrir?'true':'false'); });
+  btn.addEventListener('click', e=>{ e.stopPropagation(); const abrir=pop.hidden; pop.hidden=!abrir;
+    btn.setAttribute('aria-expanded',abrir?'true':'false'); menu.classList.toggle('aberto',abrir); });
 }
 /* ---- Ferramentas da equipe: lista única, renderizada e filtrável ----
    `alias` é só para a busca: são as palavras que a pessoa realmente digita
    quando está procurando aquela ferramenta (e não o nome oficial dela). */
 const FERRAMENTAS=[
   {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:'📇',
+   desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
    alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj'},
   {id:'fp-certificados',  nome:'Certificados e procurações',    url:'certificados.html',      ic:'🔐',
+   desc:'Vencimentos de certificado, e-CAC e SPE, com o responsável legal.',
    alias:'certificado digital procuracao e-cac ecac spe vencimento responsavel legal',
    badge:seloCertificados},
   {id:'fp-licencas',      nome:'Controle de licenças',          url:'licencas.html',          ic:'📜',
+   desc:'Alvará, sanitária e demais licenças, com a data de cada renovação.',
    alias:'licenca alvara sanitario crm pj cli licenciamento integrado regularidade cnes'},
   {id:'fp-contatos',      nome:'Contatos — gerir & permissões', url:'contatos-equipe.html',   ic:'👥',
+   desc:'Quem fala pelo cliente: e-mail, telefone, papel e permissão de acesso.',
    alias:'contato email e-mail telefone acesso permissao papel principal secundario'},
   {id:'fp-societario',    nome:'Societário — editar processos', url:'societario-equipe.html', ic:'🏛️',
+   desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
    alias:'societario mestra alteracao contratual junta etapa processo protocolo'},
   {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:'💸',
+   desc:'Relatório de cada colaborador e a planilha de controle da equiparação.',
    alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
   {id:'fp-ativos',        nome:'Clientes ativos / mês',         url:'clientes-ativos.html',   ic:'📈',
+   desc:'Quantos clientes ativos em cada competência, mês a mês.',
    alias:'ativos competencia mes calendario quantos clientes'},
   {id:'fp-comercial',     nome:'Comercial — materiais',         url:'comercial.html',         ic:'📣',
+   desc:'Material de proposta, simulador e calculadora para o comercial.',
    alias:'comercial material proposta marketing simulador calculadora'}
 ];
 function pintarFerramentas(){
   const cx=document.getElementById('ferramentas'); if(!cx) return;
   const termo=normTxt((document.getElementById('busca-fer')||{}).value||'');
-  const lista=FERRAMENTAS.filter(f=>!termo||normTxt(f.nome+' '+(f.alias||'')).includes(termo));
+  const lista=FERRAMENTAS.filter(f=>!termo||normTxt(f.nome+' '+(f.desc||'')+' '+(f.alias||'')).includes(termo));
   cx.innerHTML=lista.map(f=>{
     if(f.tipo==='menu') return `<div class="menu" id="${f.id}"></div>`;
     // `badge` é opcional: uma função que devolve {n,tit} quando a ferramenta tem
@@ -404,7 +460,11 @@ function pintarFerramentas(){
     // licenças, contatos e afins ficam sem, porque isso exigiria chamada nova.
     const b=(typeof f.badge==='function')?f.badge():null;
     const selo=(b&&b.n)?`<span class="fer-selo" title="${esc(b.tit||'')}">${esc(String(b.n))} ⚠</span>`:'';
-    return `<a class="central-lk" id="${f.id}" href="${esc(comChave(f.url))}"><span class="ic">${f.ic}</span><span>${esc(f.nome)}</span>${selo}<span class="arw">›</span></a>`;
+    return `<a class="fer-card" id="${f.id}" href="${esc(comChave(f.url))}">
+      <span class="fer-cab"><span class="fer-ic">${f.ic}</span>${selo}<span class="fer-arw">›</span></span>
+      <span class="fer-nome">${esc(f.nome)}</span>
+      <span class="fer-desc">${esc(f.desc||'')}</span>
+    </a>`;
   }).join('');
   if(lista.some(f=>f.tipo==='menu')) pintarRestituicao();
   const vazio=document.getElementById('fer-vazio'); if(vazio) vazio.hidden=lista.length>0;
@@ -412,26 +472,10 @@ function pintarFerramentas(){
   if(cnt) cnt.textContent = termo ? lista.length+' de '+FERRAMENTAS.length : '';
 }
 
-/* Seletor "Você:" — usa a mesma lista de colaboradores da restituição.
-   Trocar reescreve a URL (sem recarregar) e repropaga o código nos atalhos. */
-function montarQuemSou(){
-  const sel=document.getElementById('quem-sou'); if(!sel) return;
-  const atual=codAtual();
-  sel.innerHTML='<option value="">não identificado</option>'+
-    LINKS_RESTITUICAO.map(p=>`<option value="${esc(p.code)}"${p.code===atual?' selected':''}>${esc(p.nome)}</option>`).join('');
-  sel.addEventListener('change',()=>{
-    const u=new URL(location.href);
-    if(sel.value) u.searchParams.set('cod',sel.value); else u.searchParams.delete('cod');
-    history.replaceState(null,'',u.toString());
-    const nc=document.getElementById('novo-cliente');
-    if(nc) nc.href=comChave('registro.html');
-    pintarFerramentas();          // reconstrói os atalhos já com o ?cod= novo
-  });
-}
-
 function fecharRestituicao(){
   const pop=document.getElementById('pop-restituicao'), btn=document.getElementById('btn-restituicao');
   if(pop && !pop.hidden){ pop.hidden=true; btn.setAttribute('aria-expanded','false'); }
+  const menu=document.getElementById('menu-restituicao'); if(menu) menu.classList.remove('aberto');
 }
 
 /* ---- Painel de um cliente ---- */
@@ -488,21 +532,38 @@ function blocoCertificado(cert,id){
 function simNao(v){ const s=String(v==null?'':v).trim().toLowerCase(); if(!s) return null; if(/^(sim|s|true|verdadeiro|1|x|ativo|✓)$/.test(s)) return true; if(/^(n[aã]o|nao|n|false|falso|0|-|inativo)$/.test(s)) return false; return null; }
 function mesesAtivo(iso){ const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return null; const d=new Date(+m[1],+m[2]-1,+m[3]); let n=(hoje.getFullYear()-d.getFullYear())*12+(hoje.getMonth()-d.getMonth()); if(hoje.getDate()<d.getDate()) n--; return n<0?0:n; }
 function fmtMeses(n){ if(n==null) return ''; if(n<1) return 'menos de 1 mês'; const a=Math.floor(n/12),m=n%12,p=[]; if(a)p.push(a+(a>1?' anos':' ano')); if(m)p.push(m+(m>1?' meses':' mês')); return p.join(' e '); }
+/* A coluna "Ativo" da planilha tem três valores: Ativo, Em inativação e Inativo.
+   simNao() só entende sim/não (e é usada em outros pontos do arquivo), então o
+   status do cliente tem função própria. A comparação é sem acento e em minúsculo. */
+function statusCliente(v){
+  const t=normTxt(v);
+  if(!t) return {cl:'', txt:'sem informação'};
+  if(t==='ativo') return {cl:'ok', txt:'Ativo'};
+  if(t.indexOf('inativacao')>=0) return {cl:'aten', txt:'Em inativação'};
+  if(t==='inativo'||t==='inativa') return {cl:'bad', txt:'Inativo'};
+  return {cl:'', txt:String(v).trim()};   // fora do combinado: mostra como veio, em cinza
+}
+/* Início da contabilidade em dd/mm/aaaa. O tempo decorrido continua à vista,
+   mas como informação secundária — a data é o que a equipe procura. */
+function chipInicio(iso){
+  if(!String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/))
+    return '<span class="chip-inicio vazio">sem data de início</span>';
+  const mm=mesesAtivo(iso);
+  const dec=(mm!=null)?`<span class="sec">· ${esc(fmtMeses(mm))}</span>`:'';
+  return `<span class="chip-inicio">desde <b>${fmtBR(iso)}</b>${dec}</span>`;
+}
 function blocoInfo(c){
   const r=c.registro; if(!r) return '';
   const chips=[];
-  const at=simNao(r.ativo);
-  if(at===true) chips.push('<span class="ic-chip ok">Ativo</span>');
-  else if(at===false) chips.push('<span class="ic-chip bad">Inativo</span>');
-  else if(r.ativo) chips.push(`<span class="ic-chip">${esc(String(r.ativo))}</span>`);
+  const st=statusCliente(r.ativo);
+  chips.push(`<span class="st-chip${st.cl?' '+st.cl:''}">${esc(st.txt)}</span>`);
   if(r.regime) chips.push(`<span class="ic-chip">${esc(String(r.regime))}</span>`);
   const fr=String(r.fator_r==null?'':r.fator_r).trim();
   if(fr && !/^(n[aã]o|nao|0|-|false)$/i.test(fr)) chips.push('<span class="ic-chip">Fator R</span>');
   const eq=String(r.equiparado==null?'':r.equiparado).trim();
   if(eq && !/^(n[aã]o|nao|0|-|false)$/i.test(eq)) chips.push('<span class="ic-chip">Equiparado</span>');
-  const mm=mesesAtivo(r.inicio_contab);
-  if(mm!=null) chips.push(`<span class="ic-chip">cliente há ${esc(fmtMeses(mm))}</span>`);
-  return chips.length?`<div class="info-chips">${chips.join('')}</div>`:'';
+  chips.push(chipInicio(r.inicio_contab));
+  return `<div class="info-chips">${chips.join('')}</div>`;
 }
 function exSec(ic,titulo,body){ return `<div class="ex-sec"><div class="ex-tit">${ic} ${esc(titulo)}</div>${body}</div>`; }
 
@@ -682,7 +743,6 @@ function boot(){
     .then(d=>{ if(d && !d.erro && d.centrais && d.centrais.length){ pintarCentrais(d.centrais); pintarRestituicao(); } })
     .catch(()=>{});
   ligarCombo();
-  montarQuemSou();
   const nc=document.getElementById('novo-cliente');
   if(nc) nc.href=comChave('registro.html');
 

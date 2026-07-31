@@ -57,7 +57,8 @@
     .ok-links{display:flex;flex-direction:column;gap:8px;margin:16px 0;text-align:left}
     .ok-links a{background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:11px 13px;text-decoration:none;color:var(--brand-dark);font-weight:700;font-size:13.5px}
     .lock{max-width:420px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;text-align:center}
-  </style>
+  .btn.confirmar,button.confirmar{background:#C0392B!important;border-color:#C0392B!important;color:#fff!important}
+</style>
 </head>
 <body>
   <div class="top"><b>Onboarding — novo cliente</b><a id="voltar" href="colaborador.html">← Painel da equipe</a></div>
@@ -101,8 +102,8 @@
       'cnes':{s:'Identificação'},
       'link form diagnostico':{s:'Identificação',full:true},
       'data de abertura':{s:'Empresa',t:'date'},
-      'porte':{s:'Empresa'},
-      'natureza juridica':{s:'Empresa'},
+      'porte':{s:'Empresa',t:'select',opts:['','Microempresa','Empresa de Pequeno Porte','Sem enquadramento']},
+      'natureza juridica':{s:'Empresa',t:'select',opts:['','Sociedade Empresária Limitada','Sociedade Simples Limitada','Sociedade Simples Pura','Sociedade Limitada Unipessoal','Empresário (Individual)','Pessoa física']},
       'endereco':{s:'Empresa',full:true},
       'cnaes':{s:'Empresa',t:'textarea',full:true},
       'registro na junta':{s:'Empresa'},
@@ -111,11 +112,9 @@
       'cadastro municipal (numero)':{s:'Empresa'},
       'regime':{s:'Fiscal / Contábil',t:'select',opts:['','Lucro Presumido','Simples Nacional']},
       'fator r':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
-      'equiparados':{s:'Fiscal / Contábil'},
-      'iss':{s:'Fiscal / Contábil'},
+      'equiparados':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Em processo administrativo','N/A']},
+      'iss':{s:'Fiscal / Contábil',t:'select',opts:['','Fixo','Variável','N/A']},
       'livro caixa':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
-      'procuracao e-cac':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Feita']},
-      'procuracao spe':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Feita']},
       'contabilidade previa':{s:'Fiscal / Contábil'},
       'data de inicio da contabilidade':{s:'Fiscal / Contábil',t:'date'},
       'data de fim da contabilidade':{s:'Fiscal / Contábil',t:'date'},
@@ -137,7 +136,14 @@
     // Campo sintético UF: NÃO é coluna do Registro (vai só p/ o Config fiscal), mas é obrigatório.
     const UF_FIELD = {s:'Identificação',col:'UF',t:'text',req:true,max:2,up:true,role:'uf'};
     // Fallback: se o backend ainda não tiver "tipo=registro_campos" (ex.: não republicado ainda).
-    const CAMPOS_FALLBACK = ['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Procuração E-Cac','Procuração SPE','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Tem DPTO pessoal','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Aluguel para PF?','Pagamento Aluguel','Valor do Aluguel','Obs Aluguel'];
+    const CAMPOS_FALLBACK = ['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Tem DPTO pessoal','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Aluguel para PF?','Pagamento Aluguel','Valor do Aluguel','Obs Aluguel'];
+
+    // Colunas APOSENTADAS (chave normalizada por norm()).
+    // Saíram — ou estão saindo — da aba Registro. O montador de campos ignora essas
+    // colunas mesmo que o cabeçalho ainda exista na planilha: o formulário para de
+    // mostrar ANTES de a coluna sair e não quebra DEPOIS que ela sair. Para aposentar
+    // outra coluna no futuro, basta acrescentar a chave aqui.
+    const REMOVIDOS = ['procuracao e-cac','procuracao spe'];
 
     // normaliza rótulo igual ao backend (sem acento, minúsculo, sem ?:. no fim)
     function norm(s){ return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim().replace(/[?:.]+$/,''); }
@@ -154,6 +160,7 @@
       (headers||[]).forEach(h=>{
         const k = norm(h);
         if(!k || SKIP.indexOf(k)>=0) return;            // colunas que o sistema gerencia
+        if(REMOVIDOS.indexOf(k)>=0) return;             // coluna aposentada: não vira campo
         const hint = HINTS[k] || {s:'Outros'};
         if(hint.role) ROLE[hint.role] = h;
         campos.push({s:hint.s||'Outros', col:h, t:hint.t||'text', req:!!hint.req, full:!!hint.full, opts:hint.opts, ph:hint.ph||'', max:hint.max, up:!!hint.up});
@@ -170,7 +177,9 @@
       const id='f_'+CAMPOS.indexOf(f);
       const req=f.req?'<span class="req">*</span>':'';
       let inner;
-      if(f.t==='select'){ inner=`<select id="${id}" data-col="${esc(f.col)}">${f.opts.map(o=>`<option value="${esc(o)}">${o||'—'}</option>`).join('')}</select>`; }
+      // Cliente novo começa com tudo em branco: o select abre no vazio e a equipe
+      // escolhe uma das opções da lista — sem texto livre para inventar variação.
+      if(f.t==='select'){ inner=`<select id="${id}" data-col="${esc(f.col)}">${(f.opts||[]).map(o=>`<option value="${esc(o)}">${o?esc(o):'—'}</option>`).join('')}</select>`; }
       else if(f.t==='textarea'){ inner=`<textarea id="${id}" data-col="${esc(f.col)}" rows="2" placeholder="${esc(f.ph||'')}"></textarea>`; }
       else { inner=`<input id="${id}" data-col="${esc(f.col)}" type="${f.t==='date'?'date':'text'}" ${f.max?`maxlength="${f.max}"`:''} placeholder="${esc(f.ph||'')}">`; }
       return `<div class="fld ${f.full?'full':''}" data-fld="${esc(f.col)}"><label for="${id}">${esc(f.col)} ${req}</label>${inner}</div>`;
@@ -206,7 +215,18 @@
         e.target.closest('.fld').classList.remove('miss');
         if(e.target.dataset.col===ROLE.razao) atualizarNome();
       }));
-      document.getElementById('limpar').addEventListener('click',()=>{ if(confirm('Limpar tudo?')) location.reload(); });
+      // Confirmação em DOIS TEMPOS no próprio botão — diálogo nativo (confirm)
+      // trava a página e é o padrão que o resto do painel evita.
+      (()=>{ const b=document.getElementById('limpar'); if(!b) return;
+        const rot=b.textContent; let armado=false, t=null;
+        b.addEventListener('click',()=>{
+          if(armado){ location.reload(); return; }
+          armado=true; b.textContent='Clique de novo para limpar';
+          b.classList.add('confirmar');
+          t=setTimeout(()=>{ armado=false; b.textContent=rot; b.classList.remove('confirmar'); },4000);
+        });
+        b.addEventListener('blur',()=>{ clearTimeout(t); armado=false; b.textContent=rot; b.classList.remove('confirmar'); });
+      })();
       document.getElementById('criar').addEventListener('click', criar);
       atualizarNome();
     }

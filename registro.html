@@ -82,6 +82,10 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .lista{padding:12px 16px 48px;display:flex;flex-direction:column;gap:8px}
 .cli{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .cli.aberto{border-color:var(--brand-teal);box-shadow:0 5px 20px rgba(7,48,52,.10)}
+/* Situação do cliente: faixa lateral colorida para bater o olho na lista fechada
+   e ver na hora quem não está ativo — sem precisar abrir o cadastro. */
+.cli.sit-inativando,.cli.aberto.sit-inativando{border-left:4px solid var(--amber)}
+.cli.sit-inativo,.cli.aberto.sit-inativo{border-left:4px solid var(--vermelho)}
 .cli-head{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:0;padding:11px 13px;cursor:pointer;font-family:var(--sans);color:inherit;flex-wrap:wrap}
 .cli-head:hover{background:var(--surface-warm)}
 .cli-id{font-weight:800;color:var(--brand-teal);font-size:13.5px;white-space:nowrap;min-width:54px}
@@ -89,9 +93,13 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .cli-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end;flex:2 1 260px;min-width:0}
 .mt{font-size:11px;font-weight:700;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line);border-radius:999px;padding:2px 9px;white-space:nowrap;max-width:250px;overflow:hidden;text-overflow:ellipsis}
 .mt.vazio{color:var(--muted);font-weight:600;background:transparent;border-style:dashed}
-.pill{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap;letter-spacing:.2px}
-.pill.sim{background:#E6F3EC;color:#1f6b45;border:1px solid #BFE0CD}
-.pill.nao{background:#EEE9E2;color:var(--muted);border:1px solid var(--line)}
+/* Selo de situação: Ativo (verde discreto) · Em inativação (âmbar) · Inativo
+   (vermelho) · sem informação (cinza). Aparece na linha fechada da lista. */
+.pill{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap;letter-spacing:.2px;border:1px solid transparent}
+.pill.sit-ativo{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.pill.sit-inativando{background:var(--amber-soft);color:#8A4B12;border-color:var(--amber)}
+.pill.sit-inativo{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
+.pill.sit-sem{background:#EEE9E2;color:var(--muted);border-color:var(--line)}
 .chev{flex:none;color:var(--muted);font-size:19px;font-weight:800;transition:transform .15s;line-height:1}
 .cli.aberto .chev{transform:rotate(90deg);color:var(--brand-teal)}
 
@@ -111,6 +119,10 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .fld textarea{resize:vertical;min-height:42px;line-height:1.35}
 .fld select{font-weight:600;cursor:pointer}
 .fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:0}
+/* Campo esperado e ainda em branco: fundo avermelhado bem suave + borda um tom
+   mais forte. É dica visual para varrer a tela, não erro — some ao preencher. */
+.fld.emfalta>input,.fld.emfalta>select,.fld.emfalta>textarea{background:#FDF2EF;border-color:#E7C3BB}
+.fld.emfalta>.lbl{color:#8A5A50}
 .fld .ro{font-size:13px;padding:8px 10px;border:1px dashed var(--line-2);border-radius:8px;background:#EFE8DE;color:var(--ink-2);
   min-height:38px;word-break:break-word;display:flex;align-items:center;gap:7px;cursor:not-allowed}
 .fld .ro .cad-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -247,8 +259,8 @@ const HINTS={
   'cnes':{s:'Identificação'},
   'link form diagnostico':{s:'Identificação',full:true},
   'data de abertura':{s:'Empresa',t:'date'},
-  'porte':{s:'Empresa'},
-  'natureza juridica':{s:'Empresa'},
+  'porte':{s:'Empresa',t:'select',opts:['','Microempresa','Empresa de Pequeno Porte','Sem enquadramento']},
+  'natureza juridica':{s:'Empresa',t:'select',opts:['','Sociedade Empresária Limitada','Sociedade Simples Limitada','Sociedade Simples Pura','Sociedade Limitada Unipessoal','Empresário (Individual)','Pessoa física']},
   'endereco':{s:'Empresa',full:true},
   'cnaes':{s:'Empresa',t:'textarea',full:true},
   'registro na junta':{s:'Empresa'},
@@ -257,11 +269,9 @@ const HINTS={
   'cadastro municipal (numero)':{s:'Empresa'},
   'regime':{s:'Fiscal / Contábil',t:'select',opts:['','Lucro Presumido','Simples Nacional'],role:'regime'},
   'fator r':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
-  'equiparados':{s:'Fiscal / Contábil'},
-  'iss':{s:'Fiscal / Contábil'},
+  'equiparados':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Em processo administrativo','N/A']},
+  'iss':{s:'Fiscal / Contábil',t:'select',opts:['','Fixo','Variável','N/A']},
   'livro caixa':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
-  'procuracao e-cac':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Feita']},
-  'procuracao spe':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Feita']},
   'contabilidade previa':{s:'Fiscal / Contábil'},
   'data de inicio da contabilidade':{s:'Fiscal / Contábil',t:'date',role:'inicio'},
   'data de fim da contabilidade':{s:'Fiscal / Contábil',t:'date'},
@@ -284,7 +294,7 @@ const HINTS={
 const HINTS_SISTEMA={
   'id':{s:'Identificação',role:'id'},
   'nome':{s:'Identificação',full:true,role:'nome'},
-  'ativo':{s:'Identificação',t:'select',opts:['','Sim','Não'],role:'ativo'},
+  'ativo':{s:'Identificação',t:'select',opts:['','Ativo','Em inativação','Inativo'],role:'ativo'},
   'drive':{s:'Identificação',full:true,role:'drive'},
   'produtos back4you':{s:'Identificação',full:true,role:'produtos'}
 };
@@ -292,7 +302,16 @@ const SEC_ORDER=['Identificação','Empresa','Fiscal / Contábil','Departamento 
 /* Campo sintético UF: NÃO é coluna do Registro (vai só p/ o Config fiscal), mas é obrigatório. */
 const UF_FIELD={s:'Identificação',col:'UF',t:'text',req:true,max:2,up:true,role:'uf'};
 /* Fallback: se o backend não devolver os cabeçalhos (ex.: Web App não republicado). */
-const CAMPOS_FALLBACK=['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Procuração E-Cac','Procuração SPE','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Tem DPTO pessoal','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Aluguel para PF?','Pagamento Aluguel','Valor do Aluguel','Obs Aluguel'];
+const CAMPOS_FALLBACK=['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Tem DPTO pessoal','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Aluguel para PF?','Pagamento Aluguel','Valor do Aluguel','Obs Aluguel'];
+
+/* Colunas APOSENTADAS (chave normalizada por norm()).
+   Saíram — ou estão saindo — da aba Registro. O montador de campos ignora essas
+   colunas mesmo que o cabeçalho ainda exista na planilha. Assim o painel para de
+   mostrar ANTES de a coluna sair, e não quebra DEPOIS que ela sair. Quem apaga a
+   coluna na planilha não precisa mexer aqui; quem aposenta uma coluna nova só
+   acrescenta a chave nesta lista. Também ficam fora da conta do selo de
+   completude, senão contariam como "campo vazio" para sempre. */
+const REMOVIDOS=['procuracao e-cac','procuracao spe'];
 
 /* Motivo de cada coluna travada (vira o title do campo somente-leitura). */
 const MOTIVO_TRAVA={
@@ -313,6 +332,7 @@ function montarCampos(headers,modo){
   (headers||[]).forEach(h=>{
     const k=norm(h);
     if(!k)return;
+    if(REMOVIDOS.indexOf(k)>=0)return;                // coluna aposentada: não vira campo
     if(!edicao&&SKIP.indexOf(k)>=0)return;            // colunas que o sistema gerencia
     const hint=dicas[k]||{s:'Outros'};
     if(hint.role)roles[hint.role]=h;
@@ -344,28 +364,36 @@ let ABERTOS=new Set(),FILTRO='todos',TERMO='';
    · "Data de fim da contabilidade" — em branco ali quer dizer contrato
      em andamento, não buraco no cadastro;
    · "Ativo" — é situação do cliente, não campo de cadastro;
+   · as colunas APOSENTADAS (REMOVIDOS) — já não aparecem no cadastro;
    · toda coluna preenchida por menos de 20% dos clientes (coluna de
      exceção: CNES, obs de aluguel e afins). O corte sai dos próprios
      dados que vieram, então se ajusta sozinho quando a equipe cria uma
      coluna nova ou passa a usar uma que estava parada.
    O selo fica âmbar quando falta mais de um terço dos campos esperados
    (mínimo de 3), que é quando o cadastro deixa de ser "quase pronto".
+
+   Essa MESMA lista (COLS_COMPLETUDE) é a régua do destaque avermelhado dos
+   campos em branco lá no cadastro aberto — selo e destaque contam a mesma coisa.
    =================================================================== */
 const FORA_DA_CONTA=['data de fim da contabilidade','ativo'];
 const PISO_USO=0.2;
-let COLS_COMPLETUDE=[],LIMIAR_VAZIOS=99;
+let COLS_COMPLETUDE=[],SET_COMPLETUDE=new Set(),LIMIAR_VAZIOS=99;
 function calcularCompletude(){
   const base=CLIENTES.length||1;
   COLS_COMPLETUDE=COLUNAS.filter(col=>{
     const k=norm(col);
-    if(!k||ehTravada(col)||FORA_DA_CONTA.indexOf(k)>=0)return false;
+    if(!k||ehTravada(col)||FORA_DA_CONTA.indexOf(k)>=0||REMOVIDOS.indexOf(k)>=0)return false;
     let preenchidas=0;
     CLIENTES.forEach(c=>{if(valorDe(c,col))preenchidas++;});
     return preenchidas/base>=PISO_USO;
   });
+  SET_COMPLETUDE=new Set(COLS_COMPLETUDE);
   LIMIAR_VAZIOS=Math.max(3,Math.ceil(COLS_COMPLETUDE.length/3));
   CLIENTES.forEach(c=>{c._v=null;});
 }
+/* Campo que "conta": editável, esperado pela régua acima. É o que ganha o
+   destaque avermelhado quando está em branco. */
+function ehEsperado(col){return !ehTravada(col)&&SET_COMPLETUDE.has(col);}
 function vaziasDe(cli){return COLS_COMPLETUDE.filter(col=>!valorDe(cli,col));}
 function vaziosDe(cli){if(cli._v==null)cli._v=vaziasDe(cli).length;return cli._v;}
 function tituloSelo(cli){
@@ -387,7 +415,7 @@ const ORDENS=[
   {k:'id',rot:'ID',asc:'do menor para o maior',desc:'do maior para o menor'},
   {k:'nome',rot:'Nome',asc:'A → Z',desc:'Z → A'},
   {k:'inicio',rot:'Início da contabilidade',asc:'mais antigo primeiro',desc:'mais novo primeiro',dep:'inicio'},
-  {k:'ativo',rot:'Ativo/Inativo',asc:'ativos primeiro',desc:'inativos primeiro',dep:'ativo'},
+  {k:'ativo',rot:'Situação',asc:'ativos primeiro',desc:'inativos primeiro',dep:'ativo'},
   {k:'vazios',rot:'Campos vazios',asc:'mais incompleto primeiro',desc:'mais completo primeiro'}
 ];
 let ORDEM='id',DIR='asc';
@@ -414,9 +442,11 @@ function ordenar(arr){
       return (x-y)*d||porId(a,b);
     }
     if(ORDEM==='ativo'){
-      const rank=c=>{const p=ativoDe(c);return p===true?0:p===false?1:2;};
+      /* ativo → em inativação → inativo; sem informação sempre no fim */
+      const peso={ativo:0,inativando:1,inativo:2};
+      const rank=c=>{const s=situacaoDe(c);return s==='sem'?9:peso[s];};
       const ra=rank(a),rb=rank(b);
-      if(ra===2||rb===2)return ra===rb?porId(a,b):ra-rb;   /* sem informação no fim */
+      if(ra===9||rb===9)return ra===rb?porId(a,b):ra-rb;
       return (ra-rb)*d||porId(a,b);
     }
     if(ORDEM==='vazios')return (vaziosDe(b)-vaziosDe(a))*d||porId(a,b);
@@ -486,13 +516,37 @@ function mapearColunas(){
 function simNao(v){const s=normTxt(v);if(!s)return null;
   if(/^(sim|s|true|verdadeiro|1|x|ativo)$/.test(s))return true;
   if(/^(nao|n|false|falso|0|-|inativo)$/.test(s))return false;return null;}
-function ativoDe(cli){return simNao(cli.ativo||valorDe(cli,COL.ativo));}
+
+/* ---------------- situação do cliente (coluna "Ativo") ----------------
+   A planilha usa três valores: Ativo · Em inativação · Inativo.
+   A comparação é normalizada (sem acento, minúscula), então "INATIVO",
+   "em inativacao" e afins caem no lugar certo. Vazio ou valor que não
+   reconhecemos vira 'sem informação' (cinza) — nunca some da tela. */
+const SITUACOES={
+  ativo:{rot:'Ativo',dica:'Cliente ativo.'},
+  inativando:{rot:'Em inativação',dica:'Cliente em processo de inativação.'},
+  inativo:{rot:'Inativo',dica:'Cliente inativo.'},
+  sem:{rot:'sem situação',dica:'A coluna Ativo está em branco ou com um valor que não reconheço.'}
+};
+function situacaoDe(cli){
+  const s=normTxt(cli.ativo||valorDe(cli,COL.ativo));
+  if(!s)return 'sem';
+  if(/inativacao|inativando/.test(s))return 'inativando';              // "Em inativação"
+  if(/^(inativo|inativa|nao|n|false|falso|0|-)$/.test(s))return 'inativo';
+  if(/^(ativo|ativa|sim|s|true|verdadeiro|1|x)$/.test(s))return 'ativo';
+  return 'sem';
+}
+/* Compatibilidade com quem só quer saber "está ativo?": em inativação e valor
+   desconhecido continuam fora do sim/não (null), como era antes. */
+function ativoDe(cli){const s=situacaoDe(cli);return s==='ativo'?true:s==='inativo'?false:null;}
+function classeSituacao(cli){return 'sit-'+situacaoDe(cli);}
 
 /* ---------------- filtros ---------------- */
 const FILTROS=[
   {k:'todos',rot:'Todos',fn:()=>true},
-  {k:'ativos',rot:'Ativos',fn:c=>ativoDe(c)===true,dep:'ativo'},
-  {k:'inativos',rot:'Inativos',fn:c=>ativoDe(c)===false,dep:'ativo'},
+  {k:'ativos',rot:'Ativos',fn:c=>situacaoDe(c)==='ativo',dep:'ativo'},
+  {k:'inativando',rot:'Em inativação',fn:c=>situacaoDe(c)==='inativando',dep:'ativo'},
+  {k:'inativos',rot:'Inativos',fn:c=>situacaoDe(c)==='inativo',dep:'ativo'},
   {k:'sem_cnpj',rot:'Sem CNPJ',fn:c=>!valorDe(c,COL.cnpj),dep:'cnpj',cls:'falta'},
   {k:'sem_regime',rot:'Sem regime',fn:c=>!valorDe(c,COL.regime),dep:'regime',cls:'falta'},
   {k:'sem_inicio',rot:'Sem data de início da contabilidade',fn:c=>!valorDe(c,COL.inicio),dep:'inicio',cls:'falta'},
@@ -516,8 +570,11 @@ function metaHTML(cli){
   const add=(col,rot)=>{if(!col)return;const v=valorDe(cli,col);
     its.push(`<span class="mt${v?'':' vazio'}" title="${esc(rot+': '+(v||'em branco'))}">${esc(v||('sem '+rot.toLowerCase()))}</span>`);};
   add(COL.cnpj,'CNPJ');add(COL.regime,'Regime');add(COL.produtos,'Produtos');
-  const at=ativoDe(cli);
-  if(at!==null)its.push(`<span class="pill ${at?'sim':'nao'}">${at?'Ativo':'Inativo'}</span>`);
+  /* situação sempre visível na linha fechada — inclusive quando está em branco */
+  if(COL.ativo||cli.ativo){
+    const s=situacaoDe(cli),info=SITUACOES[s];
+    its.push(`<span class="pill sit-${s}" title="${esc(info.dica)}">${esc(info.rot)}</span>`);
+  }
   its.push(seloHTML(cli));
   return its.filter(Boolean).join('');
 }
@@ -538,8 +595,16 @@ function campoEditHTML(cli,f){
     ctrl=`<div class="ro" title="${esc(motivoTrava(col))}"><span class="cad-txt">${esc(v||'—')}</span>${link}</div>`;
   }else if(f.t==='select'){
     const opts=(f.opts||['','Sim','Não']).slice();
-    if(v&&opts.indexOf(v)<0)opts.splice(1,0,v);
-    ctrl=`<select data-ecol="${esc(col)}">`+opts.map(o=>`<option value="${esc(o)}"${o===v?' selected':''}>${o?esc(o):'—'}</option>`).join('')+`</select>`;
+    /* Valor que o cliente já tem e que não está na lista (sujeira da planilha,
+       tipo "Nao" no ISS) entra na lista assim mesmo, logo abaixo do vazio e com
+       o aviso "(fora da lista)". A página NUNCA apaga nem troca sozinha: o valor
+       gravado continua igual até alguém escolher outro à mão. */
+    const fora=!!v&&opts.indexOf(v)<0;
+    if(fora)opts.splice(1,0,v);
+    ctrl=`<select data-ecol="${esc(col)}">`+opts.map(o=>{
+      const rot=o?esc(o)+(fora&&o===v?' (fora da lista)':''):'—';
+      return `<option value="${esc(o)}"${o===v?' selected':''}>${rot}</option>`;
+    }).join('')+`</select>`;
   }else if(f.t==='textarea'){
     ctrl=`<textarea data-ecol="${esc(col)}" rows="2">${esc(v)}</textarea>`;
   }else if(f.t==='date'&&(!v||/^\d{4}-\d{2}-\d{2}$/.test(v))){
@@ -548,7 +613,10 @@ function campoEditHTML(cli,f){
     /* coluna de data com texto livre (ex.: "a definir") continua editável como texto */
     ctrl=`<input type="text" data-ecol="${esc(col)}" value="${esc(v)}"${f.t==='date'?' placeholder="aaaa-mm-dd"':''}>`;
   }
-  return `<div class="fld ${f.full?'full':''}">${rot}${ctrl}</div>`;
+  /* data-esperado marca o campo que conta para a régua de completude: é o que
+     ganha (e perde) o destaque avermelhado conforme a pessoa vai preenchendo. */
+  const esperado=ehEsperado(col);
+  return `<div class="fld ${f.full?'full':''}${esperado&&!v?' emfalta':''}"${esperado?' data-esperado="1"':''}>${rot}${ctrl}</div>`;
 }
 function corpoHTML(cli){
   const secs=SEC_ORDER.filter(s=>CAMPOS_EDIT.some(f=>f.s===s));
@@ -580,7 +648,7 @@ function desenharLista(){
     el.innerHTML=`<div class="vazio">${CLIENTES.length?'Nenhum cliente com esse filtro ou essa busca.':'A aba Registro está vazia.'}</div>`;
     return;
   }
-  el.innerHTML=arr.map(c=>`<div class="cli${ABERTOS.has(c.id)?' aberto':''}" data-id="${esc(c.id)}">${cabecaHTML(c)}${ABERTOS.has(c.id)?corpoHTML(c):''}</div>`).join('');
+  el.innerHTML=arr.map(c=>`<div class="cli ${classeSituacao(c)}${ABERTOS.has(c.id)?' aberto':''}" data-id="${esc(c.id)}">${cabecaHTML(c)}${ABERTOS.has(c.id)?corpoHTML(c):''}</div>`).join('');
 }
 function redesenhar(){desenharChips();desenharOrdem();desenharResumo();desenharLista();}
 
@@ -645,6 +713,9 @@ function atualizarCabeca(id){
   const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
   const nm=no.querySelector('.cli-nome');if(nm)nm.textContent=cli.nome||'(sem nome)';
   const mt=no.querySelector('.cli-meta');if(mt)mt.innerHTML=metaHTML(cli);
+  /* a faixa lateral acompanha a mudança de situação sem redesenhar a lista */
+  no.classList.remove('sit-ativo','sit-inativando','sit-inativo','sit-sem');
+  no.classList.add(classeSituacao(cli));
 }
 
 /* ===================================================================
@@ -804,10 +875,16 @@ function anotar(el){
   const corpo=el.closest('.corpo');if(!corpo)return;
   const cli=clientePorId(corpo.dataset.id);if(!cli)return;
   const col=el.dataset.ecol;
+  /* o destaque de campo em branco some assim que digita (e volta se apagar),
+     na hora, sem esperar o salvamento */
+  const fld=el.closest('.fld');
+  if(fld&&fld.dataset.esperado==='1')fld.classList.toggle('emfalta',!String(el.value||'').trim());
   /* 'input' e 'change' disparam os dois no mesmo campo — não salva duas vezes à toa */
   if(cli.valores[col]===el.value&&!SUJOS.has(cli.id))return;
   cli.valores[col]=el.value;
   if(COL.nome&&col===COL.nome){cli.nome=el.value;atualizarCabeca(cli.id);}
+  /* mudou a situação: selo e faixa lateral acompanham na hora */
+  if(COL.ativo&&col===COL.ativo){cli.ativo=el.value;atualizarCabeca(cli.id);}
   agendarSalvar(cli.id,col,el.tagName==='SELECT'||el.type==='date'?250:700);
 }
 document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
@@ -832,7 +909,7 @@ function layout(){
     <div class="chips ord-row" id="ordChips"></div>
     <div class="ord-info" id="ordInfo"></div>
   </div>
-  <div class="dica">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho na aba <b>Registro</b>${META.aba&&META.aba!=='Registro'?' ('+esc(META.aba)+')':''}. Cliente novo nasce pelo botão verde — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Os cards ignoram quem está inativo.</div>
+  <div class="dica">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho na aba <b>Registro</b>${META.aba&&META.aba!=='Registro'?' ('+esc(META.aba)+')':''}. Cliente novo nasce pelo botão verde — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Esses mesmos campos, quando estão em branco, ficam com um <b>fundo avermelhado</b> no cadastro aberto: é só dica visual do que falta preencher. Os cards ignoram quem está inativo.<br>Na lista, a situação do cliente vem no selo colorido e numa faixa lateral: <b>Ativo</b> em verde, <b>Em inativação</b> em laranja, <b>Inativo</b> em vermelho, cinza quando a coluna Ativo está em branco.</div>
   <div class="resumo" id="resumo"></div>
   <div class="lista" id="lista"></div>`;
 }
