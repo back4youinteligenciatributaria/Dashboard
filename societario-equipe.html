@@ -9,47 +9,56 @@
 <title>Societário (equipe) — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
+  /* Paleta canonica da equipe — a mesma em todas as telas. */
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
-  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
-  --verde:#2E9D5F;--verde-2:#25804C;
+  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
+  /* Raios: 12 padrao, 16 nos blocos grandes, 999px so em pilula, 10px em campo. */
+  --radius:12px;--radius-lg:16px;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .logo{font-weight:900;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px}
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
-.save-status{font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:20px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
+.save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
-.save-status.saving{background:#E8892E;color:#fff}
-.save-status.ok{background:#2E9D5F;color:#fff}
-.save-status.err{background:#C0392B;color:#fff}
+.save-status.saving{background:var(--amber);color:#fff}
+.save-status.ok{background:var(--verde);color:#fff}
+.save-status.err{background:var(--vermelho);color:#fff}
 @media(max-width:560px){.barra .cnt{display:none}}
 .wrap{max-width:1000px;margin:0 auto;padding:18px 20px 80px}
 .topo{position:sticky;top:52px;z-index:40;background:var(--canvas);padding:12px 0 10px}
 .linha-topo{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font-weight:700;font-size:13.5px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+/* ---------- botao (B.8): uma base, tres papeis ---------- */
+.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
 .btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
-.btn.pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
-.btn.green{background:#1F9D57;border-color:#1F9D57;color:#fff;border-radius:999px}
-.btn.mini{padding:7px 11px;font-size:12.5px}
-.btn.add{background:var(--verde);border-color:var(--verde);color:#fff}
-.btn.add:hover{background:var(--verde-2);border-color:var(--verde-2);color:#fff}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri:hover{background:#0C7871;border-color:#0C7871}
+.btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+.btn--danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
+.btn--danger:hover{background:#A33327;border-color:#A33327}
+.btn--danger-out{background:var(--surface);color:var(--vermelho);border-color:var(--line-2)}
+.btn--danger-out:hover{border-color:var(--vermelho)}
+.btn--mini{padding:6px 11px;font-size:12px}
+.btn--pill{border-radius:999px;padding:12px 20px}
 .dica{font-size:12px;color:var(--muted);margin-top:7px}
 /* filtros e ordenação — mesmo padrão de chips já usado em certificados.html */
 .linha-filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:9px}
 .grupo{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.grupo .rot{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
-.chip{font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
+.grupo .rot{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.chip{font-size:13px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
 .chip:hover{border-color:var(--brand-teal)}
 .chip:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
 .chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
@@ -58,8 +67,8 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
 .chip.falta.on{background:var(--amber);border-color:var(--amber)}
 .chip.feito.on{background:var(--verde);border-color:var(--verde)}
-.chip .seta{margin-left:5px;font-size:10px;opacity:.9}
-.vazio-filtro{background:var(--surface);border:1px dashed var(--line-2);border-radius:12px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--muted);font-size:13.5px}
+.chip .seta{margin-left:5px;font-size:11px;opacity:.9}
+.vazio-filtro{background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--muted);font-size:13px}
 /* no celular cada faixa de chips vira uma tira que rola de lado, para o topo
    não engolir a tela */
 @media(max-width:620px){
@@ -69,63 +78,63 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
   .chip,.grupo .rot{white-space:nowrap}
 }
 .lista{margin-top:12px;display:flex;flex-direction:column;gap:10px}
-.proc{background:var(--surface);border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.proc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
 .proc-h{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;cursor:pointer}
 .proc-h:hover{background:var(--surface-warm)}
-.pid{font-size:11px;font-weight:800;color:#fff;background:var(--brand-teal);border-radius:6px;padding:3px 8px;white-space:nowrap;margin-top:1px}
+.pid{font-size:11px;font-weight:800;color:#fff;background:var(--brand-teal);border-radius:10px;padding:3px 8px;white-space:nowrap;margin-top:1px}
 .pmain{flex:1;min-width:0}
-.pnome{font-size:14px;font-weight:700;line-height:1.3}
+.pnome{font-size:15px;font-weight:700;line-height:1.3}
 .pproc{font-size:12px;color:var(--ink-2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .pmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
-.bdg{font-size:10.5px;font-weight:700;border-radius:7px;padding:3px 8px}
+.bdg{font-size:11px;font-weight:700;border-radius:10px;padding:3px 8px}
 .bdg.and{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
 .bdg.ok{background:#E7F4EC;color:#2E7D52}
 .bdg.agu{background:#EEF1F0;color:#5B6B67;border:1px solid var(--line)}
-.bdg.na{background:#F2ECE4;color:#8A7D70}
+.bdg.na{background:#F2ECE4;color:var(--muted)}
 .bdg.dur{background:var(--brand-dark);color:#fff;border:1px solid var(--brand-dark);font-size:11px;font-weight:800}
 .bdg.dur.ok{background:var(--verde);border-color:var(--verde);color:#fff}
 .bdg.dur.na{background:#F2ECE4;border:1px solid var(--line);color:var(--muted);font-weight:700}
-.chev{color:var(--line-2);font-weight:900;font-size:18px;margin-top:2px}
+.chev{color:var(--line-2);font-weight:900;font-size:19px;margin-top:2px}
 .editor{border-top:1px solid var(--line);padding:15px;display:none;background:var(--surface-warm)}
 .proc.open .editor{display:block}
 .proc.open .chev{color:var(--brand-teal);transform:rotate(90deg)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fld{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
 .fld label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.fld input,.fld select,.fld textarea{font-family:var(--sans);font-size:14px;padding:9px 11px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);width:100%}
+.fld input,.fld select,.fld textarea{font-family:var(--sans);font-size:15px;padding:9px 11px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
 .fld textarea{resize:vertical;min-height:52px}
 .fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .sub{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
 .sub::after{content:"";flex:1;height:1px;background:var(--line)}
-.log{white-space:pre-wrap;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--ink-2);max-height:190px;overflow:auto}
+.log{white-space:pre-wrap;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink-2);max-height:190px;overflow:auto}
 .log.vazio{color:var(--muted);font-style:italic}
 .addobs{display:flex;gap:8px;margin-top:7px;align-items:flex-start}
 .addobs textarea{flex:1;min-height:40px}
-.etapa{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:0;margin-bottom:10px;overflow:hidden}
+.etapa{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:0;margin-bottom:10px;overflow:hidden}
 .etapa.aberta{border-color:var(--line-2)}
 .etapa-h{width:100%;display:flex;gap:9px;align-items:center;flex-wrap:wrap;text-align:left;background:none;border:0;padding:11px 12px;font-family:var(--sans);color:var(--ink);cursor:pointer}
 .etapa-h:hover{background:var(--surface-warm)}
 .etapa-h:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
 .etapa-chev{flex:none;width:12px;color:var(--brand-euc);font-weight:900;font-size:13px}
-.etapa-titulo{flex:1;min-width:130px;font-size:16px;font-weight:800;color:var(--ink);line-height:1.25}
-.etapa.vazia .etapa-titulo{font-size:13.5px;font-weight:700;color:var(--muted)}
-.etapa-datas{font-size:11.5px;font-weight:600;color:var(--muted)}
+.etapa-titulo{flex:1;min-width:130px;font-size:15px;font-weight:800;color:var(--ink);line-height:1.25}
+.etapa.vazia .etapa-titulo{font-size:13px;font-weight:700;color:var(--muted)}
+.etapa-datas{font-size:12px;font-weight:600;color:var(--muted)}
 .etapa-body{display:none;padding:12px;border-top:1px solid var(--line)}
 .etapa.aberta .etapa-body{display:block}
 .etapa-top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-.etapa-n{flex:none;font-size:10.5px;font-weight:800;color:#fff;background:var(--brand-euc);border-radius:6px;padding:3px 7px;white-space:nowrap}
+.etapa-n{flex:none;font-size:11px;font-weight:800;color:#fff;background:var(--brand-euc);border-radius:10px;padding:3px 7px;white-space:nowrap}
 .barra-salvar{position:sticky;bottom:0;background:var(--surface-warm);padding-top:12px;margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .msg{font-size:13px;font-weight:600}
 .msg.ok{color:#2E7D52}.msg.err{color:var(--vermelho)}
-.autosave{font-size:12.5px;font-weight:600;color:var(--muted)}
+.autosave{font-size:13px;font-weight:600;color:var(--muted)}
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:50vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:10px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .modal{position:fixed;inset:0;background:rgba(7,48,52,.45);display:none;align-items:center;justify-content:center;z-index:80;padding:18px}
 .modal.on{display:flex}
-.modal-card{background:var(--surface);border-radius:16px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
-.modal-card h2{font-size:17px;margin-bottom:12px}
+.modal-card{background:var(--surface);border-radius:var(--radius-lg);padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
+.modal-card h2{font-size:19px;margin-bottom:12px}
 @media(max-width:620px){.grid2{grid-template-columns:1fr}.wrap{padding:14px 12px 70px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* Todo link abre em guia nova (<base target="_blank">) — o colaborador nunca
@@ -133,6 +142,30 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
    VOLTAR, então trocam a guia atual (target="_self"). */
 .barra a.logo{color:inherit;text-decoration:none;cursor:pointer}
 .barra a.logo:hover{opacity:.82}
+
+
+/* ---------- explicacao recolhida (C.2) ----------
+   O dado vem primeiro; a instrucao fica a um clique e lembra a escolha. */
+details.ajuda{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin:8px 0}
+details.ajuda>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:12px;font-weight:800;color:var(--ink-2)}
+details.ajuda>summary::-webkit-details-marker{display:none}
+details.ajuda>summary::after{content:" \25BE";color:var(--muted)}
+details.ajuda[open]>summary::after{content:" \25B4"}
+details.ajuda>.txt{padding:0 12px 11px;font-size:12px;color:var(--muted);line-height:1.55}
+details.ajuda>.txt b{color:var(--ink-2)}
+/* ---------- o que nao gravou (C.3) ----------
+   A linha (ou o campo) fica marcada e o "tentar de novo" nasce ali mesmo. */
+.falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
+tr.falhou>td{background:#FBEAE7!important}
+.btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
+  border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.btn-retry:disabled{opacity:.6;cursor:default}
+/* ---------- padroes compartilhados (B.10 e B.12) ---------- */
+/* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
+/* A barra nunca estoura: quebra de linha e o contador some no celular. */
+.barra{flex-wrap:wrap}
+@media(max-width:560px){.barra .cnt{display:none}}
 </style>
 </head>
 <body>
@@ -154,8 +187,8 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
   <div class="fld"><label>Processo *</label><textarea id="n-proc" placeholder="Descrição do processo (ex.: 4ª ACS …)"></textarea></div>
   <div class="fld"><label>Status Geral</label><select id="n-stg"></select></div>
   <div class="barra-salvar" style="position:static;background:none;padding:0">
-    <button class="btn pri" id="n-criar">Criar processo</button>
-    <button class="btn" id="n-cancelar">Cancelar</button>
+    <button class="btn btn--pri" id="n-criar">Criar processo</button>
+    <button class="btn btn--sec" id="n-cancelar">Cancelar</button>
     <span class="msg" id="n-msg"></span>
   </div>
 </div></div>
@@ -170,6 +203,12 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
 function codAtual(){return (new URLSearchParams(location.search).get('cod')||'').trim();}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+/** Lembra no navegador se a explicação fica aberta — a escolha é de quem usa. */
+function ligarDetalhes(el,chave){
+  if(!el)return;
+  try{if(localStorage.getItem(chave)==='1')el.open=true;}catch(e){}
+  el.addEventListener('toggle',()=>{try{localStorage.setItem(chave,el.open?'1':'0');}catch(e){}});
+}
 function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual(),cod:codAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 function selectHTML(cls,val){return `<select class="${cls}">`+STATUS.map(o=>`<option value="${esc(o)}"${normTxt(o)===normTxt(val)?' selected':''}>${o||'—'}</option>`).join('')+`</select>`;}
@@ -380,6 +419,26 @@ function baseBusca(){
   const alvo=normTxt(BUSCA);
   return PROCS.filter(p=>passaBusca(p,alvo)).map(p=>({p,r:resumoProc(p)}));
 }
+/* ---------- busca, filtro e ordenação no endereço (C.10) ----------
+   F5 volta para a mesma visão; chave, cod e #hash ficam intactos. */
+function sincronizarURL(){
+  try{
+    const u=new URL(location.href);
+    const set=(k,v)=>{if(v)u.searchParams.set(k,v);else u.searchParams.delete(k);};
+    set('q',BUSCA);
+    set('f',FILTRO==='todos'?'':FILTRO);
+    set('ord',SORT.k==='dur'?'':SORT.k);
+    set('dir',SORT.dir===dirPadrao(SORT.k)?'':SORT.dir);
+    history.replaceState(null,'',u.pathname+u.search+u.hash);
+  }catch(e){}
+}
+function lerURL(){
+  const p=new URLSearchParams(location.search);
+  BUSCA=p.get('q')||'';
+  FILTRO=p.get('f')||'todos';
+  SORT.k=p.get('ord')||'dur';
+  SORT.dir=p.get('dir')||dirPadrao(SORT.k);
+}
 function chipHTML(k,rot,n,dica,extra){
   return `<button type="button" class="${['chip',extra||'',FILTRO===k?'on':''].filter(Boolean).join(' ')}" data-f="${esc(k)}" title="${esc(dica||'')}">${esc(rot)}<span class="n">${n}</span></button>`;
 }
@@ -421,24 +480,29 @@ function restaurarFoco(chave){
 function vazioHTML(){
   const filtrando=FILTRO!=='todos'||!!BUSCA.trim();
   return `<div class="vazio-filtro"><div>${filtrando?'Nenhum processo com esse filtro.':'Nenhum processo na planilha ainda.'}</div>`+
-    (filtrando?`<button type="button" class="btn mini" id="limparF">Limpar filtro e busca</button>`:'')+
+    (filtrando?`<button type="button" class="btn btn--mini" id="limparF">Limpar filtro e busca</button>`:'')+
     `</div>`;
 }
 function render(){
+  lerURL();                                   // a visão vem do endereço (C.10)
   const app=document.getElementById('app');
   app.innerHTML=`<div class="wrap">
     <div class="topo">
       <div class="linha-topo">
-        <input class="busca" id="busca" type="search" value="${esc(BUSCA)}" placeholder="Buscar por ID, nome, código, processo ou status…">
-        <button class="btn green" id="novo">+ Novo processo</button>
+        <input class="busca" id="busca" type="search" value="${esc(BUSCA)}" placeholder="Buscar por ID, nome, código, processo ou status…  ( / para focar)">
+        <button class="btn btn--pri btn--pill" id="novo">+ Novo processo</button>
       </div>
       <div class="linha-filtros"><div class="grupo" id="chipsStatus"></div></div>
       <div class="linha-filtros"><div class="grupo" id="chipsAtalho"></div></div>
       <div class="linha-filtros"><div class="grupo" id="chipsOrd"></div></div>
-      <div class="dica">Filtro, busca e ordenação funcionam juntos. Clique num processo para editar. Dentro dele, clique no nome da etapa para abrir os detalhes. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar".</div>
+      <details class="ajuda" id="ajuda">
+        <summary>ⓘ Como funciona esta tela</summary>
+        <div class="txt">Filtro, busca e ordenação funcionam juntos. Clique num processo para editar. Dentro dele, clique no nome da etapa para abrir os detalhes. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar". Atalhos: <b>/</b> foca a busca e <b>Esc</b> limpa.</div>
+      </details>
     </div>
     <div class="lista" id="lista"></div></div>`;
   desenhar();
+  ligarDetalhes(document.getElementById('ajuda'),'b4u.societario.ajuda');
   document.getElementById('busca').addEventListener('input',e=>{BUSCA=e.target.value;desenhar();});
   document.getElementById('novo').addEventListener('click',abrirNovo);
 }
@@ -451,7 +515,9 @@ function desenhar(){
   if(lista)lista.innerHTML=arr.map(x=>cardHTML(x.p)).join('')||vazioHTML();
   const cnt=document.getElementById('cnt');
   if(cnt)cnt.textContent=arr.length+' de '+PROCS.length+' processos';
+  FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
   restaurarFoco(foco);
+  sincronizarURL();
 }
 function cardHTML(p){
   return `<div class="proc" data-row="${p.row}">
@@ -503,7 +569,7 @@ function etapaHTML(p,e){
     <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Observações internas da etapa</label>
     <div class="log ${log?'':'vazio'}" data-etlog="${e.n}">${log?esc(log):'Sem observações.'}</div>
     <div class="addobs"><textarea data-etobs="${e.n}" placeholder="Nova observação (entra com a data de hoje)"></textarea>
-      <button class="btn mini add" data-addet="${e.n}">Adicionar</button></div>
+      <button class="btn btn--mini btn--pri" data-addet="${e.n}">Adicionar</button></div>
     </div>
   </div>`;
 }
@@ -539,11 +605,11 @@ function editorHTML(p){
     <div class="sub">Observações internas (geral)</div>
     <div class="log ${glog?'':'vazio'}" data-glog>${glog?esc(glog):'Sem observações.'}</div>
     <div class="addobs"><textarea data-gobs placeholder="Nova observação (entra com a data de hoje)"></textarea>
-      <button class="btn mini add" data-addgeral>Adicionar</button></div>
+      <button class="btn btn--mini btn--pri" data-addgeral>Adicionar</button></div>
 
     <div class="sub">Etapas</div>
     <div data-etapas>${etv.map(e=>etapaHTML(p,e)).join('')}</div>
-    <button class="btn mini" data-addetapa ${p._visN>=10?'disabled':''}>+ Adicionar etapa</button>
+    <button class="btn btn--mini" data-addetapa ${p._visN>=10?'disabled':''}>+ Adicionar etapa</button>
 
     <div class="sub">Campos internos</div>
     <div class="grid2">
@@ -575,6 +641,25 @@ function coletar(row){
   return {nome:ed.querySelector('.f-nome').value.trim(),codigo_processo:ed.querySelector('.f-cod').value.trim(),processo:ed.querySelector('.f-proc').value.trim(),status_geral:ed.querySelector('.f-stg').value,extras:{responsavel:ed.querySelector('.f-e34').value.trim(),uf:ed.querySelector('.f-e35').value.trim(),orgao:ed.querySelector('.f-e36').value.trim(),protocolo:ed.querySelector('.f-e37').value.trim(),dias:ed.querySelector('.f-dias').value.trim()},etapas};
 }
 let saveTimers={};
+/* ---------- pendências e falhas de gravação (C.3) ----------
+   PENDENTES = alteração ainda no debounce. FALHAS = o servidor recusou e o dado
+   só existe na tela. Nos dois casos fechar a aba pede confirmação, e a falha
+   deixa o processo marcado com um "tentar de novo". */
+const PENDENTES=new Set();
+const FALHAS=new Map();   // row -> dados que não foram gravados
+function temPendencia(){return PENDENTES.size>0||FALHAS.size>0;}
+function marcarFalha(row,falhou){
+  const cx=document.querySelector('.proc[data-row="'+row+'"]');
+  if(!cx)return;
+  cx.classList.toggle('falhou',!!falhou);
+  const cab=cx.querySelector('.pmeta');if(!cab)return;
+  const antigo=cab.querySelector('.btn-retry');
+  if(falhou&&!antigo)cab.insertAdjacentHTML('beforeend',
+    '<button type="button" class="btn-retry" data-retry="'+esc(String(row))+'">não salvou — tentar de novo</button>');
+  if(!falhou&&antigo)antigo.remove();
+}
+/* Sair com alteração pendente (ou com uma gravação que falhou) pede confirmação. */
+window.addEventListener('beforeunload',e=>{if(temPendencia()){e.preventDefault();e.returnValue='';}});
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function setMsg(row,cls,txt){
   const el=document.getElementById('saveStatus');   // status VISÍVEL no topo (barra fixa)
@@ -583,12 +668,14 @@ function setMsg(row,cls,txt){
 function agendarSalvar(row){
   const dados=coletar(row);                       // captura AGORA (mesmo que feche o editor depois)
   setMsg(row,'autosave','Alterado…');
+  PENDENTES.add(String(row));
   clearTimeout(saveTimers[row]);
   saveTimers[row]=setTimeout(()=>salvarAuto(row,dados),450);
 }
 async function salvarAuto(row,dados){
   const p=PROCS.find(x=>x.row==row);if(!p)return;
   setMsg(row,'autosave','Salvando…');
+  PENDENTES.add(String(row));
   try{
     await postAcao(Object.assign({acao:'soc_salvar',row:p.row,id:p.id},dados));
     Object.assign(p,{nome:dados.nome,codigo_processo:dados.codigo_processo,processo:dados.processo,status_geral:dados.status_geral,extras:dados.extras});
@@ -597,8 +684,14 @@ async function salvarAuto(row,dados){
     const h=document.querySelector(`.proc[data-row="${row}"] .pmeta`);
     if(h)h.innerHTML=metaHTML(p);
     const nome=document.querySelector(`.proc[data-row="${row}"] .pnome`);if(nome)nome.textContent=p.nome||'(sem nome)';
+    PENDENTES.delete(String(row));FALHAS.delete(String(row));marcarFalha(row,false);
     try{atualizarChips();}catch(_){}   // contagem dos chips em dia; a lista fica como está
-  }catch(e){setMsg(row,'msg err','Não salvou: '+(e.message||e));}
+  }catch(e){
+    PENDENTES.delete(String(row));
+    FALHAS.set(String(row),dados);
+    marcarFalha(row,true);
+    setMsg(row,'msg err','Não salvou: '+(e.message||e));
+  }
 }
 async function addObs(row,btn,tipo,n){
   const p=PROCS.find(x=>x.row==row);const ed=document.getElementById('ed-'+row);
@@ -626,7 +719,9 @@ async function criarNovo(btn){
   btn.disabled=true;msg.className='msg';msg.textContent='Criando…';
   try{
     const d=await postAcao({acao:'soc_novo',id,nome:document.getElementById('n-nome').value.trim(),codigo_processo:document.getElementById('n-cod').value.trim(),processo:proc,status_geral:document.getElementById('n-stg').value});
-    fecharNovo();FILTRO='todos';BUSCA='';await carregar();   // o processo novo não pode nascer escondido por um filtro
+    fecharNovo();FILTRO='todos';BUSCA='';SORT={k:'dur',dir:dirPadrao('dur')};
+    sincronizarURL();                                        // limpa o endereço ANTES de recarregar
+    await carregar();   // o processo novo não pode nascer escondido por um filtro
     const el=document.querySelector(`.proc[data-row="${d.row}"]`);if(el){el.scrollIntoView({block:'center'});abrirEditor(d.row);}
   }catch(e){msg.className='msg err';msg.textContent=e.message||e;}
   btn.disabled=false;
@@ -634,6 +729,13 @@ async function criarNovo(btn){
 
 // eventos (delegação)
 document.addEventListener('click',e=>{
+  const rt=e.target.closest('[data-retry]');
+  if(rt){
+    e.stopPropagation();
+    const k=rt.dataset.retry,d=FALHAS.get(k);
+    if(d){rt.textContent='enviando…';rt.disabled=true;salvarAuto(k,d);}
+    return;
+  }
   const cf=e.target.closest('.chip[data-f]');
   if(cf){FILTRO=cf.dataset.f;desenhar();return;}
   const co=e.target.closest('.chip[data-ord]');
@@ -660,6 +762,18 @@ document.addEventListener('change',e=>{
 document.addEventListener('input',e=>{
   const f=e.target;
   if(f&&f.matches&&f.matches('.etapa .e-nome,.etapa .e-ini,.etapa .e-fim'))sincronizarEtapa(f);
+});
+
+/* Atalhos de busca (C.4): "/" foca, Esc limpa. Com o modal aberto, Esc fecha o
+   modal — e o atalho não atrapalha quem já está digitando noutro campo. */
+document.addEventListener('keydown',e=>{
+  const modal=document.getElementById('modal');
+  if(e.key==='Escape'&&modal&&modal.classList.contains('on')){fecharNovo();return;}
+  const b=document.getElementById('busca');if(!b)return;
+  const a=document.activeElement,tag=a&&a.tagName;
+  const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
+  if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!digitando){e.preventDefault();b.focus();b.select();return;}
+  if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';BUSCA='';desenhar();}
 });
 
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());

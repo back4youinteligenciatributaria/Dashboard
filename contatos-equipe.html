@@ -9,14 +9,17 @@
 <title>Contatos (equipe) — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
+  /* Paleta canonica da equipe — a mesma em todas as telas. */
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
-  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
-  --vermelho:#C0392B;--verde:#2E9D5F;
+  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
+  /* Raios: 12 padrao, 16 nos blocos grandes, 999px so em pilula, 10px em campo. */
+  --radius:12px;--radius-lg:16px;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -24,11 +27,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 
 /* ---------- barra ---------- */
 .barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .logo{font-weight:900;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px}
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd;white-space:nowrap}
 .barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
-.save-status{font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:20px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
+.save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
 .save-status.saving{background:var(--amber);color:#fff}
 .save-status.ok{background:var(--verde);color:#fff}
@@ -39,113 +42,123 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .topo{position:sticky;top:52px;z-index:45;background:var(--canvas);padding:12px 0 8px}
 .linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
 .grupo{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.grupo .rot{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
-.busca{flex:1;min-width:230px;font-family:var(--sans);font-size:14px;padding:11px 16px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.grupo .rot{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.busca{flex:1;min-width:230px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-.chip{font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
+.chip{font-size:13px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
 .chip:hover{border-color:var(--brand-teal)}
 .chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
 .chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:6px;font-size:11px}
 .chip.on .n{background:rgba(255,255,255,.25)}
 .chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
 .chip.falta.on{background:var(--amber);border-color:var(--amber)}
-.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font-weight:700;font-size:13.5px;padding:9px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+.chip.limpar{border-style:dashed;color:var(--muted)}
+/* ---------- botao (B.8): uma base, tres papeis ---------- */
+.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
 .btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
-.btn.pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
-.btn.green{background:var(--verde);border-color:var(--verde);color:#fff;border-radius:999px}
-.btn.mini{padding:6px 11px;font-size:12px;border-radius:8px}
-.btn.danger{color:var(--vermelho);border-color:var(--amber-line)}
-.btn.danger:hover{border-color:var(--vermelho)}
-.btn.solido-danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
-.dica{font-size:11.5px;color:var(--muted);padding:0 0 8px}
+.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri:hover{background:#0C7871;border-color:#0C7871}
+.btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+.btn--danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
+.btn--danger:hover{background:#A33327;border-color:#A33327}
+.btn--danger-out{background:var(--surface);color:var(--vermelho);border-color:var(--line-2)}
+.btn--danger-out:hover{border-color:var(--vermelho)}
+.btn--mini{padding:6px 11px;font-size:12px}
+.btn--pill{border-radius:999px;padding:12px 20px}
+.dica{font-size:12px;color:var(--muted);padding:0 0 8px}
 
 /* ---------- resumo ---------- */
 .resumo{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:0 0 14px}
-.rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-.rhead{padding:9px 13px;font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+.rhead{padding:9px 13px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
 .rcard.semp .rhead{background:var(--vermelho)}
 .rcard.semmail .rhead{background:var(--amber)}
 .rcard.semtel .rhead{background:var(--brand-teal)}
 .rcard.semct .rhead{background:#6B8486}
-.rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:11.5px}
+.rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:12px}
 .rlista{max-height:152px;overflow:auto;padding:5px}
-.tk{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12px}
+.tk{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:10px;cursor:pointer;font-size:12px}
 .tk:hover{background:var(--surface-warm)}
 .tk .d{font-weight:800;white-space:nowrap;color:var(--brand-teal)}
 .tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tk .tp{font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
+.tk .tp{font-size:11px;font-weight:800;color:var(--muted);white-space:nowrap}
 .rvazio{color:var(--muted);font-size:12px;padding:9px}
 
 /* ---------- lista de clientes ---------- */
 .lista{display:flex;flex-direction:column;gap:8px}
-.cli{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.cli{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
 .cli.on{border-color:var(--brand-teal);box-shadow:0 3px 14px rgba(7,48,52,.08)}
 .cli-h{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:var(--surface);border:0;
-  font-family:var(--sans);font-size:14px;color:var(--ink);padding:11px 13px;cursor:pointer;flex-wrap:wrap}
+  font-family:var(--sans);font-size:15px;color:var(--ink);padding:11px 13px;cursor:pointer;flex-wrap:wrap}
 .cli-h:hover{background:var(--surface-warm)}
 .cli.on .cli-h{background:var(--surface-warm);border-bottom:1px solid var(--line)}
 .chev{color:var(--brand-teal);font-size:12px;width:12px;flex:none}
-.cid{font-weight:800;font-size:12.5px;color:#fff;background:var(--brand-teal);border-radius:7px;padding:3px 9px;white-space:nowrap}
-.cnome{font-weight:700;font-size:13.5px;flex:1;min-width:120px;line-height:1.25}
+.cid{font-weight:800;font-size:13px;color:#fff;background:var(--brand-teal);border-radius:10px;padding:3px 9px;white-space:nowrap}
+.cnome{font-weight:700;font-size:13px;flex:1;min-width:120px;line-height:1.25}
 .cnome i{color:var(--muted);font-weight:600}
 .sinais{display:flex;gap:5px;flex-wrap:wrap}
-.sn{font-size:10px;font-weight:800;letter-spacing:.2px;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.sn{font-size:11px;font-weight:800;letter-spacing:.2px;border-radius:999px;padding:3px 9px;white-space:nowrap}
 .sn.alerta{background:#F7DFDC;color:var(--vermelho);border:1px solid #E0BDB8}
 .sn.amb{background:var(--amber-soft);color:#8a5117;border:1px solid var(--amber-line)}
 .sn.cinza{background:#EEE9E2;color:var(--muted);border:1px solid var(--line)}
-.qtd{font-size:11.5px;font-weight:800;color:var(--muted);white-space:nowrap}
+.qtd{font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap}
 .cli-b{padding:10px 12px 12px;display:flex;flex-direction:column;gap:9px;background:var(--canvas)}
-.vazio{font-size:12.5px;color:var(--muted);padding:6px 2px}
+.vazio{font-size:13px;color:var(--muted);padding:6px 2px}
 .add-linha{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .dica-in{font-size:11px;color:var(--muted)}
 
 /* ---------- contato ---------- */
-.ctt{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:10px 11px;display:flex;flex-direction:column;gap:8px}
+.ctt{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 11px;display:flex;flex-direction:column;gap:8px}
 .ctt.match{border-color:var(--brand-teal);box-shadow:inset 3px 0 0 var(--brand-teal)}
 .campos{display:grid;grid-template-columns:1.2fr 1.4fr .9fr .8fr;gap:8px}
 .cp{display:flex;flex-direction:column;gap:3px;min-width:0}
-.cp>span{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-.in{font-family:var(--sans);font-size:13px;padding:7px 9px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);width:100%}
+.cp>span{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.in{font-family:var(--sans);font-size:13px;padding:7px 9px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
 .in:focus{outline:2px solid var(--brand-teal);outline-offset:0}
 .in.falho{border-color:var(--amber);background:#FFFCF7}
 .areas-linha{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.rot-a{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
-.achip{font-family:var(--sans);font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 11px;cursor:pointer;
+.rot-a{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
+.achip{font-family:var(--sans);font-size:12px;font-weight:700;border-radius:999px;padding:4px 11px;cursor:pointer;
   border:1px solid var(--line-2);background:var(--surface);color:var(--muted)}
 .achip:hover{border-color:var(--brand-teal);color:var(--ink)}
 .achip.on{background:#E1F0EE;border-color:#9ecfca;color:#0b6c66}
 .achip.trava{cursor:default;opacity:.85}
 .achip.trava:hover{border-color:#9ecfca}
 .nota{font-size:11px;color:var(--muted);font-style:italic;margin-left:4px}
+.acs{font-size:11px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;
+  background:#E6F3EC;color:#1f6b45;border:1px solid #CBE6D8}
+.acs.nunca{background:#F8E3DF;color:var(--vermelho);border-color:#F0C9C1}
+.acs.antigo{background:var(--amber-soft);color:#8a5117;border-color:#F0D6B4}
 .rodape{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:8px}
-.ro{font-size:11.5px;color:var(--ink-2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.ro b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--surface-warm);border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--ink)}
+.ro{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ro b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:2px 8px;color:var(--ink)}
 .lk{font-family:var(--sans);font-size:11px;font-weight:800;color:var(--brand-teal);background:none;border:0;border-bottom:1px dashed var(--brand-teal);
   cursor:pointer;padding:0;text-decoration:none}
 .lk.ok{color:var(--verde);border-color:var(--verde)}
 .rodape .sp{flex:1}
 .rm{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.conf{font-size:11.5px;font-weight:700;color:var(--vermelho)}
-mark{background:#FFF3B0;color:inherit;border-radius:3px;padding:0 2px}
+.conf{font-size:12px;font-weight:700;color:var(--vermelho)}
+mark{background:#FFF3B0;color:inherit;border-radius:10px;padding:0 2px}
 .cli.destaque{box-shadow:0 0 0 3px #FFF3B0;transition:box-shadow .4s ease}
 
 /* ---------- estados / modal ---------- */
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:50vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:52ch}
-.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:52ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:10px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .modal{position:fixed;inset:0;background:rgba(7,48,52,.45);display:none;align-items:center;justify-content:center;z-index:90;padding:18px}
 .modal.on{display:flex}
-.modal-card{background:var(--surface);border-radius:16px;padding:20px;max-width:560px;width:100%;max-height:92vh;overflow:auto}
-.modal-card h2{font-size:17px;margin-bottom:12px}
+.modal-card{background:var(--surface);border-radius:var(--radius-lg);padding:20px;max-width:560px;width:100%;max-height:92vh;overflow:auto}
+.modal-card h2{font-size:19px;margin-bottom:12px}
 .fld{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
-.fld label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.fld input,.fld select{font-family:var(--sans);font-size:14px;padding:9px 11px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);width:100%}
+.fld label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.fld input,.fld select{font-family:var(--sans);font-size:15px;padding:9px 11px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
 .fld input:focus,.fld select:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .fld input[readonly]{background:var(--surface-warm);color:var(--ink-2)}
-.hint{font-size:11.5px;font-weight:700;color:var(--muted);min-height:16px}
+.hint{font-size:12px;font-weight:700;color:var(--muted);min-height:16px}
 .hint.ok{color:var(--verde)}.hint.err{color:var(--vermelho)}
 .msg{font-size:13px;font-weight:700}
 .msg.err{color:var(--vermelho)}
@@ -158,6 +171,30 @@ mark{background:#FFF3B0;color:inherit;border-radius:3px;padding:0 2px}
    VOLTAR, então trocam a guia atual (target="_self"). */
 .barra a.logo{color:inherit;text-decoration:none;cursor:pointer}
 .barra a.logo:hover{opacity:.82}
+
+
+/* ---------- explicacao recolhida (C.2) ----------
+   O dado vem primeiro; a instrucao fica a um clique e lembra a escolha. */
+details.ajuda{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin:8px 0}
+details.ajuda>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:12px;font-weight:800;color:var(--ink-2)}
+details.ajuda>summary::-webkit-details-marker{display:none}
+details.ajuda>summary::after{content:" \25BE";color:var(--muted)}
+details.ajuda[open]>summary::after{content:" \25B4"}
+details.ajuda>.txt{padding:0 12px 11px;font-size:12px;color:var(--muted);line-height:1.55}
+details.ajuda>.txt b{color:var(--ink-2)}
+/* ---------- o que nao gravou (C.3) ----------
+   A linha (ou o campo) fica marcada e o "tentar de novo" nasce ali mesmo. */
+.falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
+tr.falhou>td{background:#FBEAE7!important}
+.btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
+  border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.btn-retry:disabled{opacity:.6;cursor:default}
+/* ---------- padroes compartilhados (B.10 e B.12) ---------- */
+/* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
+/* A barra nunca estoura: quebra de linha e o contador some no celular. */
+.barra{flex-wrap:wrap}
+@media(max-width:560px){.barra .cnt{display:none}}
 </style>
 </head>
 <body>
@@ -186,8 +223,8 @@ mark{background:#FFF3B0;color:inherit;border-radius:3px;padding:0 2px}
   <div class="fld"><label>Áreas que esse contato enxerga</label>
     <div class="areas-linha" id="m-areas"></div></div>
   <div class="acoes-modal">
-    <button class="btn pri" id="m-add" type="button">Adicionar contato</button>
-    <button class="btn" id="m-cancelar" type="button">Cancelar</button>
+    <button class="btn btn--pri" id="m-add" type="button">Adicionar contato</button>
+    <button class="btn btn--sec" id="m-cancelar" type="button">Cancelar</button>
     <span class="msg" id="m-msg"></span>
   </div>
 </div></div>
@@ -206,6 +243,18 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
 function respAtual(){const q=(new URLSearchParams(location.search).get('cod')||'').trim();if(q)return q;try{return decodeURIComponent((location.hash||'').replace(/^#/,'')).trim();}catch(e){return (location.hash||'').replace(/^#/,'').trim();}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function normTxt(s){return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+/* ---------- busca que entende número com e sem pontuação (C.1) ---------- */
+function soDigitos(s){return String(s==null?'':s).replace(/\D/g,'');}
+/** Compara o texto normalizado e, quando o termo tem 6 dígitos ou mais, também
+ *  só os dígitos dos dois lados — assim "12345678000190" acha "12.345.678/0001-90"
+ *  e "5511998887777" acha "(11) 99888-7777". */
+function casaBusca(alvoTxt,alvoDig,termo){
+  const t=normTxt(termo);
+  if(!t)return true;
+  if(alvoTxt.indexOf(t)>=0)return true;
+  const d=soDigitos(termo);
+  return d.length>=6&&alvoDig.indexOf(d)>=0;
+}
 function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 
@@ -250,11 +299,40 @@ function passaSit(g,f){
   if(k==='sem_email')return nSemEmail(g)>0;
   if(k==='sem_tel')return nSemTel(g)>0;
   if(k==='sem_contato')return g.contatos.length===0;
+  if(k==='nunca_acessou')return g.contatos.some(c=>String(c.email||'').trim()&&nuncaAcessou(c));
   return true;
 }
-function bateContato(c,t){return !!t&&normTxt([c.nome,c.email,c.telefone].join(' ')).includes(t);}
-function bateCliente(g,t){return !!t&&normTxt(g.id+' '+g.nome).includes(t);}
+/* Último acesso do contato (aba "log de acessos" — Acessos.gs).
+   Vem como 'dd/MM/aaaa HH:mm'. Sem registro = a pessoa nunca entrou no painel:
+   é o sinal mais acionável desta tela, então vira selo vermelho. */
+const hojeZero=(()=>{const d=new Date();d.setHours(0,0,0,0);return d;})();
+function diasDesde(br){
+  const m=String(br||'').match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(!m) return null;
+  return Math.round((hojeZero-new Date(+m[3],+m[2]-1,+m[1]))/864e5);
+}
+function nuncaAcessou(c){ return !String(c.ultimo_acesso||'').trim(); }
+function seloAcesso(c){
+  const q=String(c.ultimo_acesso||'').trim();
+  if(!String(c.email||'').trim()) return '';          // sem e-mail nem faz sentido cobrar acesso
+  if(!q) return '<span class="acs nunca" title="Este contato nunca entrou no painel">nunca acessou</span>';
+  const d=diasDesde(q), via=String(c.acesso_via||'').trim();
+  const cl=(d!=null&&d>90)?' antigo':'';
+  const rot=(d===0)?'acessou hoje':(d===1?'acessou ontem':(d!=null?`há ${d} dias`:q));
+  return `<span class="acs${cl}" title="Último acesso: ${esc(q)}${via?' · via '+esc(via):''}">${esc(rot)}</span>`;
+}
+
+function bateContato(c,t){
+  if(!t)return false;
+  return casaBusca(normTxt([c.nome,c.email,c.telefone].join(' ')),soDigitos(c.telefone),t);
+}
+function bateCliente(g,t){
+  if(!t)return false;
+  return casaBusca(normTxt(g.id+' '+g.nome),soDigitos(g.id),t);
+}
 function passaBusca(g,t){return !t||bateCliente(g,t)||g.contatos.some(c=>bateContato(c,t));}
+/* t chega normalizado (normTxt) — casaBusca normaliza de novo sem efeito colateral,
+   e os dígitos são os mesmos antes e depois da normalização. */
 function visiveis(){const t=normTxt(TERMO);return GRUPOS.filter(g=>passaArea(g)&&passaSit(g)&&passaBusca(g,t));}
 
 /* destaca o trecho encontrado sem quebrar acentos */
@@ -278,7 +356,7 @@ function areasHTML(c){
   const chips=AREAS.map(a=>`<button type="button" class="achip${(pr||c.areas[a[0]])?' on':''}${pr?' trava':''}" data-a="${a[0]}"${pr?' disabled':''}>${a[1]}</button>`).join('');
   return `<span class="rot-a">Áreas</span>${chips}`+(pr?'<span class="nota">Principal enxerga todas as áreas</span>':'');
 }
-function btnRemover(c){return `<button class="btn mini danger" type="button" data-del="${esc(c.row)}">Remover</button>`;}
+function btnRemover(c){return `<button class="btn btn--mini btn--danger-out" type="button" data-del="${esc(c.row)}">Remover</button>`;}
 function contatoHTML(c,t){
   const pr=c.papel==='Principal';
   const semMail=!String(c.email||'').trim(),semTel=!String(c.telefone||'').trim();
@@ -295,6 +373,7 @@ function contatoHTML(c,t){
       ${c.codigo?`<span class="ro">código de hoje <b>${esc(c.codigo)}</b><button class="lk" type="button" data-copy="${esc(c.codigo)}">copiar</button></span>`:''}
       ${c.link?`<span class="ro">link de acesso <button class="lk" type="button" data-copy="${esc(c.link)}">copiar</button>
         <a class="lk" href="${esc(c.link)}" target="_blank" rel="noopener">abrir ↗</a></span>`:''}
+      ${seloAcesso(c)}
       <span class="sp"></span>
       <span class="rm" data-rm>${btnRemover(c)}</span>
     </div>
@@ -320,7 +399,7 @@ function grupoHTML(g,t){
   const corpo=aberto?`<div class="cli-b">
       ${g.contatos.map(c=>contatoHTML(c,t)).join('')||'<div class="vazio">Nenhum contato cadastrado para este cliente.</div>'}
       <div class="add-linha">
-        <button class="btn mini pri" type="button" data-add="${esc(g.id)}">+ Adicionar contato</button>
+        <button class="btn btn--mini btn--pri" type="button" data-add="${esc(g.id)}">+ Adicionar contato</button>
         <span class="dica-in">O que você digitar aqui grava direto na planilha.</span>
       </div></div>`:'';
   return `<div class="cli${aberto?' on':''}" data-cli="${esc(g.id)}">
@@ -328,6 +407,16 @@ function grupoHTML(g,t){
 }
 
 /* ---------------- desenho ---------------- */
+/* Quantos filtros estão pegando agora — vira o número do "Limpar filtros" (C.5). */
+function filtrosAtivos(){
+  return (FILTRO!=='todos'?1:0)+(AREA?1:0)+(String(TERMO).trim()?1:0);
+}
+function limparFiltros(){
+  FILTRO='todos';AREA='';TERMO='';
+  const b=document.getElementById('busca');if(b)b.value='';
+  ABERTOS.clear();
+  redesenhar();
+}
 function desenharChips(){
   const porArea=GRUPOS.filter(passaArea);
   const cSit=(k)=>porArea.filter(g=>passaSit(g,k)).length;
@@ -338,14 +427,17 @@ function desenharChips(){
     c('sem_principal','Sem contato Principal',cSit('sem_principal'),'alerta')+
     c('sem_email','Sem e-mail',cSit('sem_email'),'falta')+
     c('sem_tel','Sem telefone',cSit('sem_tel'))+
-    c('sem_contato','Sem nenhum contato',cSit('sem_contato'));
+    c('sem_contato','Sem nenhum contato',cSit('sem_contato'))+
+    c('nunca_acessou','Nunca acessou',cSit('nunca_acessou'),'alerta');
 
   const porSit=GRUPOS.filter(g=>passaSit(g));
   const nArea=k=>porSit.filter(g=>g.contatos.some(x=>x.areas&&x.areas[k])).length;
+  const nAtivos=filtrosAtivos();
   document.getElementById('chipsArea').innerHTML=
     '<span class="rot">Área</span>'+
     `<button class="chip ${AREA===''?'on':''}" data-area="">Todas<span class="n">${porSit.length}</span></button>`+
-    AREAS.map(a=>`<button class="chip ${AREA===a[0]?'on':''}" data-area="${a[0]}">${a[1]}<span class="n">${nArea(a[0])}</span></button>`).join('');
+    AREAS.map(a=>`<button class="chip ${AREA===a[0]?'on':''}" data-area="${a[0]}">${a[1]}<span class="n">${nArea(a[0])}</span></button>`).join('')+
+    (nAtivos?`<button type="button" class="chip limpar" id="limparFiltros" title="Volta para a visão sem filtro e sem busca">Limpar filtros<span class="n">${nAtivos}</span></button>`:'');
 }
 function desenharResumo(){
   const semP=GRUPOS.filter(faltaPrincipal);
@@ -374,25 +466,68 @@ function desenharLista(){
   const corte=arr.slice(0,MAX_CLI);
   document.getElementById('lista').innerHTML=corte.map(g=>grupoHTML(g,t)).join('')||
     '<div class="vazio">Nenhum cliente com esse filtro ou busca.</div>';
+  /* Topo e dica falam a MESMA língua: "X de Y" (C.5). */
   const nCt=arr.reduce((s,g)=>s+g.contatos.length,0);
   document.getElementById('dica').innerHTML=
-    `${arr.length} cliente(s) · ${nCt} contato(s) na visão atual`+
+    `<b>${arr.length} de ${GRUPOS.length}</b> clientes · <b>${nCt} de ${CONTATOS.length}</b> contatos`+
     (arr.length>MAX_CLI?` — mostrando os ${MAX_CLI} primeiros, refine a busca.`:'')+
     ' · Clique no cliente para abrir. Código e link são fórmulas da planilha: dá para copiar, não para editar.';
+  desenharContagem();
+  FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
 }
 function atualizarCabecalho(id){
   const g=grupoDe(id);if(!g)return;
   const el=document.querySelector('.cli[data-cli="'+CSS.escape(String(id))+'"] .cli-h');
   if(el)el.innerHTML=cabecalhoHTML(g,normTxt(TERMO));
 }
+/* Contador do topo com os MESMOS números da dica de baixo: "X de Y" (C.5).
+   Fica separado de propósito: depois de salvar atualizamos só ele, sem redesenhar
+   a lista (redesenhar tiraria o foco de quem está digitando). */
 function desenharContagem(){
-  const nCli=GRUPOS.filter(g=>g.contatos.length>0).length;
-  document.getElementById('cnt').textContent=CONTATOS.length+' contatos · '+nCli+' clientes';
+  const arr=visiveis();
+  const nCt=arr.reduce((s,g)=>s+g.contatos.length,0);
+  document.getElementById('cnt').textContent=
+    arr.length+' de '+GRUPOS.length+' clientes · '+nCt+' de '+CONTATOS.length+' contatos';
 }
-function redesenhar(){desenharContagem();desenharChips();desenharResumo();desenharLista();}
+function redesenhar(){desenharChips();desenharResumo();desenharLista();sincronizarURL();}
+/* ---------- busca e filtros no endereço (C.10) ----------
+   F5 volta para a mesma visão; chave, cod e #hash ficam intactos. */
+function sincronizarURL(){
+  try{
+    const u=new URL(location.href);
+    const set=(k,v)=>{if(v)u.searchParams.set(k,v);else u.searchParams.delete(k);};
+    set('q',TERMO);
+    set('f',FILTRO==='todos'?'':FILTRO);
+    set('area',AREA);
+    history.replaceState(null,'',u.pathname+u.search+u.hash);
+  }catch(e){}
+}
+function lerURL(){
+  const p=new URLSearchParams(location.search);
+  FILTRO=p.get('f')||'todos';
+  AREA=p.get('area')||'';
+  TERMO=p.get('q')||'';
+}
 
 /* ---------------- salvar (auto, com debounce) ---------------- */
 const SUJOS=new Map();   // row -> timer
+/* ---------- falhas de gravação (C.3) ----------
+   FALHAS = o servidor recusou e o dado só existe na tela. O contato fica marcado
+   com um "tentar de novo" no rodapé dele, e fechar a aba pede confirmação. */
+const FALHAS=new Set();
+function temPendencia(){return SUJOS.size>0||FALHAS.size>0;}
+function marcarFalha(row,falhou){
+  const cx=document.querySelector('.ctt[data-row="'+CSS.escape(String(row))+'"]');
+  if(!cx)return;
+  cx.classList.toggle('falhou',!!falhou);
+  const rod=cx.querySelector('.rodape');if(!rod)return;
+  const antigo=rod.querySelector('.btn-retry');
+  if(falhou&&!antigo)rod.insertAdjacentHTML('afterbegin',
+    '<button type="button" class="btn-retry" data-retry="'+esc(String(row))+'">não salvou — tentar de novo</button>');
+  if(!falhou&&antigo)antigo.remove();
+}
+/* Sair com alteração pendente (ou com uma gravação que falhou) pede confirmação. */
+window.addEventListener('beforeunload',e=>{if(temPendencia()){e.preventDefault();e.returnValue='';}});
 function setSave(cl,txt){const el=document.getElementById('saveStatus');el.className='save-status '+(cl||'');el.textContent=txt||'';}
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function areasSel(c){return AREAS.filter(a=>c.areas[a[0]]).map(a=>a[0]);}
@@ -421,9 +556,13 @@ async function salvarContato(row){
       cliente:nomeCli(c.cliente_id),cod:respAtual()
     });
     c._email0=email;                       // a linha agora é este e-mail
+    FALHAS.delete(k);marcarFalha(k,false);
     setSave('ok','Salvo ✓ '+horaAgora());
     atualizarCabecalho(c.cliente_id);desenharChips();desenharResumo();desenharContagem();
-  }catch(e){setSave('err','Não salvou: '+(e.message||e));}
+  }catch(e){
+    FALHAS.add(k);marcarFalha(k,true);
+    setSave('err','Não salvou: '+(e.message||e));
+  }
 }
 async function flushPendentes(){
   const rows=Array.from(SUJOS.keys());
@@ -509,8 +648,8 @@ function pedirConfirmacao(row){
   if(!box)return;
   const quem=c.nome||c.email||'este contato';
   box.innerHTML=`<span class="conf">Remover ${esc(quem)}?</span>
-    <button class="btn mini solido-danger" type="button" data-delok="${esc(row)}">Sim, remover</button>
-    <button class="btn mini" type="button" data-delno="${esc(row)}">Cancelar</button>`;
+    <button class="btn btn--mini btn--danger" type="button" data-delok="${esc(row)}">Sim, remover</button>
+    <button class="btn btn--mini" type="button" data-delno="${esc(row)}">Cancelar</button>`;
 }
 function cancelarConfirmacao(row){
   const c=contatoDe(row);if(!c)return;
@@ -594,6 +733,8 @@ function trocarPapel(c,novo){
   }
 }
 document.addEventListener('click',e=>{
+  const rt=e.target.closest('[data-retry]');
+  if(rt){rt.textContent='enviando…';rt.disabled=true;salvarContato(rt.dataset.retry);return;}
   const cp=e.target.closest('[data-copy]');
   if(cp){copiar(cp.dataset.copy,cp);return;}
   const ac=e.target.closest('.achip[data-a]');
@@ -615,7 +756,8 @@ document.addEventListener('click',e=>{
     const id=tg.dataset.toggle;
     if(ABERTOS.has(id))ABERTOS.delete(id);else ABERTOS.add(id);
     const g=grupoDe(id),el=tg.closest('.cli');
-    if(g&&el)el.outerHTML=grupoHTML(g,normTxt(TERMO));else desenharLista();
+    if(g&&el){el.outerHTML=grupoHTML(g,normTxt(TERMO));FALHAS.forEach(k=>marcarFalha(k,true));}
+    else desenharLista();
     return;
   }
   const ad=e.target.closest('[data-add]');
@@ -630,6 +772,7 @@ document.addEventListener('click',e=>{
   if(cf){FILTRO=cf.dataset.f;redesenhar();return;}
   const ca=e.target.closest('.chip[data-area]');
   if(ca){AREA=ca.dataset.area;redesenhar();return;}
+  if(e.target.closest('#limparFiltros')){limparFiltros();return;}
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto);return;}
   if(e.target.closest('#novo')){abrirModal('');return;}
@@ -638,8 +781,15 @@ document.addEventListener('click',e=>{
   if(e.target.id==='m-add'){adicionarContato(e.target);return;}
   if(e.target.id==='m-cancelar'||e.target.id==='modal'){fecharModal();return;}
 });
+/* Atalhos de busca (C.4): "/" foca, Esc limpa. Com o modal aberto, Esc fecha o
+   modal — e o atalho não atrapalha quem já está digitando noutro campo. */
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&document.getElementById('modal').classList.contains('on'))fecharModal();
+  if(e.key==='Escape'&&document.getElementById('modal').classList.contains('on')){fecharModal();return;}
+  const b=document.getElementById('busca');if(!b)return;
+  const a=document.activeElement,tag=a&&a.tagName;
+  const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
+  if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!digitando){e.preventDefault();b.focus();b.select();return;}
+  if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';TERMO='';aplicarBusca();}
 });
 
 /* ---------------- copiar ---------------- */
@@ -662,10 +812,10 @@ function layout(){
   return `<div class="wrap">
     <div class="topo">
       <div class="linha">
-        <input class="busca" id="busca" type="search" placeholder="Buscar por ID, cliente, contato, e-mail ou telefone…" value="${esc(TERMO)}">
-        <button class="btn green" id="novo" type="button">+ Adicionar contato</button>
-        <button class="btn mini" id="abrirTodos" type="button">Abrir todos</button>
-        <button class="btn mini" id="fecharTodos" type="button">Fechar todos</button>
+        <input class="busca" id="busca" type="search" placeholder="Buscar por ID, cliente, contato, e-mail, CNPJ ou telefone…  ( / para focar)" value="${esc(TERMO)}">
+        <button class="btn btn--pri btn--pill" id="novo" type="button">+ Adicionar contato</button>
+        <button class="btn btn--mini" id="abrirTodos" type="button">Abrir todos</button>
+        <button class="btn btn--mini" id="fecharTodos" type="button">Fechar todos</button>
       </div>
       <div class="linha"><div class="grupo" id="chipsSit"></div></div>
       <div class="linha"><div class="grupo" id="chipsArea"></div></div>
@@ -680,7 +830,7 @@ async function carregar(primeira){
     const d=await jsonp(API_URL+'?tipo=contatos_equipe&chave='+encodeURIComponent(chaveAtual()));
     if(d&&d.erro)throw new Error(d.erro);
     CONTATOS=(d.contatos||[]).map(c=>Object.assign(
-      {nome:'',email:'',telefone:'',papel:'Secundário',codigo:'',link:''},c,
+      {nome:'',email:'',telefone:'',papel:'Secundário',codigo:'',link:'',ultimo_acesso:'',acesso_via:''},c,
       {cliente_id:String(c.cliente_id==null?'':c.cliente_id),areas:Object.assign({},c.areas||{}),
        // e-mail como estava na planilha quando carregamos: o backend usa isso para
        // conferir que a linha ainda é este contato antes de gravar (linhas sobem
@@ -689,9 +839,9 @@ async function carregar(primeira){
     CLIENTES=(d.clientes||[]).map(c=>({id:String(c.id),nome:String(c.nome||'')}));
     NOME={};CLIENTES.forEach(c=>NOME[c.id]=c.nome);
     agrupar();
-    if(primeira){document.getElementById('app').innerHTML=layout();}
+    if(primeira){lerURL();document.getElementById('app').innerHTML=layout();}   // a visão vem do endereço (C.10)
     preencherDatalist();
-    redesenhar();
+    if(primeira&&TERMO)aplicarBusca();else redesenhar();
   }catch(e){
     if(primeira){
       document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1>

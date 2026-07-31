@@ -9,49 +9,67 @@
 <title>Calendário de clientes ativos — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
+  /* Paleta canonica da equipe — a mesma em todas as telas. */
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
-  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
+  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
+  /* Raios: 12 padrao, 16 nos blocos grandes, 999px so em pilula, 10px em campo. */
+  --radius:12px;--radius-lg:16px;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .logo{font-weight:900;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px}
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
 .wrap{max-width:1040px;margin:0 auto;padding:18px 20px 80px}
 .toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line-2);border-radius:999px;padding:3px;margin-bottom:12px}
-.toggle button{font-family:var(--sans);font-size:13.5px;font-weight:700;border:none;background:none;color:var(--ink-2);padding:8px 16px;border-radius:999px;cursor:pointer}
+.toggle button{font-family:var(--sans);font-size:13px;font-weight:700;border:none;background:none;color:var(--ink-2);padding:8px 16px;border-radius:999px;cursor:pointer}
 .toggle button.on{background:var(--brand-teal);color:#fff}
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
-.chip{font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.chip{font-size:13px;font-weight:700;border-radius:999px;padding:6px 12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
 .chip.on{background:var(--brand-euc);border-color:var(--brand-euc);color:#fff}
-.busca{width:100%;font-family:var(--sans);font-size:15px;padding:11px 15px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-.resumo-top{background:linear-gradient(135deg,rgba(15,140,133,.12),rgba(63,166,128,.07));border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0 14px;display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
-.resumo-top .big{font-size:30px;font-weight:800;color:var(--brand-teal);line-height:1}
+.resumo-top{background:linear-gradient(135deg,rgba(15,140,133,.12),rgba(63,166,128,.07));border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin:10px 0 14px;display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.resumo-top .big{font-size:24px;font-weight:800;color:var(--brand-teal);line-height:1}
 .resumo-top .lbl{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+/* ---------- botao (B.8): uma base, tres papeis ---------- */
+.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+.btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri:hover{background:#0C7871;border-color:#0C7871}
+.btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+.btn--danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
+.btn--danger:hover{background:#A33327;border-color:#A33327}
+.btn--danger-out{background:var(--surface);color:var(--vermelho);border-color:var(--line-2)}
+.btn--danger-out:hover{border-color:var(--vermelho)}
+.btn--mini{padding:6px 11px;font-size:12px}
+.btn--pill{border-radius:999px;padding:12px 20px}
 .dica{font-size:12px;color:var(--muted);margin-top:2px}
 /* calendário */
-.legenda{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);font-weight:700;margin:2px 2px 12px;flex-wrap:wrap}
-.legenda i{width:14px;height:14px;border-radius:4px;border:1px solid var(--line);display:inline-block}
+.legenda{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700;margin:2px 2px 12px;flex-wrap:wrap}
+.legenda i{width:14px;height:14px;border-radius:10px;border:1px solid var(--line);display:inline-block}
 .legenda .sep{opacity:.6}
 .ano{margin-bottom:16px}
 .ano-h{display:flex;align-items:baseline;gap:10px;margin:0 2px 7px}
-.ano-n{font-size:17px;font-weight:800;letter-spacing:.01em}
-.ano-meta{font-size:11.5px;color:var(--muted);font-weight:700}
+.ano-n{font-size:19px;font-weight:800;letter-spacing:.01em}
+.ano-meta{font-size:12px;color:var(--muted);font-weight:700}
 .cal{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
 .mcard{font-family:var(--sans);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:9px 4px 8px;min-height:64px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:center;transition:transform .12s ease,box-shadow .12s ease}
 .mcard:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(7,48,52,.14)}
 .mcard:focus-visible{outline:2px solid var(--brand-dark);outline-offset:2px}
 .m-nome{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.85}
 .m-n{font-size:19px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
-.m-d{font-size:10px;font-weight:700;line-height:1.2}
+.m-d{font-size:11px;font-weight:700;line-height:1.2}
 .m-d.up{color:#2E7D52}.m-d.dn{color:var(--vermelho)}
 .mcard.n0{background:var(--surface-warm);color:var(--muted);border-style:dashed}
 .mcard.n1{background:#E4F1ED;border-color:#D3E7E1}
@@ -64,32 +82,32 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .mcard.sel{border-color:var(--brand-dark);box-shadow:0 0 0 3px rgba(7,48,52,.22)}
 .mcard.futuro{background:transparent;border:1px dashed var(--line-2);color:#C6BAAB;cursor:default}
 .mcard.futuro:hover{transform:none;box-shadow:none}
-.drop{margin-top:8px;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:0 6px 20px rgba(7,48,52,.10);overflow:hidden}
+.drop{margin-top:8px;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);box-shadow:0 6px 20px rgba(7,48,52,.10);overflow:hidden}
 .d-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-warm);border-bottom:1px solid var(--line)}
-.d-h b{font-size:14px;text-transform:capitalize}
+.d-h b{font-size:15px;text-transform:capitalize}
 .d-cnt{font-size:12px;color:var(--muted);font-weight:700}
-.d-x{margin-left:auto;border:none;background:none;font-size:20px;line-height:1;color:var(--muted);cursor:pointer;font-family:var(--sans);padding:0 4px}
+.d-x{margin-left:auto;border:none;background:none;font-size:19px;line-height:1;color:var(--muted);cursor:pointer;font-family:var(--sans);padding:0 4px}
 .d-x:hover{color:var(--ink)}
 .d-lista{max-height:360px;overflow:auto;padding:8px 14px 12px}
 @media(min-width:780px){.d-lista{columns:2;column-gap:26px}}
 .d-item{padding:6px 0;border-bottom:1px dashed var(--line);break-inside:avoid}
-.d-linha{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.d-linha{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
 .d-prod{font-size:11px;color:var(--muted);margin-top:1px}
 /* entradas e saídas do mês, dentro do dropdown */
 .d-mov{display:flex;gap:16px;flex-wrap:wrap;padding:9px 14px;border-bottom:1px dashed var(--line);background:#FCFAF6}
 .mv{flex:1 1 210px;min-width:190px}
 .mv-h{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
 .mv.ent .mv-h{color:#2E7D52}.mv.sai .mv-h{color:var(--vermelho)}
-.mv-h span{background:rgba(0,0,0,.06);border-radius:999px;padding:1px 7px;margin-left:5px;font-size:10.5px;color:var(--ink-2)}
+.mv-h span{background:rgba(0,0,0,.06);border-radius:999px;padding:1px 7px;margin-left:5px;font-size:11px;color:var(--ink-2)}
 .mv-l{display:flex;flex-direction:column;gap:2px}
-.mv-i{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.mv-i{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
 .mv-q{font-size:11px;font-weight:700;color:var(--muted);margin-left:6px;white-space:nowrap}
 /* chips de atalho + painel que eles abrem */
 .chips.atalhos{margin-top:-3px}
 .chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:5px;font-size:11px}
 .chip.on .n{background:rgba(255,255,255,.25)}
 .chip.atalho.on{background:var(--amber);border-color:var(--amber);color:#fff}
-.painel{margin-top:8px;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:0 6px 20px rgba(7,48,52,.10);overflow:hidden}
+.painel{margin-top:8px;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);box-shadow:0 6px 20px rgba(7,48,52,.10);overflow:hidden}
 /* +entraram / −saíram na tampa do card do mês */
 .m-d b{font-weight:800}
 .m-d .up{color:#2E7D52}.m-d .dn{color:var(--vermelho)}
@@ -98,17 +116,17 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 @media(max-width:560px){.cal{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:360px){.cal{grid-template-columns:repeat(3,1fr)}}
 /* por cliente */
-.cli{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.cli{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
 .cli-main{flex:1;min-width:220px}
-.cli-nome{font-weight:700;font-size:14.5px}
+.cli-nome{font-weight:700;font-size:15px}
 .cli-prod{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
-.pchip{font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px;background:#EAF4F1;color:#0c6b64;border:1px solid #cfe6e2}
-.cli-datas{text-align:right;font-size:12.5px;color:var(--ink-2);white-space:nowrap}
-.bdg{font-size:10.5px;font-weight:800;border-radius:7px;padding:3px 8px;display:inline-block}
+.pchip{font-size:11px;font-weight:700;border-radius:10px;padding:2px 7px;background:#EAF4F1;color:#0c6b64;border:1px solid #cfe6e2}
+.cli-datas{text-align:right;font-size:13px;color:var(--ink-2);white-space:nowrap}
+.bdg{font-size:11px;font-weight:800;border-radius:10px;padding:3px 8px;display:inline-block}
 .bdg.ativo{background:#E7F4EC;color:#2E7D52}
-.bdg.enc{background:#F2ECE4;color:#8A7D70}
+.bdg.enc{background:#F2ECE4;color:var(--muted)}
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:10px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -117,6 +135,13 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
    VOLTAR, então trocam a guia atual (target="_self"). */
 .barra a.logo{color:inherit;text-decoration:none;cursor:pointer}
 .barra a.logo:hover{opacity:.82}
+
+/* ---------- padroes compartilhados (B.10 e B.12) ---------- */
+/* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
+/* A barra nunca estoura: quebra de linha e o contador some no celular. */
+.barra{flex-wrap:wrap}
+@media(max-width:560px){.barra .cnt{display:none}}
 </style>
 </head>
 <body>
@@ -154,6 +179,27 @@ function labelLongo(idx){const y=Math.floor(idx/12),mo=idx%12;return MES_LONGO[m
 
 let CLIENTES=[],PRODUTOS=[],VIEW='calendario',PROD='',ENDIDX=0,STARTIDX=0,CALSTART=0,MESES_DADOS={},TERMO='';
 let ENTRADAS={},SAIDAS={},ATALHO='';
+/* ---------- visão no endereço (C.10) ----------
+   F5 (ou mandar o link) volta para a mesma aba, produto, atalho e busca.
+   Mexemos só nesses parâmetros — chave e #hash ficam intactos. */
+function sincronizarURL(){
+  try{
+    const u=new URL(location.href);
+    const set=(k,v)=>{if(v)u.searchParams.set(k,v);else u.searchParams.delete(k);};
+    set('q',TERMO);
+    set('view',VIEW==='calendario'?'':VIEW);
+    set('prod',PROD);
+    set('atalho',ATALHO);
+    history.replaceState(null,'',u.pathname+u.search+u.hash);
+  }catch(e){}
+}
+function lerURL(){
+  const p=new URLSearchParams(location.search);
+  VIEW=p.get('view')==='cliente'?'cliente':'calendario';
+  PROD=p.get('prod')||'';
+  ATALHO=p.get('atalho')||'';
+  TERMO=p.get('q')||'';
+}
 function carregar(){
   return jsonp(API_URL+'?tipo=ativos_equipe&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{if(d.erro)throw new Error(d.erro);
@@ -165,6 +211,7 @@ function carregar(){
       PRODUTOS=d.produtos||[];
       const now=new Date();ENDIDX=idxYM(now.getFullYear(),now.getMonth()+1);STARTIDX=idxYM(INICIO_ANO,INICIO_MES);
       CALSTART=calcularInicioCalendario();
+      lerURL();                       // a visão vem do endereço (C.10)
       render();})
     .catch(e=>{document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> e se o Web App foi republicado com <code>EquipeAtivos.gs</code>.</p></div>`;});
 }
@@ -257,9 +304,11 @@ function render(){
   inp.addEventListener('input',e=>desenhar(e.target.value));
   desenhar(TERMO);
   if(TERMO){inp.focus();try{inp.setSelectionRange(TERMO.length,TERMO.length);}catch(_){}}
+  sincronizarURL();
 }
 function desenhar(termo){
   TERMO=termo||'';
+  sincronizarURL();
   const cont=document.getElementById('conteudo');
   cont.innerHTML = ATALHO ? viewAtalho(TERMO) : (VIEW==='calendario' ? viewCalendario(TERMO) : viewCliente(TERMO));
   if(!ATALHO&&VIEW==='calendario')cont.querySelectorAll('.mcard[data-m]').forEach(b=>b.addEventListener('click',()=>alternarMes(b)));
@@ -369,7 +418,7 @@ function viewCliente(termo){
   return arr.map(c=>{
     const ativo = c.iniIdx!=null && (c.fimIdx==null || c.fimIdx>=ENDIDX) && c.iniIdx<=ENDIDX;
     let meses=0;for(let M=CALSTART;M<=ENDIDX;M++)if(ativoEm(c,M))meses++;
-    const prod=c.prodList.map(p=>`<span class="pchip">${esc(p)}</span>`).join('')||'<span class="pchip" style="background:#F2ECE4;color:#8A7D70;border-color:var(--line)">—</span>';
+    const prod=c.prodList.map(p=>`<span class="pchip">${esc(p)}</span>`).join('')||'<span class="pchip" style="background:#F2ECE4;color:var(--muted);border-color:var(--line)">—</span>';
     const fimTxt = c.iniIdx==null ? '<span class="bdg enc">sem data de início</span>'
       : (c.fimIdx==null ? '<span class="bdg ativo">Ativo</span>' : ('encerrou '+fmtData(c.fimIdx)));
     return `<div class="cli"><div class="cli-main">
@@ -384,7 +433,17 @@ function viewCliente(termo){
   }).join('');
 }
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharTudo(document.getElementById('conteudo'));});
+/* Atalhos de busca (C.4): "/" foca, Esc limpa a busca (e fecha o mês aberto).
+   Não atrapalha quem já está digitando noutro campo. */
+document.addEventListener('keydown',e=>{
+  const b=document.getElementById('busca');
+  const a=document.activeElement,tag=a&&a.tagName;
+  const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
+  if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!digitando&&b){e.preventDefault();b.focus();b.select();return;}
+  if(e.key!=='Escape')return;
+  if(b&&b.value&&(a===b||!digitando)){e.preventDefault();b.value='';desenhar('');return;}
+  fecharTudo(document.getElementById('conteudo'));
+});
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
 carregar();
 </script>

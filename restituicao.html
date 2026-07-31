@@ -9,28 +9,32 @@
 <title>Restituição (equipe) — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
+  /* Paleta canonica da equipe — a mesma em todas as telas. */
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
-  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--vermelho:#8B2E22;
+  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
+  /* Raios: 12 padrao, 16 nos blocos grandes, 999px so em pilula, 10px em campo. */
+  --radius:12px;--radius-lg:16px;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:17px}.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+.barra .logo{font-weight:900;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px}
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
-.save-status{font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:20px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
+.save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
-.save-status.saving{background:#E8892E;color:#fff}.save-status.ok{background:#2E9D5F;color:#fff}.save-status.err{background:#C0392B;color:#fff}
+.save-status.saving{background:var(--amber);color:#fff}.save-status.ok{background:var(--verde);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
 .topo{padding:12px 16px 8px}
 .chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.chips .rot{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
-.chip{font-family:var(--sans);font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.chips .rot{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.chip{font-family:var(--sans);font-size:13px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
 .chip:hover{border-color:var(--brand-teal)}
 .chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
 .chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:6px;font-size:11px}
@@ -42,27 +46,41 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chip.limpar{border-style:dashed;color:var(--muted)}
 /* faixa de filtros rapidos, logo acima da tabela */
 .filtros{padding:0 16px 10px}
-.busca{width:100%;font-family:var(--sans);font-size:15px;padding:11px 15px;border-radius:24px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+/* ---------- botao (B.8): uma base, tres papeis ---------- */
+.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+.btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri:hover{background:#0C7871;border-color:#0C7871}
+.btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+.btn--danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
+.btn--danger:hover{background:#A33327;border-color:#A33327}
+.btn--danger-out{background:var(--surface);color:var(--vermelho);border-color:var(--line-2)}
+.btn--danger-out:hover{border-color:var(--vermelho)}
+.btn--mini{padding:6px 11px;font-size:12px}
+.btn--pill{border-radius:999px;padding:12px 20px}
 .dica{font-size:12px;color:var(--muted);margin-top:7px}
 .resumo{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:10px;padding:0 16px 12px}
-.rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
 .rhead{padding:10px 13px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
-.rcard.atrasada .rhead{background:#C0392B}.rcard.semana .rhead{background:#E8892E}.rcard.proxima .rhead{background:var(--brand-teal)}
+.rcard.atrasada .rhead{background:var(--vermelho)}.rcard.semana .rhead{background:var(--amber)}.rcard.proxima .rhead{background:var(--brand-teal)}
 .rcard.adiante .rhead{background:#6B8486}.rcard.cobrar .rhead{background:#007EB5}
 .rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:12px}
 .rlista{max-height:168px;overflow:auto;padding:6px}
-.tk{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:8px;cursor:pointer;font-size:12.5px}
+.tk{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:10px;cursor:pointer;font-size:13px}
 .tk:hover{background:var(--surface-warm)}
 .tk .d{font-weight:800;color:var(--ink);white-space:nowrap}
 .tk .d.sem{color:var(--muted);font-weight:700}
 .tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tk .tp{font-size:10.5px;font-weight:700;color:var(--muted)}
+.tk .tp{font-size:11px;font-weight:700;color:var(--muted)}
 .rvazio{color:var(--muted);font-size:12px;padding:10px 9px}
 .tabela-wrap{overflow:auto;max-height:calc(100vh - 130px);border-top:1px solid var(--line)}
-table{border-collapse:separate;border-spacing:0;font-size:12.5px}
+table{border-collapse:separate;border-spacing:0;font-size:13px}
 thead th{position:sticky;top:0;z-index:20;background:var(--brand-dark);color:#fff;font-weight:700;text-align:left;
-  padding:9px 10px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);font-size:11.5px;cursor:pointer;user-select:none}
+  padding:9px 10px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);font-size:12px;cursor:pointer;user-select:none}
 thead th:hover{background:#0a4247}
 tbody td{padding:3px 5px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:top;background:var(--surface)}
 tbody tr:nth-child(even) td{background:var(--surface-warm)}
@@ -75,29 +93,29 @@ td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal);padd
 td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.25;padding:6px 9px;white-space:normal;box-shadow:2px 0 6px rgba(7,48,52,.07)}
 tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
 /* atalho para a planilha de equiparação do cliente, sempre visível (coluna congelada) */
-td.col-nome a.eq{display:inline-block;margin-top:5px;font-size:10.5px;font-weight:800;letter-spacing:.2px;
+td.col-nome a.eq{display:inline-block;margin-top:5px;font-size:11px;font-weight:800;letter-spacing:.2px;
   color:#fff;background:var(--brand-teal);border-radius:999px;padding:3px 9px;text-decoration:none;white-space:nowrap}
 td.col-nome a.eq:hover{background:var(--brand-euc)}
 .cel{display:flex;gap:4px;align-items:center}
-.cel input,.cel textarea,.cel select{font-family:var(--sans);font-size:12.5px;padding:6px 8px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
+.cel input,.cel textarea,.cel select{font-family:var(--sans);font-size:13px;padding:6px 8px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
 .cel textarea{resize:both;min-height:34px;line-height:1.35}
 .cel select{font-weight:600;cursor:pointer}
 .cel input:focus,.cel textarea:focus,.cel select:focus{outline:2px solid var(--brand-teal);outline-offset:0}
-.cel a.abrir{color:var(--brand-teal);text-decoration:none;font-weight:800;font-size:14px;flex:none}
+.cel a.abrir{color:var(--brand-teal);text-decoration:none;font-weight:800;font-size:15px;flex:none}
 /* somente-leitura — sem "..." : CNPJ e e-mails aparecem por extenso (para copiar) */
-.ro{padding:6px 8px;font-size:12.5px;color:var(--ink-2);white-space:normal;word-break:break-word;text-overflow:clip}
+.ro{padding:6px 8px;font-size:13px;color:var(--ink-2);white-space:normal;word-break:break-word;text-overflow:clip}
 .ro.roarea{white-space:pre-wrap;max-height:58px;overflow:auto;line-height:1.3;font-size:12px}
 /* URL não precisa aparecer por extenso (senão a linha fica altíssima) — use o ↗ */
-.ro.rourl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:11.5px}
+.ro.rourl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:12px}
 .ro.romails{line-height:1.35}
 .ro.romails a{display:block;color:var(--brand-teal);text-decoration:none;font-weight:600}
 .ro.romails a:hover{text-decoration:underline}
-.robadge{display:inline-block;padding:4px 9px;border-radius:7px;font-size:11.5px;font-weight:800;white-space:nowrap}
+.robadge{display:inline-block;padding:4px 9px;border-radius:10px;font-size:12px;font-weight:800;white-space:nowrap}
 @keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
 .flash{animation:fl 1.7s ease}
 tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}   /* realce da linha por 5s ao clicar numa tarefa */
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:14px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line)}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:10px;border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(max-width:720px){.resumo{grid-template-columns:1fr}}
@@ -107,6 +125,30 @@ tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}   /*
    VOLTAR, então trocam a guia atual (target="_self"). */
 .barra a.logo{color:inherit;text-decoration:none;cursor:pointer}
 .barra a.logo:hover{opacity:.82}
+
+
+/* ---------- explicacao recolhida (C.2) ----------
+   O dado vem primeiro; a instrucao fica a um clique e lembra a escolha. */
+details.ajuda{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin:8px 0}
+details.ajuda>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:12px;font-weight:800;color:var(--ink-2)}
+details.ajuda>summary::-webkit-details-marker{display:none}
+details.ajuda>summary::after{content:" \25BE";color:var(--muted)}
+details.ajuda[open]>summary::after{content:" \25B4"}
+details.ajuda>.txt{padding:0 12px 11px;font-size:12px;color:var(--muted);line-height:1.55}
+details.ajuda>.txt b{color:var(--ink-2)}
+/* ---------- o que nao gravou (C.3) ----------
+   A linha (ou o campo) fica marcada e o "tentar de novo" nasce ali mesmo. */
+.falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
+tr.falhou>td{background:#FBEAE7!important}
+.btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
+  border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.btn-retry:disabled{opacity:.6;cursor:default}
+/* ---------- padroes compartilhados (B.10 e B.12) ---------- */
+/* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
+/* A barra nunca estoura: quebra de linha e o contador some no celular. */
+.barra{flex-wrap:wrap}
+@media(max-width:560px){.barra .cnt{display:none}}
 </style>
 </head>
 <body>
@@ -129,6 +171,23 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
 function respAtual(){const q=(new URLSearchParams(location.search).get('cod')||'').trim();if(q)return q;try{return decodeURIComponent((location.hash||'').replace(/^#/,'')).trim();}catch(e){return (location.hash||'').replace(/^#/,'').trim();}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+/* ---------- busca que entende CNPJ com e sem pontuação (C.1) ---------- */
+function soDigitos(s){return String(s==null?'':s).replace(/\D/g,'');}
+/** Compara o texto normalizado e, quando o termo tem 6 dígitos ou mais, também
+ *  só os dígitos dos dois lados — assim "12345678000190" acha "12.345.678/0001-90". */
+function casaBusca(alvoTxt,alvoDig,termo){
+  const t=normTxt(termo);
+  if(!t)return true;
+  if(alvoTxt.indexOf(t)>=0)return true;
+  const d=soDigitos(termo);
+  return d.length>=6&&alvoDig.indexOf(d)>=0;
+}
+/** Lembra no navegador se a explicação fica aberta — a escolha é de quem usa. */
+function ligarDetalhes(el,chave){
+  if(!el)return;
+  try{if(localStorage.getItem(chave)==='1')el.open=true;}catch(e){}
+  el.addEventListener('toggle',()=>{try{localStorage.setItem(chave,el.open?'1':'0');}catch(e){}});
+}
 function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 
@@ -236,18 +295,43 @@ function carregar(){
       else document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(m)}</p><p>Confira o link e se o Web App foi republicado com <code>EquipeRestituicao.gs</code>.</p></div>`;});
 }
 function baseRows(){return LINHAS;}   // o backend já entrega só as linhas do colaborador do código
+/* ---------- busca e filtros no endereço (C.10) ----------
+   F5 (ou mandar o link para alguém) volta para a mesma visão. Mexemos só nos
+   parâmetros desta tela — a chave, o cod e o #hash continuam intactos. */
+function sincronizarURL(){
+  try{
+    const u=new URL(location.href),b=document.getElementById('busca');
+    const set=(k,v)=>{if(v)u.searchParams.set(k,v);else u.searchParams.delete(k);};
+    set('q',b?b.value:'');
+    set('prazo',FPRAZO==='todos'?'':FPRAZO);
+    set('etapa',FETAPA==='todas'?'':FETAPA);
+    set('status',FSTATUS==='todos'?'':FSTATUS);
+    history.replaceState(null,'',u.pathname+u.search+u.hash);
+  }catch(e){}
+}
+function lerURL(){
+  const p=new URLSearchParams(location.search);
+  FPRAZO=p.get('prazo')||'todos';
+  FETAPA=p.get('etapa')||'todas';
+  FSTATUS=p.get('status')||'todos';
+  return p.get('q')||'';
+}
 function render(){
   document.getElementById('tag').textContent='Restituição'+(RESPNOME?' · '+RESPNOME:'');
+  const termo=lerURL();   // a visão vem do endereço, não zerada
   document.getElementById('app').innerHTML=`
     <div class="topo">
-      <input class="busca" id="busca" type="search" placeholder="Buscar por ID, nome, CNPJ ou e-mail…">
-      <div class="dica">Clique num cabeçalho para ordenar (A→Z / Z→A). Só os campos de status/observação/links/tarefas são editáveis — salvam sozinhos. Etapa em <b>“Enviado ao cliente”</b> não conta como atrasada: aparece em <b>“Cobrar o cliente de retorno”</b>, com os dias corridos de espera (a data é carimbada sozinha e pode ser corrigida na coluna “Esperando retorno desde”). Os <b>filtros rápidos</b> logo acima da tabela combinam entre si, com a busca e com a ordenação.</div>
+      <input class="busca" id="busca" type="search" value="${esc(termo)}" placeholder="Buscar por ID, nome, CNPJ ou e-mail…  ( / para focar)">
+      <details class="ajuda" id="ajuda">
+        <summary>ⓘ Como funciona esta tela</summary>
+        <div class="txt">Clique num cabeçalho para ordenar (A→Z / Z→A). Só os campos de status/observação/links/tarefas são editáveis — salvam sozinhos, e <b>Enter</b> grava e desce para a mesma coluna da linha seguinte. Etapa em <b>“Enviado ao cliente”</b> não conta como atrasada: aparece em <b>“Cobrar o cliente de retorno”</b>, com os dias corridos de espera (a data é carimbada sozinha e pode ser corrigida na coluna “Esperando retorno desde”). Os <b>filtros rápidos</b> logo acima da tabela combinam entre si, com a busca e com a ordenação.</div>
+      </details>
     </div>
     <div class="resumo" id="resumo"></div>
     <div class="filtros" id="filtros"></div>
     <div class="tabela-wrap"><table id="tab"></table></div>`;
   document.getElementById('busca').addEventListener('input',()=>redesenhar());
-  FPRAZO='todos';FETAPA='todas';FSTATUS='todos';   // dados novos entram sem filtro pendurado
+  ligarDetalhes(document.getElementById('ajuda'),'b4u.restituicao.ajuda');
   mapearColunas();
   atualizarResumo();
   redesenhar();
@@ -459,6 +543,7 @@ function redesenhar(){
   const b=document.getElementById('busca');
   desenharChips();
   desenhar(b?b.value:'');
+  sincronizarURL();
 }
 function ehNum(s){return /^\s*-?\d+([.,]\d+)?\s*$/.test(String(s));}
 function valCmp(a,b){if(ehNum(a)&&ehNum(b))return parseFloat(String(a).replace(',','.'))-parseFloat(String(b).replace(',','.'));return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});}
@@ -474,7 +559,13 @@ function ordenar(arr){
     return dir==='desc'?-r:r;
   });
 }
-function porBusca(termo){const alvo=normTxt(termo);return baseRows().filter(l=>!alvo||normTxt(l.id+' '+l.nome+' '+l.cnpj+' '+(l.email||'')).includes(alvo));}
+/* Busca por ID, nome, CNPJ ou e-mail. O CNPJ acha com ou sem pontuação. */
+function porBusca(termo){
+  if(!normTxt(termo))return baseRows();
+  return baseRows().filter(l=>casaBusca(
+    normTxt(l.id+' '+l.nome+' '+l.cnpj+' '+(l.email||'')),
+    soDigitos(l.id+' '+l.cnpj),termo));
+}
 function filtradas(termo){return aplicaChips(porBusca(termo),null);}
 function seta(key){return SORT.key===key?(SORT.dir==='asc'?' ▲':' ▼'):'';}
 function celHTML(l,c){
@@ -514,6 +605,7 @@ function desenhar(termo){
     +COLS.map(c=>`<th data-sort="${c.k}" style="min-width:${c.w+16}px">${esc(c.label)}${seta(c.k)}</th>`).join('')+'</tr></thead>';
   const body='<tbody>'+(arr.map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td><td class="col-nome">${esc(l.nome||'')}${atalhoEquip(l)}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+2}" style="padding:18px;color:var(--muted)">Nenhum cliente com os filtros de agora. <button type="button" class="chip limpar" id="limparFiltros">Limpar filtros e busca</button></td></tr>`)+'</tbody>';
   document.getElementById('tab').innerHTML=head+body;
+  FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
 }
 function irPara(row,k){
   // a linha precisa estar visível: solta a busca e os chips antes de rolar até ela
@@ -528,22 +620,49 @@ function irPara(row,k){
 }
 function coletar(tr){const campos={};tr.querySelectorAll('[data-k]').forEach(el=>campos[el.dataset.k]=el.value);return campos;}
 let timers={};
+/* ---------- pendências e falhas de gravação (C.3) ----------
+   PENDENTES = alteração ainda no debounce. FALHAS = o servidor recusou e o dado
+   só existe na tela. Nos dois casos fechar a aba pede confirmação, e a falha
+   deixa a linha marcada com um "tentar de novo" ao lado do ID. */
+const PENDENTES=new Set();
+const FALHAS=new Map();
+function temPendencia(){return PENDENTES.size>0||FALHAS.size>0;}
+function marcarFalha(row,falhou){
+  const tr=document.querySelector('#tab tr[data-row="'+row+'"]');
+  if(!tr)return;
+  tr.classList.toggle('falhou',!!falhou);
+  const cel=tr.querySelector('td.col-id');if(!cel)return;
+  const antigo=cel.querySelector('.btn-retry');
+  if(falhou&&!antigo)cel.insertAdjacentHTML('beforeend',
+    '<button type="button" class="btn-retry" data-retry="'+esc(String(row))+'">tentar de novo</button>');
+  if(!falhou&&antigo)antigo.remove();
+}
 function agendarSalvar(tr){
   const row=tr.dataset.row,campos=coletar(tr);
   setSave('saving','Alterado…');
+  PENDENTES.add(String(row));
   clearTimeout(timers[row]);
   timers[row]=setTimeout(()=>salvar(row,tr.dataset.id,campos),450);
 }
 async function salvar(row,id,campos){
   setSave('saving','Salvando…');
+  PENDENTES.add(String(row));
   try{
     await postAcao({acao:'rest_salvar',row:+row,id,campos,cod:respAtual()});
     const l=LINHAS.find(x=>x.row==row);if(l)Object.keys(campos).forEach(k=>l[k]=campos[k]);
+    PENDENTES.delete(String(row));FALHAS.delete(String(row));marcarFalha(row,false);
     setSave('ok','Salvo ✓ '+horaAgora());
     atualizarResumo();
     desenharChips();   // só os chips: redesenhar a tabela tiraria o foco de quem está digitando
-  }catch(e){setSave('err','Não salvou: '+(e.message||e));}
+  }catch(e){
+    PENDENTES.delete(String(row));
+    FALHAS.set(String(row),{id:id,campos:campos});
+    marcarFalha(row,true);
+    setSave('err','Não salvou: '+(e.message||e));
+  }
 }
+/* Sair com alteração pendente (ou com uma gravação que falhou) pede confirmação. */
+window.addEventListener('beforeunload',e=>{if(temPendencia()){e.preventDefault();e.returnValue='';}});
 
 document.addEventListener('change',e=>{
   const el=e.target;if(!el.dataset||!el.dataset.k)return;
@@ -560,8 +679,36 @@ document.addEventListener('click',e=>{
     redesenhar();return;
   }
   if(e.target.closest('#limparFiltros')){limparFiltros();return;}
+  const rt=e.target.closest('[data-retry]');
+  if(rt){
+    const k=rt.dataset.retry,f=FALHAS.get(k);
+    if(f){rt.textContent='enviando…';rt.disabled=true;salvar(k,f.id,f.campos);}
+    return;
+  }
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto,tk.dataset.k);return;}
+});
+/* Enter num campo da tabela grava e desce para a MESMA coluna da linha seguinte (C.14). */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const el=e.target;
+  if(!el.dataset||!el.dataset.k||el.tagName==='TEXTAREA')return;   // no textarea Enter é quebra de linha
+  const tr=el.closest('tr[data-row]');if(!tr)return;
+  e.preventDefault();
+  clearTimeout(timers[tr.dataset.row]);
+  salvar(tr.dataset.row,tr.dataset.id,coletar(tr));
+  const prox=tr.nextElementSibling;if(!prox)return;
+  const alvo=prox.querySelector('[data-k="'+el.dataset.k+'"]');
+  if(alvo){alvo.focus();try{if(alvo.select)alvo.select();}catch(_){}}
+});
+/* Atalhos de busca (C.4): "/" foca, Esc limpa. Não atrapalha quem digita noutro
+   campo — só o Esc dentro da própria busca continua valendo. */
+document.addEventListener('keydown',e=>{
+  const b=document.getElementById('busca');if(!b)return;
+  const a=document.activeElement,tag=a&&a.tagName;
+  const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
+  if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!digitando){e.preventDefault();b.focus();b.select();return;}
+  if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';redesenhar();}
 });
 window.addEventListener('hashchange',carregar);   // trocar o código (#) recarrega para o colaborador certo
 

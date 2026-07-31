@@ -1,312 +1,126 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="robots" content="noindex, nofollow">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Onboarding — novo cliente · back4you</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --brand-teal:#128D84; --brand-dark:#063033; --eucalipto:#19AFA4; --laranja:#FF8100;
-      --verde:#1F9D57; --ink:#0E2E30; --ink-2:#3f5b5d; --muted:#6b8486;
-      --surface:#ffffff; --surface-warm:#F4F7F6; --line:#e2e9e8; --line-2:#cdd8d7; --erro:#8B2E22;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:'Montserrat',system-ui,-apple-system,sans-serif;background:var(--surface-warm);color:var(--ink);line-height:1.5}
-    .top{position:sticky;top:0;z-index:5;background:var(--brand-dark);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
-    .top b{font-size:15px;font-weight:700}
-    .top a{color:#bfeae6;text-decoration:none;font-size:13px;font-weight:700}
-    .wrap{max-width:820px;margin:0 auto;padding:18px 16px 60px}
-    .idcard{background:linear-gradient(135deg,rgba(18,141,132,.10),rgba(25,175,164,.06));border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:18px}
-    .idcard .lbl{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-    .idcard .idval{font-size:26px;font-weight:700;color:var(--brand-teal);letter-spacing:1px}
-    .idcard .nome{font-size:14px;color:var(--ink-2);margin-top:4px}
-    .idcard .nome b{color:var(--ink)}
-    .sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
-    .sec > h2{font-size:14px;font-weight:700;margin:0 0 12px;color:var(--brand-dark);display:flex;align-items:center;gap:8px}
-    .sec > h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--brand-teal)}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media(max-width:600px){.grid{grid-template-columns:1fr}}
-    .fld{display:flex;flex-direction:column}
-    .fld.full{grid-column:1/-1}
-    .fld label{font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:5px}
-    .fld label .req{color:var(--laranja)}
-    .fld input,.fld select,.fld textarea{font-family:inherit;font-size:13.5px;padding:9px 11px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface-warm);color:var(--ink);width:100%}
-    .fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
-    .fld textarea{resize:vertical;min-height:44px}
-    .fld.miss input,.fld.miss select{border-color:var(--erro);background:#fdf3f1}
-    .prods{display:flex;flex-wrap:wrap;gap:8px}
-    .prod{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line-2);border-radius:999px;padding:8px 13px;cursor:pointer;user-select:none}
-    .prod input{accent-color:var(--brand-teal);width:16px;height:16px}
-    .prod.on{background:rgba(18,141,132,.10);border-color:var(--brand-teal);color:var(--brand-dark)}
-    .hint{font-size:12px;color:var(--muted);margin-top:8px}
-    .btn{font-family:inherit;font-size:14px;font-weight:700;border:1px solid var(--line-2);border-radius:999px;padding:12px 20px;cursor:pointer;background:var(--surface);color:var(--ink)}
-    .btn.primary{background:var(--verde);color:#fff;border-color:transparent;font-weight:700}
-    .btn.primary:hover{background:#178A4B}
-    .btn.primary:disabled{opacity:.6;cursor:default}
-    .foot{display:flex;gap:10px;align-items:center;margin-top:8px}
-    .foot .btn.primary{flex:1}
-    .msg{font-size:13px;font-weight:700;min-height:18px;margin-top:10px}
-    .msg.err{color:var(--erro)}
-    .ok-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px;text-align:center}
-    .ok-card h1{font-size:20px;margin:6px 0}
-    .ok-card .big{font-size:30px;font-weight:700;color:var(--brand-teal);letter-spacing:1px}
-    .ok-links{display:flex;flex-direction:column;gap:8px;margin:16px 0;text-align:left}
-    .ok-links a{background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:11px 13px;text-decoration:none;color:var(--brand-dark);font-weight:700;font-size:13.5px}
-    .lock{max-width:420px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;text-align:center}
-  .btn.confirmar,button.confirmar{background:#C0392B!important;border-color:#C0392B!important;color:#fff!important}
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastro de cliente mudou de lugar — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Paleta canonica da equipe — a mesma em todas as telas. */
+  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
+  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
+  --radius:12px;--radius-lg:16px;
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;flex-wrap:wrap;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:900;font-size:19px;color:inherit;text-decoration:none}
+.barra .logo .y{color:var(--brand-euc)}
+.barra .logo:hover{opacity:.82}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px}
+.barra .spacer{flex:1}
+.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.barra a.volta:hover{text-decoration:underline}
+.wrap{max-width:620px;margin:0 auto;padding:40px 20px 70px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:26px 24px;text-align:center}
+.card .ic{font-size:24px}
+.card h1{font-size:19px;font-weight:800;margin:10px 0 8px}
+.card p{color:var(--ink-2);font-size:15px;margin-bottom:12px}
+.card p.mini{color:var(--muted);font-size:13px}
+.card code{background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:2px 7px;font-size:13px}
+.acoes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0 4px}
+/* ---------- botao (B.8): uma base, tres papeis ---------- */
+.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;text-decoration:none;display:inline-block;
+  transition:border-color .12s,transform .1s}
+.btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
+.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri:hover{background:#0C7871;border-color:#0C7871}
+.btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+.btn--pill{border-radius:999px;padding:12px 20px}
+.conta{font-size:12px;font-weight:700;color:var(--muted);margin-top:12px}
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-  <div class="top"><b>Onboarding — novo cliente</b><a id="voltar" href="colaborador.html">← Painel da equipe</a></div>
-  <div class="wrap" id="wrap"><div class="idcard"><div class="lbl">Carregando…</div></div></div>
+<div class="barra">
+  <a class="logo" id="logo-home" href="colaborador.html" title="Voltar para o painel da equipe">back<span class="y">4you</span></a>
+  <span class="tag">Cadastro de cliente</span>
+  <span class="spacer"></span>
+  <a class="volta" id="volta" href="colaborador.html">← Painel</a>
+</div>
 
-  <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
-    const CHAVE_PADRAO = 'b4u-equipe-2026';
+<div class="wrap">
+  <div class="card">
+    <div class="ic">📇</div>
+    <h1>Esta tela foi aposentada</h1>
+    <p>O cadastro de cliente novo agora é feito em <b>Registros de clientes</b>, no botão
+       <b>“+ Novo cliente”</b>. É a mesma coisa que se fazia aqui, no mesmo lugar em que a
+       equipe consulta e edita os cadastros — sem duas versões do formulário para manter.</p>
+    <div class="acoes">
+      <a class="btn btn--pri btn--pill" id="ir" href="registro.html">Ir para Registros de clientes</a>
+      <a class="btn btn--sec btn--pill" id="painel" href="colaborador.html">Voltar ao painel</a>
+    </div>
+    <p class="conta" id="conta"></p>
+    <p class="mini">Se você chegou por um atalho antigo, atualize o favorito para
+       <code>registro.html</code>. A <code>chave</code> e o <code>cod</code> do endereço seguem
+       junto neste redirecionamento.</p>
+  </div>
+</div>
 
-    function chaveAtual(){
-      const u=new URLSearchParams(location.search); if(u.get('chave')) return u.get('chave').trim();
-      const h=(location.hash||'').replace(/^#/,''); if(h) return decodeURIComponent(h).trim();
-      return CHAVE_PADRAO;
-    }
-    const CHAVE = chaveAtual();
-    document.getElementById('voltar').href = 'colaborador.html?chave='+encodeURIComponent(CHAVE);
+<script>
+/* ===================================================================
+   onboarding.html aposentado (C.13)
+   O cadastro de cliente novo vive no modal do registro.html. Esta página só
+   existe para não quebrar link e favorito antigos: explica a mudança e leva
+   para lá, preservando ?chave= e ?cod= (e o #hash, que os atalhos antigos
+   usavam como chave).
+   =================================================================== */
+const CHAVE_PADRAO='b4u-equipe-2026';
+const SEGUNDOS=5;
 
-    const esc = s => String(s==null?'':s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-    function jsonp(url){ return new Promise((res,rej)=>{ const cb='cb_'+Math.random().toString(36).slice(2); const t=setTimeout(()=>{rej(new Error('timeout'));cleanup();},20000);
-      function cleanup(){ delete window[cb]; s.remove(); } window[cb]=d=>{clearTimeout(t);cleanup();res(d);};
-      const s=document.createElement('script'); s.src=url+(url.indexOf('?')<0?'?':'&')+'callback='+cb; s.onerror=()=>{clearTimeout(t);cleanup();rej(new Error('rede'));}; document.body.appendChild(s); }); }
+function chaveAtual(){
+  const q=new URLSearchParams(location.search).get('chave');
+  if(q&&q.trim())return q.trim();
+  const h=(location.hash||'').replace(/^#/,'').trim();
+  if(h){try{return decodeURIComponent(h).trim();}catch(e){return h;}}
+  return CHAVE_PADRAO;
+}
+function codAtual(){return (new URLSearchParams(location.search).get('cod')||'').trim();}
+function comChave(base){
+  let u=base+'?chave='+encodeURIComponent(chaveAtual());
+  const c=codAtual();
+  if(c)u+='&cod='+encodeURIComponent(c);
+  return u;
+}
 
-    // Produtos -> quais planilhas (só informativo na tela; a regra real está no backend)
-    const PRODUTOS = ['Contabilidade','Controladoria','Equiparação','Agora Tem Especialistas','DP pessoa física','INSS'];
+const destino=comChave('registro.html');
+const painel=comChave('colaborador.html');
+document.getElementById('ir').href=destino;
+document.getElementById('painel').href=painel;
+document.getElementById('volta').href=painel;
+document.getElementById('logo-home').href=painel;
 
-    // ===== Formulário AUTO-CONSTRUÍDO a partir dos cabeçalhos VIVOS da aba "Registro" =====
-    // O backend (tipo=registro_campos) devolve as colunas atuais e o form cria um campo por
-    // coluna. As "dicas" (HINTS) só enfeitam colunas conhecidas (seção/tipo/obrigatório);
-    // coluna nova que você criar aparece como texto na seção "Outros" — sem mexer no código.
-
-    // Colunas gerenciadas pelo sistema — NÃO viram campo (chave normalizada).
-    const SKIP = ['id','nome','drive','produtos back4you','ativo'];
-
-    // Dicas por coluna (chave normalizada): s=seção, t=text|select|date|textarea, opts, full, req, role.
-    const HINTS = {
-      'razao social da empresa':{s:'Identificação',req:true,full:true,role:'razao'},
-      'cnpj ou cpf':{s:'Identificação',req:true,role:'cnpj'},
-      'nome fantasia':{s:'Identificação'},
-      'cidade':{s:'Identificação',req:true,role:'cidade'},
-      'resumo':{s:'Identificação',t:'textarea',full:true},
-      'cnes':{s:'Identificação'},
-      'link form diagnostico':{s:'Identificação',full:true},
-      'data de abertura':{s:'Empresa',t:'date'},
-      'porte':{s:'Empresa',t:'select',opts:['','Microempresa','Empresa de Pequeno Porte','Sem enquadramento']},
-      'natureza juridica':{s:'Empresa',t:'select',opts:['','Sociedade Empresária Limitada','Sociedade Simples Limitada','Sociedade Simples Pura','Sociedade Limitada Unipessoal','Empresário (Individual)','Pessoa física']},
-      'endereco':{s:'Empresa',full:true},
-      'cnaes':{s:'Empresa',t:'textarea',full:true},
-      'registro na junta':{s:'Empresa'},
-      'numero de socios':{s:'Empresa'},
-      'descricao socios':{s:'Empresa',t:'textarea',full:true},
-      'cadastro municipal (numero)':{s:'Empresa'},
-      'regime':{s:'Fiscal / Contábil',t:'select',opts:['','Lucro Presumido','Simples Nacional']},
-      'fator r':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
-      'equiparados':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não','Em processo administrativo','N/A']},
-      'iss':{s:'Fiscal / Contábil',t:'select',opts:['','Fixo','Variável','N/A']},
-      'livro caixa':{s:'Fiscal / Contábil',t:'select',opts:['','Sim','Não']},
-      'contabilidade previa':{s:'Fiscal / Contábil'},
-      'data de inicio da contabilidade':{s:'Fiscal / Contábil',t:'date'},
-      'data de fim da contabilidade':{s:'Fiscal / Contábil',t:'date'},
-      'tem dpto pessoal':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
-      'pro labore':{s:'Departamento Pessoal'},
-      '# de funcionarios':{s:'Departamento Pessoal'},
-      'adiantamento salarial':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
-      'vale alimentacao':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
-      'vale transporte':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
-      'controle de ponto':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
-      'funcionario de pessoa fisica':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
-      'paga aluguel':{s:'Aluguel',t:'select',opts:['','Sim','Não']},
-      'aluguel para pf':{s:'Aluguel',t:'select',opts:['','Sim','Não']},
-      'pagamento aluguel':{s:'Aluguel'},
-      'valor do aluguel':{s:'Aluguel'},
-      'obs aluguel':{s:'Aluguel',t:'textarea',full:true}
-    };
-    const SEC_ORDER = ['Identificação','Empresa','Fiscal / Contábil','Departamento Pessoal','Aluguel','Outros'];
-    // Campo sintético UF: NÃO é coluna do Registro (vai só p/ o Config fiscal), mas é obrigatório.
-    const UF_FIELD = {s:'Identificação',col:'UF',t:'text',req:true,max:2,up:true,role:'uf'};
-    // Fallback: se o backend ainda não tiver "tipo=registro_campos" (ex.: não republicado ainda).
-    const CAMPOS_FALLBACK = ['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Tem DPTO pessoal','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Aluguel para PF?','Pagamento Aluguel','Valor do Aluguel','Obs Aluguel'];
-
-    // Colunas APOSENTADAS (chave normalizada por norm()).
-    // Saíram — ou estão saindo — da aba Registro. O montador de campos ignora essas
-    // colunas mesmo que o cabeçalho ainda exista na planilha: o formulário para de
-    // mostrar ANTES de a coluna sair e não quebra DEPOIS que ela sair. Para aposentar
-    // outra coluna no futuro, basta acrescentar a chave aqui.
-    const REMOVIDOS = ['procuracao e-cac','procuracao spe'];
-
-    // normaliza rótulo igual ao backend (sem acento, minúsculo, sem ?:. no fim)
-    function norm(s){ return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim().replace(/[?:.]+$/,''); }
-
-    let PROX_ID = '';
-    let CAMPOS = [];        // construído a partir dos cabeçalhos vivos (ou do fallback)
-    let ROLE = {};          // role (razao/cnpj/cidade/uf) -> nome EXATO da coluna
-    const val = {};         // col -> valor
-    const prodSel = new Set();
-
-    // Monta os campos a partir da lista de cabeçalhos (ordena por seção; injeta UF após Cidade).
-    function montarCampos(headers){
-      const campos = []; ROLE = {};
-      (headers||[]).forEach(h=>{
-        const k = norm(h);
-        if(!k || SKIP.indexOf(k)>=0) return;            // colunas que o sistema gerencia
-        if(REMOVIDOS.indexOf(k)>=0) return;             // coluna aposentada: não vira campo
-        const hint = HINTS[k] || {s:'Outros'};
-        if(hint.role) ROLE[hint.role] = h;
-        campos.push({s:hint.s||'Outros', col:h, t:hint.t||'text', req:!!hint.req, full:!!hint.full, opts:hint.opts, ph:hint.ph||'', max:hint.max, up:!!hint.up});
-      });
-      ROLE.uf = 'UF';
-      const uf = Object.assign({}, UF_FIELD);
-      const iC = campos.findIndex(f=>norm(f.col)==='cidade');
-      if(iC>=0) campos.splice(iC+1,0,uf); else campos.push(uf);
-      const ord = f => { const i = SEC_ORDER.indexOf(f.s); return i<0?SEC_ORDER.length:i; };
-      return campos.map((f,i)=>(f._i=i,f)).sort((a,b)=> ord(a)-ord(b) || a._i-b._i);
-    }
-
-    function campoHTML(f){
-      const id='f_'+CAMPOS.indexOf(f);
-      const req=f.req?'<span class="req">*</span>':'';
-      let inner;
-      // Cliente novo começa com tudo em branco: o select abre no vazio e a equipe
-      // escolhe uma das opções da lista — sem texto livre para inventar variação.
-      if(f.t==='select'){ inner=`<select id="${id}" data-col="${esc(f.col)}">${(f.opts||[]).map(o=>`<option value="${esc(o)}">${o?esc(o):'—'}</option>`).join('')}</select>`; }
-      else if(f.t==='textarea'){ inner=`<textarea id="${id}" data-col="${esc(f.col)}" rows="2" placeholder="${esc(f.ph||'')}"></textarea>`; }
-      else { inner=`<input id="${id}" data-col="${esc(f.col)}" type="${f.t==='date'?'date':'text'}" ${f.max?`maxlength="${f.max}"`:''} placeholder="${esc(f.ph||'')}">`; }
-      return `<div class="fld ${f.full?'full':''}" data-fld="${esc(f.col)}"><label for="${id}">${esc(f.col)} ${req}</label>${inner}</div>`;
-    }
-
-    function render(){
-      const secs=[...new Set(CAMPOS.map(f=>f.s))];
-      let html=`
-        <div class="idcard">
-          <div class="lbl">Próximo ID previsto</div>
-          <div class="idval" id="idprev">${PROX_ID||'…'}</div>
-          <div class="nome" id="nomeprev">Nome: <b>—</b></div>
-        </div>
-        <div class="sec">
-          <h2><span class="dot"></span>Produtos Back4you <span class="req" style="color:var(--laranja)">*</span></h2>
-          <div class="prods" id="prods">${PRODUTOS.map(p=>`<label class="prod"><input type="checkbox" value="${esc(p)}"> ${esc(p)}</label>`).join('')}</div>
-          <p class="hint">Os produtos definem quais planilhas serão criadas: <b>Equiparação</b> → planilha de Equiparação · <b>Contabilidade/Controladoria</b> → Fiscal + Contábil + DP · <b>DP pessoa física</b> → DP. INSS e Agora Tem Especialistas não geram planilha por ora.</p>
-        </div>`;
-      secs.forEach(sc=>{
-        html+=`<div class="sec"><h2><span class="dot"></span>${esc(sc)}</h2><div class="grid">${CAMPOS.filter(f=>f.s===sc).map(campoHTML).join('')}</div></div>`;
-      });
-      html+=`<div class="msg" id="msg"></div><div class="foot"><button class="btn" id="limpar" type="button">Limpar</button><button class="btn primary" id="criar" type="button">Criar cliente</button></div>`;
-      document.getElementById('wrap').innerHTML=html;
-
-      // wire
-      document.querySelectorAll('#prods input').forEach(c=>c.addEventListener('change',e=>{
-        const l=e.target.closest('.prod'); if(e.target.checked){prodSel.add(e.target.value);l.classList.add('on');}else{prodSel.delete(e.target.value);l.classList.remove('on');}
-      }));
-      document.querySelectorAll('[data-col]').forEach(el=>el.addEventListener('input',e=>{
-        let v=e.target.value; const f=CAMPOS[+e.target.id.slice(2)];
-        if(f&&f.up){ v=v.toUpperCase(); e.target.value=v; }
-        val[e.target.dataset.col]=v;
-        e.target.closest('.fld').classList.remove('miss');
-        if(e.target.dataset.col===ROLE.razao) atualizarNome();
-      }));
-      // Confirmação em DOIS TEMPOS no próprio botão — diálogo nativo (confirm)
-      // trava a página e é o padrão que o resto do painel evita.
-      (()=>{ const b=document.getElementById('limpar'); if(!b) return;
-        const rot=b.textContent; let armado=false, t=null;
-        b.addEventListener('click',()=>{
-          if(armado){ location.reload(); return; }
-          armado=true; b.textContent='Clique de novo para limpar';
-          b.classList.add('confirmar');
-          t=setTimeout(()=>{ armado=false; b.textContent=rot; b.classList.remove('confirmar'); },4000);
-        });
-        b.addEventListener('blur',()=>{ clearTimeout(t); armado=false; b.textContent=rot; b.classList.remove('confirmar'); });
-      })();
-      document.getElementById('criar').addEventListener('click', criar);
-      atualizarNome();
-    }
-
-    function atualizarNome(){
-      const razao=(val[ROLE.razao]||'').trim();
-      document.getElementById('nomeprev').innerHTML='Nome: <b>'+esc((PROX_ID?PROX_ID+' ':'')+ (razao||'—'))+'</b>';
-    }
-
-    async function criar(){
-      const msg=document.getElementById('msg'); msg.className='msg'; msg.textContent='';
-      // validação dos obrigatórios (marcados com req nas HINTS + UF)
-      let faltou=false;
-      CAMPOS.filter(f=>f.req).forEach(f=>{ const el=document.querySelector(`[data-fld="${CSS.escape(f.col)}"]`); if(!((val[f.col]||'').trim())){ if(el)el.classList.add('miss'); faltou=true; } });
-      if(!prodSel.size){ document.getElementById('prods').closest('.sec').style.outline='2px solid var(--erro)'; faltou=true; }
-      if(faltou){ msg.className='msg err'; msg.textContent='Preencha os campos obrigatórios (marcados com *).'; window.scrollTo({top:0,behavior:'smooth'}); return; }
-
-      const btn=document.getElementById('criar'); btn.disabled=true; btn.textContent='Criando… (até ~1 min)';
-      msg.className='msg'; msg.textContent='Criando pastas no Drive e planilhas… não feche a página.';
-      try{
-        const body=JSON.stringify({ acao:'onboard', chave:CHAVE, produtos:[...prodSel], registro:val });
-        const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
-        const d=await r.json();
-        if(d.erro) throw new Error(d.erro);
-        sucesso(d);
-      }catch(e){
-        btn.disabled=false; btn.textContent='Criar cliente'; msg.className='msg err';
-        // "Failed to fetch": o servidor pode ter concluído mesmo assim (operação longa).
-        const rede=/failed to fetch|networkerror|load failed|timeout|rede/i.test(String(e.message||e));
-        msg.innerHTML = rede
-          ? 'A resposta não chegou (conexão/tempo). <b>O cliente pode já ter sido criado no servidor</b> — confira o Drive e a aba Registro <b>antes</b> de tentar de novo. ⚠️ Não clique em "Criar" de novo às cegas: cada tentativa gera um cliente NOVO (com o próximo ID) e novas pastas.'
-          : esc((e.message||e)+'');
-      }
-    }
-
-    function sucesso(d){
-      const pl=d.planilhas||{};
-      const links=[];
-      if(d.pasta) links.push(`<a href="${esc(d.pasta)}" target="_blank" rel="noopener">📁 Pasta do cliente no Drive</a>`);
-      if(pl.fiscal) links.push(`<a href="${esc(pl.fiscal)}" target="_blank" rel="noopener">📊 Planilha Fiscal</a>`);
-      if(pl.equiparacao) links.push(`<a href="${esc(pl.equiparacao)}" target="_blank" rel="noopener">📊 Planilha Equiparação</a>`);
-      if(pl.pessoal) links.push(`<a href="${esc(pl.pessoal)}" target="_blank" rel="noopener">📊 Planilha Departamento Pessoal</a>`);
-      const avisos=(d.avisos||[]).filter(Boolean);
-      const avisoHTML = avisos.length
-        ? `<div style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:11px 13px;font-size:12.5px;text-align:left;margin:4px 0 12px">
-             <b>Atenção:</b><br>${avisos.map(esc).join('<br>')}</div>`
-        : '';
-      const reg=d.registro||{};
-      const nGrav=(reg.gravadas||[]).length;
-      document.getElementById('wrap').innerHTML=`
-        <div class="ok-card">
-          <div style="font-size:34px">✅</div>
-          <h1>Cliente criado!</h1>
-          <div class="big">${esc(d.id)}</div>
-          <div style="color:var(--ink-2);font-size:14px;margin-top:4px">${esc(d.nome||'')}</div>
-          <div class="ok-links">${links.join('')||'<span class="hint">Nenhuma planilha gerada (confira os produtos).</span>'}</div>
-          ${avisoHTML}
-          <p class="hint">Gravado nas abas <b>Links</b> e <b>Registro</b>${nGrav?` (${nGrav} campos no Registro)`:''}. Os contatos/e-mails de acesso do cliente são cadastrados à parte, na planilha de Contatos.</p>
-          <button class="btn primary" onclick="location.reload()">Cadastrar outro cliente</button>
-        </div>`;
-      window.scrollTo({top:0});
-    }
-
-    // boot: busca o próximo ID previsto E os cabeçalhos vivos do Registro (ambos protegidos pela chave)
-    (async ()=>{
-      let headers=null;
-      const [idRes, campRes] = await Promise.allSettled([
-        jsonp(API_URL+'?tipo=proximo_id&chave='+encodeURIComponent(CHAVE)),
-        jsonp(API_URL+'?tipo=registro_campos&chave='+encodeURIComponent(CHAVE))
-      ]);
-      if(idRes.status==='fulfilled' && idRes.value){
-        const d=idRes.value;
-        if(d.erro){ document.getElementById('wrap').innerHTML='<div class="lock"><h2>Acesso restrito</h2><p class="hint">'+esc(d.erro)+'</p></div>'; return; }
-        PROX_ID=d.id||'';
-      }
-      if(campRes.status==='fulfilled' && campRes.value && Array.isArray(campRes.value.campos) && campRes.value.campos.length)
-        headers=campRes.value.campos;   // backend novo -> monta pelos cabeçalhos vivos
-      CAMPOS = montarCampos(headers && headers.length ? headers : CAMPOS_FALLBACK);   // senão, fallback estático
-      render();
-    })();
-  </script>
+/* Conta regressiva visível: quem quiser ler o aviso tem tempo, quem já sabe
+   clica no botão. replace() para o botão "voltar" não trazer de volta para cá. */
+let resta=SEGUNDOS;
+const conta=document.getElementById('conta');
+function tique(){
+  conta.textContent='Levando você para lá em '+resta+(resta===1?' segundo…':' segundos…');
+  if(resta<=0){location.replace(destino);return;}
+  resta--;
+  setTimeout(tique,1000);
+}
+tique();
+</script>
 </body>
 </html>
