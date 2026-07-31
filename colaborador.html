@@ -113,6 +113,22 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 .tag-papel{font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;vertical-align:middle;margin-left:4px}
 .tag-papel.pr{background:#E7F4EC;color:#2E7D52}
 .tag-papel.sec{background:var(--surface-warm);color:var(--muted)}
+/* busca das ferramentas + seção recolhível das planilhas centrais */
+.fer-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.busca-fer{flex:1;min-width:0;font-family:var(--sans);font-size:14px;padding:10px 15px;border-radius:24px;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca-fer:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.fer-cnt{font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.fer-vazio{color:var(--muted);font-size:13px;padding:2px 0 22px}
+.sec-drop{display:flex;align-items:center;gap:8px;width:100%;margin:2px 0 10px;padding:0;cursor:pointer;
+  background:none;border:0;font-family:var(--sans);font-size:12px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--ink-2);text-align:left}
+.sec-drop::after{content:"";flex:1;height:1px;background:var(--line)}
+.sec-drop:hover{color:var(--brand-teal)}
+.sec-drop .arw{font-size:11px;color:var(--line-2);transition:transform .15s}
+.sec-drop[aria-expanded="true"] .arw{transform:rotate(90deg);color:var(--brand-teal)}
+.sec-drop .n{font-size:11px;font-weight:700;color:var(--muted);text-transform:none;letter-spacing:0}
+#bloco-centrais[hidden]{display:none}
 .aviso-off{background:var(--amber-soft);border:1px solid #F0D6B4;border-left:3px solid var(--amber);
   border-radius:8px;padding:8px 11px;margin-bottom:9px;font-size:12.5px;color:#8a5117;font-weight:600}
 .quem{display:flex;align-items:center;gap:6px;font-size:12px;color:#cfe6e2;font-weight:600}
@@ -157,21 +173,23 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 </div>
 
 <div class="wrap">
-  <!-- ACESSO RÁPIDO — planilhas centrais (funciona mesmo sem a API) -->
-  <div class="sec-tit">Acesso rápido — planilhas centrais</div>
-  <div class="aviso-off" id="aviso-centrais" hidden>⚠️ Sem resposta da Config — mostrando a lista guardada no painel. Um link trocado recentemente pode não estar aqui.</div>
-  <div class="centrais" id="centrais"></div>
-
-  <!-- FERRAMENTAS DA EQUIPE -->
+  <!-- FERRAMENTAS DA EQUIPE — é o que a equipe mais usa, então vem primeiro -->
   <div class="sec-tit">Ferramentas da equipe</div>
-  <div class="centrais" id="ferramentas">
-    <a class="central-lk" id="fp-societario" href="societario-equipe.html"><span class="ic">🏛️</span><span>Societário — editar processos</span><span class="arw">›</span></a>
-    <a class="central-lk" id="fp-ativos" href="clientes-ativos.html"><span class="ic">📈</span><span>Clientes ativos / mês</span><span class="arw">›</span></a>
-    <a class="central-lk" id="fp-comercial" href="comercial.html"><span class="ic">📣</span><span>Comercial — materiais</span><span class="arw">›</span></a>
-    <div class="menu" id="menu-restituicao"></div>
-    <a class="central-lk" id="fp-registro" href="registro.html"><span class="ic">📇</span><span>Registros de clientes</span><span class="arw">›</span></a>
-    <a class="central-lk" id="fp-certificados" href="certificados.html"><span class="ic">🔐</span><span>Certificados e procurações</span><span class="arw">›</span></a>
-    <a class="central-lk" id="fp-contatos" href="contatos-equipe.html"><span class="ic">👥</span><span>Contatos — gerir &amp; permissões</span><span class="arw">›</span></a>
+  <div class="fer-topo">
+    <input class="busca-fer" id="busca-fer" type="search" autocomplete="off"
+           placeholder="Buscar ferramenta…  (ex.: licença, e-CAC, contato, alvará)">
+    <span class="fer-cnt" id="fer-cnt"></span>
+  </div>
+  <div class="centrais" id="ferramentas"></div>
+  <div class="fer-vazio" id="fer-vazio" hidden>Nenhuma ferramenta com esse termo.</div>
+
+  <!-- PLANILHAS CENTRAIS — atalho para as planilhas cruas, recolhido -->
+  <button type="button" class="sec-drop" id="btn-centrais" aria-expanded="false" aria-controls="bloco-centrais">
+    <span class="arw">▸</span><span>Acesso rápido — planilhas centrais</span><span class="n" id="centrais-n"></span>
+  </button>
+  <div id="bloco-centrais" hidden>
+    <div class="aviso-off" id="aviso-centrais" hidden>⚠️ Sem resposta da Config — mostrando a lista guardada no painel. Um link trocado recentemente pode não estar aqui.</div>
+    <div class="centrais" id="centrais"></div>
   </div>
 
   <!-- CLIENTES — busca com dropdown -->
@@ -299,6 +317,20 @@ function pintarCentrais(pares){
   // Enquanto a Config não responder, deixa claro que os links são a cópia local.
   const av=document.getElementById('aviso-centrais');
   if(av) av.hidden=!offline;
+  const n=document.getElementById('centrais-n');
+  if(n) n.textContent=(diretos.length+outros.length)+(offline?' · lista local':'');
+}
+
+/* Planilhas centrais ficam recolhidas: são o atalho para a planilha crua, não
+   o caminho do dia a dia (para isso existem as ferramentas acima). */
+function ligarDropCentrais(){
+  const btn=document.getElementById('btn-centrais'), bloco=document.getElementById('bloco-centrais');
+  if(!btn||!bloco) return;
+  btn.addEventListener('click',()=>{
+    const abrir=bloco.hidden;
+    bloco.hidden=!abrir;
+    btn.setAttribute('aria-expanded',abrir?'true':'false');
+  });
 }
 function fecharOutros(){
   const pop=document.getElementById('pop-outros'), btn=document.getElementById('btn-outros');
@@ -328,6 +360,41 @@ function pintarRestituicao(){
   const btn=document.getElementById('btn-restituicao'), pop=document.getElementById('pop-restituicao');
   btn.addEventListener('click', e=>{ e.stopPropagation(); const abrir=pop.hidden; pop.hidden=!abrir; btn.setAttribute('aria-expanded',abrir?'true':'false'); });
 }
+/* ---- Ferramentas da equipe: lista única, renderizada e filtrável ----
+   `alias` é só para a busca: são as palavras que a pessoa realmente digita
+   quando está procurando aquela ferramenta (e não o nome oficial dela). */
+const FERRAMENTAS=[
+  {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:'📇',
+   alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj'},
+  {id:'fp-certificados',  nome:'Certificados e procurações',    url:'certificados.html',      ic:'🔐',
+   alias:'certificado digital procuracao e-cac ecac spe vencimento responsavel legal'},
+  {id:'fp-licencas',      nome:'Controle de licenças',          url:'licencas.html',          ic:'📜',
+   alias:'licenca alvara sanitario crm pj cli licenciamento integrado regularidade cnes'},
+  {id:'fp-contatos',      nome:'Contatos — gerir & permissões', url:'contatos-equipe.html',   ic:'👥',
+   alias:'contato email e-mail telefone acesso permissao papel principal secundario'},
+  {id:'fp-societario',    nome:'Societário — editar processos', url:'societario-equipe.html', ic:'🏛️',
+   alias:'societario mestra alteracao contratual junta etapa processo protocolo'},
+  {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:'💸',
+   alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
+  {id:'fp-ativos',        nome:'Clientes ativos / mês',         url:'clientes-ativos.html',   ic:'📈',
+   alias:'ativos competencia mes calendario quantos clientes'},
+  {id:'fp-comercial',     nome:'Comercial — materiais',         url:'comercial.html',         ic:'📣',
+   alias:'comercial material proposta marketing simulador calculadora'}
+];
+function pintarFerramentas(){
+  const cx=document.getElementById('ferramentas'); if(!cx) return;
+  const termo=normTxt((document.getElementById('busca-fer')||{}).value||'');
+  const lista=FERRAMENTAS.filter(f=>!termo||normTxt(f.nome+' '+(f.alias||'')).includes(termo));
+  cx.innerHTML=lista.map(f=>f.tipo==='menu'
+    ? `<div class="menu" id="${f.id}"></div>`
+    : `<a class="central-lk" id="${f.id}" href="${esc(comChave(f.url))}"><span class="ic">${f.ic}</span><span>${esc(f.nome)}</span><span class="arw">›</span></a>`
+  ).join('');
+  if(lista.some(f=>f.tipo==='menu')) pintarRestituicao();
+  const vazio=document.getElementById('fer-vazio'); if(vazio) vazio.hidden=lista.length>0;
+  const cnt=document.getElementById('fer-cnt');
+  if(cnt) cnt.textContent = termo ? lista.length+' de '+FERRAMENTAS.length : '';
+}
+
 /* Seletor "Você:" — usa a mesma lista de colaboradores da restituição.
    Trocar reescreve a URL (sem recarregar) e repropaga o código nos atalhos. */
 function montarQuemSou(){
@@ -341,9 +408,7 @@ function montarQuemSou(){
     history.replaceState(null,'',u.toString());
     const nc=document.getElementById('novo-cliente');
     if(nc) nc.href=comChave('registro.html');
-    ['fp-societario','fp-ativos','fp-comercial','fp-contatos','fp-registro','fp-certificados']
-      .forEach(id=>{const el=document.getElementById(id);if(el)el.href=comChave(el.getAttribute('href'));});
-    pintarRestituicao();
+    pintarFerramentas();          // reconstrói os atalhos já com o ?cod= novo
   });
 }
 
@@ -557,17 +622,18 @@ function ligarCombo(){
 }
 
 function boot(){
+  pintarFerramentas();              // ferramentas primeiro — é o que a equipe usa no dia a dia
+  const bf=document.getElementById('busca-fer');
+  if(bf) bf.addEventListener('input',pintarFerramentas);
+  ligarDropCentrais();
   pintarCentrais();                 // render imediato (fallback)
   jsonp(API_URL+'?tipo=links_equipe&chave='+encodeURIComponent(chaveAtual()))   // atualiza com os links vivos da Config
     .then(d=>{ if(d && !d.erro && d.centrais && d.centrais.length){ pintarCentrais(d.centrais); pintarRestituicao(); } })
     .catch(()=>{});
-  pintarRestituicao();
   ligarCombo();
   montarQuemSou();
   const nc=document.getElementById('novo-cliente');
   if(nc) nc.href=comChave('registro.html');
-  ['fp-societario','fp-ativos','fp-comercial','fp-contatos','fp-registro','fp-certificados']
-    .forEach(id=>{const el=document.getElementById(id);if(el)el.href=comChave(el.getAttribute('href'));});
 
   jsonp(API_URL+'?tipo=equipe&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{
@@ -582,6 +648,16 @@ function boot(){
         'Confira a <code>chave</code> da equipe no endereço e se o Web App foi republicado. Os atalhos das planilhas centrais acima seguem funcionando.';
     });
 }
+
+// "/" foca a busca de ferramentas (sem atrapalhar quem está digitando num campo)
+document.addEventListener('keydown',e=>{
+  if(e.key!=='/'||e.ctrlKey||e.metaKey||e.altKey) return;
+  const a=document.activeElement, tag=a&&a.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||(a&&a.isContentEditable)) return;
+  const bf=document.getElementById('busca-fer');
+  if(bf){e.preventDefault();bf.focus();bf.select();}
+});
+
 boot();
 </script>
 </body>
