@@ -255,7 +255,7 @@ function celData(l,c){
   return `<div class="dt ${st.cl}">
     ${livre
       ? `<input type="text" data-c="${esc(c)}" value="${esc(v)}" placeholder="ex.: Não localizado">`
-      : `<input type="date" data-c="${esc(c)}" value="">`}
+      : `<input type="date" data-c="${esc(c)}" value="${isISO?v:''}">`}
     ${atalho}
     <span class="tag-d ${st.cl}">${esc(st.txt)}</span>
   </div>`;
