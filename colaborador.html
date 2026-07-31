@@ -97,7 +97,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 .spin{width:22px;height:22px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(max-width:560px){.wrap{padding:16px 14px 60px}.centrais{grid-template-columns:1fr}
-  .pend{grid-template-columns:1fr 1fr;gap:8px}.pd{padding:9px 11px}.pd-n{font-size:19px}.pd-t{font-size:12px}}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* Dossiê do cliente (contatos, licenças, certificado, mestra, equiparação) */
@@ -161,25 +161,6 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 .ic-chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
 .ic-chip.ok{background:#E7F4EC;color:#2E7D52;border-color:#cfe6e2}
 .ic-chip.bad{background:#F8E3DF;color:var(--vermelho);border-color:#F0C9C1}
-/* Faixa de pendências — números calculados do próprio tipo=equipe (custo zero).
-   Card com contagem vira link e abre a ferramenta já filtrada; card zerado fica
-   apagado e sem clique, mas continua visível para a equipe ver que está limpo. */
-.pend{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;margin-bottom:24px}
-.pd{display:flex;flex-direction:column;gap:1px;text-decoration:none;background:var(--surface);
-  border:1px solid var(--line);border-left:4px solid var(--line-2);border-radius:12px;padding:10px 13px;
-  color:var(--ink);transition:border-color .12s,transform .1s,box-shadow .12s}
-a.pd:hover{border-color:var(--brand-teal);transform:translateY(-1px);box-shadow:0 4px 14px rgba(7,48,52,.08)}
-.pd-n{font-size:22px;font-weight:900;line-height:1.15}
-.pd-t{font-size:12.5px;font-weight:700;line-height:1.25}
-.pd-s{font-size:11px;font-weight:600;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pd.venc{border-left-color:var(--vermelho)}.pd.venc .pd-n{color:var(--vermelho)}
-.pd.aten{border-left-color:var(--amber)}.pd.aten .pd-n{color:#9A5B12}
-.pd.info{border-left-color:var(--brand-teal)}.pd.info .pd-n{color:var(--brand-teal)}
-.pd.neutro .pd-n{color:var(--ink-2)}
-.pd.zero{background:var(--surface-warm);border-left-color:var(--line);opacity:.55}
-.pd.zero .pd-n{color:var(--muted)}
-.pend-nota{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:none;letter-spacing:0}
-#pend-faixa[hidden]{display:none}
 /* Selo de pendência no card da ferramenta (só onde o dado já está carregado) */
 .fer-selo{margin-left:auto;font-size:11px;font-weight:800;white-space:nowrap;
   background:#F8E3DF;color:var(--vermelho);border:1px solid #F0C9C1;border-radius:999px;padding:2px 8px}
@@ -203,13 +184,6 @@ a.pd:hover{border-color:var(--brand-teal);transform:translateY(-1px);box-shadow:
 </div>
 
 <div class="wrap">
-  <!-- PENDÊNCIAS — tudo sai do mesmo tipo=equipe que já carrega os clientes.
-       Nenhuma chamada nova: se a API não responder, a faixa simplesmente não aparece. -->
-  <div id="pend-faixa" hidden>
-    <div class="sec-tit">Pendências <span class="pend-nota"></span></div>
-    <div class="pend" id="pend"></div>
-  </div>
-
   <!-- FERRAMENTAS DA EQUIPE — é o que a equipe mais usa, então vem primeiro -->
   <div class="sec-tit">Ferramentas da equipe</div>
   <div class="fer-topo">
@@ -452,7 +426,6 @@ function montarQuemSou(){
     const nc=document.getElementById('novo-cliente');
     if(nc) nc.href=comChave('registro.html');
     pintarFerramentas();          // reconstrói os atalhos já com o ?cod= novo
-    pintarPendencias();           // os links da faixa também levam o ?cod=
   });
 }
 
@@ -598,7 +571,7 @@ function carregarExtras(c){
     .catch(e=>{ box.innerHTML='<div class="ex-sec"><div class="ex-erro">Não consegui carregar os dados do cliente: '+esc(e.message||String(e))+'</div></div>'; });
 }
 
-/* ---- Pendências: o que está atrasado hoje ----
+/* ---- Contagem de pendências (usada só pelo selo do card de Certificados) ----
    Zero chamada nova: é tudo derivado do mesmo TODOS que alimenta o combo de
    clientes. Só entram clientes ATIVOS — quem está inativo não gera trabalho
    (sem informação de ativo conta como ativo, para não esconder pendência). */
@@ -624,40 +597,6 @@ function calcPendencias(){
     if(!/^https?:/.test(String(c.drive||'').trim())) g.semdrive.push(c);
   });
   return g;
-}
-/* Cada card: grupo, cor, texto e para onde leva já filtrado (?f= nas páginas). */
-const CARDS_PEND=[
-  {k:'venc',     cor:'venc',  tit:'Vencidos',             sub:'certificado ou procuração com data no passado',
-   zero:'nada vencido',        href:()=>comChave('certificados.html')+'&f=vencidos'},
-  {k:'d30',      cor:'aten',  tit:'Vencem em 30 dias',    sub:'renovar agora',
-   zero:'nada nos próximos 30 dias', href:()=>comChave('certificados.html')+'&f=d30'},
-  {k:'d60',      cor:'info',  tit:'Vencem em 31–60 dias', sub:'dá para programar',
-   zero:'nada nos próximos 60 dias', href:()=>comChave('certificados.html')+'&f=d60'},
-  {k:'semcert',  cor:'neutro',tit:'Sem certificado',      sub:'nenhuma das 3 datas preenchida',
-   zero:'todos preenchidos',   href:()=>comChave('certificados.html')+'&f=falta'},
-  {k:'cadastro', cor:'neutro',tit:'Cadastro incompleto',  sub:'falta CNPJ, regime ou início da contabilidade',
-   zero:'cadastro em dia',     href:()=>comChave('registro.html')},
-  {k:'semdrive', cor:'neutro',tit:'Sem pasta no Drive',   sub:'link do Drive em branco ou inválido',
-   zero:'todos com pasta',     href:()=>comChave('registro.html')}
-];
-function amostraIds(lista){   // 3 IDs de exemplo já dão para a pessoa começar
-  const ids=lista.slice(0,3).map(c=>esc(String(c.id))).join(' · ');
-  return ids+(lista.length>3?' · +'+(lista.length-3):'');
-}
-function pintarPendencias(){
-  const faixa=document.getElementById('pend-faixa'), cx=document.getElementById('pend');
-  if(!faixa||!cx||!PEND) return;
-  cx.innerHTML=CARDS_PEND.map(cd=>{
-    const lista=PEND[cd.k]||[], n=lista.length;
-    const corpo=`<span class="pd-n">${n}</span><span class="pd-t">${esc(cd.tit)}</span>`+
-                `<span class="pd-s">${n?amostraIds(lista):esc(cd.zero)}</span>`;
-    return n
-      ? `<a class="pd ${cd.cor}" href="${esc(cd.href())}" title="${esc(cd.tit+' — '+cd.sub+'. Abre a ferramenta já filtrada.')}">${corpo}</a>`
-      : `<span class="pd zero" title="${esc(cd.tit+' — nada pendente por aqui.')}">${corpo}</span>`;
-  }).join('');
-  const nota=faixa.querySelector('.pend-nota');
-  if(nota) nota.textContent='· só clientes ativos ('+PEND.ativos+')';
-  faixa.hidden=false;
 }
 /* Selo do card "Certificados e procurações": vencidos + a vencer em 60 dias. */
 function seloCertificados(){
@@ -753,8 +692,7 @@ function boot(){
       TODOS=d.clientes||[]; apiOk=true;
       document.getElementById('cnt').textContent = TODOS.length+' clientes';
       document.getElementById('dica').innerHTML = 'Digite para filtrar ou clique no campo para ver todos os '+TODOS.length+' clientes.';
-      PEND=calcPendencias();          // faixa de pendências e selo saem daqui — sem chamada nova
-      pintarPendencias();
+      PEND=calcPendencias();          // alimenta o selo do card de Certificados — sem chamada nova
       pintarFerramentas();            // repinta só para o selo aparecer
     })
     .catch(e=>{
