@@ -86,19 +86,73 @@
               color:var(--ink-2);cursor:pointer;border-right:1px solid var(--line-2)}
   .seg button:last-child{border-right:0}
   .seg button[aria-pressed="true"]{background:#0C756F;color:#fff;font-weight:700}
-  input[type=number],input[type=text]{width:100%;background:var(--surface-warm);color:var(--ink);
+  /* 9px de padding sobre 16px de texto fechava 39px de altura — abaixo do alvo de
+     toque. O min-height sobe para 44 sem mexer no tipo (16px continua sendo o que
+     evita o zoom automático do Safari ao focar o campo). */
+  input[type=number],input[type=text]{width:100%;background:var(--surface-warm);color:var(--ink);min-height:44px;
        border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:9px 11px;font-family:inherit;font-size:16px}
   input[type=number]:focus,input[type=text]:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
   input[type=range]{width:100%;accent-color:var(--brand-teal)}
   .rngrow{display:flex;align-items:center;gap:11px}
   .rngrow b{font-variant-numeric:tabular-nums;min-width:52px;text-align:right;font-size:var(--fs-4);font-weight:700}
   .hintline{color:var(--muted);font-size:var(--fs-3);margin:7px 0 0}
-  details.prem{margin-top:15px;border-top:1px solid var(--line);padding-top:13px}
-  details.prem summary{cursor:pointer;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.06em;
-                       color:#0C756F;font-weight:800;min-height:44px;display:flex;align-items:center}
+  /* ---------- blocos recolhidos ---------- */
+  /* O diagrama de raias e as premissas saíram do caminho do leigo e viraram dois
+     cartões fechados no rodapé da página. Mesma casca do .panel para que abrir um
+     deles não pareça sair da página. */
+  details.bloco{margin-top:16px;background:var(--surface);border:1px solid var(--line);
+                border-radius:var(--radius-lg);padding:0 19px}
+  details.bloco>summary{cursor:pointer;font-size:var(--fs-4);font-weight:800;color:var(--ink);
+                        min-height:56px;display:flex;align-items:center;letter-spacing:-.01em}
+  details.bloco>summary:hover{color:#0C756F}
+  details.bloco[open]>summary{border-bottom:1px solid var(--line)}
+  details.bloco>.bloco-in{padding:4px 0 18px}
+  details.bloco .sec:first-of-type{margin-top:18px}
   .premgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:13px;margin-top:14px}
   .chk{display:flex;align-items:flex-start;gap:9px;font-size:var(--fs-3);color:var(--ink-2);margin-top:12px}
   .chk input{margin-top:3px;accent-color:var(--brand-teal)}
+
+  /* ---------- herói comparativo ---------- */
+  /* Uma escala só, dois valores, e a diferença de comprimento como mensagem.
+     Nenhum eixo, nenhuma legenda: o rótulo mora no fim da própria barra. */
+  .heroi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);
+         padding:20px 22px 18px;margin-top:18px}
+  .heroi .hcap{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;
+               color:var(--muted);font-weight:800;margin:0 0 13px}
+  /* --hb-res reserva a faixa do rótulo à direita da barra. A barra é uma fração
+     do que sobra, e as duas usam a MESMA fração-base: uma escala, nunca duas. */
+  .hbars{--hb-res:132px;--hb-lab:74px}
+  .hb{display:grid;grid-template-columns:var(--hb-lab) 1fr;align-items:center;gap:12px}
+  /* Fio branco de 2px entre as duas barras: elas encostam, e só a linha as separa. */
+  .hb+.hb{margin-top:2px}
+  .hb-cap{font-size:var(--fs-3);font-weight:700;color:var(--ink);line-height:1.2}
+  .hb-cap small{display:block;font-size:var(--fs-1);font-weight:600;color:var(--muted);
+                text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+  .hb-lane{display:flex;align-items:center;gap:11px;min-width:0}
+  /* min-width segura o traço visível quando o valor é quase zero — e segura o
+     calc() de virar negativo em telas estreitas. */
+  .hb-fill{flex:none;min-width:4px;height:58px;border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+  .hb-val{flex:none;font-size:var(--fs-6);font-weight:800;letter-spacing:-.02em;
+          color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .hnums{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px 30px;
+         margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+  .hk{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+      font-weight:800;margin-bottom:2px}
+  /* O maior tipo da página, de propósito: é o número que o cliente leva embora. */
+  .hbig{font-size:clamp(34px,7.4vw,54px);line-height:1.02;font-weight:800;letter-spacing:-.035em;
+        color:var(--good-ink);font-variant-numeric:tabular-nums}
+  .hbig small{font-size:clamp(15px,2.6vw,21px);font-weight:700;letter-spacing:-.01em}
+  .hmed{font-size:clamp(23px,4.4vw,32px);line-height:1.1;font-weight:800;letter-spacing:-.03em;
+        color:#0C756F;font-variant-numeric:tabular-nums}
+  .hsub{font-size:var(--fs-3);color:var(--ink-2);margin-top:4px;max-width:34ch}
+  @media(max-width:640px){
+    .heroi{padding:16px 15px 15px}
+    .hbars{--hb-res:104px;--hb-lab:70px}
+    .hb{grid-template-columns:var(--hb-lab) 1fr;gap:9px}
+    .hb-fill{height:48px}
+    .hb-val{font-size:var(--fs-5)}
+    .hb-lane{gap:8px}
+  }
 
   /* ---------- tiras de numeros ---------- */
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:16px}
@@ -221,6 +275,36 @@
   /* Amostra de cor da legenda — token compartilhado, um tamanho só em todas as páginas. */
   .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;display:inline-block}
   .sw.dash{width:18px;height:0;border-radius:0;border-top:2px dashed var(--muted)}
+  /* ---------- adiantamento do êxito ---------- */
+  /* Uma barra só, dois pedaços do MESMO valor: o que as restituições já abateram e
+     o que o cliente adiantou. Fio branco de 2px pela borda do segundo pedaço — com
+     box-sizing:border-box ele não empurra os 100% para fora. */
+  .msnote{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;background:var(--surface-warm);
+          border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;
+          font-size:var(--fs-3);color:var(--ink-2);margin-bottom:16px}
+  .msnote span{flex:1;min-width:200px}
+  .msnote b{color:var(--ink);font-weight:700}
+  .exbar{display:flex;height:46px;border-radius:var(--radius-sm);overflow:hidden;
+         background:var(--neutral-bg);margin-top:10px}
+  .exseg{height:100%;min-width:2px}
+  /* O traço marca o fim do êxito: dali em diante nada mais é devido. */
+  .exmark{display:flex;justify-content:flex-end;align-items:flex-start;gap:7px;margin-top:0}
+  .exmark span{font-size:var(--fs-2);font-weight:700;color:var(--good-ink);padding-top:3px}
+  .exmark i{display:block;width:2px;height:14px;background:var(--good-ink);flex:none}
+  .exlab{display:flex;margin-top:9px;gap:0}
+  .excol{padding-right:14px;min-width:0}
+  .excol b{display:block;font-size:var(--fs-4);font-weight:800;color:var(--ink);
+           font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .excol .expc{font-size:var(--fs-2);font-weight:700;color:var(--muted);margin-left:6px}
+  .excol>span{display:block;font-size:var(--fs-2);color:var(--ink-2);margin-top:2px;line-height:1.35}
+  .excol>span .sw{margin-right:5px}
+  /* Abaixo de 640px uma coluna de 22% não cabe texto nenhum: vira lista. */
+  @media(max-width:640px){
+    .exlab{display:grid;grid-template-columns:1fr;gap:9px}
+    .excol{width:auto!important;padding-right:0}
+    .exmark span{max-width:60%;text-align:right}
+  }
+
   .vscroll{overflow-x:auto}
   .viz svg{display:block}
   .viz svg text{font-family:inherit}
@@ -264,7 +348,16 @@
   .state p{color:var(--ink-2);font-size:var(--fs-4);max-width:48ch}
   .cad{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);
        display:flex;align-items:center;justify-content:center;font-size:var(--fs-5)}
-  @media(max-width:560px){.wrap{padding:16px 14px 60px}}
+  /* No celular tudo que vem antes do herói é altura pura. O spacer flex:1 sozinho
+     empurrava o "← Painel" para uma segunda fileira e a barra ia a 110px; o h1 a
+     24px ocupava três linhas. Nada some da tela — só para de ocupar o dobro. */
+  @media(max-width:560px){
+    .wrap{padding:16px 14px 60px}
+    .barra{padding:8px 14px;gap:9px}
+    .barra .spacer{flex:0 0 auto}
+    h1{font-size:20px}
+    header.top{gap:10px}
+  }
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -342,8 +435,7 @@
 <header class="top">
   <div>
     <h1>Simulador comercial — Equiparação hospitalar</h1>
-    <p class="sub">Ajuste faturamento, % equiparável e premissas de prazo; depois clique no desfecho de
-       cada bifurcação para acender o caminho e ver os honorários e o caixa do cliente.</p>
+    <p class="sub" title="Ajuste faturamento, % equiparável e premissas de prazo; depois abra “Ver o caminho completo” e clique no desfecho de cada bifurcação para acender o caminho e ver os honorários e o caixa do cliente.">Ajuste o faturamento e o % equiparável — a página inteira se recalcula sozinha.</p>
   </div>
   <div style="display:flex;gap:8px;flex:none">
     <button class="btn" id="reset">Reiniciar</button>
@@ -354,80 +446,91 @@
 <div class="panel">
   <div class="grid">
     <div>
-      <label class="fl">Tipo societário hoje</label>
+      <label class="fl" title="Sociedade simples exige alteração na Junta Comercial antes do pedido; a base reduzida da Lei 11.727/2008 é privativa da sociedade empresária.">Tipo societário hoje</label>
       <div class="seg" id="tipo">
         <button data-v="emp" aria-pressed="true">Sociedade empresária</button>
         <button data-v="sim" aria-pressed="false">Sociedade simples</button>
       </div>
-      <p class="hintline" id="tipoHint"></p>
     </div>
     <div>
-      <label class="fl">Faturamento mensal estimado</label>
+      <label class="fl" title="Receita bruta mensal total da pessoa jurídica.">Faturamento mensal estimado</label>
       <input type="number" id="fat" value="300000" min="0" step="10000">
-      <p class="hintline">Receita bruta mensal total da pessoa jurídica.</p>
     </div>
     <div>
-      <label class="fl">% equiparável estimado</label>
+      <label class="fl" title="Parcela da receita com natureza de serviço hospitalar.">% equiparável estimado</label>
       <div class="rngrow">
         <input type="range" id="pct" min="0" max="100" step="1" value="90">
         <b id="pctv">90%</b>
       </div>
-      <p class="hintline">Parcela da receita com natureza de serviço hospitalar.</p>
     </div>
   </div>
 
-  <details class="prem">
-    <summary>Premissas de prazo e cálculo</summary>
-    <div class="premgrid">
-      <div><label class="fl">Alteração societária (meses)</label><input type="number" id="pAlt" value="3" min="0" max="12"></div>
-      <div><label class="fl">Resposta do pedido adm. (meses)</label><input type="number" id="pAdm" value="4" min="1" max="24"></div>
-      <div><label class="fl">Julgamento na DRJ (meses)</label><input type="number" id="pDrj" value="8" min="1" max="36"></div>
-      <div><label class="fl">Julgamento no CARF (meses)</label><input type="number" id="pCarf" value="18" min="1" max="60"></div>
-      <div><label class="fl">Sentença no MS (meses)</label><input type="number" id="pSent" value="6" min="1" max="36"></div>
-      <div><label class="fl">Trânsito após sentença (meses)</label><input type="number" id="pTran" value="14" min="1" max="48"></div>
-      <div><label class="fl">Acórdão após recurso (meses)</label><input type="number" id="pAcor" value="14" min="1" max="48"></div>
-      <div><label class="fl">Meses recuperáveis (de 60)</label><input type="number" id="pRetro" value="60" min="0" max="60"></div>
-      <div><label class="fl">SELIC estimada (% a.a.)</label><input type="number" id="pSelic" value="10.5" min="0" max="30" step="0.5"></div>
-      <div><label class="fl">PIS + COFINS (%)</label><input type="number" id="pPis" value="3.65" min="0" max="15" step="0.05"></div>
-      <div><label class="fl">CBS efetiva (%)</label><input type="number" id="pCbs" value="3.52" min="0" max="20" step="0.01"></div>
-      <div><label class="fl">CBS plena a partir do mês</label><input type="number" id="pMcbs" value="6" min="0" max="60"></div>
-      <div><label class="fl">1º PER/DCOMP pago no mês</label><input type="number" id="pPdIni" value="4" min="1" max="36"></div>
-      <div style="grid-column:span 2"><label class="fl">Distribuição dos PER/DCOMP por mês</label>
-        <input type="text" id="pPdDist" value="2,3,1,2,3,4,2,1,3,2"></div>
-    </div>
-    <label class="chk"><input type="checkbox" id="cSelic" checked>
-      <span>Modalidade A e C incidem sobre o valor <b>corrigido</b> (nominal + SELIC). Desmarque para
-      cobrar apenas o nominal e devolver a correção ao cliente.</span></label>
-    <label class="chk"><input type="checkbox" id="cAdic" checked>
-      <span>Incluir o <b>adicional de 10% de IRPJ</b> sobre a base presumida que exceder R$ 20.000,00 por mês.</span></label>
-  </details>
 </div>
 
-<!-- ============ NUMEROS BASE ============ -->
-<div id="topo"></div>
-<div id="banners"></div>
-
-<!-- ============ LINHA DO TEMPO ============ -->
-<h2 class="sec">Linha do tempo e desfechos</h2>
-<p class="hint" id="flowHint">Tudo começa em cinza. Clique no desfecho de cada bifurcação para acender o caminho.</p>
-<div class="scroller"><div class="canvas" id="canvas"><svg class="wires" id="wires"></svg></div></div>
-
-<!-- ============ FECHO ============ -->
-<div class="close" id="close"></div>
+<!-- ============ HERÓI COMPARATIVO ============ -->
+<!-- A primeira coisa depois dos campos. Duas barras na mesma escala, a economia
+     por mês e o retroativo. Nada aqui depende de clique, de <details> ou de leitura. -->
+<div id="heroi"></div>
 
 <h2 class="sec">Três cenários</h2>
-<p class="hint">O que ele desembolsa de IRPJ e CSLL em cada caminho. O retroativo corre por fora, na via
-   administrativa, e não depende do resultado do processo.</p>
+<p class="hint" title="O retroativo corre por fora, na via administrativa, e não depende do resultado do processo.">O que ele paga de IRPJ e CSLL em cada caminho.</p>
 <div id="cenarios"></div>
 
 <h2 class="sec">Simulador de honorários</h2>
-<p class="hint">Escolha o resultado do processo e quando as restituições chegam. O honorário é sempre o
-   maior entre 30% do recuperado e o piso de 9 meses — um vai abatendo o outro.</p>
+<p class="hint" title="Escolha o resultado do processo e quando as restituições chegam: um honorário vai abatendo o outro, mês a mês.">O honorário é o maior entre 30% do recuperado e o piso de 9 meses — nunca a soma.</p>
 <div id="honor"></div>
 
 <h2 class="sec">Benefício acumulado</h2>
-<p class="hint">Restituição recebida somada ao imposto que deixou de pagar, já descontado o êxito.</p>
+<p class="hint">Restituição recebida mais o imposto que deixou de pagar, já descontado o êxito.</p>
 <div class="viz" id="comp"></div>
+
+<!-- ============ CAMINHO COMPLETO (recolhido) ============ -->
+<!-- O diagrama de raias continua inteiro aqui dentro. Ele deixou de ser a primeira
+     coisa que o leigo encontra: SVG e canvas dentro de <details> fechado têm
+     largura 0, então a pintura acontece no primeiro 'toggle' (mesmo padrão do
+     IND_SUJO em fiscal.html). -->
+<details class="bloco" id="detFluxo">
+  <summary>Ver o caminho completo, etapa por etapa</summary>
+  <div class="bloco-in">
+    <div id="topo"></div>
+    <div id="banners"></div>
+
+    <h2 class="sec">Linha do tempo e desfechos</h2>
+    <p class="hint" id="flowHint" title="Tudo começa em cinza: enquanto a bifurcação não é resolvida, os dois ramos ficam apagados.">Clique no desfecho de cada bifurcação para acender o caminho.</p>
+    <div class="scroller"><div class="canvas" id="canvas"><svg class="wires" id="wires"></svg></div></div>
+
+    <div class="close" id="close"></div>
+  </div>
+</details>
+
+<!-- ============ PREMISSAS (recolhido) ============ -->
+<details class="bloco" id="detPrem">
+  <summary>Premissas de prazo e cálculo</summary>
+  <div class="bloco-in" id="premBox">
+    <div class="premgrid">
+    <div><label class="fl">Alteração societária (meses)</label><input type="number" id="pAlt" value="3" min="0" max="12"></div>
+    <div><label class="fl">Resposta do pedido adm. (meses)</label><input type="number" id="pAdm" value="4" min="1" max="24"></div>
+    <div><label class="fl">Julgamento na DRJ (meses)</label><input type="number" id="pDrj" value="8" min="1" max="36"></div>
+    <div><label class="fl">Julgamento no CARF (meses)</label><input type="number" id="pCarf" value="18" min="1" max="60"></div>
+    <div><label class="fl">Sentença no MS (meses)</label><input type="number" id="pSent" value="6" min="1" max="36"></div>
+    <div><label class="fl">Trânsito após sentença (meses)</label><input type="number" id="pTran" value="14" min="1" max="48"></div>
+    <div><label class="fl">Acórdão após recurso (meses)</label><input type="number" id="pAcor" value="14" min="1" max="48"></div>
+    <div><label class="fl">Meses recuperáveis (de 60)</label><input type="number" id="pRetro" value="60" min="0" max="60"></div>
+    <div><label class="fl">SELIC estimada (% a.a.)</label><input type="number" id="pSelic" value="10.5" min="0" max="30" step="0.5"></div>
+    <div><label class="fl">PIS + COFINS (%)</label><input type="number" id="pPis" value="3.65" min="0" max="15" step="0.05"></div>
+    <div><label class="fl">CBS efetiva (%)</label><input type="number" id="pCbs" value="3.52" min="0" max="20" step="0.01"></div>
+    <div><label class="fl">CBS plena a partir do mês</label><input type="number" id="pMcbs" value="6" min="0" max="60"></div>
+    <div><label class="fl">1º PER/DCOMP pago no mês</label><input type="number" id="pPdIni" value="4" min="1" max="36"></div>
+    <div style="grid-column:span 2"><label class="fl">Distribuição dos PER/DCOMP por mês</label>
+      <input type="text" id="pPdDist" value="2,3,1,2,3,4,2,1,3,2"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="cSelic" checked>
+    <span>Modalidade A e C incidem sobre o valor <b>corrigido</b> (nominal + SELIC, apurada uma vez na formulação do PER/DCOMP). Desmarque para
+    cobrar apenas o nominal e devolver a correção ao cliente.</span></label>
+    <label class="chk"><input type="checkbox" id="cAdic" checked>
+    <span>Incluir o <b>adicional de 10% de IRPJ</b> sobre a base presumida que exceder R$ 20.000,00 por mês.</span></label>
+  </div>
+</details>
 
 <div class="tip" id="tip"></div>
 
@@ -447,7 +550,10 @@
 /* =========================================================
    ESTADO
    ========================================================= */
-const S = { tipo:'emp', fat:300000, pct:90, desfav:'sem', msOk:true, perfil:'durante', choices:{} };
+/* Sem msOk: o desfecho do processo é escolhido UMA vez, no cartão de bifurcação da
+   raia B/C, e lido de lá por desfechoMS(). Um segundo seletor dizendo a mesma coisa
+   deixava a tela se contradizer — a raia dizendo um resultado e o seletor outro. */
+const S = { tipo:'emp', fat:300000, pct:90, desfav:'sem', perfil:'durante', choices:{} };
 const P = { alt:3, adm:4, drj:8, carf:18, sent:6, tran:14, acor:14, retro:60, selic:10.5,
             pis:3.65, cbs:3.52, mcbs:6, pdIni:4, pdDist:'2,3,1,2,3,4,2,1,3,2',
             corr:true, adic:true };
@@ -719,15 +825,23 @@ function statusOf(n){
    ========================================================= */
 const canvas = document.getElementById('canvas');
 const wires  = document.getElementById('wires');
+const detFluxo = document.getElementById('detFluxo');
 let M = null, NODES = [], EDGES = [], ROWS_A=[0,0], ROWS_B=[0,0];
+/* O diagrama de raias mora num <details> fechado. Lá dentro o canvas mede 0 de
+   largura e o SVG sai em cima de si mesmo — então a pintura fica PENDENTE até a
+   primeira abertura, no evento 'toggle'. Mesmo padrão do IND_SUJO em fiscal.html. */
+let LAY = null, FLUXO_SUJO = true;
 
 function render(){
   M = modelo();
 
-  // ---- painel de abertura: barras comparativas + linha do tempo
+  // ---- o que o leigo vê primeiro, sem clique nenhum
+  renderHeroi();
+  // ---- painel de abertura: barras comparativas + linha do tempo (dentro do <details>)
   renderTopo();
 
-  // ---- layout
+  // ---- layout: só aritmética, sem tocar no DOM. O fecho e o comparativo leem
+  //      NODES, então ele roda sempre — inclusive com o diagrama recolhido.
   const pre = layout(M.pre, 'P', 0);
   const preRows = M.pre.length ? 1 : 0;
   const la = layout(M.trilhaA, 'A', preRows);
@@ -736,10 +850,23 @@ function render(){
   EDGES = [...pre.edges, ...la.edges, ...lb.edges];
   ROWS_A = [preRows, la.maxRow];
   ROWS_B = [la.maxRow+1, lb.maxRow];
+  LAY = { maxMonth: Math.max(...NODES.map(n=>n.month)) + 5, totalRows: lb.maxRow };
+  LAY.W = PAD_L + LAY.maxMonth*PX_M + NODE_W + 40;
 
-  const maxMonth = Math.max(...NODES.map(n=>n.month)) + 5;
-  const totalRows = lb.maxRow;
-  const W = PAD_L + maxMonth*PX_M + NODE_W + 40;
+  FLUXO_SUJO = true;
+  if(detFluxo && detFluxo.open) pintarFluxo();
+
+  renderClose();
+  renderCenarios();
+  renderHonorarios();
+  renderComp();
+}
+
+/* Desenho do diagrama de raias. Só roda com o <details> aberto — antes disso não
+   há largura para medir e o resultado seria um emaranhado em x=0. */
+function pintarFluxo(){
+  if(!M || !LAY) return;
+  const maxMonth = LAY.maxMonth, totalRows = LAY.totalRows, W = LAY.W;
   canvas.style.width = W+'px';
   wires.setAttribute('width', W);
 
@@ -850,10 +977,7 @@ function render(){
   }
 
   drawWires();
-  renderClose();
-  renderCenarios();
-  renderHonorarios();
-  renderComp();
+  FLUXO_SUJO = false;
 }
 
 function drawWires(){
@@ -973,6 +1097,59 @@ function rectTop(x,y,w,h,r){
   return `M ${x} ${y+h} L ${x} ${y+rr} Q ${x} ${y} ${x+rr} ${y} L ${x+w-rr} ${y} Q ${x+w} ${y} ${x+w} ${y+rr} L ${x+w} ${y+h} Z`;
 }
 
+/* =========================================================
+   HERÓI COMPARATIVO
+   =========================================================
+   A tela que o médico vê primeiro. Duas barras na MESMA escala, a economia
+   mensal como o maior tipo da página e o retroativo ao lado. Sem eixo, sem
+   legenda, sem clique: o rótulo mora no fim da própria barra e a diferença de
+   comprimento é a mensagem. Não calcula nada — só lê o que modelo() já apurou. */
+function renderHeroi(){
+  const c = M.c, E = M.E;
+  const hoje = c.cheia, dep = c.reduz;
+  /* Uma escala só: mesmo denominador (a carga de hoje) e mesmo espaço útil para
+     as duas barras. --hb-res é a faixa reservada ao rótulo, medida logo abaixo. */
+  const fr = v => (hoje > 0 ? v/hoje : 0);
+  const barra = (cap, sub, v, cor) => `
+    <div class="hb">
+      <div class="hb-cap">${cap}<small>${sub}</small></div>
+      <div class="hb-lane">
+        <div class="hb-fill" style="width:calc((100% - var(--hb-res)) * ${fr(v).toFixed(4)});background:${cor}"></div>
+        <b class="hb-val">${brl(v)}</b>
+      </div>
+    </div>`;
+
+  const box = document.getElementById('heroi');
+  box.innerHTML = `
+    <div class="heroi">
+      <p class="hcap">Imposto por mês · IRPJ + CSLL</p>
+      <div class="hbars">
+        ${barra('Hoje',   '32%',      hoje, 'var(--c-imposto)')}
+        ${barra('Depois', '8% e 12%', dep,  'var(--c-entra)')}
+      </div>
+      <div class="hnums">
+        <div>
+          <div class="hk">Economia</div>
+          <div class="hbig" id="heroEcon">${brl(E)} <small>por mês</small></div>
+        </div>
+        <div>
+          <div class="hk">Retroativo</div>
+          <div class="hmed">+ ${brl(M.baseRetro)}</div>
+          <p class="hsub">que você já pagou e pode recuperar</p>
+        </div>
+      </div>
+    </div>`;
+
+  /* A faixa do rótulo é MEDIDA, não chutada: com faturamento alto o número cresce
+     e a barra tem de encolher junto, senão o valor vaza a linha no celular. */
+  medirHeroi();
+}
+function medirHeroi(){
+  const bars = document.querySelector('#heroi .hbars'); if(!bars) return;
+  const vals = [...bars.querySelectorAll('.hb-val')].map(v=>v.offsetWidth);
+  if(vals.length) bars.style.setProperty('--hb-res', (Math.ceil(Math.max(...vals))+14)+'px');
+}
+
 function renderTopo(){
   const c = M.c, E = M.E, m0 = M.m0;
   const hoje = c.cheia, dep = c.reduz;
@@ -980,14 +1157,18 @@ function renderTopo(){
   const mRed = m0 + P.sent;
 
   /* --- barras: carga mensal hoje x depois, na mesma escala --- */
-  const BW = 460, BH = 30, LB = 128;
-  const esc = v => (v/hoje)*(BW-LB-92);
-  const barra = (lab, v, col, sub) => `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
-      <div style="width:${LB}px;flex:none;font-size:var(--fs-3);color:var(--ink-2)">${lab}</div>
-      <div style="height:${BH}px;width:${Math.max(4,esc(v))}px;background:${col};border-radius:0 var(--radius-sm) var(--radius-sm) 0"></div>
-      <b style="font-size:var(--fs-4);font-variant-numeric:tabular-nums;white-space:nowrap">${brl(v)}</b>
-      ${sub?`<span class="axl">${sub}</span>`:''}
+  /* Em px fixo (era width:240px) as duas barras eram itens flex encolhíveis: a 390px
+     a de 240 caía para 49px e a de 75 para 59, e o gráfico dizia o CONTRÁRIO do
+     número. Agora usam a mesma primitiva do herói — fração de um espaço útil, em vez
+     de px cravado — então a escala é a mesma em qualquer largura de tela. */
+  const BH = 30;
+  const barra = (lab, sub, v, col) => `
+    <div class="hb">
+      <div class="hb-cap">${lab}<small>${sub}</small></div>
+      <div class="hb-lane">
+        <div class="hb-fill" style="height:${BH}px;background:${col};width:calc((100% - var(--hb-res)) * ${(hoje>0?v/hoje:0).toFixed(4)})"></div>
+        <b class="hb-val" style="font-size:var(--fs-4)">${brl(v)}</b>
+      </div>
     </div>`;
 
   /* --- composicao da base retroativa --- */
@@ -1033,8 +1214,10 @@ function renderTopo(){
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px">
         <div>
           <h4 style="margin-bottom:10px">Carga mensal de IRPJ e CSLL</h4>
-          ${barra('Hoje, a 32%', hoje, 'var(--c-imposto)')}
-          ${barra('Com 8% e 12%', dep, 'var(--c-entra)')}
+          <div class="hbars" style="--hb-res:108px">
+            ${barra('Hoje',   '32%',      hoje, 'var(--c-imposto)')}
+            ${barra('Depois', '8% e 12%', dep,  'var(--c-entra)')}
+          </div>
           <div style="margin-top:12px;padding-top:11px;border-top:1px solid var(--line);display:flex;gap:26px">
             <div><div class="k" style="font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700">Economia por mês</div>
               <div style="font-size:var(--fs-5);font-weight:700;color:var(--good-ink)">${brl(E)}</div></div>
@@ -1045,7 +1228,7 @@ function renderTopo(){
         <div>
           <h4 style="margin-bottom:10px">Base retroativa · ${M.retro} competências</h4>
           <div style="display:flex;height:${BH}px;border-radius:var(--radius-sm);overflow:hidden;background:var(--neutral-bg)"
-               data-tip="Nominal de ${brl(nom)} mais SELIC de ${brl(sel)}, corrigida de cada competência até a data de recebimento."
+               data-tip="Nominal de ${brl(nom)} mais SELIC de ${brl(sel)}, corrigida de cada competência até a formulação do PER/DCOMP. O valor não cresce com a demora da aprovação."
                data-tip-title="Base retroativa">
             <div style="width:${pN}%;background:var(--c-entra)"></div>
             <div style="width:${100-pN}%;background:var(--c-exito)"></div>
@@ -1089,7 +1272,15 @@ function agendaPD(E, iM, retro, m0, corr, inicio, distArr){
     for(let j=0; j<q && i<trims.length; j++, i++){
       const t = trims[i];
       t.mes = mes;
-      t.idade = t.idadeBase + mes;                            // ate a data de recebimento
+      /* A SELIC é apurada UMA VEZ, na formulação do PER/DCOMP — não corre com o
+         calendário. Antes era `idadeBase + mes`, e o mês aqui é o de CHEGADA da
+         restituição: o mesmo direito valia R$ 1,60 mi se o dinheiro caísse no
+         mês 0 e R$ 1,93 mi se caísse no mês 30. Trocar o perfil de chegada mudava
+         o total em 21% sem nada ter mudado no caso — e para quem está vendo a
+         simulação pela primeira vez isso é ruído, não informação.
+         A base são os últimos 5 anos contados da IMPETRAÇÃO, e é fixa: demorar
+         para aprovar não aumenta o que se tem a receber. */
+      t.idade = t.idadeBase;
       t.selic = corr ? t.nominal * iM * t.idade : 0;
       t.valor = t.nominal + t.selic;
       (porMes[mes] = porMes[mes] || []).push(t);
@@ -1233,11 +1424,18 @@ const COUT = [
    Perfis de chegada das restituições, usados nos 3 cenários e no
    simulador de honorários. A janela do piso vai de mRed a mRed+9.
    --------------------------------------------------------------- */
+/* A aritmética é a mesma de sempre; o que mudou foi a CALIBRAGEM do perfil padrão.
+   Só o mês de início mexe no resultado: enquanto o piso corre, o cliente deve E por
+   mês, e qualquer mês com restituição já traz 0,30 × valor bem acima de E — ou seja,
+   cobre a mensalidade inteira. O desembolso próprio é, então, exatamente o número de
+   meses de piso que passam ANTES da primeira restituição, e a cobertura anda em
+   degraus de 4,4 pontos. mRed+5 põe 5 meses de piso antes: 78,1% do êxito abatido
+   pelas restituições e 21,9% adiantado — o 80/20 pedido, no degrau mais próximo. */
 function perfilPD(perfil){
   const m0 = M.m0, mRed = m0 + P.sent;
   if(perfil === 'antes')   return { inicio: Math.max(1, mRed-4), dist:[4,4,4,4,4] };
   if(perfil === 'depois')  return { inicio: mRed + 10,           dist:[3,3,3,3,4,4] };
-  return { inicio: mRed + 3, dist:[1,1,2,2,3,3,4,4] };            // durante
+  return { inicio: mRed + 5, dist:[2,2,3,3,4,3,2,1] };            // durante (padrão)
 }
 
 /* Apura o honorário principal pela regra do maior, mês a mês. */
@@ -1335,47 +1533,116 @@ function renderCenarios(){
 /* ---------------------------------------------------------------
    SIMULADOR DE HONORÁRIOS
    --------------------------------------------------------------- */
+/* O desfecho do processo NÃO tem controle próprio aqui: quem o decide é o cartão de
+   bifurcação da raia B/C, na linha do tempo. Esta função só lê o que já foi escolhido
+   lá — é o mesmo terminal que renderClose() e cenario() consultam, não um estado
+   paralelo. Sem escolha, mostra o cenário favorável e diz que é o que está mostrando. */
+function desfechoMS(){
+  const t = NODES.find(n => n.terminal === 'BC' && statusOf(n) === 'lit');
+  return { escolhido: !!t, ok: t ? !!t.meta.bDue : true, titulo: t ? t.title : '' };
+}
+
+/* Abre o bloco recolhido e leva a pessoa até as bifurcações. Abrir o <details> por
+   .open dispara o toggle, que é quem pinta o diagrama — por isso o scroll espera um
+   quadro, senão rolaria para uma caixa que ainda não tem altura. */
+function irParaAsRaias(){
+  const d = document.getElementById('detFluxo');
+  if(d && !d.open) d.open = true;
+  const suave = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  requestAnimationFrame(()=>{
+    const alvo = document.getElementById('flowHint') || d;
+    if(alvo) alvo.scrollIntoView({ behavior: suave ? 'smooth' : 'auto', block:'start' });
+  });
+}
+
 function renderHonorarios(){
-  const R = simular(S.msOk, S.perfil), E = M.E;
+  const MS = desfechoMS();
+  const R = simular(MS.ok, S.perfil), E = M.E;
+
+  /* Duas partes do MESMO êxito, nunca uma soma: o que foi retido das próprias
+     restituições e o que o cliente adiantou do bolso enquanto elas não chegavam. */
+  const abatido = Math.max(0, R.total - R.doPiso);
+  const adiant  = R.doPiso;
+  const pAb = R.total > 0 ? (abatido/R.total)*100 : 100;
+  const pAd = 100 - pAb;
+  /* Último mês em que sai dinheiro do bolso. Depois dele o êxito continua sendo
+     quitado, mas com o dinheiro que entra — a economia mensal fica inteira com ele. */
+  const ultPiso = [...R.linhas].reverse().find(l => l.peloPiso > 0.5);
+  const mLivre  = ultPiso ? ultPiso.m + 1 : R.mRed;
+
   const explica = {
-    antes:   'O grosso das restituições chega antes da decisão. Quando o piso começa a correr, os 30% já estão bem à frente — o piso nunca chega a ser cobrado.',
-    durante: 'As restituições atravessam a janela dos 9 meses. Nos meses em que os 30% acumulados ficam para trás, o piso cobra a diferença; quando a restituição alcança, ele para de cobrar.',
-    depois:  'As restituições só chegam depois da janela. O piso é cobrado por inteiro e sustenta o caixa; quando a restituição enfim entra, ela abate o que já foi pago.'
+    antes:   'As restituições chegam antes da decisão: os 30% já cobrem o piso desde o primeiro mês e nada é adiantado.',
+    durante: 'Padrão: as restituições atravessam a janela dos 9 meses e vão abatendo as mensalidades à medida que entram.',
+    depois:  'As restituições só chegam depois da janela: o cliente adianta os 9 meses e a restituição, ao entrar, abate o que já foi pago.'
   }[S.perfil];
 
   const linhas = R.linhas.map(r=>`<tr>
       <td>${r.m}</td>
       <td>${r.bruto>0.5?brl(r.bruto):'—'}</td>
       <td>${brl(r.a)}</td>
-      <td>${S.msOk?brl(r.b):'—'}</td>
+      <td>${MS.ok?brl(r.b):'—'}</td>
       <td><b>${brl(r.alvo)}</b></td>
       <td style="color:${r.peloPiso>0.5?'var(--c-exito)':'var(--ink)'}">${r.dev>0.5?brl(r.dev):'—'}</td>
       <td>${brl(r.pago)}</td></tr>`).join('');
 
+  const nota = MS.escolhido
+    ? `<span>Desfecho escolhido na linha do tempo:
+         <b>${MS.ok?'processo favorável':'sem decisão favorável'}</b> — ${MS.titulo}.</span>
+       <button class="btn" id="irRaias">Mudar na linha do tempo</button>`
+    : `<span>Mostrando o cenário em que o <b>processo dá certo</b>.</span>
+       <button class="btn" id="irRaias">Escolher o desfecho na linha do tempo</button>`;
+
+  /* Barra única do êxito, em ordem CRONOLÓGICA: primeiro o pedaço que ele adianta
+     (os meses de piso antes da 1ª restituição), depois o que as restituições abatem —
+     e o fim da barra é a quitação, onde mora o rótulo "a partir daqui é 100% seu".
+     Fio branco de 2px entre os pedaços pela borda do segundo (box-sizing:border-box),
+     que não estoura os 100%. */
+  const seg = (w, cor, fio) => w > 0.05
+    ? `<div class="exseg" style="width:${w.toFixed(2)}%;background:${cor}${fio?';border-left:2px solid var(--surface)':''}"></div>`
+    : '';
+  const rot = (w, val, txt, cor) => w > 0.05
+    ? `<div class="excol" style="width:${w.toFixed(2)}%">
+         <b>${brl(val)} <span class="expc">${Math.round(w)}%</span></b>
+         <span><i class="sw" style="background:${cor}"></i>${txt}</span></div>`
+    : '';
+
   document.getElementById('honor').innerHTML = `
     <div class="viz">
-      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;margin-bottom:16px">
-        <div><div class="k" style="margin-bottom:6px">Resultado do processo</div>
-          <div class="seg" id="segMS">
-            <button data-v="ok"  aria-pressed="${S.msOk}">Deu certo</button>
-            <button data-v="nao" aria-pressed="${!S.msOk}">Deu errado</button>
-          </div></div>
-        <div style="flex:1;min-width:300px"><div class="k" style="margin-bottom:6px">Quando as restituições chegam</div>
-          <div class="seg" id="segPerfil">
-            <button data-v="antes"   aria-pressed="${S.perfil==='antes'}">Antes da decisão</button>
-            <button data-v="durante" aria-pressed="${S.perfil==='durante'}">Durante os 9 meses</button>
-            <button data-v="depois"  aria-pressed="${S.perfil==='depois'}">Depois dos 9 meses</button>
-          </div></div>
+      <div class="msnote">${nota}</div>
+
+      <div style="margin-bottom:16px"><div class="k" style="margin-bottom:6px">Quando as restituições chegam</div>
+        <div class="seg" id="segPerfil">
+          <button data-v="antes"   aria-pressed="${S.perfil==='antes'}">Antes da decisão</button>
+          <button data-v="durante" aria-pressed="${S.perfil==='durante'}">Durante os 9 meses</button>
+          <button data-v="depois"  aria-pressed="${S.perfil==='depois'}">Depois dos 9 meses</button>
+        </div></div>
+
+      <h4>Como o êxito de ${brl(R.total)} é pago</h4>
+      <p class="cap">Nada de custo novo: é o mesmo êxito, só que parte dele adiantada.</p>
+      <div class="exbar" role="img"
+           aria-label="Do êxito de ${brl(R.total)}, ${brl(abatido)} são abatidos pelas restituições e ${brl(adiant)} adiantados pelo cliente.">
+        ${seg(pAd, 'var(--c-exito)', false)}${seg(pAb, 'var(--c-entra)', pAd > 0.05)}
       </div>
-      <div class="tiles" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-        <div class="tile"><div class="k">30% do recuperado</div><div class="v">${brl(R.a)}</div>
-          <div class="n">sobre ${brl(R.bruto)} restituídos</div></div>
-        <div class="tile"><div class="k">Piso de 9 meses</div><div class="v">${S.msOk?brl(R.b):'—'}</div>
-          <div class="n">${S.msOk?'9 × '+brl(E):'sem decisão favorável, não há piso'}</div></div>
-        <div class="tile acc"><div class="k">Total devido</div><div class="v">${brl(R.total)}</div>
-          <div class="n">o maior dos dois, nunca a soma</div></div>
-        <div class="tile"><div class="k">Cobrado pelo piso</div><div class="v">${brl(R.doPiso)}</div>
-          <div class="n">${R.mesesPiso} ${R.mesesPiso===1?'mês':'meses'} em que o piso adiantou</div></div>
+      ${MS.ok?'<div class="exmark"><span>a partir daqui é 100% seu</span><i></i></div>':''}
+      <div class="exlab">
+        ${rot(pAd, adiant,  'adiantado por você',            'var(--c-exito)')}
+        ${rot(pAb, abatido, 'já abatido pelas restituições', 'var(--c-entra)')}
+      </div>
+
+      ${MS.ok
+        ? `<div class="banner good"><b>Do mês ${mLivre} em diante nada mais sai do bolso.</b>
+             A economia de ${brl(E)} por mês passa a ser 100% sua — e continua sendo depois que o
+             êxito termina, para sempre, sem honorário nenhum.</div>`
+        : `<div class="banner warn"><b>Sem decisão favorável não há economia mensal — e não há piso.</b>
+             O êxito sai apenas do que for efetivamente restituído no pedido administrativo.</div>`}
+
+      <div class="tiles" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr))">
+        <div class="tile acc"><div class="k">Êxito total</div><div class="v">${brl(R.total)}</div>
+          <div class="n">o maior entre ${brl(R.a)} (30% de ${brl(R.bruto)} restituídos)
+            e ${MS.ok?brl(R.b)+' (9 × '+brl(E)+')':'nenhum piso'} — nunca a soma</div></div>
+        <div class="tile"><div class="k">Depois, por mês</div>
+          <div class="v" style="color:var(--good-ink)">${MS.ok?brl(E):'R$ 0'}</div>
+          <div class="n">${MS.ok?'100% seu, para sempre, sem honorário':'sem decisão favorável, o imposto não muda'}</div></div>
       </div>
       <p class="note" style="margin-top:12px">${explica}</p>
       <details class="tbl" style="margin-top:6px"><summary>Apuração mês a mês</summary>
@@ -1387,8 +1654,8 @@ function renderHonorarios(){
       </details>
     </div>`;
 
-  document.querySelectorAll('#segMS button').forEach(b=>b.addEventListener('click',()=>{
-    S.msOk = b.dataset.v==='ok'; renderHonorarios(); renderCenarios(); }));
+  const ir = document.getElementById('irRaias');
+  if(ir) ir.addEventListener('click', irParaAsRaias);
   document.querySelectorAll('#segPerfil button').forEach(b=>b.addEventListener('click',()=>{
     S.perfil = b.dataset.v; renderHonorarios(); renderCenarios(); }));
 }
@@ -1502,6 +1769,14 @@ document.getElementById('pPdDist').addEventListener('input',e=>{ P.pdDist=e.targ
 document.getElementById('cSelic').addEventListener('change',e=>{ P.corr=e.target.checked; render(); });
 document.getElementById('cAdic').addEventListener('change',e=>{ P.adic=e.target.checked; render(); });
 document.getElementById('reset').addEventListener('click',()=>{ S.choices={}; render(); });
+
+/* O diagrama de raias só é montado quando o bloco abre: dentro de um <details>
+   fechado o canvas mede 0 e o SVG sairia todo empilhado em x=0. Se os números
+   mudarem enquanto ele estiver recolhido, FLUXO_SUJO fica ligado e a próxima
+   abertura repinta. */
+if(detFluxo) detFluxo.addEventListener('toggle',()=>{
+  if(detFluxo.open && FLUXO_SUJO) pintarFluxo();
+});
 // tooltip global: o texto some da tela e volta no hover
 const gtip = document.getElementById('tip');
 document.addEventListener('mousemove', ev=>{
@@ -1514,7 +1789,7 @@ document.addEventListener('mousemove', ev=>{
   gtip.style.left = Math.min(window.innerWidth-w-12, Math.max(8, ev.clientX+16))+'px';
   gtip.style.top  = Math.max(8, Math.min(window.innerHeight-h-10, ev.clientY-h-12))+'px';
 });
-window.addEventListener('resize', drawWires);
+window.addEventListener('resize', ()=>{ if(detFluxo && detFluxo.open) drawWires(); });
 
 /* =========================================================
    CHAVE DA EQUIPE
@@ -1549,6 +1824,10 @@ function medirBarra(){
   document.getElementById('volta').href='comercial.html?chave='+encodeURIComponent(ch);
   document.getElementById('b4u-logo').href='comercial.html?chave='+encodeURIComponent(ch);
   render();
+  /* A faixa do rótulo do herói é medida em px. A primeira medição acontece antes
+     de a Montserrat chegar do CDN; quando ela troca, o número muda de largura. */
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(medirHeroi).catch(()=>{});
+  window.addEventListener('resize', medirHeroi);
 })();
 </script>
 </div>
