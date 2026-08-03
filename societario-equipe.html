@@ -260,7 +260,7 @@ tr.falhou>td{background:#FBEAE7!important}
 // A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
 // é reserva: se o config.js não carregar, a página continua de pé.
 const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
-  'https://script.google.com/macros/s/AKfycbxJ63h8C5A6lgDgd_xp9XIPk3uaa0ks04CD1hQTptcZNTDfGwQadPej5xResVknzshe/exec';
+  'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
 const CHAVE_PADRAO='b4u-equipe-2026';
 const STATUS=['','Aguardando','Em andamento','Concluído','Não se aplica'];
 function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');const h=(location.hash||'').replace('#','').trim();return q||h||CHAVE_PADRAO;}

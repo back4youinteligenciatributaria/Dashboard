@@ -316,7 +316,7 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
   if (CFG.__ready) return;
 
   var WA = '5511937173906';                        // +55 11 93717-3906
-  var API_FALLBACK = 'https://script.google.com/macros/s/AKfycbxJ63h8C5A6lgDgd_xp9XIPk3uaa0ks04CD1hQTptcZNTDfGwQadPej5xResVknzshe/exec';
+  var API_FALLBACK = 'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
   function api(){ try{ if(typeof API_URL==='string' && API_URL) return API_URL; }catch(e){} return API_FALLBACK; }
 
   var AREAS = [
@@ -765,7 +765,7 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
 // A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
 // é reserva: se o config.js não carregar, a página continua de pé.
 const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
-  'https://script.google.com/macros/s/AKfycbxJ63h8C5A6lgDgd_xp9XIPk3uaa0ks04CD1hQTptcZNTDfGwQadPej5xResVknzshe/exec';
+  'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 

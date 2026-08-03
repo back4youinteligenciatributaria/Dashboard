@@ -21,4 +21,4 @@
  * Se este arquivo não carregar, cada página cai numa cópia de reserva da URL que
  * ela guarda internamente — o painel não morre por causa de um 404 aqui.
  */
-window.B4U_API = 'https://script.google.com/macros/s/AKfycbxJ63h8C5A6lgDgd_xp9XIPk3uaa0ks04CD1hQTptcZNTDfGwQadPej5xResVknzshe/exec';
+window.B4U_API = 'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
