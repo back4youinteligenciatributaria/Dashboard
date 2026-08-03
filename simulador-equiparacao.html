@@ -284,26 +284,17 @@
           font-size:var(--fs-3);color:var(--ink-2);margin-bottom:16px}
   .msnote span{flex:1;min-width:200px}
   .msnote b{color:var(--ink);font-weight:700}
-  .exbar{display:flex;height:46px;border-radius:var(--radius-sm);overflow:hidden;
-         background:var(--neutral-bg);margin-top:10px}
-  .exseg{height:100%;min-width:2px}
-  /* O traço marca o fim do êxito: dali em diante nada mais é devido. */
-  .exmark{display:flex;justify-content:flex-end;align-items:flex-start;gap:7px;margin-top:0}
-  .exmark span{font-size:var(--fs-2);font-weight:700;color:var(--good-ink);padding-top:3px}
-  .exmark i{display:block;width:2px;height:14px;background:var(--good-ink);flex:none}
-  .exlab{display:flex;margin-top:9px;gap:0}
-  .excol{padding-right:14px;min-width:0}
-  .excol b{display:block;font-size:var(--fs-4);font-weight:800;color:var(--ink);
-           font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-  .excol .expc{font-size:var(--fs-2);font-weight:700;color:var(--muted);margin-left:6px}
-  .excol>span{display:block;font-size:var(--fs-2);color:var(--ink-2);margin-top:2px;line-height:1.35}
-  .excol>span .sw{margin-right:5px}
-  /* Abaixo de 640px uma coluna de 22% não cabe texto nenhum: vira lista. */
-  @media(max-width:640px){
-    .exlab{display:grid;grid-template-columns:1fr;gap:9px}
-    .excol{width:auto!important;padding-right:0}
-    .exmark span{max-width:60%;text-align:right}
-  }
+  /* Os dois totais moram COLADOS na metade do gráfico a que pertencem — o de cima
+     acima da linha de base, o de baixo abaixo dela. É rótulo por posição, não
+     legenda: ninguém precisa procurar a cor numa lista. */
+  .tmlab{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;font-size:var(--fs-2);
+         color:var(--ink-2);margin:12px 0 2px}
+  .tmlab.dn{margin:2px 0 4px}
+  .tmlab .sw{align-self:center}
+  .tmlab b{font-size:var(--fs-4);font-weight:800;color:var(--ink);letter-spacing:-.01em;
+           font-variant-numeric:tabular-nums}
+  /* Rótulo de marco dentro do SVG: 12px é o piso de leitura da página. */
+  .tmk{font-size:var(--fs-2);font-weight:700}
 
   .vscroll{overflow-x:auto}
   .viz svg{display:block}
@@ -311,10 +302,6 @@
   .gl{stroke:var(--line);stroke-width:1}
   /* 9px de rótulo de eixo não se lê em tela nenhuma: piso de 11px. */
   .axl{fill:var(--muted);font-size:var(--fs-1)}
-  .qlb{fill:var(--ink-2);font-size:var(--fs-2);font-weight:700}
-  .qhit{fill:transparent;cursor:default}
-  .qhit:hover ~ .qhl,.qg:hover .qhl{opacity:1}
-  .qhl{fill:var(--ink);opacity:0;transition:opacity .12s}
   .tip{position:fixed;z-index:80;pointer-events:none;background:var(--surface);border:1px solid var(--line-2);
        border-radius:var(--radius);padding:10px 12px;font-size:var(--fs-3);box-shadow:0 8px 26px rgba(7,48,52,.18);
        max-width:270px;display:none}
@@ -323,14 +310,6 @@
   .tip td{padding:2px 0;vertical-align:top}
   .tip td.n{text-align:right;font-variant-numeric:tabular-nums;padding-left:12px;font-weight:700}
   .tip .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
-  details.tbl{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
-  details.tbl summary{cursor:pointer;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.06em;
-                      color:#0C756F;font-weight:800;min-height:44px;display:flex;align-items:center}
-  table.q{width:100%;border-collapse:collapse;font-size:var(--fs-3);margin-top:12px}
-  table.q th,table.q td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-  table.q th{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:right}
-  table.q th:first-child,table.q td:first-child{text-align:left}
-  table.q td{text-align:right;font-variant-numeric:tabular-nums}
   /* display:flex apaga o marcador nativo do <summary>. Sem uma seta explícita
      ninguém descobre que o bloco abre — e o conteúdo recolhido some de vez. */
   summary{list-style:none}
@@ -1559,12 +1538,10 @@ function renderHonorarios(){
   const MS = desfechoMS();
   const R = simular(MS.ok, S.perfil), E = M.E;
 
-  /* Duas partes do MESMO êxito, nunca uma soma: o que foi retido das próprias
+  /* Duas metades do MESMO êxito, nunca uma soma: o que foi retido das próprias
      restituições e o que o cliente adiantou do bolso enquanto elas não chegavam. */
   const abatido = Math.max(0, R.total - R.doPiso);
   const adiant  = R.doPiso;
-  const pAb = R.total > 0 ? (abatido/R.total)*100 : 100;
-  const pAd = 100 - pAb;
   /* Último mês em que sai dinheiro do bolso. Depois dele o êxito continua sendo
      quitado, mas com o dinheiro que entra — a economia mensal fica inteira com ele. */
   const ultPiso = [...R.linhas].reverse().find(l => l.peloPiso > 0.5);
@@ -1576,35 +1553,12 @@ function renderHonorarios(){
     depois:  'As restituições só chegam depois da janela: o cliente adianta os 9 meses e a restituição, ao entrar, abate o que já foi pago.'
   }[S.perfil];
 
-  const linhas = R.linhas.map(r=>`<tr>
-      <td>${r.m}</td>
-      <td>${r.bruto>0.5?brl(r.bruto):'—'}</td>
-      <td>${brl(r.a)}</td>
-      <td>${MS.ok?brl(r.b):'—'}</td>
-      <td><b>${brl(r.alvo)}</b></td>
-      <td style="color:${r.peloPiso>0.5?'var(--c-exito)':'var(--ink)'}">${r.dev>0.5?brl(r.dev):'—'}</td>
-      <td>${brl(r.pago)}</td></tr>`).join('');
-
   const nota = MS.escolhido
     ? `<span>Desfecho escolhido na linha do tempo:
          <b>${MS.ok?'processo favorável':'sem decisão favorável'}</b> — ${MS.titulo}.</span>
        <button class="btn" id="irRaias">Mudar na linha do tempo</button>`
     : `<span>Mostrando o cenário em que o <b>processo dá certo</b>.</span>
        <button class="btn" id="irRaias">Escolher o desfecho na linha do tempo</button>`;
-
-  /* Barra única do êxito, em ordem CRONOLÓGICA: primeiro o pedaço que ele adianta
-     (os meses de piso antes da 1ª restituição), depois o que as restituições abatem —
-     e o fim da barra é a quitação, onde mora o rótulo "a partir daqui é 100% seu".
-     Fio branco de 2px entre os pedaços pela borda do segundo (box-sizing:border-box),
-     que não estoura os 100%. */
-  const seg = (w, cor, fio) => w > 0.05
-    ? `<div class="exseg" style="width:${w.toFixed(2)}%;background:${cor}${fio?';border-left:2px solid var(--surface)':''}"></div>`
-    : '';
-  const rot = (w, val, txt, cor) => w > 0.05
-    ? `<div class="excol" style="width:${w.toFixed(2)}%">
-         <b>${brl(val)} <span class="expc">${Math.round(w)}%</span></b>
-         <span><i class="sw" style="background:${cor}"></i>${txt}</span></div>`
-    : '';
 
   document.getElementById('honor').innerHTML = `
     <div class="viz">
@@ -1617,17 +1571,16 @@ function renderHonorarios(){
           <button data-v="depois"  aria-pressed="${S.perfil==='depois'}">Depois dos 9 meses</button>
         </div></div>
 
-      <h4>Como o êxito de ${brl(R.total)} é pago</h4>
+      <h4>Como o êxito de ${brl(R.total)} é pago, mês a mês</h4>
       <p class="cap">Nada de custo novo: é o mesmo êxito, só que parte dele adiantada.</p>
-      <div class="exbar" role="img"
-           aria-label="Do êxito de ${brl(R.total)}, ${brl(abatido)} são abatidos pelas restituições e ${brl(adiant)} adiantados pelo cliente.">
-        ${seg(pAd, 'var(--c-exito)', false)}${seg(pAb, 'var(--c-entra)', pAd > 0.05)}
-      </div>
-      ${MS.ok?'<div class="exmark"><span>a partir daqui é 100% seu</span><i></i></div>':''}
-      <div class="exlab">
-        ${rot(pAd, adiant,  'adiantado por você',            'var(--c-exito)')}
-        ${rot(pAb, abatido, 'já abatido pelas restituições', 'var(--c-entra)')}
-      </div>
+
+      <div class="tmlab"><i class="sw" style="background:var(--c-entra)"></i>
+        <b>${brl(abatido)}</b> <span>já abatido pelas restituições que entram</span></div>
+      <div class="vscroll" id="tmwrap"></div>
+      <div class="tmlab dn"><i class="sw" style="background:var(--c-exito)"></i>
+        ${adiant > 0.5
+          ? `<b>${brl(adiant)}</b> <span>adiantado por você, antes de a restituição chegar</span>`
+          : `<b>Nada adiantado</b> <span>as restituições chegaram antes de o piso cobrar</span>`}</div>
 
       ${MS.ok
         ? `<div class="banner good"><b>Do mês ${mLivre} em diante nada mais sai do bolso.</b>
@@ -1645,19 +1598,164 @@ function renderHonorarios(){
           <div class="n">${MS.ok?'100% seu, para sempre, sem honorário':'sem decisão favorável, o imposto não muda'}</div></div>
       </div>
       <p class="note" style="margin-top:12px">${explica}</p>
-      <details class="tbl" style="margin-top:6px"><summary>Apuração mês a mês</summary>
-        <div class="vscroll"><table class="q">
-          <tr><th>Mês</th><th>Restituição</th><th>30% acumulado</th><th>Piso acumulado</th>
-              <th>O maior</th><th>Vence no mês</th><th>Pago acumulado</th></tr>
-          ${linhas}
-        </table></div>
-      </details>
     </div>`;
 
-  const ir = document.getElementById('irRaias');
+  desenharLinhaExito(R, MS);
+
+    const ir = document.getElementById('irRaias');
   if(ir) ir.addEventListener('click', irParaAsRaias);
   document.querySelectorAll('#segPerfil button').forEach(b=>b.addEventListener('click',()=>{
     S.perfil = b.dataset.v; renderHonorarios(); renderCenarios(); }));
+}
+
+/* ---------------------------------------------------------------
+   LINHA DO TEMPO DO ÊXITO
+   ---------------------------------------------------------------
+   A barra empilhada que morava aqui era um gráfico de COMPOSIÇÃO: dizia que fatia
+   do êxito veio de onde, e não tinha como dizer QUANDO — não há eixo de tempo numa
+   barra empilhada. A pergunta do cliente ("vão entrar restituições ao longo do
+   tempo?") é de posição no tempo, então o gráfico virou uma linha do tempo.
+
+   Acima da linha de base, o êxito que cada restituição pagou no mês em que chegou;
+   abaixo, o que saiu do bolso naquele mês. UMA escala de reais para os dois lados —
+   o mesmo k de px por real acima e abaixo, nunca dois eixos. Os dois lados somam
+   exatamente o êxito total, e é por isso que o gráfico usa a parcela do êxito e não
+   a restituição bruta: bruto é ~9× o adiantamento e esmagaria o lado de baixo.
+
+   Nada aqui calcula: tudo vem de R.linhas, que simular() já devolve. */
+/* Eixo X e escala Y são os MESMOS nos três perfis. Se cada perfil redesenhasse o
+   próprio domínio, trocar o botão moveria as barras por dois motivos ao mesmo tempo
+   (o dado e a régua) e a comparação não se leria. Com a régua parada, o que muda na
+   tela é só o dado — que é o ponto do controle. Três simular() a mais por repintura;
+   é um laço de ~25 meses, não custa nada, e nenhum deles altera aritmética. */
+function dominioExito(MS){
+  let mFim = 0, maxV = 1, maxC = 0, maxB = 0;
+  for(const pf of ['antes','durante','depois']){
+    const r = simular(MS.ok, pf);
+    const mm = r.linhas.filter(l=>l.pelaRest>0.5 || l.peloPiso>0.5).map(l=>l.m);
+    mFim = Math.max(mFim, MS.ok ? r.mRed+9 : r.mRed, ...(mm.length?mm:[r.mRed]));
+    r.linhas.forEach(l=>{
+      maxV = Math.max(maxV, l.pelaRest||0, l.peloPiso||0);
+      maxC = Math.max(maxC, l.pelaRest||0);
+      maxB = Math.max(maxB, l.peloPiso||0);
+    });
+  }
+  return { mFim, maxV, maxC, maxB };
+}
+
+function desenharLinhaExito(R, MS){
+  const wrap = document.getElementById('tmwrap'); if(!wrap) return;
+  const L = R.linhas;
+  const mRed = R.mRed;
+  const D = dominioExito(MS);
+  const mIni = 0, mFim = D.mFim;
+  const nCol = mFim - mIni + 1;
+
+  /* Largura: cabe na caixa quando dá, senão o .vscroll rola — o mesmo acordo das
+     outras vizualizações da página. LM abre espaço para os rótulos de reais. */
+  const LM = 8, RM = 12;
+  const disp = Math.max(260, (wrap.clientWidth || 900));
+  const SW = Math.max(9, Math.min(46, Math.floor((disp - LM - RM) / nCol)));
+  const W  = LM + nCol*SW + RM;
+  const BW = Math.max(4, Math.min(SW - 2, 26));     // 2px de fio branco entre vizinhas
+
+  /* A faixa de cabeçalho tem DUAS linhas: "janela do piso" em cima, "1ª restituição"
+     embaixo. Disputando a mesma linha, a 390px elas se sobrepunham sempre que a
+     primeira restituição caía perto do começo da janela — e nenhuma regra de
+     empurrão resolve, porque não há largura para as duas. */
+  const TOPO = 46, HUP = 116, k = HUP/D.maxV;      // k é o MESMO acima e abaixo
+  const yBase = TOPO + Math.max(24, Math.ceil(k*D.maxC));
+  const HDN   = Math.max(14, Math.ceil(k*D.maxB));
+  /* 40 = régua de meses, +18 = a linha do rótulo de quitação, que não pode dividir
+     a fileira com os números do eixo (dividia, e "a partir daqui é 100% seu" saía
+     escrito por cima do "16" e do "18"). */
+  const H     = yBase + HDN + 58;
+
+  const cx = m => LM + (m-mIni)*SW + SW/2;
+  let o = '';
+
+  // faixa dos 9 meses do piso, bem esmaecida, atrás de tudo
+  if(MS.ok){
+    const x0 = cx(mRed)-SW/2, x1 = cx(mRed+8)+SW/2;
+    o += `<rect x="${x0}" y="${TOPO-34}" width="${Math.max(2,x1-x0)}" height="${yBase+HDN-TOPO+34}"
+           fill="var(--c-travado)" fill-opacity=".10" rx="4"/>`;
+    o += `<text x="${x0+5}" y="${TOPO-22}" class="axl">${SW>=20?'janela do piso · 9 meses':'janela do piso'}</text>`;
+  }
+
+  // barras
+  L.forEach(r=>{
+    const x = cx(r.m) - BW/2;
+    if(r.pelaRest > 0.5){
+      const h = Math.max(2, k*r.pelaRest);
+      o += `<rect x="${x}" y="${yBase-h}" width="${BW}" height="${h}" rx="2" fill="var(--c-entra)"/>`;
+    }
+    if(r.peloPiso > 0.5){
+      const h = Math.max(2, k*r.peloPiso);
+      o += `<rect x="${x}" y="${yBase}" width="${BW}" height="${h}" rx="2" fill="var(--c-exito)"/>`;
+    }
+  });
+
+  // linha de base — o zero
+  o += `<line x1="${LM}" y1="${yBase}" x2="${W-RM}" y2="${yBase}" stroke="var(--ink-2)" stroke-width="1.5"/>`;
+
+  // régua: só de 3 em 3 meses quando a coluna é estreita
+  const passo = SW >= 26 ? 2 : (SW >= 15 ? 3 : 6);
+  for(let m=mIni; m<=mFim; m+=passo){
+    /* "mês 0" centrado na 1ª coluna começava em x negativo e era cortado: a primeira
+       marca ancora pela esquerda, na margem. */
+    const ini = m===mIni;
+    o += `<text x="${ini?LM:cx(m)}" y="${yBase+HDN+16}" class="axl"
+           text-anchor="${ini?'start':'middle'}">${m===0?'mês 0':m}</text>`;
+  }
+
+  // marcos: 1ª restituição e quitação. Só esses dois — rotular todo mês é ruído.
+  const ult = [...L].reverse().find(r=>r.dev>0.5);
+  const xq  = (ult && MS.ok) ? cx(ult.m) + BW/2 + 3 : null;
+  const prim = L.find(r=>r.pelaRest>0.5);
+  if(prim){
+    /* O rótulo mora na faixa reservada acima das barras: escrito na altura da barra
+       ele sumia atrás dela sempre que a 1ª restituição era das grandes. E vai em
+       --brand-teal-txt, não no --c-entra da barra: sobre a faixa lilás o teal da
+       série dá 3,2:1, e o escurecido dá 4,8:1. */
+    const h = Math.max(2, k*prim.pelaRest);
+    o += `<line x1="${cx(prim.m)}" y1="${yBase-h-5}" x2="${cx(prim.m)}" y2="${TOPO-2}"
+           stroke="var(--c-entra)" stroke-width="1" stroke-dasharray="3 3" stroke-opacity=".7"/>`;
+    /* Cresce para a direita; só vira para a esquerda quando bateria na borda. */
+    const rotulo = SW >= 20 ? ('1ª restituição · mês '+prim.m) : '1ª restituição';
+    const LARG = SW >= 20 ? 152 : 96;
+    const px = cx(prim.m);
+    /* Não deixa o rótulo passar por cima do traço de quitação, quando ele fica à
+       direita do marco — no perfil "depois" os dois caem quase no mesmo lugar. */
+    const limite = (xq !== null && xq > px) ? Math.min(W-RM, xq-4) : W-RM;
+    let dir = px + 6 + LARG <= limite;
+    // se também não couber à esquerda, volta para a direita: cruzar o traço é menos
+    // ruim do que sair cortado pela borda do desenho.
+    if(!dir && px - 6 - LARG < LM) dir = true;
+    o += `<text x="${dir ? px+6 : px-6}" y="${TOPO-6}" class="tmk"
+           fill="var(--brand-teal-txt)" text-anchor="${dir?'start':'end'}">${rotulo}</text>`;
+  }
+  if(ult && MS.ok){
+    o += `<line x1="${xq}" y1="${TOPO-34}" x2="${xq}" y2="${yBase+HDN+26}"
+           stroke="var(--good-ink)" stroke-width="2"/>`;
+    const fim = xq > W - 180;
+    o += `<text x="${fim ? xq-6 : xq+6}" y="${yBase+HDN+38}" class="tmk"
+           fill="var(--good-ink)" text-anchor="${fim?'end':'start'}">a partir daqui é 100% seu</text>`;
+  }
+
+  // alvos de tooltip: uma coluna inteira por mês, para não depender da altura da barra
+  L.forEach(r=>{
+    if(r.pelaRest<0.5 && r.peloPiso<0.5 && r.bruto<0.5) return;
+    const partes = [];
+    if(r.bruto>0.5)     partes.push('Restituição que chegou: <b>'+brl(r.bruto)+'</b>');
+    if(r.pelaRest>0.5)  partes.push('Êxito pago por ela: <b>'+brl(r.pelaRest)+'</b>');
+    if(r.peloPiso>0.5)  partes.push('Adiantado por você: <b>'+brl(r.peloPiso)+'</b>');
+    partes.push('Êxito já pago até aqui: <b>'+brl(r.pago)+'</b>');
+    o += `<rect x="${cx(r.m)-SW/2}" y="${TOPO-34}" width="${SW}" height="${yBase+HDN-TOPO+34}"
+           fill="transparent" data-tip-title="Mês ${r.m}" data-tip="${partes.join('<br>')}"/>`;
+  });
+
+  wrap.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img"
+     aria-label="Linha do tempo do êxito: ${brl(Math.max(0,R.total-R.doPiso))} pagos pelas restituições que chegam a partir do mês ${prim?prim.m:'—'}, e ${brl(R.doPiso)} adiantados nos meses anteriores.">${o}</svg>`;
 }
 
 function renderComp(){
@@ -1827,7 +1925,20 @@ function medirBarra(){
   /* A faixa do rótulo do herói é medida em px. A primeira medição acontece antes
      de a Montserrat chegar do CDN; quando ela troca, o número muda de largura. */
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(medirHeroi).catch(()=>{});
-  window.addEventListener('resize', medirHeroi);
+  /* A linha do tempo do êxito é dimensionada em px na hora do desenho. Girar o
+     celular deixaria o SVG com a largura antiga (o .vscroll rola, não quebra, mas
+     o gráfico deixa de caber na tela). Só o SVG é repintado — a seção inteira não,
+     para não recriar os botões debaixo do dedo de quem está usando. */
+  let redraw = 0;
+  window.addEventListener('resize', ()=>{
+    medirHeroi();
+    clearTimeout(redraw);
+    redraw = setTimeout(()=>{
+      if(!M || !document.getElementById('tmwrap')) return;
+      const MS = desfechoMS();
+      desenharLinhaExito(simular(MS.ok, S.perfil), MS);
+    }, 180);
+  });
 })();
 </script>
 </div>

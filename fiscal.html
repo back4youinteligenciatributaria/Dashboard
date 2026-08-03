@@ -64,6 +64,9 @@ input,select,textarea{font-size:16px}
 /* Tarja de "estamos atualizando": discreta, não empurra o conteúdo. */
 .tarja-atualizando{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-2);font-weight:600;
   color:var(--ink-2);background:var(--receita-soft);border-radius:var(--radius-pill);padding:6px 14px;margin:14px 0 -6px}
+/* Mesma tarja quando a GRAVAÇÃO deu certo e só a releitura falhou: o recado tem de
+   começar dizendo que está salvo, senão ele digita tudo de novo. */
+.tarja-atualizando.aviso{background:var(--sinal-soft);color:var(--sinal-txt);display:flex;max-width:70ch}
 
 header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:var(--b4u-bar-h,0px);z-index:30}
 .bar{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
@@ -168,8 +171,12 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .dv-in:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .dv-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}
 .dv-foot #dv-msg{font-size:var(--fs-2)}
-.btn.dv-save{background:var(--brand-teal-txt);color:#fff;border:0;border-radius:var(--radius-sm);padding:10px 16px;font-family:var(--sans);font-weight:700;font-size:var(--fs-3);cursor:pointer}
-.btn.dv-save[disabled]{opacity:.6;cursor:default}
+/* Status por linha do autosave. Sem botão de salvar, é ele que diz o que aconteceu —
+   por isso ocupa a linha inteira e nunca some (min-height reserva o espaço). */
+.dv-st{grid-column:1/-1;text-align:right;font-size:var(--fs-1);color:var(--muted);min-height:15px;line-height:1.25}
+.dv-st.salvando{color:var(--ink-2);font-weight:600}
+.dv-st.salvo{color:var(--brand-teal-txt);font-weight:700}
+.dv-st.erro{color:#8B2E22;font-weight:700}
 @media(max-width:560px){.dv-row{grid-template-columns:1fr 110px}.dv-luc{display:none}}
 
 .guias-card{padding:var(--pad);margin-bottom:16px}
@@ -189,6 +196,8 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .guia-detalhe{display:none;margin:6px 0 2px 0;padding:8px 12px;background:var(--surface-warm);border-radius:var(--radius-sm)}
 .guia-detalhe.aberto{display:block}
 .guia-detalhe-row{display:flex;justify-content:space-between;font-size:var(--fs-2);padding:4px 0}
+/* A provisão precisa dizer, na mesma linha do olho, que não é guia deste mês. */
+.guia-prov-nota{margin:2px 0 0;font-size:var(--fs-2);color:var(--ink-2);line-height:1.4}
 .head-nota{font-size:var(--fs-2);color:var(--muted)}
 .guias-nota{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line-2);font-size:var(--fs-2);color:var(--muted);line-height:1.45}
 .guias-nota b{color:var(--ink-2)}
@@ -267,6 +276,16 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .cbox{position:relative;height:210px}
 .charts3 .cbox{height:160px}
 .pie-legend{margin-top:10px}
+/* O histórico virou navegação: cada mês troca a competência da página inteira. As barras
+   do gráfico fazem o mesmo, mas canvas não recebe foco de teclado — estes botões, sim. */
+#c1{cursor:pointer}
+.mes-atalhos{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line-2)}
+.mes-b{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--ink-2);background:var(--surface-warm);
+  border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:6px 12px;min-height:44px;cursor:pointer;
+  display:inline-flex;align-items:center;white-space:nowrap}
+.mes-b:hover{border-color:var(--brand-teal-txt);color:var(--brand-teal-txt)}
+.mes-b.on{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
+.mes-atalhos-dica{font-size:var(--fs-2);color:var(--muted);margin-top:8px}
 .prov-vazio{font-size:var(--fs-2);color:var(--muted);padding:8px 0 2px}
 /* O #3FA680 do gradiente deixava o branco em 3,0:1 — e ainda é a cor do ISS nos
    gráficos, dois sentidos na mesma tela. Gradiente escuro: 5,54:1 no pior ponto. */
@@ -319,6 +338,29 @@ table.rat tbody tr.nid td{background:var(--alerta-soft)}
 .share{position:relative;height:5px;border-radius:3px;background:var(--surface-warm);margin-top:5px;overflow:hidden}
 .share i{position:absolute;inset:0 auto 0 0;background:var(--receita);border-radius:3px;display:block}
 tr.nid .share i{background:var(--alerta)}
+/* Nome do centro = gatilho das guias daquele centro. Alvo de toque de 44px e a linha
+   aberta é uma linha da própria tabela: no celular ela ocupa a largura toda sem
+   empurrar coluna nenhuma. */
+.rat-nome{font-family:var(--sans);font-size:inherit;color:var(--ink);background:none;border:0;padding:0;
+  cursor:pointer;display:flex;align-items:center;gap:6px;min-height:44px;width:100%;text-align:left}
+.rat-nome b{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.rat-nome .car{color:var(--muted);font-size:var(--fs-2);flex-shrink:0;transition:transform .15s}
+.rat-nome[aria-expanded="true"] .car{transform:rotate(180deg)}
+.rat-nome:hover b{color:var(--brand-teal-txt)}
+tr.rat-det{display:none} tr.rat-det.aberto{display:table-row}
+tr.rat-det>td{padding:0 10px 10px;border-bottom:1px solid var(--line)}
+/* No celular a tabela rola DENTRO do cartão: sem isto a linha aberta nascia com a
+   largura da tabela e os valores — o motivo do clique — ficavam fora da tela. */
+.rateio-grid .table-scroll{container-type:inline-size}
+.rat-det-box{position:sticky;left:0;max-width:100cqw;
+  background:var(--surface-warm);border-radius:var(--radius-sm);padding:8px 12px}
+.rat-det-cab{font-size:var(--fs-1);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
+.rat-det-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:var(--fs-2);padding:4px 0}
+.rat-det-row.tot{border-top:1px solid var(--line-2);margin-top:2px;padding-top:6px;font-weight:700}
+.rat-det-nome{min-width:0;overflow-wrap:anywhere}
+.rat-det-vazio{font-size:var(--fs-2);color:var(--muted)}
+.rat-tag{font-style:normal;font-size:var(--fs-1);font-weight:700;white-space:nowrap;
+  background:var(--receita-soft);color:var(--brand-teal-txt);padding:1px 6px;border-radius:var(--radius-sm)}
 
 /* Notas do mês (tomadas / prestadas) + editor de centro */
 #notas{scroll-margin-top:80px}
@@ -1615,6 +1657,15 @@ function rateioParaComp(M, comp){
   const api=(M.rateioAPI||[]).filter(x=>x.competencia===comp);
   return api.length ? api : rateioDoMes(M, comp);
 }
+/* Resultado líquido de UMA linha do rateio. O Fechamento é lido por rótulo de linha: se a
+   planilha do cliente não tiver a linha "Resultado Líquido" por centro, refazemos aqui a
+   mesma conta do rateio (faturamento − impostos − o que veio das notas tomadas). */
+function resLiqDe(M,x){
+  if(!x) return 0;
+  const v=getM(x,'Resultado Líquido (R$)');
+  if(v!==undefined && v!==null && v!=='') return num(v);
+  return num(getM(x,'Total (R$)')) - M.impostos(x) - OUTRAS_TOMADAS.reduce((s,k)=>s+num(getM(x,k)),0);
+}
 
 /* ===================== PROVISÃO / CALENDÁRIO helpers ===================== */
 function nivelarTrimestre(M,comp,coluna){
@@ -1654,6 +1705,7 @@ function vencimentosDoMes(M,ano,mes){ const marc=new Map();
 
 /* ===================== RENDER ===================== */
 let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='', NF_PEND=false, NF_ANO=false;
+let COMPS=[];        // competências oferecidas no seletor — e agora também no histórico
 let IND_SUJO=true;   // o bloco de indicadores precisa ser remontado na próxima abertura
 
 /* ---------------- revelação progressiva ---------------- */
@@ -1737,6 +1789,7 @@ function render(M){
   SEL=comps.includes(mesAnt)?mesAnt:comps[comps.length-1];
   const salvo=lerEscolha(M.id);               // lembrar onde parou (ano + mês)
   if(salvo.comp && comps.includes(salvo.comp)) SEL=salvo.comp;
+  COMPS=comps.slice();                        // os atalhos do histórico oferecem os mesmos meses
   const app=document.getElementById('app'); app.innerHTML='';
 
   const anos=(ANOS&&ANOS.length?ANOS:[ANO_SEL]).slice().sort().reverse();
@@ -1778,7 +1831,9 @@ function render(M){
     <div class="charts">
       <div class="card chart"><h3>Faturamento e imposto</h3><div class="sub">Barras: faturamento. Linha: total de impostos a pagar.</div>
         <div class="legend" id="lg1"><span><i class="sw" style="background:#D9CDBB"></i>faturamento do mês</span><span><i class="sw" style="background:${PAL.vinho}"></i>impostos a pagar</span></div>
-        <div class="cbox"><canvas id="c1"></canvas></div></div>
+        <div class="cbox"><canvas id="c1"></canvas></div>
+        <div class="mes-atalhos" id="mes-atalhos" role="group" aria-label="Escolher o mês exibido na página"></div>
+        <p class="mes-atalhos-dica">Toque num mês (aqui ou no gráfico) para ver a página inteira nele.</p></div>
       <div class="card chart"><h3>Impostos por tributo</h3><div class="legend" id="lg2"></div><div class="cbox"><canvas id="c2"></canvas></div></div>
       <div class="card chart" id="card-c3"><h3>Composição do mês</h3><div class="sub" id="c3sub"></div><div class="cbox" id="cbox-c3" style="height:170px"><canvas id="c3"></canvas></div><div class="pie-legend" id="c3-lg"></div></div>
     </div>`);
@@ -1838,7 +1893,10 @@ function render(M){
   wrap.appendChild(el(`<footer><span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span><span>back4you · inteligência tributária</span></footer>`));
 
   const pick=document.getElementById('comp'); pick.value=SEL;
-  pick.addEventListener('change',e=>{ SEL=e.target.value; gravarEscolha(M.id,ANO_SEL,SEL); pintarMes(M,SEL); });
+  pick.addEventListener('change',e=>trocarComp(M,e.target.value,false));
+  // Histórico: clicar num mês troca a competência da página inteira, pelo mesmo caminho.
+  const atalhos=document.getElementById('mes-atalhos');
+  if(atalhos) atalhos.addEventListener('click',ev=>{ const b=ev.target.closest('.mes-b'); if(b) trocarComp(M,b.dataset.comp,true); });
   const pickAno=document.getElementById('ano');
   if(pickAno) pickAno.addEventListener('change',e=>trocarAno(M,e.target.value));
   // Trocar de aba, buscar ou filtrar devolve o teto a 20: a lista é outra, e
@@ -1899,6 +1957,7 @@ function gravarEscolha(id,ano,comp){ try{ localStorage.setItem('b4u_fisc_comp_'+
 async function trocarAno(M,ano){
   ano=String(ano||'').trim();
   if(!/^\d{4}$/.test(ano) || ano===ANO_SEL) return;
+  salvarDividendosPendentes();          // trocar de ano também sai do mês: grava antes
   if(!API_URL){ ANO_SEL=ano; render(M); return; }
   const anterior=ANO_SEL;
   esperandoAno(true,ano);
@@ -1939,10 +1998,85 @@ function tarja(modo,quando){
   const box=document.getElementById('tarja'); if(!box) return;
   if(modo==='atualizando'){ box.innerHTML='<div class="tarja-atualizando">Atualizando…</div>'; return; }
   if(modo==='falhou'){ box.innerHTML='<div class="tarja-atualizando">Não consegui atualizar agora — mostrando os dados de '+esc(quando||'antes')+'.</div>'; return; }
+  /* Gravou e não conseguiu reler: a frase COMEÇA por "está salvo". Se ela começasse
+     pelo erro, o cliente reabriria a tela e digitaria tudo de novo por medo. */
+  if(modo==='salvo-sem-atualizar'){ box.innerHTML='<div class="tarja-atualizando aviso" role="status">'
+    +'<span><b>A sua alteração foi salva.</b> Só não consegui reler os números agora — '+esc(quando||'')+'</span></div>'; return; }
   box.innerHTML='';
 }
 
-/* Junta as pendências do fiscal (notas sem centro no ano; meses com lucro apurado
+/* ---------- recarregar a tela inteira depois de escrever ----------
+   Salvar mexia num canto e deixava o resto (herói, total de impostos, divisão do
+   faturamento, guias, provisões, gráficos) com o número velho até alguém apertar F5.
+   Agora toda escrita rebusca o payload e repinta tudo — sem que a pessoa perca o
+   lugar onde estava. */
+function capturarContexto(){
+  const foco=document.activeElement, ehDv=!!(foco&&foco.classList&&foco.classList.contains('dv-in'));
+  const painel=document.getElementById('painel-filtros'), det=document.getElementById('bloco-ind');
+  const dv=document.getElementById('div-editor');
+  return { ano:ANO_SEL, comp:SEL, tab:NF_TAB, busca:NF_BUSCA, pend:NF_PEND, anoTodo:NF_ANO, teto:NF_TETO,
+    buscaTxt:(document.getElementById('nf-search')||{}).value||'',
+    ordCampo:NF_ORD.campo, ordDir:NF_ORD.dir, y:window.scrollY,
+    ind:!!(det&&det.open), filtros:!!(painel&&!painel.hidden),
+    divAberto:!!(dv&&dv.dataset.open==='1'),
+    divFoco:ehDv?foco.dataset.centro:'', divCaret:ehDv?foco.selectionStart:null };
+}
+function restaurarContexto(c){
+  NF_TAB=c.tab; NF_BUSCA=c.busca; NF_PEND=c.pend; NF_ANO=c.anoTodo;
+  NF_ORD.campo=c.ordCampo; NF_ORD.dir=c.ordDir;
+  const s=document.getElementById('nf-search'); if(s) s.value=c.buscaTxt;
+  const det=document.getElementById('bloco-ind'); if(det&&c.ind&&!det.open) det.open=true;
+  if(c.filtros&&FILTROS_UI&&FILTROS_UI.abrir) FILTROS_UI.abrir(true,false);
+  if(FILTROS_UI&&FILTROS_UI.atualizarContador) FILTROS_UI.atualizarContador();
+  toggleTabs();
+  NF_TETO=c.teto;                       // depois do render, que zera o teto no pintarMes
+  desenharNotas(M_GLOBAL,SEL);
+  if(c.divAberto){
+    abrirEditorDividendos(M_GLOBAL,SEL);
+    if(c.divFoco){ const inp=Array.from(document.querySelectorAll('.dv-in')).find(i=>i.dataset.centro===c.divFoco);
+      if(inp){ inp.focus({preventScroll:true}); if(c.divCaret!=null){ try{ inp.setSelectionRange(c.divCaret,c.divCaret); }catch(e){} } } }
+  }
+  // duas vezes: o gráfico entra um quadro depois e não pode empurrar a página de volta
+  window.scrollTo(0,c.y); requestAnimationFrame(()=>window.scrollTo(0,c.y));
+}
+/** Rebusca o payload do ano em tela. Na demonstração não há o que buscar: a verdade é o
+    objeto em memória, que a edição acabou de atualizar. */
+function buscarPayloadAtual(){
+  if(!API_URL) return Promise.resolve(null);
+  return jsonp(urlFiscal(IDENTIDADE.id,IDENTIDADE.codigo,ANO_SEL))
+    .then(d=>{ if(d&&d.erro) throw new Error(d.erro); return d; });
+}
+/** O payload fica 6h em cache. Depois de escrever ele está velho: some com ele ANTES de
+    rebuscar — se o F5 vier no meio, o painel busca em vez de ressuscitar o número antigo. */
+function invalidarCachePayload(){
+  try{ if(window.B4U&&B4U.cacheChave) localStorage.removeItem(B4U.cacheChave(chaveCache(ANO_SEL),IDENTIDADE.id)); }catch(e){}
+}
+let RECARGA=null;   // uma de cada vez: dois autosaves seguidos não repintam um por cima do outro
+function recarregarPainel(M){
+  if(RECARGA) return RECARGA;
+  const ctx=capturarContexto();
+  invalidarCachePayload();
+  tarja('atualizando');
+  RECARGA=(async()=>{
+    let M2=M, falha=null;
+    try{
+      const raw=await buscarPayloadAtual();
+      if(raw){
+        if(window.B4U&&B4U.cacheGravar) B4U.cacheGravar(chaveCache(raw.ano||ctx.ano),IDENTIDADE.id,raw);
+        M2=aplicarPayload(raw,ctx.ano);
+      }
+    }catch(e){ falha=e; }              // a gravação já deu certo: a falha aqui é só de leitura
+    try{
+      gravarEscolha(M2.id||M.id,ctx.ano,ctx.comp);   // o render escolhe o mês por aqui
+      render(M2); restaurarContexto(ctx);
+      tarja(falha?'salvo-sem-atualizar':'', falha?((window.B4U&&B4U.msgAmigavel)?B4U.msgAmigavel(falha):''):'');
+    } finally { RECARGA=null; }        // travar aqui deixaria a tela sem recarregar para sempre
+    return M2;
+  })();
+  return RECARGA;
+}
+
+/* Junta as pendências do fiscal (notas sem centro no ano; meses com resultado líquido
    sem distribuição informada), mostra um banner no topo e grava um resumo em
    localStorage para a HOME exibir o alerta com botão. */
 function computarPendencias(M){
@@ -1953,13 +2087,15 @@ function computarPendencias(M){
   ['prestadas','tomadas'].forEach(tab=>{ notasDoAno_(M,anoVisto,tab).forEach(x=>{ if(semCentro(x.nf)&&!notaInativa(x.nf)) semCentroN++; }); });
   let lucroSemDist=0;
   (M.empresa||[]).forEach(r=>{ const c=String(r.competencia||''); if(c.slice(0,4)!==anoVisto) return;
-    const lucro=num(getM(r,'Apuração de lucro do mês (R$)')); const div=num(getM(r,'Dividendos distribuídos (R$)'));
-    if(lucro>0 && div<=0) lucroSemDist++; });
+    // mesma base do tile "Dividendos distribuídos": resultado líquido, senão o banner
+    // e o cartão discordariam sobre o mesmo mês
+    const liq=num(getM(r,'Resultado Líquido (R$)')); const div=num(getM(r,'Dividendos distribuídos (R$)'));
+    if(liq>0 && div<=0) lucroSemDist++; });
   const V=M.voc;
   const itens=[];
   if(semCentroN>0) itens.push({titulo:semCentroN+(semCentroN>1?' notas sem '+V.um:' nota sem '+V.um),
     detalhe:V.aviso, area:'fiscal', pend:true});
-  if(lucroSemDist>0) itens.push({titulo:lucroSemDist+(lucroSemDist>1?' meses com lucro sem distribuição informada':' mês com lucro sem distribuição informada'),
+  if(lucroSemDist>0) itens.push({titulo:lucroSemDist+(lucroSemDist>1?' meses com resultado líquido sem distribuição informada':' mês com resultado líquido sem distribuição informada'),
     detalhe:'Informe quanto foi distribuído de lucros/dividendos.', area:'fiscal'});
   // banner no topo do fiscal
   const box=document.getElementById('pend-topo');
@@ -1982,6 +2118,34 @@ function toggleTabs(){ document.getElementById('tab-prest').classList.toggle('on
     de IRPJ, por exemplo): na tela a conta "imposto do mês − já retido = sobra para
     pagar" tem de fechar sempre, senão o cliente refaz a subtração e desconfia. */
 function devidoDe(M,r,t){ return num(getM(r,t.pag)) + (t.ret?num(getM(r,t.ret)):0); }
+
+/* CAMINHO ÚNICO para trocar de competência: seletor do topo, atalhos do histórico e
+   clique no gráfico passam por aqui. Dois fluxos paralelos divergiriam no primeiro
+   ajuste — e um deles esqueceria de gravar a escolha ou de salvar o que foi digitado. */
+function trocarComp(M,comp,rolarTopo){
+  if(!comp||COMPS.indexOf(comp)<0) return;
+  salvarDividendosPendentes();                 // sair do mês não pode engolir o valor digitado
+  SEL=comp; gravarEscolha(M.id,ANO_SEL,SEL);
+  const pick=document.getElementById('comp'); if(pick&&pick.value!==comp) pick.value=comp;
+  pintarMes(M,comp);
+  /* Quem clicou lá embaixo, no histórico, não vê que a página inteira mudou: subimos até
+     o herói. O topo da tela tem duas barras grudadas (a do B4U e o cabeçalho) — sem
+     descontar a altura delas, o número do mês nasceria escondido atrás. */
+  if(rolarTopo){
+    const topo=document.getElementById('hero');
+    if(topo){
+      const cab=document.querySelector('header');
+      const barra=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--b4u-bar-h'))||0;
+      const oculto=barra+(cab?cab.getBoundingClientRect().height:0)+10;
+      window.scrollTo({top:Math.max(0,topo.getBoundingClientRect().top+window.scrollY-oculto),behavior:'smooth'});
+    }
+  }
+}
+/** Atalhos de mês do histórico. O mês em tela leva aria-current + destaque. */
+function desenharAtalhosMes(M,comp){
+  const box=document.getElementById('mes-atalhos'); if(!box) return;
+  box.innerHTML=COMPS.map(c=>`<button type="button" class="mes-b${c===comp?' on':''}" data-comp="${esc(c)}"${c===comp?' aria-current="true"':''}>${esc(mesLabel(c))}</button>`).join('');
+}
 
 function pintarMes(M,comp){
   const de=document.getElementById('div-editor'); if(de){ de.innerHTML=''; de.dataset.open=''; } // fecha o editor de dividendos ao trocar de mês
@@ -2013,14 +2177,16 @@ function pintarMes(M,comp){
       <a class="btn" href="#rateio">Ver ${esc(M.voc.titulo.toLowerCase())} ↓</a></div></div>`;
 
   const prov=provisaoDoMes(M,comp);
-  const lucroAp=num(getM(r,'Apuração de lucro do mês (R$)'));
+  /* A base da distribuição é o RESULTADO LÍQUIDO — o mesmo número do tile ao lado, o que
+     sobrou depois dos impostos. É de lá que o dividendo sai; "lucro apurado" era outra
+     conta e batia com nada na tela. */
   const divid=num(getM(r,'Dividendos distribuídos (R$)'));
-  const semDiv = lucroAp>0 && divid<=0;
+  const semDiv = liq>0 && divid<=0;
   document.getElementById('tiles').innerHTML=`<div class="tiles">
     ${M.reg.retencao?`<div class="card tile"><span class="lbl">Retido na fonte</span><div class="v num">${brl(ret)}</div><div class="s">${ret?'já pago por quem te contratou':'nenhuma retenção no mês'}</div></div>`:''}
     <div class="card tile"><span class="lbl">Carga efetiva</span><div class="v num">${pct(carga)}</div><div class="s">sobre o faturamento bruto</div></div>
     <div class="card tile"><span class="lbl">Resultado líquido</span><div class="v num" style="color:#0C756F">${brl(liq)}</div><div class="s">depois dos impostos</div></div>
-    <button type="button" id="card-div" class="card tile card-click${semDiv?' div-alerta':''}"><span class="lbl">Dividendos distribuídos</span><div class="v num">${divid>0?brl(divid):'—'}</div><div class="s">${semDiv?'⚠ nenhuma distribuição informada':(divid>0?('de '+brl(lucroAp)+' de lucro apurado'):'nenhum valor informado')}</div><span class="tile-cta">${divid>0?'Editar distribuição':'Informar distribuição'} →</span></button></div>`;
+    <button type="button" id="card-div" class="card tile card-click${semDiv?' div-alerta':''}"><span class="lbl">Dividendos distribuídos</span><div class="v num">${divid>0?brl(divid):'—'}</div><div class="s">${semDiv?'⚠ nenhuma distribuição informada':(divid>0?('de '+brl(liq)+' de resultado líquido'):'nenhum valor informado')}</div><span class="tile-cta">${divid>0?'Editar distribuição':'Informar distribuição'} →</span></button></div>`;
   const cd=document.getElementById('card-div'); if(cd) cd.addEventListener('click',()=>abrirEditorDividendos(M,comp));
 
   /* "Provisão" é palavra de contador. O que o cliente precisa saber é que este dinheiro
@@ -2034,6 +2200,7 @@ function pintarMes(M,comp){
       <div class="prov-compact-total"><span>Total do ${prov.tri}º trimestre de ${prov.ano}</span><b class="num">${brl(prov.total)}</b></div></div>`; })():'';
 
   desenharRateio(M,comp,tot);
+  desenharAtalhosMes(M,comp);                     // o histórico marca qual mês está em tela
   NF_TETO=PASSO;                                  // mês novo, lista nova: o teto volta ao início
   desenharNotas(M,comp);
   IND_SUJO=true;                                  // o bloco de indicadores só é remontado quando aberto
@@ -2069,9 +2236,11 @@ function corDaCategoria(cat){ cat=String(cat||'').toLowerCase();
   if(cat.indexOf('pessoal')>-1) return PAL.inss; if(cat.indexOf('federal')>-1) return PAL.irpj; return PAL.couro; }
 
 /** Quebra o valor de uma guia por centro, somando os mesmos meses que valorDe usaria
-    (respeita acumula_meses, ex.: o trimestre do IRPJ), a partir do rateio autoritativo. */
+    (respeita acumula_meses, ex.: o trimestre do IRPJ), a partir do rateio autoritativo.
+    item.regra permite pedir a quebra de UMA métrica/UM mês só (provisão, parcela do mês)
+    sem duplicar esta regra em outro lugar. */
 function detalheGuiaPorCentro(M,item){
-  const reg=M.regraDe[item.id_regra]||{}; const fonte=String(reg.metrica_fonte||'').trim(); if(!fonte) return [];
+  const reg=item.regra||M.regraDe[item.id_regra]||{}; const fonte=String(reg.metrica_fonte||'').trim(); if(!fonte) return [];
   const chaves=fonte.split('|').map(s=>s.trim()).filter(Boolean); const n=Math.max(1,num(reg.acumula_meses)||1);
   const ref=String(item.competencia_ref||''); if(!/^\d{4}-\d{2}$/.test(ref)) return [];
   const [a,m]=ref.split('-').map(Number); const porCentro={};
@@ -2079,28 +2248,101 @@ function detalheGuiaPorCentro(M,item){
     rateioParaComp(M,c).forEach(x=>{ if(!x.centro) return; const v=chaves.reduce((s,k)=>s+num(x[k]),0); porCentro[x.centro]=(porCentro[x.centro]||0)+v; }); }
   return Object.entries(porCentro).map(([centro,v])=>({centro,v:Math.round(v*100)/100})).filter(x=>x.v>0.004).sort((a,b)=>b.v-a.v);
 }
+/** As chaves de métrica de uma regra: "PIS a pagar (R$)|COFINS a pagar (R$)" → duas chaves. */
+function chavesDaRegra(reg){ return String((reg||{}).metrica_fonte||'').split('|').map(s=>s.trim()).filter(Boolean); }
+
+/* IRPJ e CSLL fecham por trimestre: nos meses do meio eles sumiam de "Guias do mês" e o
+   cliente não via que já está acumulando imposto — depois levava o susto no fechamento.
+   Aqui a parcela do mês volta à lista como PROVISÃO, informativa: não é guia a pagar e
+   não entra em total nenhum da página. O valor é o que já está no rateio da competência. */
+const NOME_PROVISAO={'IR a pagar (R$)':'IRPJ','CSLL a pagar (R$)':'CSLL'};
+function guiasProvisionadas(M,comp,jaNaLista){
+  if(!M.reg.provisaoTrimestral) return [];          // no Simples não existe IRPJ/CSLL para provisionar
+  const listadas=new Set(); (jaNaLista||[]).forEach(it=>chavesDaRegra(M.regraDe[it.id_regra]).forEach(k=>listadas.add(k)));
+  const out=[];
+  (M.regras||[]).forEach(reg=>{
+    if(String(reg.ativo)==='FALSE'||num(reg.acumula_meses)<=1||!guiaEhRateavel(reg)) return;   // só guia que acumula meses
+    chavesDaRegra(reg).forEach(k=>{
+      if(listadas.has(k)||!NOME_PROVISAO[k]) return;   // já listada = este mês fecha o trimestre
+      listadas.add(k);
+      const g={id_regra:reg.id, regra:{metrica_fonte:k,acumula_meses:1}, competencia_ref:comp,
+               descricao:NOME_PROVISAO[k], prov:true};
+      g.det=detalheGuiaPorCentro(M,g);
+      g.v=Math.round(g.det.reduce((s,d)=>s+d.v,0)*100)/100;   // o total é a soma da divisão exibida
+      if(g.v>0.004) out.push(g);
+    });
+  });
+  return out.sort((a,b)=>b.v-a.v);
+}
+
+/** Guias rateáveis da competência + as provisões do trimestre, cada uma já com a divisão
+    por centro. Fonte única: "Guias do mês" e a quebra por centro da tabela leem daqui. */
+function guiasRateaveisDoMes(M,comp){
+  const fiscais=M.cal.filter(c=>c.competencia_ref===comp).map(c=>({...c,...M.valorDe(c)}))
+    .filter(it=>guiaEhRateavel(M.regraDe[it.id_regra])).sort((a,b)=>b.v-a.v)
+    .map(it=>({...it, prov:false, det: it.v>0?detalheGuiaPorCentro(M,it):[]}));
+  return fiscais.concat(guiasProvisionadas(M,comp,fiscais));
+}
+
+/** Uma linha de "Guias do mês". A provisão reusa o selo de estimativa: é o mesmo recado
+    ("este número ainda vai mudar"), não merece cor nova. */
+function guiaLinhaHTML(g){
+  const status=g.prov?'estimativa':(g.v<=0?'aberto':(g.est?'estimativa':'fechada'));
+  const rot=g.prov?'Provisão · estimado':{fechada:'Valor final',estimativa:'Ainda é estimativa',aberto:'Sem valor ainda'}[status];
+  const det=g.det||[];
+  return `<div class="guia-row"><div class="guia-main"><span class="guia-status status-${status}">${esc(rot)}</span><span class="guia-nome">${esc(g.descricao)}</span>
+    <span class="guia-valor num ${status==='estimativa'?'estimativa':''}">${g.v>0?brl(g.v):'—'}${(!g.prov&&status==='estimativa')?' (est.)':''}</span>
+    ${det.length?`<button class="guia-toggle" type="button" aria-expanded="false" onclick="alternarDetalheGuia(this)"><span>ver a divisão</span><span class="car">▾</span></button>`:''}</div>
+    ${g.prov?`<p class="guia-prov-nota">Não é guia para pagar em ${esc(mesNome(g.competencia_ref))}: é o quanto já está sendo acumulado para a guia do trimestre.</p>`:''}
+    ${det.length?`<div class="guia-detalhe">${det.map(d=>`<div class="guia-detalhe-row"><span>${esc(d.centro)}</span><b class="num">${brl(d.v)}</b></div>`).join('')}</div>`:''}</div>`;
+}
+function alternarDetalheGuia(btn){
+  const d=btn.closest('.guia-row').querySelector('.guia-detalhe'); const a=d.classList.toggle('aberto');
+  btn.classList.toggle('on',a); btn.setAttribute('aria-expanded',a?'true':'false');
+  btn.firstChild.textContent=a?'ocultar':'ver a divisão';
+}
 
 function desenharGuiasDoMes(M,comp){
-  const itens=M.cal.filter(c=>c.competencia_ref===comp).map(c=>({...c,...M.valorDe(c)}));
-  const fiscais=itens.filter(it=>guiaEhRateavel(M.regraDe[it.id_regra])).sort((a,b)=>b.v-a.v);
-  const outras=itens.filter(it=>!guiaEhRateavel(M.regraDe[it.id_regra]) && it.v>0 && String((M.regraDe[it.id_regra]||{}).periodicidade)!=='Anual').sort((a,b)=>b.v-a.v);
+  const guias=guiasRateaveisDoMes(M,comp);
+  const outras=M.cal.filter(c=>c.competencia_ref===comp).map(c=>({...c,...M.valorDe(c)}))
+    .filter(it=>!guiaEhRateavel(M.regraDe[it.id_regra]) && it.v>0 && String((M.regraDe[it.id_regra]||{}).periodicidade)!=='Anual').sort((a,b)=>b.v-a.v);
 
   const V=M.voc;
   const box=document.getElementById('guias-mes');
   /* "Fechada" era lido como "já paga". O rótulo agora fala do VALOR, não do pagamento —
      e a legenda diz, sem rodeio, que marcar pagamento é na agenda. */
-  box.innerHTML=fiscais.length?`<div class="card guias-card"><div class="relacao-head"><h2>Guias de ${esc(mesNome(comp))}</h2><span class="head-nota">quanto é de cada ${esc(V.um)}: toque em "ver a divisão"</span></div>
-    ${fiscais.map(it=>{ const status=it.v<=0?'aberto':(it.est?'estimativa':'fechada'); const rot={fechada:'Valor final',estimativa:'Ainda é estimativa',aberto:'Sem valor ainda'}[status];
-      const det=it.v>0?detalheGuiaPorCentro(M,it):[];
-      return `<div class="guia-row"><div class="guia-main"><span class="guia-status status-${status}">${rot}</span><span class="guia-nome">${esc(it.descricao)}</span>
-        <span class="guia-valor num ${status==='estimativa'?'estimativa':''}">${it.v>0?brl(it.v):'—'}${status==='estimativa'?' (est.)':''}</span>
-        ${det.length?`<button class="guia-toggle" onclick="const d=this.closest('.guia-row').querySelector('.guia-detalhe');const a=d.classList.toggle('aberto');this.classList.toggle('on',a);this.firstChild.textContent=a?'ocultar':'ver a divisão'"><span>ver a divisão</span><span class="car">▾</span></button>`:''}</div>
-        ${det.length?`<div class="guia-detalhe">${det.map(d=>`<div class="guia-detalhe-row"><span>${esc(d.centro)}</span><b class="num">${brl(d.v)}</b></div>`).join('')}</div>`:''}</div>`;}).join('')}
+  box.innerHTML=guias.length?`<div class="card guias-card"><div class="relacao-head"><h2>Guias de ${esc(mesNome(comp))}</h2><span class="head-nota">quanto é de cada ${esc(V.um)}: toque em "ver a divisão"</span></div>
+    ${guias.map(g=>guiaLinhaHTML(g)).join('')}
     <p class="guias-nota">Nenhuma guia desta lista está paga — aqui só mostramos o valor. Marcar como agendada ou paga é na <b>Agenda de pagamentos</b>.</p></div>`:'';
 
   const ob=document.getElementById('outras');
   ob.innerHTML=outras.length?`<div class="card outras"><h4>Outras guias de ${esc(mesNome(comp))}</h4><div class="lbl" style="margin:-4px 0 8px;text-transform:none;letter-spacing:0">não entram na divisão por ${esc(V.um)} (folha e retenções)</div>
     ${outras.map(it=>`<div class="outras-row"><i class="sw" style="background:${corDaCategoria(it.categoria)}"></i><span>${esc(it.descricao)}</span><b class="num">${brl(it.v)}</b></div>`).join('')}</div>`:'';
+}
+
+/* Cada guia do mês quebrada por centro, sempre na PARCELA DA COMPETÊNCIA (acumula_meses:1):
+   a guia do trimestre inteiro aparece em "Guias do mês"; aqui o cliente compara com a
+   coluna "Impostos" da própria linha, e as duas têm de fechar. */
+function parcelasDoMes(M,comp){
+  return guiasRateaveisDoMes(M,comp).map(g=>{ const reg=g.regra||M.regraDe[g.id_regra]||{};
+    return { nome:g.descricao, prov:!!g.prov, parcial:!g.prov&&num(reg.acumula_meses)>1,
+      por:detalheGuiaPorCentro(M,{regra:{metrica_fonte:reg.metrica_fonte,acumula_meses:1},competencia_ref:comp}) }; });
+}
+/** "Por guia, quanto de cada um" virado: por um, quanto de cada guia. O total é o da
+    própria linha da tabela (arredondar guia a guia dava um centavo de diferença ao lado
+    da coluna "Impostos" — e um centavo teimoso destrói a confiança no resto). */
+function quebraGuiasHTML(M,comp,linhaRat,parcelas){
+  const centro=linhaRat.centro;
+  const linhas=parcelas.map(p=>({...p, v:(p.por.find(d=>d.centro===centro)||{v:0}).v})).filter(x=>x.v>0.004);
+  if(!linhas.length) return `<div class="rat-det-box"><div class="rat-det-vazio">Nenhum imposto de ${esc(mesNome(comp))} nesta linha.</div></div>`;
+  const soma=M.impostos(linhaRat);
+  return `<div class="rat-det-box"><div class="rat-det-cab">Impostos de ${esc(mesNome(comp))} · ${esc(centro)}</div>
+    ${linhas.map(x=>`<div class="rat-det-row"><span class="rat-det-nome">${esc(x.nome)}${x.prov?' <i class="rat-tag">Provisão · estimado</i>':(x.parcial?' <i class="rat-tag">parcela do mês</i>':'')}</span><b class="num${x.prov?' estimativa':''}">${brl(x.v)}</b></div>`).join('')}
+    <div class="rat-det-row tot"><span>Total</span><b class="num">${brl(soma)}</b></div></div>`;
+}
+function alternarGuiasDoCentro(btn){
+  const det=btn.closest('tr').nextElementSibling; if(!det||!det.classList.contains('rat-det')) return;
+  const a=det.classList.toggle('aberto'); btn.setAttribute('aria-expanded',a?'true':'false');
 }
 
 let RAT_ULT={linhas:[],tot:0};      // último rateio pintado (o gráfico é desenhado depois do texto)
@@ -2109,11 +2351,20 @@ function desenharRateio(M,comp,tot){
   const linhas=rateioParaComp(M,comp).filter(x=>num(x['Total (R$)'])>0||num(x['Nº NFs'])>0||M.impostos(x)>0)
     .sort((a,b)=>num(b['Total (R$)'])-num(a['Total (R$)']));
   RAT_ULT={linhas,tot};
+  /* O nome abre as guias daquele centro no mês: é a mesma quebra de detalheGuiaPorCentro
+     virada do avesso. "Não identificado" continua indo direto para as pendências — ali o
+     que falta não é ver a conta, é dizer de quem é a nota. */
+  const parcelas=parcelasDoMes(M,comp);
+  const nCols=M.reg.retencao?6:5;
   const tb=document.querySelector('#rat tbody');
-  tb.innerHTML=linhas.map(x=>{ const nid=x.centro==='Não identificado'; const t=num(x['Total (R$)']); const sh=tot?t/tot:0;
-    return `<tr class="${nid?'nid':''}"${nid?` onclick="irParaPendencias()" style="cursor:pointer" title="Ver as notas que faltam definir"`:''}><td><b style="font-weight:${nid?800:600}">${esc(x.centro)}${nid?` <span style="font-weight:600;text-decoration:underline;color:var(--alerta)">${esc(V.acao.toLowerCase())} ↓</span>`:''}</b><div class="share"><i style="width:${(sh*100).toFixed(1)}%"></i></div></td>
+  tb.innerHTML=linhas.map((x,i)=>{ const nid=x.centro==='Não identificado'; const t=num(x['Total (R$)']); const sh=tot?t/tot:0;
+    const nome=nid
+      ? `<b style="font-weight:800">${esc(x.centro)} <span style="font-weight:600;text-decoration:underline;color:var(--alerta)">${esc(V.acao.toLowerCase())} ↓</span></b>`
+      : `<button type="button" class="rat-nome" aria-expanded="false" aria-controls="ratdet-${i}" onclick="alternarGuiasDoCentro(this)" title="Ver as guias deste ${esc(V.um)}"><b>${esc(x.centro)}</b><span class="car" aria-hidden="true">▾</span></button>`;
+    return `<tr class="${nid?'nid':''}"${nid?` onclick="irParaPendencias()" style="cursor:pointer" title="Ver as notas que faltam definir"`:''}><td>${nome}<div class="share"><i style="width:${(sh*100).toFixed(1)}%"></i></div></td>
       <td class="r num">${x['Nº NFs']}</td><td class="r num">${brl(t)}<div style="font-size:var(--fs-1);color:var(--muted)">${pct(sh)}</div></td>
-      <td class="r num">${brl(M.impostos(x))}</td>${M.reg.retencao?`<td class="r num">${brl(M.retido(x))}</td>`:''}<td class="r num">${brl(num(x['Resultado Líquido (R$)']))}</td></tr>`;
+      <td class="r num">${brl(M.impostos(x))}</td>${M.reg.retencao?`<td class="r num">${brl(M.retido(x))}</td>`:''}<td class="r num">${brl(resLiqDe(M,x))}</td></tr>`
+      + (nid?'':`<tr class="rat-det" id="ratdet-${i}"><td colspan="${nCols}">${quebraGuiasHTML(M,comp,x,parcelas)}</td></tr>`);
   }).join('')||`<tr><td colspan="6" style="color:var(--muted)">${esc(V.vazio)} neste mês.</td></tr>`;
 
   const nidRow=linhas.find(x=>x.centro==='Não identificado'); const shareNid=nidRow&&tot?num(nidRow['Total (R$)'])/tot:0;
@@ -2326,7 +2577,8 @@ function confirmarSalvar(M,gid){
   const fechar=()=>{ bg.classList.remove('on'); conf.onclick=null; canc.onclick=null; };
   canc.onclick=fechar;
   conf.onclick=async()=>{ conf.disabled=true; conf.textContent='Salvando…';
-    try{ await salvarCentros(M,E,map); fechar(); }
+    // fecha o modal ANTES de repintar: a recarga leva a tarja, não o modal travado
+    try{ await salvarCentros(M,E,map); fechar(); recarregarPainel(M); }
     /* O erro do sistema não vai para a tela: ele diz o que sobreviveu e o que fazer. */
     catch(err){ document.getElementById('modal-texto').innerHTML='<span style="color:var(--alerta)">Não consegui salvar essa divisão agora. Seus valores continuam na tela — tente de novo.</span>'; }
     finally{ conf.disabled=false; conf.textContent='Sim, salvar'; }
@@ -2348,57 +2600,114 @@ async function salvarCentros(M,E,map){
   E.nf.centros=map;
   const gid=E.gid||`${E.comp}-${E.tab}-${E.idx}`; const row=document.getElementById('editor-'+gid); if(row){row.classList.remove('aberto');row.querySelector('td').innerHTML='';}
   delete EDIT_STATE[gid];
-  // atualiza SÓ o que depende do rateio, sem recarregar a página nem re-renderizar o painel todo
-  if(E.comp===SEL){
-    const r=M.porComp[E.comp]; const tot=num(getM(r,'Total (R$)'));
-    desenharRateio(M,E.comp,tot);      // tabela de rateio + gráfico de participação + alerta de pendências
-    desenharGuiasDoMes(M,E.comp);      // quebra "por centro" das guias
-    desenharNotas(M,E.comp);           // chips e contagem de pendências
-  } else {
-    const chips=document.getElementById('chips-'+gid); if(chips) chips.innerHTML=chipsCentro(M,E.nf);
+  /* Repintar só a tabela do rateio era mentira por omissão: mudar de quem é uma nota
+     move o herói, o total de impostos, as guias e as provisões junto. Quem repinta é o
+     recarregarPainel de quem chamou — com o payload relido da planilha. */
+}
+
+/* ---- Editar dividendos/lucros distribuídos (grava no Fechamento) ----
+   Salva sozinho, como as caixinhas do dpto pessoal: 3s depois da última tecla, mais
+   descarga imediata ao sair do campo, ao esconder a aba e ao trocar de competência.
+   O debounce sozinho perde o que foi digitado por quem sai da tela em seguida. */
+const DV_RASC={};     // 'AAAA-MM|centro' -> texto ainda não confirmado pelo servidor
+const DV_TIMER={};    // 'AAAA-MM|centro' -> timer do debounce
+const DV_STATUS={};   // 'AAAA-MM|centro' -> {txt,cls} — sobrevive à repintura da tela
+const chaveDv=(comp,centro)=>comp+'|'+centro;
+function statusDv(comp,centro,txt,cls){
+  DV_STATUS[chaveDv(comp,centro)]={txt,cls};
+  if(comp!==SEL) return;
+  const el=Array.from(document.querySelectorAll('.dv-st')).find(e=>e.dataset.centro===centro);
+  if(el){ el.textContent=txt; el.className='dv-st'+(cls?' '+cls:''); }
+}
+function agendarDividendo(comp,centro,valor){
+  const k=chaveDv(comp,centro); DV_RASC[k]=valor;
+  clearTimeout(DV_TIMER[k]); DV_TIMER[k]=setTimeout(()=>salvarDividendo(comp,centro),3000);
+}
+function salvarDividendoJa(comp,centro){
+  const k=chaveDv(comp,centro); if(!DV_TIMER[k]) return;      // nada esperando: já foi
+  clearTimeout(DV_TIMER[k]); DV_TIMER[k]=null; salvarDividendo(comp,centro);
+}
+/** Descarrega tudo o que ainda está no debounce. */
+function salvarDividendosPendentes(){
+  Object.keys(DV_TIMER).forEach(k=>{ const p=k.split('|'); salvarDividendoJa(p[0],p.slice(1).join('|')); });
+}
+/* A aba sumindo (trocar de app no celular, bloquear a tela) é quando o navegador
+   congela a página — é aqui que o valor se perderia calado. */
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') salvarDividendosPendentes(); });
+
+/** Grava a distribuição de UM centro. O backend só mexe nos centros que recebe, então
+    mandar um de cada vez não zera os outros. */
+function enviarDividendo(comp,centro,valor){
+  if(!API_URL) return Promise.reject(new Error('demonstração'));
+  const qs=new URLSearchParams({ id:IDENTIDADE.id, codigo:IDENTIDADE.codigo, acao:'atualizar_dividendos',
+    competencia:comp, valores:JSON.stringify({[centro]:valor}) });
+  return jsonp(API_URL+'?'+qs.toString()).then(d=>{ if(d&&d.erro) throw new Error(d.erro); return d; });
+}
+/* Sempre no modelo que está NA TELA (M_GLOBAL): depois de uma repintura, um timer
+   antigo guardaria um modelo já substituído. */
+async function salvarDividendo(comp,centro,ehRetentativa){
+  const k=chaveDv(comp,centro); const valor=DV_RASC[k]; if(valor===undefined) return;   // já salvo
+  const M=M_GLOBAL; DV_TIMER[k]=null;
+  statusDv(comp,centro,'Salvando…','salvando');
+  try{
+    const d=await enviarDividendo(comp,centro,numBR(valor));
+    if(DV_RASC[k]===valor) delete DV_RASC[k];        // pode ter digitado mais durante o envio
+    if(d&&d.rateio){ M.rateioAPI=(M.rateioAPI||[]).filter(x=>x.competencia!==comp).concat(d.rateio); }
+    if(d&&d.empresa){ Object.assign(M.porComp[comp]||{}, d.empresa); }
+    guardarDividendo(M,comp,centro,numBR(valor));
+    statusDv(comp,centro,'Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),'salvo');
+    // repinta a tela toda (o dividendo mexe no tile e no rateio) — mas só quando não há
+    // mais nada esperando, senão cada tecla derrubaria a repintura da anterior
+    if(!Object.keys(DV_TIMER).some(x=>DV_TIMER[x])) recarregarPainel(M);
+  }catch(e){
+    /* O valor continua na tela e no rascunho — a frase tem de dizer isso, senão ele
+       acha que perdeu e digita de novo. E a nova tentativa prometida existe (uma, 8s). */
+    if(MODO_DEMO) statusDv(comp,centro,'Modo demonstração: nada é gravado na planilha.','erro');
+    else{
+      statusDv(comp,centro,'Não salvei ainda. Seu valor está aqui; vou tentar de novo sozinho.','erro');
+      if(!ehRetentativa) DV_TIMER[k]=setTimeout(()=>salvarDividendo(comp,centro,true),8000);
+    }
   }
 }
 
-/* ---- Editar dividendos/lucros distribuídos (grava no Fechamento) ---- */
+/* Mantém o rateio em memória em dia depois de gravar: sem isto, repintar a tela (ou
+   trocar de mês e voltar) redesenharia o campo com o valor ANTIGO — a mesma perda por
+   outro caminho. Só mexe em linha que já existe: inventar uma faria o rateio da
+   competência inteira passar a ser essa única linha. */
+function guardarDividendo(M,comp,centro,valor){
+  const linha=(M.rateioAPI||[]).find(x=>x.competencia===comp&&x.centro===centro);
+  if(linha){ linha['Dividendos distribuídos (R$)']=valor; delete linha.__norm; }
+}
+
 function abrirEditorDividendos(M,comp){
   const box=document.getElementById('div-editor'); if(!box) return;
-  if(box.dataset.open==='1'){ box.innerHTML=''; box.dataset.open=''; return; }
+  if(box.dataset.open==='1'){ salvarDividendosPendentes(); box.innerHTML=''; box.dataset.open=''; return; }
   box.dataset.open='1';
   const rat=rateioParaComp(M,comp); const byC={}; rat.forEach(x=>{ if(x.centro) byC[x.centro]=x; });
   const linhas=centrosReais(M).map(c=>{
-    const o=byC[c]||{}; const dv=num(o['Dividendos distribuídos (R$)']); const luc=num(o['Apuração de lucro do mês (R$)']);
+    // a base do que dá para distribuir é o resultado líquido do centro, não o lucro apurado
+    const o=byC[c]||{}; const dv=num(o['Dividendos distribuídos (R$)']); const liq=resLiqDe(M,o);
+    const k=chaveDv(comp,c); const st=DV_STATUS[k]||{txt:'',cls:''};
+    // rascunho não confirmado vence o que veio da planilha: repintar não pode desfazer o que ele digitou
+    const valor=DV_RASC[k]!==undefined?DV_RASC[k]:(dv>0?dv.toFixed(2).replace('.',','):'');
     return `<div class="dv-row">
       <span class="dv-centro"><i style="background:${centroCor(M,c)}"></i>${esc(c)}</span>
-      <span class="dv-luc">lucro apurado ${brl(luc)}</span>
-      <input class="dv-in" data-centro="${esc(c)}" type="text" inputmode="decimal" value="${dv>0?dv.toFixed(2).replace('.',','):''}" placeholder="0,00" aria-label="Dividendos ${esc(c)}"></div>`;
+      <span class="dv-luc">resultado líquido ${brl(liq)}</span>
+      <input class="dv-in" data-centro="${esc(c)}" type="text" inputmode="decimal" value="${esc(valor)}" placeholder="0,00" aria-label="Dividendos ${esc(c)}">
+      <span class="dv-st${st.cls?' '+st.cls:''}" data-centro="${esc(c)}" role="status">${esc(st.txt)}</span></div>`;
   }).join('');
   box.innerHTML=`<div class="card dv-card">
     <div class="dv-head"><b>Distribuição de lucros/dividendos — ${mesNome(comp)}</b><button class="dv-close" data-act="fechar" aria-label="Fechar">✕</button></div>
-    <p class="dv-sub">Informe quanto foi efetivamente distribuído a cada ${esc(M.voc.um)} neste mês. Salva na planilha do mês e atualiza o painel.</p>
-    <div class="dv-list">${linhas}</div>
-    <div class="dv-foot"><span id="dv-msg"></span><button class="btn dv-save" data-act="salvar">Salvar distribuição</button></div></div>`;
-  box.querySelector('[data-act="fechar"]').addEventListener('click',()=>{ box.innerHTML=''; box.dataset.open=''; });
-  box.querySelector('[data-act="salvar"]').addEventListener('click',()=>salvarDividendos(M,comp,box));
-}
-
-async function salvarDividendos(M,comp,box){
-  const msg=box.querySelector('#dv-msg'); const btn=box.querySelector('.dv-save');
-  const valores={};
-  // só envia o que foi preenchido (vazio = não mexe no valor atual daquele sócio; digite 0 para zerar)
-  box.querySelectorAll('.dv-in').forEach(inp=>{ const raw=inp.value.trim().replace(/\./g,'').replace(',','.');
-    if(raw==='') return; valores[inp.dataset.centro]=Number(raw)||0; });
-  if(!API_URL){ msg.textContent='Sem API neste modo de demonstração.'; msg.style.color='#8B2E22'; return; }
-  btn.disabled=true; btn.textContent='Salvando…'; msg.textContent='';
-  try{
-    const qs=new URLSearchParams({ id:IDENTIDADE.id, codigo:IDENTIDADE.codigo, acao:'atualizar_dividendos',
-      competencia:comp, valores:JSON.stringify(valores) });
-    const d=await jsonp(API_URL+'?'+qs.toString()); if(d.erro) throw new Error(d.erro);
-    if(d.rateio){ M.rateioAPI=(M.rateioAPI||[]).filter(x=>x.competencia!==comp).concat(d.rateio); }
-    if(d.empresa){ Object.assign(M.porComp[comp]||{}, d.empresa); }
-    box.innerHTML=''; box.dataset.open='';
-    if(comp===SEL) pintarMes(M,comp);
-  }catch(e){ btn.disabled=false; btn.textContent='Salvar distribuição';
-    msg.textContent='Não consegui salvar agora. Seus valores continuam na tela — tente de novo em alguns segundos.'; msg.style.color='#8B2E22'; }
+    <p class="dv-sub">Informe quanto foi efetivamente distribuído a cada ${esc(M.voc.um)} neste mês.
+      <b>Salva sozinho</b>: alguns segundos depois da última tecla, ou assim que você sai do campo.</p>
+    <div class="dv-list">${linhas}</div></div>`;
+  box.querySelector('[data-act="fechar"]').addEventListener('click',()=>{ salvarDividendosPendentes(); box.innerHTML=''; box.dataset.open=''; });
+  box.querySelectorAll('.dv-in').forEach(inp=>{
+    const centro=inp.dataset.centro;
+    inp.addEventListener('input',()=>{ statusDv(comp,centro,'Digitando… (salva sozinho)',''); agendarDividendo(comp,centro,inp.value); });
+    // sair do campo é o gesto que antecede sair da tela: não dá para esperar os 3s
+    inp.addEventListener('blur',()=>salvarDividendoJa(comp,centro));
+  });
 }
 
 /** Rola até as notas e liga o filtro de pendências (notas sem centro). */
@@ -2417,9 +2726,14 @@ function desenharGraficos(M){
   const base={responsive:true,maintainAspectRatio:false,animation:{duration:550},
     plugins:{legend:{display:false},tooltip:{backgroundColor:PAL.petroleo,padding:10,cornerRadius:6,titleFont:{family:'Montserrat',size:12,weight:600},bodyFont:{family:'Montserrat',size:12},displayColors:true,boxWidth:8,boxHeight:8,callbacks:{label:c=>' '+c.dataset.label+': '+brl(c.parsed.y??c.parsed)}}},
     scales:{x:{grid:{display:false},border:{color:PAL.line},ticks:{color:PAL.muted,font:{family:'Montserrat',size:11}}},y:{grid:{color:'#EDE4D6'},border:{display:false},ticks:{color:PAL.muted,font:{family:'Montserrat',size:11},callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'}}}};
+  /* Clicar numa coluna do histórico troca a competência da página — mesmo caminho do
+     seletor. 'index' sem intersect: acerta a coluna inteira, não só o pixel da barra. */
+  const opcC1={...base, onClick:(ev,els,ch)=>{
+    const p=ch.getElementsAtEventForMode(ev,'index',{intersect:false},true);
+    if(p&&p.length){ const r=M.empresa[p[0].index]; if(r) trocarComp(M,r.competencia,true); } }};
   const c1=new Chart(document.getElementById('c1'),{data:{labels,datasets:[
     {type:'bar',label:'Faturamento',data:M.empresa.map(r=>num(getM(r,'Total (R$)'))),backgroundColor:'#D9CDBB',borderRadius:{topLeft:4,topRight:4},maxBarThickness:24,order:2},
-    {type:'line',label:'Impostos',data:M.empresa.map(r=>M.impostos(r)),borderColor:PAL.vinho,backgroundColor:PAL.vinho,borderWidth:2,tension:.3,pointRadius:2.5,pointHoverRadius:5,order:1}]},options:base});
+    {type:'line',label:'Impostos',data:M.empresa.map(r=>M.impostos(r)),borderColor:PAL.vinho,backgroundColor:PAL.vinho,borderWidth:2,tension:.3,pointRadius:2.5,pointHoverRadius:5,order:1}]},options:opcC1});
   document.getElementById('lg2').innerHTML=M.tribs.map(t=>`<span><i class="sw" style="background:${t.c}"></i>${t.n}</span>`).join('');
   // fio branco entre as barras empilhadas: sem ele dois tributos vizinhos viram um bloco só
   const c2=new Chart(document.getElementById('c2'),{type:'bar',data:{labels,datasets:M.tribs.map(t=>({label:t.n,data:M.empresa.map(r=>num(getM(r,t.pag))),backgroundColor:t.c,borderRadius:2,maxBarThickness:24,borderColor:FIO,borderWidth:{top:FIO_W,right:0,bottom:0,left:0}}))},options:{...base,scales:{x:{...base.scales.x,stacked:true},y:{...base.scales.y,stacked:true}}}});
