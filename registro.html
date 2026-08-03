@@ -34,6 +34,10 @@
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
   /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
   --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Escala de texto e o teal claro: as outras telas ja tinham, esta nao. Sem eles
+     o CSS compartilhado da regua de acoes cai no valor herdado e desalinha. */
+  --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
+  --receita-soft:#DBEFEC;
   /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
   --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
@@ -114,7 +118,9 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .cli-nome{font-weight:700;font-size:15px;flex:1 1 200px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cli-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end;flex:2 1 260px;min-width:0}
 .mt{font-size:11px;font-weight:700;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap;max-width:250px;overflow:hidden;text-overflow:ellipsis}
-.mt.vazio{color:var(--muted);font-weight:600;background:transparent;border-style:dashed}
+/* O `.vazio` da lista sem resultado (15px, padding de 30px) estava vencendo aqui e
+   inchava o selo "sem CNPJ" num balão de 80px de altura. Repete o tamanho do .mt. */
+.mt.vazio{color:var(--muted);font-weight:600;background:transparent;border-style:dashed;font-size:11px;padding:2px 9px}
 /* Selo de situação: Ativo (verde discreto) · Em inativação (âmbar) · Inativo
    (vermelho) · sem informação (cinza). Aparece na linha fechada da lista. */
 .pill{font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap;letter-spacing:.2px;border:1px solid transparent}
@@ -230,6 +236,51 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra a.logo:hover{opacity:.82}
 
 
+/* ---------- revelacao progressiva ---------- */
+/* Régua de ações: busca sempre à mão, filtros a um clique, contagem à vista.
+   Antes os filtros ficavam todos abertos na tela — quem chegava tinha de ler a
+   parede inteira antes de achar o campo de busca, que é o que 9 em 10 usam. */
+.barra-acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.barra-acoes .campo-busca{flex:1;min-width:200px;font-size:16px;padding:12px 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
+.barra-acoes .campo-busca:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.btn-filtros{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);
+  color:var(--ink);font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.btn-filtros:hover{border-color:var(--brand-teal)}
+.btn-filtros[aria-expanded="true"]{background:var(--receita-soft);border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.btn-filtros svg{width:15px;height:15px;flex:none}
+.cont-filtros{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
+  padding:0 5px;border-radius:var(--radius-pill);background:var(--brand-teal-txt);color:#fff;
+  font-size:var(--fs-1);font-weight:800}
+/* display:inline-flex ganha do atributo hidden — sem esta linha o selo mostrava
+   um "0" permanente ao lado de Filtros. */
+.cont-filtros[hidden]{display:none}
+.resumo-lista{font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
+.painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
+  padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--surface-warm)}
+.painel-filtros[hidden]{display:none}
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
+/* A contagem desta tela tem quatro números; no celular ela precisa quebrar, senão
+   o nowrap do contrato empurra a página para o lado. */
+@media(max-width:560px){.resumo-lista{white-space:normal}}
+/* Cada grupo de chips ocupa a fileira inteira: Situação e Ordenar por não se misturam. */
+.painel-filtros .grupo{width:100%;margin:0}
+.btn-limpar{min-height:38px;padding:0 15px;border-radius:var(--radius-pill);border:1px dashed var(--line-2);
+  background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:var(--fs-2);cursor:pointer}
+.btn-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+/* Os exemplos por situação continuam inteiros, só que a um clique de distância. */
+details.situacao>summary{padding:10px 13px;font-size:var(--fs-3)}
+details.situacao>.resumo{padding:0 12px 12px}
+/* Quanto da lista está desenhado. Vazio quando tudo cabe no teto — sem linha à toa. */
+.dica:empty{display:none}
+
 /* ---------- explicacao recolhida (C.2) ----------
    O dado vem primeiro; a instrucao fica a um clique e lembra a escolha. */
 details.ajuda{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin:8px 0}
@@ -304,6 +355,49 @@ function ligarDetalhes(el,chave){
   if(!el)return;
   try{if(localStorage.getItem(chave)==='1')el.open=true;}catch(e){}
   el.addEventListener('toggle',()=>{try{localStorage.setItem(chave,el.open?'1':'0');}catch(e){}});
+}
+
+/* ---------------- revelação progressiva ---------------- */
+/* Filtros recolhidos, com memória. O contador ao lado do botão existe para
+   evitar o único efeito colateral ruim de esconder filtro: a pessoa esquece que
+   filtrou e acha que os dados sumiram. Por isso, com filtro ativo, o painel
+   nasce ABERTO. */
+function ligarFiltros(pagina, contarAtivos){
+  const bt = document.getElementById('btn-filtros');
+  const pn = document.getElementById('painel-filtros');
+  if(!bt || !pn) return;
+  const chave = 'b4u_filtros_' + pagina;
+  const abrir = (v, persistir) => { pn.hidden = !v; bt.setAttribute('aria-expanded', String(v));
+                       if(persistir){ try{ localStorage.setItem(chave, v?'1':'0'); }catch(e){} } };
+  let inicial = false;
+  try{ inicial = localStorage.getItem(chave) === '1'; }catch(e){}
+  /* Abrir por causa de filtro ativo NÃO é escolha da pessoa — e por isso não pode
+     virar preferência. Antes esta abertura automática era gravada junto: bastava
+     entrar uma vez por um link com filtro para o painel passar a nascer aberto
+     para sempre, sem ninguém ter pedido. Só o clique persiste. */
+  const forcado = !!(contarAtivos && contarAtivos() > 0);
+  abrir(inicial || forcado, false);
+  bt.addEventListener('click', ()=> abrir(pn.hidden, true));
+  return { atualizarContador(){
+    const n = contarAtivos ? contarAtivos() : 0;
+    const c = bt.querySelector('.cont-filtros');
+    if(c){ c.textContent = n; c.hidden = n === 0; }
+  }};
+}
+let FILTROS_UI=null;
+
+/* Teto da lista. Dois botões de propósito: "mais 20" para quem lê, "todos" para
+   quem vai usar Ctrl+F. Buscar ou filtrar volta o teto ao início — o resultado
+   é outro, e continuar de onde parou confundiria. */
+const PASSO = 20;
+let TETO = PASSO;
+function rodapeLista(mostrados, total){
+  if(total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
 }
 /* O servidor termina o serviço: o log mostra execuções de 15s, 17s e 23s completando
    e gravando o cache. Quem desistia cedo era o front, com teto de 20s — a resposta
@@ -677,21 +771,36 @@ function visiveis(){
 }
 
 /* ---------------- lista ---------------- */
+/* A linha fechada mostra só o que pede ação: o campo QUE FALTA (sem CNPJ, sem
+   regime, sem produtos), a situação quando NÃO é "Ativo" e o selo de completude.
+   O valor preenchido — o CNPJ inteiro, a lista de produtos — é informação, não
+   tarefa: some da linha e continua no cadastro (um clique) e no title do
+   cabeçalho (passar o mouse). Eram 5 selos por ficha em 110 fichas. */
 function metaHTML(cli){
   const its=[];
-  const add=(col,rot)=>{if(!col)return;const v=valorDe(cli,col);
-    its.push(`<span class="mt${v?'':' vazio'}" title="${esc(rot+': '+(v||'em branco'))}">${esc(v||('sem '+rot.toLowerCase()))}</span>`);};
+  const add=(col,rot)=>{if(!col)return;if(valorDe(cli,col))return;
+    its.push(`<span class="mt vazio" title="${esc(rot+': em branco')}">${esc('sem '+rot.toLowerCase())}</span>`);};
   add(COL.cnpj,'CNPJ');add(COL.regime,'Regime');add(COL.produtos,'Produtos');
-  /* situação sempre visível na linha fechada — inclusive quando está em branco */
+  /* Toda situação que não seja "Ativo" continua na linha fechada — inclusive a
+     em branco. "Ativo" é o esperado de 87 dos 110: repeti-lo é ruído. */
   if(COL.ativo||cli.ativo){
     const s=situacaoDe(cli),info=SITUACOES[s];
-    its.push(`<span class="pill sit-${s}" title="${esc(info.dica)}">${esc(info.rot)}</span>`);
+    if(s!=='ativo')its.push(`<span class="pill sit-${s}" title="${esc(info.dica)}">${esc(info.rot)}</span>`);
   }
   its.push(seloHTML(cli));
   return its.filter(Boolean).join('');
 }
+/** O que saiu dos selos vira o title da linha: dá para conferir sem abrir nada. */
+function tituloCabeca(cli){
+  const p=[];
+  const add=(col,rot)=>{if(!col)return;const v=valorDe(cli,col);if(v)p.push(rot+': '+v);};
+  add(COL.cnpj,'CNPJ');add(COL.regime,'Regime');add(COL.produtos,'Produtos');
+  if(COL.ativo||cli.ativo)p.push('Situação: '+SITUACOES[situacaoDe(cli)].rot);
+  p.push('Clique para abrir o cadastro.');
+  return p.join(' · ');
+}
 function cabecaHTML(cli){
-  return `<button type="button" class="cli-head" aria-expanded="${ABERTOS.has(cli.id)?'true':'false'}">
+  return `<button type="button" class="cli-head" aria-expanded="${ABERTOS.has(cli.id)?'true':'false'}" title="${esc(tituloCabeca(cli))}">
       <span class="cli-id">${esc(cli.id)}</span>
       <span class="cli-nome">${esc(cli.nome||'(sem nome)')}</span>
       <span class="cli-meta">${metaHTML(cli)}</span>
@@ -745,37 +854,60 @@ function corpoHTML(cli){
     </div>
   </div>`;
 }
-/* Quantos filtros estão pegando agora — vira o número do "Limpar filtros" (C.5). */
-function filtrosAtivos(){return (FILTRO!=='todos'?1:0)+(String(TERMO).trim()?1:0);}
+/* Quantos controles do PAINEL estão pegando agora — vira o selo ao lado do botão
+   Filtros (C.5). Só conta o que está escondido lá dentro: a busca fica à vista na
+   régua, e um selo por causa dela faria a pessoa procurar o que não sumiu. A
+   ordenação entra porque também está no painel e também muda o que aparece. */
+function filtrosPainel(){return (FILTRO!=='todos'?1:0)+(ORDEM!=='id'||DIR!=='asc'?1:0);}
 function limparFiltros(){
-  FILTRO='todos';TERMO='';
+  FILTRO='todos';TERMO='';ORDEM='id';DIR='asc';TETO=PASSO;
   const b=document.getElementById('busca');if(b)b.value='';
   redesenhar();
 }
 function desenharChips(){
-  const html=filtrosVivos().map(f=>{
+  document.getElementById('chips').innerHTML='<span class="rot">Situação</span>'+filtrosVivos().map(f=>{
     const n=CLIENTES.filter(f.fn).length;
     return `<button type="button" class="chip ${f.cls||''} ${FILTRO===f.k?'on':''}" data-f="${f.k}">${esc(f.rot)}<span class="n">${n}</span></button>`;
   }).join('');
-  const nAtivos=filtrosAtivos();
-  document.getElementById('chips').innerHTML=html+
-    (nAtivos?`<button type="button" class="chip limpar" id="limparFiltros" title="Volta para a visão sem filtro e sem busca">Limpar filtros<span class="n">${nAtivos}</span></button>`:'');
+  /* O "Limpar filtros" agora é fixo no rodapé do painel (#btn-limpar) — não é
+     mais um chip que aparece e some no meio dos outros treze. */
 }
 function desenharLista(){
   const arr=visiveis();
   document.getElementById('cnt').textContent=arr.length+' de '+CLIENTES.length+' clientes';
-  const el=document.getElementById('lista');
+  const el=document.getElementById('lista'),dica=document.getElementById('dica');
   if(!arr.length){
     el.innerHTML=`<div class="vazio">${CLIENTES.length?'Nenhum cliente com esse filtro ou essa busca.':'A aba Registro está vazia.'}</div>`;
-    desenharChips();sincronizarURL();
+    if(dica)dica.textContent='';
+    desenharChips();desenharResumoLista();sincronizarURL();
     return;
   }
-  el.innerHTML=arr.map(c=>`<div class="cli ${classeSituacao(c)}${ABERTOS.has(c.id)?' aberto':''}" data-id="${esc(c.id)}">${cabecaHTML(c)}${ABERTOS.has(c.id)?corpoHTML(c):''}</div>`).join('');
-  desenharChips();
+  /* Teto de 20: a tela abre com o começo da lista, não com as 110 fichas. */
+  const n=Math.min(TETO,arr.length);
+  el.innerHTML=arr.slice(0,n).map(c=>`<div class="cli ${classeSituacao(c)}${ABERTOS.has(c.id)?' aberto':''}" data-id="${esc(c.id)}">${cabecaHTML(c)}${ABERTOS.has(c.id)?corpoHTML(c):''}</div>`).join('')+
+    rodapeLista(n,arr.length);
+  if(dica)dica.textContent=arr.length>n?('Mostrando '+n+' de '+arr.length+'.'):'';
+  desenharChips();desenharResumoLista();
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
   sincronizarURL();
 }
-function redesenhar(){desenharChips();desenharOrdem();desenharResumo();desenharLista();}
+/* A contagem em texto é o que permite recolher chips e cartões sem esconder
+   pendência: os números continuam na primeira linha da tela, filtrada ou não. */
+function desenharResumoLista(){
+  const el=document.getElementById('resumo-lista');if(!el)return;
+  const vis=visiveis().length,tot=CLIENTES.length;
+  const quantos=fn=>CLIENTES.filter(fn).length;
+  const p=[(vis===tot?String(tot):vis+' de '+tot)+' clientes'];
+  if(COL.ativo){const a=quantos(c=>situacaoDe(c)==='ativo');if(a)p.push(a+' ativos');}
+  if(COL.inicio){const s=quantos(c=>!valorDe(c,COL.inicio));if(s)p.push(s+' sem data de início');}
+  if(COL.cnpj){const s=quantos(c=>!valorDe(c,COL.cnpj));if(s)p.push(s+' sem CNPJ');}
+  if(COL.regime){const s=quantos(c=>!valorDe(c,COL.regime));if(s)p.push(s+' sem regime');}
+  el.textContent=p.join(' · ');
+}
+function redesenhar(){
+  desenharChips();desenharOrdem();desenharResumo();desenharLista();
+  if(FILTROS_UI)FILTROS_UI.atualizarContador();
+}
 /* ---------- busca, filtro e ordenação no endereço (C.10) ----------
    F5 volta para a mesma visão; chave, cod e #hash ficam intactos. */
 function sincronizarURL(){
@@ -813,9 +945,14 @@ function alternar(id,forcar){
   const bt=no.querySelector('.cli-head');if(bt)bt.setAttribute('aria-expanded',abrir?'true':'false');
 }
 function irPara(id){
-  if(!document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`)){
-    FILTRO='todos';TERMO='';const b=document.getElementById('busca');if(b)b.value='';redesenhar();
+  const alvo=String(id);let mexeu=false;
+  if(!visiveis().some(c=>String(c.id)===alvo)){
+    FILTRO='todos';TERMO='';const b=document.getElementById('busca');if(b)b.value='';mexeu=true;
   }
+  /* O teto não pode esconder justamente a ficha para onde estamos indo. */
+  const pos=visiveis().findIndex(c=>String(c.id)===alvo);
+  if(pos>=TETO){TETO=Math.ceil((pos+1)/PASSO)*PASSO;mexeu=true;}
+  if(mexeu)redesenhar();
   const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
   alternar(id,true);
   no.scrollIntoView({block:'center',behavior:'smooth'});
@@ -899,6 +1036,7 @@ function atualizarCabeca(id){
   const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
   const nm=no.querySelector('.cli-nome');if(nm)nm.textContent=cli.nome||'(sem nome)';
   const mt=no.querySelector('.cli-meta');if(mt)mt.innerHTML=metaHTML(cli);
+  const bt=no.querySelector('.cli-head');if(bt)bt.title=tituloCabeca(cli);   // o title carrega o que saiu dos selos
   /* a faixa lateral acompanha a mudança de situação sem redesenhar a lista */
   no.classList.remove('sit-ativo','sit-inativando','sit-inativo','sit-sem');
   no.classList.add(classeSituacao(cli));
@@ -1045,15 +1183,21 @@ function sucessoNovo(d){
 document.addEventListener('click',e=>{
   const rt=e.target.closest('[data-retry]');
   if(rt){e.stopPropagation();rt.textContent='enviando…';rt.disabled=true;tentarDeNovo(rt.dataset.retry);return;}
-  if(e.target.closest('#limparFiltros')){limparFiltros();return;}
+  if(e.target.closest('#btn-limpar')){limparFiltros();return;}
+  /* "mais 20" para quem está lendo, "todos" para quem vai usar Ctrl+F. */
+  if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
+  if(e.target.closest('.btn-todos')){TETO=CLIENTES.length;desenharLista();return;}
   const head=e.target.closest('.cli-head');
   if(head){const no=head.closest('.cli');if(no)alternar(no.dataset.id);return;}
   const chip=e.target.closest('.chip[data-f]');
-  if(chip){FILTRO=chip.dataset.f;redesenhar();return;}
+  if(chip){FILTRO=chip.dataset.f;TETO=PASSO;redesenhar();return;}
   const ord=e.target.closest('.chip[data-s]');
   if(ord){const k=ord.dataset.s;
     if(ORDEM===k)DIR=(DIR==='asc'?'desc':'asc');else{ORDEM=k;DIR='asc';}
-    desenharOrdem();desenharLista();return;}   // desenharLista() sincroniza a URL
+    TETO=PASSO;                                // outra ordem, outro começo de lista
+    desenharOrdem();desenharLista();
+    if(FILTROS_UI)FILTROS_UI.atualizarContador();
+    return;}   // desenharLista() sincroniza a URL
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto);return;}
   if(e.target.closest('#btnNovo')){abrirModal();return;}
@@ -1086,27 +1230,43 @@ document.addEventListener('keydown',e=>{
   const a=document.activeElement,tag=a&&a.tagName;
   const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
   if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!digitando){e.preventDefault();b.focus();b.select();return;}
-  if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';TERMO='';desenharLista();}
+  if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';TERMO='';TETO=PASSO;desenharLista();}
 });
 
 /* ===================================================================
    Carregar
    =================================================================== */
+/* A ordem aqui é a da tela: primeiro o que responde (busca, cadastrar, contagem),
+   depois o que refina (filtros e ordenação, recolhidos), depois os exemplos, e só
+   então as fichas. Os 13 chips e os 3 cartões continuam existindo — deixaram de
+   ser pedágio. */
 function layout(){
   return `<div class="topo">
-    <div class="linha-busca">
-      <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por ID, nome, CNPJ (com ou sem pontos), cidade…  ( / para focar)">
+    <div class="barra-acoes">
+      <input class="busca campo-busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por ID, nome, CNPJ (com ou sem pontos), cidade…  ( / para focar)">
+      <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.2 2h13.6a.6.6 0 0 1 .46.99L10.4 9.02V13.4a.6.6 0 0 1-.87.54l-2.6-1.3a.6.6 0 0 1-.33-.54V9.02L.74 2.99A.6.6 0 0 1 1.2 2Z"/></svg>
+        Filtros <span class="cont-filtros" hidden>0</span>
+      </button>
       <button class="btn btn--pri btn--pill btn-novo" id="btnNovo" type="button">+ Novo cliente</button>
+      <span class="resumo-lista" id="resumo-lista"></span>
     </div>
-    <div class="chips" id="chips"></div>
-    <div class="chips ord-row" id="ordChips"></div>
-    <div class="ord-info" id="ordInfo"></div>
+    <div id="painel-filtros" class="painel-filtros" hidden>
+      <div class="grupo chips" id="chips"></div>
+      <div class="grupo chips ord-row" id="ordChips"></div>
+      <div class="grupo ord-info" id="ordInfo"></div>
+      <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro, sem busca e na ordem de ID">Limpar filtros</button>
+    </div>
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho na aba <b>Registro</b>${META.aba&&META.aba!=='Registro'?' ('+esc(META.aba)+')':''}. Cliente novo nasce pelo botão do topo — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Esses mesmos campos, quando estão em branco, ficam com um <b>fundo avermelhado</b> no cadastro aberto: é só dica visual do que falta preencher. Os cards ignoram quem está inativo.<br>Na lista, a situação do cliente vem no selo colorido e numa faixa lateral: <b>Ativo</b> em verde, <b>Em inativação</b> em laranja, <b>Inativo</b> em vermelho, cinza quando a coluna Ativo está em branco.</div>
+    <div class="txt">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho na aba <b>Registro</b>${META.aba&&META.aba!=='Registro'?' ('+esc(META.aba)+')':''}. Cliente novo nasce pelo botão do topo — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Esses mesmos campos, quando estão em branco, ficam com um <b>fundo avermelhado</b> no cadastro aberto: é só dica visual do que falta preencher. Os cards ignoram quem está inativo.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. Os filtros e a ordenação ficam no botão <b>Filtros</b>, que avisa com um número quando algum está pegando.<br>Na linha fechada aparece só o que pede ação: o campo <b>em branco</b> (sem CNPJ, sem regime, sem produtos), os campos vazios e a situação quando <b>não</b> é Ativo — <b>Em inativação</b> em laranja, <b>Inativo</b> em vermelho, cinza quando a coluna Ativo está em branco, cada um com uma faixa na lateral. O que está preenchido fica no cadastro (é só clicar) e no rótulo que aparece ao passar o mouse na linha.</div>
   </details>
-  <div class="resumo" id="resumo"></div>
+  <details class="ajuda situacao" id="det-situacao">
+    <summary>Ver quem está em cada situação</summary>
+    <div class="resumo" id="resumo"></div>
+  </details>
+  <div class="dica" id="dica"></div>
   <div class="lista" id="lista"></div>`;
 }
 async function carregar(op){
@@ -1129,10 +1289,11 @@ async function carregar(op){
     const termoAtual=busca?busca.value:lerURL();
     document.getElementById('app').innerHTML=layout();
     ligarDetalhes(document.getElementById('ajuda'),'b4u.registro.ajuda');
+    FILTROS_UI=ligarFiltros('registro',filtrosPainel);   // depois do layout: o painel já existe
     const nb=document.getElementById('busca');
     nb.value=op.expandir?'':(termoAtual||'');
     TERMO=nb.value;
-    nb.addEventListener('input',e=>{TERMO=e.target.value;desenharLista();});
+    nb.addEventListener('input',e=>{TERMO=e.target.value;TETO=PASSO;desenharLista();});
     const pl=document.getElementById('plan');
     if(d.planilha_url){pl.href=d.planilha_url;pl.hidden=false;}
     redesenhar();

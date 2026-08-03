@@ -987,10 +987,14 @@ function responsavelEtapa(e){
   return null;                                     // "Aguardando" sem órgão conhecido
 }
 
-function timelineHTML(p){
+/* `indices` desenha só as etapas pedidas (a corrente, que fica fora do dropdown).
+   Sem ele, a linha do tempo inteira, como sempre foi. */
+function timelineHTML(p, indices){
   // Observações (livres e internas) por etapa NÃO aparecem para o cliente.
+  const todas = p.etapas || [];
+  const lista = indices ? indices.map(i=>todas[i]).filter(Boolean) : todas;
   return `<div class="timeline">
-    ${(p.etapas||[]).map((e)=>{
+    ${lista.map((e)=>{
       const cl = classeStatus(e.status);
       const per = periodoEtapa(e);
       const r = responsavelEtapa(e);
@@ -1107,13 +1111,30 @@ function desenharAlteracoes(alteracoes){
         <div class="processo-corpo" style="display:none">${timelineHTML(p)}</div>
       </div>`;
     }
+    /* Só a etapa CORRENTE fica aberta: é ela que responde "em que pé está" e é ela
+       que carrega o "precisamos da sua assinatura". As outras entram no dropdown —
+       seis etapas abertas de uma vez eram a parede desta tela. O status geral e o
+       stepper ficam fora, sempre à vista. */
+    const et = p.etapas || [];
+    const i = indiceEtapaAtual(p);
+    /* Pendência dentro de bloco recolhido não existe: se outra etapa também está com
+       o cliente, o dropdown nasce aberto. */
+    const abre = et.some((e,k)=>{ if(k===i) return false; const r = responsavelEtapa(e); return !!(r && r.voce); });
     return `<div class="card processo-card" data-busca="${busca}">
       <div class="processo-head">
         <h3>${esc(p.processo)}</h3>
         <span class="status-chip status-andamento">${esc(p.status_geral||'Em andamento')}</span>
       </div>
       ${stepperHTML(p)}
-      ${timelineHTML(p)}
+      ${et.length ? timelineHTML(p, [i]) : ''}
+      ${et.length > 1 ? `<div class="grupo-cat">
+        <button class="grupo-cat-btn" data-etapas aria-expanded="${abre}">
+          <span class="grupo-cat-nome">Ver todas as etapas</span>
+          <span class="grupo-cat-conta">${et.length}</span>
+          <span class="seta"${abre?' style="transform:rotate(180deg)"':''}>▾</span>
+        </button>
+        <div class="grupo-cat-body" style="display:${abre?'block':'none'}">${timelineHTML(p)}</div>
+      </div>` : ''}
     </div>`;
   }).join('');
 
@@ -1124,6 +1145,15 @@ function desenharAlteracoes(alteracoes){
       const abrir = corpo.style.display === 'none';
       corpo.style.display = abrir ? 'block' : 'none';
       proc.setAttribute('aria-expanded', abrir);
+      return;
+    }
+    const eta = ev.target.closest('[data-etapas]');
+    if (eta){
+      const corpo = eta.parentElement.querySelector('.grupo-cat-body');
+      const abrir = corpo.style.display === 'none';
+      corpo.style.display = abrir ? 'block' : 'none';
+      eta.setAttribute('aria-expanded', abrir);
+      eta.querySelector('.seta').style.transform = abrir ? 'rotate(180deg)' : '';
       return;
     }
   };
@@ -1172,16 +1202,35 @@ function desenharVencimentos(M){
     </div>`).join('');
 }
 
+/* Arquivo morto: 23 linhas de documento entre o processo e os modelos. Recolhe, com
+   a conta no rótulo. Nenhum vencimento se perde aqui — TODO documento com data já
+   aparece inteiro em "Certificados e licenças", acima e sempre aberto. */
 function desenharDocumentos(documentos){
   const box = document.getElementById('documentos');
   const comLink = (documentos||[]).filter(d => d.link && String(d.link).trim());
   if (!comLink.length){ box.innerHTML = '<div class="vazio">Nenhum documento cadastrado ainda.</div>'; return; }
-  box.innerHTML = comLink.map(d=>{
+  const itens = comLink.map(d=>{
     return `<div class="item" data-busca="${normTxt(d.documento)}">
       <div><div class="nome">${esc(d.documento)}</div>${vencimentoInfo(d.vencimento)}</div>
       <a href="${esc(d.link)}" target="_blank" rel="noopener">Abrir ↗</a>
     </div>`;
   }).join('');
+  box.innerHTML = `<div class="grupo-cat">
+    <button class="grupo-cat-btn" id="btn-docs" aria-expanded="false">
+      <span class="grupo-cat-nome">Ver os documentos da sua empresa</span>
+      <span class="grupo-cat-conta">${comLink.length}</span>
+      <span class="seta">▾</span>
+    </button>
+    <div class="grupo-cat-body" id="body-docs" style="display:none">${itens}</div>
+  </div>`;
+  const btn = document.getElementById('btn-docs');
+  if (btn) btn.addEventListener('click', ()=>{
+    const body = document.getElementById('body-docs');
+    const abrir = body.style.display !== 'block';
+    body.style.display = abrir ? 'block' : 'none';
+    btn.setAttribute('aria-expanded', abrir);
+    btn.querySelector('.seta').style.transform = abrir ? 'rotate(180deg)' : '';
+  });
 }
 
 /** `modelos === null` = ainda vindo (a página não espera por eles para pintar). */
@@ -1243,6 +1292,23 @@ const SECOES_BUSCA = [
 /* Só os itens contam como resultado; o .grupo-cat dos modelos é embalagem. */
 const SEL_BUSCA = '#documentos [data-busca], #alteracoes [data-busca], #vencimentos [data-busca], #modelos .item[data-busca]';
 
+/* Bloco recolhido que a busca alcança: abre sozinho quando há resultado dentro dele
+   e volta a fechar quando a busca é limpa. */
+function abrirSeBuscar(idBtn, idBody, alvo){
+  const btn = document.getElementById(idBtn), body = document.getElementById(idBody);
+  if (!btn || !body) return;
+  const tem = !!alvo && Array.from(body.querySelectorAll('[data-busca]')).some(el=>el.style.display !== 'none');
+  if (tem){
+    body.style.display = 'block';
+    btn.setAttribute('aria-expanded','true');
+    btn.querySelector('.seta').style.transform = 'rotate(180deg)';
+  } else if (!alvo){
+    body.style.display = 'none';
+    btn.setAttribute('aria-expanded','false');
+    btn.querySelector('.seta').style.transform = '';
+  }
+}
+
 /* Guarda como cada seção aparece SEM busca (vencimentos já nasce escondida). */
 function memorizarSecoes(){
   SECOES_BUSCA.forEach(s=>{
@@ -1282,6 +1348,10 @@ function filtrar(termo){
       btn.querySelector('.seta').style.transform = '';
     }
   });
+
+  // Documentos recolhidos: a busca abre o bloco quando acha algo lá dentro — senão
+  // ela diria "3 resultados" e a tela não mostraria nenhum.
+  abrirSeBuscar('btn-docs', 'body-docs', alvo);
 
   SECOES_BUSCA.forEach(s=>{
     const head = document.getElementById(s.head), box = document.getElementById(s.box);

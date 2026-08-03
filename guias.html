@@ -302,6 +302,20 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .charts3 .cbox{height:160px}
 .pie-legend{margin-top:10px}
 .prov-vazio{font-size:var(--fs-2);color:var(--muted);padding:8px 0 2px}
+/* ---------- revelacao progressiva ---------- */
+/* Só o teto da lista e a contagem: aqui não há filtro solto para recolher. O par
+   "Em aberto / Todas" é navegação, não filtro, e continua na tela. */
+.resumo-lista{font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
+/* A contagem tem três números e vive dentro do cabeçalho da seção; no celular ela
+   precisa quebrar, senão o nowrap empurra a página para o lado. */
+@media(max-width:560px){.resumo-lista{white-space:normal}}
+
 /* lista de guias */
 .guias-bloco{margin-bottom:22px}
 .guias-mestit{font-size:var(--fs-3);font-weight:800;text-transform:capitalize;color:var(--ink);margin:0 2px 10px;letter-spacing:-.01em}
@@ -1388,6 +1402,22 @@ function vencimentosDoMes(M,ano,mes){ const marc=new Map();
 
 /* ===================== RENDER ===================== */
 let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='', NF_PEND=false, NF_ANO=false;
+
+/* ---------------- revelação progressiva ---------------- */
+/* Teto da lista. Dois botões de propósito: "mais 20" para quem lê, "todos" para
+   quem vai usar Ctrl+F. Trocar de aba volta o teto ao início — a lista é outra,
+   e continuar de onde parou confundiria. */
+const PASSO = 20;
+let G_TETO = PASSO;
+function rodapeLista(mostrados, total){
+  if(total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
+}
+
 function render(M){
   M_GLOBAL=M;
   const app=document.getElementById('app'); app.innerHTML='';
@@ -1410,7 +1440,8 @@ function render(M){
     <div class="heroi" id="heroi"></div>
     <div id="tarja-slot"></div>`);
 
-  appendAll(wrap,`<div class="sec-head" id="sec-guias"><div><h2>Guias e obrigações</h2><p>Marque como agendada ou paga conforme for resolvendo — fica registrado quem marcou.</p></div>
+  appendAll(wrap,`<div class="sec-head" id="sec-guias"><div><h2>Guias e obrigações</h2><p>Marque como agendada ou paga conforme for resolvendo — fica registrado quem marcou.</p>
+    <span class="resumo-lista" id="guias-resumo"></span></div>
     <div class="tabs"><button class="tab${GUIAS_FILTRO==='pendentes'?' on':''}" id="gf-pend" data-f="pendentes">Em aberto</button><button class="tab${GUIAS_FILTRO==='todas'?' on':''}" id="gf-todas" data-f="todas">Todas</button></div></div>
     <div id="guias-lista"></div>`);
 
@@ -1462,7 +1493,7 @@ function render(M){
   document.getElementById('cal-prev-btn').addEventListener('click',()=>{ const d=new Date(calCentro.ano,calCentro.mes-1,1); if(dentro(d.getFullYear())){calCentro={ano:d.getFullYear(),mes:d.getMonth()};renderCarrossel();} });
   document.getElementById('cal-next-btn').addEventListener('click',()=>{ const d=new Date(calCentro.ano,calCentro.mes+1,1); if(dentro(d.getFullYear())){calCentro={ano:d.getFullYear(),mes:d.getMonth()};renderCarrossel();} });
 
-  function trocarFiltro(f){ GUIAS_FILTRO=f;
+  function trocarFiltro(f){ GUIAS_FILTRO=f; G_TETO=PASSO;   // lista nova, teto novo
     document.getElementById('gf-pend').classList.toggle('on', f==='pendentes');
     document.getElementById('gf-todas').classList.toggle('on', f==='todas');
     sincronizarURL(); renderGuias(M); }
@@ -1519,14 +1550,35 @@ function renderGuias(M){
   const box=document.getElementById('guias-lista'); if(!box) return;
   let lista=guiasDe(M);
   if(GUIAS_FILTRO==='pendentes') lista=lista.filter(g=>(g.status||'').toLowerCase()!=='paga');
-  const grupos={}; lista.forEach(g=>{ const mk=String(g.venc).slice(0,7); (grupos[mk]=grupos[mk]||[]).push(g); });
+  /* Teto de 20. A lista vem ordenada por vencimento, do mais próximo ao mais
+     distante: o corte come o fim (guia de dezembro), nunca o começo. E o que já
+     venceu é obrigatório — guia vencida é o oposto de detalhe —, então o teto
+     cede para incluir a última vencida, mesmo que passe de 20. */
+  const total=lista.length;
+  let ultVencida=-1; lista.forEach((g,i)=>{ if(guiaVencida(g)) ultVencida=i; });
+  const n=Math.max(Math.min(G_TETO,total), ultVencida+1);
+  const corte=lista.slice(0,n);
+  const grupos={}; corte.forEach(g=>{ const mk=String(g.venc).slice(0,7); (grupos[mk]=grupos[mk]||[]).push(g); });
   const meses=Object.keys(grupos).sort();
-  box.innerHTML = meses.length ? meses.map(mk=>`
+  box.innerHTML = (meses.length ? meses.map(mk=>`
     <div class="guias-bloco">
       <div class="guias-mestit">${mesLongo(mk)}</div>
       ${grupos[mk].map(g=>cardGuia(g)).join('')}
-    </div>`).join('') : `<div class="card"><div class="vazio" style="padding:20px;text-align:center;color:var(--muted)">Nenhuma guia ${GUIAS_FILTRO==='pendentes'?'em aberto':''} por aqui.</div></div>`;
+    </div>`).join('') : `<div class="card"><div class="vazio" style="padding:20px;text-align:center;color:var(--muted)">Nenhuma guia ${GUIAS_FILTRO==='pendentes'?'em aberto':''} por aqui.</div></div>`)
+    + rodapeLista(n,total);
   box.querySelectorAll('[data-marca]').forEach(b=> b.addEventListener('click',()=>marcarGuiaUI(M,b.dataset.chave,b.dataset.marca,b)));
+  const bm=box.querySelector('.lista-mais .btn-mais');
+  if(bm) bm.addEventListener('click',()=>{ G_TETO=n+PASSO; renderGuias(M); });
+  const bt=box.querySelector('.lista-mais .btn-todos');
+  if(bt) bt.addEventListener('click',()=>{ G_TETO=total; renderGuias(M); });
+  /* A contagem fica na tela mesmo com a lista cortada: sem ela, cortar em 20 vira
+     "sumiram guias". */
+  const res=document.getElementById('guias-resumo');
+  if(res){
+    const nVenc=lista.filter(guiaVencida).length;
+    res.innerHTML=`${n<total?n+' de '+total:total} guias ${GUIAS_FILTRO==='pendentes'?'em aberto':'no total'}`
+      +(nVenc?` · <b style="color:var(--vermelho)">${nVenc} vencida${nVenc>1?'s':''}</b>`:'');
+  }
   renderHeroi(M);
 }
 

@@ -105,6 +105,14 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .antigos-btn[aria-expanded="true"] .seta{transform:rotate(180deg)}
 .antigos-body{display:none;margin-top:12px}
 .antigos-body.on{display:block}
+/* Teto da lista — dois botões de propósito: "mais 20" para quem lê, "todos" para
+   quem vai usar Ctrl+F. Abrir "Chamados antigos" despejava os 31 de uma vez. */
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
 .tk .msg{font-size:var(--fs-3);color:var(--ink-2);line-height:1.55;white-space:pre-wrap}
 .tk .resp{margin-top:12px;padding:12px 14px;background:var(--surface-warm);
   border:1px solid var(--line);border-radius:var(--radius-sm)}
@@ -763,6 +771,31 @@ function idadeDias(v){ const d = new Date(v); return isNaN(d) ? 0 : (Date.now() 
 
 let TICKETS = [];
 
+/* Teto da lista de chamados antigos. Dois botões de propósito: "mais 20" para quem
+   está lendo, "todos" para quem vai usar Ctrl+F ou imprimir. Os abertos não passam
+   por aqui: quem tem chamado em aberto veio ver justamente esse. */
+const PASSO = 20;
+let ANTIGOS = [], TETO_ANTIGOS = PASSO;
+function rodapeLista(mostrados, total){
+  if(total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
+}
+function desenharAntigos(){
+  const body = document.getElementById('antigos-body'); if(!body) return;
+  const n = Math.min(TETO_ANTIGOS, ANTIGOS.length);
+  body.innerHTML = ANTIGOS.slice(0, n).map(cardTicket).join('') + rodapeLista(n, ANTIGOS.length);
+  /* Redesenhar troca os cartões: quem pode ser cancelado tem de reganhar o botão. */
+  body.querySelectorAll('.btn-cancelar').forEach(b=> b.addEventListener('click', ()=> pedirCancelamento(b)));
+  const mais = body.querySelector('.btn-mais');
+  if(mais) mais.addEventListener('click', ()=>{ TETO_ANTIGOS += PASSO; desenharAntigos(); });
+  const todos = body.querySelector('.btn-todos');
+  if(todos) todos.addEventListener('click', ()=>{ TETO_ANTIGOS = ANTIGOS.length; desenharAntigos(); });
+}
+
 function cardTicket(t){
   const cls = classeStatus(t.status);
   const rotStatus = ROT_STATUS[cls] || 'Aberto';
@@ -813,7 +846,7 @@ function render(tickets){
         <button type="button" class="antigos-btn" id="antigos-btn" aria-expanded="false">
           Chamados antigos<span class="conta">${antigos.length}</span><span class="seta">▾</span>
         </button>
-        <div class="antigos-body" id="antigos-body">${antigos.map(cardTicket).join('')}</div>
+        <div class="antigos-body" id="antigos-body"></div>
       </div>`:''}`;
 
   const ab = document.getElementById('antigos-btn');
@@ -823,6 +856,9 @@ function render(tickets){
     ab.setAttribute('aria-expanded', open?'true':'false');
   });
   app.querySelectorAll('.btn-cancelar').forEach(b=> b.addEventListener('click', ()=> pedirCancelamento(b)));
+  /* Depois do bind acima, para os antigos ligarem os seus próprios botões uma vez só. */
+  ANTIGOS = antigos; TETO_ANTIGOS = PASSO;
+  desenharAntigos();
 }
 
 /** Confirmação inline (sem popup nativo) antes de cancelar. */

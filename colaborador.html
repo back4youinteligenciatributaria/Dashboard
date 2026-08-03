@@ -35,6 +35,10 @@
   --vermelho-2:#96271B;
   /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
   --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Escala de texto e o teal claro: as outras telas ja tinham, esta nao. Sem eles
+     o CSS compartilhado do teto de lista cai no valor herdado e desalinha. */
+  --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
+  --receita-soft:#DBEFEC;
   /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
   --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
@@ -109,6 +113,15 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
    e o navegador sintetizava um falso — o CNPJ saía borrado ao lado do nome. */
 .opt-cnpj{font-size:11px;color:var(--muted);font-weight:400}
 .opt-vazio{padding:14px 12px;color:var(--muted);font-size:13px}
+/* Teto da lista: clicar no campo despejava 114 linhas de uma vez e a rolagem do
+   dropdown virava a tarefa. Dois botões de propósito — "mais 20" para quem lê,
+   "todos" para quem vai usar Ctrl+F. */
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
 
 /* Painel do cliente selecionado */
 .detalhe{margin-top:16px}
@@ -788,6 +801,19 @@ function seloCertificados(){
 
 /* ---- Combobox de clientes ---- */
 let TODOS=[], VISIVEIS=[], ativo=-1, apiOk=false;
+/* Teto do dropdown. Abrir ou digitar recomeça do zero: o resultado é outro, e
+   continuar de onde parou confundiria. */
+const PASSO=20;
+let TETO_OPS=PASSO;
+function nOps(){ return Math.min(TETO_OPS, VISIVEIS.length); }
+function rodapeLista(mostrados, total){
+  if(total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
+}
 const $busca=()=>document.getElementById('busca');
 const $ops=()=>document.getElementById('opcoes');
 const $det=()=>document.getElementById('detalhe');
@@ -806,6 +832,7 @@ function abrir(){
   if(!apiOk) return;
   VISIVEIS=filtrar($busca().value);
   ativo=-1;
+  TETO_OPS=PASSO;          // resultado novo, teto novo
   pintarOpcoes();
   $ops().hidden=false;
 }
@@ -813,11 +840,12 @@ function fechar(){ $ops().hidden=true; ativo=-1; }
 function pintarOpcoes(){
   const ops=$ops();
   if(!VISIVEIS.length){ ops.innerHTML='<div class="opt-vazio">Nenhum cliente encontrado.</div>'; return; }
-  ops.innerHTML=VISIVEIS.map((c,i)=>
+  const n=nOps();
+  ops.innerHTML=VISIVEIS.slice(0,n).map((c,i)=>
     `<div class="opt${i===ativo?' on':''}" data-i="${i}">
        <span class="opt-id">${esc(c.id)}</span>
        <span class="opt-nome">${esc(c.nome||'(sem nome)')}${c.cnpj?`<span class="opt-cnpj"> · ${esc(c.cnpj)}</span>`:''}</span>
-     </div>`).join('');
+     </div>`).join('')+rodapeLista(n,VISIVEIS.length);
 }
 function selecionar(c){
   if(!c) return;
@@ -839,7 +867,11 @@ function restaurarCliente(id){
 function moverAtivo(passo){
   if($ops().hidden) { abrir(); return; }
   if(!VISIVEIS.length) return;
-  ativo = (ativo+passo+VISIVEIS.length)%VISIVEIS.length;
+  /* A seta para baixo no fim do que está desenhado revela mais 20: o teto não
+     pode tirar do teclado nenhum cliente que o mouse alcança. */
+  let n=nOps(), novo=ativo+passo;
+  if(novo>=n && n<VISIVEIS.length){ TETO_OPS+=PASSO; n=nOps(); }
+  ativo = (novo+n)%n;
   pintarOpcoes();
   const el=$ops().querySelector('.opt.on'); if(el) el.scrollIntoView({block:'nearest'});
 }
@@ -856,6 +888,12 @@ function ligarCombo(){
     else if(e.key==='Escape'){ fechar(); }
   });
   $ops().addEventListener('mousedown', e=>{
+    /* preventDefault em todo clique dentro do dropdown: sem isso o "mostrar mais"
+       tira o foco do campo e a lista fecha antes de repintar. */
+    const m=e.target.closest('.lista-mais button');
+    if(m){ e.preventDefault();
+      TETO_OPS = m.classList.contains('btn-todos') ? VISIVEIS.length : TETO_OPS+PASSO;
+      pintarOpcoes(); return; }
     const o=e.target.closest('.opt'); if(!o) return;
     e.preventDefault(); selecionar(VISIVEIS[+o.dataset.i]);
   });
@@ -891,7 +929,7 @@ function boot(){
       // centrais vêm no mesmo payload (era uma chamada separada, ver acima)
       if(d.centrais && d.centrais.length){ pintarCentrais(d.centrais); pintarRestituicao(); }
       document.getElementById('cnt').textContent = TODOS.length+' clientes';
-      document.getElementById('dica').innerHTML = 'Digite para filtrar ou clique no campo para ver todos os '+TODOS.length+' clientes.';
+      document.getElementById('dica').innerHTML = 'Digite para filtrar ou clique no campo para escolher entre os '+TODOS.length+' clientes.';
       PEND=calcPendencias();          // alimenta o selo do card de Certificados — sem chamada nova
       pintarFerramentas();            // repinta só para o selo aparecer
       restaurarCliente(url.cli);      // e volta para o cliente que estava aberto

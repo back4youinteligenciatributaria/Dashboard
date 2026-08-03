@@ -36,6 +36,10 @@
   --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
   /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
   --lift:0 8px 20px rgba(17,61,57,.10);
+  /* Tamanhos e o teal claro vem das paginas irmas: a regua de acoes e colada
+     literal do contrato, entao os nomes que ela usa tem de existir aqui. */
+  --fs-1:11px;--fs-2:12px;--fs-3:13px;
+  --receita-soft:#DBEFEC;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -56,7 +60,6 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 
 /* ---------- topo: filtros + busca ---------- */
 .topo{padding:14px 16px 6px}
-.linha-filtros{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
 .grupo{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
 .grupo .rot{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px;align-self:center}
 .chip{font-size:13px;font-weight:700;border-radius:var(--radius-pill);padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
@@ -66,10 +69,53 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chip.on .n{background:rgba(255,255,255,.25)}
 .chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
 .chip.falta.on{background:var(--amber);border-color:var(--amber)}
-.chip.limpar{border-style:dashed;color:var(--muted)}
 /* B.7: a busca é a pílula larga da tela. */
 .busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+
+/* ---------- revelacao progressiva ---------- */
+/* Régua de ações: busca sempre à mão, filtros a um clique, contagem à vista.
+   Antes os doze chips de filtro abriam a tela — quem chegava tinha de ler a
+   parede inteira antes de achar o campo de busca, que é o que 9 em 10 usam. */
+.barra-acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.barra-acoes .campo-busca{flex:1;min-width:200px;font-size:16px;padding:12px 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
+.barra-acoes .campo-busca:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.btn-filtros{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);
+  color:var(--ink);font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.btn-filtros:hover{border-color:var(--brand-teal)}
+.btn-filtros[aria-expanded="true"]{background:var(--receita-soft);border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.btn-filtros svg{width:15px;height:15px;flex:none}
+.cont-filtros{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
+  padding:0 5px;border-radius:var(--radius-pill);background:var(--brand-teal-txt);color:#fff;
+  font-size:var(--fs-1);font-weight:800}
+/* display:inline-flex ganha do atributo hidden — sem esta linha o selo mostrava
+   um "0" permanente ao lado de Filtros. */
+.cont-filtros[hidden]{display:none}
+.resumo-lista{font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
+.painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
+  padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--surface-warm)}
+.painel-filtros[hidden]{display:none}
+/* Cada grupo de chips ocupa a fileira inteira: Situação e Vencimento não se misturam. */
+.painel-filtros .grupo{width:100%}
+.btn-limpar{min-height:38px;padding:0 15px;border-radius:var(--radius-pill);border:1px dashed var(--line-2);
+  background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:var(--fs-2);cursor:pointer}
+.btn-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+/* A contagem desta tela tem quatro números; no celular ela precisa quebrar, senão
+   o nowrap do contrato empurra a página para o lado. */
+@media(max-width:560px){.resumo-lista{white-space:normal}}
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
+/* O rodapé da grade fica FORA do quadro que rola: com 12 colunas, quem rolasse
+   para o lado perderia de vista o botão de mostrar mais. */
+#rodape-lista{padding:0 16px 10px}
+#rodape-lista .quanto{display:block;text-align:center;font-size:var(--fs-2);color:var(--muted);margin-top:6px}
 
 /* ---------- cards de resumo ---------- */
 .resumo{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;padding:0 16px 12px}
@@ -80,8 +126,14 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .rcard.d60 .rhead{background:var(--brand-teal-txt)}
 .rcard.falta .rhead{background:#6B8486}
 .rhead .n{background:rgba(255,255,255,.25);border-radius:var(--radius-pill);padding:2px 9px;font-size:11px}
-.rlista{max-height:150px;overflow:auto;padding:5px}
-.tk{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;font-family:var(--sans);font-size:12px;
+/* 5px de folga em cima + 5 linhas de 30px: a caixa termina exatamente onde uma
+   linha termina. Antes a sexta aparecia pela metade, atravessada pela borda do
+   cartão, e parecia defeito de dado — quem via achava que o nome do cliente
+   estava cortado na planilha. A folga de baixo só aparece no fim da rolagem. */
+.rlista{max-height:155px;overflow:auto;padding:5px 5px 9px}
+/* Altura fixa de 30px: com align-items:baseline a linha media 30,5px e sobrava
+   meia linha aparecendo embaixo. É deste 30 que sai o múltiplo do max-height. */
+.tk{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;font-family:var(--sans);font-size:12px;line-height:1.5;height:30px;
   border:0;background:transparent;color:inherit;padding:6px 8px;border-radius:var(--radius-sm);cursor:pointer}
 .tk:hover{background:var(--surface-warm)}
 .tk .d{font-weight:800;white-space:nowrap;color:var(--ink)}
@@ -117,6 +169,15 @@ td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal-txt);
 td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.25;padding:7px 9px;white-space:normal;box-shadow:2px 0 6px rgba(7,48,52,.07)}
 tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
 td.col-nome .flag{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.3px;border-radius:var(--radius-pill);padding:2px 8px}
+/* Atalho para a pasta do cliente no Drive, colado no nome. É o pulo que a equipe
+   mais faz à mão a partir daqui; sem endereço cadastrado o ícone nem aparece,
+   para ninguém clicar e cair numa guia em branco. */
+td.col-nome .drive{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+  margin-left:5px;vertical-align:-5px;border-radius:var(--radius-sm);border:1px solid var(--line);
+  background:var(--surface-warm);color:var(--brand-teal-txt);text-decoration:none;flex:none}
+td.col-nome .drive svg{width:13px;height:13px}
+td.col-nome .drive:hover{border-color:var(--brand-teal);background:#EAF5F4}
+td.col-nome .drive:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
 td.col-nome .flag.nova{background:var(--amber-soft);color:var(--amber-txt);border:1px solid var(--amber-line)}
 td.col-nome .flag.inativo{background:#EEE9E2;color:var(--muted);border:1px solid var(--line)}
 tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}
@@ -193,6 +254,10 @@ details.ajuda[open]>summary::after{content:" \25B4"}
 details.ajuda>.txt{padding:0 12px 11px;font-size:12px;color:var(--muted);line-height:1.55}
 details.ajuda>.txt b{color:var(--ink-2)}
 details.ajuda>.txt a{color:var(--brand-teal-txt)}
+/* Os quatro cartões de exemplo continuam inteiros, só que a um clique de
+   distância: a CONTAGEM deles já está na régua, então nada de pendência some. */
+details.situacao>summary{padding:10px 13px;font-size:13px}
+details.situacao>.resumo{padding:0 12px 12px}
 /* ---------- o que nao gravou (C.3) ----------
    A linha (ou o campo) fica marcada e o "tentar de novo" nasce ali mesmo. */
 .falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
@@ -296,6 +361,49 @@ let VER_CADASTRO=false;  // mostrar as colunas espelhadas do Registro (só leitu
 let SORT={key:'urgencia',dir:'asc'};
 const REVELADAS=new Set();
 const hoje=new Date(); hoje.setHours(0,0,0,0);
+
+/* ---------------- revelação progressiva ---------------- */
+/* Filtros recolhidos, com memória. O contador ao lado do botão existe para
+   evitar o único efeito colateral ruim de esconder filtro: a pessoa esquece que
+   filtrou e acha que os dados sumiram. Por isso, com filtro ativo, o painel
+   nasce ABERTO. */
+function ligarFiltros(pagina, contarAtivos){
+  const bt = document.getElementById('btn-filtros');
+  const pn = document.getElementById('painel-filtros');
+  if(!bt || !pn) return;
+  const chave = 'b4u_filtros_' + pagina;
+  const abrir = (v, persistir) => { pn.hidden = !v; bt.setAttribute('aria-expanded', String(v));
+                       if(persistir){ try{ localStorage.setItem(chave, v?'1':'0'); }catch(e){} } };
+  let inicial = false;
+  try{ inicial = localStorage.getItem(chave) === '1'; }catch(e){}
+  /* Abrir por causa de filtro ativo NÃO é escolha da pessoa — e por isso não pode
+     virar preferência. Antes esta abertura automática era gravada junto: bastava
+     entrar uma vez por um link com filtro para o painel passar a nascer aberto
+     para sempre, sem ninguém ter pedido. Só o clique persiste. */
+  const forcado = !!(contarAtivos && contarAtivos() > 0);
+  abrir(inicial || forcado, false);
+  bt.addEventListener('click', ()=> abrir(pn.hidden, true));
+  return { atualizarContador(){
+    const n = contarAtivos ? contarAtivos() : 0;
+    const c = bt.querySelector('.cont-filtros');
+    if(c){ c.textContent = n; c.hidden = n === 0; }
+  }};
+}
+let FILTROS_UI=null;
+
+/* Teto da grade. Dois botões de propósito: "mais 20" para quem lê, "todas" para
+   quem vai usar Ctrl+F ou imprimir. Buscar ou filtrar volta o teto ao início —
+   o resultado é outro, e continuar de onde parou confundiria. */
+const PASSO = 20;
+let TETO = PASSO;
+function rodapeLista(mostrados, total){
+  if(total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todas as ${total}</button>
+  </div>`;
+}
 
 const eh=(lista,c)=>lista.some(x=>normTxt(x)===normTxt(c));
 /* Espelhada = vem do Registro por IMPORTRANGE. Escrever nela destruiria a fórmula,
@@ -548,13 +656,26 @@ function cabecalho(){
   `<tr class="cols"><th scope="col" class="col-id" data-sort="id">ID${seta('id')}</th>
     <th scope="col" class="col-nome" data-sort="nome_cliente">Cliente${seta('nome_cliente')}</th>${cols}</tr>`;
 }
+/* Pasta do cliente no Drive (vem do cadastro, no payload da grade). Só vira
+   botão quando há endereço de verdade — campo vazio some, em vez de virar um
+   link morto. */
+function atalhoDrive(l){
+  const u=String(l.drive||'').trim();
+  if(!urlOk(u)) return '';
+  return `<a class="drive" href="${esc(u)}" target="_blank" rel="noopener noreferrer"`
+    +` title="Abrir a pasta deste cliente no Drive" aria-label="Abrir a pasta de `
+    +`${esc(l.nome_cliente||l.id)} no Drive">`
+    +`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`
+    +`<path d="M4 20h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-7.5L10 4H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1z"/></svg></a>`;
+}
+
 function linhaHTML(l){
   const at=ativoDe(l);
   const flags=at===false?'<span class="flag inativo">inativo</span>':'';
   const tds=GRUPOS.map(g=>g.cols.map((c,j)=>`<td class="${j===0?'ini':''}">${cel(l,c)}</td>`).join('')).join('');
   return `<tr data-id="${esc(l.id)}">
     <td class="col-id">${esc(l.id)}</td>
-    <td class="col-nome">${esc(l.nome_cliente||'(sem nome)')}<br>${flags}</td>
+    <td class="col-nome">${esc(l.nome_cliente||'(sem nome)')}${atalhoDrive(l)}<br>${flags}</td>
     ${tds}
   </tr>`;
 }
@@ -565,9 +686,17 @@ function desenharTabela(){
   th.innerHTML=cabecalho();
   const arr=visiveis();
   document.getElementById('cnt').textContent=arr.length+' de '+LINHAS.length+' clientes';
-  document.getElementById('tbody').innerHTML=arr.length
-    ? arr.map(linhaHTML).join('')
+  /* A grade nasce com 20 linhas: 111 linhas × 12 colunas de campo era a parede
+     que o dono do produto reclamou. Quem digita em massa pede "todas" uma vez e
+     segue igual; quem só veio conferir um cliente nunca paga por 111. */
+  const total=arr.length;
+  const n=Math.min(TETO,total);
+  document.getElementById('tbody').innerHTML=total
+    ? arr.slice(0,n).map(linhaHTML).join('')
     : `<tr><td colspan="${gradeCols().length+2}" style="padding:26px;text-align:center;color:var(--muted)">Nada com esse filtro.</td></tr>`;
+  const rod=document.getElementById('rodape-lista');
+  if(rod)rod.innerHTML=rodapeLista(n,total)+
+    (total>n?`<span class="quanto">Mostrando ${n} de ${total} linhas.</span>`:'');
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
 }
 function itemResumo(l,c){
@@ -599,12 +728,14 @@ function desenharResumo(){
         <span class="d">${esc(l.id)}</span><span class="lb">${esc(l.nome_cliente||'')}</span>
         <span class="tp">${esc(faltando(l).join(' · '))}</span></button>`);
 }
-/* Quantos filtros estão pegando agora — vira o número do "Limpar filtros" (C.5). */
-function filtrosAtivos(){
-  return (FILTRO!=='todos'?1:0)+(DOC!=='todos'?1:0)+(String(TERMO).trim()?1:0)+(SO_ATIVOS?0:1);
+/* Quantos filtros estão pegando agora — vira o selo ao lado do botão Filtros (C.5).
+   Só conta o que está ESCONDIDO no painel: a busca fica à vista na régua, e um
+   selo dizendo "1 filtro" por causa dela faria a pessoa procurar o que não sumiu. */
+function filtrosPainel(){
+  return (FILTRO!=='todos'?1:0)+(DOC!=='todos'?1:0)+(SO_ATIVOS?0:1);
 }
 function limparFiltros(){
-  FILTRO='todos';DOC='todos';TERMO='';SO_ATIVOS=true;
+  FILTRO='todos';DOC='todos';TERMO='';SO_ATIVOS=true;TETO=PASSO;
   const b=document.getElementById('busca');if(b)b.value='';
   redesenhar();
 }
@@ -623,15 +754,33 @@ function desenharChips(){
     c('d60','≤ 60 dias',nUrg(-99999,60))+
     c('d90','≤ 90 dias',nUrg(-99999,90));
   const d=(k,rot)=>`<button type="button" class="chip ${DOC===k?'on':''}" data-doc="${esc(k)}">${esc(rot)}</button>`;
-  const nAtivos=filtrosAtivos();
+  /* O "Limpar filtros" agora é fixo no rodapé do painel (#btn-limpar) — não é
+     mais um chip que aparece e some no meio dos outros doze. */
   document.getElementById('chipsDoc').innerHTML=
     `<span class="rot">Vencimento</span>`+d('todos','Todos')+DATAS.map(x=>d(x,curto(x))).join('')+
     `<button type="button" class="chip ${SO_ATIVOS?'on':''}" id="chipAtivos">Só ativos</button>`+
-    (ESPELHADAS.length?`<button type="button" class="chip ${VER_CADASTRO?'on':''}" id="chipCadastro" title="Colunas que vêm do Registro por fórmula — aqui são só leitura">Dados do cadastro</button>`:'')+
-    (nAtivos?`<button type="button" class="chip limpar" id="limparFiltros" title="Volta para a visão sem filtro e sem busca">Limpar filtros<span class="n">${nAtivos}</span></button>`:'');
+    (ESPELHADAS.length?`<button type="button" class="chip ${VER_CADASTRO?'on':''}" id="chipCadastro" title="Colunas que vêm do Registro por fórmula — aqui são só leitura">Dados do cadastro</button>`:'');
 }
-function redesenhar(){desenharChips();desenharResumo();desenharTabela();sincronizarURL();}
-function aplicarBusca(){desenharChips();desenharTabela();sincronizarURL();}
+/* A contagem em texto é o que permite recolher os chips e os cartões sem esconder
+   pendência: os números continuam na primeira linha da tela, filtrada ou não. */
+function desenharResumoLista(){
+  const el=document.getElementById('resumo-lista');if(!el)return;
+  const keys=colsData();
+  const base=LINHAS.filter(l=>!SO_ATIVOS||ativoDe(l)!==false);
+  const vis=visiveis().length;
+  const nUrg=(min,max)=>base.filter(l=>{const u=urgencia(l,keys);return u!==null&&u>=min&&u<=max;}).length;
+  const nFalta=base.filter(l=>faltando(l).length>0).length;
+  const p=[(vis===base.length?String(base.length):vis+' de '+base.length)+' clientes'];
+  if(nFalta)p.push(nFalta+' faltando dados');
+  const nVenc=nUrg(-99999,-1); if(nVenc)p.push(nVenc+' vencidos');
+  const n30=nUrg(-99999,30);   if(n30)p.push(n30+' vencem em 30 dias');
+  el.textContent=p.join(' · ');
+}
+function redesenhar(){desenharChips();desenharResumo();desenharTabela();desenharResumoLista();
+  if(FILTROS_UI)FILTROS_UI.atualizarContador();
+  sincronizarURL();}
+function aplicarBusca(){TETO=PASSO;   // resultado novo, teto novo
+  desenharChips();desenharTabela();desenharResumoLista();sincronizarURL();}
 
 /* ---------- busca e filtros no endereço (C.10) ----------
    F5 volta para a mesma visão; chave, cod e #hash ficam intactos.
@@ -733,7 +882,8 @@ async function salvar(id){
     const ign=(r&&r.ignoradas)||[];
     FALHAS.delete(k); marcarFalha(k,false);
     setSave('ok','Salvo ✓ '+horaAgora()+(ign.length?' · '+ign.length+' campo(s) só de leitura':''));
-    desenharResumo();desenharChips();
+    // a contagem da régua também é pendência: gravar um vencimento muda o número
+    desenharResumo();desenharChips();desenharResumoLista();
   }catch(e){
     FALHAS.set(k,{campos:s.campos});
     marcarFalha(k,true);
@@ -814,13 +964,16 @@ document.addEventListener('click',async e=>{
     const antes=cp.textContent; cp.textContent='✓'; setTimeout(()=>{cp.textContent=antes;},1200);
     return;
   }
-  if(e.target.closest('#limparFiltros')){limparFiltros();return;}
+  if(e.target.closest('#btn-limpar')){limparFiltros();return;}
   const chip=e.target.closest('.chip[data-f]');
-  if(chip){FILTRO=chip.dataset.f;redesenhar();return;}
+  if(chip){FILTRO=chip.dataset.f;TETO=PASSO;redesenhar();return;}
   const cd=e.target.closest('.chip[data-doc]');
-  if(cd){DOC=cd.dataset.doc;redesenhar();return;}
-  if(e.target.closest('#chipAtivos')){SO_ATIVOS=!SO_ATIVOS;redesenhar();return;}
+  if(cd){DOC=cd.dataset.doc;TETO=PASSO;redesenhar();return;}
+  if(e.target.closest('#chipAtivos')){SO_ATIVOS=!SO_ATIVOS;TETO=PASSO;redesenhar();return;}
+  /* "Dados do cadastro" mexe em COLUNA, não em linha: o teto fica onde está. */
   if(e.target.closest('#chipCadastro')){VER_CADASTRO=!VER_CADASTRO;redesenhar();return;}
+  if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharTabela();return;}
+  if(e.target.closest('.btn-todos')){TETO=LINHAS.length;desenharTabela();return;}
   const th=e.target.closest('th[data-sort]');
   if(th){const k=th.dataset.sort;
     if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}
@@ -868,7 +1021,16 @@ document.addEventListener('keydown',e=>{
   e.preventDefault();
   const r=aplicarCampo(el);
   if(r){ el._jaGravado=el.value; salvarAgora(r.l.id,r.c); }
-  const prox=linhaVizinha(tr,e.shiftKey?-1:1);
+  let prox=linhaVizinha(tr,e.shiftKey?-1:1);
+  /* Quem está descendo a coluna não pode esbarrar no teto: se a última linha
+     desenhada não é a última do filtro, a grade cresce sozinha e o Enter segue.
+     Bloquear aqui seria trocar uma parede de informação por uma parede de fato. */
+  if(!prox&&!e.shiftKey&&TETO<visiveis().length){
+    const daqui=tr.dataset.id;
+    TETO+=PASSO; desenharTabela();
+    const atual=document.querySelector('tr[data-id="'+CSS.escape(daqui)+'"]');
+    if(atual)prox=linhaVizinha(atual,1);
+  }
   if(!prox) return;
   const alvo=campoDestino(prox,el.dataset.c);
   // campo de data não aceita select() — por isso a tentativa é protegida
@@ -884,10 +1046,16 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';TERMO='';aplicarBusca();}
 });
 function irPara(id){
-  const achar=()=>document.querySelector(`tr[data-id="${CSS.escape(String(id))}"]`);
+  const alvo=String(id);
+  const achar=()=>document.querySelector(`tr[data-id="${CSS.escape(alvo)}"]`);
   if(!achar()){
-    FILTRO='todos';TERMO=String(id);
-    const b=document.getElementById('busca');if(b)b.value=TERMO;
+    if(!visiveis().some(l=>String(l.id)===alvo)){
+      FILTRO='todos';TERMO=alvo;TETO=PASSO;
+      const b=document.getElementById('busca');if(b)b.value=TERMO;
+    }
+    /* O teto não pode esconder justamente a linha para onde estamos indo. */
+    const pos=visiveis().findIndex(l=>String(l.id)===alvo);
+    if(pos>=TETO)TETO=Math.ceil((pos+1)/PASSO)*PASSO;
     redesenhar();
   }
   const tr=achar(); if(!tr) return;
@@ -896,23 +1064,38 @@ function irPara(id){
 }
 
 /* ---------------- carregar ---------------- */
+/* A ordem aqui é a da tela: primeiro o que responde (busca e contagem), depois o
+   que refina (os doze chips, recolhidos), depois os exemplos, e só então a grade.
+   Os chips e os cartões continuam existindo — deixaram de ser pedágio. */
 function layout(){
   return `<div class="topo">
-    <div class="linha-filtros"><div class="grupo" id="chipsSit"></div></div>
-    <div class="linha-filtros">
+    <div class="barra-acoes">
+      <input class="busca campo-busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por ID, cliente, CNPJ (com ou sem pontos), CRM, cidade…  ( / para focar)">
+      <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.2 2h13.6a.6.6 0 0 1 .46.99L10.4 9.02V13.4a.6.6 0 0 1-.87.54l-2.6-1.3a.6.6 0 0 1-.33-.54V9.02L.74 2.99A.6.6 0 0 1 1.2 2Z"/></svg>
+        Filtros <span class="cont-filtros" hidden>0</span>
+      </button>
+      <span class="resumo-lista" id="resumo-lista"></span>
+    </div>
+    <div id="painel-filtros" class="painel-filtros" hidden>
+      <div class="grupo" id="chipsSit"></div>
       <div class="grupo" id="chipsDoc"></div>
-      <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por ID, cliente, CNPJ (com ou sem pontos), CRM, cidade…  ( / para focar)">
+      <button type="button" class="btn-limpar" id="btn-limpar">Limpar filtros</button>
     </div>
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
     <div class="txt">Editar aqui grava direto na planilha${META.aba?' (aba <b>'+esc(META.aba)+'</b>)':''}. O atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. Coluna de endereço tem o atalho <b>↗</b> ao lado, que abre o documento em outra guia quando o campo é mesmo um link.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do <b>Registro</b> por fórmula — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>Na grade, a faixa escura acima dos cabeçalhos junta as colunas por <b>assunto</b> (o mesmo documento, o mesmo portal), para não se perder na rolagem lateral. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
   </details>
-  <div class="resumo" id="resumo"></div>
+  <details class="ajuda situacao" id="det-situacao">
+    <summary>Ver quem está em cada situação</summary>
+    <div class="resumo" id="resumo"></div>
+  </details>
   <div class="tabela-wrap"><table>
     <thead id="thead"></thead>
     <tbody id="tbody"></tbody>
-  </table></div>`;
+  </table></div>
+  <div id="rodape-lista"></div>`;
 }
 async function carregar(){
   try{
@@ -926,6 +1109,7 @@ async function carregar(){
     validarURL();                                  // a visão vem do endereço (C.10)
     document.getElementById('app').innerHTML=layout();
     ligarDetalhes(document.getElementById('ajuda'),'b4u.licencas.ajuda');
+    FILTROS_UI=ligarFiltros('licencas',filtrosPainel);   // depois do layout: o painel já existe
     if(d.planilha_url) document.getElementById('plan').href=d.planilha_url;
     const b=document.getElementById('busca');
     b.value=TERMO;

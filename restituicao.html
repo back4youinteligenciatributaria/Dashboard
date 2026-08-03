@@ -34,6 +34,10 @@
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
   /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
   --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Escala de texto e o teal claro: as outras telas ja tinham, esta nao. Sem eles
+     o CSS compartilhado da regua de acoes cai no valor herdado e desalinha. */
+  --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
+  --receita-soft:#DBEFEC;
   /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
   --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
@@ -145,6 +149,54 @@ tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}   /*
 .barra a.logo:hover{opacity:.82}
 
 
+/* ---------- revelacao progressiva ---------- */
+/* Régua de ações: busca sempre à mão, filtros a um clique, contagem à vista.
+   Antes os filtros ficavam todos abertos na tela — quem chegava tinha de ler a
+   parede inteira antes de achar o campo de busca, que é o que 9 em 10 usam. */
+.barra-acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.barra-acoes .campo-busca{flex:1;min-width:200px;font-size:16px;padding:12px 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
+.barra-acoes .campo-busca:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.btn-filtros{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);
+  color:var(--ink);font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.btn-filtros:hover{border-color:var(--brand-teal)}
+.btn-filtros[aria-expanded="true"]{background:var(--receita-soft);border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.btn-filtros svg{width:15px;height:15px;flex:none}
+.cont-filtros{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
+  padding:0 5px;border-radius:var(--radius-pill);background:var(--brand-teal-txt);color:#fff;
+  font-size:var(--fs-1);font-weight:800}
+/* display:inline-flex ganha do atributo hidden — sem esta linha o selo mostrava
+   um "0" permanente ao lado de Filtros. */
+.cont-filtros[hidden]{display:none}
+.resumo-lista{font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
+.painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
+  padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--surface-warm)}
+.painel-filtros[hidden]{display:none}
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
+/* A contagem desta tela tem quatro números; no celular ela precisa quebrar, senão
+   o nowrap do contrato empurra a página para o lado. */
+@media(max-width:560px){.resumo-lista{white-space:normal}}
+/* Cada grupo de chips ocupa a fileira inteira: Prazos, Etapa e Status não se misturam. */
+.painel-filtros .grupo{width:100%}
+.painel-filtros .grupo .chips:last-child{margin-bottom:0}
+.btn-limpar{min-height:38px;padding:0 15px;border-radius:var(--radius-pill);border:1px dashed var(--line-2);
+  background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:var(--fs-2);cursor:pointer}
+.btn-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+/* Os quadros de prazo continuam inteiros, só que a um clique de distância — a
+   contagem deles fica na régua, que é o que impede de esconder pendência. */
+details.situacao>summary{padding:10px 13px;font-size:var(--fs-3)}
+details.situacao>.resumo{padding:0 12px 12px}
+/* Quanto da grade está desenhado. Vazio quando tudo cabe no teto. */
+.mostrando{font-size:var(--fs-2);color:var(--muted);padding:10px 16px 0;text-align:center}
+.mostrando:empty{display:none}
+
 /* ---------- explicacao recolhida (C.2) ----------
    O dado vem primeiro; a instrucao fica a um clique e lembra a escolha. */
 details.ajuda{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin:8px 0}
@@ -209,6 +261,49 @@ function ligarDetalhes(el,chave){
   if(!el)return;
   try{if(localStorage.getItem(chave)==='1')el.open=true;}catch(e){}
   el.addEventListener('toggle',()=>{try{localStorage.setItem(chave,el.open?'1':'0');}catch(e){}});
+}
+
+/* ---------------- revelação progressiva ---------------- */
+/* Filtros recolhidos, com memória. O contador ao lado do botão existe para
+   evitar o único efeito colateral ruim de esconder filtro: a pessoa esquece que
+   filtrou e acha que os dados sumiram. Por isso, com filtro ativo, o painel
+   nasce ABERTO. */
+function ligarFiltros(pagina, contarAtivos){
+  const bt = document.getElementById('btn-filtros');
+  const pn = document.getElementById('painel-filtros');
+  if(!bt || !pn) return;
+  const chave = 'b4u_filtros_' + pagina;
+  const abrir = (v, persistir) => { pn.hidden = !v; bt.setAttribute('aria-expanded', String(v));
+                       if(persistir){ try{ localStorage.setItem(chave, v?'1':'0'); }catch(e){} } };
+  let inicial = false;
+  try{ inicial = localStorage.getItem(chave) === '1'; }catch(e){}
+  /* Abrir por causa de filtro ativo NÃO é escolha da pessoa — e por isso não pode
+     virar preferência. Antes esta abertura automática era gravada junto: bastava
+     entrar uma vez por um link com filtro para o painel passar a nascer aberto
+     para sempre, sem ninguém ter pedido. Só o clique persiste. */
+  const forcado = !!(contarAtivos && contarAtivos() > 0);
+  abrir(inicial || forcado, false);
+  bt.addEventListener('click', ()=> abrir(pn.hidden, true));
+  return { atualizarContador(){
+    const n = contarAtivos ? contarAtivos() : 0;
+    const c = bt.querySelector('.cont-filtros');
+    if(c){ c.textContent = n; c.hidden = n === 0; }
+  }};
+}
+let FILTROS_UI=null;
+
+/* Teto da grade. Dois botões de propósito: "mais 20" para quem lê, "todos" para
+   quem vai usar Ctrl+F. Buscar, filtrar ou reordenar volta o teto ao início — o
+   resultado é outro, e continuar de onde parou confundiria. */
+const PASSO = 20;
+let TETO = PASSO;
+function rodapeLista(mostrados, total){
+  if(total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
 }
 /* O servidor termina o serviço: o log mostra execuções de 15s, 17s e 23s completando
    e gravando o cache. Quem desistia cedo era o front, com teto de 20s — a resposta
@@ -367,24 +462,44 @@ function lerURL(){
   FSTATUS=p.get('status')||'todos';
   return p.get('q')||'';
 }
+/* A ordem aqui é a da tela: primeiro o que responde (busca e contagem), depois o
+   que refina (os 24 chips, recolhidos), depois os quadros de prazo, e só então a
+   grade. Nada foi embora — deixou de ser pedágio. */
 function render(){
   document.getElementById('tag').textContent='Restituição'+(RESPNOME?' · '+RESPNOME:'');
   const termo=lerURL();   // a visão vem do endereço, não zerada
+  TETO=PASSO;
   document.getElementById('app').innerHTML=`
     <div class="topo">
-      <input class="busca" id="busca" type="search" value="${esc(termo)}" placeholder="Buscar por ID, nome, CNPJ ou e-mail…  ( / para focar)">
+      <div class="barra-acoes">
+        <input class="busca campo-busca" id="busca" type="search" value="${esc(termo)}" placeholder="Buscar por ID, nome, CNPJ ou e-mail…  ( / para focar)">
+        <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.2 2h13.6a.6.6 0 0 1 .46.99L10.4 9.02V13.4a.6.6 0 0 1-.87.54l-2.6-1.3a.6.6 0 0 1-.33-.54V9.02L.74 2.99A.6.6 0 0 1 1.2 2Z"/></svg>
+          Filtros <span class="cont-filtros" hidden>0</span>
+        </button>
+        <span class="resumo-lista" id="resumo-lista"></span>
+      </div>
+      <div id="painel-filtros" class="painel-filtros" hidden>
+        <div class="grupo" id="filtros"></div>
+        <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro e sem busca">Limpar filtros</button>
+      </div>
       <details class="ajuda" id="ajuda">
         <summary>ⓘ Como funciona esta tela</summary>
-        <div class="txt">Clique num cabeçalho para ordenar (A→Z / Z→A). Só os campos de status/observação/links/tarefas são editáveis — salvam sozinhos, e <b>Enter</b> grava e desce para a mesma coluna da linha seguinte. Etapa em <b>“Enviado ao cliente”</b> não conta como atrasada: aparece em <b>“Cobrar o cliente de retorno”</b>, com os dias corridos de espera (a data é carimbada sozinha e pode ser corrigida na coluna “Esperando retorno desde”). Os <b>filtros rápidos</b> logo acima da tabela combinam entre si, com a busca e com a ordenação.</div>
+        <div class="txt">Clique num cabeçalho para ordenar (A→Z / Z→A). Só os campos de status/observação/links/tarefas são editáveis — salvam sozinhos, e <b>Enter</b> grava e desce para a mesma coluna da linha seguinte. Etapa em <b>“Enviado ao cliente”</b> não conta como atrasada: aparece em <b>“Cobrar o cliente de retorno”</b>, com os dias corridos de espera (a data é carimbada sozinha e pode ser corrigida na coluna “Esperando retorno desde”). Os <b>filtros rápidos</b> ficam no botão <b>Filtros</b> e combinam entre si, com a busca e com a ordenação.</div>
       </details>
     </div>
-    <div class="resumo" id="resumo"></div>
-    <div class="filtros" id="filtros"></div>
-    <div class="tabela-wrap"><table id="tab"></table></div>`;
-  document.getElementById('busca').addEventListener('input',()=>redesenhar());
+    <details class="ajuda situacao" id="det-situacao">
+      <summary>Ver quem está em cada situação</summary>
+      <div class="resumo" id="resumo"></div>
+    </details>
+    <div class="tabela-wrap"><table id="tab"></table></div>
+    <div class="mostrando" id="mostrando"></div>
+    <div id="lista-mais"></div>`;
+  document.getElementById('busca').addEventListener('input',()=>{TETO=PASSO;redesenhar();});
   ligarDetalhes(document.getElementById('ajuda'),'b4u.restituicao.ajuda');
   mapearColunas();
   atualizarResumo();
+  FILTROS_UI=ligarFiltros('restituicao',filtrosPainel);   // depois do layout: o painel já existe
   redesenhar();
 }
 /** Desde quando o cliente está devendo retorno naquela etapa:
@@ -442,6 +557,10 @@ function listaCobrar(arr){
     return `<div class="tk" data-goto="${t.row}" data-k="${t.k}" title="${esc(tit)}"><span class="d${t.dias==null?' sem':''}">${esc(quanto)}</span><span class="lb">${esc(t.id)} · ${esc(t.nome)}</span><span class="tp">${esc(t.label)}</span></div>`;
   }).join('');
 }
+/* Os cinco quadros saíram da primeira dobra. O que impede de esconder pendência
+   não é o quadro: é a contagem em texto na régua ("11 tarefas atrasadas · 17
+   vencem esta semana"), que fica visível com o bloco fechado. Aqui dentro ficam
+   os exemplos — bons, mas no lugar errado. */
 function atualizarResumo(){
   const b=computeResumo();
   document.getElementById('resumo').innerHTML=`
@@ -530,8 +649,12 @@ function statusUnicos(){
   return {lista:lista,vazio:vazio};
 }
 function filtroAtivo(){return FPRAZO!=='todos'||FETAPA!=='todas'||FSTATUS!=='todos';}
+/* Quantos filtros do PAINEL estão pegando — vira o selo ao lado do botão (C.5).
+   A busca não conta: ela fica à vista na régua, e um selo por causa dela faria a
+   pessoa procurar o que não sumiu. */
+function filtrosPainel(){return (FPRAZO!=='todos'?1:0)+(FETAPA!=='todas'?1:0)+(FSTATUS!=='todos'?1:0);}
 function limparFiltros(){
-  FPRAZO='todos';FETAPA='todas';FSTATUS='todos';
+  FPRAZO='todos';FETAPA='todas';FSTATUS='todos';TETO=PASSO;
   const b=document.getElementById('busca');if(b)b.value='';
   redesenhar();
 }
@@ -587,13 +710,29 @@ function desenharChips(){
     html+='<div class="chips">'+t+'</div>';
   }
 
-  if(filtroAtivo()||(b&&b.value))html+='<div class="chips"><button type="button" class="chip limpar" id="limparFiltros">Limpar filtros e busca</button></div>';
+  /* O "Limpar filtros" agora é fixo no rodapé do painel (#btn-limpar) — não é mais
+     um chip que aparece e some no meio dos outros vinte e quatro. */
   cx.innerHTML=html;
+}
+/* A contagem em texto é o que permite recolher os chips e os quadros sem esconder
+   pendência: os números continuam na primeira linha da tela, filtrada ou não. */
+function desenharResumoLista(){
+  const el=document.getElementById('resumo-lista');if(!el)return;
+  const b=document.getElementById('busca');
+  const vis=filtradas(b?b.value:'').length,tot=baseRows().length;
+  const r=computeResumo();
+  const p=[(vis===tot?String(tot):vis+' de '+tot)+' clientes'];
+  if(r.atrasada.length)p.push(r.atrasada.length+' tarefas atrasadas');
+  if(r.semana.length)p.push(r.semana.length+' vencem esta semana');
+  if(r.cobrar.length)p.push(r.cobrar.length+' esperando o cliente');
+  el.textContent=p.join(' · ');
 }
 function redesenhar(){
   const b=document.getElementById('busca');
   desenharChips();
   desenhar(b?b.value:'');
+  desenharResumoLista();
+  if(FILTROS_UI)FILTROS_UI.atualizarContador();
   sincronizarURL();
 }
 function ehNum(s){return /^\s*-?\d+([.,]\d+)?\s*$/.test(String(s));}
@@ -650,18 +789,29 @@ function atalhoEquip(l){
 function desenhar(termo){
   const arr=ordenar(filtradas(termo));
   document.getElementById('cnt').textContent=arr.length+' de '+baseRows().length+' clientes';
+  /* Teto de 20: a tela abre com o começo da grade, não com as 110 linhas. */
+  const n=Math.min(TETO,arr.length);
   const head='<thead><tr>'
     +'<th class="col-id" data-sort="id">ID'+seta('id')+'</th>'
     +'<th class="col-nome" data-sort="nome">Nome'+seta('nome')+'</th>'
     +COLS.map(c=>`<th data-sort="${c.k}" style="min-width:${c.w+16}px">${esc(c.label)}${seta(c.k)}</th>`).join('')+'</tr></thead>';
-  const body='<tbody>'+(arr.map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td><td class="col-nome">${esc(l.nome||'')}${atalhoEquip(l)}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+2}" style="padding:18px;color:var(--muted)">Nenhum cliente com os filtros de agora. <button type="button" class="chip limpar" id="limparFiltros">Limpar filtros e busca</button></td></tr>`)+'</tbody>';
+  const body='<tbody>'+(arr.slice(0,n).map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td><td class="col-nome">${esc(l.nome||'')}${atalhoEquip(l)}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+2}" style="padding:18px;color:var(--muted)">Nenhum cliente com os filtros de agora. <button type="button" class="chip limpar" data-limpar>Limpar filtros e busca</button></td></tr>`)+'</tbody>';
   document.getElementById('tab').innerHTML=head+body;
+  const mo=document.getElementById('mostrando');
+  if(mo)mo.textContent=arr.length>n?('Mostrando '+n+' de '+arr.length+' clientes.'):'';
+  const lm=document.getElementById('lista-mais');
+  if(lm)lm.innerHTML=rodapeLista(n,arr.length);
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
 }
 function irPara(row,k){
   // a linha precisa estar visível: solta a busca e os chips antes de rolar até ela
   const busca=document.getElementById('busca');
-  if((busca&&busca.value)||filtroAtivo()){FPRAZO='todos';FETAPA='todas';FSTATUS='todos';if(busca)busca.value='';redesenhar();}
+  let mexeu=false;
+  if((busca&&busca.value)||filtroAtivo()){FPRAZO='todos';FETAPA='todas';FSTATUS='todos';if(busca)busca.value='';mexeu=true;}
+  /* O teto não pode esconder justamente a linha para onde estamos indo. */
+  const pos=ordenar(filtradas(busca?busca.value:'')).findIndex(l=>String(l.row)===String(row));
+  if(pos>=TETO){TETO=Math.ceil((pos+1)/PASSO)*PASSO;mexeu=true;}
+  if(mexeu)redesenhar();
   requestAnimationFrame(()=>{
     const tr=document.querySelector(`#tab tr[data-row="${row}"]`);if(!tr)return;
     tr.scrollIntoView({block:'center'});
@@ -704,7 +854,9 @@ async function salvar(row,id,campos){
     PENDENTES.delete(String(row));FALHAS.delete(String(row));marcarFalha(row,false);
     setSave('ok','Salvo ✓ '+horaAgora());
     atualizarResumo();
-    desenharChips();   // só os chips: redesenhar a tabela tiraria o foco de quem está digitando
+    /* só os chips e a contagem: redesenhar a tabela tiraria o foco de quem está digitando */
+    desenharChips();desenharResumoLista();
+    if(FILTROS_UI)FILTROS_UI.atualizarContador();
   }catch(e){
     PENDENTES.delete(String(row));
     FALHAS.set(String(row),{id:id,campos:campos});
@@ -722,14 +874,19 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('click',e=>{
   const th=e.target.closest('th[data-sort]');
-  if(th){const k=th.dataset.sort;if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}desenhar(document.getElementById('busca').value);return;}
+  if(th){const k=th.dataset.sort;if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}
+    TETO=PASSO;                                // outra ordem, outro começo de grade
+    desenhar(document.getElementById('busca').value);return;}
   const chip=e.target.closest('.chip[data-dim]');
   if(chip){
     const d=chip.dataset.dim,v=chip.dataset.v;
     if(d==='prazo')FPRAZO=v;else if(d==='etapa')FETAPA=v;else if(d==='status')FSTATUS=v;
-    redesenhar();return;
+    TETO=PASSO;redesenhar();return;
   }
-  if(e.target.closest('#limparFiltros')){limparFiltros();return;}
+  if(e.target.closest('#btn-limpar,[data-limpar]')){limparFiltros();return;}
+  /* "mais 20" para quem está lendo, "todos" para quem vai usar Ctrl+F. */
+  if(e.target.closest('.btn-mais')){TETO+=PASSO;desenhar(document.getElementById('busca').value);return;}
+  if(e.target.closest('.btn-todos')){TETO=baseRows().length;desenhar(document.getElementById('busca').value);return;}
   const rt=e.target.closest('[data-retry]');
   if(rt){
     const k=rt.dataset.retry,f=FALHAS.get(k);
@@ -791,7 +948,7 @@ document.addEventListener('keydown',e=>{
   const a=document.activeElement,tag=a&&a.tagName;
   const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
   if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!digitando){e.preventDefault();b.focus();b.select();return;}
-  if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';redesenhar();}
+  if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';TETO=PASSO;redesenhar();}
 });
 window.addEventListener('hashchange',carregar);   // trocar o código (#) recarrega para o colaborador certo
 

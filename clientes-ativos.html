@@ -51,10 +51,6 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
 .chip{font-family:var(--sans);line-height:1.5;font-size:13px;font-weight:700;border-radius:var(--radius-pill);padding:6px 12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
 .chip.on{background:var(--brand-euc);border-color:var(--brand-euc);color:#fff}
-/* Limpar filtros: tracejado e apagado de propósito — é saída, não mais um filtro. */
-.chip.limpar{border-style:dashed;color:var(--muted)}
-/* O invólucro não vira item do flex: sem filtro ativo ele não deixa buraco. */
-#limpar-cx{display:contents}
 .busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .resumo-top{background:linear-gradient(135deg,rgba(15,140,133,.12),rgba(63,166,128,.07));border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin:10px 0 14px;display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
@@ -75,6 +71,51 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .btn--mini{padding:6px 11px;font-size:12px}
 .btn--pill{border-radius:var(--radius-pill);padding:12px 20px}
 .dica{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ---------- revelacao progressiva ---------- */
+/* Régua de ações: busca sempre à mão, filtros a um clique, contagem à vista.
+   Antes os nove chips de produto e de atalho ficavam abertos acima do calendário —
+   quem chegava lia a fileira inteira antes de olhar o número que veio buscar. */
+.barra-acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.barra-acoes .campo-busca{flex:1;min-width:200px;font-size:16px;padding:12px 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
+.barra-acoes .campo-busca:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.btn-filtros{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);
+  color:var(--ink);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.btn-filtros:hover{border-color:var(--brand-teal)}
+.btn-filtros[aria-expanded="true"]{background:#EAF4F1;border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.btn-filtros svg{width:15px;height:15px;flex:none}
+.cont-filtros{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
+  padding:0 5px;border-radius:var(--radius-pill);background:var(--brand-teal-txt);color:#fff;
+  font-size:11px;font-weight:800}
+/* display:inline-flex ganha do atributo hidden — sem esta linha o selo mostrava
+   um "0" permanente ao lado de Filtros. */
+.cont-filtros[hidden]{display:none}
+.resumo-lista{font-size:13px;color:var(--ink-2);white-space:nowrap}
+/* Três números não cabem numa linha só no celular; sem isto o nowrap do contrato
+   empurraria a página para o lado. */
+@media(max-width:560px){.resumo-lista{white-space:normal}}
+.painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
+  padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--surface-warm)}
+.painel-filtros[hidden]{display:none}
+/* Cada grupo ocupa a fileira inteira: Produto e Atalhos não se misturam. */
+.painel-filtros .grupo{width:100%;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.painel-filtros .grupo .rot{font-size:11px;font-weight:800;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--muted);margin-right:2px}
+.btn-limpar{min-height:38px;padding:0 15px;border-radius:var(--radius-pill);border:1px dashed var(--line-2);
+  background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:12px;cursor:pointer}
+.btn-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:#EAF4F1}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
+/* Dentro do dropdown o rodapé é rodapé mesmo: encostado na borda, fora das duas
+   colunas da lista, senão ele viraria mais um item no meio dos clientes. */
+.drop .lista-mais{margin:0;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface-warm)}
 /* calendário */
 .legenda{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700;margin:2px 2px 12px;flex-wrap:wrap}
 /* Amostra de cor: uma classe só no painel inteiro (§7) — antes cada tela tinha
@@ -265,8 +306,15 @@ function carregar(){
     .then(d=>{if(d.erro)throw new Error(d.erro);
       CLIENTES=(d.clientes||[]).map(c=>{
         const pi=parseYM(c.inicio), pf=parseYM(c.fim);
+        /* fimIdx  = ÚLTIMA COMPETÊNCIA em que o cliente foi atendido (ele conta
+                     como ativo nesse mês).
+           saidaIdx = o mês em que ele DEIXA de contar — o seguinte.
+           Os dois são coisas diferentes e antes estavam no mesmo número: a baixa
+           aparecia no último mês trabalhado, competindo com a própria presença
+           dele na lista daquele mês. Última competência jul/26 significa ativo em
+           julho e −1 em agosto. */
         return {id:c.id,nome:c.nome,produtos:c.produtos,prodList:String(c.produtos||'').split(',').map(x=>x.trim()).filter(Boolean),
-                iniIdx:pi,fimIdx:pf,inicio:c.inicio,fim:c.fim};
+                iniIdx:pi,fimIdx:pf,saidaIdx:(pf==null?null:pf+1),inicio:c.inicio,fim:c.fim};
       });
       PRODUTOS=d.produtos||[];
       const now=new Date();ENDIDX=idxYM(now.getFullYear(),now.getMonth()+1);STARTIDX=idxYM(INICIO_ANO,INICIO_MES);
@@ -298,9 +346,9 @@ function porNome(a,b){return normTxt(a.nome||a.id).localeCompare(normTxt(b.nome|
 
 /* ---------- atalhos ----------
    Três perguntas que o calendário não responde de bate-pronto. A regra de
-   competência é a mesma da página: entrou no mês do início, saiu no mês do fim
-   (o mês do fim ainda conta como ativo). "Últimos 3 meses" = a competência
-   atual e as duas anteriores; "últimos 12" segue a mesma ideia.
+   competência é a mesma da página: entrou no mês do início; a última competência
+   ainda conta como ativo e a baixa cai no mês SEGUINTE. "Últimos 3 meses" = a
+   competência atual e as duas anteriores; "últimos 12" segue a mesma ideia.
    "Sem data de início" é o caso que nunca aparece em contagem nenhuma — por
    isso passa despercebido. */
 const ATALHOS=[
@@ -309,11 +357,15 @@ const ATALHOS=[
    ord:(a,b)=>(b.iniIdx-a.iniIdx)||porNome(a,b),
    quando:c=>'entrou em '+labelIdx(c.iniIdx),
    vazio:'Ninguém entrou nas últimas três competências.'},
-  {k:'sai12',rot:'Saíram nos últimos 12 meses',
-   fn:c=>c.fimIdx!=null&&c.fimIdx>=ENDIDX-11&&c.fimIdx<=ENDIDX,
-   ord:(a,b)=>(b.fimIdx-a.fimIdx)||porNome(a,b),
-   quando:c=>'último mês: '+labelIdx(c.fimIdx),
-   vazio:'Ninguém encerrou nos últimos doze meses.'},
+  /* A janela vai até ENDIDX+1 de propósito: quem tem a competência atual como
+     última já está de saída, e some da contagem no mês que vem. É a informação
+     mais útil da lista — e some dela se a janela parar na competência de hoje. */
+  {k:'sai12',rot:'Saídas dos últimos 12 meses',
+   fn:c=>c.saidaIdx!=null&&c.saidaIdx>=ENDIDX-11&&c.saidaIdx<=ENDIDX+1,
+   ord:(a,b)=>(b.saidaIdx-a.saidaIdx)||porNome(a,b),
+   quando:c=>(c.saidaIdx>ENDIDX?'sai em ':'saiu em ')+labelIdx(c.saidaIdx)+
+             ' · última competência '+labelIdx(c.fimIdx),
+   vazio:'Nenhuma saída nas últimas doze competências.'},
   {k:'semini',rot:'Sem data de início',
    fn:c=>c.iniIdx==null,
    ord:porNome,
@@ -334,23 +386,67 @@ function viewAtalho(termo){
   return `<div class="painel"><div class="d-h"><b>${esc(a.rot)}</b><span class="d-cnt">${arr.length} ${arr.length===1?'cliente':'clientes'}</span></div><div class="d-lista">${itens}</div></div>`;
 }
 
-/* ---------- limpar filtros (C.5) ----------
-   Quantos filtros estão pegando agora. A visão (calendário / por cliente) fica de
-   fora: ela é a aba em que a pessoa está, não um filtro que escondeu alguém. */
-function filtrosAtivos(){
-  return (PROD?1:0)+(ATALHO?1:0)+(String(TERMO).trim()?1:0);
+/* ---------- revelação progressiva ----------
+   Filtros recolhidos, com memória. O contador ao lado do botão existe para evitar
+   o único efeito colateral ruim de esconder filtro: a pessoa esquece que filtrou e
+   acha que os dados sumiram. Por isso, com filtro ativo, o painel nasce ABERTO. */
+function ligarFiltros(pagina, contarAtivos){
+  const bt = document.getElementById('btn-filtros');
+  const pn = document.getElementById('painel-filtros');
+  if(!bt || !pn) return;
+  const chave = 'b4u_filtros_' + pagina;
+  const abrir = (v, persistir) => { pn.hidden = !v; bt.setAttribute('aria-expanded', String(v));
+                       if(persistir){ try{ localStorage.setItem(chave, v?'1':'0'); }catch(e){} } };
+  let inicial = false;
+  try{ inicial = localStorage.getItem(chave) === '1'; }catch(e){}
+  /* Abrir por causa de filtro ativo NÃO é escolha da pessoa — e por isso não pode
+     virar preferência. Antes esta abertura automática era gravada junto: bastava
+     entrar uma vez por um link com filtro para o painel passar a nascer aberto
+     para sempre, sem ninguém ter pedido. Só o clique persiste. */
+  const forcado = !!(contarAtivos && contarAtivos() > 0);
+  abrir(inicial || forcado, false);
+  bt.addEventListener('click', ()=> abrir(pn.hidden, true));
+  return { atualizarContador(){
+    const n = contarAtivos ? contarAtivos() : 0;
+    const c = bt.querySelector('.cont-filtros');
+    if(c){ c.textContent = n; c.hidden = n === 0; }
+  }};
 }
+let FILTROS_UI=null;
+
+/* Teto da lista. Dois botões de propósito: "mais 20" para quem lê, "todos" para
+   quem vai usar Ctrl+F. Buscar ou filtrar volta o teto ao início — o resultado é
+   outro, e continuar de onde parou confundiria. */
+const PASSO=20;
+function rodapeLista(mostrados,total){
+  if(total<=mostrados)return '';
+  const faltam=total-mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO,faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
+}
+
+/* ---------- limpar filtros (C.5) ----------
+   Quantos filtros estão pegando agora — vira o selo ao lado do botão Filtros. Só
+   conta o que ficou ESCONDIDO no painel: a busca segue à vista na régua, e um selo
+   por causa dela faria a pessoa procurar o que não sumiu. A visão (calendário /
+   por cliente) também fica de fora: é a aba em que a pessoa está, não um filtro. */
+function filtrosPainel(){return (PROD?1:0)+(ATALHO?1:0);}
 function limparFiltros(){PROD='';ATALHO='';TERMO='';render();}
-/* Sem filtro nenhum o botão não existe — ele é a saída de quem se perdeu, não mais
-   um chip para ler. Repintado sozinho porque refazer a tela a cada tecla digitada
-   tiraria o cursor de dentro da busca. */
-function pintarLimpar(){
-  const cx=document.getElementById('limpar-cx'); if(!cx) return;
-  const n=filtrosAtivos();
-  cx.innerHTML=n?`<button type="button" class="chip limpar" id="limparFiltros"
-    title="Volta para a visão sem produto, sem atalho e sem busca">Limpar filtros<span class="n">${n}</span></button>`:'';
-  const b=document.getElementById('limparFiltros');
-  if(b)b.addEventListener('click',limparFiltros);
+/* A contagem em texto é o que permite recolher os chips sem esconder número: o
+   total, o ativo da competência e quem está fora de toda contagem continuam na
+   primeira linha da tela, com o painel aberto ou fechado. */
+function desenharResumoLista(){
+  const el=document.getElementById('resumo-lista');if(!el)return;
+  const universo=CLIENTES.filter(noUniverso).length;
+  const vis=CLIENTES.filter(combinaProduto).length;
+  const ativos=CLIENTES.filter(c=>combinaProduto(c)&&ativoEm(c,ENDIDX)).length;
+  const semIni=CLIENTES.filter(c=>combinaProduto(c)&&c.iniIdx==null).length;
+  const p=[(vis===universo?String(universo):vis+' de '+universo)+' clientes',
+           ativos+' ativos em '+labelIdx(ENDIDX)];
+  if(semIni)p.push(semIni+' sem data de início');
+  el.textContent=p.join(' · ');
 }
 
 function render(){
@@ -364,23 +460,46 @@ function render(){
   const opAtalho=ATALHOS.map(a=>`<button type="button" class="chip atalho${a.k===ATALHO?' on':''}" data-atalho="${a.k}" aria-pressed="${a.k===ATALHO}" title="${esc(a.rot)}">${esc(a.rot)}<span class="n">${contarAtalho(a)}</span></button>`).join('');
   const ph=ATALHO?'Buscar nesta lista (nome ou ID)…'
     :(VIEW==='calendario'?'Buscar cliente (nome ou ID) ou um ano (ex.: 2025)…':'Buscar cliente por nome…');
+  /* A ordem é a da tela: primeiro a busca e a contagem, depois o resumo e o
+     calendário — que é a resposta e por isso NUNCA recolhe. Os chips de produto e
+     de atalho, que antes vinham antes de tudo, agora esperam no painel. */
   document.getElementById('app').innerHTML=`<div class="wrap">
     <div class="toggle">
       <button data-view="calendario" class="${VIEW==='calendario'?'on':''}">Calendário</button>
       <button data-view="cliente" class="${VIEW==='cliente'?'on':''}">Por cliente</button>
     </div>
-    <div class="chips">${opProd}</div>
-    <div class="chips atalhos">${opAtalho}<span id="limpar-cx"></span></div>
+    <div class="barra-acoes">
+      <input class="busca campo-busca" id="busca" type="search" placeholder="${ph}" value="${esc(TERMO)}">
+      <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.2 2h13.6a.6.6 0 0 1 .46.99L10.4 9.02V13.4a.6.6 0 0 1-.87.54l-2.6-1.3a.6.6 0 0 1-.33-.54V9.02L.74 2.99A.6.6 0 0 1 1.2 2Z"/></svg>
+        Filtros <span class="cont-filtros" hidden>0</span>
+      </button>
+      <span class="resumo-lista" id="resumo-lista"></span>
+    </div>
+    <div id="painel-filtros" class="painel-filtros" hidden>
+      <div class="grupo"><span class="rot">Produto</span>${opProd}</div>
+      <div class="grupo"><span class="rot">Atalhos</span>${opAtalho}</div>
+      <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem produto, sem atalho e sem busca">Limpar filtros</button>
+    </div>
     <div class="resumo-top">
       <div><div class="lbl">Ativos em ${labelIdx(ENDIDX)} · ${PROD?esc(PROD):'contab./controlad.'}</div><div class="big">${ativosAgora}</div></div>
       <div><div class="lbl">Competência</div><div class="dica">1º mês com movimento: ${labelIdx(CALSTART)} · até ${labelIdx(ENDIDX)}. Sem data de fim = ativo em andamento.</div></div>
     </div>
-    <input class="busca" id="busca" type="search" placeholder="${ph}" value="${esc(TERMO)}">
     <div id="conteudo" style="margin-top:12px"></div>
   </div>`;
+  /* render() refaz o #app inteiro, então o botão de Filtros é sempre um elemento
+     novo: religar aqui é o que mantém a memória do painel valendo entre um chip e
+     outro. A escolha mora no localStorage, não no DOM, e sobrevive ao F5 — com uma
+     exceção de propósito: enquanto houver produto ou atalho ligado o painel volta
+     aberto, porque filtro que mexe no que a pessoa vê não pode ficar escondido. */
+  FILTROS_UI=ligarFiltros('clientes-ativos',filtrosPainel);
+  if(FILTROS_UI)FILTROS_UI.atualizarContador();
+  desenharResumoLista();
   document.querySelectorAll('.toggle button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.view===VIEW&&!ATALHO)return;VIEW=b.dataset.view;ATALHO='';TERMO='';render();}));
   document.querySelectorAll('.chip[data-prod]').forEach(c=>c.addEventListener('click',()=>{PROD=c.dataset.prod;render();}));
   document.querySelectorAll('.chip[data-atalho]').forEach(c=>c.addEventListener('click',()=>{ATALHO=(ATALHO===c.dataset.atalho?'':c.dataset.atalho);TERMO='';render();}));
+  const bl=document.getElementById('btn-limpar');
+  if(bl)bl.addEventListener('click',limparFiltros);
   const inp=document.getElementById('busca');
   inp.addEventListener('input',e=>desenhar(e.target.value));
   desenhar(TERMO);
@@ -390,7 +509,6 @@ function render(){
 function desenhar(termo){
   TERMO=termo||'';
   sincronizarURL();
-  pintarLimpar();
   const cont=document.getElementById('conteudo');
   cont.innerHTML = ATALHO ? viewAtalho(TERMO) : (VIEW==='calendario' ? viewCalendario(TERMO) : viewCliente(TERMO));
   if(!ATALHO&&VIEW==='calendario')cont.querySelectorAll('.mcard[data-m]').forEach(b=>b.addEventListener('click',()=>alternarMes(b)));
@@ -404,11 +522,14 @@ function viewCalendario(termo){
   const lista=CLIENTES.filter(c=>combinaProduto(c)&&(!alvo||normTxt((c.id||'')+' '+(c.nome||'')).includes(alvo)));
   const a0=anoIni(),a1=anoFim();
   MESES_DADOS={};ENTRADAS={};SAIDAS={};
-  /* entrou = mês do início da contabilidade; saiu = mês do fim (que ainda conta
-     como ativo, pela mesma regra do resto da página) */
+  /* entrou = mês do início da contabilidade.
+     saiu   = o mês SEGUINTE à última competência (saidaIdx). O mês da última
+              competência ainda tem o cliente na lista de ativos; a baixa é o
+              primeiro mês em que ele não está mais lá — que é onde a equipe
+              espera ver o −1. */
   lista.forEach(c=>{
     if(c.iniIdx!=null)(ENTRADAS[c.iniIdx]=ENTRADAS[c.iniIdx]||[]).push(c);
-    if(c.fimIdx!=null)(SAIDAS[c.fimIdx]=SAIDAS[c.fimIdx]||[]).push(c);
+    if(c.saidaIdx!=null)(SAIDAS[c.saidaIdx]=SAIDAS[c.saidaIdx]||[]).push(c);
   });
   let max=0;
   for(let y=a0;y<=a1;y++)for(let mo=0;mo<12;mo++){
@@ -458,17 +579,30 @@ function fecharTudo(cont){
   cont.querySelectorAll('.drop').forEach(d=>{d.hidden=true;d.innerHTML='';});
   cont.querySelectorAll('.mcard.sel').forEach(b=>{b.classList.remove('sel');b.setAttribute('aria-expanded','false');});
 }
+/* Teto dentro do dropdown: um mês de pico traz mais de cem clientes, e a lista
+   virava um rolo de duas colunas dentro do cartão. Abre com 20 e o total continua
+   escrito no cabeçalho do mês — o corte é do desenho, não da contagem. */
+let TETO_DROP=PASSO;
+function montarDrop(drop,btn,M){
+  drop.innerHTML=dropHtml(M);
+  const cont=document.getElementById('conteudo');
+  const x=drop.querySelector('.d-x');
+  if(x)x.addEventListener('click',()=>{fecharTudo(cont);btn.focus();});
+  const mais=drop.querySelector('.btn-mais');
+  if(mais)mais.addEventListener('click',()=>{TETO_DROP+=PASSO;montarDrop(drop,btn,M);});
+  const todos=drop.querySelector('.btn-todos');
+  if(todos)todos.addEventListener('click',()=>{TETO_DROP=(MESES_DADOS[M]||[]).length;montarDrop(drop,btn,M);});
+}
 function alternarMes(btn){
   const cont=document.getElementById('conteudo');
   const jaAberto=btn.classList.contains('sel');
   fecharTudo(cont);
   if(jaAberto)return;
   const drop=btn.closest('.ano').querySelector('.drop');
-  drop.innerHTML=dropHtml(+btn.dataset.m);
+  TETO_DROP=PASSO;            // mês novo (ou busca nova, que refaz o calendário): teto novo
+  montarDrop(drop,btn,+btn.dataset.m);
   drop.hidden=false;
   btn.classList.add('sel');btn.setAttribute('aria-expanded','true');
-  const x=drop.querySelector('.d-x');
-  if(x)x.addEventListener('click',()=>{fecharTudo(cont);btn.focus();});
 }
 function movHtml(M){
   const ent=(ENTRADAS[M]||[]).slice().sort(porNome);
@@ -478,16 +612,17 @@ function movHtml(M){
   const bloco=(cls,rot,tit,arr)=>arr.length
     ? `<div class="mv ${cls}"><div class="mv-h" title="${esc(tit)}">${rot}<span>${arr.length}</span></div><div class="mv-l">${arr.map(linha).join('')}</div></div>`
     : '';
-  return `<div class="d-mov">${bloco('ent','Entraram','Início da contabilidade neste mês.',ent)}${bloco('sai','Saíram','Fim da contabilidade neste mês — este ainda é o último mês em que contam como ativos.',sai)}</div>`;
+  return `<div class="d-mov">${bloco('ent','Entraram','Início da contabilidade neste mês.',ent)}${bloco('sai','Saíram','Primeiro mês sem eles — a última competência atendida foi a anterior, e nela ainda contam como ativos.',sai)}</div>`;
 }
 function dropHtml(M){
   const arr=(MESES_DADOS[M]||[]).slice().sort(porNome);
-  const itens=arr.map(c=>{
+  const n=Math.min(TETO_DROP,arr.length);
+  const itens=arr.slice(0,n).map(c=>{
     const linha=(c.id?esc(c.id)+' · ':'')+esc(c.nome||'(sem nome)');
     const prod=c.produtos?`<div class="d-prod">${esc(c.produtos)}</div>`:'';
     return `<div class="d-item"><div class="d-linha">${linha}</div>${prod}</div>`;
   }).join('')||'<div class="dica">Nenhum cliente ativo nesta competência.</div>';
-  return `<div class="d-h"><b>${esc(labelLongo(M))}</b><span class="d-cnt">${arr.length} ${arr.length===1?'cliente ativo':'clientes ativos'}</span><button class="d-x" type="button" aria-label="Fechar">×</button></div>${movHtml(M)}<div class="d-lista">${itens}</div>`;
+  return `<div class="d-h"><b>${esc(labelLongo(M))}</b><span class="d-cnt">${arr.length} ${arr.length===1?'cliente ativo':'clientes ativos'}</span><button class="d-x" type="button" aria-label="Fechar">×</button></div>${movHtml(M)}<div class="d-lista">${itens}</div>${rodapeLista(n,arr.length)}`;
 }
 
 /* ---------- por cliente ---------- */
@@ -501,8 +636,13 @@ function viewCliente(termo){
     const ativo = c.iniIdx!=null && (c.fimIdx==null || c.fimIdx>=ENDIDX) && c.iniIdx<=ENDIDX;
     let meses=0;for(let M=CALSTART;M<=ENDIDX;M++)if(ativoEm(c,M))meses++;
     const prod=c.prodList.map(p=>`<span class="pchip">${esc(p)}</span>`).join('')||'<span class="pchip" style="background:#F2ECE4;color:var(--muted);border-color:var(--line)">—</span>';
+    /* "encerrou jul/26" era ambíguo: julho é a última competência ATENDIDA, não o
+       mês em que ele some da contagem. Agora os dois aparecem — e quem está no
+       último mês ganha aviso, porque some da lista na virada. */
     const fimTxt = c.iniIdx==null ? '<span class="bdg enc">sem data de início</span>'
-      : (c.fimIdx==null ? '<span class="bdg ativo">Ativo</span>' : ('encerrou '+fmtData(c.fimIdx)));
+      : (c.fimIdx==null ? '<span class="bdg ativo">Ativo</span>'
+      : (c.fimIdx>=ENDIDX ? '<span class="bdg ativo">Ativo</span> <span class="bdg enc">último mês · sai em '+fmtData(c.saidaIdx)+'</span>'
+      : ('última competência '+fmtData(c.fimIdx)+' · saiu em '+fmtData(c.saidaIdx))));
     return `<div class="cli"><div class="cli-main">
         <div class="cli-nome">${esc(c.nome||c.id)}</div>
         <div class="cli-prod">${prod}</div>

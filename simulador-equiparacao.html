@@ -415,11 +415,18 @@
 <!-- ============ FECHO ============ -->
 <div class="close" id="close"></div>
 
-<h2 class="sec">Comparativo direto — MS favorável × MS desfavorável</h2>
-<p class="hint">O <b style="color:var(--c-travado)">roxo</b> é a janela do mandado de segurança: a base
-   reduzida conta como se valesse desde a impetração, e a diferença recolhida nesses meses fica travada
-   até o trânsito em julgado — é ela que a Modalidade C recupera. Passe o mouse em qualquer barra ou
-   marco para ver os números.</p>
+<h2 class="sec">Três cenários</h2>
+<p class="hint">O que ele desembolsa de IRPJ e CSLL em cada caminho. O retroativo corre por fora, na via
+   administrativa, e não depende do resultado do processo.</p>
+<div id="cenarios"></div>
+
+<h2 class="sec">Simulador de honorários</h2>
+<p class="hint">Escolha o resultado do processo e quando as restituições chegam. O honorário é sempre o
+   maior entre 30% do recuperado e o piso de 9 meses — um vai abatendo o outro.</p>
+<div id="honor"></div>
+
+<h2 class="sec">Benefício acumulado</h2>
+<p class="hint">Restituição recebida somada ao imposto que deixou de pagar, já descontado o êxito.</p>
 <div class="viz" id="comp"></div>
 
 <div class="tip" id="tip"></div>
@@ -440,7 +447,7 @@
 /* =========================================================
    ESTADO
    ========================================================= */
-const S = { tipo:'emp', fat:300000, pct:90, desfav:'sem', choices:{} };
+const S = { tipo:'emp', fat:300000, pct:90, desfav:'sem', msOk:true, perfil:'durante', choices:{} };
 const P = { alt:3, adm:4, drj:8, carf:18, sent:6, tran:14, acor:14, retro:60, selic:10.5,
             pis:3.65, cbs:3.52, mcbs:6, pdIni:4, pdDist:'2,3,1,2,3,4,2,1,3,2',
             corr:true, adic:true };
@@ -535,10 +542,10 @@ function modelo(){
       { type:'branch', key:'A', month:m0+P.adm, options:[
         { id:'defer', label:'Deferimento / homologação', tag:'good',
           body:'Crédito liberado para restituição ou compensação. O cliente usufrui do valor.',
-          fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30% · '+brl(honA)+'</em>',
+          fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>',
           then:[{ id:'A1f', month:m0+P.adm+1, kind:'fee', title:'Restituição na conta',
                   body:'Devida no momento da efetivação do benefício, em até 48 horas, independentemente de revisão posterior da homologação (Cl. 7.4.2 do Anexo II).',
-                  fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30%</em>', terminal:'A', aDue:true }] },
+                  fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>', terminal:'A', aDue:true }] },
         { id:'indefer', label:'Indeferimento', tag:'crit',
           body:'Despacho decisório nega o crédito. Abre-se a defesa administrativa inclusa no Termo.',
           fee:'Defesa inclusa<em>sem custo adicional</em>',
@@ -548,9 +555,9 @@ function modelo(){
             { type:'branch', key:'ADRJ', month:m0+P.adm+1+P.drj, options:[
               { id:'ok', label:'DRJ favorável', tag:'good',
                 body:'Crédito reconhecido na primeira instância administrativa.',
-                fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30%</em>',
+                fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>',
                 then:[{ id:'A3f', month:m0+P.adm+2+P.drj, kind:'fee', title:'Restituição na conta',
-                        body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30%</em>', terminal:'A', aDue:true }] },
+                        body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>', terminal:'A', aDue:true }] },
               { id:'nao', label:'DRJ desfavorável', tag:'crit',
                 body:'Segue o recurso voluntário ao Conselho Administrativo de Recursos Fiscais.',
                 fee:'Defesa inclusa<em>sem custo adicional</em>',
@@ -560,10 +567,10 @@ function modelo(){
                   { type:'branch', key:'ACARF', month:m0+P.adm+2+P.drj+P.carf, options:[
                     { id:'ok', label:'CARF favorável', tag:'good',
                       body:'Crédito reconhecido em definitivo na esfera administrativa.',
-                      fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30%</em>',
+                      fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>',
                       then:[{ id:'A4f', month:m0+P.adm+3+P.drj+P.carf, kind:'fee',
                               title:'Restituição na conta',
-                              body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30%</em>', terminal:'A', aDue:true }] },
+                              body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>', terminal:'A', aDue:true }] },
                     { id:'nao', label:'CARF desfavorável', tag:'crit',
                       body:'Crédito definitivamente não homologado na via administrativa.',
                       fee:'Nada devido<em>sem êxito, sem honorário</em>',
@@ -586,13 +593,13 @@ function modelo(){
     { type:'branch', key:'B', month:m0+P.sent, options:[
       { id:'sentOK', label:'Sentença favorável', tag:'good',
         body:'Autoriza a apuração por 8% e 12% desde logo, por execução provisória (art. 14, §3º, da Lei 12.016/2009).',
-        fee:'Economia de '+brl(E)+'/mês<em>êxito de 100% nos 9 primeiros meses</em>',
+        fee:'Economia de '+brl(E)+'/mês<em>piso de 9 meses, só se superar os 30% já pagos</em>',
         then:[
           { id:'B2', month:m0+P.sent, kind:'good', title:'Base reduzida em uso',
             body:'Economia mensal de '+brl(E)+' a partir da primeira competência apurada após a sentença.' },
           { id:'B3', month:m0+P.sent+1, kind:'fee', title:'Economia começa',
             body:'100% da economia mensal apurada, por 9 meses, pagos nas mesmas datas de vencimento das guias — o desembolso total do cliente fica igual ao de antes.',
-            fee:'Depois do 9º mês a economia é 100% dele<em>êxito só nos 9 primeiros meses</em>' },
+            fee:'A economia é dele desde o 1º mês<em>o piso só cobra o que faltar para 9 meses</em>' },
           { type:'branch', key:'BT', month:m0+P.sent+P.tran, options:[
             { id:'tOK', label:'Trânsito em julgado favorável', tag:'good',
               body:'Direito consolidado. Abre a compensação das competências do curso do processo.',
@@ -621,7 +628,7 @@ function modelo(){
           { type:'branch', key:'BR', month:m0+P.sent+P.acor, options:[
             { id:'rOK', label:'Acórdão favorável e trânsito', tag:'good',
               body:'O resultado favorável chega em grau recursal. As modalidades permanecem devidas, ainda que a fase recursal tenha sido conduzida por outro profissional (Cl. 7.8).',
-              fee:'Economia de '+brl(E)+'/mês<em>êxito de 100% nos 9 primeiros meses</em>',
+              fee:'Economia de '+brl(E)+'/mês<em>piso de 9 meses, só se superar os 30% já pagos</em>',
               then:[
                 { id:'B7', month:m0+P.sent+P.acor, kind:'good', title:'Base reduzida em uso',
                   body:'Economia mensal de '+brl(E)+', agora a partir do acórdão favorável.' },
@@ -844,6 +851,8 @@ function render(){
 
   drawWires();
   renderClose();
+  renderCenarios();
+  renderHonorarios();
   renderComp();
 }
 
@@ -913,11 +922,11 @@ function renderClose(){
 
   const est = (txt, cls) => `<span class="selo ${cls}">${txt}</span>`;
   const linhas = [
-    ['Modalidade A — restituição retroativa', `${M.retro} competências`,
-      aDue ? (aRisco ? ['devida, com direito a devolução','c-warn'] : ['devida','c-good'])
-           : ['não devida','c-none']],
-    ['Modalidade B — 9 meses de economia', 'a partir da decisão favorável',
-      refund ? ['devolvida integralmente','c-crit'] : (bDue ? ['devida','c-good'] : ['não devida','c-none'])],
+    ['Êxito principal — o maior entre 30% do recuperado e 9 meses de economia',
+      aDue ? `${M.retro} competências, com piso de 9 meses` : 'sem restituição: vale o piso de 9 meses',
+      (aDue||bDue) ? (aRisco ? ['devido, com direito a devolução','c-warn']
+                             : (refund ? ['piso mantido, excedente devolvido','c-warn'] : ['devido','c-good']))
+                   : ['não devido','c-none']],
     ['Modalidade C — período do processo', cDue ? `${cMes} competências` : 'depende do trânsito favorável',
       cDue ? ['devida','c-good'] : ['não devida','c-none']],
   ];
@@ -1066,12 +1075,12 @@ function renderTopo(){
    somada de forma simples (art. 39, §4º, da Lei 9.250/95), de modo que as
    competencias mais antigas valem mais. Valor sempre proporcional ao %
    equiparavel, porque a economia mensal ja e apurada sobre essa parcela. */
-function agendaPD(E, iM, retro, m0, corr, inicio){
+function agendaPD(E, iM, retro, m0, corr, inicio, distArr){
   const n = Math.max(0, Math.round(retro/3));
   const trims = [];
   for(let k=1; k<=n; k++) trims.push({ k, idadeBase: 2 + 3*(n-k), nominal: 3*E });
   trims.sort((a,b)=>b.idadeBase-a.idadeBase);                 // as mais antigas primeiro
-  const dist = String(P.pdDist).split(',').map(x=>Math.max(0, parseInt(x,10)||0));
+  const dist = distArr || String(P.pdDist).split(',').map(x=>Math.max(0, parseInt(x,10)||0));
   const porMes = {};
   let i = 0, off = 0;
   while(i < trims.length && off <= 120){
@@ -1153,6 +1162,10 @@ function comparativo(){
   const nC = M.nCparc;
   const valC = CE.temC ? CE.cVal / nC : 0;
 
+  /* Honorário principal: o MAIOR entre 30% do efetivamente restituído e 9 meses
+     de economia, apurado de forma contínua. A cada mês vence apenas a diferença
+     entre esse maior e o que já foi pago — nunca a soma dos dois. */
+  let aAcum = 0, bAcum = 0, pagoAcum = 0;
   const fav = [], des = [];
   /* Janela do mandado de segurança: da impetração até a base reduzida entrar em
      uso. Nesses meses o cliente recolhe cheio, mas a diferença é recuperável
@@ -1165,10 +1178,16 @@ function comparativo(){
     const travado = naJanela ? Math.max(0, taxFull - taxRed) : 0;
     // ---- favoravel
     const brutoA = PD.valorNoMes(m);
-    const entA = 0.70*brutoA;                      // so o que cai na conta dele
-    const honB = (CE.temB && m >= CE.mB0 && m < CE.mB0+9) ? E : 0;
-    fav.push({ m, ent:entA, entA, entC:0, brutoA, retidoA:0.30*brutoA, imposto, travado,
-               exito:honB, honB, honC:0,
+    aAcum += 0.30*brutoA;
+    if(CE.temB && m >= CE.mB0 && m < CE.mB0+9) bAcum += E;
+    const alvo = Math.max(aAcum, bAcum);
+    const exitoMes = Math.max(0, alvo - pagoAcum);
+    if(alvo > pagoAcum) pagoAcum = alvo;
+    const absorvido = Math.min(exitoMes, brutoA);  // parte retida da propria restituicao
+    const entA = brutoA - absorvido;               // o que sobra e cai na conta dele
+    const honB = exitoMes - absorvido;             // residuo do piso, cobrado a parte
+    fav.push({ m, ent:entA, entA, entC:0, brutoA, retidoA:absorvido, imposto, travado,
+               exito:honB, honB, honC:0, aAcum, bAcum, pagoAcum,
                qtd:PD.qtdNoMes(m),
                sai:imposto+travado+honB, ref:taxFull });
     // ---- desfavoravel: nada reduz; entradas somente na versao "credito usufruido"
@@ -1207,8 +1226,172 @@ const CIN  = {k:'ent', label:'Entra na conta do cliente', col:'var(--c-entra)'};
 const COUT = [
   {k:'imposto', label:'IRPJ + CSLL', col:'var(--c-imposto)'},
   {k:'travado', label:'Travado até o trânsito', col:'var(--c-travado)'},
-  {k:'exito',   label:'Êxito Back4You', col:'var(--c-exito)'},
+  {k:'exito',   label:'Piso de 9 meses', col:'var(--c-exito)'},
 ];
+
+/* ---------------------------------------------------------------
+   Perfis de chegada das restituições, usados nos 3 cenários e no
+   simulador de honorários. A janela do piso vai de mRed a mRed+9.
+   --------------------------------------------------------------- */
+function perfilPD(perfil){
+  const m0 = M.m0, mRed = m0 + P.sent;
+  if(perfil === 'antes')   return { inicio: Math.max(1, mRed-4), dist:[4,4,4,4,4] };
+  if(perfil === 'depois')  return { inicio: mRed + 10,           dist:[3,3,3,3,4,4] };
+  return { inicio: mRed + 3, dist:[1,1,2,2,3,3,4,4] };            // durante
+}
+
+/* Apura o honorário principal pela regra do maior, mês a mês. */
+function simular(msOk, perfil){
+  const E = M.E, m0 = M.m0, mRed = m0 + P.sent, pf = perfilPD(perfil);
+  const PDx = agendaPD(E, M.c.iM, M.retro, m0, P.corr, pf.inicio, pf.dist);
+  let a = 0, b = 0, pago = 0, mesesPiso = 0, doPiso = 0;
+  const linhas = [];
+  const H = Math.max(PDx.ultimo, msOk ? mRed + 9 : mRed) + 1;
+  for(let m = 0; m <= H; m++){
+    const bruto = PDx.valorNoMes(m);
+    a += 0.30 * bruto;
+    if(msOk && m >= mRed && m < mRed + 9) b += E;
+    const alvo = Math.max(a, b);
+    const dev  = Math.max(0, alvo - pago);
+    if(alvo > pago) pago = alvo;
+    const pelaRest = Math.min(dev, 0.30 * bruto);
+    const peloPiso = dev - pelaRest;
+    if(peloPiso > 0.5){ mesesPiso++; doPiso += peloPiso; }
+    if(bruto > 0.5 || dev > 0.5)
+      linhas.push({ m, bruto, a, b, alvo, dev, pago, pelaRest, peloPiso });
+  }
+  return { PDx, linhas, a, b, total: pago, mesesPiso, doPiso,
+           bruto: PDx.total, mRed };
+}
+
+/* ---------------------------------------------------------------
+   TRÊS CENÁRIOS
+   --------------------------------------------------------------- */
+function renderCenarios(){
+  const c = M.c, E = M.E, m0 = M.m0, mRed = m0 + P.sent;
+  const hoje = c.irpjCheia + c.csllCheia, dep = c.irpjRed + c.csllRed;
+  const ok  = simular(true,  S.perfil);
+  const nao = simular(false, S.perfil);
+  const cVal = M.valCsent;
+
+  const barra = (v, cor) => `<div style="height:20px;width:${Math.max(6,(v/hoje)*150)}px;
+      background:${cor};border-radius:0 4px 4px 0"></div>`;
+
+  const card = (tit, sub, linhas, destaque) => `
+    <div class="tile" style="border-top:3px solid ${destaque};padding:16px 17px">
+      <div style="font-size:var(--fs-4);font-weight:750;line-height:1.2">${tit}</div>
+      <div class="n" style="margin:2px 0 12px">${sub}</div>
+      ${linhas}
+    </div>`;
+  const bloco = (rot, val, cor, nota) => `
+    <div style="margin-bottom:11px">
+      <div class="k" style="margin-bottom:4px">${rot}</div>
+      <div style="display:flex;align-items:center;gap:9px">
+        ${barra(val, cor)}
+        <b style="font-size:var(--fs-4);font-variant-numeric:tabular-nums">${brl(val)}</b>
+      </div>
+      ${nota?`<div class="n" style="margin-top:3px">${nota}</div>`:''}
+    </div>`;
+
+  document.getElementById('cenarios').innerHTML = `
+    <div class="tiles" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">
+      ${card('Não fazer nada', 'segue como está hoje', 
+        bloco('IRPJ + CSLL por mês', hoje, 'var(--c-imposto)', 'para sempre') +
+        `<div class="n" style="border-top:1px solid var(--line);padding-top:9px;margin-top:2px">
+           Honorário: <b>R$ 0</b> · Recupera: <b>R$ 0</b></div>`, 'var(--c-imposto)')}
+      ${card('Processo deu certo', 'base reduzida a partir do mês '+mRed,
+        bloco('Durante o processo', hoje, 'var(--c-travado)', 'os mesmos '+brl(hoje)+' de hoje, por '+P.sent+' meses') +
+        bloco('Depois da decisão', dep, 'var(--c-entra)', 'economia de '+brl(E)+' por mês, para sempre') +
+        `<div class="n" style="border-top:1px solid var(--line);padding-top:9px;margin-top:2px">
+           Honorário: <b>${brl(ok.total + cVal)}</b> · Economia em 12 meses: <b>${brl(E*12)}</b></div>`,
+        'var(--c-entra)')}
+      ${card('Processo deu errado', 'nada muda no imposto',
+        bloco('IRPJ + CSLL por mês', hoje, 'var(--c-imposto)', 'idêntico ao que ele já paga hoje') +
+        `<div class="n" style="border-top:1px solid var(--line);padding-top:9px;margin-top:2px">
+           Honorário do processo: <b>R$ 0</b> · Nenhuma cobrança pela tentativa</div>`, 'var(--c-imposto)')}
+    </div>
+    <div class="viz" style="margin-top:14px">
+      <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:center">
+        <div style="flex:1;min-width:230px">
+          <b style="font-size:var(--fs-3)">O retroativo corre por fora</b>
+          <div class="n" style="margin-top:3px">Pedido administrativo dos ${M.retro} meses anteriores.
+          Não depende do processo: acontece igual nos dois cenários.</div>
+        </div>
+        <div><div class="k">Restituição bruta</div>
+          <div style="font-size:var(--fs-5);font-weight:750">${brl(nao.bruto)}</div></div>
+        <div><div class="k">Êxito de 30%</div>
+          <div style="font-size:var(--fs-5);font-weight:750">${brl(nao.total)}</div></div>
+        <div><div class="k">Fica com o cliente</div>
+          <div style="font-size:var(--fs-5);font-weight:750;color:var(--c-entra)">${brl(nao.bruto - nao.total)}</div></div>
+      </div>
+    </div>
+    <div class="banner" style="margin-top:12px;background:var(--good-bg);
+         border-color:color-mix(in srgb,var(--good) 30%,transparent);color:var(--good-ink)">
+      <b>Ele não paga nada a mais por tentar.</b> No cenário em que o processo dá errado, o desembolso
+      mensal é exatamente o de hoje, ${brl(hoje)}, e nenhum honorário é devido pelo processo.
+    </div>`;
+}
+
+/* ---------------------------------------------------------------
+   SIMULADOR DE HONORÁRIOS
+   --------------------------------------------------------------- */
+function renderHonorarios(){
+  const R = simular(S.msOk, S.perfil), E = M.E;
+  const explica = {
+    antes:   'O grosso das restituições chega antes da decisão. Quando o piso começa a correr, os 30% já estão bem à frente — o piso nunca chega a ser cobrado.',
+    durante: 'As restituições atravessam a janela dos 9 meses. Nos meses em que os 30% acumulados ficam para trás, o piso cobra a diferença; quando a restituição alcança, ele para de cobrar.',
+    depois:  'As restituições só chegam depois da janela. O piso é cobrado por inteiro e sustenta o caixa; quando a restituição enfim entra, ela abate o que já foi pago.'
+  }[S.perfil];
+
+  const linhas = R.linhas.map(r=>`<tr>
+      <td>${r.m}</td>
+      <td>${r.bruto>0.5?brl(r.bruto):'—'}</td>
+      <td>${brl(r.a)}</td>
+      <td>${S.msOk?brl(r.b):'—'}</td>
+      <td><b>${brl(r.alvo)}</b></td>
+      <td style="color:${r.peloPiso>0.5?'var(--c-exito)':'var(--ink)'}">${r.dev>0.5?brl(r.dev):'—'}</td>
+      <td>${brl(r.pago)}</td></tr>`).join('');
+
+  document.getElementById('honor').innerHTML = `
+    <div class="viz">
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;margin-bottom:16px">
+        <div><div class="k" style="margin-bottom:6px">Resultado do processo</div>
+          <div class="seg" id="segMS">
+            <button data-v="ok"  aria-pressed="${S.msOk}">Deu certo</button>
+            <button data-v="nao" aria-pressed="${!S.msOk}">Deu errado</button>
+          </div></div>
+        <div style="flex:1;min-width:300px"><div class="k" style="margin-bottom:6px">Quando as restituições chegam</div>
+          <div class="seg" id="segPerfil">
+            <button data-v="antes"   aria-pressed="${S.perfil==='antes'}">Antes da decisão</button>
+            <button data-v="durante" aria-pressed="${S.perfil==='durante'}">Durante os 9 meses</button>
+            <button data-v="depois"  aria-pressed="${S.perfil==='depois'}">Depois dos 9 meses</button>
+          </div></div>
+      </div>
+      <div class="tiles" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+        <div class="tile"><div class="k">30% do recuperado</div><div class="v">${brl(R.a)}</div>
+          <div class="n">sobre ${brl(R.bruto)} restituídos</div></div>
+        <div class="tile"><div class="k">Piso de 9 meses</div><div class="v">${S.msOk?brl(R.b):'—'}</div>
+          <div class="n">${S.msOk?'9 × '+brl(E):'sem decisão favorável, não há piso'}</div></div>
+        <div class="tile acc"><div class="k">Total devido</div><div class="v">${brl(R.total)}</div>
+          <div class="n">o maior dos dois, nunca a soma</div></div>
+        <div class="tile"><div class="k">Cobrado pelo piso</div><div class="v">${brl(R.doPiso)}</div>
+          <div class="n">${R.mesesPiso} ${R.mesesPiso===1?'mês':'meses'} em que o piso adiantou</div></div>
+      </div>
+      <p class="note" style="margin-top:12px">${explica}</p>
+      <details class="tbl" style="margin-top:6px"><summary>Apuração mês a mês</summary>
+        <div class="vscroll"><table class="q">
+          <tr><th>Mês</th><th>Restituição</th><th>30% acumulado</th><th>Piso acumulado</th>
+              <th>O maior</th><th>Vence no mês</th><th>Pago acumulado</th></tr>
+          ${linhas}
+        </table></div>
+      </details>
+    </div>`;
+
+  document.querySelectorAll('#segMS button').forEach(b=>b.addEventListener('click',()=>{
+    S.msOk = b.dataset.v==='ok'; renderHonorarios(); renderCenarios(); }));
+  document.querySelectorAll('#segPerfil button').forEach(b=>b.addEventListener('click',()=>{
+    S.perfil = b.dataset.v; renderHonorarios(); renderCenarios(); }));
+}
 
 function renderComp(){
   const K = comparativo();
@@ -1236,65 +1419,12 @@ function renderComp(){
     return o;
   }
 
-  let y = TOPP, out='';
-  const cen = [
-    {ev:K.evFav, d:K.fav, lab:K.CE.escolhido?'Escolhido':'Favorável', sub:K.CE.rotA},
-    {ev:K.evDes, d:K.des, lab:'Desfavorável', sub:'nada dá certo'},
-  ];
-  cen.forEach((C,ci)=>{
-    out += `<text x="4" y="${y+13}" class="qlb">${C.lab}</text>`;
-    out += `<text x="4" y="${y+26}" class="axl">${C.sub||'cenário'}</text>`;
-    out += evLane(C.ev, y);
-    y += EVH + 2;
-    const zero = y + UP;
-    out += `<line x1="${LM-8}" y1="${zero}" x2="${W-12}" y2="${zero}" stroke="var(--ink-2)" stroke-opacity=".55"/>`;
-    out += `<text x="4" y="${zero-6}" class="axl">entra</text>`;
-    out += `<text x="4" y="${zero+13}" class="axl">sai</text>`;
-    // referencia: imposto de hoje
-    const yr = zero + (K.taxFull/maxS)*DN;
-    out += `<line x1="${LM}" y1="${yr}" x2="${W-12}" y2="${yr}" stroke="var(--muted)" stroke-width="1.5"
-             stroke-dasharray="4 4" stroke-opacity=".8"/>`;
-    if(!C.d.some(r=>r.ent>0.5)){
-      out += `<text x="${LM+(W-LM)/2}" y="${zero-UP/2}" class="axl" text-anchor="middle"
-               >nada entra na conta</text>`;
-    }
-    C.d.forEach(r=>{
-      const xc = LM + r.m*SW;
-      // entrada, para cima
-      if(r.ent > 0.5){
-        const h = (r.ent/maxE)*UP;
-        out += `<path d="${rectTop(xc+1, zero-h, BW, h, 3)}" fill="${CIN.col}"/>`;
-      }
-      // saidas, empilhadas para baixo
-      let acc = 0;
-      COUT.forEach((sr,j)=>{
-        const v = r[sr.k]||0; if(v<0.5) return;
-        const y0 = zero + (acc/maxS)*DN, hh = (v/maxS)*DN;
-        out += `<rect x="${xc-BW-1}" y="${y0}" width="${BW}" height="${Math.max(0.8,hh-1)}" fill="${sr.col}"/>`;
-        acc += v;
-      });
-      const tipo = ci===0?'MS favorável':'MS desfavorável';
-      const det = `<table>
-        <tr><td><i class="dot" style="background:${CIN.col}"></i>Entra na conta${r.qtd?' ('+r.qtd+' PER/DCOMP)':''}</td><td class="n">${brl(r.ent)}</td></tr>
-        ${r.brutoA>0.5?`<tr><td style="color:var(--muted);padding-left:15px">restituição bruta ${brl(r.brutoA)}, já líquida do êxito de 30%</td><td class="n" style="color:var(--muted)">−${brl(r.retidoA)}</td></tr>`:''}
-        ${COUT.map(sr=>(r[sr.k]||0)>0.5?`<tr><td><i class="dot" style="background:${sr.col}"></i>${sr.label}</td><td class="n">${brl(r[sr.k])}</td></tr>`:'').join('')}
-        ${r.travado>0.5?`<tr><td style="color:var(--muted);padding-left:15px">recolhido cheio agora porque o crédito só pode ser usado depois do trânsito; quando voltar, a Modalidade C fica com 100% desse valor</td><td></td></tr>`:''}
-        <tr><td style="border-top:1px solid var(--line);padding-top:5px"><b>Saldo do mês</b></td>
-            <td class="n" style="border-top:1px solid var(--line);padding-top:5px;color:${(r.ent-r.sai)>=0?'var(--good-ink)':'var(--ink)'}">${brl(r.ent-r.sai)}</td></tr>
-        <tr><td style="color:var(--muted)">Pagaria hoje só de imposto</td><td class="n" style="color:var(--muted)">${brl(r.ref)}</td></tr></table>`;
-      out += `<rect x="${xc-SW/2}" y="${y}" width="${SW}" height="${BAH-14}" fill="transparent"
-               data-tip="${det.replace(/"/g,'&quot;')}" data-tip-title="${tipo} · mês ${r.m}"/>`;
-    });
-    /* 8px de folga não bastavam: a linha tracejada do "pagaria hoje" fica no máximo em
-       zero+DN, exatamente onde começava o topo dos glifos de m0…m30 — o traço cortava
-       a letra e o par caía para 2,30:1. Com 18px o rótulo desce para zero+DN+18 e a
-       linha nunca o alcança, para qualquer dado. */
-    y += BAH - 14 + 18;
-    for(let m=0; m<=K.H; m+=6){
-      out += `<text x="${LM+m*SW}" y="${y}" class="axl" text-anchor="middle">m${m}</text>`;
-    }
-    y += GAP + 12;
-  });
+  /* O diagrama de raias "MS favorável × desfavorável" que ficava aqui foi
+     aposentado: quem responde essa pergunta agora são os três cartões de
+     cenário, mais acima. O código que o montava continuava rodando a cada
+     render e o SVG era descartado sem nunca entrar na tela — 61 linhas de
+     trabalho por repintura, invisíveis. Removido junto com a legenda e o
+     seletor de raia desfavorável, que já não tinham onde aparecer. */
 
   // ---------- linha acumulada: restituido + nao gasto, liquido de exito ----------
   let ac = 0;
@@ -1333,37 +1463,17 @@ function renderComp(){
              data-tip-title="Benefício acumulado · mês ${pt.m}"/>`;
   });
 
-  const leg = `<span><i class="sw" style="background:${CIN.col}"></i>${CIN.label}</span>`
-    + COUT.map(sr=>`<span><i class="sw" style="background:${sr.col}"></i>${sr.label}</span>`).join('')
-    + `<span><i class="sw dash"></i>imposto de hoje</span>`;
-
   document.getElementById('comp').innerHTML =
-    `<div class="vlegend">${leg}
-      <span style="margin-left:auto">Raia desfavorável:
-      <span class="seg mini" id="segDes">
-        <button data-v="sem" aria-pressed="${S.desfav!=='com'}">crédito não confirmado</button>
-        <button data-v="com" aria-pressed="${S.desfav==='com'}">crédito já usufruído</button>
-      </span></span></div>
-     <div class="vscroll"><svg width="${W}" height="${y}" viewBox="0 0 ${W} ${y}">${out}</svg></div>
-     <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">
-       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
-         <div><b style="font-size:var(--fs-3)">Benefício acumulado do cliente</b>
-           <span class="axl" style="display:block;font-size:var(--fs-2)">restituição recebida + imposto que deixou de pagar, já descontado o êxito</span></div>
-       </div>
-       <div class="vscroll"><svg width="${W}" height="${CH}" viewBox="0 0 ${W} ${CH}">${cur}</svg></div>
-     </div>
+    `<div class="vscroll"><svg width="${W}" height="${CH}" viewBox="0 0 ${W} ${CH}">${cur}</svg></div>
      <div class="tiles" style="margin-top:14px">
-       <div class="tile acc" data-tip="Já líquido do êxito. A restituição bruta dos ${K.PD.n} trimestres é de ${brl(K.totBrutoA)}; 30% ficam com a Back4You e ${brl(K.totBrutoA*0.7)} caem na conta do cliente, somados ao período do processo." data-tip-title="Entra na conta">
+       <div class="tile acc" data-tip="Já líquido do êxito retido em cada restituição." data-tip-title="Entra na conta">
          <div class="k">Entra na conta</div><div class="v">${brl(K.totEntF)}</div><div class="n">${K.CE.temCred?'líquido, dos '+K.PD.n+' PER/DCOMP':'sem restituição neste desfecho'}</div></div>
        <div class="tile acc" data-tip="Diferença entre o que ele teria pago só de imposto sem fazer nada e o que efetivamente sai, somada ao que entra." data-tip-title="Ganho no período">
          <div class="k">Ganho no período</div><div class="v">${brl(K.ganho)}</div><div class="n">contra não fazer nada</div></div>
-       <div class="tile acc" data-tip="Do 10º mês após a sentença em diante a economia é integralmente do cliente." data-tip-title="Economia perpétua">
+       <div class="tile acc" data-tip="Do 10º mês após a decisão em diante a economia é integralmente do cliente." data-tip-title="Economia perpétua">
          <div class="k">Depois, por mês</div><div class="v">${brl(M.E)}</div><div class="n">100% dele, sem honorário</div></div>
      </div>`;
 
-  document.querySelectorAll('#segDes button').forEach(b=>{
-    b.addEventListener('click',()=>{ S.desfav = b.dataset.v; renderComp(); });
-  });
 }
 
 /* =========================================================

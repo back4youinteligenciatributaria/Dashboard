@@ -34,6 +34,10 @@
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
   /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
   --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Escala de texto e o teal claro: as outras telas ja tinham, esta nao. Sem eles
+     o CSS compartilhado da regua de acoes cai no valor herdado e desalinha. */
+  --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
+  --receita-soft:#DBEFEC;
   /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
   --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
@@ -87,6 +91,53 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .btn--pill{border-radius:var(--radius-pill);padding:12px 20px}
 .dica{font-size:12px;color:var(--muted);padding:0 0 8px}
 
+/* ---------- revelacao progressiva ---------- */
+/* Régua de ações: busca sempre à mão, filtros a um clique, contagem à vista.
+   Antes os filtros ficavam todos abertos na tela — quem chegava tinha de ler a
+   parede inteira antes de achar o campo de busca, que é o que 9 em 10 usam. */
+.barra-acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.barra-acoes .campo-busca{flex:1;min-width:200px;font-size:16px;padding:12px 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
+.barra-acoes .campo-busca:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.btn-filtros{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);
+  color:var(--ink);font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.btn-filtros:hover{border-color:var(--brand-teal)}
+.btn-filtros[aria-expanded="true"]{background:var(--receita-soft);border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.btn-filtros svg{width:15px;height:15px;flex:none}
+.cont-filtros{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
+  padding:0 5px;border-radius:var(--radius-pill);background:var(--brand-teal-txt);color:#fff;
+  font-size:var(--fs-1);font-weight:800}
+/* display:inline-flex ganha do atributo hidden — sem esta linha o selo mostrava
+   um "0" permanente ao lado de Filtros. */
+.cont-filtros[hidden]{display:none}
+.resumo-lista{font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
+.painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
+  padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--surface-warm)}
+.painel-filtros[hidden]{display:none}
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
+/* A contagem desta tela tem quatro números; no celular ela precisa quebrar, senão
+   o nowrap do contrato empurra a página para o lado. */
+@media(max-width:560px){.resumo-lista{white-space:normal}}
+/* Cada grupo de chips ocupa a fileira inteira: Situação e Área não se misturam. */
+.painel-filtros .grupo{width:100%}
+.btn-limpar{min-height:38px;padding:0 15px;border-radius:var(--radius-pill);border:1px dashed var(--line-2);
+  background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:var(--fs-2);cursor:pointer}
+.btn-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+/* "Abrir todos" é da lista, não da régua — e só mexe no que está desenhado. */
+.acoes-lista{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:2px 0 10px}
+.acoes-lista .dica{padding:0;flex:1;min-width:170px}
+/* Os exemplos por situação continuam inteiros, só que a um clique de distância. */
+details.situacao{margin:0 0 12px}
+details.situacao>summary{padding:10px 13px;font-size:var(--fs-3)}
+details.situacao>.resumo{padding:0 12px 12px}
+
 /* ---------- resumo ---------- */
 .resumo{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:0 0 14px}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
@@ -96,12 +147,19 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .rcard.semtel .rhead{background:var(--brand-teal-txt)}
 .rcard.semct .rhead{background:#6B8486}
 .rhead .n{background:rgba(255,255,255,.25);border-radius:var(--radius-pill);padding:2px 9px;font-size:12px}
-.rlista{max-height:152px;overflow:auto;padding:5px}
+/* Altura em múltiplo de linha + folga embaixo: antes a última linha aparecia pela
+   metade, cortada pela borda do cartão, e parecia defeito de dado. */
+.rlista{max-height:236px;overflow:auto;padding:5px 5px 9px}
 .tk{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px}
 .tk:hover{background:var(--surface-warm)}
 .tk .d{font-weight:800;white-space:nowrap;color:var(--brand-teal-txt)}
-.tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Nome cortado no meio ("AJUB - CIRURGIA DE CABEÇA E P…") não serve para
+   reconhecer ninguém: aqui ele quebra a linha em vez de sumir. */
+.tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.35}
 .tk .tp{font-size:11px;font-weight:800;color:var(--muted);white-space:nowrap}
+/* A terceira coluna também é nome de cliente ("Padaria Sao…"): quebra em vez de
+   virar reticências. O "2 ct" dos outros cartões é curto e não sente diferença. */
+.tk .tp{max-width:40%;white-space:normal;text-align:right;line-height:1.35;overflow-wrap:anywhere}
 .rvazio{color:var(--muted);font-size:12px;padding:9px}
 
 /* ---------- lista de clientes ---------- */
@@ -317,6 +375,49 @@ let AREA='';          // '' = todas
 let TERMO='';
 let MODAL_AREAS={};
 
+/* ---------------- revelação progressiva ---------------- */
+/* Filtros recolhidos, com memória. O contador ao lado do botão existe para
+   evitar o único efeito colateral ruim de esconder filtro: a pessoa esquece que
+   filtrou e acha que os dados sumiram. Por isso, com filtro ativo, o painel
+   nasce ABERTO. */
+function ligarFiltros(pagina, contarAtivos){
+  const bt = document.getElementById('btn-filtros');
+  const pn = document.getElementById('painel-filtros');
+  if(!bt || !pn) return;
+  const chave = 'b4u_filtros_' + pagina;
+  const abrir = (v, persistir) => { pn.hidden = !v; bt.setAttribute('aria-expanded', String(v));
+                       if(persistir){ try{ localStorage.setItem(chave, v?'1':'0'); }catch(e){} } };
+  let inicial = false;
+  try{ inicial = localStorage.getItem(chave) === '1'; }catch(e){}
+  /* Abrir por causa de filtro ativo NÃO é escolha da pessoa — e por isso não pode
+     virar preferência. Antes esta abertura automática era gravada junto: bastava
+     entrar uma vez por um link com filtro para o painel passar a nascer aberto
+     para sempre, sem ninguém ter pedido. Só o clique persiste. */
+  const forcado = !!(contarAtivos && contarAtivos() > 0);
+  abrir(inicial || forcado, false);
+  bt.addEventListener('click', ()=> abrir(pn.hidden, true));
+  return { atualizarContador(){
+    const n = contarAtivos ? contarAtivos() : 0;
+    const c = bt.querySelector('.cont-filtros');
+    if(c){ c.textContent = n; c.hidden = n === 0; }
+  }};
+}
+let FILTROS_UI=null;
+
+/* Teto da lista. Dois botões de propósito: "mais 20" para quem lê, "todos" para
+   quem vai usar Ctrl+F. Buscar ou filtrar volta o teto ao início — o resultado
+   é outro, e continuar de onde parou confundiria. */
+const PASSO = 20;
+let TETO = PASSO;
+function rodapeLista(mostrados, total){
+  if(total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
+}
+
 /* ---------------- agrupamento ---------------- */
 function nomeCli(id){const n=NOME[String(id)];return n?n:'';}
 function agrupar(){
@@ -458,12 +559,14 @@ function grupoHTML(g,t){
 }
 
 /* ---------------- desenho ---------------- */
-/* Quantos filtros estão pegando agora — vira o número do "Limpar filtros" (C.5). */
-function filtrosAtivos(){
-  return (FILTRO!=='todos'?1:0)+(AREA?1:0)+(String(TERMO).trim()?1:0);
+/* Quantos filtros estão pegando agora — vira o selo ao lado do botão Filtros (C.5).
+   Só conta o que está ESCONDIDO no painel: a busca fica à vista na régua, e um
+   selo dizendo "1 filtro" por causa dela faria a pessoa procurar o que não sumiu. */
+function filtrosPainel(){
+  return (FILTRO!=='todos'?1:0)+(AREA?1:0);
 }
 function limparFiltros(){
-  FILTRO='todos';AREA='';TERMO='';
+  FILTRO='todos';AREA='';TERMO='';TETO=PASSO;
   const b=document.getElementById('busca');if(b)b.value='';
   ABERTOS.clear();
   redesenhar();
@@ -483,12 +586,12 @@ function desenharChips(){
 
   const porSit=GRUPOS.filter(g=>passaSit(g));
   const nArea=k=>porSit.filter(g=>g.contatos.some(x=>x.areas&&x.areas[k])).length;
-  const nAtivos=filtrosAtivos();
+  /* O "Limpar filtros" agora é fixo no rodapé do painel (#btn-limpar) — não é
+     mais um chip que aparece e some no meio dos outros treze. */
   document.getElementById('chipsArea').innerHTML=
     '<span class="rot">Área</span>'+
     `<button class="chip ${AREA===''?'on':''}" data-area="">Todas<span class="n">${porSit.length}</span></button>`+
-    AREAS.map(a=>`<button class="chip ${AREA===a[0]?'on':''}" data-area="${a[0]}">${a[1]}<span class="n">${nArea(a[0])}</span></button>`).join('')+
-    (nAtivos?`<button type="button" class="chip limpar" id="limparFiltros" title="Volta para a visão sem filtro e sem busca">Limpar filtros<span class="n">${nAtivos}</span></button>`:'');
+    AREAS.map(a=>`<button class="chip ${AREA===a[0]?'on':''}" data-area="${a[0]}">${a[1]}<span class="n">${nArea(a[0])}</span></button>`).join('');
 }
 function desenharResumo(){
   const semP=GRUPOS.filter(faltaPrincipal);
@@ -498,9 +601,11 @@ function desenharResumo(){
     if(!String(c.email||'').trim())semE.push({g:g,c:c});
     if(!String(c.telefone||'').trim())semT.push({g:g,c:c});
   }));
-  const itemCli=g=>`<div class="tk" data-goto="${esc(g.id)}"><span class="d">${esc(g.id||'—')}</span>
+  /* title= completa o que a coluna estreita ainda cortar: o nome do cliente é o
+     único jeito de reconhecer a linha, não pode ficar em "…". */
+  const itemCli=g=>`<div class="tk" data-goto="${esc(g.id)}" title="${esc(g.nome||'')}"><span class="d">${esc(g.id||'—')}</span>
     <span class="lb">${esc(g.nome||'(sem nome)')}</span><span class="tp">${g.contatos.length} ct</span></div>`;
-  const itemCtt=x=>`<div class="tk" data-goto="${esc(x.g.id)}"><span class="d">${esc(x.g.id||'—')}</span>
+  const itemCtt=x=>`<div class="tk" data-goto="${esc(x.g.id)}" title="${esc(x.g.nome||'')}"><span class="d">${esc(x.g.id||'—')}</span>
     <span class="lb">${esc(x.c.nome||x.c.email||'(sem nome)')}</span><span class="tp">${esc(x.g.nome||'')}</span></div>`;
   const card=(cls,titulo,lista,render)=>`<div class="rcard ${cls}">
     <div class="rhead"><span>${titulo}</span><span class="n">${lista.length}</span></div>
@@ -514,17 +619,33 @@ function desenharResumo(){
 function desenharLista(){
   const t=normTxt(TERMO);
   const arr=visiveis();
-  const corte=arr.slice(0,MAX_CLI);
-  document.getElementById('lista').innerHTML=corte.map(g=>grupoHTML(g,t)).join('')||
-    '<div class="vazio">Nenhum cliente com esse filtro ou busca.</div>';
-  /* Topo e dica falam a MESMA língua: "X de Y" (C.5). */
-  const nCt=arr.reduce((s,g)=>s+g.contatos.length,0);
+  const total=Math.min(arr.length,MAX_CLI);     // MAX_CLI segue como trava dura de desenho
+  const n=Math.min(TETO,total);
+  const corte=arr.slice(0,n);
+  document.getElementById('lista').innerHTML=
+    (corte.map(g=>grupoHTML(g,t)).join('')||'<div class="vazio">Nenhum cliente com esse filtro ou busca.</div>')+
+    rodapeLista(n,total);
+  /* A contagem completa vive na régua (#resumo-lista); aqui fica só o quanto da
+     lista está desenhado e o que a pessoa precisa saber antes de clicar. */
   document.getElementById('dica').innerHTML=
-    `<b>${arr.length} de ${GRUPOS.length}</b> clientes · <b>${nCt} de ${CONTATOS.length}</b> contatos`+
-    (arr.length>MAX_CLI?` — mostrando os ${MAX_CLI} primeiros, refine a busca.`:'')+
-    ' · Clique no cliente para abrir. Código e link são fórmulas da planilha: dá para copiar, não para editar.';
+    (total>n?`Mostrando <b>${n} de ${arr.length}</b>. `:'')+
+    (arr.length>MAX_CLI?`Desenho no máximo ${MAX_CLI} — refine a busca. `:'')+
+    'Clique no cliente para abrir. Código e link são fórmulas da planilha: dá para copiar, não para editar.';
   desenharContagem();
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
+}
+/* A contagem em texto é o que permite recolher chips e cartões sem esconder
+   pendência: os números continuam na primeira linha da tela, filtrada ou não. */
+function desenharResumoLista(){
+  const el=document.getElementById('resumo-lista');if(!el)return;
+  const vis=visiveis().length;
+  const semP=GRUPOS.filter(faltaPrincipal).length;
+  const semE=CONTATOS.filter(c=>!String(c.email||'').trim()).length;
+  const p=[(vis===GRUPOS.length?String(GRUPOS.length):vis+' de '+GRUPOS.length)+' clientes',
+           CONTATOS.length+' contatos'];
+  if(semP)p.push(semP+' sem contato principal');
+  if(semE)p.push(semE+' sem e-mail');
+  el.textContent=p.join(' · ');
 }
 function atualizarCabecalho(id){
   const g=grupoDe(id);if(!g)return;
@@ -540,7 +661,11 @@ function desenharContagem(){
   document.getElementById('cnt').textContent=
     arr.length+' de '+GRUPOS.length+' clientes · '+nCt+' de '+CONTATOS.length+' contatos';
 }
-function redesenhar(){desenharChips();desenharResumo();desenharLista();sincronizarURL();}
+function redesenhar(){
+  desenharChips();desenharResumo();desenharLista();desenharResumoLista();
+  if(FILTROS_UI)FILTROS_UI.atualizarContador();
+  sincronizarURL();
+}
 /* ---------- busca e filtros no endereço (C.10) ----------
    F5 volta para a mesma visão; chave, cod e #hash ficam intactos. */
 function sincronizarURL(){
@@ -609,7 +734,7 @@ async function salvarContato(row){
     c._email0=email;                       // a linha agora é este e-mail
     FALHAS.delete(k);marcarFalha(k,false);
     setSave('ok','Salvo ✓ '+horaAgora());
-    atualizarCabecalho(c.cliente_id);desenharChips();desenharResumo();desenharContagem();
+    atualizarCabecalho(c.cliente_id);desenharChips();desenharResumo();desenharContagem();desenharResumoLista();
   }catch(e){
     FALHAS.add(k);marcarFalha(k,true);
     setSave('err','Não salvou: '+(e.message||e));
@@ -732,6 +857,9 @@ function irPara(id){
     FILTRO='todos';AREA='';TERMO='';
     const b=document.getElementById('busca');if(b)b.value='';
   }
+  /* O teto não pode esconder justamente o cliente para onde estamos indo. */
+  const pos=visiveis().findIndex(g=>g.id===alvo);
+  if(pos>=TETO)TETO=Math.ceil((pos+1)/PASSO)*PASSO;
   redesenhar();
   const el=achar();if(!el)return;
   el.scrollIntoView({block:'center',behavior:'smooth'});
@@ -739,6 +867,7 @@ function irPara(id){
 }
 function aplicarBusca(){
   const t=normTxt(TERMO);
+  TETO=PASSO;            // resultado novo, teto novo
   ABERTOS.clear();
   if(t){
     const arr=visiveis();
@@ -820,14 +949,21 @@ document.addEventListener('click',e=>{
   const no=e.target.closest('[data-delno]');
   if(no){cancelarConfirmacao(no.dataset.delno);return;}
   const cf=e.target.closest('.chip[data-f]');
-  if(cf){FILTRO=cf.dataset.f;redesenhar();return;}
+  if(cf){FILTRO=cf.dataset.f;TETO=PASSO;redesenhar();return;}
   const ca=e.target.closest('.chip[data-area]');
-  if(ca){AREA=ca.dataset.area;redesenhar();return;}
-  if(e.target.closest('#limparFiltros')){limparFiltros();return;}
+  if(ca){AREA=ca.dataset.area;TETO=PASSO;redesenhar();return;}
+  if(e.target.closest('#btn-limpar')){limparFiltros();return;}
+  if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
+  if(e.target.closest('.btn-todos')){TETO=MAX_CLI;desenharLista();return;}
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto);return;}
   if(e.target.closest('#novo')){abrirModal('');return;}
-  if(e.target.closest('#abrirTodos')){visiveis().slice(0,MAX_CLI).forEach(g=>ABERTOS.add(g.id));desenharLista();return;}
+  /* "Abrir todos" só abre o que está desenhado: com 114 fichas na tela ele deixa
+     de ser atalho e vira armadilha — quem quer tudo primeiro pede "mostrar todos". */
+  if(e.target.closest('#abrirTodos')){
+    document.querySelectorAll('#lista .cli[data-cli]').forEach(el=>ABERTOS.add(el.dataset.cli));
+    desenharLista();return;
+  }
   if(e.target.closest('#fecharTodos')){ABERTOS.clear();desenharLista();return;}
   if(e.target.id==='m-add'){adicionarContato(e.target);return;}
   if(e.target.id==='m-cancelar'||e.target.id==='modal'){fecharModal();return;}
@@ -859,20 +995,36 @@ function copiar(txt,btn){
 }
 
 /* ---------------- carregar ---------------- */
+/* A ordem aqui é a da tela: primeiro o que responde (busca, contagem), depois o
+   que refina (filtros), depois o exemplo, e só então as fichas. Os 13 chips e os
+   4 cartões continuam existindo — deixaram de ser pedágio. */
 function layout(){
   return `<div class="wrap">
     <div class="topo">
-      <div class="linha">
-        <input class="busca" id="busca" type="search" placeholder="Buscar por ID, cliente, contato, e-mail, CNPJ ou telefone…  ( / para focar)" value="${esc(TERMO)}">
+      <div class="barra-acoes">
+        <input class="busca campo-busca" id="busca" type="search" placeholder="Buscar por ID, cliente, contato, e-mail, CNPJ ou telefone…  ( / para focar)" value="${esc(TERMO)}">
+        <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.2 2h13.6a.6.6 0 0 1 .46.99L10.4 9.02V13.4a.6.6 0 0 1-.87.54l-2.6-1.3a.6.6 0 0 1-.33-.54V9.02L.74 2.99A.6.6 0 0 1 1.2 2Z"/></svg>
+          Filtros <span class="cont-filtros" hidden>0</span>
+        </button>
         <button class="btn btn--pri btn--pill" id="novo" type="button">+ Adicionar contato</button>
-        <button class="btn btn--mini" id="abrirTodos" type="button">Abrir todos</button>
-        <button class="btn btn--mini" id="fecharTodos" type="button">Fechar todos</button>
+        <span class="resumo-lista" id="resumo-lista"></span>
       </div>
-      <div class="linha"><div class="grupo" id="chipsSit"></div></div>
-      <div class="linha"><div class="grupo" id="chipsArea"></div></div>
-      <div class="dica" id="dica"></div>
+      <div id="painel-filtros" class="painel-filtros" hidden>
+        <div class="grupo" id="chipsSit"></div>
+        <div class="grupo" id="chipsArea"></div>
+        <button type="button" class="btn-limpar" id="btn-limpar">Limpar filtros</button>
+      </div>
     </div>
-    <div class="resumo" id="resumo"></div>
+    <details class="ajuda situacao" id="det-situacao">
+      <summary>Ver quem está em cada situação</summary>
+      <div class="resumo" id="resumo"></div>
+    </details>
+    <div class="acoes-lista">
+      <button class="btn btn--mini" id="abrirTodos" type="button">Abrir todos</button>
+      <button class="btn btn--mini" id="fecharTodos" type="button">Fechar todos</button>
+      <span class="dica" id="dica"></span>
+    </div>
     <div class="lista" id="lista"></div>
   </div>`;
 }
@@ -890,7 +1042,10 @@ async function carregar(primeira){
     CLIENTES=(d.clientes||[]).map(c=>({id:String(c.id),nome:String(c.nome||'')}));
     NOME={};CLIENTES.forEach(c=>NOME[c.id]=c.nome);
     agrupar();
-    if(primeira){lerURL();document.getElementById('app').innerHTML=layout();}   // a visão vem do endereço (C.10)
+    if(primeira){
+      lerURL();document.getElementById('app').innerHTML=layout();   // a visão vem do endereço (C.10)
+      FILTROS_UI=ligarFiltros('contatos-equipe',filtrosPainel);     // depois do layout: o painel já existe
+    }
     preencherDatalist();
     if(primeira&&TERMO)aplicarBusca();else redesenhar();
   }catch(e){

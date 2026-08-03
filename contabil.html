@@ -196,6 +196,15 @@ td.v.zero{color:var(--line-2)}
 td.av{font-variant-numeric:tabular-nums;color:var(--muted);font-size:var(--fs-2)}
 .tab-legenda{font-size:var(--fs-2);color:var(--muted);margin-top:10px;line-height:1.5}
 @media(max-width:640px){table.tab th,table.tab td{padding:8px 9px}table.tab th.conta,table.tab td.conta{min-width:158px}}
+/* Dois botões de propósito: "mais 20" para quem lê de cima para baixo, "todos"
+   para quem vai usar Ctrl+F ou imprimir. Um só obrigaria a escolher entre
+   paciência e controle. */
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
 
 /* barra de proporção (parte-de-um-todo) */
 .prop{display:flex;height:16px;border-radius:var(--radius-pill);overflow:hidden;background:#EFE6D6;border:1px solid var(--line)}
@@ -1605,6 +1614,14 @@ function render(M){
   '</footer>'));
 
   ligarSairDemo();
+  desenharTabelaMeses();
+  /* Delegado no bloco: a tabela é redesenhada a cada clique, e botão redesenhado
+     perde o listener que estava preso nele. */
+  const bm = document.getElementById('bloco-meses');
+  if (bm) bm.addEventListener('click', e => {
+    if (e.target.closest('.btn-mais')){ TETO_MESES += PASSO_MESES; desenharTabelaMeses(); return; }
+    if (e.target.closest('.btn-todos')){ TETO_MESES = LINHAS_MESES.length; desenharTabelaMeses(); }
+  });
   /* Com chart.js no <head> com defer, ele executa DEPOIS deste script: numa pintura
      síncrona (cache) ainda não existe. Em vez de trocar o gráfico por "indisponível"
      à toa, esperamos o defer terminar e desenhamos. */
@@ -1811,6 +1828,38 @@ function blocoIndicadores(M){
 }
 
 /* ─────────────────────── Evolução mês a mês ─────────────────────── */
+/* Teto da tabela. A lista de meses só cresce: dois anos de escrituração já são
+   24 linhas iguais, e no celular a rolagem não acaba. O corte é pelo FIM — os
+   meses recentes são a resposta; os antigos é que ficam a um clique. */
+const PASSO_MESES = 20;
+let TETO_MESES = PASSO_MESES, LINHAS_MESES = [];
+function rodapeLista(mostrados, total){
+  if (total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return '<div class="lista-mais">' +
+    '<button type="button" class="btn-mais">Mostrar mais ' + Math.min(PASSO_MESES, faltam) + '</button>' +
+    '<button type="button" class="btn-todos">Mostrar todos os ' + total + '</button>' +
+  '</div>';
+}
+function linhaMesHTML(l){
+  return '<tr>' +
+    '<td class="conta"><span class="c-nome">' + esc(mesExtenso(l.m)) + '</span></td>' +
+    '<td class="v">' + (l.rl == null ? '—' : esc(brl0(l.rl))) + '</td>' +
+    '<td class="v saida">' + (l.saidas == null ? '—' : esc(brl0(-Math.abs(l.saidas)))) + '</td>' +
+    '<td class="v" style="font-weight:800;color:' + ((l.ll||0) >= 0 ? 'var(--g-ok-txt)' : 'var(--g-enc-txt)') + '">' +
+      (l.ll == null ? '—' : esc(brl0(l.ll))) + '</td>' +
+    '<td class="av">' + (l.mg == null ? '—' : pctBR(l.mg,1)) + '</td>' +
+  '</tr>';
+}
+function desenharTabelaMeses(){
+  const corpo = document.getElementById('tab-meses-corpo');
+  const pe = document.getElementById('tab-meses-pe');
+  if (!corpo || !pe) return;
+  const total = LINHAS_MESES.length, n = Math.min(TETO_MESES, total);
+  corpo.innerHTML = LINHAS_MESES.slice(total - n).map(linhaMesHTML).join('');
+  pe.innerHTML = (total > n ? '<div class="tab-legenda">Mostrando os <b>' + n + '</b> meses mais recentes, de ' +
+      total + '.</div>' : '') + rodapeLista(n, total);
+}
 function blocoMeses(M){
   const D = M.dre, meses = M.mesesFluxo;
   const linhas = meses.map(m => {
@@ -1828,6 +1877,8 @@ function blocoMeses(M){
     (melhor ? ' · melhor foi ' + mesCurtoLbl(melhor.m) + ' (' + brlCurto(melhor.ll) + ')' : '') +
     (pior && melhor && pior.m !== melhor.m ? ' · pior foi ' + mesCurtoLbl(pior.m) + ' (' + brlCurto(pior.ll) + ')' : '');
 
+  LINHAS_MESES = linhas;
+  TETO_MESES = PASSO_MESES;
   return '<details class="bloco" id="bloco-meses">' +
     '<summary><div class="bloco-t"><b>Mês a mês, lado a lado</b>' +
       '<span>' + esc(resumo) + '</span></div>' + (DEMO ? SELO : '') + IC_CHEV + '</summary>' +
@@ -1840,15 +1891,8 @@ function blocoMeses(M){
       '<div class="leg" id="g-meses-lg"></div>' +
       '<div class="tab-rol" style="margin-top:20px"><table class="tab"><thead><tr>' +
         '<th class="conta">Mês</th><th>Entrou</th><th>Saiu</th><th>Sobrou</th><th>Margem</th>' +
-      '</tr></thead><tbody>' +
-      linhas.map(l => '<tr>' +
-        '<td class="conta"><span class="c-nome">' + esc(mesExtenso(l.m)) + '</span></td>' +
-        '<td class="v">' + (l.rl == null ? '—' : esc(brl0(l.rl))) + '</td>' +
-        '<td class="v saida">' + (l.saidas == null ? '—' : esc(brl0(-Math.abs(l.saidas)))) + '</td>' +
-        '<td class="v" style="font-weight:800;color:' + ((l.ll||0) >= 0 ? 'var(--g-ok-txt)' : 'var(--g-enc-txt)') + '">' +
-          (l.ll == null ? '—' : esc(brl0(l.ll))) + '</td>' +
-        '<td class="av">' + (l.mg == null ? '—' : pctBR(l.mg,1)) + '</td>' +
-      '</tr>').join('') + '</tbody></table></div>' +
+      '</tr></thead><tbody id="tab-meses-corpo"></tbody></table></div>' +
+      '<div id="tab-meses-pe"></div>' +
     '</div></details>';
 }
 

@@ -865,6 +865,10 @@ function render(id, codigo, disponiveis, pessoa){
     : '';
   pararEspera();
 
+  /* A ordem desta pilha é a tela: primeiro a RESPOSTA (a frase-resumo e o que exige
+     ação), só depois as PORTAS (os cards de área). Quem chega precisa saber se tem
+     algo pendente antes de escolher para onde ir — invertido, ele escolhe às cegas.
+     Alerta de pendência não recolhe nunca, nem entra em <details>. */
   document.getElementById('miolo').innerHTML = `
     <div class="saudacao">
       <h1>Olá${primeiro?', '+esc(primeiro):''}.</h1>

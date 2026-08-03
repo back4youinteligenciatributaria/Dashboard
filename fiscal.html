@@ -326,10 +326,48 @@ tr.nid .share i{background:var(--alerta)}
 .tab{font-family:var(--sans);font-size:var(--fs-3);font-weight:700;color:var(--ink-2);background:none;border:none;
   padding:6px 14px;border-radius:var(--radius-lg);cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 .tab.on{background:var(--brand-teal-txt);color:#fff}
-.nf-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.nf-search{font-family:var(--sans);font-size:16px;border:1px solid var(--line-2);border-radius:var(--radius-lg);padding:8px 14px;background:var(--surface-warm);min-width:180px;min-height:44px}
 .btn-pend{font-family:var(--sans);font-size:var(--fs-3);font-weight:700;color:var(--sinal-txt);background:var(--sinal-soft);border:1px solid var(--line-2);border-radius:var(--radius-lg);padding:6px 14px;cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
 .btn-pend.on{background:var(--sinal-txt);color:#fff;border-color:var(--sinal-txt)}
+
+/* ---------- revelacao progressiva ---------- */
+/* Régua de ações: busca sempre à mão, filtros a um clique, contagem à vista.
+   Antes os filtros ficavam todos abertos na tela — quem chegava tinha de ler a
+   parede inteira antes de achar o campo de busca, que é o que 9 em 10 usam. */
+.barra-acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.barra-acoes .campo-busca{flex:1;min-width:200px;font-size:16px;padding:12px 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
+.barra-acoes .campo-busca:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.btn-filtros{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);
+  color:var(--ink);font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.btn-filtros:hover{border-color:var(--brand-teal)}
+.btn-filtros[aria-expanded="true"]{background:var(--receita-soft);border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.btn-filtros svg{width:15px;height:15px;flex:none}
+.cont-filtros{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
+  padding:0 5px;border-radius:var(--radius-pill);background:var(--brand-teal-txt);color:#fff;
+  font-size:var(--fs-1);font-weight:800}
+/* display:inline-flex ganha do atributo hidden — sem esta linha o selo mostrava
+   um "0" permanente ao lado de Filtros. */
+.cont-filtros[hidden]{display:none}
+.resumo-lista{font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
+.painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
+  padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--surface-warm)}
+.painel-filtros[hidden]{display:none}
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
+.btn-limpar{min-height:38px;padding:0 15px;border-radius:var(--radius-pill);border:1px dashed var(--line-2);
+  background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:var(--fs-2);cursor:pointer}
+.btn-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+/* A contagem aqui é uma frase ("32 de 100 notas que você emitiu em julho · 11 sem
+   sócio"), não duas palavras: no celular ela tem de quebrar, senão o nowrap do
+   contrato empurra a página para o lado. */
+@media(max-width:720px){.resumo-lista{white-space:normal;width:100%}}
+
 .alert{cursor:default} .alert.clicavel{cursor:pointer} .alert.clicavel:hover{filter:brightness(.99)}
 table.nf{width:100%;border-collapse:collapse;font-size:var(--fs-3)}
 table.nf th{text-align:left;font-size:var(--fs-1);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line-2)}
@@ -1617,6 +1655,52 @@ function vencimentosDoMes(M,ano,mes){ const marc=new Map();
 /* ===================== RENDER ===================== */
 let M_GLOBAL=null, CHARTS=null, SEL=null, NF_TAB='prestadas', NF_BUSCA='', NF_PEND=false, NF_ANO=false;
 let IND_SUJO=true;   // o bloco de indicadores precisa ser remontado na próxima abertura
+
+/* ---------------- revelação progressiva ---------------- */
+/* Filtros recolhidos, com memória. O contador ao lado do botão existe para
+   evitar o único efeito colateral ruim de esconder filtro: a pessoa esquece que
+   filtrou e acha que os dados sumiram. Por isso, com filtro ativo, o painel
+   nasce ABERTO. */
+function ligarFiltros(pagina, contarAtivos){
+  const bt = document.getElementById('btn-filtros');
+  const pn = document.getElementById('painel-filtros');
+  if(!bt || !pn) return;
+  const chave = 'b4u_filtros_' + pagina;
+  const abrir = (v, persistir) => { pn.hidden = !v; bt.setAttribute('aria-expanded', String(v));
+                       if(persistir){ try{ localStorage.setItem(chave, v?'1':'0'); }catch(e){} } };
+  let inicial = false;
+  try{ inicial = localStorage.getItem(chave) === '1'; }catch(e){}
+  /* Abrir por causa de filtro ativo NÃO é escolha da pessoa — e por isso não pode
+     virar preferência. Antes esta abertura automática era gravada junto: bastava
+     entrar uma vez por um link com filtro para o painel passar a nascer aberto
+     para sempre, sem ninguém ter pedido. Só o clique persiste. */
+  const forcado = !!(contarAtivos && contarAtivos() > 0);
+  abrir(inicial || forcado, false);
+  bt.addEventListener('click', ()=> abrir(pn.hidden, true));
+  return { abrir, atualizarContador(){
+    const n = contarAtivos ? contarAtivos() : 0;
+    const c = bt.querySelector('.cont-filtros');
+    if(c){ c.textContent = n; c.hidden = n === 0; }
+  }};
+}
+let FILTROS_UI=null;
+/* Quantos filtros de nota estão mexendo no que ele vê. "No ano todo" conta: é ele
+   que explica uma lista com notas de outros meses. */
+function filtrosNotasAtivos(){ return (NF_PEND?1:0) + (NF_ANO?1:0); }
+
+/* Teto da lista. Dois botões de propósito: "mais 20" para quem lê, "todos" para
+   quem vai usar Ctrl+F. Buscar ou filtrar volta o teto ao início — o resultado
+   é outro, e continuar de onde parou confundiria. */
+const PASSO = 20;
+let NF_TETO = PASSO;
+function rodapeLista(mostrados, total){
+  if(total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
+}
 /* Ordenação da tabela de notas. campo null = ordem natural (competência + nº da NF),
    que é como a lista sempre veio. dir: 1 crescente, -1 decrescente. */
 const NF_ORD={campo:null,dir:1};
@@ -1731,12 +1815,24 @@ function render(M){
       <p class="tabs-hint">Emiti = para os seus clientes. Recebi = de fornecedores para você.</p>
     </div></div>
     <div class="card" style="padding:var(--pad)">
-      <div class="nf-toolbar"><span class="lbl" id="nf-resumo"></span>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="btn-pend" id="nf-ano" title="Buscar em todas as competências do ano">No ano todo</button>
-          <button class="btn-pend" id="nf-pend">Só as sem ${esc(V.um)}</button>
-          <input class="nf-search" id="nf-search" type="search" placeholder="buscar nº, nome, descrição… (tecle /)" aria-label="Buscar nas notas"></div></div>
+      <!-- Buscar é o que ele veio fazer nesta caixa; "só as sem sócio" e "no ano todo"
+           são refinamento. Os dois botões saíram da linha de cima para o painel, mas a
+           contagem de pendência continua escrita aqui do lado, sem clique nenhum. -->
+      <div class="barra-acoes">
+        <input class="campo-busca" id="nf-search" type="search" placeholder="buscar nº, nome, descrição… (tecle /)" aria-label="Buscar nas notas">
+        <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.2 2h13.6a.6.6 0 0 1 .46.99L10.4 9.02V13.4a.6.6 0 0 1-.87.54l-2.6-1.3a.6.6 0 0 1-.33-.54V9.02L.74 2.99A.6.6 0 0 1 1.2 2Z"/></svg>
+          Filtros <span class="cont-filtros" hidden>0</span>
+        </button>
+        <span class="resumo-lista" id="nf-resumo"></span>
+      </div>
+      <div id="painel-filtros" class="painel-filtros" hidden>
+        <button class="btn-pend" id="nf-ano" type="button" title="Buscar em todas as competências do ano">No ano todo</button>
+        <button class="btn-pend" id="nf-pend" type="button">Só as sem ${esc(V.um)}</button>
+        <button type="button" class="btn-limpar" id="btn-limpar">Limpar filtros</button>
+      </div>
       <div class="table-scroll"><table class="nf" id="nf-tabela"><thead></thead><tbody></tbody></table></div>
+      <div id="nf-mais"></div>
     </div>`);
 
   wrap.appendChild(el(`<footer><span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span><span>back4you · inteligência tributária</span></footer>`));
@@ -1745,12 +1841,20 @@ function render(M){
   pick.addEventListener('change',e=>{ SEL=e.target.value; gravarEscolha(M.id,ANO_SEL,SEL); pintarMes(M,SEL); });
   const pickAno=document.getElementById('ano');
   if(pickAno) pickAno.addEventListener('change',e=>trocarAno(M,e.target.value));
-  document.getElementById('tab-prest').addEventListener('click',()=>{NF_TAB='prestadas';toggleTabs();desenharNotas(M,SEL);});
-  document.getElementById('tab-tom').addEventListener('click',()=>{NF_TAB='tomadas';toggleTabs();desenharNotas(M,SEL);});
-  document.getElementById('nf-search').addEventListener('input',e=>{NF_BUSCA=normTxt(e.target.value);desenharNotas(M,SEL);});
-  atalhosDeBusca('nf-search',()=>{NF_BUSCA='';desenharNotas(M,SEL);});
-  document.getElementById('nf-pend').addEventListener('click',()=>{NF_PEND=!NF_PEND;desenharNotas(M,SEL);});
-  document.getElementById('nf-ano').addEventListener('click',()=>{NF_ANO=!NF_ANO;desenharNotas(M,SEL);});
+  // Trocar de aba, buscar ou filtrar devolve o teto a 20: a lista é outra, e
+  // continuar de onde parou na anterior confundiria.
+  document.getElementById('tab-prest').addEventListener('click',()=>{NF_TAB='prestadas';NF_TETO=PASSO;toggleTabs();desenharNotas(M,SEL);});
+  document.getElementById('tab-tom').addEventListener('click',()=>{NF_TAB='tomadas';NF_TETO=PASSO;toggleTabs();desenharNotas(M,SEL);});
+  document.getElementById('nf-search').addEventListener('input',e=>{NF_BUSCA=normTxt(e.target.value);NF_TETO=PASSO;desenharNotas(M,SEL);});
+  atalhosDeBusca('nf-search',()=>{NF_BUSCA='';NF_TETO=PASSO;desenharNotas(M,SEL);});
+  document.getElementById('nf-pend').addEventListener('click',()=>{NF_PEND=!NF_PEND;NF_TETO=PASSO;desenharNotas(M,SEL);});
+  document.getElementById('nf-ano').addEventListener('click',()=>{NF_ANO=!NF_ANO;NF_TETO=PASSO;desenharNotas(M,SEL);});
+  document.getElementById('btn-limpar').addEventListener('click',()=>{
+    NF_PEND=false;NF_ANO=false;NF_BUSCA='';NF_TETO=PASSO;
+    const b=document.getElementById('nf-search'); if(b) b.value='';
+    desenharNotas(M,SEL);
+  });
+  FILTROS_UI=ligarFiltros('fiscal',filtrosNotasAtivos);   // depois do layout: o painel já existe
   // Indicadores: o HTML e os gráficos só são montados quando o bloco abre (canvas 0x0
   // dentro de <details> fechado não renderiza — e ninguém paga por conteúdo escondido).
   const detInd=document.getElementById('bloco-ind');
@@ -1930,6 +2034,7 @@ function pintarMes(M,comp){
       <div class="prov-compact-total"><span>Total do ${prov.tri}º trimestre de ${prov.ano}</span><b class="num">${brl(prov.total)}</b></div></div>`; })():'';
 
   desenharRateio(M,comp,tot);
+  NF_TETO=PASSO;                                  // mês novo, lista nova: o teto volta ao início
   desenharNotas(M,comp);
   IND_SUJO=true;                                  // o bloco de indicadores só é remontado quando aberto
   const detInd=document.getElementById('bloco-ind');
@@ -2070,9 +2175,12 @@ function desenharNotas(M,comp){
 
   const V=M.voc;
   const escopo=anoMode?`no ano de ${ano}`:('em '+mesNome(comp));
+  // A contagem fica na régua, em texto, mesmo com a tabela cortada em 20: é o que
+  // permite recolher os filtros sem esconder pendência.
   document.getElementById('nf-resumo').innerHTML=`${lista.length===todas.length?todas.length:lista.length+' de '+todas.length} notas que você ${prest?'emitiu':'recebeu'} ${escopo}${nPend?` · <b style="color:var(--sinal-txt)">${nPend} sem ${esc(V.um)}</b>`:''}`;
   const pb=document.getElementById('nf-pend'); pb.classList.toggle('on',NF_PEND); pb.textContent=NF_PEND?'Mostrar todas':('Só as sem '+V.um);
   const ab=document.getElementById('nf-ano'); if(ab){ ab.classList.toggle('on',NF_ANO); ab.textContent=NF_ANO?'Só este mês':'No ano todo'; }
+  if(FILTROS_UI) FILTROS_UI.atualizarContador();
 
   const thead=document.querySelector('#nf-tabela thead');
   const th=(campo,rot,cls)=>{
@@ -2090,9 +2198,16 @@ function desenharNotas(M,comp){
     h.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); trocar(); } });
   });
   const tb=document.querySelector('#nf-tabela tbody');
+  const mais=document.getElementById('nf-mais');
   if(!lista.length){ const onde=anoMode?' no ano.':' neste mês.';
+    if(mais) mais.innerHTML='';
     tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">${esc(NF_BUSCA?'Nenhuma nota encontrada'+onde:(NF_PEND?('Nenhuma nota sem '+V.um+onde):('Nenhuma nota '+(prest?'emitida':'recebida')+onde)))}</td></tr>`; return; }
-  tb.innerHTML=lista.map(({nf,oi,comp:c})=>{
+  // Teto de 20: um mês com 100 notas despejava a lista inteira, e a tabela virava a
+  // página. Os números do mês, o alerta e a busca continuam acima, sem clique.
+  const total=lista.length;
+  const n=Math.min(NF_TETO,total);
+  const corte=lista.slice(0,n);
+  tb.innerHTML=corte.map(({nf,oi,comp:c})=>{
     const gid=`${c}-${NF_TAB}-${oi}`; const inativa=notaInativa(nf); const pend=semCentro(nf)&&!inativa;
     const sit=(nf.situacao||'').trim();
     const badge=sit?`<span class="nf-sit ${/cancel/i.test(sit)?'cancel':'subst'}">${esc(sit)}${nf.substituidaPor?(' → NF '+esc(nf.substituidaPor)):''}</span>`:'';
@@ -2114,6 +2229,13 @@ function desenharNotas(M,comp){
     const det=document.getElementById('det-'+b.dataset.exp); const ab=det.classList.toggle('aberto');
     b.setAttribute('aria-expanded',ab);
   }));
+  if(mais){
+    mais.innerHTML=rodapeLista(n,total);
+    const bm=mais.querySelector('.btn-mais');
+    if(bm) bm.addEventListener('click',()=>{ NF_TETO=n+PASSO; desenharNotas(M,comp); });
+    const bt2=mais.querySelector('.btn-todos');
+    if(bt2) bt2.addEventListener('click',()=>{ NF_TETO=total; desenharNotas(M,comp); });
+  }
 }
 
 const EDIT_STATE={};
@@ -2281,7 +2403,10 @@ async function salvarDividendos(M,comp,box){
 
 /** Rola até as notas e liga o filtro de pendências (notas sem centro). */
 function irParaPendencias(){
-  NF_PEND=true;
+  NF_PEND=true; NF_TETO=PASSO;          // filtro novo, teto novo
+  // Ligamos o filtro por ele: o painel tem de abrir junto, senão a lista encolhe de
+  // 100 para 12 e o controle que fez isso está escondido.
+  if(FILTROS_UI && FILTROS_UI.abrir) FILTROS_UI.abrir(true);
   if(M_GLOBAL) desenharNotas(M_GLOBAL,SEL);
   const n=document.getElementById('notas'); if(n) n.scrollIntoView({behavior:'smooth',block:'start'});
 }

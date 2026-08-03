@@ -253,6 +253,15 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .det-painel .det-busca{flex:1 1 220px}
 .alerta-pgto-pix{font-size:var(--fs-2);color:#0E5B37}
 .det-vazio{padding:24px;text-align:center;color:var(--muted);font-size:var(--fs-3)}
+/* Dois botões de propósito: "mais 20" para quem lê de cima para baixo, "todos"
+   para quem vai usar Ctrl+F ou imprimir. Um só obrigaria a escolher entre
+   paciência e controle. */
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
 .pitem.flash{animation:b4uflash 1.8s ease}
 @keyframes b4uflash{0%,22%{background:#DBEFEC}100%{background:var(--surface)}}
 
@@ -1561,6 +1570,21 @@ function construirResumoStatus(M){
 /* ===== Detalhamento completo: filtro + busca + um dropdown por PER/DCOMP ===== */
 const FILTRO = { busca:'', ano:'', situacao:'', pagamento:'' };
 
+/* Teto da lista. Sete anos de equiparação passam de 50 PER/DCOMP: desenhar tudo
+   de uma vez transforma o bloco numa parede de linhas iguais, e no celular a
+   rolagem nunca acaba. Filtrar ou buscar volta o teto ao início — o resultado é
+   outro, e continuar de onde parou confundiria. */
+const PASSO = 20;
+let TETO = PASSO;
+function rodapeLista(mostrados, total){
+  if (total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
+}
+
 /* Filtrar, dar F5 e perder tudo é o jeito mais rápido de fazer alguém desistir do
    filtro. A visão vai para a QUERY; o #id-codigo é a credencial da sessão e não
    pode ser tocado — por isso mexemos só em searchParams e recolocamos o hash. */
@@ -1675,11 +1699,17 @@ function cardDetalhe(p){
 function renderListaDetalhe(){
   const lista = document.getElementById('det-lista'); if (!lista) return;
   const arr = ordenarDet(DETPEDIDOS.filter(passaFiltro));
+  const n = Math.min(TETO, arr.length);
+  /* A contagem é do resultado inteiro, não do pedaço desenhado: cortar em 20 sem
+     dizer quantos existem faria o cliente achar que perdeu pedido. */
   const cont = document.getElementById('det-count');
-  if (cont) cont.textContent = arr.length === DETPEDIDOS.length
-    ? `${DETPEDIDOS.length} PER/DCOMP`
-    : `${arr.length} de ${DETPEDIDOS.length} PER/DCOMP`;
-  lista.innerHTML = arr.length ? arr.map(cardDetalhe).join('') : '<div class="det-vazio">Nenhum PER/DCOMP com esses filtros.</div>';
+  if (cont) cont.textContent = (arr.length === DETPEDIDOS.length
+      ? `${DETPEDIDOS.length} PER/DCOMP`
+      : `${arr.length} de ${DETPEDIDOS.length} PER/DCOMP`)
+    + (arr.length > n ? ` · mostrando ${n}` : '');
+  lista.innerHTML = arr.length
+    ? arr.slice(0, n).map(cardDetalhe).join('') + rodapeLista(n, arr.length)
+    : '<div class="det-vazio">Nenhum PER/DCOMP com esses filtros.</div>';
   atualizarBotaoFiltros();
   sincronizarURLDet();
 }
@@ -1692,6 +1722,7 @@ function sincronizarControles(){
 /* Aplica um conjunto de filtros do zero, abre o detalhamento e rola até ele. */
 function filtrarDetalhe(patch, scroll){
   Object.assign(FILTRO, { busca:'', ano:'', situacao:'', pagamento:'' }, patch || {});
+  TETO = PASSO;                     // resultado novo, teto novo
   const outer = document.getElementById('det-outer'); if (outer) abrirDetalhesAte(outer);
   sincronizarControles();
   renderListaDetalhe();
@@ -1700,6 +1731,11 @@ function filtrarDetalhe(patch, scroll){
 /* Deep-link para um PER/DCOMP específico: limpa filtros, abre e destaca o pedido. */
 function irParaPedido(numero){
   Object.assign(FILTRO, { busca:'', ano:'', situacao:'', pagamento:'' });
+  /* O teto não pode esconder justamente o pedido para onde estamos indo — o
+     clique vem do resumo por situação e tem de chegar na linha certa. */
+  const pos = ordenarDet(DETPEDIDOS.filter(passaFiltro))
+    .findIndex(p => String(p.numero_per_dcomp) === String(numero));
+  TETO = pos >= 0 ? Math.max(PASSO, Math.ceil((pos + 1) / PASSO) * PASSO) : PASSO;
   const outer = document.getElementById('det-outer'); if (outer) abrirDetalhesAte(outer);
   sincronizarControles();
   renderListaDetalhe();
@@ -1770,10 +1806,11 @@ function construirDetalheTodos(M){
     </details>`;
 
   const q = box.querySelector('#det-q'), fa = box.querySelector('#det-ano'), fs = box.querySelector('#det-sit'), fp = box.querySelector('#det-pag');
-  q.addEventListener('input', () => { FILTRO.busca = q.value; renderListaDetalhe(); });
-  fa.addEventListener('change', () => { FILTRO.ano = fa.value; renderListaDetalhe(); });
-  fs.addEventListener('change', () => { FILTRO.situacao = fs.value; renderListaDetalhe(); });
-  fp.addEventListener('change', () => { FILTRO.pagamento = fp.value; renderListaDetalhe(); });
+  // Buscar ou trocar filtro é outro resultado: o teto volta ao início.
+  q.addEventListener('input', () => { FILTRO.busca = q.value; TETO = PASSO; renderListaDetalhe(); });
+  fa.addEventListener('change', () => { FILTRO.ano = fa.value; TETO = PASSO; renderListaDetalhe(); });
+  fs.addEventListener('change', () => { FILTRO.situacao = fs.value; TETO = PASSO; renderListaDetalhe(); });
+  fp.addEventListener('change', () => { FILTRO.pagamento = fp.value; TETO = PASSO; renderListaDetalhe(); });
   const ford = box.querySelector('#det-ordem'); ford.value = ORDEM;
   ford.addEventListener('change', () => { ORDEM = ford.value; renderListaDetalhe(); });
   const fbtn = box.querySelector('#det-fbtn'), painel = box.querySelector('#det-painel');
@@ -1792,9 +1829,15 @@ function construirDetalheTodos(M){
     fbtn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
   });
   box.querySelector('#det-limpar').addEventListener('click', () => filtrarDetalhe({}, false));
+  /* Delegado no bloco: a lista é redesenhada a cada filtro, e botão redesenhado
+     perde o listener que estava preso nele. */
+  box.addEventListener('click', e => {
+    if (e.target.closest('.btn-mais')){ TETO += PASSO; renderListaDetalhe(); return; }
+    if (e.target.closest('.btn-todos')){ TETO = DETPEDIDOS.length; renderListaDetalhe(); }
+  });
   // "/" foca a busca (abrindo o bloco e o painel de filtros); "Esc" limpa o termo.
   atalhosDeBusca('det-q',
-    () => { FILTRO.busca = ''; renderListaDetalhe(); },
+    () => { FILTRO.busca = ''; TETO = PASSO; renderListaDetalhe(); },
     () => {
       const painel = document.getElementById('det-painel'), fbtn = document.getElementById('det-fbtn');
       if (painel && painel.hasAttribute('hidden')){

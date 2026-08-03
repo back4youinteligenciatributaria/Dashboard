@@ -54,7 +54,6 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 @media(max-width:560px){.barra .cnt{display:none}}
 .wrap{max-width:1000px;margin:0 auto;padding:18px 20px 80px}
 .topo{position:sticky;top:52px;z-index:40;background:var(--canvas);padding:12px 0 10px}
-.linha-topo{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 /* ---------- botao (B.8): uma base, tres papeis ---------- */
@@ -95,6 +94,47 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
   .grupo{flex-wrap:nowrap}
   .chip,.grupo .rot{white-space:nowrap}
 }
+
+/* ---------- revelacao progressiva ---------- */
+/* Régua de ações: busca sempre à mão, filtros a um clique, contagem à vista.
+   Antes as três fileiras de chips (status, atalhos e ordenação) ficavam abertas
+   entre a busca e o primeiro processo — o colaborador abre esta tela vinte vezes
+   por dia e relia a parede inteira toda vez. */
+.barra-acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.barra-acoes .campo-busca{flex:1;min-width:200px;font-size:16px;padding:12px 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
+.barra-acoes .campo-busca:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.btn-filtros{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);
+  color:var(--ink);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.btn-filtros:hover{border-color:var(--brand-teal)}
+.btn-filtros[aria-expanded="true"]{background:#EAF4F1;border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.btn-filtros svg{width:15px;height:15px;flex:none}
+.cont-filtros{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
+  padding:0 5px;border-radius:var(--radius-pill);background:var(--brand-teal-txt);color:#fff;
+  font-size:11px;font-weight:800}
+/* display:inline-flex ganha do atributo hidden — sem esta linha o selo mostrava
+   um "0" permanente ao lado de Filtros. */
+.cont-filtros[hidden]{display:none}
+.resumo-lista{font-size:13px;color:var(--ink-2);white-space:nowrap}
+/* A contagem desta tela tem até quatro números; abaixo do desktop ela precisa
+   quebrar, senão o nowrap do contrato empurra a página para o lado. */
+@media(max-width:820px){.resumo-lista{white-space:normal}}
+.painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
+  padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--surface-warm)}
+.painel-filtros[hidden]{display:none}
+/* Cada fileira ocupa a largura toda: status, atalhos e ordenação não se misturam. */
+.painel-filtros .linha-filtros{width:100%;margin-top:0}
+.btn-limpar{min-height:38px;padding:0 15px;border-radius:var(--radius-pill);border:1px dashed var(--line-2);
+  background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:12px;cursor:pointer}
+.btn-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:#EAF4F1}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
 .lista{margin-top:12px;display:flex;flex-direction:column;gap:10px}
 .proc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
 .proc-h{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;cursor:pointer}
@@ -374,6 +414,49 @@ function carregar(){
    captura os campos no evento "change" (que dispara no blur, antes do clique),
    então nada digitado se perde. */
 const PARADO_DIAS=30;
+
+/* ---------- revelação progressiva ----------
+   Filtros recolhidos, com memória. O contador ao lado do botão existe para evitar
+   o único efeito colateral ruim de esconder filtro: a pessoa esquece que filtrou e
+   acha que os processos sumiram. Por isso, com filtro ativo, o painel nasce ABERTO. */
+function ligarFiltros(pagina, contarAtivos){
+  const bt = document.getElementById('btn-filtros');
+  const pn = document.getElementById('painel-filtros');
+  if(!bt || !pn) return;
+  const chave = 'b4u_filtros_' + pagina;
+  const abrir = (v, persistir) => { pn.hidden = !v; bt.setAttribute('aria-expanded', String(v));
+                       if(persistir){ try{ localStorage.setItem(chave, v?'1':'0'); }catch(e){} } };
+  let inicial = false;
+  try{ inicial = localStorage.getItem(chave) === '1'; }catch(e){}
+  /* Abrir por causa de filtro ativo NÃO é escolha da pessoa — e por isso não pode
+     virar preferência. Antes esta abertura automática era gravada junto: bastava
+     entrar uma vez por um link com filtro para o painel passar a nascer aberto
+     para sempre, sem ninguém ter pedido. Só o clique persiste. */
+  const forcado = !!(contarAtivos && contarAtivos() > 0);
+  abrir(inicial || forcado, false);
+  bt.addEventListener('click', ()=> abrir(pn.hidden, true));
+  return { atualizarContador(){
+    const n = contarAtivos ? contarAtivos() : 0;
+    const c = bt.querySelector('.cont-filtros');
+    if(c){ c.textContent = n; c.hidden = n === 0; }
+  }};
+}
+let FILTROS_UI=null;
+
+/* Teto da lista. Dois botões de propósito: "mais 20" para quem lê, "todos" para
+   quem vai usar Ctrl+F. Buscar, filtrar ou reordenar volta o teto ao início — o
+   resultado é outro, e continuar de onde parou confundiria. */
+const PASSO=20;
+let TETO=PASSO;
+function rodapeLista(mostrados,total){
+  if(total<=mostrados)return '';
+  const faltam=total-mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO,faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
+}
+
 let BUSCA='';
 let FILTRO='todos';
 let SORT={k:'dur',dir:'desc'};   // padrão: mais tempo em aberto no topo
@@ -520,7 +603,35 @@ function desenharChips(base){
     `<span class="rot" style="margin-left:2px">${esc(rotuloDir())}</span>`;
 }
 // contagens dos chips depois de um salvamento, sem tocar na lista (o editor aberto continua aberto)
-function atualizarChips(){if(document.getElementById('chipsStatus'))desenharChips(baseBusca());}
+function atualizarChips(){if(document.getElementById('chipsStatus')){desenharChips(baseBusca());desenharResumoLista();}}
+/* ---------- limpar filtros (C.5) ----------
+   Quantos filtros estão pegando agora — vira o selo ao lado do botão Filtros. Só
+   conta o que ficou ESCONDIDO no painel e que tira processo da lista: a busca segue
+   à vista na régua, e a ordenação não esconde ninguém — ela só troca a ordem, que a
+   própria lista mostra. */
+function filtrosPainel(){return FILTRO==='todos'?0:1;}
+function limparFiltros(){
+  FILTRO='todos';BUSCA='';TETO=PASSO;
+  const b=document.getElementById('busca');if(b)b.value='';
+  desenhar();
+}
+/* A contagem em texto é o que permite recolher as três fileiras de chips sem
+   esconder pendência: parados e sem responsável continuam na primeira linha da
+   tela, contados sobre a planilha inteira — não sobre o que o filtro deixou. */
+function desenharResumoLista(){
+  const el=document.getElementById('resumo-lista');if(!el)return;
+  const todos=PROCS.map(p=>({p,r:resumoProc(p)}));
+  const alvo=normTxt(BUSCA);
+  const vis=todos.filter(x=>passaBusca(x.p,alvo)&&passaFiltro(x.p,x.r,FILTRO)).length;
+  const abertos=todos.filter(x=>!x.r.conc).length;
+  const parados=todos.filter(x=>passaFiltro(x.p,x.r,'parado')).length;
+  const semResp=todos.filter(x=>x.r.semResp).length;
+  const p=[(vis===PROCS.length?String(PROCS.length):vis+' de '+PROCS.length)+' processos',
+           abertos+' em aberto'];
+  if(parados)p.push(parados+' parados há +'+PARADO_DIAS+' dias');
+  if(semResp)p.push(semResp+' sem responsável');
+  el.textContent=p.join(' · ');
+}
 function chipFocado(){
   const el=document.activeElement;
   if(!el||!el.classList||!el.classList.contains('chip'))return '';
@@ -541,24 +652,35 @@ function vazioHTML(){
 function render(){
   lerURL();                                   // a visão vem do endereço (C.10)
   const app=document.getElementById('app');
+  /* A ordem é a da tela: busca, "novo processo" e a contagem primeiro; os chips
+     de status, atalho e ordenação esperam no painel, que abre a um clique. */
   app.innerHTML=`<div class="wrap">
     <div class="topo">
-      <div class="linha-topo">
-        <input class="busca" id="busca" type="search" value="${esc(BUSCA)}" placeholder="Buscar por ID, nome, código, processo ou status…  ( / para focar)">
+      <div class="barra-acoes">
+        <input class="busca campo-busca" id="busca" type="search" value="${esc(BUSCA)}" placeholder="Buscar por ID, nome, código, processo ou status…  ( / para focar)">
+        <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.2 2h13.6a.6.6 0 0 1 .46.99L10.4 9.02V13.4a.6.6 0 0 1-.87.54l-2.6-1.3a.6.6 0 0 1-.33-.54V9.02L.74 2.99A.6.6 0 0 1 1.2 2Z"/></svg>
+          Filtros <span class="cont-filtros" hidden>0</span>
+        </button>
         <button class="btn btn--pri btn--pill" id="novo">+ Novo processo</button>
+        <span class="resumo-lista" id="resumo-lista"></span>
       </div>
-      <div class="linha-filtros"><div class="grupo" id="chipsStatus"></div></div>
-      <div class="linha-filtros"><div class="grupo" id="chipsAtalho"></div></div>
-      <div class="linha-filtros"><div class="grupo" id="chipsOrd"></div></div>
+      <div id="painel-filtros" class="painel-filtros" hidden>
+        <div class="linha-filtros"><div class="grupo" id="chipsStatus"></div></div>
+        <div class="linha-filtros"><div class="grupo" id="chipsAtalho"></div></div>
+        <div class="linha-filtros"><div class="grupo" id="chipsOrd"></div></div>
+        <button type="button" class="btn-limpar" id="btn-limpar">Limpar filtros</button>
+      </div>
       <details class="ajuda" id="ajuda">
         <summary>ⓘ Como funciona esta tela</summary>
-        <div class="txt">Filtro, busca e ordenação funcionam juntos. Clique num processo para editar. Dentro dele, clique no nome da etapa para abrir os detalhes. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar". Atalhos: <b>/</b> foca a busca e <b>Esc</b> limpa.</div>
+        <div class="txt">Filtro, busca e ordenação funcionam juntos — os chips ficam no botão <b>Filtros</b>. Clique num processo para editar. Dentro dele, clique no nome da etapa para abrir os detalhes. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar". Atalhos: <b>/</b> foca a busca e <b>Esc</b> limpa.</div>
       </details>
     </div>
     <div class="lista" id="lista"></div></div>`;
+  FILTROS_UI=ligarFiltros('societario-equipe',filtrosPainel);   // depois do layout: o painel já existe
   desenhar();
   ligarDetalhes(document.getElementById('ajuda'),'b4u.societario.ajuda');
-  document.getElementById('busca').addEventListener('input',e=>{BUSCA=e.target.value;desenhar();});
+  document.getElementById('busca').addEventListener('input',e=>{BUSCA=e.target.value;TETO=PASSO;desenhar();});
   document.getElementById('novo').addEventListener('click',abrirNovo);
 }
 function desenhar(){
@@ -567,12 +689,32 @@ function desenhar(){
   const arr=ordenar(base.filter(x=>passaFiltro(x.p,x.r,FILTRO)));
   desenharChips(base);
   const lista=document.getElementById('lista');
-  if(lista)lista.innerHTML=arr.map(x=>cardHTML(x.p)).join('')||vazioHTML();
+  /* O teto corta o DESENHO, nunca a contagem: os totais de cima seguem falando da
+     lista inteira (arr.length), com ou sem rodapé. */
+  const n=Math.min(TETO,arr.length);
+  if(lista)lista.innerHTML=(arr.slice(0,n).map(x=>cardHTML(x.p)).join('')+rodapeLista(n,arr.length))||vazioHTML();
   const cnt=document.getElementById('cnt');
   if(cnt)cnt.textContent=arr.length+' de '+PROCS.length+' processos';
+  desenharResumoLista();
+  if(FILTROS_UI)FILTROS_UI.atualizarContador();
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
   restaurarFoco(foco);
   sincronizarURL();
+}
+/* Estender o teto não pode fechar o editor que a pessoa está preenchendo: guardamos
+   qual processo estava aberto e reabrimos depois do redesenho. */
+function crescerTeto(novo){
+  const aberto=document.querySelector('.proc.open');
+  const row=aberto?aberto.dataset.row:'';
+  TETO=novo;desenhar();
+  if(row&&document.querySelector('.proc[data-row="'+row+'"]'))abrirEditor(row);
+}
+/* O processo recém-criado não pode nascer atrás do teto — ele entra sem datas e a
+   ordem padrão (mais tempo em aberto primeiro) joga quem não tem data para o fim. */
+function garantirVisivel(row){
+  const arr=ordenar(baseBusca().filter(x=>passaFiltro(x.p,x.r,FILTRO)));
+  const pos=arr.findIndex(x=>String(x.p.row)===String(row));
+  if(pos>=TETO){TETO=Math.ceil((pos+1)/PASSO)*PASSO;desenhar();}
 }
 function cardHTML(p){
   return `<div class="proc" data-row="${p.row}">
@@ -774,9 +916,10 @@ async function criarNovo(btn){
   btn.disabled=true;msg.className='msg';msg.textContent='Criando…';
   try{
     const d=await postAcao({acao:'soc_novo',id,nome:document.getElementById('n-nome').value.trim(),codigo_processo:document.getElementById('n-cod').value.trim(),processo:proc,status_geral:document.getElementById('n-stg').value});
-    fecharNovo();FILTRO='todos';BUSCA='';SORT={k:'dur',dir:dirPadrao('dur')};
+    fecharNovo();FILTRO='todos';BUSCA='';SORT={k:'dur',dir:dirPadrao('dur')};TETO=PASSO;
     sincronizarURL();                                        // limpa o endereço ANTES de recarregar
     await carregar();   // o processo novo não pode nascer escondido por um filtro
+    garantirVisivel(d.row);   // nem atrás do teto
     const el=document.querySelector(`.proc[data-row="${d.row}"]`);if(el){el.scrollIntoView({block:'center'});abrirEditor(d.row);}
   }catch(e){msg.className='msg err';msg.textContent=e.message||e;}
   btn.disabled=false;
@@ -792,10 +935,12 @@ document.addEventListener('click',e=>{
     return;
   }
   const cf=e.target.closest('.chip[data-f]');
-  if(cf){FILTRO=cf.dataset.f;desenhar();return;}
+  if(cf){FILTRO=cf.dataset.f;TETO=PASSO;desenhar();return;}
   const co=e.target.closest('.chip[data-ord]');
-  if(co){const k=co.dataset.ord;if(SORT.k===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.k=k;SORT.dir=dirPadrao(k);}desenhar();return;}
-  if(e.target.closest('#limparF')){FILTRO='todos';BUSCA='';const b=document.getElementById('busca');if(b)b.value='';desenhar();return;}
+  if(co){const k=co.dataset.ord;if(SORT.k===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.k=k;SORT.dir=dirPadrao(k);}TETO=PASSO;desenhar();return;}
+  if(e.target.closest('#limparF')||e.target.closest('#btn-limpar')){limparFiltros();return;}
+  if(e.target.closest('.btn-mais')){crescerTeto(TETO+PASSO);return;}
+  if(e.target.closest('.btn-todos')){crescerTeto(PROCS.length);return;}
   const et=e.target.closest('[data-etapa-toggle]');if(et){alternarEtapa(et);return;}
   const tg=e.target.closest('[data-toggle]');if(tg){abrirEditor(tg.dataset.toggle);return;}
   const ag=e.target.closest('[data-addgeral]');if(ag){addObs(ag.closest('.proc').dataset.row,ag,'geral');return;}
@@ -828,7 +973,7 @@ document.addEventListener('keydown',e=>{
   const a=document.activeElement,tag=a&&a.tagName;
   const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
   if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!digitando){e.preventDefault();b.focus();b.select();return;}
-  if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';BUSCA='';desenhar();}
+  if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';BUSCA='';TETO=PASSO;desenhar();}
 });
 
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());

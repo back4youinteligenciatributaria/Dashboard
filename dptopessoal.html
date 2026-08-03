@@ -258,6 +258,14 @@ table.func tbody tr:last-child td{border-bottom:none}
 .dropdown-btn .conta{font-size:var(--fs-1);font-weight:700;color:var(--muted);background:var(--surface-warm);border-radius:var(--radius-sm);padding:2px 9px}
 .dropdown-btn .seta{color:var(--muted);font-size:var(--fs-3);transition:transform .2s}
 .dropdown-body{display:none;padding-bottom:8px}
+/* Teto da lista — dois botões de propósito: "mais 20" para quem lê, "todos" para
+   quem vai usar Ctrl+F. 35 funcionários de uma vez não é lista, é parede. */
+.lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
+.lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
+.lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
 
 .solic-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
 .solic-item:first-child{border-top:none}
@@ -1069,12 +1077,24 @@ function render(M, modelos){
     <div class="sec-head" id="sec-admissoes"><div><h2>Admissões e desligamentos</h2><p>O que está em andamento aparece primeiro.</p></div></div>
     <div id="admissoes"></div>`);
 
+  /* A lista completa é consulta, não tarefa: recolhida, com a contagem no cabeçalho
+     (que fica FORA do bloco — recolher não pode esconder quantas pessoas ele tem). */
   appendAll(wrap, `
-    <div class="sec-head" id="sec-func"><div><h2>Funcionários</h2></div></div>
-    <div class="card" id="box-func" style="padding:var(--pad)"><div class="table-scroll"><table class="func" id="tabela-func">
-      <thead><tr><th>Nome</th><th>Cargo</th><th>Admissão</th><th>Status</th></tr></thead>
-      <tbody></tbody>
-    </table></div></div>`);
+    <div class="sec-head" id="sec-func"><div><h2>Funcionários</h2><p id="func-resumo"></p></div></div>
+    <div class="card" id="box-func" style="padding:8px 20px">
+      <button class="dropdown-btn" id="btn-func" aria-expanded="false">
+        <span class="nome">Ver a lista de funcionários</span>
+        <span class="conta" id="func-conta">0</span>
+        <span class="seta">▾</span>
+      </button>
+      <div class="dropdown-body" id="body-func">
+        <div class="table-scroll"><table class="func" id="tabela-func">
+          <thead><tr><th>Nome</th><th>Cargo</th><th>Admissão</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <div id="func-mais"></div>
+      </div>
+    </div>`);
 
   appendAll(wrap, `
     <div class="sec-head" id="sec-ferias"><div><h2>Férias</h2></div></div>
@@ -1147,8 +1167,30 @@ function desenharObrigacoesDP(M){
       <span class="obr-tag cli">da sua empresa</span>
     </div>`;
   }).join('');
-  box.innerHTML = `<div class="card" style="padding:var(--pad)">
-    ${OBRIGACOES_DP.map(linha).join('')}${doCliente}</div>`;
+  /* O calendário fixo é igual todo mês e para todo cliente: é informativo, e eram
+     seis linhas empurrando a página para baixo. Recolhe, e o rótulo já diz quantas
+     são com ele — a conta não pode ficar atrás de um clique. O que tem data DESTA
+     empresa continua à vista: prazo com data é justamente o que nunca recolhe. */
+  const nVoce = OBRIGACOES_DP.filter(o=>o.quem==='voce').length;
+  box.innerHTML = `<div class="card" style="padding:8px 20px">
+    ${doCliente}
+    <div class="${doCliente?'dropdown-sec':''}">
+      <button class="dropdown-btn" id="btn-obrig" aria-expanded="false">
+        <span class="nome">Ver o calendário de todo mês — ${nVoce} ${nVoce===1?'linha é':'linhas são'} com você</span>
+        <span class="conta">${OBRIGACOES_DP.length}</span>
+        <span class="seta">▾</span>
+      </button>
+      <div class="dropdown-body" id="body-obrig">${OBRIGACOES_DP.map(linha).join('')}</div>
+    </div>
+  </div>`;
+  const btn = document.getElementById('btn-obrig');
+  if (btn) btn.addEventListener('click', () => {
+    const body = document.getElementById('body-obrig');
+    const abrir = body.style.display !== 'block';
+    body.style.display = abrir ? 'block' : 'none';
+    btn.setAttribute('aria-expanded', abrir);
+    btn.querySelector('.seta').style.transform = abrir ? 'rotate(180deg)' : '';
+  });
 }
 
 /** Tudo que muda com a competência selecionada: folha do mês, desligamentos
@@ -1438,10 +1480,45 @@ function desenharAdmissoes(admissoes){
   }).join('');
 }
 
+/* Teto da lista. Dois botões de propósito: "mais 20" para quem está lendo, "todos"
+   para quem vai usar Ctrl+F. O texto diz sempre o número real. */
+const PASSO = 20;
+let TETO_FUNC = PASSO;
+function rodapeLista(mostrados, total){
+  if (total <= mostrados) return '';
+  const faltam = total - mostrados;
+  return `<div class="lista-mais">
+    <button type="button" class="btn-mais">Mostrar mais ${Math.min(PASSO, faltam)}</button>
+    <button type="button" class="btn-todos">Mostrar todos os ${total}</button>
+  </div>`;
+}
+/* O teto esconde por CSS; as linhas continuam TODAS no DOM. A busca desta página
+   varre o DOM e promete achar funcionário — cortar de verdade a faria mentir a
+   partir do 21º nome. Enquanto se busca, quem casa aparece e o teto cala a boca. */
+function aplicarTetoFunc(){
+  const tb = document.querySelector('#tabela-func tbody'); if (!tb) return;
+  const campo = document.getElementById('busca');
+  const pe = document.getElementById('func-mais');
+  const linhas = Array.from(tb.querySelectorAll('tr[data-busca]'));
+  if (campo && campo.value.trim()){ if (pe) pe.innerHTML = ''; return; }
+  linhas.forEach((tr,k)=> tr.style.display = k < TETO_FUNC ? '' : 'none');
+  const n = Math.min(TETO_FUNC, linhas.length);
+  if (pe) pe.innerHTML = rodapeLista(n, linhas.length);
+}
+
 function desenharFuncionarios(funcionarios){
   const tb = document.querySelector('#tabela-func tbody');
+  const resumo = document.getElementById('func-resumo');
+  const conta = document.getElementById('func-conta');
+  if (conta) conta.textContent = funcionarios.length;
   if (!funcionarios.length){
     tb.innerHTML = '<tr><td colspan="4" class="vazio">Nenhum funcionário cadastrado ainda.</td></tr>';
+    if (resumo) resumo.textContent = '';
+    /* Sem ninguém no cadastro não há o que recolher — e um botão que abre o vazio
+       seria um clique para não ver nada. O aviso aparece direto. */
+    const b = document.getElementById('btn-func'), corpo = document.getElementById('body-func');
+    if (b) b.style.display = 'none';
+    if (corpo) corpo.style.display = 'block';
     return;
   }
   tb.innerHTML = funcionarios.map(f=>{
@@ -1453,6 +1530,26 @@ function desenharFuncionarios(funcionarios){
       <td><span class="status-chip status-${desligado?'vencida':'concluido'}">${desligado?'Desligado':'Ativo'}</span></td>
     </tr>`;
   }).join('');
+
+  const ativos = funcionarios.filter(f => !(normTxt(f.status) === 'desligado' || f.data_desligamento)).length;
+  if (resumo) resumo.textContent = `${funcionarios.length} no cadastro · ${ativos} ${ativos===1?'ativo':'ativos'}`;
+
+  TETO_FUNC = PASSO;
+  aplicarTetoFunc();
+
+  const btn = document.getElementById('btn-func');
+  if (btn) btn.addEventListener('click', () => {
+    const body = document.getElementById('body-func');
+    const abrir = body.style.display !== 'block';
+    body.style.display = abrir ? 'block' : 'none';
+    btn.setAttribute('aria-expanded', abrir);
+    btn.querySelector('.seta').style.transform = abrir ? 'rotate(180deg)' : '';
+  });
+  const pe = document.getElementById('func-mais');
+  if (pe) pe.addEventListener('click', ev=>{
+    if (ev.target.closest('.btn-mais')) { TETO_FUNC += PASSO; aplicarTetoFunc(); return; }
+    if (ev.target.closest('.btn-todos')){ TETO_FUNC = funcionarios.length; aplicarTetoFunc(); return; }
+  });
 }
 
 const hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -1551,6 +1648,23 @@ const SECOES_BUSCA = [
 /* O seletor precisa incluir #modelos — o placeholder promete buscar "modelo". */
 const SEL_BUSCA = '#admissoes [data-busca], #tabela-func [data-busca], #ferias [data-busca], #documentos [data-busca], #modelos [data-busca]';
 
+/* Bloco recolhido que a busca alcança: abre sozinho quando há resultado dentro dele
+   e volta a fechar quando a busca é limpa. */
+function abrirSeBuscar(idBtn, idBody, alvo){
+  const btn = document.getElementById(idBtn), body = document.getElementById(idBody);
+  if (!btn || !body || btn.style.display === 'none') return;   // bloco sem botão não recolhe
+  const tem = !!alvo && Array.from(body.querySelectorAll('[data-busca]')).some(el=>el.style.display !== 'none');
+  if (tem){
+    body.style.display = 'block';
+    btn.setAttribute('aria-expanded','true');
+    btn.querySelector('.seta').style.transform = 'rotate(180deg)';
+  } else if (!alvo){
+    body.style.display = 'none';
+    btn.setAttribute('aria-expanded','false');
+    btn.querySelector('.seta').style.transform = '';
+  }
+}
+
 /* Guarda como cada seção aparece SEM busca (algumas já nascem escondidas). */
 function memorizarSecoes(){
   SECOES_BUSCA.forEach(s=>{
@@ -1569,21 +1683,10 @@ function filtrar(termo){
     if (alvo && bate) achados++;
   });
 
-  // O dropdown de modelos abre sozinho quando a busca acha algo lá dentro.
-  const bodyMod = document.getElementById('body-modelos');
-  const btnMod  = document.getElementById('btn-modelos');
-  if (bodyMod && btnMod){
-    const temMod = Array.from(bodyMod.querySelectorAll('[data-busca]')).some(el=>el.style.display !== 'none');
-    if (alvo && temMod){
-      bodyMod.style.display = 'block';
-      btnMod.setAttribute('aria-expanded','true');
-      btnMod.querySelector('.seta').style.transform = 'rotate(180deg)';
-    } else if (!alvo){
-      bodyMod.style.display = 'none';
-      btnMod.setAttribute('aria-expanded','false');
-      btnMod.querySelector('.seta').style.transform = '';
-    }
-  }
+  // Os dropdowns abrem sozinhos quando a busca acha algo lá dentro — senão a página
+  // diria "3 resultados" e a tela não mostraria nenhum.
+  abrirSeBuscar('btn-modelos', 'body-modelos', alvo);
+  abrirSeBuscar('btn-func',    'body-func',    alvo);
 
   SECOES_BUSCA.forEach(s=>{
     const head = document.getElementById(s.head), box = document.getElementById(s.box);
@@ -1594,6 +1697,9 @@ function filtrar(termo){
     head.style.display = esconder ? 'none' : (head.dataset.disp || '');
     box.style.display  = esconder ? 'none' : (box.dataset.disp  || '');
   });
+
+  // Depois do filtro: com busca o teto sai da frente, sem busca ele volta.
+  aplicarTetoFunc();
 
   mostrarResumoBusca(termo, achados);
 }
