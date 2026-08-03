@@ -231,7 +231,36 @@ function ligarDetalhes(el,chave){
   try{if(localStorage.getItem(chave)==='1')el.open=true;}catch(e){}
   el.addEventListener('toggle',()=>{try{localStorage.setItem(chave,el.open?'1':'0');}catch(e){}});
 }
-function jsonp(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},25000);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
+/* O servidor termina o serviço: o log mostra execuções de 15s, 17s e 23s completando
+   e gravando o cache. Quem desistia cedo era o front, com teto de 20s — a resposta
+   chegava e era jogada fora, e a pessoa lia "a API não respondeu" numa chamada que
+   deu certo. 45s cobre a cauda longa da primeira abertura do dia. */
+const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
+
+/* Só leitura repete. Toda escrita nossa viaja com `acao=` (ticket, marcar_guia,
+   salvar_contatos, confiar_aparelho…) e o login por e-mail dispara código novo ou
+   queima tentativa — repetir qualquer um desses lança em duplicidade. */
+function jsonpRepetivel(url){
+  return !/[?&]acao=[^&]/.test(url) && !/[?&]tipo=(login_email_|entrar_token)/.test(url);
+}
+function jsonpAviso(txt){
+  const p = document.getElementById('espera-txt')
+       || document.querySelector('#app .state p')
+       || document.querySelector('.state p');
+  if(p) p.textContent = txt;
+}
+function jsonpTentativa(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
+/* Uma repetição, nunca mais que uma. A primeira execução provavelmente terminou e
+   deixou o cache quente no servidor, então a segunda costuma voltar rápido. Enquanto
+   espera, a tela diz que ainda estamos buscando — erro só se a segunda também falhar. */
+function jsonp(url){
+  return jsonpTentativa(url).catch(e=>{
+    if(!jsonpRepetivel(url)) throw e;
+    if(typeof pararEspera === 'function'){ try{ pararEspera(); }catch(_){} }
+    jsonpAviso('Ainda estou buscando — tentando de novo…');
+    return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
+  });
+}
 async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual(),cod:codAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 function selectHTML(cls,val){return `<select class="${cls}">`+STATUS.map(o=>`<option value="${esc(o)}"${normTxt(o)===normTxt(val)?' selected':''}>${o||'—'}</option>`).join('')+`</select>`;}
 function bdgStatus(s){const n=normTxt(s);let cl='agu';if(/conclu|finaliz|encerr/.test(n))cl='ok';else if(/andamento/.test(n))cl='and';else if(/nao se aplica|não se aplica/.test(n))cl='na';return `<span class="bdg ${cl}">${esc(s||'—')}</span>`;}

@@ -535,10 +535,10 @@ function modelo(){
       { type:'branch', key:'A', month:m0+P.adm, options:[
         { id:'defer', label:'Deferimento / homologação', tag:'good',
           body:'Crédito liberado para restituição ou compensação. O cliente usufrui do valor.',
-          fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>',
+          fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30% · '+brl(honA)+'</em>',
           then:[{ id:'A1f', month:m0+P.adm+1, kind:'fee', title:'Restituição na conta',
                   body:'Devida no momento da efetivação do benefício, em até 48 horas, independentemente de revisão posterior da homologação (Cl. 7.4.2 do Anexo II).',
-                  fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>', terminal:'A', aDue:true }] },
+                  fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30%</em>', terminal:'A', aDue:true }] },
         { id:'indefer', label:'Indeferimento', tag:'crit',
           body:'Despacho decisório nega o crédito. Abre-se a defesa administrativa inclusa no Termo.',
           fee:'Defesa inclusa<em>sem custo adicional</em>',
@@ -548,9 +548,9 @@ function modelo(){
             { type:'branch', key:'ADRJ', month:m0+P.adm+1+P.drj, options:[
               { id:'ok', label:'DRJ favorável', tag:'good',
                 body:'Crédito reconhecido na primeira instância administrativa.',
-                fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>',
+                fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30%</em>',
                 then:[{ id:'A3f', month:m0+P.adm+2+P.drj, kind:'fee', title:'Restituição na conta',
-                        body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>', terminal:'A', aDue:true }] },
+                        body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30%</em>', terminal:'A', aDue:true }] },
               { id:'nao', label:'DRJ desfavorável', tag:'crit',
                 body:'Segue o recurso voluntário ao Conselho Administrativo de Recursos Fiscais.',
                 fee:'Defesa inclusa<em>sem custo adicional</em>',
@@ -560,10 +560,10 @@ function modelo(){
                   { type:'branch', key:'ACARF', month:m0+P.adm+2+P.drj+P.carf, options:[
                     { id:'ok', label:'CARF favorável', tag:'good',
                       body:'Crédito reconhecido em definitivo na esfera administrativa.',
-                      fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>',
+                      fee:'Cliente recebe '+brl(baseRetro-honA)+'<em>êxito de 30%</em>',
                       then:[{ id:'A4f', month:m0+P.adm+3+P.drj+P.carf, kind:'fee',
                               title:'Restituição na conta',
-                              body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30% do recuperado</em>', terminal:'A', aDue:true }] },
+                              body:'Devida em 48h da efetivação do crédito. Honorário de '+brl(honA)+'.', fee:'Cliente fica com '+brl(baseRetro-honA)+'<em>êxito de 30%</em>', terminal:'A', aDue:true }] },
                     { id:'nao', label:'CARF desfavorável', tag:'crit',
                       body:'Crédito definitivamente não homologado na via administrativa.',
                       fee:'Nada devido<em>sem êxito, sem honorário</em>',
@@ -586,13 +586,13 @@ function modelo(){
     { type:'branch', key:'B', month:m0+P.sent, options:[
       { id:'sentOK', label:'Sentença favorável', tag:'good',
         body:'Autoriza a apuração por 8% e 12% desde logo, por execução provisória (art. 14, §3º, da Lei 12.016/2009).',
-        fee:'Economia de '+brl(E)+'/mês<em>piso de 9 meses, só se superar os 30% já pagos</em>',
+        fee:'Economia de '+brl(E)+'/mês<em>êxito de 100% nos 9 primeiros meses</em>',
         then:[
           { id:'B2', month:m0+P.sent, kind:'good', title:'Base reduzida em uso',
             body:'Economia mensal de '+brl(E)+' a partir da primeira competência apurada após a sentença.' },
           { id:'B3', month:m0+P.sent+1, kind:'fee', title:'Economia começa',
             body:'100% da economia mensal apurada, por 9 meses, pagos nas mesmas datas de vencimento das guias — o desembolso total do cliente fica igual ao de antes.',
-            fee:'A economia é dele desde o 1º mês<em>o piso só cobra o que faltar para 9 meses</em>' },
+            fee:'Depois do 9º mês a economia é 100% dele<em>êxito só nos 9 primeiros meses</em>' },
           { type:'branch', key:'BT', month:m0+P.sent+P.tran, options:[
             { id:'tOK', label:'Trânsito em julgado favorável', tag:'good',
               body:'Direito consolidado. Abre a compensação das competências do curso do processo.',
@@ -621,7 +621,7 @@ function modelo(){
           { type:'branch', key:'BR', month:m0+P.sent+P.acor, options:[
             { id:'rOK', label:'Acórdão favorável e trânsito', tag:'good',
               body:'O resultado favorável chega em grau recursal. As modalidades permanecem devidas, ainda que a fase recursal tenha sido conduzida por outro profissional (Cl. 7.8).',
-              fee:'Economia de '+brl(E)+'/mês<em>piso de 9 meses, só se superar os 30% já pagos</em>',
+              fee:'Economia de '+brl(E)+'/mês<em>êxito de 100% nos 9 primeiros meses</em>',
               then:[
                 { id:'B7', month:m0+P.sent+P.acor, kind:'good', title:'Base reduzida em uso',
                   body:'Economia mensal de '+brl(E)+', agora a partir do acórdão favorável.' },
@@ -913,11 +913,11 @@ function renderClose(){
 
   const est = (txt, cls) => `<span class="selo ${cls}">${txt}</span>`;
   const linhas = [
-    ['Êxito principal — o maior entre 30% do recuperado e 9 meses de economia',
-      aDue ? `${M.retro} competências, com piso de 9 meses` : 'sem restituição: vale o piso de 9 meses',
-      (aDue||bDue) ? (aRisco ? ['devido, com direito a devolução','c-warn']
-                             : (refund ? ['piso mantido, excedente devolvido','c-warn'] : ['devido','c-good']))
-                   : ['não devido','c-none']],
+    ['Modalidade A — restituição retroativa', `${M.retro} competências`,
+      aDue ? (aRisco ? ['devida, com direito a devolução','c-warn'] : ['devida','c-good'])
+           : ['não devida','c-none']],
+    ['Modalidade B — 9 meses de economia', 'a partir da decisão favorável',
+      refund ? ['devolvida integralmente','c-crit'] : (bDue ? ['devida','c-good'] : ['não devida','c-none'])],
     ['Modalidade C — período do processo', cDue ? `${cMes} competências` : 'depende do trânsito favorável',
       cDue ? ['devida','c-good'] : ['não devida','c-none']],
   ];
@@ -1153,10 +1153,6 @@ function comparativo(){
   const nC = M.nCparc;
   const valC = CE.temC ? CE.cVal / nC : 0;
 
-  /* Honorário principal: o MAIOR entre 30% do efetivamente restituído e 9 meses
-     de economia, apurado de forma contínua. A cada mês vence apenas a diferença
-     entre esse maior e o que já foi pago — nunca a soma dos dois. */
-  let aAcum = 0, bAcum = 0, pagoAcum = 0;
   const fav = [], des = [];
   /* Janela do mandado de segurança: da impetração até a base reduzida entrar em
      uso. Nesses meses o cliente recolhe cheio, mas a diferença é recuperável
@@ -1169,16 +1165,10 @@ function comparativo(){
     const travado = naJanela ? Math.max(0, taxFull - taxRed) : 0;
     // ---- favoravel
     const brutoA = PD.valorNoMes(m);
-    aAcum += 0.30*brutoA;
-    if(CE.temB && m >= CE.mB0 && m < CE.mB0+9) bAcum += E;
-    const alvo = Math.max(aAcum, bAcum);
-    const exitoMes = Math.max(0, alvo - pagoAcum);
-    if(alvo > pagoAcum) pagoAcum = alvo;
-    const absorvido = Math.min(exitoMes, brutoA);  // parte retida da propria restituicao
-    const entA = brutoA - absorvido;               // o que sobra e cai na conta dele
-    const honB = exitoMes - absorvido;             // residuo do piso, cobrado a parte
-    fav.push({ m, ent:entA, entA, entC:0, brutoA, retidoA:absorvido, imposto, travado,
-               exito:honB, honB, honC:0, aAcum, bAcum, pagoAcum,
+    const entA = 0.70*brutoA;                      // so o que cai na conta dele
+    const honB = (CE.temB && m >= CE.mB0 && m < CE.mB0+9) ? E : 0;
+    fav.push({ m, ent:entA, entA, entC:0, brutoA, retidoA:0.30*brutoA, imposto, travado,
+               exito:honB, honB, honC:0,
                qtd:PD.qtdNoMes(m),
                sai:imposto+travado+honB, ref:taxFull });
     // ---- desfavoravel: nada reduz; entradas somente na versao "credito usufruido"
@@ -1217,7 +1207,7 @@ const CIN  = {k:'ent', label:'Entra na conta do cliente', col:'var(--c-entra)'};
 const COUT = [
   {k:'imposto', label:'IRPJ + CSLL', col:'var(--c-imposto)'},
   {k:'travado', label:'Travado até o trânsito', col:'var(--c-travado)'},
-  {k:'exito',   label:'Piso de 9 meses', col:'var(--c-exito)'},
+  {k:'exito',   label:'Êxito Back4You', col:'var(--c-exito)'},
 ];
 
 function renderComp(){
@@ -1286,8 +1276,7 @@ function renderComp(){
       const tipo = ci===0?'MS favorável':'MS desfavorável';
       const det = `<table>
         <tr><td><i class="dot" style="background:${CIN.col}"></i>Entra na conta${r.qtd?' ('+r.qtd+' PER/DCOMP)':''}</td><td class="n">${brl(r.ent)}</td></tr>
-        ${r.brutoA>0.5?`<tr><td style="color:var(--muted);padding-left:15px">restituição bruta ${brl(r.brutoA)}, líquida do êxito retido</td><td class="n" style="color:var(--muted)">−${brl(r.retidoA||0)}</td></tr>`:''}
-        ${(r.aAcum!==undefined)?`<tr><td style="color:var(--muted);padding-left:15px">acumulado: 30% = ${brl(r.aAcum)} · piso 9 meses = ${brl(r.bAcum)}</td><td class="n" style="color:var(--muted)">${brl(r.pagoAcum)}</td></tr>`:''}
+        ${r.brutoA>0.5?`<tr><td style="color:var(--muted);padding-left:15px">restituição bruta ${brl(r.brutoA)}, já líquida do êxito de 30%</td><td class="n" style="color:var(--muted)">−${brl(r.retidoA)}</td></tr>`:''}
         ${COUT.map(sr=>(r[sr.k]||0)>0.5?`<tr><td><i class="dot" style="background:${sr.col}"></i>${sr.label}</td><td class="n">${brl(r[sr.k])}</td></tr>`:'').join('')}
         ${r.travado>0.5?`<tr><td style="color:var(--muted);padding-left:15px">recolhido cheio agora porque o crédito só pode ser usado depois do trânsito; quando voltar, a Modalidade C fica com 100% desse valor</td><td></td></tr>`:''}
         <tr><td style="border-top:1px solid var(--line);padding-top:5px"><b>Saldo do mês</b></td>

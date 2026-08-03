@@ -410,16 +410,46 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
     }
     return { id:String(id).replace(/\D/g,''), codigo:String(cod).trim() };
   }
-  function jsonp(url){
+  /* O servidor termina o serviço: o log mostra execuções de 15s, 17s e 23s completando
+     e gravando o cache. Quem desistia cedo era o front, com teto de 20s — a resposta
+     chegava e era jogada fora, e a pessoa lia "a API não respondeu" numa chamada que
+     deu certo. 45s cobre a cauda longa da primeira abertura do dia. */
+  var JSONP_TETO = 45000, JSONP_PAUSA = 4000;
+
+  /* Só leitura repete. Toda escrita nossa viaja com `acao=` (ticket, marcar_guia,
+     salvar_contatos, confiar_aparelho…) e o login por e-mail dispara código novo ou
+     queima tentativa — repetir qualquer um desses lança em duplicidade. */
+  function jsonpRepetivel(url){
+    return !/[?&]acao=[^&]/.test(url) && !/[?&]tipo=(login_email_|entrar_token)/.test(url);
+  }
+  function jsonpAviso(txt){
+    var p = document.getElementById('espera-txt')
+         || document.querySelector('#app .state p')
+         || document.querySelector('.state p');
+    if(p) p.textContent = txt;
+  }
+  function jsonpTentativa(url){
     return new Promise(function(ok,fail){
       var cb='b4ucb_'+Math.random().toString(36).slice(2);
       var s=document.createElement('script');
-      var t=setTimeout(function(){ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
+      var t=setTimeout(function(){ limpa(); fail(new Error('A API não respondeu.')); }, JSONP_TETO);
       function limpa(){ clearTimeout(t); try{delete window[cb];}catch(e){window[cb]=undefined;} s.remove(); }
       window[cb]=function(d){ limpa(); ok(d); };
       s.onerror=function(){ limpa(); fail(new Error('Não consegui alcançar a API.')); };
       s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
       document.body.appendChild(s);
+    });
+  }
+  /* Uma repetição, nunca mais que uma. A primeira execução provavelmente terminou e
+     deixou o cache quente no servidor, então a segunda costuma voltar rápido. Enquanto
+     espera, a tela diz que ainda estamos buscando — erro só se a segunda também falhar. */
+  function jsonp(url){
+    return jsonpTentativa(url).catch(function(e){
+      if(!jsonpRepetivel(url)) throw e;
+      if(typeof pararEspera === 'function'){ try{ pararEspera(); }catch(_){} }
+      jsonpAviso('Ainda estou buscando — tentando de novo…');
+      return new Promise(function(r){ setTimeout(r, JSONP_PAUSA); })
+        .then(function(){ return jsonpTentativa(url); });
     });
   }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
@@ -903,16 +933,45 @@ function urlComDemo(ligar){
   if (ligar) u.searchParams.set('demo','1');
   return u.toString();
 }
-function jsonp(url){
+/* O servidor termina o serviço: o log mostra execuções de 15s, 17s e 23s completando
+   e gravando o cache. Quem desistia cedo era o front, com teto de 20s — a resposta
+   chegava e era jogada fora, e a pessoa lia "a API não respondeu" numa chamada que
+   deu certo. 45s cobre a cauda longa da primeira abertura do dia. */
+const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
+
+/* Só leitura repete. Toda escrita nossa viaja com `acao=` (ticket, marcar_guia,
+   salvar_contatos, confiar_aparelho…) e o login por e-mail dispara código novo ou
+   queima tentativa — repetir qualquer um desses lança em duplicidade. */
+function jsonpRepetivel(url){
+  return !/[?&]acao=[^&]/.test(url) && !/[?&]tipo=(login_email_|entrar_token)/.test(url);
+}
+function jsonpAviso(txt){
+  const p = document.getElementById('espera-txt')
+       || document.querySelector('#app .state p')
+       || document.querySelector('.state p');
+  if(p) p.textContent = txt;
+}
+function jsonpTentativa(url){
   return new Promise((ok,fail)=>{
     const cb = 'cb_'+Math.random().toString(36).slice(2);
     const s = document.createElement('script');
-    const t = setTimeout(()=>{ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
+    const t = setTimeout(()=>{ limpa(); fail(new Error('A API não respondeu.')); }, JSONP_TETO);
     function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
     window[cb] = d => { limpa(); ok(d); };
     s.onerror = () => { limpa(); fail(new Error('Não consegui alcançar a API.')); };
     s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
     document.body.appendChild(s);
+  });
+}
+/* Uma repetição, nunca mais que uma. A primeira execução provavelmente terminou e
+   deixou o cache quente no servidor, então a segunda costuma voltar rápido. Enquanto
+   espera, a tela diz que ainda estamos buscando — erro só se a segunda também falhar. */
+function jsonp(url){
+  return jsonpTentativa(url).catch(e=>{
+    if(!jsonpRepetivel(url)) throw e;
+    if(typeof pararEspera === 'function'){ try{ pararEspera(); }catch(_){} }
+    jsonpAviso('Ainda estou buscando — tentando de novo…');
+    return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
 let IDENTIDADE = { id:'', codigo:'' };
@@ -2099,13 +2158,15 @@ async function carregar(){
   return d;
 }
 
-/* 20s olhando a mesma frase é lido como "travou" — e ele recarrega, jogando fora o
+/* Olhar a mesma frase por 45s é lido como "travou" — e ele recarrega, jogando fora o
    pedido que já estava a caminho. Trocar o texto é barato e compra paciência. */
 var _tEspera = [
   setTimeout(function(){ var p=document.getElementById('espera-txt');
     if(p) p.textContent = 'Estamos buscando os seus dados na planilha…'; }, 4000),
   setTimeout(function(){ var p=document.getElementById('espera-txt');
-    if(p) p.textContent = 'Está demorando mais que o normal — continuamos tentando.'; }, 10000)
+    if(p) p.textContent = 'Está demorando mais que o normal — continuamos tentando.'; }, 10000),
+  setTimeout(function(){ var p=document.getElementById('espera-txt');
+    if(p) p.textContent = 'Quase lá — a primeira abertura do dia é a mais lenta.'; }, 20000)
 ];
 function pararEspera(){ _tEspera.forEach(clearTimeout); }
 
