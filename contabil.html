@@ -7,14 +7,27 @@
 <title>Contábil — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- São DUAS origens porque o /exec responde 302 para a segunda: sem isto o aparelho
+     paga DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte deixa de bloquear a primeira pintura: o esqueleto aparece antes dela. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"></noscript>
+<!-- chart.js sai do meio do corpo: com defer ele executa antes do DOMContentLoaded,
+     muito antes de o JSONP responder, e não atrasa a primeira pintura. -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 <style>
 :root{
   /* PALETA CANÔNICA — igual nas outras páginas do cliente. Não redeclare tons aqui. */
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
   --ink:#113D39; --ink-2:#3F5854; --muted:#6E6256; --line:#E4D9C9; --line-2:#D6C3AC;
   --brand-dark:#073034; --brand-teal:#0F8C85; --brand-euc:#3FA680;
-  --amber:#E8892E; --amber-txt:#B05F12; --vermelho:#C0392B; --verde:#2E9D5F;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,44:1 no receita-soft).
+     Este é o mesmo teal escurecido só para texto e fundo de texto; o --brand-teal
+     continua canônico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E; --amber-txt:#8A5A10; --vermelho:#C0392B; --verde:#2E9D5F;
   /* Escala tipográfica — 6 passos, sem meio pixel. */
   --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
   /* Raios — 12 padrão, 16 para caixas grandes, 999 só para pílulas. */
@@ -26,6 +39,11 @@
   --g-enc:#C0392B; --g-enc-soft:#F7E4E1; --g-enc-txt:#96271B;
   /* Slots categóricos — ordem fixa, já validada por contraste. */
   --slot1:#009488; --slot2:#B4530F; --slot3:#6B4FA0; --slot4:#7A8B3D;
+  /* Escala de padding — três degraus no lugar dos 37 valores avulsos que havia aqui. */
+  --pad-sm: 14px 16px;
+  --pad:    18px 20px;
+  --pad-lg: 24px 26px;
+  --lift:   0 8px 20px rgba(17,61,57,.10);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -34,25 +52,41 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .lbl{font-size:var(--fs-1);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
 :focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
-.wrap{max-width:1180px;margin:0 auto;padding:0 24px 72px}
+/* Campo com menos de 16px faz o Safari ampliar a página inteira ao focar. Só os campos. */
+input,select,textarea{font-size:16px}
+/* Uma amostra de cor só — a mesma medida em todas as páginas do painel. */
+.sw,.leg-sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;display:inline-block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 60px}
+/* Tarja de cache: o que está na tela é do último acesso e já está sendo atualizado. */
+.tarja-atualizando{font-size:var(--fs-2);font-weight:600;color:var(--brand-dark);
+  background:var(--receita-soft);border-radius:var(--radius-pill);padding:6px 14px;margin:14px 0 0;
+  display:inline-flex;align-items:center;gap:8px}
+.tarja-atualizando.falhou{background:#FCEFE0;color:#8A5A10}
 
 header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:var(--b4u-bar-h,0px);z-index:30}
 .bar{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;line-height:1}
 .logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
-.brand-sub{font-size:var(--fs-4);color:var(--brand-teal);font-weight:700;margin-top:2px}
+/* Razão social + CNPJ é o que confirma "esta é a minha empresa": 15px em teal
+   puro dá 4,11:1. Escurecido, 5,54:1. */
+.brand-sub{font-size:var(--fs-4);color:var(--brand-teal-txt);font-weight:700;margin-top:2px}
 .spacer{flex:1}
-.badge-topo{font-size:var(--fs-1);font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:5px 12px;border-radius:var(--radius-pill)}
+/* 11px sobre o verde claro: teal puro dá 3,44:1. Escurecido, 4,64:1. */
+.badge-topo{font-size:var(--fs-1);font-weight:700;color:var(--brand-teal-txt);background:var(--receita-soft);padding:5px 12px;border-radius:var(--radius-pill)}
 
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:32px 0 14px}
-.sec-head h2{font-size:var(--fs-4);font-weight:700;letter-spacing:-.01em}
+.sec-head h2{font-size:var(--fs-5);font-weight:700;letter-spacing:-.01em}
 .sec-head p{font-size:var(--fs-3);color:var(--muted)}
 
 /* ════════ Selo de EXEMPLO — permanente enquanto o modo estiver ativo ════════ */
 .selo{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-1);font-weight:800;letter-spacing:.07em;
   text-transform:uppercase;padding:3px 9px;border-radius:var(--radius-pill);background:#FCEEDF;color:var(--amber-txt);
+  /* O --amber-txt era #B05F12 e dava 4,10:1 em 11px sobre este creme. Agora ele É o
+     mesmo âmbar escurecido (#8A5A10) que o societário já usava: 5,19:1. */
   border:1px solid #F0D9A8;white-space:nowrap;vertical-align:middle}
-.heroi .selo{background:rgba(255,255,255,.20);color:#fff;border-color:rgba(255,255,255,.42)}
+/* Véu de 20% sobre o lado claro do gradiente deixa o branco em 3,03:1. Placa sólida,
+   como no herói do societário: 14,18:1 — e o selo passa a saltar, que é o ponto. */
+.heroi .selo{background:#fff;color:var(--brand-dark);border-color:#fff}
 .faixa-demo{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;max-width:1180px;margin:0 auto;
   padding:10px 24px 12px;color:#6B5326;font-size:var(--fs-2);line-height:1.45}
 header.demo{background:#FFF6E9;border-bottom-color:#F0D9A8}
@@ -60,25 +94,32 @@ header.demo{background:#FFF6E9;border-bottom-color:#F0D9A8}
 .faixa-demo .fd-txt{flex:1;min-width:200px}
 .faixa-btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);font-family:var(--sans);
   font-size:var(--fs-2);font-weight:700;padding:8px 14px;border-radius:var(--radius-pill);cursor:pointer;white-space:nowrap}
-.faixa-btn:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
+.faixa-btn:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
 @media(max-width:640px){.faixa-demo{padding:9px 14px 11px}}
 
 /* ════════ Topo: número-herói + fila de indicadores ════════ */
-.heroi{margin:24px 0 0;padding:28px 26px 24px;border:none;border-radius:var(--radius-lg);color:#fff;
-  background:linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);box-shadow:0 18px 38px -18px rgba(6,48,51,.6)}
-.heroi .lbl{color:rgba(255,255,255,.82)}
+.heroi{margin:24px 0 0;padding:var(--pad-lg);border:none;border-radius:var(--radius-lg);color:#fff;
+  /* O gradiente da marca clareia no canto de baixo: medido a 390px, o branco cai para
+     4,38:1 justamente na última linha. O véu escuro devolve o contraste sem trocar a cor. */
+  background:linear-gradient(180deg,rgba(7,48,52,0) 45%,rgba(7,48,52,.22) 100%),
+             linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);
+  box-shadow:0 18px 38px -18px rgba(6,48,51,.6)}
+/* 11px maiúsculo sobre o lado claro do gradiente não pode ser branco a 82% (3,7:1). */
+.heroi .lbl{color:#fff}
 .heroi-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .heroi-v{font-size:48px;font-weight:800;letter-spacing:-.03em;line-height:1.04;margin-top:8px;
   font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 @media(min-width:720px){.heroi-v{font-size:56px}}
 @media(max-width:420px){.heroi-v{font-size:34px}}
 .heroi-v.neg{color:#FFC9C2}
-.heroi-sub{font-size:var(--fs-4);color:rgba(255,255,255,.9);margin-top:10px;line-height:1.5;max-width:54ch}
+/* branco a 90% sobre o lado claro do gradiente dá 4,24:1 a 390px — texto corrido
+   de 15px precisa de 4,5. Branco cheio; a hierarquia fica no <b>, não na opacidade. */
+.heroi-sub{font-size:var(--fs-4);color:#fff;margin-top:10px;line-height:1.5;max-width:54ch}
 .heroi-sub b{color:#fff;font-weight:800}
-.heroi-pe{font-size:var(--fs-2);color:rgba(255,255,255,.78);margin-top:14px}
+.heroi-pe{font-size:var(--fs-2);color:#fff;margin-top:14px}
 
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-top:14px}
-.tile{padding:16px 18px}
+.tile{padding:var(--pad)}
 .tile .v{font-size:clamp(15px,4.2vw,24px);font-weight:800;letter-spacing:-.02em;margin-top:7px;
   font-variant-numeric:tabular-nums;white-space:nowrap}
 .tile .s{font-size:var(--fs-2);color:var(--muted);margin-top:4px;line-height:1.45}
@@ -95,7 +136,7 @@ header.demo{background:#FFF6E9;border-bottom-color:#F0D9A8}
 
 /* ════════ Blocos recolhidos ════════ */
 .bloco{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden}
-.bloco>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:17px 20px}
+.bloco>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:var(--pad);min-height:44px}
 .bloco>summary::-webkit-details-marker{display:none}
 .bloco>summary::marker{content:''}
 .bloco>summary:hover{background:var(--surface-warm)}
@@ -106,14 +147,14 @@ header.demo{background:#FFF6E9;border-bottom-color:#F0D9A8}
 .bloco-t span{display:block;font-size:var(--fs-2);color:var(--muted);margin-top:2px;line-height:1.45}
 .chev{flex-shrink:0;width:20px;height:20px;color:var(--muted);transition:transform .22s ease}
 .bloco[open]>summary .chev{transform:rotate(180deg)}
-.bloco-body{padding:16px 20px 22px}
+.bloco-body{padding:var(--pad)}
 .bloco-nota{font-size:var(--fs-2);color:var(--ink-2);line-height:1.55;background:var(--surface-warm);
   border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:14px}
 .bloco-nota b{color:var(--ink)}
 @media(max-width:640px){.bloco>summary{padding:15px 15px;gap:10px}.bloco-body{padding:14px 15px 18px}}
 
 /* ════════ Gráficos ════════ */
-.chart{padding:20px 22px 16px}
+.chart{padding:var(--pad)}
 .graf-titulo{font-size:var(--fs-4);font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .graf-sub{font-size:var(--fs-2);color:var(--muted);margin-bottom:14px;line-height:1.45}
 .cbox-alto{position:relative;height:300px}
@@ -122,7 +163,7 @@ header.demo{background:#FFF6E9;border-bottom-color:#F0D9A8}
 @media(max-width:640px){.cbox-alto{height:250px}.cbox{height:210px}}
 .leg{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px}
 .leg-item{display:flex;align-items:center;gap:8px;font-size:var(--fs-2);color:var(--ink-2);font-weight:600}
-.leg-sw{display:inline-block;width:22px;height:11px;border-radius:3px;flex-shrink:0}
+
 .leg-sw.linha{height:0;border-top:3px solid var(--brand-dark);border-radius:0}
 .leg-item b{color:var(--ink);font-variant-numeric:tabular-nums}
 .sem-grafico{font-size:var(--fs-3);color:var(--muted);background:var(--surface-warm);border:1px dashed var(--line-2);
@@ -162,11 +203,11 @@ td.av{font-variant-numeric:tabular-nums;color:var(--muted);font-size:var(--fs-2)
 
 /* ════════ Indicadores ════════ */
 .ind-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px}
-.ind{padding:16px 18px;background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius)}
+.ind{padding:var(--pad);background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius)}
 .ind-v{font-size:var(--fs-6);font-weight:800;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
 .ind-s{font-size:var(--fs-2);color:var(--ink-2);margin-top:6px;line-height:1.5}
 .como{margin-top:11px;border-top:1px dashed var(--line-2);padding-top:9px}
-.como>summary{list-style:none;cursor:pointer;font-size:var(--fs-2);font-weight:700;color:var(--brand-teal);
+.como>summary{list-style:none;cursor:pointer;font-size:var(--fs-2);font-weight:700;color:var(--brand-teal-txt);
   display:flex;align-items:center;gap:6px}
 .como>summary::-webkit-details-marker{display:none}
 .como>summary::marker{content:''}
@@ -179,11 +220,9 @@ td.av{font-variant-numeric:tabular-nums;color:var(--muted);font-size:var(--fs-2)
   font-variant-numeric:tabular-nums;white-space:normal;overflow-wrap:anywhere}
 
 /* ════════ Estados ════════ */
-.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
-.state p{color:var(--muted);font-size:var(--fs-4);max-width:44ch}
-.spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-.vazio-card{margin-top:26px;padding:34px 30px;border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--line)}
+/* a bolinha de carregar saiu: quem espera agora é o esqueleto no formato da página */
+.espera{margin-top:18px;text-align:center;font-size:var(--fs-3);color:var(--muted);min-height:1.4em}
+.vazio-card{margin-top:26px;padding:var(--pad-lg);border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--line)}
 .vazio-ico{width:56px;height:56px;border-radius:var(--radius);background:var(--receita-soft);color:var(--brand-teal);
   display:flex;align-items:center;justify-content:center;margin-bottom:16px}
 .vazio-ico svg{width:30px;height:30px}
@@ -191,28 +230,36 @@ td.av{font-variant-numeric:tabular-nums;color:var(--muted);font-size:var(--fs-2)
 .vazio-card p{font-size:var(--fs-4);color:var(--ink-2);line-height:1.6;margin-top:8px;max-width:56ch}
 .vazio-lista{list-style:none;margin:18px 0 0;display:grid;gap:9px}
 .vazio-lista li{display:flex;gap:10px;align-items:flex-start;font-size:var(--fs-3);color:var(--ink-2);line-height:1.5}
-.vazio-lista .mk{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--receita-soft);color:var(--brand-teal);
+.vazio-lista .mk{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--receita-soft);color:var(--brand-teal-txt);
   display:flex;align-items:center;justify-content:center;font-size:var(--fs-1);font-weight:800;margin-top:1px}
 .vazio-acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
 .btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;font-family:var(--sans);font-weight:700;
   font-size:var(--fs-3);padding:12px 20px;border-radius:var(--radius-pill);text-decoration:none;transition:background .15s}
-.btn.primario{background:var(--brand-teal);color:#fff} .btn.primario:hover{background:#0c756f}
+.btn.primario{background:var(--brand-teal-txt);color:#fff} .btn.primario:hover{background:var(--brand-dark)}
 .btn.secundario{background:var(--canvas);color:var(--ink-2);border:1px solid var(--line-2)}
-.btn.secundario:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
-.aviso{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;margin-top:14px;background:#FFF6E9;
+.btn.secundario:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.aviso{display:flex;gap:12px;align-items:flex-start;padding:var(--pad-sm);margin-top:14px;background:#FFF6E9;
   border:1px solid #F0D9A8;border-radius:var(--radius-sm);color:#6B5326;font-size:var(--fs-2);line-height:1.55}
 .aviso .ai{font-size:var(--fs-4);line-height:1.2;color:var(--amber-txt);flex-shrink:0}
 .aviso b{color:#5A4413}
 
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:var(--fs-2);color:var(--muted);
   display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
-@media(max-width:640px){.wrap{padding:0 14px 60px}.sec-head{margin:22px 0 10px}}
+@media(max-width:640px){
+  /* No celular a escala inteira encolhe de uma vez, pelos tokens. */
+  :root{--pad-sm:12px 13px;--pad:15px 16px;--pad-lg:18px 18px}
+  .wrap{padding:0 14px 60px}
+  .sec-head{margin:22px 0 10px}
+  /* razão social + CNPJ do cliente não podem virar 11px: ficam menores que o texto ao lado */
+  .brand-sub{font-size:var(--fs-3)}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
 <!--B4U:START-->
-<style id="b4u-oculta-chamado">/* "Abrir chamado" oculto por ora (topo #b4u-open e rodape #ac-abrir) */ #b4u-open,#ac-abrir,#b4u-help{display:none!important}</style>
+<style id="b4u-oculta-chamado">/* Abertura de chamado oculta por ora. O "?" (#b4u-help) abre ESTE MESMO modal:
+   deixá-lo visível era uma porta de serviço para um recurso que decidimos segurar. */ #b4u-open,#ac-abrir,#b4u-help{display:none!important}</style>
 <script>window.B4U = { area:'contabil' };</script>
 <!-- ═══════════ back4you · cabeçalho + chamados (compartilhado) ═══════════
      Bloco único, autocontido e com prefixo .b4u- (não conflita com o CSS da
@@ -223,13 +270,15 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
      home:true  -> esconde o botão "Início" (usar só no index).
      Para reaproveitar em todas as páginas, mantenha este bloco IDÊNTICO. ─── -->
 <style>
-.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;
+.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   padding:10px 18px;background:var(--brand-dark);color:#fff;box-shadow:0 2px 12px rgba(7,48,52,.20);
   font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+/* min-height nos três: no celular a barra inteira ficava com ~34px de alto e o dedo
+   errava o alvo. 44px é o mínimo que a mão acerta de primeira. */
 .b4u-bar .b4u-logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;margin-right:auto;
-  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1}
+  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1;min-height:44px}
 .b4u-bar .b4u-logo .y{color:var(--brand-euc)}
-.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;
+.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;min-height:44px;
   font-family:inherit;font-weight:600;font-size:var(--fs-3);padding:8px 13px;border-radius:var(--radius-sm);
   text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
 .b4u-btn svg{width:16px;height:16px;flex-shrink:0}
@@ -237,19 +286,25 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .b4u-btn:active{transform:translateY(1px)}
 .b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
 .b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
-.b4u-btn.wa{background:#25D366;color:#fff}
+/* Branco sobre o verde do WhatsApp dá 1,98:1 — ilegível no sol. Verde-escuro: 7,23:1.
+   É o botão que ele usa para pedir socorro; não pode ser o mais difícil de ler. */
+.b4u-btn.wa{background:#25D366;color:#06302b}
 .b4u-btn.wa:hover{background:#20bd5a}
-.b4u-btn.call{background:var(--brand-teal);color:#fff}
-.b4u-btn.call:hover{background:#0c756f}
-.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+.b4u-btn.call{background:var(--brand-teal-txt);color:#fff}
+.b4u-btn.call:hover{background:#0A5F5A}
+.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;
   padding:0;border:0;cursor:pointer;border-radius:var(--radius-sm);background:rgba(255,255,255,.10);color:#fff;
   transition:background .15s}
 .b4u-icobtn:hover{background:rgba(255,255,255,.18)}
 .b4u-icobtn svg{width:17px;height:17px}
 @media(max-width:640px){
   .b4u-bar{gap:7px;padding:9px 12px}
-  .b4u-btn .b4u-lbl{display:none}
-  .b4u-btn{padding:9px 11px}
+  /* display:none tira o nome da árvore de acessibilidade e o leitor anuncia
+     "link, link, botão". Some da TELA, continua existindo para quem ouve. */
+  .b4u-btn .b4u-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  /* sem rótulo o botão fica só com o ícone de 16px: 11px de folga dava 38px de
+     largura. 14px fecha os 44px nos dois eixos. */
+  .b4u-btn{padding:9px 14px}
 }
 .b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
   display:none;align-items:flex-end;justify-content:center;
@@ -263,15 +318,15 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .b4u-modal .b4u-sub{font-size:var(--fs-2);color:#6E6256;padding:0 20px 10px;line-height:1.5}
 .b4u-fld{padding:7px 20px}
 .b4u-fld label{display:block;font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin-bottom:5px}
-.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:var(--fs-4);
+.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:16px;
   padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink)}
 .b4u-fld textarea{min-height:120px;resize:vertical;line-height:1.5}
 .b4u-fld select:focus,.b4u-fld input:focus,.b4u-fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px;border-color:transparent}
 .b4u-err{color:var(--vermelho);font-size:var(--fs-2);padding:2px 20px 0;min-height:16px}
 .b4u-foot{display:flex;gap:10px;padding:14px 20px 20px;position:sticky;bottom:0;background:var(--surface)}
 .b4u-foot .b4u-btn{flex:1;justify-content:center;padding:12px}
-.b4u-foot .primary{background:var(--brand-teal);color:#fff}
-.b4u-foot .primary:hover{background:#0c756f}
+.b4u-foot .primary{background:var(--brand-teal-txt);color:#fff}
+.b4u-foot .primary:hover{background:#0A5F5A}
 .b4u-foot .primary[disabled]{opacity:.6;cursor:default}
 .b4u-foot .cancel{background:var(--canvas);color:var(--ink-2)}
 .b4u-foot .cancel:hover{background:#e8dccb}
@@ -289,7 +344,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 @media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
 /* Puxar para atualizar (mobile) */
 .b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
-  height:0;overflow:hidden;color:var(--brand-teal);z-index:1500;pointer-events:none;
+  height:0;overflow:hidden;color:var(--brand-teal-txt);z-index:1500;pointer-events:none;
   font-family:'Montserrat',system-ui,sans-serif;font-size:var(--fs-2);font-weight:700;gap:8px}
 .b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:var(--brand-teal);border-radius:50%}
 .b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
@@ -370,18 +425,90 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
+  /* Traduz qualquer erro para uma frase que o cliente entende — e que não o culpa.
+     `e.message` NUNCA vai para a tela: ele é vocabulário nosso, não dele. */
+  function msgAmigavel(e){
+    var m = String((e && e.message) || e || '');
+    if (/API|alcançar|respondeu|network|timeout|Failed to fetch/i.test(m))
+      return 'Não consegui falar com o sistema agora. Confira a sua internet e tente de '
+           + 'novo em alguns segundos — nada do que você digitou foi perdido.';
+    if (/restrito|acesso|código|senha|contato/i.test(m))
+      return 'Este link não está mais valendo. Peça um novo acesso para a gente que '
+           + 'reenviamos na hora.';
+    return 'Deu um problema do nosso lado, não seu. A equipe já foi avisada. Se for '
+         + 'urgente, chame no WhatsApp.';
+  }
+
+  /* A segunda visita não precisa recomeçar do esqueleto. Guardamos o último payload por
+     6h e pintamos com ele na hora, com tarja de "atualizando"; quando a resposta chega,
+     redesenhamos. Dado financeiro no aparelho dele — por isso prazo curto e limpeza no
+     logout (B4U.limparCache), junto do aparelho confiável. */
+  var CACHE_MS = 6 * 60 * 60 * 1000;
+  function cacheChave(tipo, id){ return 'b4u_pl_' + tipo + '_' + id; }
+  function cacheLer(tipo, id){
+    try {
+      var o = JSON.parse(localStorage.getItem(cacheChave(tipo, id)) || 'null');
+      if (!o || (Date.now() - o.ts) > CACHE_MS) return null;
+      return o.raw;
+    } catch (e) { return null; }
+  }
+  function cacheGravar(tipo, id, raw){
+    try { localStorage.setItem(cacheChave(tipo, id),
+          JSON.stringify({ ts: Date.now(), raw: raw })); } catch (e) {}
+  }
+  function limparCache(){
+    /* Sai o payload e sai também o b4u_disp_ (quais áreas o cliente tem): num aparelho
+       compartilhado, a barra do próximo não pode herdar o mapa de painéis do anterior. */
+    try { Object.keys(localStorage).forEach(function (k) {
+          if (k.indexOf('b4u_pl_') === 0 || k.indexOf('b4u_disp_') === 0) localStorage.removeItem(k); }); } catch (e) {}
+  }
+
   var IC = {
     home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
     wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>',
     chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/></svg>',
     help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>',
-    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>'
+    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>',
+    guias:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m8.5 15 2 2 4-4"/></svg>',
+    pessoal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><path d="M16 4.2c1.7.4 3 2 3 3.8s-1.3 3.4-3 3.8M23 20c0-2.8-2.3-5.1-5.4-5.8"/></svg>',
+    fiscal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>',
+    equiparacao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>'
   };
 
   var C = idc();
   var linkHome = 'index.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var linkTickets = 'meustickets.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
+
+  // ---- links de área na própria barra --------------------------------------
+  /* Do fiscal para a agenda não havia caminho: era voltar para a home e pagar outra
+     chamada à API. Os links saem do `disponiveis` que a HOME já recebeu e gravou no
+     aparelho (b4u_disp_<id>) — assim respeitam PAINEIS_OCULTOS e o acesso da pessoa
+     sem esta página perguntar nada. Sem esse registro, só a agenda, que quem tem
+     fiscal ou pessoal sempre tem. */
+  var AREAS_LINK = [
+    ['guias.html',       'Agenda',       'guias',       IC.guias],
+    ['fiscal.html',      'Fiscal',       'fiscal',      IC.fiscal],
+    ['dptopessoal.html', 'Pessoal',      'pessoal',     IC.pessoal],
+    ['equiparacao.html', 'Equiparação',  'equiparacao', IC.equiparacao]
+  ];
+  function disponiveisSalvos(){
+    try { var o = JSON.parse(localStorage.getItem('b4u_disp_'+C.id)||'null');
+          return (o && (o.disponiveis || o)) || null; } catch(e){ return null; }
+  }
+  function linksDeArea(){
+    var disp = disponiveisSalvos();
+    var aqui = (location.pathname.split('/').pop()||'').toLowerCase();
+    return AREAS_LINK.filter(function(a){
+      if (a[0].toLowerCase() === aqui) return false;                       // não linkar a página atual
+      if (a[2] === 'guias') return !disp || !!(disp.fiscal || disp.pessoal);
+      return !!(disp && disp[a[2]]);
+    }).slice(0, 2)                                                          // 2 links: a barra ainda tem 3 botões fixos
+     .map(function(a){
+       return '<a class="b4u-btn ghost" href="'+esc(a[0]+(C.id?('#'+C.id+(C.codigo?'-'+C.codigo:'')):''))+'" '+
+              'title="'+esc(a[1])+'">'+a[3]+'<span class="b4u-lbl">'+esc(a[1])+'</span></a>';
+     }).join('');
+  }
 
   // ---- barra fixa ----------------------------------------------------------
   var bar = document.createElement('div');
@@ -390,6 +517,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
     '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
     (CFG.home ? '' :
       '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
+    (CFG.home ? '' : linksDeArea()) +
     '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
     '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
     '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
@@ -405,7 +533,39 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
   ov.className = 'b4u-ov';
   document.body.appendChild(ov);
 
-  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; }
+  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; ESQ_ATUAL=''; }
+
+  /* Fechar por clique no fundo ou Esc NÃO pode apagar o que ele escreveu. Só é
+     "limpo" o que ainda for igual ao esqueleto pré-preenchido do tipo escolhido. */
+  var ESQ_ATUAL = '';
+  function modalSujo(){
+    var t = ov.querySelector('#b4u-msg'), a = ov.querySelector('#b4u-assunto');
+    if(!t) return false;
+    return String(t.value||'').trim() !== String(ESQ_ATUAL||'').trim()
+        || !!(a && a.value.trim());
+  }
+  function tentarFechar(){ if(modalSujo()) pedirDescartar(); else fecharModal(); }
+  function montarFoot(){
+    var foot = ov.querySelector('.b4u-foot'); if(!foot) return;
+    foot.innerHTML =
+      '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
+      '<button type="button" class="b4u-btn primary" id="b4u-send">Enviar chamado</button>';
+    foot.querySelector('#b4u-cancel').addEventListener('click', tentarFechar);
+    foot.querySelector('#b4u-send').addEventListener('click', enviar);
+  }
+  function pedirDescartar(){
+    var foot = ov.querySelector('.b4u-foot'); if(!foot){ fecharModal(); return; }
+    foot.innerHTML =
+      '<button type="button" class="b4u-btn cancel" id="b4u-keep">Continuar escrevendo</button>' +
+      '<button type="button" class="b4u-btn primary" id="b4u-discard">Descartar o que escrevi</button>';
+    var err = ov.querySelector('#b4u-erro');
+    if(err) err.textContent = 'Você escreveu algo neste chamado. Quer mesmo sair sem enviar?';
+    foot.querySelector('#b4u-keep').addEventListener('click', function(){
+      if(err) err.textContent=''; montarFoot();
+      var t = ov.querySelector('#b4u-msg'); if(t) t.focus();
+    });
+    foot.querySelector('#b4u-discard').addEventListener('click', fecharModal);
+  }
 
   function abrir(opts){
     opts = opts || {};
@@ -444,6 +604,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
     function aplicaSkeleton(force){
       var esq = TIPOS[selTipo.value] ? TIPOS[selTipo.value][1] : '';
       if(force || !txt.value.trim()) txt.value = esq;
+      ESQ_ATUAL = esq;                 // referência do que ainda é "vazio", não texto dele
     }
     aplicaSkeleton(true);
     selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
@@ -452,8 +613,8 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
       selTipo.innerHTML = opcoesTipo(this.value, selTipo.value);
       aplicaSkeleton(true);
     });
-    ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
-    ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
+    ov.querySelector('#b4u-cancel').addEventListener('click', tentarFechar);
+    ov.addEventListener('click', function(e){ if(e.target===ov) tentarFechar(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
     // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
     var fileEl = ov.querySelector('#b4u-file');
@@ -479,7 +640,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
     var file = fileEl && fileEl.files && fileEl.files[0];
     if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
     btn.disabled = true; btn.textContent = 'Enviando…';
-    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = msgAmigavel(e); };
     if(file){
       // COM arquivo -> POST (JSONP/GET não comporta base64)
       var reader = new FileReader();
@@ -535,7 +696,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 
   bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
   bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) tentarFechar(); });
 
   // ---- Puxar para atualizar (mobile) --------------------------------------
   // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
@@ -567,6 +728,9 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
   })();
 
   window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    msgAmigavel: msgAmigavel,
+    CACHE_MS: CACHE_MS, cacheChave: cacheChave, cacheLer: cacheLer,
+    cacheGravar: cacheGravar, limparCache: limparCache,
     // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
     skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
       var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
@@ -577,13 +741,31 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 <!--B4U:END-->
 
 <div id="app">
-  <div class="state">
-    <div class="spin" role="status" aria-label="Carregando"></div>
-    <p>Carregando o painel contábil…</p>
+  <!-- Esqueleto no formato REAL da página: barra branca, herói, quatro tiles e os
+       blocos recolhidos. Um retângulo genérico (ou uma bolinha) não avisa o que vem. -->
+  <div>
+    <header><div class="bar">
+      <div>
+        <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
+        <div class="b4u-skel" style="height:15px;width:230px;max-width:60vw;margin-top:6px"></div>
+      </div>
+    </div></header>
+    <div class="wrap">
+      <div class="b4u-skel" style="height:176px;border-radius:var(--radius-lg);margin-top:24px"></div>
+      <div class="tiles">
+        <div class="b4u-skel" style="height:92px;border-radius:var(--radius)"></div>
+        <div class="b4u-skel" style="height:92px;border-radius:var(--radius)"></div>
+        <div class="b4u-skel" style="height:92px;border-radius:var(--radius)"></div>
+        <div class="b4u-skel" style="height:92px;border-radius:var(--radius)"></div>
+      </div>
+      <div class="b4u-skel" style="height:66px;border-radius:var(--radius-lg);margin-top:22px"></div>
+      <div class="b4u-skel" style="height:66px;border-radius:var(--radius-lg);margin-top:10px"></div>
+      <div class="b4u-skel" style="height:66px;border-radius:var(--radius-lg);margin-top:10px;opacity:.6"></div>
+      <p id="espera-txt" class="espera">Carregando o painel contábil…</p>
+    </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 
@@ -591,13 +773,13 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-
    PAINEL CONTÁBIL DO CLIENTE — DRE + Balanço Patrimonial
    --------------------------------------------------------------------------
    ATENÇÃO (07/2026): ainda NÃO existe planilha contábil para nenhum cliente.
-   A rota já existe no Roteador.gs (COLUNA_POR_TIPO.contabil = 'Contábil' e
-   'contabil' está em TIPOS_COM_PAINEL), mas montar(id,codigo,'contabil') ainda
-   cai no montarFiscal. Portanto esta página tem de dar conta de TRÊS mundos:
+   A rota `&tipo=contabil` agora é PRÓPRIA (Contabil.gs · montarContabil_) e devolve
+   o cabeçalho + `temDados:false` — antes ela caía no montarFiscal e a página baixava
+   todas as notas do ano para desenhar "ainda não há DRE". Três mundos a atender:
 
      1) A planilha existe e a rota devolve DRE/Balanço  -> painel completo.
-     2) A rota devolve outra coisa (hoje, o payload fiscal) ou o cliente está
-        no índice "sem link de contabil" -> ESTADO VAZIO explicando, sem
+     2) A rota responde `temDados:false` (hoje, todos os clientes) ou o cliente
+        está no índice "sem link de contabil" -> ESTADO VAZIO explicando, sem
         gráfico zerado e sem erro feio.
      3) A equipe quer mostrar ao cliente como vai ficar -> MODO EXEMPLO
         (?demo=1), com selo permanente em tudo o que é dado fictício.
@@ -607,7 +789,9 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-
 
    {
      id, atualizado_em,
+     temDados,                            // false = "ainda não"; decide sozinho
      config: { razao_social, cnpj, regime, ... },
+     empresa: [ ... ],                    // aba Empresa, quando houver — não usada aqui
      contabil: {                          // ou tudo direto na raiz
        meses: ['2026-01','2026-02', ...], // opcional — deduzido das linhas
        dre: [                             // linhas da DRE (ordem livre)
@@ -632,13 +816,16 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-
      entra/receita = slot1 · sai/custos = slot2 · despesas = slot3 ·
      outros = slot4 · resultado/total = petróleo.
    Os 4 slots categóricos estão na ordem validada. */
-const PAL = { petroleo:'#113D39', escuro:'#073034', teal:'#0F8C85', muted:'#6E6256',
+const PAL = { petroleo:'#113D39', escuro:'#073034', muted:'#6E6256',
   line:'#E4D9C9', line2:'#D6C3AC', grade:'#EDE4D6',
   slot1:'#009488', slot2:'#B4530F', slot3:'#6B4FA0', slot4:'#7A8B3D',
   ok:'#2E9D5F', okTxt:'#16713E', ruim:'#C0392B', ruimTxt:'#96271B', amberTxt:'#B05F12' };
 const COR = { entra:PAL.slot1, sai:PAL.slot2, despesa:PAL.slot3, outros:PAL.slot4, resultado:PAL.escuro };
 const FONTE = { family:'Montserrat', size:11 };
-const TEM_CHART = (typeof Chart !== 'undefined');
+/* chart.js está no <head> com defer: executa DEPOIS deste script inline, e muito
+   antes de o JSONP responder. Por isso a checagem é uma função, avaliada na hora de
+   desenhar — um `const` aqui em cima diria "não tem gráfico" para sempre. */
+const temChart = () => typeof Chart !== 'undefined';
 
 /* ───────────────────────── utilitários ───────────────────────── */
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -926,7 +1113,14 @@ function casar(nome, dicionario){
   return dicionario[semPrefixo] || '';
 }
 
+const VAZIO_CONTABIL = { meses:[], dre:{}, ativo:{}, passivo:{}, extras:[],
+  sinalCorrigido:false, temDRE:false, temBP:false, temDados:false };
+
 function normalizarContabil(raw){
+  /* A rota diz explicitamente se há contabilidade. Quando ela diz que não, é não:
+     nada de adivinhar pela ausência de campos — era esse chute que fazia um payload
+     de outra rota passar por "planilha contábil vazia". */
+  if (raw && raw.temDados === false) return Object.assign({}, VAZIO_CONTABIL);
   const C = (raw && (raw.contabil || raw.contabilidade)) || raw || {};
   const linhasDRE = listaDeLinhas(C.dre || C.DRE || C.demonstrativo || C.resultado);
   let brutoBal = C.balanco || C.balanço || C.balancete || C.bp || null;
@@ -993,6 +1187,8 @@ function normalizarContabil(raw){
   derivarDRE(dreB.serie, meses);
   derivarBalanco(ativoB.serie, passB.serie, meses);
 
+  /* `temDados:true` sem linha nenhuma continua sendo estado vazio — a promessa do
+     backend não desenha gráfico. Quem confirma é o conteúdo. */
   const temDRE = meses.length > 0 && !!(dreB.serie.receita_bruta || dreB.serie.receita_liquida || dreB.serie.lucro_liquido);
   const temBP  = meses.length > 0 && !!(ativoB.serie.ativo || passB.serie.passivo_pl);
   return {
@@ -1245,6 +1441,7 @@ function render(M){
   appendAll(app, htmlCabecalho(M));
   const wrap = el('<div class="wrap"></div>');
   app.appendChild(wrap);
+  wrap.appendChild(el('<div id="tarja-slot"></div>'));
 
   const D = M.dre, m = M.ultimo, ant = M.anterior;
   const rl   = V(D,'receita_liquida', m);
@@ -1345,7 +1542,12 @@ function render(M){
   '</footer>'));
 
   ligarSairDemo();
-  try { graficoEvolucao(M); } catch(e){ console.warn('Gráfico principal indisponível:', e); }
+  /* Com chart.js no <head> com defer, ele executa DEPOIS deste script: numa pintura
+     síncrona (cache) ainda não existe. Em vez de trocar o gráfico por "indisponível"
+     à toa, esperamos o defer terminar e desenhamos. */
+  const desenhar = () => { try { graficoEvolucao(M); } catch(e){ console.warn('Gráfico principal indisponível:', e); } };
+  if (!temChart() && document.readyState === 'loading') document.addEventListener('DOMContentLoaded', desenhar, { once:true });
+  else desenhar();
   desenharAoAbrir('bloco-dre',     () => graficoCascata(M));
   desenharAoAbrir('bloco-balanco', () => graficoBalanco(M));
   desenharAoAbrir('bloco-meses',   () => graficoMeses(M));
@@ -1642,7 +1844,7 @@ function legenda(id, itens){
        MESMO eixo. É o jeito honesto de mostrar as duas coisas juntas. */
 function graficoEvolucao(M){
   const D = M.dre, meses = M.mesesFluxo.length ? M.mesesFluxo : M.meses;
-  if (!TEM_CHART) return semGrafico('g-evolucao','Não consegui carregar o gráfico agora. Os números continuam completos nas tabelas abaixo.');
+  if (!temChart()) return semGrafico('g-evolucao','Não consegui carregar o gráfico agora. Os números continuam completos nas tabelas abaixo.');
   if (meses.length < 2){
     return semGrafico('g-evolucao','Ainda há só um mês de contabilidade no painel — um gráfico de um ponto só não diz nada. ' +
       'A partir do segundo mês fechado, a linha do tempo aparece aqui.');
@@ -1688,7 +1890,7 @@ function graficoEvolucao(M){
        Barras flutuantes ([início, fim]) — waterfall de verdade, sem gambiarra. */
 function graficoCascata(M){
   const D = M.dre, m = M.ultimo;
-  if (!TEM_CHART || !m) return semGrafico('g-cascata','O detalhe mês a mês está na tabela logo abaixo.');
+  if (!temChart() || !m) return semGrafico('g-cascata','O detalhe mês a mês está na tabela logo abaixo.');
   const rb = V(D,'receita_bruta',m), ded = V0(D,'deducoes',m), cus = V0(D,'custos',m),
         des = V0(D,'despesas',m), ll = V(D,'lucro_liquido',m);
   if (rb == null || ll == null) return semGrafico('g-cascata','A tabela abaixo mostra as linhas que temos deste mês.');
@@ -1743,7 +1945,7 @@ function graficoCascata(M){
        As duas barras dividem a mesma escala: dá para ver de olho se fecham. */
 function graficoBalanco(M){
   const m = M.ultimoBP;
-  if (!TEM_CHART || !m) return semGrafico('g-balanco','As tabelas abaixo trazem os saldos conta a conta.');
+  if (!temChart() || !m) return semGrafico('g-balanco','As tabelas abaixo trazem os saldos conta a conta.');
   const ac = V0(M.ativo,'ativo_circulante',m), anc = V0(M.ativo,'ativo_nao_circulante',m);
   const pc = V0(M.passivo,'passivo_circulante',m), pnc = V0(M.passivo,'passivo_nao_circulante',m),
         pl = V0(M.passivo,'pl',m);
@@ -1783,7 +1985,7 @@ function graficoBalanco(M){
        de um total (custos + despesas + outras saídas = tudo o que saiu). */
 function graficoMeses(M){
   const D = M.dre, meses = M.mesesFluxo;
-  if (!TEM_CHART || meses.length < 2) return semGrafico('g-meses','A tabela abaixo mostra mês a mês.');
+  if (!temChart() || meses.length < 2) return semGrafico('g-meses','A tabela abaixo mostra mês a mês.');
   const abs = (k,m) => Math.max(0, -V0(D,k,m));
   const custos = meses.map(m => abs('custos',m));
   const desp   = meses.map(m => abs('despesas',m));
@@ -1863,8 +2065,9 @@ function estadoVazio(M){
 }
 
 /* Em subpágina, sem login volta ao index; com id+código mostra aviso amigável. */
-function erro(msg){
+function erro(e){
   var ic = getIdCodigo(), id = ic.id, codigo = ic.codigo;
+  var amigavel = (window.B4U && B4U.msgAmigavel) ? B4U.msgAmigavel(e) : '';
   if (!id || !codigo){ location.replace('index.html' + (id ? ('#'+id+(codigo?'-'+codigo:'')) : (location.hash||''))); return; }
   var volta = 'index.html#' + id + (codigo ? ('-'+codigo) : '');
   document.body.innerHTML =
@@ -1874,9 +2077,9 @@ function erro(msg){
    +'border-radius:16px;padding:32px 28px;box-shadow:0 6px 24px rgba(7,48,52,.06)">'
    +'<div style="font-size:24px;line-height:1;margin-bottom:10px">📄</div>'
    +'<h2 style="margin:0 0 8px;font-size:19px">Não foi possível carregar suas informações agora.</h2>'
-   +'<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:#3F5854">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
-   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#0F8C85;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:15px">Falar com o atendimento</a>'
-   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#0F8C85;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
+   +'<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:#3F5854">'+(amigavel||'Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.')+'</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#0C756F;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:15px">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#0C756F;font-size:13px;text-decoration:none">Voltar ao início</a></div>'
    +'</div></div>';
 }
 
@@ -1896,18 +2099,57 @@ async function carregar(){
   return d;
 }
 
+/* 20s olhando a mesma frase é lido como "travou" — e ele recarrega, jogando fora o
+   pedido que já estava a caminho. Trocar o texto é barato e compra paciência. */
+var _tEspera = [
+  setTimeout(function(){ var p=document.getElementById('espera-txt');
+    if(p) p.textContent = 'Estamos buscando os seus dados na planilha…'; }, 4000),
+  setTimeout(function(){ var p=document.getElementById('espera-txt');
+    if(p) p.textContent = 'Está demorando mais que o normal — continuamos tentando.'; }, 10000)
+];
+function pararEspera(){ _tEspera.forEach(clearTimeout); }
+
+/* Tarja discreta do cache: diz que o que está na tela veio do último acesso. */
+function tarja(texto, falhou){
+  const slot = document.getElementById('tarja-slot'); if (!slot) return;
+  slot.innerHTML = texto ? '<div class="tarja-atualizando' + (falhou?' falhou':'') + '">' + esc(texto) + '</div>' : '';
+}
+function horaCache(ts){ return ts ? new Date(ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}) : 'antes'; }
+
+/* O estado vazio e o modo exemplo desenham a página inteira; só o painel COM dados
+   é que pode ser pintado do cache e redesenhado por baixo. */
+function mostrar(M){ if (!M.temDados){ estadoVazio(M); return false; } render(M); return true; }
+
 (async function(){
+  const ic = getIdCodigo();
+  let pintadoDoCache = false, tsCache = 0;
+  /* A segunda visita não recomeça do esqueleto. No modo exemplo não há cache: os
+     números são fictícios e vêm prontos da própria página. */
+  if (!DEMO && ic.id && window.B4U && B4U.cacheLer){
+    const bruto = B4U.cacheLer('contabil', ic.id);
+    if (bruto){
+      try {
+        IDENTIDADE = ic;
+        const Mc = preparar(bruto);
+        if (Mc.temDados){ tsCache = bruto.atualizado_em || 0;
+          pararEspera(); render(Mc); tarja('Atualizando…'); pintadoDoCache = true; }
+      } catch(err){ /* cache velho ou de outro formato: ignora e busca de novo */ }
+    }
+  }
   try {
     const raw = await carregar();
+    if (!DEMO && ic.id && window.B4U && B4U.cacheGravar) B4U.cacheGravar('contabil', ic.id, raw);
     const M = preparar(raw);
-    /* Enquanto a rota não devolver DRE/Balanço (hoje ela cai no payload fiscal),
-       isto aqui é o caminho normal — e tem de ser digno, não uma tela de erro. */
-    if (!M.temDados){ estadoVazio(M); return; }
-    render(M);
+    /* Hoje `temDados:false` é a resposta de todo cliente — é o caminho NORMAL,
+       e tem de ser digno: estado vazio explicando, nunca tela de erro. */
+    pararEspera();
+    if (mostrar(M)) tarja('');
   } catch (e) {
+    pararEspera();
     const msg = (e && e.message) || String(e);
     if (RE_SEM_PLANILHA.test(msg)){ estadoVazio(null); return; }
-    erro(msg);
+    if (pintadoDoCache){ tarja('Não consegui atualizar agora — mostrando os dados de '+horaCache(tsCache)+'.', true); return; }
+    erro(e);
   }
 })();
 </script>

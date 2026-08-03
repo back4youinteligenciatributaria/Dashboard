@@ -9,35 +9,53 @@
 <title>Restituição (equipe) — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Duas origens porque o /exec responde 302 para a segunda: sem isto o aparelho paga
+     DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte não pode segurar a primeira pintura: entra como preload e vira folha depois. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
 <style>
 :root{
   /* Paleta canonica da equipe — a mesma em todas as telas. */
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
   --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,37:1 no canvas).
+     Este e o mesmo teal escurecido so para letra e fundo de letra; o --brand-teal
+     segue canonico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  /* Sufixo -2 = a mesma tinta um degrau mais escura, para quando ela vira FUNDO de
+     texto branco: o --amber da 2,61:1 com #fff, o --amber-2 da 4,68:1. Como
+     preenchimento de barra, icone ou borda, o --amber original continua valendo. */
+  --amber-2:#B05F12;
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
-  /* Raios: 12 padrao, 16 nos blocos grandes, 999px so em pilula, 10px em campo. */
-  --radius:12px;--radius-lg:16px;
+  /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
+  --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
+  --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px}
+.barra .logo{font-weight:800;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill)}
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
-.save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
+.save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:var(--radius-pill);background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
-.save-status.saving{background:var(--amber);color:#fff}.save-status.ok{background:var(--verde);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
+/* Branco sobre --amber da 2,61:1 e sobre --verde 3,44:1 — o rotulo do proprio
+   status de gravacao some. Um degrau mais escuro na MESMA familia: 4,68:1 e 4,92:1. */
+.save-status.saving{background:var(--amber-2);color:#fff}.save-status.ok{background:var(--verde-2);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
 .topo{padding:12px 16px 8px}
 .chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
 .chips .rot{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
-.chip{font-family:var(--sans);font-size:13px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.chip{font-family:var(--sans);font-size:13px;font-weight:700;border-radius:var(--radius-pill);padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
 .chip:hover{border-color:var(--brand-teal)}
-.chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
-.chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:6px;font-size:11px}
+.chip.on{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
+.chip .n{background:rgba(0,0,0,.10);border-radius:var(--radius-pill);padding:1px 7px;margin-left:6px;font-size:11px}
 .chip.on .n{background:rgba(255,255,255,.25)}
 .chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
 .chip.aviso.on{background:var(--amber);border-color:var(--amber)}
@@ -46,14 +64,14 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chip.limpar{border-style:dashed;color:var(--muted)}
 /* faixa de filtros rapidos, logo acima da tabela */
 .filtros{padding:0 16px 10px}
-.busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 /* ---------- botao (B.8): uma base, tres papeis ---------- */
 .btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
-  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:var(--radius-sm);transition:border-color .12s,transform .1s}
 .btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
-.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
 .btn--pri:hover{background:#0C7871;border-color:#0C7871}
 .btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
 .btn--danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
@@ -61,16 +79,16 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .btn--danger-out{background:var(--surface);color:var(--vermelho);border-color:var(--line-2)}
 .btn--danger-out:hover{border-color:var(--vermelho)}
 .btn--mini{padding:6px 11px;font-size:12px}
-.btn--pill{border-radius:999px;padding:12px 20px}
+.btn--pill{border-radius:var(--radius-pill);padding:12px 20px}
 .dica{font-size:12px;color:var(--muted);margin-top:7px}
 .resumo{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:10px;padding:0 16px 12px}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
 .rhead{padding:10px 13px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
-.rcard.atrasada .rhead{background:var(--vermelho)}.rcard.semana .rhead{background:var(--amber)}.rcard.proxima .rhead{background:var(--brand-teal)}
+.rcard.atrasada .rhead{background:var(--vermelho)}.rcard.semana .rhead{background:var(--amber)}.rcard.proxima .rhead{background:var(--brand-teal-txt)}
 .rcard.adiante .rhead{background:#6B8486}.rcard.cobrar .rhead{background:#007EB5}
-.rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:12px}
+.rhead .n{background:rgba(255,255,255,.25);border-radius:var(--radius-pill);padding:2px 9px;font-size:12px}
 .rlista{max-height:168px;overflow:auto;padding:6px}
-.tk{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:10px;cursor:pointer;font-size:13px}
+.tk{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px}
 .tk:hover{background:var(--surface-warm)}
 .tk .d{font-weight:800;color:var(--ink);white-space:nowrap}
 .tk .d.sem{color:var(--muted);font-weight:700}
@@ -89,33 +107,33 @@ th.col-id,td.col-id{position:sticky;left:0;width:74px;min-width:74px;max-width:7
 th.col-nome,td.col-nome{position:sticky;left:74px;min-width:210px;max-width:230px}
 thead th.col-id,thead th.col-nome{z-index:26}
 td.col-id,td.col-nome{z-index:15}
-td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal);padding:6px 9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
+td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal-txt);padding:6px 9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
 td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.25;padding:6px 9px;white-space:normal;box-shadow:2px 0 6px rgba(7,48,52,.07)}
 tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
 /* atalho para a planilha de equiparação do cliente, sempre visível (coluna congelada) */
 td.col-nome a.eq{display:inline-block;margin-top:5px;font-size:11px;font-weight:800;letter-spacing:.2px;
-  color:#fff;background:var(--brand-teal);border-radius:999px;padding:3px 9px;text-decoration:none;white-space:nowrap}
+  color:#fff;background:var(--brand-teal-txt);border-radius:var(--radius-pill);padding:3px 9px;text-decoration:none;white-space:nowrap}
 td.col-nome a.eq:hover{background:var(--brand-euc)}
 .cel{display:flex;gap:4px;align-items:center}
-.cel input,.cel textarea,.cel select{font-family:var(--sans);font-size:13px;padding:6px 8px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
+.cel input,.cel textarea,.cel select{font-family:var(--sans);font-size:13px;padding:6px 8px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);width:100%}
 .cel textarea{resize:both;min-height:34px;line-height:1.35}
 .cel select{font-weight:600;cursor:pointer}
 .cel input:focus,.cel textarea:focus,.cel select:focus{outline:2px solid var(--brand-teal);outline-offset:0}
-.cel a.abrir{color:var(--brand-teal);text-decoration:none;font-weight:800;font-size:15px;flex:none}
+.cel a.abrir{color:var(--brand-teal-txt);text-decoration:none;font-weight:800;font-size:15px;flex:none}
 /* somente-leitura — sem "..." : CNPJ e e-mails aparecem por extenso (para copiar) */
 .ro{padding:6px 8px;font-size:13px;color:var(--ink-2);white-space:normal;word-break:break-word;text-overflow:clip}
 .ro.roarea{white-space:pre-wrap;max-height:58px;overflow:auto;line-height:1.3;font-size:12px}
 /* URL não precisa aparecer por extenso (senão a linha fica altíssima) — use o ↗ */
 .ro.rourl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:12px}
 .ro.romails{line-height:1.35}
-.ro.romails a{display:block;color:var(--brand-teal);text-decoration:none;font-weight:600}
+.ro.romails a{display:block;color:var(--brand-teal-txt);text-decoration:none;font-weight:600}
 .ro.romails a:hover{text-decoration:underline}
-.robadge{display:inline-block;padding:4px 9px;border-radius:10px;font-size:12px;font-weight:800;white-space:nowrap}
+.robadge{display:inline-block;padding:4px 9px;border-radius:var(--radius-sm);font-size:12px;font-weight:800;white-space:nowrap}
 @keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
 .flash{animation:fl 1.7s ease}
 tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}   /* realce da linha por 5s ao clicar numa tarefa */
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:10px;border:1px solid var(--line)}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(max-width:720px){.resumo{grid-template-columns:1fr}}
@@ -141,7 +159,7 @@ details.ajuda>.txt b{color:var(--ink-2)}
 .falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
 tr.falhou>td{background:#FBEAE7!important}
 .btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
-  border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:999px;padding:2px 9px;white-space:nowrap}
+  border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap}
 .btn-retry:disabled{opacity:.6;cursor:default}
 /* ---------- padroes compartilhados (B.10 e B.12) ---------- */
 /* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
@@ -688,17 +706,49 @@ document.addEventListener('click',e=>{
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto,tk.dataset.k);return;}
 });
-/* Enter num campo da tabela grava e desce para a MESMA coluna da linha seguinte (C.14). */
+/* Enter num campo da tabela grava e desce para a MESMA coluna da linha seguinte (C.14);
+   Shift+Enter sobe. Da última linha grava e fica onde está — dar a volta faria a pessoa
+   reescrever a primeira linha sem perceber. Mesmas duas funções de certificados/licenças:
+   as três grades são a mesma grade para quem digita. */
+/* Linha vizinha que dá para editar. O filtro tira a linha da grade, mas se ela
+   estiver só escondida a gente pula do mesmo jeito: quem filtrou não quer o
+   cursor caindo justamente no que mandou sumir. */
+function linhaVizinha(tr,passo){
+  let p=tr;
+  for(;;){
+    p=passo>0?p.nextElementSibling:p.previousElementSibling;
+    if(!p) return null;
+    if(!p.dataset||!p.dataset.row) continue;     // a linha do "Nenhum cliente com os filtros"
+    if(!p.getClientRects().length) continue;     // escondida
+    return p;
+  }
+}
+/* Campo da mesma coluna na linha de destino. Coluna espelhada/só leitura não tem
+   campo nenhum (é um <div class="ro">), então o Enter segue para a próxima
+   editável em vez de largar o foco no nada. */
+function campoDestino(tr,coluna){
+  const ok=el=>!!el&&!el.disabled&&!el.readOnly;
+  const igual=tr.querySelector('[data-k="'+CSS.escape(coluna)+'"]');
+  if(ok(igual)) return igual;
+  const cols=COLS.map(c=>c.k);
+  for(let j=cols.indexOf(coluna)+1;j<cols.length;j++){
+    const el=tr.querySelector('[data-k="'+CSS.escape(cols[j])+'"]');
+    if(ok(el)) return el;
+  }
+  return null;
+}
 document.addEventListener('keydown',e=>{
-  if(e.key!=='Enter')return;
+  if(e.key!=='Enter'||e.ctrlKey||e.metaKey||e.altKey)return;
   const el=e.target;
   if(!el.dataset||!el.dataset.k||el.tagName==='TEXTAREA')return;   // no textarea Enter é quebra de linha
   const tr=el.closest('tr[data-row]');if(!tr)return;
   e.preventDefault();
   clearTimeout(timers[tr.dataset.row]);
   salvar(tr.dataset.row,tr.dataset.id,coletar(tr));
-  const prox=tr.nextElementSibling;if(!prox)return;
-  const alvo=prox.querySelector('[data-k="'+el.dataset.k+'"]');
+  const prox=linhaVizinha(tr,e.shiftKey?-1:1);
+  if(!prox)return;
+  const alvo=campoDestino(prox,el.dataset.k);
+  // campo de data não aceita select() — por isso a tentativa é protegida
   if(alvo){alvo.focus();try{if(alvo.select)alvo.select();}catch(_){}}
 });
 /* Atalhos de busca (C.4): "/" foca, Esc limpa. Não atrapalha quem digita noutro

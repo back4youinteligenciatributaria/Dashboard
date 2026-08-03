@@ -7,14 +7,27 @@
 <title>Agenda de pagamentos — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- São DUAS origens porque o /exec responde 302 para a segunda: sem isto o aparelho
+     paga DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte deixa de bloquear a primeira pintura: o esqueleto aparece antes dela. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"></noscript>
+<!-- chart.js sai do meio do corpo: com defer ele executa antes do DOMContentLoaded,
+     muito antes de o JSONP responder, e não atrasa a primeira pintura. -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 <style>
 :root{
   /* PALETA CANÔNICA — igual nas 7 páginas do cliente. Não redeclare tons aqui. */
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
   --ink:#113D39; --ink-2:#3F5854; --muted:#6E6256; --line:#E4D9C9; --line-2:#D6C3AC;
   --brand-dark:#073034; --brand-teal:#0F8C85; --brand-euc:#3FA680;
-  --amber:#E8892E; --amber-txt:#B05F12; --vermelho:#C0392B; --verde:#2E9D5F;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,44:1 no receita-soft).
+     Este é o mesmo teal escurecido só para texto e fundo de texto; o --brand-teal
+     continua canônico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E; --amber-txt:#8A5A10; --vermelho:#C0392B; --verde:#2E9D5F;
   /* Escala tipográfica — 6 passos, sem meio pixel. */
   --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
   /* Raios — 12 padrão, 16 para caixas grandes, 999 só para pílulas. */
@@ -22,11 +35,18 @@
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
   --brand-eucalipto:#649C8A; --brand-eucalipto-2:var(--brand-euc);
   --bege:#CBA88F; --couro:#A7715D; --terracota:#8F5A4A; --vinho:#731007;
-  --receita:var(--brand-teal); --receita-soft:#DCEFEC;
+  --receita:var(--brand-teal); --receita-soft:#DBEFEC;
   --imposto:#8F5A4A; --imposto-soft:#F1E1D8;
   --alerta:#731007; --alerta-soft:#F3DEDB;
   --provisao:var(--ink); --provisao-soft:#DFE8E4;
-  --sinal:#A7715D; --sinal-soft:#F1E4DC;
+  /* --sinal pinta gráfico e preenchimento; como TEXTO sobre --sinal-soft ele dá
+     3,27:1. O --sinal-txt é o mesmo tom escurecido só para letra: 5,38:1. */
+  --sinal:#A7715D; --sinal-soft:#F1E4DC; --sinal-txt:#8A4B33;
+  /* Escala de padding — três degraus no lugar dos 87 valores avulsos que havia aqui. */
+  --pad-sm: 14px 16px;
+  --pad:    18px 20px;
+  --pad-lg: 24px 26px;
+  --lift:   0 8px 20px rgba(17,61,57,.10);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
@@ -34,45 +54,100 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .lbl{font-size:var(--fs-1);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
-:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
-.wrap{max-width:1180px;margin:0 auto;padding:0 24px 72px}
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:var(--radius-sm)}
+/* Campo com menos de 16px faz o Safari ampliar a página inteira ao focar. Só os campos. */
+input,select,textarea{font-size:16px}
+/* Uma amostra de cor só — antes eram nove tamanhos diferentes na mesma tela. */
+.sw,.legend i,.pie-legend-row i,.outras-row i,.dv-centro i,.ed-row i,.chip-c i{
+  width:10px;height:10px;border-radius:3px;flex-shrink:0;display:inline-block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 60px}
+@media(max-width:640px){.wrap{padding:0 14px 60px}}
 
 header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:var(--b4u-bar-h,0px);z-index:30}
 .bar{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;white-space:nowrap;line-height:1}
 .logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
-.brand-sub{font-size:var(--fs-4);color:var(--brand-teal);font-weight:700;margin-top:2px}
+/* Razão social + CNPJ é o que confirma "esta é a minha empresa": 15px em teal
+   puro dá 4,11:1. Escurecido, 5,54:1. */
+.brand-sub{font-size:var(--fs-4);color:var(--brand-teal-txt);font-weight:700;margin-top:2px}
 .brand-sub .reg{font-size:var(--fs-1);color:var(--muted);font-weight:600;margin-left:6px}
+/* 11px sobre o verde claro: teal puro dá 3,44:1. Escurecido, 4,64:1. */
+.badge-topo{font-size:var(--fs-1);font-weight:700;color:var(--brand-teal-txt);background:var(--receita-soft);padding:5px 12px;border-radius:var(--radius-pill)}
 .voltar{display:inline-block;font-size:var(--fs-1);font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:4px}
-.voltar:hover{color:var(--brand-teal)}
+.voltar:hover{color:var(--brand-teal-txt)}
 .spacer{flex:1}
 .picker{display:flex;align-items:center;gap:10px}
 .picker .lbl{color:var(--ink-2)}
+/* Escolher a competência é um ajuste, não a ação principal da página — deixa de ser
+   uma pílula verde com sombra e vira um campo discreto, como qualquer outro seletor. */
 select{
-  font-family:var(--sans);font-size:var(--fs-4);font-weight:700;color:#fff;
-  background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto-2));
-  border:none;border-radius:var(--radius-pill);padding:9px 16px;cursor:pointer;
-  box-shadow:0 3px 10px rgba(15,140,133,.28);
+  font-family:var(--sans);font-weight:600;color:var(--ink);
+  background:var(--surface-warm);border:1px solid var(--line-2);border-radius:var(--radius-sm);
+  padding:9px 14px;cursor:pointer;min-height:44px;
 }
-select:hover{filter:brightness(1.05)}
+select:hover{border-color:var(--brand-teal)}
 option{color:#111;font-weight:400}
+
+/* ════════ Herói: a resposta para "tenho alguma coisa vencendo?" ════════
+   Mesmo componente visual do contábil — o cliente reconhece o bloco de página
+   em página. Vem ANTES de tudo porque é a única pergunta que ele traz ao abrir. */
+.faixa-vencidas{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:22px 0 0;
+  padding:var(--pad-sm);border-radius:var(--radius-lg);background:var(--alerta-soft);
+  border:1px solid #E3C4BE;color:#7A140A;font-size:var(--fs-4);line-height:1.45}
+.faixa-vencidas b{font-weight:800;color:#5E1006}
+.faixa-vencidas .fv-txt{flex:1;min-width:200px}
+.faixa-vencidas a{color:#7A140A;font-weight:800;text-decoration:underline;text-underline-offset:3px;
+  min-height:44px;display:inline-flex;align-items:center;white-space:nowrap}
+.faixa-vencidas[hidden]{display:none}
+
+.heroi{margin:22px 0 0;padding:var(--pad-lg);border:none;border-radius:var(--radius-lg);color:#fff;
+  /* O gradiente da marca clareia no canto de baixo: medido a 390px, o branco cai para
+     4,38:1 justamente na última linha. O véu escuro devolve o contraste sem trocar a cor. */
+  background:linear-gradient(180deg,rgba(7,48,52,0) 45%,rgba(7,48,52,.22) 100%),
+             linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);
+  box-shadow:0 18px 38px -18px rgba(6,48,51,.6)}
+/* 11px maiúsculo sobre o lado claro do gradiente não pode ser branco a 82% (3,7:1). */
+.heroi .lbl{color:#fff}
+.heroi-v{font-size:48px;font-weight:800;letter-spacing:-.03em;line-height:1.04;margin-top:8px;
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+@media(min-width:720px){.heroi-v{font-size:56px}}
+@media(max-width:420px){.heroi-v{font-size:34px}}
+.heroi-v .quando{font-size:var(--fs-5);font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+/* branco a 90% sobre o lado claro do gradiente dá 4,24:1 a 390px — texto corrido
+   de 15px precisa de 4,5. Branco cheio; a hierarquia fica no <b>, não na opacidade.
+   Sem font-weight: o link do Montserrat não traz o 500 e o navegador sintetizava
+   o peso, engrossando o traço na marra. Mesmo peso do contábil e da equiparação. */
+.heroi-sub{font-size:var(--fs-4);color:#fff;margin-top:10px;line-height:1.5;max-width:54ch}
+.heroi-sub b{color:#fff;font-weight:800}
+/* Branco sobre véu translúcido no herói dá 2,26:1 — a chamada mais importante da
+   tela era a menos legível. Placa sólida, como o selo do fiscal: 14,18:1. */
+.heroi-ir{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin-top:14px;padding:0 16px;
+  border-radius:var(--radius-pill);background:#fff;color:var(--brand-dark);font-weight:700;
+  font-size:var(--fs-3);text-decoration:none;border:1px solid #fff;cursor:pointer;font-family:var(--sans)}
+.heroi-ir:hover{background:var(--receita-soft);border-color:var(--receita-soft)}
+
+/* Tarja de cache: o que está na tela é do último acesso e já está sendo atualizado. */
+.tarja-atualizando{font-size:var(--fs-2);font-weight:600;color:var(--brand-dark);
+  background:var(--receita-soft);border-radius:var(--radius-pill);padding:6px 14px;margin:14px 0 0;
+  display:inline-flex;align-items:center;gap:8px}
+.tarja-atualizando.falhou{background:#FCEFE0;color:#8A5A10}
 
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px;margin:28px 0 14px}
 @media(max-width:920px){.hero{grid-template-columns:1fr}}
-.hero-main{padding:26px 28px;display:flex;flex-direction:column;justify-content:center}
+.hero-main{padding:var(--pad-lg);display:flex;flex-direction:column;justify-content:center}
 .comp-title{font-size:var(--fs-5);font-weight:800;letter-spacing:-.02em;margin-top:6px}
 .comp-note{font-size:var(--fs-2);color:var(--muted);margin-top:6px;max-width:42ch}
 .big{font-size:clamp(var(--fs-5),4.4vw,var(--fs-6));font-weight:800;line-height:1;letter-spacing:-.03em;margin-top:16px}
 .delta{margin-top:12px;font-size:var(--fs-3);color:var(--ink-2);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .selo{font-size:var(--fs-2);font-weight:700;padding:2px 8px;border-radius:6px}
-.selo.up{background:var(--receita-soft);color:var(--receita)}
+.selo.up{background:var(--receita-soft);color:var(--brand-teal-txt)}
 .selo.down{background:var(--alerta-soft);color:var(--alerta)}
 .link-planilha{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-size:var(--fs-2);font-weight:700;
-  color:var(--brand-teal);text-decoration:none;background:var(--receita-soft);padding:8px 14px;border-radius:var(--radius-pill);align-self:flex-start}
+  color:var(--brand-teal-txt);text-decoration:none;background:var(--receita-soft);padding:8px 14px;border-radius:var(--radius-pill);align-self:flex-start}
 .link-planilha:hover{filter:brightness(1.03)}
 .link-planilha[aria-disabled="true"]{background:var(--surface-warm);color:var(--muted);cursor:default}
 
-.relacao{padding:20px 24px}
+.relacao{padding:var(--pad)}
 .relacao-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px;flex-wrap:wrap}
 .relacao-head h2{font-size:var(--fs-4);font-weight:700}
 table.imp{width:100%;border-collapse:collapse;font-size:var(--fs-3)}
@@ -81,22 +156,22 @@ table.imp th:first-child{text-align:left}
 table.imp td{padding:7px 0;border-bottom:1px solid var(--line);text-align:right}
 table.imp td:first-child{text-align:left;font-weight:600}
 table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:800;padding-top:9px}
-.btn{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:var(--fs-2);font-weight:700;color:var(--brand-teal);
+.btn{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:var(--fs-2);font-weight:700;color:var(--brand-teal-txt);
   text-decoration:none;padding:8px 0;border-top:1px dashed var(--line-2);width:100%;justify-content:center}
 .btn:hover{color:var(--brand-dark)}
 
 .slim{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px}
-.stat{padding:16px 18px}
+.stat{padding:var(--pad)}
 .stat .v{font-size:var(--fs-5);font-weight:800;letter-spacing:-.02em;margin-top:6px}
 .stat .s{font-size:var(--fs-2);color:var(--muted);margin-top:3px}
 .stat.div-alerta{border-color:#E0B45A;background:#FBF3E2}
 .stat.div-alerta .s{color:#9A6B10;font-weight:600}
 .card-click{cursor:pointer;text-align:left;font-family:var(--sans);width:100%;transition:border-color .12s,transform .12s,box-shadow .12s;display:flex;flex-direction:column}
-.card-click:hover{border-color:var(--brand-teal);transform:translateY(-1px);box-shadow:0 6px 16px rgba(17,61,57,.10)}
-.stat-cta{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:var(--fs-2);font-weight:700;color:#fff;background:var(--brand-teal);padding:6px 12px;border-radius:var(--radius-pill)}
+.card-click:hover{border-color:var(--brand-teal);transform:translateY(-2px);box-shadow:var(--lift)}
+.stat-cta{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:var(--fs-2);font-weight:700;color:#fff;background:var(--brand-teal-txt);padding:6px 12px;border-radius:var(--radius-pill)}
 .card-click:hover .stat-cta{background:var(--brand-dark)}
 .stat.div-alerta .stat-cta{background:#B57A16}
-.dv-card{padding:18px 20px;margin-bottom:16px}
+.dv-card{padding:var(--pad);margin-bottom:16px}
 .dv-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .dv-head b{font-size:var(--fs-4)}
 .dv-close{background:none;border:0;cursor:pointer;font-size:var(--fs-4);color:var(--muted)}
@@ -104,66 +179,85 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .dv-list{display:flex;flex-direction:column;gap:8px}
 .dv-row{display:grid;grid-template-columns:1fr auto 130px;align-items:center;gap:12px}
 .dv-centro{display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-3);font-weight:600}
-.dv-centro i{width:9px;height:9px;border-radius:3px;flex-shrink:0}
 .dv-luc{font-size:var(--fs-2);color:var(--muted);white-space:nowrap}
-.dv-in{font-family:var(--sans);font-size:var(--fs-3);text-align:right;padding:8px 10px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink)}
+.dv-in{font-family:var(--sans);text-align:right;padding:8px 10px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink)}
 .dv-in:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .dv-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}
 .dv-foot #dv-msg{font-size:var(--fs-2)}
-.btn.dv-save{background:var(--brand-teal);color:#fff;border:0;border-radius:var(--radius-sm);padding:10px 16px;font-family:var(--sans);font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.btn.dv-save{background:var(--brand-teal-txt);color:#fff;border:0;border-radius:var(--radius-sm);padding:10px 16px;font-family:var(--sans);font-weight:700;font-size:var(--fs-3);cursor:pointer}
 .btn.dv-save[disabled]{opacity:.6;cursor:default}
 @media(max-width:560px){.dv-row{grid-template-columns:1fr 110px}.dv-luc{display:none}}
 
-.guias-card{padding:20px 24px;margin-bottom:16px}
+.guias-card{padding:var(--pad);margin-bottom:16px}
 .guias-card .relacao-head{margin-bottom:10px}
 .guia-row{border-top:1px solid var(--line);padding:11px 0}
 .guia-row:first-of-type{border-top:none}
 .guia-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .guia-status{font-size:var(--fs-1);font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:var(--radius-sm);flex-shrink:0}
-.status-fechada{background:var(--receita-soft);color:var(--receita)}
-.status-estimativa{background:#DCF3E9;color:#3FA680}
-.status-aberto{background:var(--sinal-soft);color:var(--sinal)}
+.status-fechada{background:var(--receita-soft);color:var(--brand-teal-txt)}
+/* #3FA680 dava 2,58:1 em 11px maiúsculo — ilegível. #0C756F sobre o mesmo fundo: 5,6:1. */
+.status-estimativa{background:var(--receita-soft);color:var(--brand-teal-txt)}
+.status-aberto{background:var(--sinal-soft);color:var(--sinal-txt)}
 .guia-nome{flex:1;font-size:var(--fs-3);font-weight:600;min-width:120px}
 .guia-valor{font-size:var(--fs-4);font-weight:800;white-space:nowrap}
 .guia-toggle{font-family:var(--sans);font-size:var(--fs-1);font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 2px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
-.guia-toggle:hover{color:var(--brand-teal)}
+.guia-toggle:hover{color:var(--brand-teal-txt)}
 .guia-toggle .car{transition:transform .15s} .guia-toggle.on .car{transform:rotate(180deg)}
 .guia-detalhe{display:none;margin:6px 0 2px 0;padding:8px 12px;background:var(--surface-warm);border-radius:var(--radius-sm)}
 .guia-detalhe.aberto{display:block}
 .guia-detalhe-row{display:flex;justify-content:space-between;font-size:var(--fs-2);padding:4px 0}
 
-.outras{padding:14px 18px;margin-bottom:20px}
+.outras{padding:var(--pad-sm);margin-bottom:20px}
 .outras h4{font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin-bottom:8px}
 .outras-row{display:flex;align-items:center;justify-content:space-between;font-size:var(--fs-3);padding:5px 0;border-top:1px solid var(--line)}
 .outras-row:first-of-type{border-top:none}
-.outras-row i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:8px}
+.outras-row i{margin-right:8px}
 .outras-row span{flex:1;display:flex;align-items:center}
 
-.prov-compact{padding:16px 20px;margin-bottom:20px}
+.prov-compact{padding:var(--pad);margin-bottom:20px}
 .prov-compact-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .prov-compact-venc{font-size:var(--fs-2);color:var(--muted);font-weight:600}
 .prov-compact-meses{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
 @media(max-width:600px){.prov-compact-meses{grid-template-columns:1fr}}
-.pmes{background:var(--surface-warm);border-radius:var(--radius-sm);padding:9px 12px;display:flex;flex-direction:column;gap:3px}
+.pmes{background:var(--surface-warm);border-radius:var(--radius-sm);padding:var(--pad-sm);display:flex;flex-direction:column;gap:3px}
 .pmes.futuro{background:repeating-linear-gradient(135deg,var(--provisao-soft),var(--provisao-soft) 6px,#EDE4D6 6px,#EDE4D6 12px)}
 .pmes-label{font-size:var(--fs-1);color:var(--muted);font-weight:600;text-transform:capitalize}
 .pmes-v{font-size:var(--fs-4);font-weight:800;color:var(--provisao)}
 .prov-compact-total{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--line);font-size:var(--fs-3)}
 .prov-compact-total b{font-size:var(--fs-5);color:var(--provisao)}
 
-.alert{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;border-radius:var(--radius);
+.alert{display:flex;gap:12px;align-items:flex-start;padding:var(--pad-sm);border-radius:var(--radius);
   background:var(--alerta-soft);border:1px solid #E3C4BE;color:var(--alerta);font-size:var(--fs-3);margin-bottom:20px}
 .alert svg{flex-shrink:0;margin-top:2px}
 
-.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:32px 0 14px}
-.sec-head h2{font-size:var(--fs-4);font-weight:700;letter-spacing:-.01em}
+/* Bloco recolhido (mesmo componente do contábil) — o provisionamento é consulta,
+   não ação: fica fechado no fim da página, e quem quiser abre. */
+.bloco{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);margin-top:22px;overflow:hidden}
+.bloco>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:var(--pad);min-height:44px}
+.bloco>summary::-webkit-details-marker{display:none}
+.bloco>summary::marker{content:''}
+.bloco>summary:hover{background:var(--surface-warm)}
+.bloco>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.bloco[open]>summary{background:var(--surface-warm);border-bottom:1px solid var(--line)}
+.bloco-t{flex:1;min-width:0}
+.bloco-t b{display:block;font-size:var(--fs-4);font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.bloco-t span{display:block;font-size:var(--fs-2);color:var(--muted);margin-top:2px;line-height:1.45}
+.chev{flex-shrink:0;width:20px;height:20px;color:var(--muted);transition:transform .22s ease}
+.bloco[open]>summary .chev{transform:rotate(180deg)}
+.bloco-body{padding:var(--pad)}
+/* Código curto ao lado do aviso — serve ao atendimento, não é prosa técnica na cara do cliente. */
+.cod-erro{font-size:var(--fs-1);color:var(--muted);font-weight:600;margin-left:6px}
+
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px 20px;margin:32px 0 14px;flex-wrap:wrap}
+/* Título de seção e texto corrido tinham os mesmos 15px: nada indicava hierarquia. */
+.sec-head h2{font-size:var(--fs-5);font-weight:700;letter-spacing:-.01em}
 .sec-head p{font-size:var(--fs-3);color:var(--muted)}
 
-.cal-card{padding:20px 22px}
+.cal-card{padding:var(--pad)}
 .cal-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
 .cal-arrow{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface-warm);
   color:var(--ink);font-size:var(--fs-4);font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.cal-arrow:hover{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
+.cal-arrow:hover{background:var(--brand-teal-txt);color:#fff;border-color:var(--brand-teal-txt)}
 .cal-arrow:disabled{opacity:.35;cursor:default}
 .cal-nav h3{font-size:var(--fs-4);font-weight:700;min-width:180px;text-align:center;text-transform:capitalize}
 .cal-strip{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:16px;align-items:start}
@@ -182,7 +276,7 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .empty{color:var(--muted);font-size:var(--fs-3);padding:8px 0;text-align:center}
 
 .months{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px}
-.month{padding:14px 16px 16px}
+.month{padding:var(--pad-sm)}
 .month h4{font-size:var(--fs-3);font-weight:700;text-transform:capitalize}
 .due{display:flex;gap:9px;padding:7px 6px;border-radius:6px;font-size:var(--fs-2)}
 .due.due-pago{background:var(--receita-soft)}
@@ -191,17 +285,19 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .due .body{min-width:0;flex:1}
 .due .nm{display:block;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .due .vl{font-size:var(--fs-2);color:var(--ink-2);font-weight:600}
-.estimativa,.vl.est{color:#3FA680!important;font-weight:800!important}
-.due .vl.est::after{content:' (estimado)';font-weight:600;font-size:var(--fs-1);color:#3FA680}
+/* #3FA680 reprovava em 3,01:1 e ainda significava "ISS" no gráfico — a mesma cor com
+   dois sentidos na mesma tela. Como texto, agora é sempre #0C756F (5,6:1). */
+.estimativa,.vl.est{color:var(--brand-teal-txt)!important;font-weight:800!important}
+.due .vl.est::after{content:' (estimado)';font-weight:600;font-size:var(--fs-1);color:var(--brand-teal-txt)}
 
 .charts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .charts3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 @media(max-width:900px){.charts{grid-template-columns:1fr}.charts3{grid-template-columns:1fr}}
-.chart{padding:20px 22px 16px}
+.chart{padding:var(--pad)}
 .chart h3{font-size:var(--fs-4);font-weight:700;margin-bottom:2px;text-transform:capitalize}
 .chart .sub{font-size:var(--fs-2);color:var(--muted);margin-bottom:14px}
 .legend{display:flex;flex-wrap:wrap;gap:11px;margin-bottom:10px;font-size:var(--fs-2);color:var(--ink-2)}
-.legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+.legend i{margin-right:5px;vertical-align:-1px}
 .cbox{position:relative;height:210px}
 .charts3 .cbox{height:160px}
 .pie-legend{margin-top:10px}
@@ -209,12 +305,13 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 /* lista de guias */
 .guias-bloco{margin-bottom:22px}
 .guias-mestit{font-size:var(--fs-3);font-weight:800;text-transform:capitalize;color:var(--ink);margin:0 2px 10px;letter-spacing:-.01em}
-.guia-card{display:flex;flex-wrap:wrap;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 16px;margin-bottom:9px}
+.guia-card{display:flex;flex-wrap:wrap;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad-sm);margin-bottom:9px}
 /* aviso inline quando a marcação falha (nada de alert nativo) */
 .guia-aviso{flex:0 0 100%;font-size:var(--fs-2);font-weight:600;color:var(--vermelho);background:#F9EAE8;border:1px solid #E9C9C4;border-radius:var(--radius-sm);padding:8px 11px}
 .guia-card.paga{opacity:.66}
 .guia-card.vencida{border-color:#E0B4AC;background:#FCF2F0}
-.guia-venc{flex-shrink:0;width:52px;text-align:center;display:flex;flex-direction:column;gap:2px}
+/* a etiqueta "vencida" tem 11px maiúsculo e não cabia nos 52px fixos: invadia a descrição */
+.guia-venc{flex-shrink:0;min-width:52px;text-align:center;display:flex;flex-direction:column;gap:2px}
 .guia-venc b{font-size:var(--fs-4);font-variant-numeric:tabular-nums}
 .gv-tag{font-size:var(--fs-1);font-weight:800;text-transform:uppercase;color:#8B2E22}
 .guia-info{flex:1;min-width:0}
@@ -225,28 +322,20 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 .guia-status.apagar{background:#FFF1DC;color:#9A6B10}
 .guia-status.agendada{background:#E5F0FF;color:#25518F}
 .guia-status.paga{background:#E7F4EC;color:#2E7D4F}
-.guia-btns{display:flex;gap:6px}
-.guia-btns button{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;border:1px solid var(--line-2);background:var(--surface-warm);color:var(--ink-2);border-radius:var(--radius-sm);padding:6px 10px;cursor:pointer;min-width:66px}
+/* São os botões mais clicados do painel. Tinham ~32px de altura e 6px de respiro:
+   o polegar erra, marca "agendei" no lugar de "paguei" e ele tem de desfazer. */
+.guia-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.guia-btns button{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;border:1px solid var(--line-2);background:var(--surface-warm);color:var(--ink-2);border-radius:var(--radius-sm);padding:9px 13px;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
 .guia-btns button:hover{border-color:var(--brand-teal)}
-.guia-btns button.on{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
+.guia-btns button.on{background:var(--brand-teal-txt);color:#fff;border-color:var(--brand-teal-txt)}
 .guia-btns button[disabled]{opacity:.55;cursor:progress}
-.guia-btns button.marcando{color:var(--brand-teal);border-color:var(--brand-teal);background:var(--receita-soft);opacity:1}
+.guia-btns button.marcando{color:var(--brand-teal-txt);border-color:var(--brand-teal);background:var(--receita-soft);opacity:1}
 
-/* faixa de resumo no topo — leva direto para a lista de guias */
-.resumo-topo{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--radius-pill);padding:9px 8px 9px 18px;margin:24px 0 2px}
-.rt-item{display:flex;align-items:baseline;gap:6px;font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
-.rt-item b{font-size:var(--fs-3);font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
-.rt-item.alerta b{color:var(--vermelho)}
-.rt-sep{width:1px;height:16px;background:var(--line-2);flex-shrink:0}
-.rt-ir{margin-left:auto;font-size:var(--fs-2);font-weight:700;text-decoration:none;color:#fff;background:var(--brand-teal);
-  border-radius:var(--radius-pill);padding:8px 15px;white-space:nowrap}
-.rt-ir:hover{background:var(--brand-dark)}
-@media(max-width:600px){.resumo-topo{border-radius:var(--radius);padding:12px 14px}.rt-sep{display:none}
-  .rt-ir{margin-left:0;width:100%;text-align:center}}
-@media(max-width:600px){.guia-card{flex-wrap:wrap;gap:10px}.guia-venc{width:44px}
+/* .resumo-topo saiu: a faixa fina virou o herói, que responde a mesma pergunta em
+   tamanho de manchete e no topo da página. */
+@media(max-width:600px){.guia-card{flex-wrap:wrap;gap:10px}.guia-venc{min-width:44px}
   .guia-acoes{flex-direction:row;align-items:center;width:100%;justify-content:space-between;flex-wrap:wrap}}
-.pend-banner{display:flex;align-items:center;gap:13px;background:#FCEFE0;border:1px solid #F0D6B4;border-radius:var(--radius);padding:13px 16px;margin:18px 0 4px}
+.pend-banner{display:flex;align-items:center;gap:13px;background:#FCEFE0;border:1px solid #F0D6B4;border-radius:var(--radius);padding:var(--pad-sm);margin:18px 0 4px}
 .pend-b-ico{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--amber);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
 .pend-b-txt{flex:1;display:flex;flex-direction:column;gap:2px;font-size:var(--fs-3)}
 .pend-b-txt span{font-size:var(--fs-2);color:var(--muted)}
@@ -255,25 +344,24 @@ table.imp tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-wei
 @media(max-width:600px){.pend-banner{flex-wrap:wrap}.pend-b-btn{width:100%}}
 .pie-legend-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:var(--fs-2)}
 .pie-legend-row:first-child{border-top:none}
-.pie-legend-row i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
 .pie-legend-row span{flex:1;color:var(--ink-2)}
 
-.campo-texto,.form-nf input,.form-nf textarea{width:100%;font-family:var(--sans);font-size:var(--fs-3);color:var(--ink);
+.campo-texto,.form-nf input,.form-nf textarea{width:100%;font-family:var(--sans);color:var(--ink);
   border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:9px 11px;background:var(--surface-warm);margin-top:10px;resize:vertical}
 .campo-texto:focus,.form-nf input:focus,.form-nf textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .form-nf{display:flex;flex-direction:column}
 .btn-acao{margin-top:12px;font-family:var(--sans);font-size:var(--fs-3);font-weight:700;color:#fff;
-  background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto-2));
+  background:var(--brand-teal-txt);
   border:none;border-radius:var(--radius-pill);padding:9px 18px;cursor:pointer;align-self:flex-start}
 .btn-acao:hover{filter:brightness(1.05)}
 .btn-acao:disabled{opacity:.5;cursor:default}
 .msg-status{font-size:var(--fs-2);margin-top:8px;min-height:16px}
 .msg-status.enviando{color:var(--muted)}
-.msg-status.sucesso{color:var(--receita);font-weight:600}
+.msg-status.sucesso{color:var(--brand-teal-txt);font-weight:600}
 .msg-status.erro{color:var(--alerta);font-weight:600}
 .comp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
 .comp-head h3{margin-bottom:0}
-.mini-select{font-family:var(--sans);font-size:var(--fs-1);font-weight:600;color:var(--ink-2);
+.mini-select{font-family:var(--sans);font-weight:600;color:var(--ink-2);
   background:var(--surface-warm);border:1px solid var(--line-2);border-radius:var(--radius);padding:4px 9px;cursor:pointer}
 
 #rateio{scroll-margin-top:80px}
@@ -293,13 +381,14 @@ tr.nid .share i{background:var(--alerta)}
 /* Notas do mês (tomadas / prestadas) + editor de centro */
 #notas{scroll-margin-top:80px}
 .tabs{display:inline-flex;gap:4px;background:var(--surface-warm);border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:3px}
+/* alvo de toque de 44px: a aba Em aberto/Todas é clicada com o polegar */
 .tab{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--ink-2);background:none;border:none;
-  padding:6px 14px;border-radius:var(--radius-lg);cursor:pointer}
-.tab.on{background:var(--brand-teal);color:#fff}
+  padding:6px 16px;border-radius:var(--radius-lg);cursor:pointer;min-height:44px;display:inline-flex;align-items:center}
+.tab.on{background:var(--brand-teal-txt);color:#fff}
 .nf-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.nf-search{font-family:var(--sans);font-size:var(--fs-2);border:1px solid var(--line-2);border-radius:var(--radius-lg);padding:6px 12px;background:var(--surface-warm);min-width:180px}
-.btn-pend{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--sinal);background:var(--sinal-soft);border:1px solid var(--line-2);border-radius:var(--radius-lg);padding:6px 12px;cursor:pointer;white-space:nowrap}
-.btn-pend.on{background:var(--sinal);color:#fff;border-color:var(--sinal)}
+.nf-search{font-family:var(--sans);border:1px solid var(--line-2);border-radius:var(--radius-lg);padding:9px 14px;background:var(--surface-warm);min-width:180px;min-height:44px}
+.btn-pend{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--sinal-txt);background:var(--sinal-soft);border:1px solid var(--line-2);border-radius:var(--radius-lg);padding:6px 12px;cursor:pointer;white-space:nowrap}
+.btn-pend.on{background:var(--sinal-txt);color:#fff;border-color:var(--sinal-txt)}
 .alert{cursor:default} .alert.clicavel{cursor:pointer} .alert.clicavel:hover{filter:brightness(.99)}
 table.nf{width:100%;border-collapse:collapse;font-size:var(--fs-3)}
 table.nf th{text-align:left;font-size:var(--fs-1);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--line-2)}
@@ -308,7 +397,7 @@ table.nf td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:
 table.nf tbody tr.nf-open{background:var(--surface-warm)}
 .nf-cp{font-weight:600}
 .nf-tipo{font-size:var(--fs-1);color:var(--muted)}
-.nf-expand{background:none;border:0;cursor:pointer;font-family:var(--sans);font-size:var(--fs-1);font-weight:700;color:var(--brand-teal);padding:3px 0;margin-top:3px;display:inline-flex;align-items:center;gap:4px}
+.nf-expand{background:none;border:0;cursor:pointer;font-family:var(--sans);font-size:var(--fs-1);font-weight:700;color:var(--brand-teal-txt);padding:3px 0;margin-top:3px;display:inline-flex;align-items:center;gap:4px}
 .nf-expand .mais{display:inline-block;transition:transform .15s}
 .nf-expand[aria-expanded="true"] .mais{transform:rotate(45deg)}
 .nf-detalhe{display:none;margin-top:6px;padding:8px 11px;background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-sm);max-width:340px}
@@ -316,7 +405,7 @@ table.nf tbody tr.nf-open{background:var(--surface-warm)}
 .nf-detalhe .det-lbl{display:block;font-size:var(--fs-1);font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:1px}
 .nf-desc{font-size:var(--fs-2);color:var(--ink-2)}
 .nf-obs{font-size:var(--fs-2);color:var(--ink-2);margin-top:6px}
-.nf-comp{display:inline-block;font-size:var(--fs-1);font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:2px 8px;border-radius:var(--radius-sm)}
+.nf-comp{display:inline-block;font-size:var(--fs-1);font-weight:700;color:var(--brand-teal-txt);background:var(--receita-soft);padding:2px 8px;border-radius:var(--radius-sm)}
 .nf-sit{font-size:var(--fs-1);font-weight:700;padding:1px 7px;border-radius:var(--radius-sm);margin-left:6px;white-space:nowrap;vertical-align:middle}
 .nf-sit.cancel{background:#F3DEDB;color:#8B2E22}
 .nf-sit.subst{background:#EDE7DD;color:#7a6a56}
@@ -325,10 +414,9 @@ table.nf tbody tr.nf-inativa .nf-cp{text-decoration:line-through}
 .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .chip-c{font-size:var(--fs-1);font-weight:700;padding:2px 8px;border-radius:var(--radius-sm);background:var(--receita-soft);color:var(--brand-dark);display:inline-flex;gap:5px;align-items:center}
 .chip-c.nid{background:var(--alerta-soft);color:var(--alerta)}
-.chip-c i{width:7px;height:7px;border-radius:2px}
-.btn-edit{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--brand-teal);background:var(--surface-warm);
+.btn-edit{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--brand-teal-txt);background:var(--surface-warm);
   border:1px solid var(--line-2);border-radius:var(--radius);padding:5px 12px;cursor:pointer;white-space:nowrap}
-.btn-edit:hover{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal)}
+.btn-edit:hover{background:var(--brand-teal-txt);color:#fff;border-color:var(--brand-teal-txt)}
 .btn-edit.pend{background:#F3DEDB;color:#8B2E22;border-color:#E0B4AC}
 .btn-edit.pend:hover{background:#8B2E22;color:#fff;border-color:#8B2E22}
 tr.editor-row{display:none}
@@ -339,17 +427,16 @@ tr.editor-row>td{background:var(--surface-warm);padding:0 10px 14px}
 .editor-modos .tab{font-size:var(--fs-2);padding:5px 12px}
 .ed-row{display:grid;grid-template-columns:16px 1fr 108px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
 .ed-row:first-child{border-top:none}
-.ed-row i{width:10px;height:10px;border-radius:2px}
 .ed-row label{font-size:var(--fs-3);font-weight:600}
 .ed-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand-teal);cursor:pointer}
-.ed-num{width:100%;font-family:var(--sans);font-size:var(--fs-2);text-align:right;border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:6px 8px;background:var(--surface-warm)}
+.ed-num{width:100%;font-family:var(--sans);text-align:right;border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:6px 8px;background:var(--surface-warm)}
 .ed-num:disabled{opacity:.4;background:transparent;border-color:transparent}
 .ed-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line-2);flex-wrap:wrap}
 .ed-sum{font-size:var(--fs-2);font-weight:700}
-.ed-sum.ok{color:var(--receita)} .ed-sum.warn{color:var(--sinal)} .ed-sum.err{color:var(--alerta)}
+.ed-sum.ok{color:var(--brand-teal-txt)} .ed-sum.warn{color:var(--sinal-txt)} .ed-sum.err{color:var(--alerta)}
 .ed-actions{display:flex;gap:8px}
 .btn-ghost{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--ink-2);background:none;border:1px solid var(--line-2);border-radius:var(--radius-lg);padding:8px 16px;cursor:pointer}
-.btn-save{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:#fff;background:linear-gradient(135deg,var(--brand-teal),var(--brand-eucalipto-2));border:none;border-radius:var(--radius-lg);padding:8px 18px;cursor:pointer}
+.btn-save{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:#fff;background:var(--brand-teal-txt);border:none;border-radius:var(--radius-lg);padding:8px 18px;cursor:pointer}
 .btn-save:disabled{opacity:.45;cursor:default}
 
 /* modal de confirmação */
@@ -375,16 +462,24 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-si
 .table-scroll table{min-width:420px}
 table.rat{min-width:560px} table.nf{min-width:620px}
 @media(max-width:600px){
-  .wrap{padding:0 14px 56px}.bar{padding:12px 14px;gap:10px}.logo{font-size:var(--fs-5)}.brand-sub{font-size:var(--fs-1)}
-  select{padding:8px 12px;font-size:var(--fs-3)}.picker .lbl{display:none}
-  .hero{margin:18px 0 12px;gap:12px}.hero-main{padding:18px 18px}.comp-title{font-size:var(--fs-5)}
-  .big{font-size:clamp(var(--fs-5),8vw,var(--fs-6))}.relacao{padding:16px 16px}
-  .slim{gap:10px}.stat{padding:13px 14px}.stat .v{font-size:var(--fs-5)}
-  .cal-card{padding:14px 14px}.cal-nav h3{min-width:0;font-size:var(--fs-2)}.cal-arrow{width:26px;height:26px}
-  .sec-head{margin:24px 0 10px}.sec-head h2{font-size:var(--fs-4)}
-  .chart{padding:16px 16px 13px}.charts,.charts3{gap:12px}
+  /* No celular a escala inteira encolhe de uma vez, pelos tokens — antes cada
+     seletor repetia o seu próprio padding aqui embaixo. */
+  :root{--pad-sm:12px 13px;--pad:15px 16px;--pad-lg:18px 18px}
+  .bar{padding:12px 14px;gap:10px}.logo{font-size:var(--fs-5)}
+  /* razão social + CNPJ do cliente não podem virar 11px: ficam menores que o texto ao lado */
+  .brand-sub{font-size:var(--fs-3)}
+  select{padding:8px 12px}.picker .lbl{display:none}
+  .hero{margin:18px 0 12px;gap:12px}.comp-title{font-size:var(--fs-5)}
+  .big{font-size:clamp(var(--fs-5),8vw,var(--fs-6))}
+  .slim{gap:10px}.stat .v{font-size:var(--fs-5)}
+  /* a seta do calendário ENCOLHIA para 26px justamente onde o dedo é o ponteiro */
+  .cal-nav h3{min-width:0;font-size:var(--fs-3)}.cal-arrow{width:44px;height:44px}
+  .sec-head{margin:24px 0 10px}
+  .charts,.charts3{gap:12px}
   .ed-row{grid-template-columns:16px 1fr 92px}
   footer{flex-direction:column;gap:4px}
+  .guia-btns{gap:10px}
+  .guia-btns button{min-height:44px;padding:11px 14px}
 
   /* itens de grid/flex podem encolher (senão a tabela estica o cartão e vaza a página) */
   .hero>*,.rateio-grid>*,.charts>*,.charts3>*,.slim>*{min-width:0}
@@ -425,7 +520,8 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 </head>
 <body>
 <!--B4U:START-->
-<style id="b4u-oculta-chamado">/* "Abrir chamado" oculto por ora (topo #b4u-open e rodape #ac-abrir) */ #b4u-open,#ac-abrir{display:none!important}</style>
+<style id="b4u-oculta-chamado">/* Abertura de chamado oculta por ora. O "?" (#b4u-help) abre ESTE MESMO modal:
+   deixá-lo visível era uma porta de serviço para um recurso que decidimos segurar. */ #b4u-open,#ac-abrir,#b4u-help{display:none!important}</style>
 <script>window.B4U = { area:'fiscal' };</script>
 <!-- ═══════════ back4you · cabeçalho + chamados (compartilhado) ═══════════
      Bloco único, autocontido e com prefixo .b4u- (não conflita com o CSS da
@@ -436,13 +532,15 @@ table.rat{min-width:560px} table.nf{min-width:620px}
      home:true  -> esconde o botão "Início" (usar só no index).
      Para reaproveitar em todas as páginas, mantenha este bloco IDÊNTICO. ─── -->
 <style>
-.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;
+.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   padding:10px 18px;background:var(--brand-dark);color:#fff;box-shadow:0 2px 12px rgba(7,48,52,.20);
   font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+/* min-height nos três: no celular a barra inteira ficava com ~34px de alto e o dedo
+   errava o alvo. 44px é o mínimo que a mão acerta de primeira. */
 .b4u-bar .b4u-logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;margin-right:auto;
-  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1}
+  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1;min-height:44px}
 .b4u-bar .b4u-logo .y{color:var(--brand-euc)}
-.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;
+.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;min-height:44px;
   font-family:inherit;font-weight:600;font-size:var(--fs-3);padding:8px 13px;border-radius:var(--radius-sm);
   text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
 .b4u-btn svg{width:16px;height:16px;flex-shrink:0}
@@ -450,19 +548,25 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 .b4u-btn:active{transform:translateY(1px)}
 .b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
 .b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
-.b4u-btn.wa{background:#25D366;color:#fff}
+/* Branco sobre o verde do WhatsApp dá 1,98:1 — ilegível no sol. Verde-escuro: 7,23:1.
+   É o botão que ele usa para pedir socorro; não pode ser o mais difícil de ler. */
+.b4u-btn.wa{background:#25D366;color:#06302b}
 .b4u-btn.wa:hover{background:#20bd5a}
-.b4u-btn.call{background:var(--brand-teal);color:#fff}
-.b4u-btn.call:hover{background:#0c756f}
-.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+.b4u-btn.call{background:var(--brand-teal-txt);color:#fff}
+.b4u-btn.call:hover{background:#0A5F5A}
+.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;
   padding:0;border:0;cursor:pointer;border-radius:var(--radius-sm);background:rgba(255,255,255,.10);color:#fff;
   transition:background .15s}
 .b4u-icobtn:hover{background:rgba(255,255,255,.18)}
 .b4u-icobtn svg{width:17px;height:17px}
 @media(max-width:640px){
   .b4u-bar{gap:7px;padding:9px 12px}
-  .b4u-btn .b4u-lbl{display:none}
-  .b4u-btn{padding:9px 11px}
+  /* display:none tira o nome da árvore de acessibilidade e o leitor anuncia
+     "link, link, botão". Some da TELA, continua existindo para quem ouve. */
+  .b4u-btn .b4u-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  /* sem rótulo o botão fica só com o ícone de 16px: 11px de folga dava 38px de
+     largura. 14px fecha os 44px nos dois eixos. */
+  .b4u-btn{padding:9px 14px}
 }
 .b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
   display:none;align-items:flex-end;justify-content:center;
@@ -476,15 +580,15 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 .b4u-modal .b4u-sub{font-size:var(--fs-2);color:#6E6256;padding:0 20px 10px;line-height:1.5}
 .b4u-fld{padding:7px 20px}
 .b4u-fld label{display:block;font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin-bottom:5px}
-.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:var(--fs-4);
+.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:16px;
   padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink)}
 .b4u-fld textarea{min-height:120px;resize:vertical;line-height:1.5}
 .b4u-fld select:focus,.b4u-fld input:focus,.b4u-fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px;border-color:transparent}
 .b4u-err{color:var(--vermelho);font-size:var(--fs-2);padding:2px 20px 0;min-height:16px}
 .b4u-foot{display:flex;gap:10px;padding:14px 20px 20px;position:sticky;bottom:0;background:var(--surface)}
 .b4u-foot .b4u-btn{flex:1;justify-content:center;padding:12px}
-.b4u-foot .primary{background:var(--brand-teal);color:#fff}
-.b4u-foot .primary:hover{background:#0c756f}
+.b4u-foot .primary{background:var(--brand-teal-txt);color:#fff}
+.b4u-foot .primary:hover{background:#0A5F5A}
 .b4u-foot .primary[disabled]{opacity:.6;cursor:default}
 .b4u-foot .cancel{background:var(--canvas);color:var(--ink-2)}
 .b4u-foot .cancel:hover{background:#e8dccb}
@@ -502,7 +606,7 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 @media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
 /* Puxar para atualizar (mobile) */
 .b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
-  height:0;overflow:hidden;color:var(--brand-teal);z-index:1500;pointer-events:none;
+  height:0;overflow:hidden;color:var(--brand-teal-txt);z-index:1500;pointer-events:none;
   font-family:'Montserrat',system-ui,sans-serif;font-size:var(--fs-2);font-weight:700;gap:8px}
 .b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:var(--brand-teal);border-radius:50%}
 .b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
@@ -583,18 +687,90 @@ table.rat{min-width:560px} table.nf{min-width:620px}
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
+  /* Traduz qualquer erro para uma frase que o cliente entende — e que não o culpa.
+     `e.message` NUNCA vai para a tela: ele é vocabulário nosso, não dele. */
+  function msgAmigavel(e){
+    var m = String((e && e.message) || e || '');
+    if (/API|alcançar|respondeu|network|timeout|Failed to fetch/i.test(m))
+      return 'Não consegui falar com o sistema agora. Confira a sua internet e tente de '
+           + 'novo em alguns segundos — nada do que você digitou foi perdido.';
+    if (/restrito|acesso|código|senha|contato/i.test(m))
+      return 'Este link não está mais valendo. Peça um novo acesso para a gente que '
+           + 'reenviamos na hora.';
+    return 'Deu um problema do nosso lado, não seu. A equipe já foi avisada. Se for '
+         + 'urgente, chame no WhatsApp.';
+  }
+
+  /* A segunda visita não precisa recomeçar do esqueleto. Guardamos o último payload por
+     6h e pintamos com ele na hora, com tarja de "atualizando"; quando a resposta chega,
+     redesenhamos. Dado financeiro no aparelho dele — por isso prazo curto e limpeza no
+     logout (B4U.limparCache), junto do aparelho confiável. */
+  var CACHE_MS = 6 * 60 * 60 * 1000;
+  function cacheChave(tipo, id){ return 'b4u_pl_' + tipo + '_' + id; }
+  function cacheLer(tipo, id){
+    try {
+      var o = JSON.parse(localStorage.getItem(cacheChave(tipo, id)) || 'null');
+      if (!o || (Date.now() - o.ts) > CACHE_MS) return null;
+      return o.raw;
+    } catch (e) { return null; }
+  }
+  function cacheGravar(tipo, id, raw){
+    try { localStorage.setItem(cacheChave(tipo, id),
+          JSON.stringify({ ts: Date.now(), raw: raw })); } catch (e) {}
+  }
+  function limparCache(){
+    /* Sai o payload e sai também o b4u_disp_ (quais áreas o cliente tem): num aparelho
+       compartilhado, a barra do próximo não pode herdar o mapa de painéis do anterior. */
+    try { Object.keys(localStorage).forEach(function (k) {
+          if (k.indexOf('b4u_pl_') === 0 || k.indexOf('b4u_disp_') === 0) localStorage.removeItem(k); }); } catch (e) {}
+  }
+
   var IC = {
     home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
     wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>',
     chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/></svg>',
     help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>',
-    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>'
+    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>',
+    guias:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m8.5 15 2 2 4-4"/></svg>',
+    pessoal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><path d="M16 4.2c1.7.4 3 2 3 3.8s-1.3 3.4-3 3.8M23 20c0-2.8-2.3-5.1-5.4-5.8"/></svg>',
+    fiscal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>',
+    equiparacao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>'
   };
 
   var C = idc();
   var linkHome = 'index.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var linkTickets = 'meustickets.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
+
+  // ---- links de área na própria barra --------------------------------------
+  /* Do fiscal para a agenda não havia caminho: era voltar para a home e pagar outra
+     chamada à API. Os links saem do `disponiveis` que a HOME já recebeu e gravou no
+     aparelho (b4u_disp_<id>) — assim respeitam PAINEIS_OCULTOS e o acesso da pessoa
+     sem esta página perguntar nada. Sem esse registro, só a agenda, que quem tem
+     fiscal ou pessoal sempre tem. */
+  var AREAS_LINK = [
+    ['guias.html',       'Agenda',       'guias',       IC.guias],
+    ['fiscal.html',      'Fiscal',       'fiscal',      IC.fiscal],
+    ['dptopessoal.html', 'Pessoal',      'pessoal',     IC.pessoal],
+    ['equiparacao.html', 'Equiparação',  'equiparacao', IC.equiparacao]
+  ];
+  function disponiveisSalvos(){
+    try { var o = JSON.parse(localStorage.getItem('b4u_disp_'+C.id)||'null');
+          return (o && (o.disponiveis || o)) || null; } catch(e){ return null; }
+  }
+  function linksDeArea(){
+    var disp = disponiveisSalvos();
+    var aqui = (location.pathname.split('/').pop()||'').toLowerCase();
+    return AREAS_LINK.filter(function(a){
+      if (a[0].toLowerCase() === aqui) return false;                       // não linkar a página atual
+      if (a[2] === 'guias') return !disp || !!(disp.fiscal || disp.pessoal);
+      return !!(disp && disp[a[2]]);
+    }).slice(0, 2)                                                          // 2 links: a barra ainda tem 3 botões fixos
+     .map(function(a){
+       return '<a class="b4u-btn ghost" href="'+esc(a[0]+(C.id?('#'+C.id+(C.codigo?'-'+C.codigo:'')):''))+'" '+
+              'title="'+esc(a[1])+'">'+a[3]+'<span class="b4u-lbl">'+esc(a[1])+'</span></a>';
+     }).join('');
+  }
 
   // ---- barra fixa ----------------------------------------------------------
   var bar = document.createElement('div');
@@ -603,6 +779,7 @@ table.rat{min-width:560px} table.nf{min-width:620px}
     '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
     (CFG.home ? '' :
       '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
+    (CFG.home ? '' : linksDeArea()) +
     '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
     '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
     '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
@@ -618,7 +795,39 @@ table.rat{min-width:560px} table.nf{min-width:620px}
   ov.className = 'b4u-ov';
   document.body.appendChild(ov);
 
-  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; }
+  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; ESQ_ATUAL=''; }
+
+  /* Fechar por clique no fundo ou Esc NÃO pode apagar o que ele escreveu. Só é
+     "limpo" o que ainda for igual ao esqueleto pré-preenchido do tipo escolhido. */
+  var ESQ_ATUAL = '';
+  function modalSujo(){
+    var t = ov.querySelector('#b4u-msg'), a = ov.querySelector('#b4u-assunto');
+    if(!t) return false;
+    return String(t.value||'').trim() !== String(ESQ_ATUAL||'').trim()
+        || !!(a && a.value.trim());
+  }
+  function tentarFechar(){ if(modalSujo()) pedirDescartar(); else fecharModal(); }
+  function montarFoot(){
+    var foot = ov.querySelector('.b4u-foot'); if(!foot) return;
+    foot.innerHTML =
+      '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
+      '<button type="button" class="b4u-btn primary" id="b4u-send">Enviar chamado</button>';
+    foot.querySelector('#b4u-cancel').addEventListener('click', tentarFechar);
+    foot.querySelector('#b4u-send').addEventListener('click', enviar);
+  }
+  function pedirDescartar(){
+    var foot = ov.querySelector('.b4u-foot'); if(!foot){ fecharModal(); return; }
+    foot.innerHTML =
+      '<button type="button" class="b4u-btn cancel" id="b4u-keep">Continuar escrevendo</button>' +
+      '<button type="button" class="b4u-btn primary" id="b4u-discard">Descartar o que escrevi</button>';
+    var err = ov.querySelector('#b4u-erro');
+    if(err) err.textContent = 'Você escreveu algo neste chamado. Quer mesmo sair sem enviar?';
+    foot.querySelector('#b4u-keep').addEventListener('click', function(){
+      if(err) err.textContent=''; montarFoot();
+      var t = ov.querySelector('#b4u-msg'); if(t) t.focus();
+    });
+    foot.querySelector('#b4u-discard').addEventListener('click', fecharModal);
+  }
 
   function abrir(opts){
     opts = opts || {};
@@ -657,6 +866,7 @@ table.rat{min-width:560px} table.nf{min-width:620px}
     function aplicaSkeleton(force){
       var esq = TIPOS[selTipo.value] ? TIPOS[selTipo.value][1] : '';
       if(force || !txt.value.trim()) txt.value = esq;
+      ESQ_ATUAL = esq;                 // referência do que ainda é "vazio", não texto dele
     }
     aplicaSkeleton(true);
     selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
@@ -665,8 +875,8 @@ table.rat{min-width:560px} table.nf{min-width:620px}
       selTipo.innerHTML = opcoesTipo(this.value, selTipo.value);
       aplicaSkeleton(true);
     });
-    ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
-    ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
+    ov.querySelector('#b4u-cancel').addEventListener('click', tentarFechar);
+    ov.addEventListener('click', function(e){ if(e.target===ov) tentarFechar(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
     // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
     var fileEl = ov.querySelector('#b4u-file');
@@ -692,7 +902,7 @@ table.rat{min-width:560px} table.nf{min-width:620px}
     var file = fileEl && fileEl.files && fileEl.files[0];
     if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
     btn.disabled = true; btn.textContent = 'Enviando…';
-    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = msgAmigavel(e); };
     if(file){
       // COM arquivo -> POST (JSONP/GET não comporta base64)
       var reader = new FileReader();
@@ -748,7 +958,7 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 
   bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
   bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) tentarFechar(); });
 
   // ---- Puxar para atualizar (mobile) --------------------------------------
   // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
@@ -780,6 +990,9 @@ table.rat{min-width:560px} table.nf{min-width:620px}
   })();
 
   window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    msgAmigavel: msgAmigavel,
+    CACHE_MS: CACHE_MS, cacheChave: cacheChave, cacheLer: cacheLer,
+    cacheGravar: cacheGravar, limparCache: limparCache,
     // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
     skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
       var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
@@ -798,7 +1011,21 @@ table.rat{min-width:560px} table.nf{min-width:620px}
 
 
 
-<div id="app"><div class="state"><div class="spin" role="status" aria-label="Carregando"></div><p>Carregando o painel…</p></div></div>
+<!-- Esqueleto com a silhueta REAL da página (cabeçalho, herói, três guias, calendário):
+     uma bolinha girando não diz nada sobre o que está chegando. render() apaga tudo. -->
+<div id="app">
+  <div class="wrap" role="status" aria-live="polite">
+    <div class="b4u-skel" style="height:22px;width:200px;margin:22px 0 8px"></div>
+    <div class="b4u-skel" style="height:13px;width:72%;max-width:340px;margin-bottom:20px"></div>
+    <div class="b4u-skel" style="height:150px;border-radius:var(--radius-lg);margin-bottom:26px"></div>
+    <div class="b4u-skel" style="height:15px;width:170px;margin-bottom:12px"></div>
+    <div class="b4u-skel" style="height:66px;border-radius:var(--radius);margin-bottom:9px"></div>
+    <div class="b4u-skel" style="height:66px;border-radius:var(--radius);margin-bottom:9px"></div>
+    <div class="b4u-skel" style="height:66px;border-radius:var(--radius);margin-bottom:22px;opacity:.6"></div>
+    <div class="b4u-skel" style="height:180px;border-radius:var(--radius);opacity:.45"></div>
+    <p id="espera-txt" style="text-align:center;color:var(--muted);font-size:var(--fs-3);margin-top:18px">Carregando o painel…</p>
+  </div>
+</div>
 
 <div class="modal-bg" id="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
   <div class="modal">
@@ -812,16 +1039,19 @@ table.rat{min-width:560px} table.nf{min-width:620px}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 /* ===== CONFIG =====
    URL /exec da sua implantação do Apps Script. Confirme que é a implantação ATUAL
    (Implantar > Gerenciar implantações). Deixe '' apenas para rodar a demonstração. */
 const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
 
+/* Slots validados: antes ISS e DAS tinham o MESMO hex e cinco tributos eram o mesmo
+   marrom — no donut viravam uma fatia só. ISS e DAS podem repetir o slot 1 porque
+   nunca aparecem juntos (um é Simples, o outro não). */
 const PAL = {
-  iss:'#3FA680', das:'#3FA680', pis:'#A7715D', cofins:'#C79873', csll:'#8F5A4A', irpj:'#6B4236',
-  inss:'#CBA88F', fgts:'#B89572', estimativa:'#3FA680',
+  iss:'#009488', das:'#009488', pis:'#B4530F', cofins:'#6B4FA0',
+  csll:'#7A8B3D', irpj:'#113D39', inss:'#8A6D3B', fgts:'#5B7C99',
+  estimativa:'#0C756F',
   musgo:'#1D3B37', petroleo:'#113D39', vinho:'#731007', muted:'#6E6256', line:'#E4D9C9'
 };
 // Paleta FIXA dos centros de custo (ordem 1..10) — cor sempre consistente por posição do centro.
@@ -853,6 +1083,9 @@ const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov'
 const MESES_L = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 /** "2026-06" → "junho" (com "/25" se o ano da competência diferir do ano exibido). */
 const compRefTexto = (ref,anoExibido)=>{ const [a,m]=String(ref).split('-'); if(!m) return ''; return MESES_L[+m-1]+(+a!==anoExibido?'/'+String(a).slice(2):''); };
+/** "2026-06" → "junho de 2026". A tela do cliente não mostra chave de planilha. */
+const compRefLongo = ref => { const [a,m]=String(ref||'').split('-');
+  return (!m||!MESES_L[+m-1]) ? '' : MESES_L[+m-1]+' de '+a; };
 const DOW = ['dom','seg','ter','qua','qui','sex','sáb'];
 
 const brl = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
@@ -1106,15 +1339,17 @@ function render(M){
   </div></header>`));
   const wrap=el('<div class="wrap"></div>'); app.appendChild(wrap);
 
-  // Faixa fina no topo: o acionável (a lista de guias) fica no fim da página, então
-  // o resumo aparece antes dos gráficos e leva direto para lá.
-  appendAll(wrap,`<div class="resumo-topo" id="resumo-topo"></div>`);
+  /* ORDEM DA PÁGINA: a pergunta que ele traz ao abrir é "tenho alguma coisa vencendo?".
+     Então: faixa de vencidas → herói com a resposta → lista de guias (onde ele age) →
+     calendário (consulta) → provisionamento (planejamento, recolhido). Antes a resposta
+     vinha depois de três roscas e de um calendário, em corpo de texto. */
+  appendAll(wrap,`<div class="faixa-vencidas" id="faixa-vencidas" role="alert" hidden></div>
+    <div class="heroi" id="heroi"></div>
+    <div id="tarja-slot"></div>`);
 
-  appendAll(wrap,`<div class="sec-head"><div><h2>Provisionamento dos impostos</h2>
-    <p>Quanto separar para os próximos vencimentos — por tributo, pelo mês em que a guia vence.</p></div></div>
-    <div class="charts3" id="estim3">
-      ${[0,1,2].map(i=>`<div class="card chart"><h3 id="est-t-${i}"></h3><div class="sub" id="est-s-${i}"></div><div class="cbox"><canvas id="est-${i}"></canvas></div><div class="pie-legend" id="est-lg-${i}"></div></div>`).join('')}
-    </div>`);
+  appendAll(wrap,`<div class="sec-head" id="sec-guias"><div><h2>Guias e obrigações</h2><p>Marque como agendada ou paga conforme for resolvendo — fica registrado quem marcou.</p></div>
+    <div class="tabs"><button class="tab${GUIAS_FILTRO==='pendentes'?' on':''}" id="gf-pend" data-f="pendentes">Em aberto</button><button class="tab${GUIAS_FILTRO==='todas'?' on':''}" id="gf-todas" data-f="todas">Todas</button></div></div>
+    <div id="guias-lista"></div>`);
 
   appendAll(wrap,`<div class="sec-head"><div><h2>Calendário de vencimentos</h2>
     <p>Use as setas para navegar pelos meses.</p></div></div>
@@ -1124,9 +1359,16 @@ function render(M){
       <div class="cal-strip"><div class="cal-mini lateral" id="cal-prev"></div><div class="cal-mini" id="cal-atual"></div><div class="cal-mini lateral" id="cal-next"></div></div>
       <div class="cal-total" id="cal-total"></div><div class="cal-agenda" id="cal-agenda"></div></div>`);
 
-  appendAll(wrap,`<div class="sec-head" id="sec-guias"><div><h2>Guias e obrigações</h2><p>Marque como agendada ou paga conforme for resolvendo — fica registrado quem marcou.</p></div>
-    <div class="tabs"><button class="tab on" id="gf-pend" data-f="pendentes">Em aberto</button><button class="tab" id="gf-todas" data-f="todas">Todas</button></div></div>
-    <div id="guias-lista"></div>`);
+  appendAll(wrap,`<details class="bloco" id="det-prov">
+      <summary><div class="bloco-t"><b>Quanto separar para os próximos meses</b>
+        <span>Por tributo, pelo mês em que a guia vence. Nada aqui é para pagar hoje.</span></div>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="bloco-body">
+        <div class="charts3" id="estim3">
+          ${[0,1,2].map(i=>`<div class="card chart"><h3 id="est-t-${i}"></h3><div class="sub" id="est-s-${i}"></div><div class="cbox"><canvas id="est-${i}"></canvas></div><div class="pie-legend" id="est-lg-${i}"></div></div>`).join('')}
+        </div>
+      </div>
+    </details>`);
 
   wrap.appendChild(el(`<footer><span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span><span>back4you · inteligência tributária</span></footer>`));
 
@@ -1157,17 +1399,39 @@ function render(M){
   document.getElementById('cal-prev-btn').addEventListener('click',()=>{ const d=new Date(calCentro.ano,calCentro.mes-1,1); if(dentro(d.getFullYear())){calCentro={ano:d.getFullYear(),mes:d.getMonth()};renderCarrossel();} });
   document.getElementById('cal-next-btn').addEventListener('click',()=>{ const d=new Date(calCentro.ano,calCentro.mes+1,1); if(dentro(d.getFullYear())){calCentro={ano:d.getFullYear(),mes:d.getMonth()};renderCarrossel();} });
 
-  document.getElementById('gf-pend').addEventListener('click',()=>{ GUIAS_FILTRO='pendentes'; document.getElementById('gf-pend').classList.add('on'); document.getElementById('gf-todas').classList.remove('on'); renderGuias(M); });
-  document.getElementById('gf-todas').addEventListener('click',()=>{ GUIAS_FILTRO='todas'; document.getElementById('gf-todas').classList.add('on'); document.getElementById('gf-pend').classList.remove('on'); renderGuias(M); });
+  function trocarFiltro(f){ GUIAS_FILTRO=f;
+    document.getElementById('gf-pend').classList.toggle('on', f==='pendentes');
+    document.getElementById('gf-todas').classList.toggle('on', f==='todas');
+    sincronizarURL(); renderGuias(M); }
+  document.getElementById('gf-pend').addEventListener('click',()=>trocarFiltro('pendentes'));
+  document.getElementById('gf-todas').addEventListener('click',()=>trocarFiltro('todas'));
 
-  // Se o Chart.js (CDN) falhar, o painel deve continuar aparecendo (sem os gráficos), nunca redirecionar.
-  try{ desenharEstimativas(M); }catch(e){ if(window.console&&console.warn) console.warn('Gráficos de provisão indisponíveis:', e); }
+  // O bloco de provisionamento nasce fechado: desenhar dentro de um container sem
+  // altura dá gráfico de 0px. Desenha na primeira abertura, uma vez só.
+  // Se o Chart.js (CDN) falhar, o painel continua aparecendo (sem os gráficos), nunca redireciona.
+  const detProv=document.getElementById('det-prov'); let provFeito=false;
+  function desenharProv(){ if(provFeito) return; provFeito=true;
+    try{ desenharEstimativas(M); }catch(e){ if(window.console&&console.warn) console.warn('Gráficos de provisão indisponíveis:', e); } }
+  detProv.addEventListener('toggle',()=>{ if(detProv.open) desenharProv(); });
+  if(detProv.open) desenharProv();
+
   renderCarrossel();
   renderGuias(M);
 }
 
 /* ---- Lista de guias com controle de pago/agendado ---- */
-let GUIAS_FILTRO='pendentes';
+/* A aba escolhida vive no endereço: dar F5 (ou voltar do link da guia) devolvia
+   sempre "Em aberto", mesmo para quem tinha acabado de pedir "Todas". */
+const GUIAS_FILTROS_OK=['pendentes','todas'];
+function lerFiltroURL(){ const f=String(new URLSearchParams(location.search).get('g')||'').trim().toLowerCase();
+  return GUIAS_FILTROS_OK.indexOf(f)>=0?f:'pendentes'; }
+function sincronizarURL(){
+  try{ const u=new URL(location.href);
+    if(GUIAS_FILTRO==='pendentes') u.searchParams.delete('g'); else u.searchParams.set('g',GUIAS_FILTRO);
+    history.replaceState(null,'',u.pathname+u.search+u.hash);   // o #id-codigo continua intacto
+  }catch(e){}
+}
+let GUIAS_FILTRO=lerFiltroURL();
 // CHAVE de 2 partes (regra|competência) — casa com a aba Agenda pré-preenchida da planilha
 // fiscal. Não inclui o vencimento (que varia com feriados), então status + LINK da guia
 // batem sempre com a linha da Agenda que o colaborador preencheu.
@@ -1200,31 +1464,74 @@ function renderGuias(M){
       ${grupos[mk].map(g=>cardGuia(g)).join('')}
     </div>`).join('') : `<div class="card"><div class="vazio" style="padding:20px;text-align:center;color:var(--muted)">Nenhuma guia ${GUIAS_FILTRO==='pendentes'?'em aberto':''} por aqui.</div></div>`;
   box.querySelectorAll('[data-marca]').forEach(b=> b.addEventListener('click',()=>marcarGuiaUI(M,b.dataset.chave,b.dataset.marca,b)));
-  renderResumoTopo(M);
+  renderHeroi(M);
 }
 
-/* Faixa fina do topo: próximo vencimento · total em aberto · quantas vencidas. */
-function renderResumoTopo(M){
-  const box=document.getElementById('resumo-topo'); if(!box) return;
+/* Rolar até a lista SEM mexer no endereço: `href="#sec-guias"` trocava o fragmento
+   e levava embora o `#id-codigo` — o cliente perdia o acesso ao dar F5. */
+function irParaGuias(e){ if(e) e.preventDefault();
+  const alvo=document.getElementById('sec-guias'); if(alvo) alvo.scrollIntoView({block:'start'}); }
+
+/* Dias inteiros entre hoje e um vencimento "AAAA-MM-DD" (positivo = ainda vai vencer). */
+function diasAte(venc){ const d=dParse(String(venc).slice(0,10)); d.setHours(0,0,0,0);
+  return Math.round((d-hoje)/86400000); }
+function textoPrazo(n){ return n<0?('há '+(-n)+(n===-1?' dia':' dias')) : n===0?'hoje' : n===1?'amanhã' : ('em '+n+' dias'); }
+/* Une descrições em linguagem de gente: "FGTS, INSS e ISS". */
+function listar(itens){ const a=itens.filter(Boolean);
+  return a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' e '+a[a.length-1]; }
+
+/* Vence "agora" o que cai nos próximos 15 dias. Mais longe que isso, a resposta
+   honesta para "tenho alguma coisa vencendo?" é "não" — e o herói diz isso. */
+const DIAS_PROXIMO = 15;
+
+/* O herói responde a única pergunta que o cliente traz ao abrir esta página.
+   Três estados: tem vencidas (faixa vermelha acima) · tem algo vencendo · nada agora. */
+function renderHeroi(M){
+  const faixa=document.getElementById('faixa-vencidas');
+  const box=document.getElementById('heroi'); if(!box) return;
   const abertas=guiasDe(M).filter(g=>(g.status||'').toLowerCase()!=='paga');
-  if(!abertas.length){
-    box.innerHTML=`<div class="rt-item"><b>Tudo em dia</b><span>nenhuma guia em aberto</span></div>
-      <a class="rt-ir" href="#sec-guias">Ver guias</a>`;
-    return;
-  }
   const vencidas=abertas.filter(guiaVencida);
   const futuras=abertas.filter(g=>!guiaVencida(g));
-  const prox=futuras[0]||abertas[0];
-  const total=abertas.reduce((s,g)=>s+(g.valor>0?g.valor:0),0);
-  const algumaEstimativa=abertas.some(g=>g.est&&g.valor>0);
-  const dia=String(prox.venc).slice(8,10)+'/'+String(prox.venc).slice(5,7)+'/'+String(prox.venc).slice(0,4);
-  box.innerHTML=
-    `<div class="rt-item"><span>Próximo vencimento</span><b>${esc(dia)}</b><span>· ${esc(prox.desc)}</span></div>
-     <span class="rt-sep"></span>
-     <div class="rt-item"><span>Em aberto</span><b>${total>0?brl(total):'a apurar'}</b><span>${algumaEstimativa?'(inclui estimativa)':''}</span></div>
-     ${vencidas.length?`<span class="rt-sep"></span>
-     <div class="rt-item alerta"><b>${vencidas.length}</b><span>${vencidas.length>1?'vencidas':'vencida'}</span></div>`:''}
-     <a class="rt-ir" href="#sec-guias">Ver guias</a>`;
+
+  // ---- estado "vencidas": faixa vermelha ACIMA de tudo ----
+  if(faixa){
+    if(vencidas.length){
+      const tv=vencidas.reduce((s,g)=>s+(g.valor>0?g.valor:0),0);
+      const n=vencidas.length;
+      faixa.innerHTML=`<span class="fv-txt">${n} ${n>1?'guias venceram':'guia venceu'} e ainda `+
+        `${n>1?'não foram marcadas como pagas':'não foi marcada como paga'} — <b>${tv>0?brl(tv):'valor a apurar'}</b>.</span>`+
+        `<a href="#" id="fv-ver">Ver quais ↓</a>`;
+      faixa.hidden=false;
+      const lk=faixa.querySelector('#fv-ver'); if(lk) lk.addEventListener('click',irParaGuias);
+    } else { faixa.hidden=true; faixa.innerHTML=''; }
+  }
+
+  // ---- estado "nada vencendo agora" ----
+  const prox=futuras[0];
+  const prazo=prox?diasAte(prox.venc):null;
+  if(!prox || prazo>DIAS_PROXIMO){
+    const quando=prox?(String(prox.venc).slice(8,10)+'/'+String(prox.venc).slice(5,7)):'';
+    box.innerHTML=`<div class="lbl">Agenda de pagamentos</div>
+      <div class="heroi-v">Nada vencendo agora</div>
+      <div class="heroi-sub">${prox?`A próxima guia é só em <b>${esc(quando)}</b>.`:'Você não tem nenhuma guia em aberto por aqui.'}</div>
+      <button type="button" class="heroi-ir" id="hr-ver">Ver a lista de guias ↓</button>`;
+    box.querySelector('#hr-ver').addEventListener('click',irParaGuias);
+    return;
+  }
+
+  // ---- estado "vencendo": tudo que cai no mesmo dia entra no mesmo número ----
+  const doDia=futuras.filter(g=>g.venc===prox.venc);
+  const total=doDia.reduce((s,g)=>s+(g.valor>0?g.valor:0),0);
+  const algumEst=doDia.some(g=>g.est&&g.valor>0);
+  const dia=String(prox.venc).slice(8,10)+'/'+String(prox.venc).slice(5,7);
+  const nomes=listar([...new Set(doDia.map(g=>g.desc).filter(Boolean))]);
+  const refs=[...new Set(doDia.map(g=>g.ref).filter(Boolean))];
+  const refTxt=refs.length===1?compRefLongo(refs[0]):'';
+  box.innerHTML=`<div class="lbl">Seu próximo pagamento</div>
+    <div class="heroi-v">${total>0?brl(total):'a apurar'} <span class="quando">· vence ${esc(dia)} (${esc(textoPrazo(prazo))})</span></div>
+    <div class="heroi-sub">${esc(nomes)}${refTxt?' de '+esc(refTxt):''}${algumEst?' <span style="opacity:.85">(valor estimado)</span>':''}</div>
+    <button type="button" class="heroi-ir" id="hr-ver">Ver a lista de guias ↓</button>`;
+  box.querySelector('#hr-ver').addEventListener('click',irParaGuias);
 }
 function cardGuia(g){
   const st=(g.status||'').toLowerCase();
@@ -1235,25 +1542,30 @@ function cardGuia(g){
   return `<div class="guia-card ${cls}${vencida?' vencida':''}">
     <div class="guia-venc"><b>${dia}</b>${vencida?'<span class="gv-tag">vencida</span>':''}</div>
     <div class="guia-info"><div class="guia-desc">${esc(g.desc)}</div>
-      <div class="guia-meta">${g.ref?('comp. '+esc(g.ref)+' · '):''}${g.valor>0?brl(g.valor)+(g.est?' (estim.)':''):'a apurar'}${g.por?(' · por '+esc(g.por)):''}${g.ajustada?' · <span title="vencimento definido manualmente na planilha">data ajustada</span>':''}</div>
-      ${g.link?`<a class="guia-baixar" href="${esc(g.link)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:var(--fs-2);font-weight:600;color:var(--brand-teal);text-decoration:none">📄 Baixar guia</a>`:''}</div>
+      <div class="guia-meta">${g.ref&&compRefLongo(g.ref)?('impostos de '+esc(compRefLongo(g.ref))+' · '):''}${g.valor>0?brl(g.valor)+(g.est?' (estim.)':''):'a apurar'}${g.por?(' · por '+esc(g.por)):''}${g.ajustada?' · <span title="vencimento definido manualmente na planilha">data ajustada</span>':''}</div>
+      ${g.link?`<a class="guia-baixar" href="${esc(g.link)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:var(--fs-2);font-weight:600;color:var(--brand-teal-txt);text-decoration:none">📄 Baixar guia</a>`:''}</div>
     <div class="guia-acoes">
       <span class="guia-status ${cls}">${rot}</span>
+      <!-- "Agendar"/"Paga" não diziam quem faz o quê (nós agendamos? ele?), e clicar
+           num botão já ativo limpava o status em silêncio. Agora o rótulo é a frase
+           dele, e desmarcar está escrito no próprio botão. -->
       <div class="guia-btns">
-        <button data-marca="Agendada" data-chave="${g.chave}" class="${st==='agendada'?'on':''}">Agendar</button>
-        <button data-marca="Paga" data-chave="${g.chave}" class="${st==='paga'?'on':''}">Paga</button>
+        <button data-marca="Agendada" data-chave="${g.chave}" class="${st==='agendada'?'on':''}">${st==='agendada'?'✓ Já agendei · desfazer':'Já agendei no banco'}</button>
+        <button data-marca="Paga" data-chave="${g.chave}" class="${st==='paga'?'on':''}">${st==='paga'?'✓ Já paguei · desfazer':'Já paguei'}</button>
       </div>
     </div>
   </div>`;
 }
 function compDeDia(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-/* Aviso inline dentro do próprio cartão da guia (a casa não usa alert/confirm/prompt). */
-function avisoGuia(card,msg){
+/* Aviso inline dentro do próprio cartão da guia (a casa não usa alert/confirm/prompt).
+   O código curto ao lado é para o atendimento; a frase é para ele. */
+function avisoGuia(card,msg,cod){
   if(!card) return;
   let box=card.querySelector('.guia-aviso');
   if(!msg){ if(box) box.remove(); return; }
   if(!box){ box=document.createElement('div'); box.className='guia-aviso'; box.setAttribute('role','alert'); card.appendChild(box); }
-  box.textContent=msg;
+  box.textContent=msg+' ';   // espaço antes do código: sem ele o leitor de tela junta as duas palavras
+  if(cod){ const c=document.createElement('span'); c.className='cod-erro'; c.textContent=cod; box.appendChild(c); }
 }
 async function marcarGuiaUI(M,chave,marca,btn){
   const atual=(M.agenda||{})[chave]; const novo=(atual&&atual.status===marca)?'':marca;
@@ -1274,7 +1586,8 @@ async function marcarGuiaUI(M,chave,marca,btn){
   }catch(e){
     botoes.forEach(b=>{ b.disabled=false; });
     if(btn){ btn.classList.remove('marcando'); btn.textContent=rotulo; }
-    avisoGuia(card,'Não consegui marcar agora: '+(e&&e.message?e.message:e)+'. Tente de novo em instantes.');
+    // e.message é vocabulário nosso ("A API não respondeu"): nunca vai para a tela dele.
+    avisoGuia(card,'Não consegui registrar o pagamento agora. Tente de novo em alguns segundos — a guia continua marcada como estava.','GUI-01');
   }
 }
 
@@ -1315,16 +1628,26 @@ function desenharEstimativas(M){
     document.getElementById('est-s-'+i).innerHTML=(algumEst?'estimativa · ':'')+'provisionar <span class="estimativa">'+brl(total)+'</span>';
     const lg=document.getElementById('est-lg-'+i), cbox=document.getElementById('est-'+i).closest('.cbox');
     if(total<=0){ if(cbox) cbox.style.display='none'; lg.innerHTML='<div class="prov-vazio">Sem guias a provisionar neste mês.</div>'; continue; }
+    lg.innerHTML=dados.map(x=>`<div class="pie-legend-row"><i class="sw" style="background:${x.c}"></i><span>${x.n}${x.est&&x.v>0?' <span style="color:var(--muted);font-weight:400">· estim.</span>':''}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`).join('');
+    // Donut de uma fatia só é um anel maciço: não compara nada (é o caso de todo cliente
+    // do Simples, que só tem DAS). Com menos de duas fatias o valor vale mais como texto
+    // — e a linha da legenda logo abaixo já é exatamente isso.
+    const visiveis=dados.filter(x=>x.v>0);
+    if(visiveis.length<2){ if(cbox) cbox.style.display='none'; continue; }
     if(cbox) cbox.style.display='';
-    lg.innerHTML=dados.map(x=>`<div class="pie-legend-row"><i style="background:${x.c}"></i><span>${x.n}${x.est&&x.v>0?' <span style="color:var(--muted);font-weight:400">· estim.</span>':''}</span><b class="num ${x.v>0?'estimativa':''}">${x.v>0?brl(x.v):'—'}</b></div>`).join('');
-    new Chart(document.getElementById('est-'+i),{type:'doughnut',data:{labels:dados.map(x=>x.n),datasets:[{data:dados.map(x=>x.v),backgroundColor:dados.map(x=>x.c),borderWidth:0}]},options:opts});
+    // sem o fio branco entre as fatias, duas cores vizinhas se fundem numa mancha só
+    // try por gráfico: se o CDN do Chart.js cair, os outros meses ainda desenham a legenda
+    try{
+      new Chart(document.getElementById('est-'+i),{type:'doughnut',data:{labels:dados.map(x=>x.n),datasets:[{data:dados.map(x=>x.v),backgroundColor:dados.map(x=>x.c),borderColor:'#fff',borderWidth:1.5}]},options:opts});
+    }catch(e){ if(cbox) cbox.style.display='none'; if(window.console&&console.warn) console.warn('Gráfico indisponível:',e); }
   }
 }
 
 // Sem login (falta id/código) volta ao index; com login, mostra aviso amigável e não redireciona
 // (assim uma falha momentânea de dados/gráfico nunca "expulsa" o cliente do painel).
-function erro(msg){
+function erro(e){
   var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
+  var amigavel=(window.B4U&&B4U.msgAmigavel)?B4U.msgAmigavel(e):'';
   if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
   var volta='index.html#'+id+(codigo?('-'+codigo):'');
   document.body.innerHTML=
@@ -1334,15 +1657,60 @@ function erro(msg){
    +'border-radius:var(--radius-lg);padding:32px 28px;box-shadow:0 6px 24px rgba(7,48,52,.06)">'
    +'<div style="font-size:var(--fs-6);line-height:1;margin-bottom:10px">📄</div>'
    +'<h2 style="margin:0 0 8px;font-size:var(--fs-5)">Não foi possível carregar suas informações agora.</h2>'
-   +'<p style="margin:0 0 20px;font-size:var(--fs-4);line-height:1.5;color:#3F5854">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
-   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#0F8C85;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:var(--radius-pill);font-size:var(--fs-4)">Falar com o atendimento</a>'
-   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#0F8C85;font-size:var(--fs-3);text-decoration:none">Voltar ao início</a></div>'
+   +'<p style="margin:0 0 20px;font-size:var(--fs-4);line-height:1.5;color:#3F5854">'+(amigavel||'Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.')+'</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#0C756F;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:var(--radius-pill);font-size:var(--fs-4)">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#0C756F;font-size:var(--fs-3);text-decoration:none">Voltar ao início</a></div>'
    +'</div></div>';
 }
 
-(async function(){ try{ const raw=await carregar(); const M=preparar(raw); M.atualizado_em=raw.atualizado_em;
-  if(!M.empresa.length) return erro('A planilha deste cliente não tem nenhum mês na aba Empresa.'); render(M);
-} catch(e){ erro(e.message||String(e)); } })();
+/* 20s olhando a mesma frase é lido como "travou" — e ele recarrega, jogando fora o
+   pedido que já estava a caminho. Trocar o texto é barato e compra paciência. */
+var _tEspera = [
+  setTimeout(function(){ var p=document.getElementById('espera-txt');
+    if(p) p.textContent = 'Estamos buscando os seus dados na planilha…'; }, 4000),
+  setTimeout(function(){ var p=document.getElementById('espera-txt');
+    if(p) p.textContent = 'Está demorando mais que o normal — continuamos tentando.'; }, 10000)
+];
+function pararEspera(){ _tEspera.forEach(clearTimeout); }
+
+/* Tarja discreta do cache: diz que o que está na tela veio do último acesso.
+   Fica dentro do .wrap, logo abaixo do herói — nunca por cima do número. */
+function tarja(texto,falhou){
+  const slot=document.getElementById('tarja-slot'); if(!slot) return;
+  slot.innerHTML = texto ? `<div class="tarja-atualizando${falhou?' falhou':''}">${esc(texto)}</div>` : '';
+}
+
+(async function(){
+  const {id}=getIdCodigo();
+  let pintadoDoCache=false, tsCache=0;
+  /* A segunda visita não recomeça do esqueleto: pintamos com o último payload (6h de
+     validade) e atualizamos por baixo. Se a atualização falhar, o que está na tela
+     continua — apagar dado bom por causa de uma rede ruim é pior que dado de 1h atrás. */
+  if(API_URL && id && window.B4U && B4U.cacheLer){
+    const bruto=B4U.cacheLer('guias',id);
+    if(bruto){
+      try{
+        const Mc=preparar(bruto);
+        if(Mc.empresa.length){ Mc.atualizado_em=bruto.atualizado_em; tsCache=bruto.atualizado_em||0;
+          pararEspera(); render(Mc); tarja('Atualizando…'); pintadoDoCache=true; }
+      }catch(err){ /* cache velho ou de outro formato: simplesmente ignora e busca de novo */ }
+    }
+  }
+  try{
+    const raw=await carregar();
+    const M=preparar(raw); M.atualizado_em=raw.atualizado_em;
+    if(!M.empresa.length){
+      if(pintadoDoCache){ tarja('Não consegui atualizar agora — mostrando os dados de '+horaCache(tsCache)+'.',true); return; }
+      return erro(new Error('A planilha deste cliente não tem nenhum mês na aba Empresa.'));
+    }
+    if(API_URL && id && window.B4U && B4U.cacheGravar) B4U.cacheGravar('guias',id,raw);
+    pararEspera(); render(M); tarja('');
+  } catch(e){
+    if(pintadoDoCache){ tarja('Não consegui atualizar agora — mostrando os dados de '+horaCache(tsCache)+'.',true); return; }
+    erro(e);
+  }
+})();
+function horaCache(ts){ return ts ? new Date(ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}) : 'antes'; }
 </script>
 </body>
 </html>

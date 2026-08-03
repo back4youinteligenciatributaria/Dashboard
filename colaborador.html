@@ -9,25 +9,42 @@
 <title>Painel da Equipe — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Duas origens porque o /exec responde 302 para a segunda: sem isto o aparelho paga
+     DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte não pode segurar a primeira pintura: entra como preload e vira folha depois. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
 <style>
 :root{
   /* Paleta canonica da equipe — a mesma em todas as telas. */
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
   --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,37:1 no canvas).
+     Este e o mesmo teal escurecido so para letra e fundo de letra; o --brand-teal
+     segue canonico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
-  /* Raios: 12 padrao, 16 nos blocos grandes, 999px so em pilula, 10px em campo. */
-  --radius:12px;--radius-lg:16px;
+  /* Sufixo -2 = a mesma tinta um degrau mais escura. O --vermelho da 4,46:1 sobre o
+     canvas — falta 0,04 para o minimo, e e justamente a cor da mensagem de erro.
+     O --vermelho-2 devolve 6,61:1 e e o mesmo hex que contabil/equiparacao ja usam
+     como tinta de letra vermelha (--g-enc-txt). */
+  --vermelho-2:#96271B;
+  /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
+  --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
+  --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:14px;padding:12px 22px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:19px;letter-spacing:-.02em}
+.barra .logo{font-weight:800;font-size:19px;letter-spacing:-.02em}
 .barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill)}
 .barra .spacer{flex:1}
 .barra .cnt{font-size:12px;color:#bcd;opacity:.9}
 .wrap{max-width:1000px;margin:0 auto;padding:20px 22px 70px}
@@ -40,31 +57,37 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .centrais{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;margin-bottom:26px}
 .central-lk{display:flex;align-items:center;gap:10px;text-decoration:none;background:var(--surface);border:1px solid var(--line);
   border-radius:var(--radius);padding:12px 14px;color:var(--ink);font-weight:700;font-size:13px;transition:border-color .12s,transform .1s,box-shadow .12s}
-.central-lk:hover{border-color:var(--brand-teal);transform:translateY(-1px);box-shadow:0 4px 14px rgba(7,48,52,.08)}
+/* Cartão clicável levanta sempre igual (--lift): três sombras diferentes para o
+   mesmo gesto faziam a página parecer feita por três pessoas. */
+.central-lk:hover{border-color:var(--brand-teal);transform:translateY(-2px);box-shadow:var(--lift)}
 .central-lk .ic{font-size:19px;width:22px;text-align:center;flex:none}
-.central-lk .arw{margin-left:auto;color:var(--line-2);font-weight:900}
+/* Chevron = affordance de "isto abre". Em --line-2 ele dava 1,40-1,71:1 sobre
+   branco e sobre o canvas: praticamente invisivel. --muted e o token de texto
+   secundario mais proximo que passa (5,92:1 no branco, 4,85:1 no canvas) — e o
+   mesmo que dptopessoal/societario/meustickets ja usam na seta deles. */
+.central-lk .arw{margin-left:auto;color:var(--muted);font-weight:900}
 button.central-lk{width:100%;font-family:inherit;font-size:13px;text-align:left;cursor:pointer}
 button.central-lk[aria-expanded="true"]{border-color:var(--brand-teal)}
-button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
+button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .menu{position:relative}
 .menu-pop{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:35;background:var(--surface);
   border:1px solid var(--line-2);border-radius:var(--radius);box-shadow:0 12px 30px rgba(7,48,52,.16);padding:6px;min-width:230px}
 .menu-pop[hidden]{display:none}
-.menu-pop a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;text-decoration:none;color:var(--ink);font-weight:600;font-size:13px}
+.menu-pop a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--radius-sm);text-decoration:none;color:var(--ink);font-weight:600;font-size:13px}
 .menu-pop a:hover{background:var(--surface-warm)}
 .menu-pop a .ic{font-size:15px;width:20px;text-align:center;flex:none}
 
 /* Combobox de clientes */
 .combo{position:relative}
 .combo-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 /* ---------- botao (B.8): uma base, tres papeis ---------- */
 .btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
-  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:var(--radius-sm);transition:border-color .12s,transform .1s}
 .btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
-.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
 .btn--pri:hover{background:#0C7871;border-color:#0C7871}
 .btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
 .btn--danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
@@ -72,37 +95,39 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 .btn--danger-out{background:var(--surface);color:var(--vermelho);border-color:var(--line-2)}
 .btn--danger-out:hover{border-color:var(--vermelho)}
 .btn--mini{padding:6px 11px;font-size:12px}
-.btn--pill{border-radius:999px;padding:12px 20px}
+.btn--pill{border-radius:var(--radius-pill);padding:12px 20px}
 .btn-novo{white-space:nowrap;text-decoration:none;display:inline-block}
 .dica{font-size:12px;color:var(--muted);margin-top:8px;padding-left:4px}
 .opcoes{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border:1px solid var(--line-2);
   border-radius:var(--radius);box-shadow:0 12px 30px rgba(7,48,52,.16);max-height:52vh;overflow:auto;padding:6px}
 .opcoes[hidden]{display:none}
-.opt{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;cursor:pointer;font-size:15px}
+.opt{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:15px}
 .opt:hover,.opt.on{background:var(--surface-warm)}
-.opt-id{font-size:11px;font-weight:800;color:#fff;background:var(--brand-teal);border-radius:10px;padding:2px 7px;white-space:nowrap}
+.opt-id{font-size:11px;font-weight:800;color:#fff;background:var(--brand-teal-txt);border-radius:var(--radius-sm);padding:2px 7px;white-space:nowrap}
 .opt-nome{flex:1;font-weight:600;line-height:1.25}
-.opt-cnpj{font-size:11px;color:var(--muted);font-weight:500}
+/* Texto de apoio em 400: o Montserrat que a página carrega não tem o peso 500,
+   e o navegador sintetizava um falso — o CNPJ saía borrado ao lado do nome. */
+.opt-cnpj{font-size:11px;color:var(--muted);font-weight:400}
 .opt-vazio{padding:14px 12px;color:var(--muted);font-size:13px}
 
 /* Painel do cliente selecionado */
 .detalhe{margin-top:16px}
 .cli{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 17px;display:flex;flex-direction:column;gap:12px}
 .cli-top{display:flex;align-items:flex-start;gap:10px}
-.cli-id{font-size:12px;font-weight:800;color:#fff;background:var(--brand-teal);border-radius:10px;padding:3px 9px;white-space:nowrap;margin-top:1px}
+.cli-id{font-size:12px;font-weight:800;color:#fff;background:var(--brand-teal-txt);border-radius:var(--radius-sm);padding:3px 9px;white-space:nowrap;margin-top:1px}
 .cli-nome{font-size:15px;font-weight:700;line-height:1.3;flex:1}
-.cli-cnpj{font-size:12px;color:var(--muted);margin-top:2px;font-weight:500}
+.cli-cnpj{font-size:12px;color:var(--muted);margin-top:2px;font-weight:400}  /* idem .opt-cnpj: 500 não existe na fonte */
 .linha{display:flex;flex-wrap:wrap;gap:6px}
 .rot{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);width:100%;margin-top:2px}
 .lk{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;text-decoration:none;
-  padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface-warm);color:var(--ink);transition:border-color .12s,transform .1s}
+  padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--line);background:var(--surface-warm);color:var(--ink);transition:border-color .12s,transform .1s}
 .lk:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
 .lk.drive{background:#EAF4F1;border-color:#cfe6e2}
 .lk.area{background:#fff}
 .lk .ic{font-size:13px}
 .lk.off{opacity:.4;pointer-events:none}
 .alertas{display:flex;flex-wrap:wrap;gap:6px}
-.al{font-size:11px;font-weight:700;border-radius:10px;padding:4px 9px;display:inline-flex;gap:5px;align-items:center}
+.al{font-size:11px;font-weight:700;border-radius:var(--radius-sm);padding:4px 9px;display:inline-flex;gap:5px;align-items:center}
 .al.ok{background:#E7F4EC;color:#2E7D52}
 .al.aten{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
 .al.venc{background:#F8E3DF;color:var(--vermelho)}
@@ -111,7 +136,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:40vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:46ch}
-.state code{background:var(--surface-warm);padding:2px 6px;border-radius:10px;border:1px solid var(--line);font-size:13px}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line);font-size:13px}
 .spin{width:22px;height:22px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(max-width:560px){.wrap{padding:16px 14px 60px}.centrais{grid-template-columns:1fr}
@@ -124,19 +149,19 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 .ex-tit{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin-bottom:8px}
 .ex-load,.ex-erro,.ex-vazio{color:var(--muted);font-size:13px;padding:4px 0}
 .ex-erro{color:var(--vermelho)}
-.ex-lk{display:inline-block;margin-top:8px;font-size:13px;font-weight:700;color:var(--brand-teal);text-decoration:none}
+.ex-lk{display:inline-block;margin-top:8px;font-size:13px;font-weight:700;color:var(--brand-teal-txt);text-decoration:none}
 .ex-lk:hover{text-decoration:underline}
 .ct-row{padding:7px 0;border-top:1px solid var(--line)}
 .ct-row:first-child{border-top:none}
 .ct-nome{font-weight:700;font-size:13px}
 .ct-meta{font-size:13px;color:var(--ink-2);margin-top:2px}
-.ct-meta a{color:var(--brand-teal);text-decoration:none}
-.tag-papel{font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;vertical-align:middle;margin-left:4px}
+.ct-meta a{color:var(--brand-teal-txt);text-decoration:none}
+.tag-papel{font-size:11px;font-weight:800;padding:1px 7px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px}
 .tag-papel.pr{background:#E7F4EC;color:#2E7D52}
 .tag-papel.sec{background:var(--surface-warm);color:var(--muted)}
 /* busca das ferramentas + seção recolhível das planilhas centrais */
 .fer-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.busca-fer{flex:1;min-width:0;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:999px;
+.busca-fer{flex:1;min-width:0;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);
   border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca-fer:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .fer-cnt{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
@@ -145,33 +170,33 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
   background:none;border:0;font-family:var(--sans);font-size:12px;font-weight:800;text-transform:uppercase;
   letter-spacing:.06em;color:var(--ink-2);text-align:left}
 .sec-drop::after{content:"";flex:1;height:1px;background:var(--line)}
-.sec-drop:hover{color:var(--brand-teal)}
-.sec-drop .arw{font-size:11px;color:var(--line-2);transition:transform .15s}
-.sec-drop[aria-expanded="true"] .arw{transform:rotate(90deg);color:var(--brand-teal)}
+.sec-drop:hover{color:var(--brand-teal-txt)}
+.sec-drop .arw{font-size:11px;color:var(--muted);transition:transform .15s}
+.sec-drop[aria-expanded="true"] .arw{transform:rotate(90deg);color:var(--brand-teal-txt)}
 .sec-drop .n{font-size:11px;font-weight:700;color:var(--muted);text-transform:none;letter-spacing:0}
 #bloco-centrais[hidden]{display:none}
 .aviso-off{background:var(--amber-soft);border:1px solid #F0D6B4;border-left:3px solid var(--amber);
-  border-radius:10px;padding:8px 11px;margin-bottom:9px;font-size:13px;color:#8a5117;font-weight:600}
+  border-radius:var(--radius-sm);padding:8px 11px;margin-bottom:9px;font-size:13px;color:#8a5117;font-weight:600}
 .cd{display:flex;flex-direction:column;gap:4px;margin-top:2px}
 .cd-val{color:var(--ink)!important;font-weight:700;font-size:13px;text-align:right}
 .cd-obs{font-size:12px;line-height:1.4;color:var(--ink-2);background:var(--surface-warm);
-  border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:7px 9px;margin-top:2px}
+  border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:var(--radius-sm);padding:7px 9px;margin-top:2px}
 .cd-obs b{color:var(--amber-txt);font-size:11px;letter-spacing:.4px;text-transform:uppercase;display:block;margin-bottom:2px}
 .cd-edit{align-self:flex-start;margin-top:4px;font-size:11px;font-weight:800;text-decoration:none;
-  color:var(--brand-teal);border:1px solid var(--line-2);border-radius:999px;padding:3px 10px;background:var(--surface)}
-.cd-edit:hover{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+  color:var(--brand-teal-txt);border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:3px 10px;background:var(--surface)}
+.cd-edit:hover{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
 .cd-row,.lic-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0}
 .lic-grid{display:flex;flex-direction:column;gap:2px}
 .lic-row span,.cd-row span{color:var(--ink-2)}
-.pill{font-size:11px;font-weight:700;border-radius:10px;padding:3px 9px;background:var(--surface-warm);color:var(--ink-2);white-space:nowrap}
+.pill{font-size:11px;font-weight:700;border-radius:var(--radius-sm);padding:3px 9px;background:var(--surface-warm);color:var(--ink-2);white-space:nowrap}
 .pill.ok{background:#E7F4EC;color:#2E7D52}
 .pill.aten{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
 .pill.venc{background:#F8E3DF;color:var(--vermelho)}
-.card{background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px}
+.card{background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:8px}
 .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
 .mini{font-size:13px;color:var(--ink-2);margin-top:4px}
 .info-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
-.ic-chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
+.ic-chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--radius-pill);background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
 .ic-chip.ok{background:#E7F4EC;color:#2E7D52;border-color:#cfe6e2}
 .ic-chip.bad{background:#F8E3DF;color:var(--vermelho);border-color:#F0C9C1}
 /* ---- Ferramentas da equipe: o centro do painel ----
@@ -185,7 +210,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
   text-align:left;text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);
   padding:15px 16px 16px;color:var(--ink);font-family:var(--sans);font-size:15px;cursor:pointer;
   box-shadow:0 1px 2px rgba(7,48,52,.04);transition:border-color .14s,transform .12s,box-shadow .14s}
-.fer-card:hover{border-color:var(--brand-teal);transform:translateY(-2px);box-shadow:0 10px 24px rgba(7,48,52,.11)}
+.fer-card:hover{border-color:var(--brand-teal);transform:translateY(-2px);box-shadow:var(--lift)}
 .fer-card:focus-visible{outline:2px solid var(--brand-teal);outline-offset:3px}
 .fer-cab{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:10px}
 .fer-ic{margin-right:auto;flex:none;width:42px;height:42px;border-radius:var(--radius);display:flex;align-items:center;
@@ -194,13 +219,13 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal)}
 .fer-card:hover .fer-ic{background:#EAF4F1;border-color:#cfe6e2}
 .fer-nome{font-size:15px;font-weight:700;line-height:1.25;letter-spacing:-.01em;color:var(--ink)}
 .fer-desc{font-size:13px;font-weight:400;line-height:1.4;color:var(--ink-2);margin-top:4px}
-.fer-arw{flex:none;font-size:13px;font-weight:900;color:var(--line-2);transition:color .14s,transform .15s}
-.fer-card:hover .fer-arw{color:var(--brand-teal)}
+.fer-arw{flex:none;font-size:13px;font-weight:900;color:var(--muted);transition:color .14s,transform .15s}
+.fer-card:hover .fer-arw{color:var(--brand-teal-txt)}
 button.fer-card[aria-expanded="true"]{border-color:var(--brand-teal)}
-button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal);transform:rotate(180deg)}
+button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);transform:rotate(180deg)}
 /* Selo de pendência: no topo do card, ao lado da seta (só onde o dado já está carregado). */
 .fer-selo{flex:none;font-size:11px;font-weight:800;white-space:nowrap;
-  background:#F8E3DF;color:var(--vermelho);border:1px solid #F0C9C1;border-radius:999px;padding:2px 8px}
+  background:#F8E3DF;color:var(--vermelho);border:1px solid #F0C9C1;border-radius:var(--radius-pill);padding:2px 8px}
 /* Restituição é um card de menu: o dropdown precisa passar por cima dos cards
    vizinhos (o hover deles cria contexto de empilhamento por causa do transform). */
 .fer-grid .menu{display:flex;flex-direction:column}
@@ -210,7 +235,7 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal);transform
 /* Status do cliente: chip de destaque, três estados (Ativo / Em inativação / Inativo). */
 .info-chips{align-items:center;gap:7px}
 .st-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.01em;
-  padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface-warm);color:var(--muted)}
+  padding:5px 12px;border-radius:var(--radius-pill);border:1px solid var(--line);background:var(--surface-warm);color:var(--muted)}
 .st-chip::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--line-2)}
 .st-chip.ok{background:#E7F4EC;color:#276B47;border-color:#BFE0CD}
 .st-chip.ok::before{background:#2E7D52}
@@ -220,7 +245,7 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal);transform
 .st-chip.bad::before{background:var(--vermelho)}
 /* Início da contabilidade: a data é o protagonista, o tempo decorrido vem em segundo plano. */
 .chip-inicio{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 10px;
-  border-radius:999px;background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
+  border-radius:var(--radius-pill);background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
 .chip-inicio b{font-weight:800;color:var(--ink);font-size:12px}
 .chip-inicio .sec{font-weight:600;color:var(--muted)}
 .chip-inicio.vazio{color:var(--muted);font-weight:600}
@@ -321,6 +346,28 @@ function comChave(base){
   if(codAtual()) q+='&cod='+encodeURIComponent(codAtual());
   return u+q;
 }
+/* ---------- busca e cliente no endereço (C.10) ----------
+   F5 volta para a mesma visão: a busca de ferramentas, a busca de cliente e o
+   cliente que estava aberto. Mexemos SÓ em fer, q e cli — chave, cod e o #hash
+   ficam intactos, porque é deles que sai o acesso da equipe e o nome de quem
+   edita, e comChave() relê os dois da URL a cada link que monta. */
+let CLI_SEL='';                      // id do cliente aberto ('' = nenhum)
+function sincronizarURL(){
+  try{
+    const u=new URL(location.href);
+    const set=(k,v)=>{if(v)u.searchParams.set(k,v);else u.searchParams.delete(k);};
+    const bf=document.getElementById('busca-fer'), bc=document.getElementById('busca');
+    set('fer',bf?bf.value.trim():'');
+    set('cli',CLI_SEL);
+    // com cliente escolhido a busca só repete o nome dele — não vale guardar duas vezes
+    set('q',CLI_SEL?'':((bc&&bc.value)||'').trim());
+    history.replaceState(null,'',u.pathname+u.search+u.hash);
+  }catch(e){}
+}
+function lerURL(){
+  const p=new URLSearchParams(location.search);
+  return {fer:p.get('fer')||'', q:p.get('q')||'', cli:(p.get('cli')||'').trim()};
+}
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function normTxt(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
 /* ---------- busca que entende CNPJ com e sem pontuação (C.1) ---------- */
@@ -387,7 +434,10 @@ function pintarCentrais(pares){
   const registros={nome:'Registros de clientes', url:urlRegistros(validos), ic:'📇'};
   const diretos=[registros].concat(validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))<0)
     .map(p=>({nome:p.nome, url:p.url, ic:iconeCentral(p.nome)})));
-  const outros=validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))>=0)
+  // A lista fica separada do HTML porque é ela que o contador soma: somar a string
+  // pronta devolvia o número de caracteres ("279" no lugar de 5).
+  const recolhidos=validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))>=0);
+  const outros=recolhidos
     .map(p=>`<a href="${esc(p.url)}" target="_blank" rel="noopener"><span class="ic">${iconeCentral(p.nome)}</span>${esc(p.nome)}</a>`).join('');
   document.getElementById('centrais').innerHTML = diretos.map(botaoCentral).join('') +
     `<div class="menu" id="menu-outros">
@@ -407,7 +457,7 @@ function pintarCentrais(pares){
   const av=document.getElementById('aviso-centrais');
   if(av) av.hidden=!offline;
   const n=document.getElementById('centrais-n');
-  if(n) n.textContent=(diretos.length+outros.length)+(offline?' · lista local':'');
+  if(n) n.textContent=(diretos.length+recolhidos.length)+(offline?' · lista local':'');
 }
 
 /* Planilhas centrais ficam recolhidas: são o atalho para a planilha crua, não
@@ -738,9 +788,19 @@ function pintarOpcoes(){
 function selecionar(c){
   if(!c) return;
   $busca().value = c.id+' — '+(c.nome||'');
+  CLI_SEL=String(c.id);
+  sincronizarURL();
   fechar();
   $det().innerHTML = painelCliente(c);
   carregarExtras(c);
+}
+/* Volta para o cliente que estava aberto antes do F5. Se ele saiu da lista, o
+   endereço não pode continuar apontando para quem não existe mais. */
+function restaurarCliente(id){
+  if(!id) return;
+  const c=TODOS.find(x=>String(x.id)===String(id));
+  if(c) selecionar(c);
+  else { CLI_SEL=''; sincronizarURL(); }
 }
 function moverAtivo(passo){
   if($ops().hidden) { abrir(); return; }
@@ -752,7 +812,8 @@ function moverAtivo(passo){
 
 function ligarCombo(){
   const b=$busca();
-  b.addEventListener('input', ()=>{ if(apiOk) abrir(); });
+  // digitar de novo desfaz a escolha: o que vale guardar passa a ser o termo
+  b.addEventListener('input', ()=>{ CLI_SEL=''; sincronizarURL(); if(apiOk) abrir(); });
   b.addEventListener('focus', ()=>{ if(apiOk) abrir(); });
   b.addEventListener('keydown', e=>{
     if(e.key==='ArrowDown'){ e.preventDefault(); moverAtivo(1); }
@@ -772,9 +833,12 @@ function ligarCombo(){
 }
 
 function boot(){
-  pintarFerramentas();              // ferramentas primeiro — é o que a equipe usa no dia a dia
+  const url=lerURL();               // a visão vem do endereço (C.10)
   const bf=document.getElementById('busca-fer');
-  if(bf) bf.addEventListener('input',pintarFerramentas);
+  if(bf) bf.value=url.fer;           // antes de pintar: o filtro já entra valendo
+  pintarFerramentas();              // ferramentas primeiro — é o que a equipe usa no dia a dia
+  if(bf) bf.addEventListener('input',()=>{pintarFerramentas();sincronizarURL();});
+  const bc=$busca(); if(bc) bc.value=url.q;
   ligarDropCentrais();
   pintarCentrais();                 // render imediato (fallback)
   jsonp(API_URL+'?tipo=links_equipe&chave='+encodeURIComponent(chaveAtual()))   // atualiza com os links vivos da Config
@@ -792,10 +856,11 @@ function boot(){
       document.getElementById('dica').innerHTML = 'Digite para filtrar ou clique no campo para ver todos os '+TODOS.length+' clientes.';
       PEND=calcPendencias();          // alimenta o selo do card de Certificados — sem chamada nova
       pintarFerramentas();            // repinta só para o selo aparecer
+      restaurarCliente(url.cli);      // e volta para o cliente que estava aberto
     })
     .catch(e=>{
       document.getElementById('dica').innerHTML =
-        '<span style="color:var(--vermelho)">Não consegui carregar os clientes: '+esc(e.message||String(e))+'.</span> '+
+        '<span style="color:var(--vermelho-2)">Não consegui carregar os clientes: '+esc(e.message||String(e))+'.</span> '+
         'Confira a <code>chave</code> da equipe no endereço e se o Web App foi republicado. Os atalhos das planilhas centrais acima seguem funcionando.';
     });
 }
@@ -813,13 +878,13 @@ document.addEventListener('keydown',e=>{
     return;
   }
   if(e.key!=='Escape') return;
-  if(a===bf&&bf.value){e.preventDefault();bf.value='';pintarFerramentas();return;}
-  if(a===bc&&bc&&bc.value&&$ops().hidden){e.preventDefault();bc.value='';abrir();return;}
+  if(a===bf&&bf.value){e.preventDefault();bf.value='';pintarFerramentas();sincronizarURL();return;}
+  if(a===bc&&bc&&bc.value&&$ops().hidden){e.preventDefault();bc.value='';CLI_SEL='';sincronizarURL();abrir();return;}
   if(!digitando){
     let mexeu=false;
     if(bf&&bf.value){bf.value='';pintarFerramentas();mexeu=true;}
-    if(bc&&bc.value){bc.value='';mexeu=true;}
-    if(mexeu)e.preventDefault();
+    if(bc&&bc.value){bc.value='';CLI_SEL='';mexeu=true;}
+    if(mexeu){e.preventDefault();sincronizarURL();}
   }
 });
 

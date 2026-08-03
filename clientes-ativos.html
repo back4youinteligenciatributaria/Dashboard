@@ -9,43 +9,63 @@
 <title>Calendário de clientes ativos — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Duas origens porque o /exec responde 302 para a segunda: sem isto o aparelho paga
+     DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte não pode segurar a primeira pintura: entra como preload e vira folha depois. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
 <style>
 :root{
   /* Paleta canonica da equipe — a mesma em todas as telas. */
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
   --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,37:1 no canvas).
+     Este e o mesmo teal escurecido so para letra e fundo de letra; o --brand-teal
+     segue canonico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  /* Sufixo -2 = a mesma tinta um degrau mais escura, para quando ela vira FUNDO de
+     texto branco: o --amber da 2,61:1 com #fff, o --amber-2 da 4,68:1. Como
+     preenchimento de barra, icone ou borda, o --amber original continua valendo. */
+  --amber-2:#B05F12;
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
-  /* Raios: 12 padrao, 16 nos blocos grandes, 999px so em pilula, 10px em campo. */
-  --radius:12px;--radius-lg:16px;
+  /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
+  --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
+  --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px}
+.barra .logo{font-weight:800;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill)}
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
 .wrap{max-width:1040px;margin:0 auto;padding:18px 20px 80px}
-.toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line-2);border-radius:999px;padding:3px;margin-bottom:12px}
-.toggle button{font-family:var(--sans);font-size:13px;font-weight:700;border:none;background:none;color:var(--ink-2);padding:8px 16px;border-radius:999px;cursor:pointer}
-.toggle button.on{background:var(--brand-teal);color:#fff}
+.toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:3px;margin-bottom:12px}
+.toggle button{font-family:var(--sans);font-size:13px;font-weight:700;border:none;background:none;color:var(--ink-2);padding:8px 16px;border-radius:var(--radius-pill);cursor:pointer}
+.toggle button.on{background:var(--brand-teal-txt);color:#fff}
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
-.chip{font-size:13px;font-weight:700;border-radius:999px;padding:6px 12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.chip{font-family:var(--sans);line-height:1.5;font-size:13px;font-weight:700;border-radius:var(--radius-pill);padding:6px 12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
 .chip.on{background:var(--brand-euc);border-color:var(--brand-euc);color:#fff}
-.busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+/* Limpar filtros: tracejado e apagado de propósito — é saída, não mais um filtro. */
+.chip.limpar{border-style:dashed;color:var(--muted)}
+/* O invólucro não vira item do flex: sem filtro ativo ele não deixa buraco. */
+#limpar-cx{display:contents}
+.busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .resumo-top{background:linear-gradient(135deg,rgba(15,140,133,.12),rgba(63,166,128,.07));border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin:10px 0 14px;display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
 .resumo-top .big{font-size:24px;font-weight:800;color:var(--brand-teal);line-height:1}
 .resumo-top .lbl{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 /* ---------- botao (B.8): uma base, tres papeis ---------- */
 .btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
-  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:var(--radius-sm);transition:border-color .12s,transform .1s}
 .btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
-.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
 .btn--pri:hover{background:#0C7871;border-color:#0C7871}
 .btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
 .btn--danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
@@ -53,19 +73,24 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .btn--danger-out{background:var(--surface);color:var(--vermelho);border-color:var(--line-2)}
 .btn--danger-out:hover{border-color:var(--vermelho)}
 .btn--mini{padding:6px 11px;font-size:12px}
-.btn--pill{border-radius:999px;padding:12px 20px}
+.btn--pill{border-radius:var(--radius-pill);padding:12px 20px}
 .dica{font-size:12px;color:var(--muted);margin-top:2px}
 /* calendário */
 .legenda{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700;margin:2px 2px 12px;flex-wrap:wrap}
-.legenda i{width:14px;height:14px;border-radius:10px;border:1px solid var(--line);display:inline-block}
+/* Amostra de cor: uma classe só no painel inteiro (§7) — antes cada tela tinha
+   o seu tamanho. O fio branco fica só aqui, porque o passo mais claro da rampa
+   é quase a cor do fundo e sem borda a legenda começaria do nada. */
+.sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;display:inline-block}
+.legenda .sw{border:1px solid var(--line)}
 .legenda .sep{opacity:.6}
 .ano{margin-bottom:16px}
 .ano-h{display:flex;align-items:baseline;gap:10px;margin:0 2px 7px}
 .ano-n{font-size:19px;font-weight:800;letter-spacing:.01em}
 .ano-meta{font-size:12px;color:var(--muted);font-weight:700}
 .cal{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
-.mcard{font-family:var(--sans);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:9px 4px 8px;min-height:64px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:center;transition:transform .12s ease,box-shadow .12s ease}
-.mcard:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(7,48,52,.14)}
+.mcard{font-family:var(--sans);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:9px 4px 8px;min-height:64px;border-radius:var(--radius-sm);border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:center;transition:transform .12s ease,box-shadow .12s ease}
+/* Cartão clicável levanta sempre igual (--lift), como nas telas irmãs. */
+.mcard:hover{transform:translateY(-2px);box-shadow:var(--lift)}
 .mcard:focus-visible{outline:2px solid var(--brand-dark);outline-offset:2px}
 .m-nome{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.85}
 .m-n{font-size:19px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
@@ -76,7 +101,7 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .mcard.n2{background:#C2E2D9;border-color:#AFD8CD}
 .mcard.n3{background:#8FCCBF;border-color:#7CC0B2}
 .mcard.n4{background:var(--brand-euc);border-color:#379473;color:#fff}
-.mcard.n5{background:var(--brand-teal);border-color:#0C7871;color:#fff}
+.mcard.n5{background:var(--brand-teal-txt);border-color:#0A625D;color:#fff}
 .mcard.n4 .m-d,.mcard.n5 .m-d{color:#fff;opacity:.9}
 .mcard.atual{outline:2px solid var(--amber);outline-offset:-2px}
 .mcard.sel{border-color:var(--brand-dark);box-shadow:0 0 0 3px rgba(7,48,52,.22)}
@@ -98,15 +123,17 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .mv{flex:1 1 210px;min-width:190px}
 .mv-h{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
 .mv.ent .mv-h{color:#2E7D52}.mv.sai .mv-h{color:var(--vermelho)}
-.mv-h span{background:rgba(0,0,0,.06);border-radius:999px;padding:1px 7px;margin-left:5px;font-size:11px;color:var(--ink-2)}
+.mv-h span{background:rgba(0,0,0,.06);border-radius:var(--radius-pill);padding:1px 7px;margin-left:5px;font-size:11px;color:var(--ink-2)}
 .mv-l{display:flex;flex-direction:column;gap:2px}
 .mv-i{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
 .mv-q{font-size:11px;font-weight:700;color:var(--muted);margin-left:6px;white-space:nowrap}
 /* chips de atalho + painel que eles abrem */
 .chips.atalhos{margin-top:-3px}
-.chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:5px;font-size:11px}
+.chip .n{background:rgba(0,0,0,.10);border-radius:var(--radius-pill);padding:1px 7px;margin-left:5px;font-size:11px}
 .chip.on .n{background:rgba(255,255,255,.25)}
-.chip.atalho.on{background:var(--amber);border-color:var(--amber);color:#fff}
+/* Branco sobre --amber da 2,61:1: o rotulo do filtro ativo some justamente quando
+   ele esta ligado. --amber-2, mesma familia um degrau mais escura: 4,68:1. */
+.chip.atalho.on{background:var(--amber-2);border-color:var(--amber-2);color:#fff}
 .painel{margin-top:8px;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);box-shadow:0 6px 20px rgba(7,48,52,.10);overflow:hidden}
 /* +entraram / −saíram na tampa do card do mês */
 .m-d b{font-weight:800}
@@ -120,13 +147,13 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .cli-main{flex:1;min-width:220px}
 .cli-nome{font-weight:700;font-size:15px}
 .cli-prod{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
-.pchip{font-size:11px;font-weight:700;border-radius:10px;padding:2px 7px;background:#EAF4F1;color:#0c6b64;border:1px solid #cfe6e2}
+.pchip{font-size:11px;font-weight:700;border-radius:var(--radius-sm);padding:2px 7px;background:#EAF4F1;color:#0c6b64;border:1px solid #cfe6e2}
 .cli-datas{text-align:right;font-size:13px;color:var(--ink-2);white-space:nowrap}
-.bdg{font-size:11px;font-weight:800;border-radius:10px;padding:3px 8px;display:inline-block}
+.bdg{font-size:11px;font-weight:800;border-radius:var(--radius-sm);padding:3px 8px;display:inline-block}
 .bdg.ativo{background:#E7F4EC;color:#2E7D52}
 .bdg.enc{background:#F2ECE4;color:var(--muted)}
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:10px;border:1px solid var(--line)}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -274,13 +301,34 @@ function viewAtalho(termo){
   return `<div class="painel"><div class="d-h"><b>${esc(a.rot)}</b><span class="d-cnt">${arr.length} ${arr.length===1?'cliente':'clientes'}</span></div><div class="d-lista">${itens}</div></div>`;
 }
 
+/* ---------- limpar filtros (C.5) ----------
+   Quantos filtros estão pegando agora. A visão (calendário / por cliente) fica de
+   fora: ela é a aba em que a pessoa está, não um filtro que escondeu alguém. */
+function filtrosAtivos(){
+  return (PROD?1:0)+(ATALHO?1:0)+(String(TERMO).trim()?1:0);
+}
+function limparFiltros(){PROD='';ATALHO='';TERMO='';render();}
+/* Sem filtro nenhum o botão não existe — ele é a saída de quem se perdeu, não mais
+   um chip para ler. Repintado sozinho porque refazer a tela a cada tecla digitada
+   tiraria o cursor de dentro da busca. */
+function pintarLimpar(){
+  const cx=document.getElementById('limpar-cx'); if(!cx) return;
+  const n=filtrosAtivos();
+  cx.innerHTML=n?`<button type="button" class="chip limpar" id="limparFiltros"
+    title="Volta para a visão sem produto, sem atalho e sem busca">Limpar filtros<span class="n">${n}</span></button>`:'';
+  const b=document.getElementById('limparFiltros');
+  if(b)b.addEventListener('click',limparFiltros);
+}
+
 function render(){
-  const opProd=['<span class="chip'+(!PROD?' on':'')+'" data-prod="">Ambos</span>']
-    .concat(PROD_PANEL.map(p=>`<span class="chip${p===PROD?' on':''}" data-prod="${esc(p)}">${esc(p)}</span>`)).join('');
+  /* Chip é <button>, não <span>: com clique num <span> quem navega por teclado nunca
+     chega no filtro. O aria-pressed conta o estado que a classe "on" só pinta. */
+  const opProd=['<button type="button" class="chip'+(!PROD?' on':'')+'" data-prod="" aria-pressed="'+(!PROD)+'">Ambos</button>']
+    .concat(PROD_PANEL.map(p=>`<button type="button" class="chip${p===PROD?' on':''}" data-prod="${esc(p)}" aria-pressed="${p===PROD}">${esc(p)}</button>`)).join('');
   const universo=CLIENTES.filter(noUniverso).length;
   const ativosAgora=CLIENTES.filter(c=>combinaProduto(c)&&ativoEm(c,ENDIDX)).length;
   document.getElementById('cnt').textContent=universo+' clientes (contab./controlad.)';
-  const opAtalho=ATALHOS.map(a=>`<span class="chip atalho${a.k===ATALHO?' on':''}" data-atalho="${a.k}" title="${esc(a.rot)}">${esc(a.rot)}<span class="n">${contarAtalho(a)}</span></span>`).join('');
+  const opAtalho=ATALHOS.map(a=>`<button type="button" class="chip atalho${a.k===ATALHO?' on':''}" data-atalho="${a.k}" aria-pressed="${a.k===ATALHO}" title="${esc(a.rot)}">${esc(a.rot)}<span class="n">${contarAtalho(a)}</span></button>`).join('');
   const ph=ATALHO?'Buscar nesta lista (nome ou ID)…'
     :(VIEW==='calendario'?'Buscar cliente (nome ou ID) ou um ano (ex.: 2025)…':'Buscar cliente por nome…');
   document.getElementById('app').innerHTML=`<div class="wrap">
@@ -289,7 +337,7 @@ function render(){
       <button data-view="cliente" class="${VIEW==='cliente'?'on':''}">Por cliente</button>
     </div>
     <div class="chips">${opProd}</div>
-    <div class="chips atalhos">${opAtalho}</div>
+    <div class="chips atalhos">${opAtalho}<span id="limpar-cx"></span></div>
     <div class="resumo-top">
       <div><div class="lbl">Ativos em ${labelIdx(ENDIDX)} · ${PROD?esc(PROD):'contab./controlad.'}</div><div class="big">${ativosAgora}</div></div>
       <div><div class="lbl">Competência</div><div class="dica">1º mês com movimento: ${labelIdx(CALSTART)} · até ${labelIdx(ENDIDX)}. Sem data de fim = ativo em andamento.</div></div>
@@ -309,6 +357,7 @@ function render(){
 function desenhar(termo){
   TERMO=termo||'';
   sincronizarURL();
+  pintarLimpar();
   const cont=document.getElementById('conteudo');
   cont.innerHTML = ATALHO ? viewAtalho(TERMO) : (VIEW==='calendario' ? viewCalendario(TERMO) : viewCliente(TERMO));
   if(!ATALHO&&VIEW==='calendario')cont.querySelectorAll('.mcard[data-m]').forEach(b=>b.addEventListener('click',()=>alternarMes(b)));
@@ -344,7 +393,7 @@ function viewCalendario(termo){
   return legendaHtml()+aviso+anos.map(y=>anoHtml(y,max)).join('');
 }
 function legendaHtml(){
-  const sw=RAMPA.map(c=>`<i style="background:${c}"></i>`).join('');
+  const sw=RAMPA.map(c=>`<i class="sw" style="background:${c}"></i>`).join('');
   return `<div class="legenda"><span>Menos</span>${sw}<span>Mais</span><span class="sep">·</span><span>clique no mês para ver os ativos, quem entrou e quem saiu</span><span class="sep">·</span><span><b style="color:#2E7D52">+</b> entraram <b style="color:var(--vermelho)">−</b> saíram no mês</span></div>`;
 }
 function anoHtml(y,max){

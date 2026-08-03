@@ -7,14 +7,28 @@
 <title>Painel do cliente — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- Duas origens porque o /exec responde 302 para a segunda: sem isto o aparelho paga
+     DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte não pode segurar a primeira pintura: entra como preload e vira folha depois. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"></noscript>
 <style>
 :root{
   /* PALETA CANÔNICA — igual nas 7 páginas do cliente. Não redeclare tons aqui. */
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
   --ink:#113D39; --ink-2:#3F5854; --muted:#6E6256; --line:#E4D9C9; --line-2:#D6C3AC;
   --brand-dark:#073034; --brand-teal:#0F8C85; --brand-euc:#3FA680;
-  --amber:#E8892E; --amber-txt:#B05F12; --vermelho:#C0392B; --verde:#2E9D5F;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,44:1 no receita-soft).
+     Este é o mesmo teal escurecido só para texto e fundo de texto; o --brand-teal
+     continua canônico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E; --amber-txt:#8A5A10; --vermelho:#C0392B; --verde:#2E9D5F;
+  /* Sufixo -2 = a mesma tinta um degrau mais escura, para quando ela vira FUNDO de
+     texto branco: o --amber dá 2,61:1 e o --verde 3,44:1 com #fff; estes devolvem
+     4,68:1 e 4,92:1. Como preenchimento de barra ou ícone, os originais continuam. */
+  --amber-2:#B05F12; --verde-2:#25804C;
   /* Escala tipográfica — 6 passos, sem meio pixel. */
   --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
   /* Raios — 12 padrão, 16 para caixas grandes, 999 só para pílulas. */
@@ -22,8 +36,17 @@
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
   --brand-eucalipto2:var(--brand-euc);
   --receita-soft:#DBEFEC;
+  /* Espaçamento e elevação — mesmos três degraus em todas as páginas do cliente. */
+  --pad-sm: 14px 16px;
+  --pad:    18px 20px;
+  --pad-lg: 24px 26px;
+  --lift:   0 8px 20px rgba(17,61,57,.10);
 }
 *{box-sizing:border-box;margin:0;padding:0}
+/* No Safari, focar campo com menos de 16px amplia a página sozinho. Só os campos. */
+input,select,textarea{font-size:16px}
+/* Amostra de cor da legenda — token compartilhado, um tamanho só em todas as páginas. */
+.sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;display:inline-block}
 body{
   background:var(--canvas);color:var(--ink);font-family:var(--sans);
   min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;
@@ -34,34 +57,48 @@ body{
 .logo{font-weight:800;font-size:var(--fs-6);letter-spacing:-.02em}
 .logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
 
-.miolo{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 56px}
-.saudacao{text-align:center;margin-bottom:36px;max-width:520px}
+/* Largura padrão do conteúdo — igual nas 7 páginas do cliente. */
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 60px}
+@media(max-width:640px){.wrap{padding:0 14px 60px}}
+.miolo{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:32px}
+.saudacao{text-align:center;margin-bottom:36px;max-width:560px}
 .saudacao h1{font-size:var(--fs-6);font-weight:800;letter-spacing:-.01em}
-.saudacao p{font-size:var(--fs-3);color:var(--muted);margin-top:8px;line-height:1.6}
+.saudacao p{font-size:var(--fs-4);color:var(--ink-2);margin-top:10px;line-height:1.6}
 .saudacao .cliente{font-size:var(--fs-2);color:var(--ink-2);font-weight:600;margin-top:10px}
-.saudacao .cta{font-size:var(--fs-3);color:var(--brand-teal);font-weight:700;margin-top:18px}
+.saudacao .tudo-em-dia{color:var(--brand-teal-txt);font-weight:700}
 .acoes-chamado{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+/* Enquanto o chamado está segurado, o atalho para "meus chamados" também some — ele
+   levaria a uma lista que ninguém consegue alimentar. Regra daqui, não do bloco. */
+.acoes-chamado a[href*="meustickets"]{display:none!important}
 .escolha-empresas{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:10px}
 .escolha-emp{min-width:260px}
 .ac-btn{font-family:var(--sans);font-size:var(--fs-3);font-weight:700;text-decoration:none;cursor:pointer;
   padding:11px 20px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink);transition:border-color .12s,transform .12s,box-shadow .12s}
 .ac-btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
-.ac-btn.ac-primary{background:var(--brand-teal);color:#fff;border-color:var(--brand-teal);box-shadow:0 8px 18px -8px rgba(18,141,132,.6)}
+.ac-btn.ac-primary{background:var(--brand-teal-txt);color:#fff;border-color:var(--brand-teal-txt);box-shadow:0 8px 18px -8px rgba(18,141,132,.6)}
 .ac-btn.ac-primary:hover{background:var(--brand-dark);border-color:var(--brand-dark)}
 .quem{margin-top:14px;font-size:var(--fs-2);color:var(--ink-2)}
-.quem-trocar{background:none;border:0;color:var(--brand-teal);font-weight:700;cursor:pointer;font-size:var(--fs-2);text-decoration:underline;padding:0 2px}
+.quem-trocar{background:none;border:0;color:var(--brand-teal-txt);font-weight:700;cursor:pointer;font-size:var(--fs-2);text-decoration:underline;padding:0 2px}
 .confiar-row{margin-top:18px;font-size:var(--fs-2);color:var(--muted);text-align:center;line-height:1.6}
-.conf-ok{color:var(--brand-eucalipto2);font-weight:600}
+.conf-ok{color:var(--brand-teal-txt);font-weight:600}
 .alertas-home{width:100%;max-width:680px;display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
 .alerta-card{display:flex;align-items:center;gap:12px;background:#FCEFE0;border:1px solid #F0D6B4;border-radius:var(--radius);
   padding:12px 15px;text-decoration:none;color:var(--ink);transition:border-color .12s,transform .12s}
-.alerta-card:hover{border-color:#E0A96A;transform:translateY(-1px)}
-.alerta-ico{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--amber);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:var(--fs-4)}
+.alerta-card:hover{border-color:#E0A96A;transform:translateY(-2px);box-shadow:var(--lift)}
+/* Branco sobre --amber dá 2,61:1 — o "!" some dentro do círculo. Com --amber-2: 4,68:1. */
+.alerta-ico{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--amber-2);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:var(--fs-4)}
 .alerta-txt{flex:1;font-size:var(--fs-3);display:flex;flex-direction:column;gap:2px}
 .alerta-txt span{font-size:var(--fs-2);color:var(--muted)}
+/* O --amber-txt agora É #8A5A10: sobre este creme dá 5,19:1 (o antigo #B05F12
+   dava 4,13:1 e reprovava). Um valor só, e pelo token. */
 .alerta-seta{color:var(--amber-txt);font-weight:700}
+/* Tarja de revalidação: pintamos com o cache e avisamos, discreto, que já estamos
+   buscando o número novo. Some quando a resposta chega. */
+.tarja-atualizando{width:100%;max-width:680px;margin:0 auto 12px;text-align:center;
+  font-size:var(--fs-2);font-weight:600;color:var(--ink-2);background:var(--receita-soft);
+  border-radius:var(--radius-pill);padding:6px 14px}
 .id-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;width:100%;max-width:380px}
-.id-form input{flex:1;min-width:190px;font-family:var(--sans);font-size:var(--fs-4);padding:11px 13px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink)}
+.id-form input{flex:1;min-width:190px;font-family:var(--sans);font-size:16px;padding:11px 13px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink)}
 .id-form input:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .reenvio{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin:6px auto 0}
 .reenvio-op{width:100%}
@@ -73,7 +110,15 @@ body{
 .otp-box.ok{border-color:var(--brand-teal)}
 @media(max-width:400px){.otp{gap:6px}.otp-box{width:42px;height:52px;font-size:var(--fs-5);border-radius:var(--radius-sm)}}
 @media(max-width:340px){.otp-box{width:38px;height:48px;font-size:var(--fs-5)}}
-.linklike{background:none;border:0;color:var(--brand-teal);font-weight:700;cursor:pointer;font:inherit;padding:0}
+/* "Colar código": discreto de propósito — quem tem autofill nem precisa olhar pra ele */
+.otp-colar{background:none;border:1px solid var(--line-2);border-radius:var(--radius-pill);color:var(--brand-teal-txt);
+  font:inherit;font-size:var(--fs-2);font-weight:700;padding:6px 14px;cursor:pointer}
+.otp-colar:hover{border-color:var(--brand-teal);background:var(--surface-warm)}
+.otp-colar[hidden]{display:none}
+/* :empty some para a dica não abrir um buraco no meio da tela enquanto não tem o que dizer */
+.otp-dica{font-size:var(--fs-2);color:var(--muted);max-width:34ch;line-height:1.45}
+.otp-dica:empty{display:none}
+.linklike{background:none;border:0;color:var(--brand-teal-txt);font-weight:700;cursor:pointer;font:inherit;padding:0}
 .linklike:hover{text-decoration:underline}
 /* overlay de contatos (bottom sheet no mobile, modal no desktop) */
 .ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);display:flex;align-items:flex-end;justify-content:center}
@@ -88,7 +133,7 @@ body{
 .ct-fld{margin-bottom:12px}
 .ct-fld label{display:block;font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin-bottom:5px}
 .ct-fld .ct-sub{font-weight:400;color:var(--muted)}
-.ct-fld textarea{width:100%;font-family:var(--sans);font-size:var(--fs-3);padding:10px 12px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink);resize:vertical;min-height:44px}
+.ct-fld textarea{width:100%;font-family:var(--sans);font-size:16px;padding:10px 12px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink);resize:vertical;min-height:44px}
 .ct-fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .ct-err{color:#8B2E22;font-size:var(--fs-2);min-height:16px}
 .sheet-foot{display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface);padding-top:12px}
@@ -105,15 +150,15 @@ body{
 .ct-acc-body{display:none;padding:2px 14px 14px}
 .ct-acc.open .ct-acc-body{display:block}
 .ct-papel{font-size:var(--fs-1);font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:var(--radius-pill);white-space:nowrap}
-.ct-papel.p{background:var(--brand-teal);color:#fff}
+.ct-papel.p{background:var(--brand-teal-txt);color:#fff}
 .ct-papel.s{background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
 .ct-lbl{display:block;font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin:11px 0 4px}
 .ct-mail{font-size:var(--fs-2);color:var(--ink-2);margin:6px 0 10px;word-break:break-all}
 .ct-areas{display:flex;flex-wrap:wrap;gap:6px}
 .ct-areas-wrap.oculto{display:none}
 .ct-area-chip{font-size:var(--fs-1);font-weight:600;padding:2px 9px;border-radius:var(--radius-pill);background:var(--surface-warm);color:var(--muted);border:1px solid var(--line)}
-.ct-area-chip.on{background:var(--receita-soft,#DCEFEC);color:var(--brand-dark);border-color:transparent}
-.ct-in{width:100%;font-family:var(--sans);font-size:var(--fs-3);padding:9px 11px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink)}
+.ct-area-chip.on{background:var(--receita-soft,#DBEFEC);color:var(--brand-dark);border-color:transparent}
+.ct-in{width:100%;font-family:var(--sans);font-size:16px;padding:9px 11px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink)}
 .ct-in:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .ct-in[disabled],.ct-in[readonly]{opacity:.7}
 .ct-area-chk{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-2);font-weight:600;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-pill);padding:5px 10px;cursor:pointer}
@@ -124,11 +169,14 @@ body{
 .ct-rm-desfazer{margin-left:10px;background:none;border:0;padding:0;font-family:inherit;font-size:var(--fs-2);
   font-weight:700;color:var(--ink-2);text-decoration:underline;cursor:pointer}
 .ct-rm:hover{text-decoration:underline}
-.ct-voce{font-size:var(--fs-1);font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-teal);background:var(--surface-warm);border:1px solid var(--line);padding:3px 9px;border-radius:var(--radius-pill);white-space:nowrap}
+.ct-voce{font-size:var(--fs-1);font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-teal-txt);background:var(--surface-warm);border:1px solid var(--line);padding:3px 9px;border-radius:var(--radius-pill);white-space:nowrap}
 .ct-selfnote{font-size:var(--fs-2);color:var(--muted);margin-top:14px}
-.ct-add{margin-top:10px;width:100%;background:#1F9D57;color:#fff;border-color:transparent;font-weight:800}
+/* Branco sobre --verde dá 3,44:1. O --verde-2 é o mesmo verde um degrau mais escuro
+   (já declarado nas telas de equipe) e devolve 4,92:1 — a família de cor não muda. */
+.ct-add{margin-top:10px;width:100%;background:var(--verde-2);color:#fff;border-color:transparent;font-weight:800}
 .ct-add:hover{background:#178A4B}
-.ct-warn{flex:1;font-size:var(--fs-2);font-weight:700;color:#9A6B10;display:flex;align-items:center;gap:6px}
+/* #9A6B10 dava 3,84:1 no canvas. Pelo token: 4,85:1. */
+.ct-warn{flex:1;font-size:var(--fs-2);font-weight:700;color:var(--amber-txt);display:flex;align-items:center;gap:6px}
 .ct-danger{background:#8B2E22;color:#fff;border-color:transparent}
 
 .grade{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:18px;max-width:680px;width:100%}
@@ -139,19 +187,22 @@ body{
 
 .opcao{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-  padding:26px 24px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:10px;
+  padding:var(--pad-lg);text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:10px;
   transition:transform .15s, box-shadow .15s; position:relative; overflow:hidden;
 }
-.opcao:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(17,61,57,.10)}
+.opcao:hover{transform:translateY(-2px);box-shadow:var(--lift)}
 .opcao .icone{
   width:42px;height:42px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;
-  background:var(--surface-warm);color:var(--brand-teal);flex-shrink:0;
+  background:var(--surface-warm);color:var(--brand-teal-txt);flex-shrink:0;
 }
 .opcao .icone svg{width:22px;height:22px}
 .opcao h2{font-size:var(--fs-4);font-weight:700;letter-spacing:-.01em}
 .opcao p{font-size:var(--fs-2);color:var(--muted);line-height:1.5}
-.opcao .seta{position:absolute;top:24px;right:22px;color:var(--line-2);font-size:var(--fs-4);transition:transform .15s, color .15s}
-.opcao:hover .seta{transform:translateX(3px);color:var(--brand-teal)}
+/* A seta é a affordance de "isto abre". Em --line-2 dava 1,71:1 no branco — invisível
+   para quem tem pouca acuidade. --muted, o mesmo token que dptopessoal/societario/
+   meustickets já usam na seta deles: 5,92:1. */
+.opcao .seta{position:absolute;top:24px;right:22px;color:var(--muted);font-size:var(--fs-4);transition:transform .15s, color .15s}
+.opcao:hover .seta{transform:translateX(3px);color:var(--brand-teal-txt)}
 
 footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--muted)}
 
@@ -166,7 +217,8 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
 </head>
 <body>
 <!--B4U:START-->
-<style id="b4u-oculta-chamado">/* "Abrir chamado" oculto por ora (topo #b4u-open e rodape #ac-abrir) */ #b4u-open,#ac-abrir,#b4u-help,.acoes-chamado a[href*="meustickets"]{display:none!important}</style>
+<style id="b4u-oculta-chamado">/* Abertura de chamado oculta por ora. O "?" (#b4u-help) abre ESTE MESMO modal:
+   deixá-lo visível era uma porta de serviço para um recurso que decidimos segurar. */ #b4u-open,#ac-abrir,#b4u-help{display:none!important}</style>
 <script>window.B4U = { area:'outros', home:true };</script>
 <!-- ═══════════ back4you · cabeçalho + chamados (compartilhado) ═══════════
      Bloco único, autocontido e com prefixo .b4u- (não conflita com o CSS da
@@ -177,13 +229,15 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
      home:true  -> esconde o botão "Início" (usar só no index).
      Para reaproveitar em todas as páginas, mantenha este bloco IDÊNTICO. ─── -->
 <style>
-.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;
+.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   padding:10px 18px;background:var(--brand-dark);color:#fff;box-shadow:0 2px 12px rgba(7,48,52,.20);
   font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+/* min-height nos três: no celular a barra inteira ficava com ~34px de alto e o dedo
+   errava o alvo. 44px é o mínimo que a mão acerta de primeira. */
 .b4u-bar .b4u-logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;margin-right:auto;
-  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1}
+  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1;min-height:44px}
 .b4u-bar .b4u-logo .y{color:var(--brand-euc)}
-.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;
+.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;min-height:44px;
   font-family:inherit;font-weight:600;font-size:var(--fs-3);padding:8px 13px;border-radius:var(--radius-sm);
   text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
 .b4u-btn svg{width:16px;height:16px;flex-shrink:0}
@@ -191,19 +245,25 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
 .b4u-btn:active{transform:translateY(1px)}
 .b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
 .b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
-.b4u-btn.wa{background:#25D366;color:#fff}
+/* Branco sobre o verde do WhatsApp dá 1,98:1 — ilegível no sol. Verde-escuro: 7,23:1.
+   É o botão que ele usa para pedir socorro; não pode ser o mais difícil de ler. */
+.b4u-btn.wa{background:#25D366;color:#06302b}
 .b4u-btn.wa:hover{background:#20bd5a}
-.b4u-btn.call{background:var(--brand-teal);color:#fff}
-.b4u-btn.call:hover{background:#0c756f}
-.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+.b4u-btn.call{background:var(--brand-teal-txt);color:#fff}
+.b4u-btn.call:hover{background:#0A5F5A}
+.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;
   padding:0;border:0;cursor:pointer;border-radius:var(--radius-sm);background:rgba(255,255,255,.10);color:#fff;
   transition:background .15s}
 .b4u-icobtn:hover{background:rgba(255,255,255,.18)}
 .b4u-icobtn svg{width:17px;height:17px}
 @media(max-width:640px){
   .b4u-bar{gap:7px;padding:9px 12px}
-  .b4u-btn .b4u-lbl{display:none}
-  .b4u-btn{padding:9px 11px}
+  /* display:none tira o nome da árvore de acessibilidade e o leitor anuncia
+     "link, link, botão". Some da TELA, continua existindo para quem ouve. */
+  .b4u-btn .b4u-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  /* sem rótulo o botão fica só com o ícone de 16px: 11px de folga dava 38px de
+     largura. 14px fecha os 44px nos dois eixos. */
+  .b4u-btn{padding:9px 14px}
 }
 .b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
   display:none;align-items:flex-end;justify-content:center;
@@ -217,15 +277,15 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
 .b4u-modal .b4u-sub{font-size:var(--fs-2);color:#6E6256;padding:0 20px 10px;line-height:1.5}
 .b4u-fld{padding:7px 20px}
 .b4u-fld label{display:block;font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin-bottom:5px}
-.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:var(--fs-4);
+.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:16px;
   padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink)}
 .b4u-fld textarea{min-height:120px;resize:vertical;line-height:1.5}
 .b4u-fld select:focus,.b4u-fld input:focus,.b4u-fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px;border-color:transparent}
 .b4u-err{color:var(--vermelho);font-size:var(--fs-2);padding:2px 20px 0;min-height:16px}
 .b4u-foot{display:flex;gap:10px;padding:14px 20px 20px;position:sticky;bottom:0;background:var(--surface)}
 .b4u-foot .b4u-btn{flex:1;justify-content:center;padding:12px}
-.b4u-foot .primary{background:var(--brand-teal);color:#fff}
-.b4u-foot .primary:hover{background:#0c756f}
+.b4u-foot .primary{background:var(--brand-teal-txt);color:#fff}
+.b4u-foot .primary:hover{background:#0A5F5A}
 .b4u-foot .primary[disabled]{opacity:.6;cursor:default}
 .b4u-foot .cancel{background:var(--canvas);color:var(--ink-2)}
 .b4u-foot .cancel:hover{background:#e8dccb}
@@ -243,7 +303,7 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
 @media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
 /* Puxar para atualizar (mobile) */
 .b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
-  height:0;overflow:hidden;color:var(--brand-teal);z-index:1500;pointer-events:none;
+  height:0;overflow:hidden;color:var(--brand-teal-txt);z-index:1500;pointer-events:none;
   font-family:'Montserrat',system-ui,sans-serif;font-size:var(--fs-2);font-weight:700;gap:8px}
 .b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:var(--brand-teal);border-radius:50%}
 .b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
@@ -324,18 +384,90 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
+  /* Traduz qualquer erro para uma frase que o cliente entende — e que não o culpa.
+     `e.message` NUNCA vai para a tela: ele é vocabulário nosso, não dele. */
+  function msgAmigavel(e){
+    var m = String((e && e.message) || e || '');
+    if (/API|alcançar|respondeu|network|timeout|Failed to fetch/i.test(m))
+      return 'Não consegui falar com o sistema agora. Confira a sua internet e tente de '
+           + 'novo em alguns segundos — nada do que você digitou foi perdido.';
+    if (/restrito|acesso|código|senha|contato/i.test(m))
+      return 'Este link não está mais valendo. Peça um novo acesso para a gente que '
+           + 'reenviamos na hora.';
+    return 'Deu um problema do nosso lado, não seu. A equipe já foi avisada. Se for '
+         + 'urgente, chame no WhatsApp.';
+  }
+
+  /* A segunda visita não precisa recomeçar do esqueleto. Guardamos o último payload por
+     6h e pintamos com ele na hora, com tarja de "atualizando"; quando a resposta chega,
+     redesenhamos. Dado financeiro no aparelho dele — por isso prazo curto e limpeza no
+     logout (B4U.limparCache), junto do aparelho confiável. */
+  var CACHE_MS = 6 * 60 * 60 * 1000;
+  function cacheChave(tipo, id){ return 'b4u_pl_' + tipo + '_' + id; }
+  function cacheLer(tipo, id){
+    try {
+      var o = JSON.parse(localStorage.getItem(cacheChave(tipo, id)) || 'null');
+      if (!o || (Date.now() - o.ts) > CACHE_MS) return null;
+      return o.raw;
+    } catch (e) { return null; }
+  }
+  function cacheGravar(tipo, id, raw){
+    try { localStorage.setItem(cacheChave(tipo, id),
+          JSON.stringify({ ts: Date.now(), raw: raw })); } catch (e) {}
+  }
+  function limparCache(){
+    /* Sai o payload e sai também o b4u_disp_ (quais áreas o cliente tem): num aparelho
+       compartilhado, a barra do próximo não pode herdar o mapa de painéis do anterior. */
+    try { Object.keys(localStorage).forEach(function (k) {
+          if (k.indexOf('b4u_pl_') === 0 || k.indexOf('b4u_disp_') === 0) localStorage.removeItem(k); }); } catch (e) {}
+  }
+
   var IC = {
     home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
     wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>',
     chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/></svg>',
     help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>',
-    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>'
+    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>',
+    guias:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m8.5 15 2 2 4-4"/></svg>',
+    pessoal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><path d="M16 4.2c1.7.4 3 2 3 3.8s-1.3 3.4-3 3.8M23 20c0-2.8-2.3-5.1-5.4-5.8"/></svg>',
+    fiscal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>',
+    equiparacao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>'
   };
 
   var C = idc();
   var linkHome = 'index.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var linkTickets = 'meustickets.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
+
+  // ---- links de área na própria barra --------------------------------------
+  /* Do fiscal para a agenda não havia caminho: era voltar para a home e pagar outra
+     chamada à API. Os links saem do `disponiveis` que a HOME já recebeu e gravou no
+     aparelho (b4u_disp_<id>) — assim respeitam PAINEIS_OCULTOS e o acesso da pessoa
+     sem esta página perguntar nada. Sem esse registro, só a agenda, que quem tem
+     fiscal ou pessoal sempre tem. */
+  var AREAS_LINK = [
+    ['guias.html',       'Agenda',       'guias',       IC.guias],
+    ['fiscal.html',      'Fiscal',       'fiscal',      IC.fiscal],
+    ['dptopessoal.html', 'Pessoal',      'pessoal',     IC.pessoal],
+    ['equiparacao.html', 'Equiparação',  'equiparacao', IC.equiparacao]
+  ];
+  function disponiveisSalvos(){
+    try { var o = JSON.parse(localStorage.getItem('b4u_disp_'+C.id)||'null');
+          return (o && (o.disponiveis || o)) || null; } catch(e){ return null; }
+  }
+  function linksDeArea(){
+    var disp = disponiveisSalvos();
+    var aqui = (location.pathname.split('/').pop()||'').toLowerCase();
+    return AREAS_LINK.filter(function(a){
+      if (a[0].toLowerCase() === aqui) return false;                       // não linkar a página atual
+      if (a[2] === 'guias') return !disp || !!(disp.fiscal || disp.pessoal);
+      return !!(disp && disp[a[2]]);
+    }).slice(0, 2)                                                          // 2 links: a barra ainda tem 3 botões fixos
+     .map(function(a){
+       return '<a class="b4u-btn ghost" href="'+esc(a[0]+(C.id?('#'+C.id+(C.codigo?'-'+C.codigo:'')):''))+'" '+
+              'title="'+esc(a[1])+'">'+a[3]+'<span class="b4u-lbl">'+esc(a[1])+'</span></a>';
+     }).join('');
+  }
 
   // ---- barra fixa ----------------------------------------------------------
   var bar = document.createElement('div');
@@ -344,6 +476,7 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
     '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
     (CFG.home ? '' :
       '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
+    (CFG.home ? '' : linksDeArea()) +
     '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
     '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
     '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
@@ -359,7 +492,39 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
   ov.className = 'b4u-ov';
   document.body.appendChild(ov);
 
-  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; }
+  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; ESQ_ATUAL=''; }
+
+  /* Fechar por clique no fundo ou Esc NÃO pode apagar o que ele escreveu. Só é
+     "limpo" o que ainda for igual ao esqueleto pré-preenchido do tipo escolhido. */
+  var ESQ_ATUAL = '';
+  function modalSujo(){
+    var t = ov.querySelector('#b4u-msg'), a = ov.querySelector('#b4u-assunto');
+    if(!t) return false;
+    return String(t.value||'').trim() !== String(ESQ_ATUAL||'').trim()
+        || !!(a && a.value.trim());
+  }
+  function tentarFechar(){ if(modalSujo()) pedirDescartar(); else fecharModal(); }
+  function montarFoot(){
+    var foot = ov.querySelector('.b4u-foot'); if(!foot) return;
+    foot.innerHTML =
+      '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
+      '<button type="button" class="b4u-btn primary" id="b4u-send">Enviar chamado</button>';
+    foot.querySelector('#b4u-cancel').addEventListener('click', tentarFechar);
+    foot.querySelector('#b4u-send').addEventListener('click', enviar);
+  }
+  function pedirDescartar(){
+    var foot = ov.querySelector('.b4u-foot'); if(!foot){ fecharModal(); return; }
+    foot.innerHTML =
+      '<button type="button" class="b4u-btn cancel" id="b4u-keep">Continuar escrevendo</button>' +
+      '<button type="button" class="b4u-btn primary" id="b4u-discard">Descartar o que escrevi</button>';
+    var err = ov.querySelector('#b4u-erro');
+    if(err) err.textContent = 'Você escreveu algo neste chamado. Quer mesmo sair sem enviar?';
+    foot.querySelector('#b4u-keep').addEventListener('click', function(){
+      if(err) err.textContent=''; montarFoot();
+      var t = ov.querySelector('#b4u-msg'); if(t) t.focus();
+    });
+    foot.querySelector('#b4u-discard').addEventListener('click', fecharModal);
+  }
 
   function abrir(opts){
     opts = opts || {};
@@ -398,6 +563,7 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
     function aplicaSkeleton(force){
       var esq = TIPOS[selTipo.value] ? TIPOS[selTipo.value][1] : '';
       if(force || !txt.value.trim()) txt.value = esq;
+      ESQ_ATUAL = esq;                 // referência do que ainda é "vazio", não texto dele
     }
     aplicaSkeleton(true);
     selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
@@ -406,8 +572,8 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
       selTipo.innerHTML = opcoesTipo(this.value, selTipo.value);
       aplicaSkeleton(true);
     });
-    ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
-    ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
+    ov.querySelector('#b4u-cancel').addEventListener('click', tentarFechar);
+    ov.addEventListener('click', function(e){ if(e.target===ov) tentarFechar(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
     // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
     var fileEl = ov.querySelector('#b4u-file');
@@ -433,7 +599,7 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
     var file = fileEl && fileEl.files && fileEl.files[0];
     if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
     btn.disabled = true; btn.textContent = 'Enviando…';
-    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = msgAmigavel(e); };
     if(file){
       // COM arquivo -> POST (JSONP/GET não comporta base64)
       var reader = new FileReader();
@@ -489,7 +655,7 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
 
   bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
   bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) tentarFechar(); });
 
   // ---- Puxar para atualizar (mobile) --------------------------------------
   // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
@@ -521,6 +687,9 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
   })();
 
   window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    msgAmigavel: msgAmigavel,
+    CACHE_MS: CACHE_MS, cacheChave: cacheChave, cacheLer: cacheLer,
+    cacheGravar: cacheGravar, limparCache: limparCache,
     // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
     skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
       var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
@@ -544,11 +713,19 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
   <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
 </div>
 
-<div class="miolo" id="miolo">
-  <div class="state">
-    <div class="spin" role="status" aria-label="Carregando"></div>
-    <p>Carregando…</p>
+<div class="wrap miolo" id="miolo">
+  <!-- Esqueleto no formato real da home: a saudação e os quatro cartões. -->
+  <div class="saudacao" style="width:100%;max-width:560px">
+    <div class="b4u-skel" style="height:26px;width:62%;margin:0 auto 12px"></div>
+    <div class="b4u-skel" style="height:15px;width:88%;margin:0 auto"></div>
   </div>
+  <div class="grade" aria-hidden="true">
+    <div class="b4u-skel" style="height:120px;width:100%"></div>
+    <div class="b4u-skel" style="height:120px;width:100%"></div>
+    <div class="b4u-skel" style="height:120px;width:100%"></div>
+    <div class="b4u-skel" style="height:120px;width:100%"></div>
+  </div>
+  <p id="espera-txt" role="status" style="margin-top:20px;font-size:var(--fs-3);color:var(--muted)">Carregando o seu painel…</p>
 </div>
 
 <footer>back4you · inteligência tributária</footer>
@@ -591,13 +768,17 @@ const ICONES = {
   pessoal:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><path d="M16 4.2c1.7.4 3 2 3 3.8s-1.3 3.4-3 3.8M23 20c0-2.8-2.3-5.1-5.4-5.8"/></svg>',
   equiparacao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>',
   guias:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m8.5 15 2 2 4-4"/></svg>',
+  contabil:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
 };
 
 const DEFINICOES = [
-  { chave:'fiscal',      arquivo:'fiscal.html',       titulo:'Dashboard Fiscal',        desc:'Faturamento, impostos, rateio por centro de custo e notas fiscais.' },
+  { chave:'fiscal',      arquivo:'fiscal.html',       titulo:'Impostos e faturamento',  desc:'Quanto você faturou, quanto vai pagar de imposto e como isso se divide.' },
   { chave:'equiparacao', arquivo:'equiparacao.html',  titulo:'Equiparação hospitalar',  desc:'Pedidos de restituição, valores atualizados e situação de cada processo.' },
   { chave:'societario',  arquivo:'societario.html',   titulo:'Societário',  desc:'Contrato social, alterações, alvarás, processos e modelos de documentos da empresa.' },
   { chave:'pessoal',     arquivo:'dptopessoal.html',  titulo:'Departamento Pessoal',    desc:'Folha, encargos e obrigações trabalhistas.' },
+  // A página contábil existe e está pronta. Quem decide se ela aparece é o `disponiveis`
+  // que vem do backend (PAINEIS_OCULTOS) — aqui ela fica registrada para não sumir por acidente.
+  { chave:'contabil',    arquivo:'contabil.html',     titulo:'Contábil',                desc:'Balanço, resultado do exercício e a posição contábil da empresa.' },
 ];
 
 function render(id, codigo, disponiveis, pessoa){
@@ -612,16 +793,24 @@ function render(id, codigo, disponiveis, pessoa){
       <p>Vencimentos, provisionamento e controle das guias — marque agendada ou paga, por você.</p>
       <span class="seta">→</span></a>` : '';
   const totalCards = (cardGuias ? 1 : 0) + visiveis.length;
-  const quem = (pessoa && (pessoa.nome||pessoa.email)) ? `<div class="quem">Você: <b>${esc(pessoa.nome||pessoa.email||'')}</b>${/principal/i.test(pessoa.papel||'')?' · responsável principal':''}</div>` : '';
+  // O nome já vai na saudação; aqui fica só o que ela não diz (o papel do acesso).
+  const primeiro = String((pessoa && pessoa.nome) || '').trim().split(/\s+/)[0] || '';
+  const quem = pessoa
+    ? (/principal/i.test(pessoa.papel||'')
+        ? `<div class="quem">Você entrou como responsável principal.</div>`
+        : (primeiro ? '' : `<div class="quem">Você: <b>${esc(pessoa.email||'')}</b></div>`))
+    : '';
+  pararEspera();
 
   document.getElementById('miolo').innerHTML = `
     <div class="saudacao">
-      <h1>Bem-vindo à back4you</h1>
-      <p>Aqui fica tudo o que você precisa acompanhar sobre a sua empresa — de impostos a processos em andamento.</p>
-      <div class="cta">Clique abaixo para verificar documentos, andamento e muito mais.</div>
+      <h1>Olá${primeiro?', '+esc(primeiro):''}.</h1>
+      <!-- span, não div: um <div> dentro de <p> é fechado pelo parser e o esqueleto
+           vira irmão do parágrafo — ficava na tela para sempre. -->
+      <p id="hm-resumo"><span class="b4u-skel" style="height:15px;width:92%;margin:0 auto"></span></p>
       ${quem}
     </div>
-    <div class="alertas-home" id="alertas-home"></div>
+    <div class="alertas-home" id="alertas-home">${window.B4U&&window.B4U.skeleton?window.B4U.skeleton(1,44):''}</div>
     <div class="grade${totalCards===1?' grade--uma':''}" id="grade"></div>
     <div class="acoes-chamado">
       <button type="button" class="ac-btn ac-primary" id="ac-abrir">Abrir um chamado</button>
@@ -657,27 +846,209 @@ function render(id, codigo, disponiveis, pessoa){
     }
   }
 
-  // alertas de pendência na home (resumo que o painel fiscal grava no aparelho)
-  carregarAlertasHome(id, codigo);
+  /* A barra das páginas internas monta os links de área a partir daqui: só a home
+     recebe `disponiveis`, e sem este registro o fiscal degradava para um link só.
+     Gravamos o que a home REALMENTE mostrou — já filtrado por PAINEIS_OCULTOS (que
+     vem false do backend) e pelas áreas do acesso de quem entrou. Assim a barra
+     nunca oferece uma porta que a pessoa não consegue abrir. */
+  try {
+    const visivel = {};
+    DEFINICOES.forEach(d => { visivel[d.chave] = !!(disponiveis[d.chave] && (!areasP || areasP.indexOf(d.chave)>=0)); });
+    localStorage.setItem('b4u_disp_' + id, JSON.stringify(visivel));
+  } catch(e){}
+
+  // alertas de pendência + frase-resumo da saudação (só quem realmente abre o fiscal)
+  carregarAlertasHome(id, codigo, !!disponiveis.fiscal && (!areasP || areasP.indexOf('fiscal')>=0));
 }
 
 /* ---------- Alertas de pendência na home ----------
- * O painel fiscal grava um resumo em localStorage (b4u_pend_<id>) sempre que
- * abre; a home lê e mostra os cartões (cada um leva ao ponto de ajuste). */
-function carregarAlertasHome(id, codigo){
+ * A home NÃO pode depender de o cliente ter aberto o fiscal antes: quem entra pela
+ * primeira vez no celular via uma home limpa mesmo tendo guia vencida e notas sem
+ * divisão, e lia o silêncio como "está tudo em dia". Então ela mesma busca o
+ * `tipo=fiscal` e conta as pendências. O localStorage do fiscal continua servindo
+ * para pintar na hora, enquanto a resposta não chega. */
+const PAGINAS_ALERTA = { fiscal:'fiscal.html', guias:'guias.html', contabil:'contabil.html',
+  equiparacao:'equiparacao.html', societario:'societario.html', dptopessoal:'dptopessoal.html', pessoal:'dptopessoal.html' };
+
+function pintarAlertas(id, codigo, itens){
   const box = document.getElementById('alertas-home'); if(!box) return;
-  let dados=null;
-  try{ dados = JSON.parse(localStorage.getItem('b4u_pend_'+id)||'null'); }catch(e){}
-  if(!dados || !Array.isArray(dados.itens) || !dados.itens.length){ box.innerHTML=''; return; }
-  // Só linkar para páginas que existem de fato (evita 404, ex.: contabil.html).
-  const PAGINAS_ALERTA = { fiscal:'fiscal.html', equiparacao:'equiparacao.html', societario:'societario.html', dptopessoal:'dptopessoal.html', pessoal:'dptopessoal.html' };
-  box.innerHTML = dados.itens.map(p=>{
+  box.innerHTML = (itens||[]).map(p=>{
     const arq = PAGINAS_ALERTA[p.area] || 'fiscal.html';
-    const alvo = arq+'#'+id+'-'+codigo+(p.pend?'?pend=1':'');
+    // A query vai ANTES do '#': depois dela o '?pend=1' vira parte do fragmento e
+    // contamina o código de acesso, derrubando a sessão de quem clica no alerta.
+    const alvo = arq + (p.pend?'?pend=1':'') + '#' + id + '-' + codigo;
     return `<a class="alerta-card" href="${esc(alvo)}">
       <span class="alerta-ico">!</span>
       <span class="alerta-txt"><b>${esc(p.titulo)}</b>${p.detalhe?`<span>${esc(p.detalhe)}</span>`:''}</span>
       <span class="alerta-seta">→</span></a>`; }).join('');
+}
+
+/* A saudação é o resumo: ela diz em uma frase o que precisa da atenção dele hoje —
+   e diz explicitamente quando não precisa de nada. Silêncio não é resposta. */
+function pintarResumo(itens, incerto){
+  const p = document.getElementById('hm-resumo'); if(!p) return;
+  if(incerto){
+    p.textContent = 'Aqui fica tudo o que você precisa acompanhar sobre a sua empresa — de impostos a processos em andamento.';
+    return;
+  }
+  const frases = (itens||[]).map(x=>x.frase).filter(Boolean);
+  if(!frases.length){
+    p.innerHTML = '<span class="tudo-em-dia">Está tudo em dia — nada precisa da sua atenção hoje.</span>';
+    return;
+  }
+  const n = frases.length;
+  const lista = n===1 ? frases[0] : frases.slice(0,-1).join(', ') + ' e ' + frases[n-1];
+  p.textContent = `Hoje você tem ${n===1?'uma coisa':n+' coisas'} para ver: ${lista}.`;
+}
+
+let ALERTAS_EM_VOO = false;   // render() pode rodar duas vezes (cache + resposta): uma busca só
+async function carregarAlertasHome(id, codigo, temFiscal){
+  if(!document.getElementById('alertas-home')) return;
+
+  // 1) pinta na hora: o payload fiscal guardado, ou o resumo que o painel fiscal deixou
+  let pintou = false;
+  const cacheFiscal = (temFiscal && window.B4U && B4U.cacheLer) ? B4U.cacheLer('fiscal', id) : null;
+  if(cacheFiscal){
+    const it = pendenciasDoFiscal(cacheFiscal); pintarAlertas(id, codigo, it); pintarResumo(it, false); pintou = true;
+  } else {
+    let pend=null; try{ pend = JSON.parse(localStorage.getItem('b4u_pend_'+id)||'null'); }catch(e){}
+    if(pend && Array.isArray(pend.itens)){ pintarAlertas(id, codigo, pend.itens); pintarResumo(pend.itens, false); pintou = true; }
+  }
+
+  if(!temFiscal){
+    // Sem painel fiscal não há o que contar aqui — e não dá para afirmar que está tudo em dia.
+    if(!pintou){ pintarAlertas(id, codigo, []); pintarResumo(null, true); }
+    return;
+  }
+  if(!pintou){
+    const box=document.getElementById('alertas-home');
+    if(box) box.innerHTML = (window.B4U && B4U.skeleton) ? B4U.skeleton(1,44) : '';
+  }
+  if(ALERTAS_EM_VOO) return;
+
+  // 2) busca a verdade. O payload fiscal vai para o cache compartilhado (B4U.cacheChave),
+  //    então esta chamada também adianta a abertura do painel fiscal.
+  ALERTAS_EM_VOO = true;
+  let raw = null;
+  try{
+    const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&tipo=fiscal');
+    if(d && !d.erro){ raw = d; if(window.B4U && B4U.cacheGravar) B4U.cacheGravar('fiscal', id, d); }
+  }catch(e){}
+  ALERTAS_EM_VOO = false;
+  if(!raw) raw = cacheFiscal;
+  if(!raw){ if(!pintou){ pintarAlertas(id, codigo, []); pintarResumo(null, true); } return; }
+
+  const itens = pendenciasDoFiscal(raw);
+  pintarAlertas(id, codigo, itens);
+  pintarResumo(itens, false);
+  try{ localStorage.setItem('b4u_pend_'+id, JSON.stringify({itens, ts:Date.now()})); }catch(e){}
+}
+
+/* ---------- Contagem das pendências a partir do payload fiscal ----------
+ * Mesmas três contas do painel fiscal (guias vencidas, notas sem divisão, lucro sem
+ * distribuição), aqui só para contar — nada é redesenhado. */
+const HOJE_HOME = (()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; })();
+const numH = v => Number(v)||0;
+const compH = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+const diaH  = d => compH(d)+'-'+String(d.getDate()).padStart(2,'0');
+const brlH  = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+const chaveNorm = s => String(s).trim().toLowerCase().replace(/\s+/g,' ');
+function metrica(row, chave){
+  if(!row) return undefined;
+  if(chave in row) return row[chave];
+  const alvo = chaveNorm(chave);
+  const k = Object.keys(row).find(x=>chaveNorm(x)===alvo);
+  return k===undefined ? undefined : row[k];
+}
+/* Peso de cada centro numa nota: true => rateio igual; número => valor/bruto;
+   nenhum marcado => a nota inteira cai em "Não identificado". */
+function semDivisao(nf){
+  const map = (nf && nf.centros) || {}; const nomes = Object.keys(map);
+  const marcados = nomes.filter(k=>map[k]===true);
+  const numericos = nomes.filter(k=>typeof map[k]==='number');
+  if(!marcados.length && !numericos.length) return true;
+  const bruto = numH(nf.valorBruto);
+  if(marcados.indexOf('Não identificado')>=0) return true;
+  const nid = numH(map['Não identificado']);
+  return bruto ? (nid/bruto) > 0.005 : nid > 0;
+}
+const notaInativaH = nf => !!(nf && (nf.ativa===false || /cancel|substit/i.test(nf.situacao||'')));
+
+function pendenciasDoFiscal(raw){
+  const itens = [];
+  const anoAtual = String(compH(HOJE_HOME)).slice(0,4);
+
+  // -- guias vencidas (venc no passado e ainda não marcadas como pagas) --------
+  const regras = (raw.regras||[]).filter(r=>/^R\d+$/.test(String(r.id||'')));
+  const regraDe = Object.fromEntries(regras.map(r=>[r.id,r]));
+  const empresa = (raw.empresa||[]).filter(r=>/^\d{4}-\d{2}$/.test(String(r.competencia||'')));
+  const porComp = Object.fromEntries(empresa.map(r=>[r.competencia,r]));
+  const comDado = empresa.filter(r=>numH(metrica(r,'Total (R$)'))>0);
+  const baseMedia = (comDado.length?comDado:empresa).slice(-3);
+  const mediaDe = k => baseMedia.length ? baseMedia.reduce((s,r)=>s+numH(metrica(r,k)),0)/baseMedia.length : 0;
+  const valorDe = item => {
+    const rr = regraDe[item.id_regra]||{};
+    if(numH(rr.valor_previsto)>0) return numH(rr.valor_previsto);
+    const fonte = String(rr.metrica_fonte||'').trim(); if(!fonte) return 0;
+    const chaves = fonte.split('|').map(s=>s.trim()).filter(Boolean);
+    const n = Math.max(1, numH(rr.acumula_meses)||1);
+    const ref = String(item.competencia_ref||''); if(!/^\d{4}-\d{2}$/.test(ref)) return 0;
+    const [a,m] = ref.split('-').map(Number);
+    let total = 0;
+    for(let i=0;i<n;i++){ const c = compH(new Date(a,m-1-i,1)); const r = porComp[c];
+      total += chaves.reduce((s,k)=>s+(r?numH(metrica(r,k)):mediaDe(k)),0); }
+    return Math.round(total*100)/100;
+  };
+  const agenda = raw.agenda||{};
+  const ontem = new Date(HOJE_HOME); ontem.setDate(ontem.getDate()-1);
+  // Janela de 60 dias (dois ciclos). O calendário cobre três anos e quase ninguém
+  // marcou "paga" no passado: sem o limite, a home gritaria uma dívida histórica que
+  // na verdade é só falta de marcação. O que ainda dá para resolver é o recente.
+  const limite = new Date(HOJE_HOME); limite.setDate(limite.getDate()-60);
+  const vencidas = (raw.calendario||[])
+    .filter(c=>/^R\d+$/.test(String(c.id_regra||'')) && c.vencimento)
+    .map(c=>{ const st = agenda[(c.id_regra||'')+'|'+(c.competencia_ref||'')] || {};
+      const ov = (st.venc && /^\d{4}-\d{2}-\d{2}/.test(st.venc)) ? String(st.venc).slice(0,10) : '';
+      return { venc: ov||c.vencimento, status:String(st.status||'').toLowerCase(), valor: valorDe(c) }; })
+    .filter(g=>g.status!=='paga' && g.valor>0
+             && String(g.venc) < diaH(HOJE_HOME) && String(g.venc) >= diaH(limite));
+  if(vencidas.length){
+    const total = vencidas.reduce((s,g)=>s+g.valor,0);
+    const ultima = vencidas.map(g=>String(g.venc)).sort().pop();
+    const quando = ultima===diaH(ontem) ? 'ontem' : ('em '+ultima.slice(8,10)+'/'+ultima.slice(5,7));
+    itens.push({ area:'guias',
+      titulo: vencidas.length===1 ? `Uma guia de ${brlH(total)} venceu` : `${vencidas.length} guias vencidas · ${brlH(total)}`,
+      detalhe:'Confira na agenda de pagamentos e marque como paga.',
+      frase: vencidas.length===1 ? `uma guia de ${brlH(total)} venceu ${quando}`
+                                 : `${vencidas.length} guias vencidas somam ${brlH(total)}` });
+  }
+
+  // -- notas do ano sem divisão definida --------------------------------------
+  let semDiv = 0;
+  Object.keys(raw.nfs||{}).forEach(c=>{
+    if(String(c).slice(0,4)!==anoAtual) return;
+    ['prestadas','tomadas'].forEach(tab=>{
+      ((raw.nfs[c]||{})[tab]||[]).forEach(nf=>{ if(semDivisao(nf) && !notaInativaH(nf)) semDiv++; });
+    });
+  });
+  if(semDiv>0) itens.push({ area:'fiscal', pend:true,
+    titulo: semDiv>1 ? `${semDiv} notas sem divisão definida` : 'Uma nota sem divisão definida',
+    detalhe:'Sem isso a divisão do imposto sai errada.',
+    frase: semDiv>1 ? `${semDiv} notas ainda estão sem divisão definida` : 'uma nota ainda está sem divisão definida' });
+
+  // -- meses com lucro apurado e nenhuma distribuição informada ----------------
+  let lucroSemDist = 0;
+  empresa.forEach(r=>{
+    if(String(r.competencia||'').slice(0,4)!==anoAtual) return;
+    if(numH(metrica(r,'Apuração de lucro do mês (R$)'))>0 && numH(metrica(r,'Dividendos distribuídos (R$)'))<=0) lucroSemDist++;
+  });
+  if(lucroSemDist>0) itens.push({ area:'fiscal',
+    titulo: lucroSemDist>1 ? `${lucroSemDist} meses com lucro sem distribuição informada` : 'Um mês com lucro sem distribuição informada',
+    detalhe:'Informe quanto foi distribuído de lucros/dividendos.',
+    frase: lucroSemDist>1 ? `${lucroSemDist} meses com lucro ainda estão sem distribuição informada`
+                          : 'um mês com lucro ainda está sem distribuição informada' });
+
+  return itens;
 }
 
 const AREAS_LABEL = { fiscal:'Fiscal', contabil:'Contábil', pessoal:'Pessoal', societario:'Societário', equiparacao:'Equiparação', financeiro:'Financeiro' };
@@ -719,7 +1090,7 @@ async function abrirContatos(id, codigo){
       contatos:(d.contatos||[]).map(c=>({nome:c.nome,email:c.email,papel:c.papel,areas:Object.keys(c.areas||{}).filter(a=>c.areas[a]),_open:false})),
       areas:(d.areas&&d.areas.length)?d.areas:Object.keys(AREAS_LABEL), editando:!!d.podeEditar, euEmail:(d.euEmail||'').toLowerCase() };
     renderContatos();
-  }catch(e){ document.getElementById('ct-body').innerHTML = `<p class="sheet-note" style="color:#8B2E22">${esc(e.message||e)}</p>`; }
+  }catch(e){ document.getElementById('ct-body').innerHTML = `<p class="sheet-note" style="color:#8B2E22">${esc(B4U.msgAmigavel(e))}</p>`; }
 }
 
 function renderContatos(){
@@ -734,8 +1105,22 @@ function renderContatos(){
     <div class="ct-err" id="ct-err"></div>
     <div class="sheet-foot" id="ct-foot"></div>`;
   montarFoot();
-  const add=document.getElementById('ct-add'); if(add) add.addEventListener('click',()=>{ CT.contatos.push({nome:'',email:'',papel:'Secundário',areas:[],_open:true}); CT.dirty=true; renderContatos(); });
+  const add=document.getElementById('ct-add');
+  if(add) add.addEventListener('click',()=>{
+    CT.contatos.push({nome:'',email:'',papel:'Secundário',areas:[],_open:true}); CT.dirty=true;
+    renderContatos();
+    // renderContatos refaz o innerHTML inteiro e a folha volta ao topo: sem levar o
+    // cartão novo até os olhos, ele acha que o toque não funcionou e toca de novo.
+    focarUltimoContato();
+  });
   wireCards(podeEditar);
+}
+
+function focarUltimoContato(){
+  const cards=document.querySelectorAll('#ct-lista .ct-acc');
+  const novo=cards[cards.length-1]; if(!novo) return;
+  novo.scrollIntoView({block:'center'});
+  const nm=novo.querySelector('.ct-nome'); if(nm) nm.focus({preventScroll:true});
 }
 
 function cardContato(c,i,editar){
@@ -757,7 +1142,8 @@ function cardContato(c,i,editar){
       <label class="ct-lbl">Nome</label>
       <input class="ct-in ct-nome" data-i="${i}" placeholder="Nome" value="${esc(c.nome)}">
       <label class="ct-lbl">E-mail</label>
-      <input class="ct-in ct-email" data-i="${i}" placeholder="e-mail@empresa.com" value="${esc(c.email)}"${euMesmo?' readonly':''}>
+      <!-- Sem isto o iPhone entrega "Ana@empresa.com" (maiúscula automática) e esconde a tecla @. -->
+      <input class="ct-in ct-email" data-i="${i}" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="e-mail@empresa.com" value="${esc(c.email)}"${euMesmo?' readonly':''}>
       <label class="ct-lbl">Tipo de acesso</label>
       <select class="ct-in ct-papel-sel" data-i="${i}"${euMesmo?' disabled title="Você não pode remover o seu próprio acesso principal"':''}>
         <option value="Principal"${principal?' selected':''}>Principal · acesso total</option>
@@ -818,8 +1204,36 @@ function wireCards(editar){
   }));
 }
 
+const ORDINAL_CT = ['1º','2º','3º','4º','5º','6º','7º','8º','9º','10º'];
+/* O backend descarta em silêncio quem está sem e-mail e ainda responde sucesso — o
+   sócio some da lista e nunca recebe acesso. Barramos aqui, apontando a linha. */
+function validarContatos(){
+  for(let i=0;i<CT.contatos.length;i++){
+    const c=CT.contatos[i];
+    const nome=String(c.nome||'').trim(), email=String(c.email||'').trim();
+    const quem = nome ? `“${nome}”` : `o ${ORDINAL_CT[i]||(i+1)+'º'} contato`;
+    if(!nome && !email) return { i, msg:`O ${ORDINAL_CT[i]||(i+1)+'º'} contato está em branco. Preencha nome e e-mail ou remova o cartão.` };
+    if(!email) return { i, msg:`Falta o e-mail de ${quem}. Sem e-mail ele não recebe o acesso — preencha ou remova o cartão.` };
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { i, msg:`O e-mail de ${quem} está incompleto: “${email}”. Confira antes de salvar.` };
+  }
+  return null;
+}
+
 async function salvarContatos(){
   const err=document.getElementById('ct-err'), btn=document.getElementById('ct-save'); if(err) err.textContent='';
+  const falha=validarContatos();
+  if(falha){
+    // Abre o cartão do contato incompleto e leva a pessoa até ele — o erro sozinho,
+    // com o cartão fechado, não diz qual dos quatro nomes está faltando.
+    CT.contatos.forEach((c,k)=>{ c._open = (k===falha.i); });
+    renderContatos();
+    const errNovo=document.getElementById('ct-err'); if(errNovo) errNovo.textContent=falha.msg;
+    const card=document.querySelectorAll('#ct-lista .ct-acc')[falha.i];
+    if(card){ card.scrollIntoView({block:'center'});
+      const alvo=card.querySelector(String(CT.contatos[falha.i].nome||'').trim()?'.ct-email':'.ct-nome');
+      if(alvo) alvo.focus({preventScroll:true}); }
+    return;
+  }
   const payload=CT.contatos.map(c=>({nome:c.nome,email:c.email,papel:c.papel,areas:/principal/i.test(c.papel)?[]:c.areas}));
   const params=new URLSearchParams({ id:CT.id, codigo:CT.codigo, acao:'salvar_contatos', contatos:JSON.stringify(payload) });
   if(btn){ btn.disabled=true; btn.textContent='Salvando…'; }
@@ -827,20 +1241,50 @@ async function salvarContatos(){
     const d=await jsonp(API_URL+'?'+params.toString());
     if(d.erro) throw new Error(d.erro);
     CT.dirty=false;
-    document.getElementById('ct-body').innerHTML=`<div class="state" style="min-height:160px"><h1 style="font-size:var(--fs-5)">Contatos salvos ✓</h1><p>${esc(d.mensagem||'Tudo certo.')}</p><button class="ac-btn ac-primary" id="ct-ok">Fechar</button></div>`;
+    // Se o backend tiver descartado alguém mesmo assim, ele diz quem — e nós mostramos.
+    const ign=(d && Array.isArray(d.ignorados)) ? d.ignorados.filter(Boolean) : [];
+    const avisoIgn = ign.length
+      ? `<p class="sheet-note" style="color:#9A6B10;max-width:40ch;margin:10px auto 0">⚠ ${ign.length===1?'Não foi salvo':'Não foram salvos'}: ${esc(ign.map(x=>(x&&(x.nome||x.email))||String(x)).join(', '))}. ${ign.length===1?'Esse contato ficou':'Esses contatos ficaram'} sem e-mail válido e não ${ign.length===1?'recebe':'recebem'} acesso.</p>`
+      : '';
+    document.getElementById('ct-body').innerHTML=`<div class="state" style="min-height:160px"><h1 style="font-size:var(--fs-5)">Contatos salvos ✓</h1><p>${esc(d.mensagem||'Tudo certo.')}</p>${avisoIgn}<button class="ac-btn ac-primary" id="ct-ok">Fechar</button></div>`;
     document.getElementById('ct-ok').addEventListener('click', ()=>fecharOverlay(true));
-  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='Salvar'; } if(err) err.textContent=e.message||String(e); }
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='Salvar'; }
+    const e2=document.getElementById('ct-err');
+    // O que ele digitou continua na tela: a frase precisa dizer isso.
+    if(e2) e2.textContent='Não consegui salvar os contatos agora. Nada foi perdido — o que você digitou continua aqui, tente de novo em alguns segundos.'; }
 }
 
-/* ---------- código de verificação: 6 caixinhas, só números ---------- */
+/* ---------- código de verificação: 6 caixinhas, só números ----------
+ * `autocomplete="one-time-code"` é o que faz o iPhone/Mac oferecer o código sozinho
+ * em cima do teclado. Só que o gatilho está no E-MAIL, não aqui: quem decide é a
+ * heurística do sistema lendo o assunto e a última linha do texto plano. Se algum dia
+ * o preenchimento parar, olhe `enviarEmailAcesso_` no Contatos.gs antes de mexer aqui.
+ *
+ * NÃO chamar a WebOTP API (`navigator.credentials.get({otp:{transport:['sms']}})`):
+ * ela só recebe código por SMS, e o nosso vai por e-mail — a chamada abriria um pedido
+ * de permissão que fica pendurado pra sempre. Se um dia o envio passar a ter SMS, é
+ * bem aqui (junto do wireOTP, com AbortController amarrado na saída da tela) que ela
+ * entra, e o SMS precisa terminar com a linha `@painel.back4you.com.br #123456`. */
 function boxesOTP(){
   return `<div class="otp" id="otp">${Array.from({length:6}).map(()=>
-    `<input class="otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="dígito do código">`).join('')}</div>`;
+    `<input class="otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="dígito do código">`).join('')}</div>
+    <button type="button" class="otp-colar" id="otp-colar" hidden>Colar código</button>
+    <p class="otp-dica" id="otp-dica" role="status" aria-live="polite"></p>`;
 }
 function wireOTP(onComplete){
   const inputs = Array.from(document.querySelectorAll('#otp .otp-box'));
   const val = () => inputs.map(i=>i.value).join('');
   const marcar = ()=> inputs.forEach(i=> i.classList.toggle('ok', !!i.value));
+  // Um caminho só para espalhar os dígitos: colar com Ctrl+V, botão "Colar código" e
+  // autofill do sistema caem todos aqui — duas cópias dessa regra viravam duas regras.
+  function distribuir(digitos, focoAtual){
+    const d = String(digitos||'').replace(/\D/g,'').slice(0,inputs.length);
+    if(!d) return false;
+    inputs.forEach((x,k)=> x.value=d[k]||''); marcar();
+    (inputs[Math.min(d.length,inputs.length-1)]||focoAtual||inputs[0]).focus();
+    if(d.length>=inputs.length && onComplete) onComplete(val());
+    return true;
+  }
   inputs.forEach((inp,i)=>{
     inp.addEventListener('input', ()=>{
       inp.value = inp.value.replace(/\D/g,'').slice(0,1);
@@ -853,44 +1297,78 @@ function wireOTP(onComplete){
     });
     inp.addEventListener('paste', e=>{
       e.preventDefault();
-      const d=(e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,inputs.length);
-      if(!d) return; inputs.forEach((x,k)=> x.value=d[k]||''); marcar();
-      (inputs[Math.min(d.length,inputs.length-1)]||inp).focus();
-      if(d.length>=inputs.length && onComplete) onComplete(val());
+      distribuir((e.clipboardData.getData('text')||''), inp);
     });
   });
+  // No Android/Chrome não existe autofill de código vindo de e-mail (a WebOTP só cobre
+  // SMS): lá o cliente teria que segurar o campo e caçar "colar" no menu do sistema.
+  // O botão troca isso por um toque — e some de vez em quem não tem a API.
+  const bt = document.getElementById('otp-colar'), dica = document.getElementById('otp-dica');
+  if(bt && navigator.clipboard && navigator.clipboard.readText){
+    bt.hidden = false;
+    bt.addEventListener('click', async ()=>{
+      if(dica) dica.textContent = '';
+      let txt = '';
+      // ler a área de transferência exige gesto do usuário E permissão. Negou? o botão
+      // sai de cena: insistir num pedido recusado só ensina a pessoa a dizer não.
+      try{ txt = await navigator.clipboard.readText(); }
+      catch(e){ bt.hidden = true; return; }
+      // /\d{6}/ e não "todos os dígitos": o que costuma estar na área de transferência é
+      // o e-mail inteiro, cheio de outros números — queremos a sequência de 6, só ela.
+      const m = String(txt||'').match(/\d{6}/);
+      if(!m){ if(dica) dica.textContent = 'Não achei um código de 6 dígitos na área de transferência.'; return; }
+      distribuir(m[0]);
+    });
+  }
   if(inputs[0]) inputs[0].focus();
-  return { val, clear:()=>{inputs.forEach(i=>{i.value='';i.classList.remove('ok');}); inputs[0]&&inputs[0].focus();} };
+  return { val, clear:()=>{inputs.forEach(i=>{i.value='';i.classList.remove('ok');}); if(dica) dica.textContent=''; inputs[0]&&inputs[0].focus();} };
 }
 
-/* ---------- entrar com o código pessoal (já tem ID+empresa no link) ---------- */
+/* ---------- entrar com o código pessoal (já tem ID+empresa no link) ----------
+ * Sinaliza que a oferta de "confiar neste aparelho" pode aparecer — mas quem a
+ * mostra é o boot(), e só depois de o backend aceitar o código. Convidar antes de
+ * conferir era oferecer confiança num acesso que ainda ia falhar. */
+let OFERECER_CONFIAR = false;
 function entrarComCodigo(entrada){
   const { id, codigo } = getIdCodigo();
   const empresa = (codigo||'').split('-')[0].trim();
   const contato = String(entrada||'').replace(/\D/g,'');   // código é numérico
-  if (!contato) return 'Digite o seu código de acesso.';
+  if (contato.length !== 6) return 'Digite os 6 dígitos do seu código.';
   if (!empresa) return 'Faltou o código da empresa no endereço — entre pelo seu e-mail.';
   location.hash = id + '-' + empresa + '-' + contato;      // corrige a URL
-  if(!lerToken()){ telaConfiarAparelho(); return ''; }     // oferece confiar (tela própria) — só se ainda não confia
-  boot();                                                  // re-tenta o acesso
+  OFERECER_CONFIAR = true;
+  boot();                                                  // valida primeiro
   return '';
+}
+
+/* Classifica a falha do acesso. O 1º segmento do código é a senha DA EMPRESA e ela
+   muda todo dia: quando é ela que caducou, nenhum código pessoal digitado nas
+   caixinhas vai passar — o caminho certo é recomeçar pelo e-mail. */
+function falhaDeEmpresa(e){
+  const m = String((e && e.message) || e || '');
+  if (/incompleto/i.test(m)) return false;                 // a empresa está ok; falta o código pessoal
+  return /inválid|invalid|restrito|expir|venc/i.test(m);
 }
 
 const WA_ACESSO = m => 'https://wa.me/5511937173906?text='+encodeURIComponent(m);
 
 /* ---------- E-MAIL PRIMEIRO: pede o e-mail, envia o código, monta o link ---------- */
-async function telaLoginEmail(){
+async function telaLoginEmail(aviso){
+  pararEspera();
   const wa = WA_ACESSO('Olá, preciso de ajuda com o acesso ao painel back4you.');
+  const nota = (typeof aviso === 'string' && aviso)
+    ? `<p style="color:var(--amber-txt);font-weight:700;max-width:40ch">${esc(aviso)}</p>` : '';
   document.getElementById('miolo').innerHTML = `
     <div class="state">
       <h1>Acesse o seu painel</h1>
+      ${nota}
       <p>Digite o seu e-mail cadastrado. Enviamos um código de 6 dígitos para você entrar.</p>
       <form id="mail-form" class="id-form">
         <input id="mail-input" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" required>
         <button type="submit" class="ac-btn ac-primary">Enviar código</button>
       </form>
       <div class="ct-err" id="mail-err" style="min-height:18px"></div>
-      <p style="margin-top:2px">Não sabe qual e-mail? <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">Falar com o atendimento</a></p>
+      <p style="margin-top:2px">Não sabe qual e-mail? <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal-txt);font-weight:700">Falar com o atendimento</a></p>
     </div>`;
   const form = document.getElementById('mail-form');
   form.addEventListener('submit', async (e)=>{
@@ -903,16 +1381,17 @@ async function telaLoginEmail(){
       const d = await jsonp(API_URL+'?tipo=login_email_iniciar&email='+encodeURIComponent(email));
       if(d.erro) throw new Error(d.erro);
       if(!d.encontrado){ btn.disabled=false; btn.textContent='Enviar código';
-        errEl.innerHTML = 'Não encontramos esse e-mail no cadastro. Confira ou <a href="'+wa+'" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">fale com o atendimento</a>.'; return; }
+        errEl.innerHTML = 'Não encontramos esse e-mail no cadastro. Confira ou <a href="'+wa+'" target="_blank" rel="noopener" style="color:var(--brand-teal-txt);font-weight:700">fale com o atendimento</a>.'; return; }
       if(d.enviado===false){ btn.disabled=false; btn.textContent='Enviar código';
-        errEl.innerHTML = (d.mensagem||'Encontramos seu cadastro, mas não consegui enviar o e-mail agora.')+' <a href="'+wa+'" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">atendimento</a>'; return; }
+        errEl.innerHTML = (d.mensagem||'Encontramos seu cadastro, mas não consegui enviar o e-mail agora.')+' <a href="'+wa+'" target="_blank" rel="noopener" style="color:var(--brand-teal-txt);font-weight:700">atendimento</a>'; return; }
       telaCodigoEmail(email, d.mascarado||'');
-    }catch(err){ btn.disabled=false; btn.textContent='Enviar código'; errEl.textContent = err.message||String(err); }
+    }catch(err){ btn.disabled=false; btn.textContent='Enviar código'; errEl.textContent = B4U.msgAmigavel(err); }
   });
   document.getElementById('mail-input').focus();
 }
 
 function telaCodigoEmail(email, mascarado){
+  pararEspera();
   const wa = WA_ACESSO('Olá, não recebi o código de acesso ao painel back4you.');
   document.getElementById('miolo').innerHTML = `
     <div class="state">
@@ -921,7 +1400,7 @@ function telaCodigoEmail(email, mascarado){
       ${boxesOTP()}
       <div class="ct-err" id="cod-err" style="min-height:18px"></div>
       <button type="button" class="ac-btn ac-primary" id="cod-continuar" style="min-width:220px">Continuar</button>
-      <p style="margin-top:12px;color:var(--muted)">Não recebeu? <button type="button" class="linklike" id="reenviar-mail">Reenviar código</button> · <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">atendimento</a></p>
+      <p style="margin-top:12px;color:var(--muted)">Não recebeu? <button type="button" class="linklike" id="reenviar-mail">Reenviar código</button> · <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal-txt);font-weight:700">atendimento</a></p>
     </div>`;
   const otp = wireOTP(()=>submeter());
   const btn = document.getElementById('cod-continuar');
@@ -936,9 +1415,9 @@ function telaCodigoEmail(email, mascarado){
       if(!d.ok){ btn.disabled=false; btn.textContent='Continuar'; errEl.textContent = d.mensagem||'Código incorreto.'; otp.clear(); return; }
       if(d.multi && d.empresas && d.empresas.length){ return telaEscolherEmpresa(d.empresas); }
       location.hash = d.hash;
-      if(!lerToken()) return telaConfiarAparelho();   // logo após o código: oferece confiar (tela própria)
+      OFERECER_CONFIAR = true;   // a oferta de confiar sai no fim do boot, com o acesso já aceito
       boot();
-    }catch(err){ btn.disabled=false; btn.textContent='Continuar'; errEl.textContent = err.message||String(err); }
+    }catch(err){ btn.disabled=false; btn.textContent='Continuar'; errEl.textContent = B4U.msgAmigavel(err); }
   }
   btn.addEventListener('click', submeter);
   document.getElementById('reenviar-mail').addEventListener('click', async ()=>{
@@ -962,21 +1441,32 @@ function telaEscolherEmpresa(empresas){
   document.querySelectorAll('.escolha-emp').forEach(b=>b.addEventListener('click', ()=>{
     const e = empresas[+b.dataset.i];
     location.hash = e.hash;
-    if(!lerToken()) return telaConfiarAparelho();
+    OFERECER_CONFIAR = true;
     boot();
   }));
 }
 
-/* ---------- ID+empresa no link, mas falta/expirou o código pessoal ---------- */
+/* ---------- ID+empresa no link, mas falta/expirou o código pessoal ----------
+ * A tela precisa DIZER o que aconteceu (o `msg` que o boot mandou) e, quando o que
+ * caducou foi o link da empresa, não pode oferecer caixinhas: qualquer código pessoal
+ * digitado ali seria remontado sobre a senha vencida e falharia de novo, sem explicação. */
 async function telaAcessoExpirado(id, msg){
+  pararEspera();
   const { codigo } = getIdCodigo();
-  if(!(codigo||'').split('-')[0].trim()) return telaLoginEmail();  // sem código da empresa → e-mail primeiro
+  if(!(codigo||'').split('-')[0].trim())
+    return telaLoginEmail('Este endereço está sem o código da empresa. Entre pelo seu e-mail que montamos o link certo.');
+  if(falhaDeEmpresa(msg))
+    return telaLoginEmail('Seu link de ontem venceu — peça um novo abaixo.');
+  const aviso = /incompleto/i.test(String((msg && msg.message) || msg || ''))
+    ? 'Este link abre a sua empresa, mas ainda falta dizer quem é você.'
+    : (msg ? B4U.msgAmigavel(msg) : '');
   let opcoes = [];
   try{ const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&tipo=reenvio_opcoes'); opcoes = (d && d.opcoes) || []; }catch(e){}
   const wa = WA_ACESSO('Olá, preciso de ajuda com o acesso ao painel (ID '+id+').');
   document.getElementById('miolo').innerHTML = `
     <div class="state">
       <h1>Código de verificação</h1>
+      ${aviso?`<p style="color:var(--amber-txt);font-weight:700;max-width:40ch">${esc(aviso)}</p>`:''}
       <p>Digite o seu código de acesso pessoal de 6 dígitos — o que você recebeu por e-mail.</p>
       ${boxesOTP()}
       <div class="ct-err" id="cod-err" style="min-height:18px"></div>
@@ -987,19 +1477,25 @@ async function telaAcessoExpirado(id, msg){
           ? opcoes.map(o=>`<button type="button" class="ac-btn reenvio-op" data-idx="${o.idx}">Enviar para ${o.mascarado}</button>`).join('')
           : `<p style="color:var(--muted)">Nenhum e-mail cadastrado para este acesso.</p>`}
       </div>
-      <p style="margin-top:8px">Prefere entrar pelo e-mail? <button type="button" class="linklike" id="ir-email">Usar meu e-mail</button> · <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal);font-weight:700">atendimento</a></p>
+      <p style="margin-top:8px">Prefere entrar pelo e-mail? <button type="button" class="linklike" id="ir-email">Usar meu e-mail</button> · <a href="${wa}" target="_blank" rel="noopener" style="color:var(--brand-teal-txt);font-weight:700">atendimento</a></p>
     </div>`;
   const otp = wireOTP(()=>submeter());
-  function submeter(){ const err = entrarComCodigo(otp.val()); if(err) document.getElementById('cod-err').textContent = err; }
+  const errEl = document.getElementById('cod-err');
+  function submeter(){
+    // Confere os 6 dígitos ANTES de mexer na URL — igual à tela de código por e-mail.
+    if(otp.val().length !== 6){ errEl.textContent = 'Digite os 6 dígitos.'; return; }
+    errEl.textContent = '';
+    const err = entrarComCodigo(otp.val()); if(err) errEl.textContent = err;
+  }
   document.getElementById('cod-continuar').addEventListener('click', submeter);
-  document.getElementById('ir-email').addEventListener('click', telaLoginEmail);
+  document.getElementById('ir-email').addEventListener('click', ()=>telaLoginEmail());
   document.querySelectorAll('.reenvio-op').forEach(b=>b.addEventListener('click', async ()=>{
     const box=document.getElementById('reenvio'); box.innerHTML='<div class="spin"></div>';
     try{
       const d = await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&acao=reenviar_codigo&idx='+encodeURIComponent(b.dataset.idx));
       if(d.erro) throw new Error(d.erro);
-      box.innerHTML = `<p style="color:var(--brand-teal);font-weight:700">${d.mensagem||'Pedido enviado.'}</p>`;
-    }catch(e){ box.innerHTML = `<p style="color:#8B2E22">${e.message||e}</p>`; }
+      box.innerHTML = `<p style="color:var(--brand-teal-txt);font-weight:700">${esc(d.mensagem||'Pedido enviado.')}</p>`;
+    }catch(e){ box.innerHTML = `<p style="color:#8B2E22">${esc(B4U.msgAmigavel(e))}</p>`; }
   }));
 }
 
@@ -1008,7 +1504,10 @@ function erro(){ return telaLoginEmail(); }   // sem id → entra pelo e-mail
 /* ---------- Confiar neste aparelho (token no localStorage) ---------- */
 function lerToken(){ try{ return localStorage.getItem('b4u_token'); }catch(e){ return null; } }
 function salvarToken(t){ try{ localStorage.setItem('b4u_token', t); }catch(e){} }
-function limparToken(){ try{ localStorage.removeItem('b4u_token'); }catch(e){} }
+/* Sair do aparelho apaga também o payload guardado: é dado financeiro dele, não pode
+   sobreviver ao logout no navegador de ninguém. */
+function limparToken(){ try{ localStorage.removeItem('b4u_token'); }catch(e){}
+  if(window.B4U && B4U.limparCache) B4U.limparCache(); }
 async function tentarToken(){
   const tok = lerToken(); if(!tok) return false;
   try{ const d = await jsonp(API_URL+'?tipo=entrar_token&token='+encodeURIComponent(tok));
@@ -1025,13 +1524,16 @@ async function confiarNesteAparelho(id, codigo){
 async function sairDesteAparelho(id, codigo){
   try{ await jsonp(API_URL+'?id='+encodeURIComponent(id)+'&codigo='+encodeURIComponent(codigo)+'&acao=revogar_aparelhos'); }catch(e){}
   limparToken();
+  try{ localStorage.removeItem('b4u_pend_'+id); }catch(e){}
 }
-/* Oferta "confiar neste aparelho" — tela PRÓPRIA, mostrada UMA vez, logo após o
- * cliente inserir o código (e só se o aparelho ainda não for confiável). Depois
- * não reaparece na home. */
-function telaConfiarAparelho(){
+/* Oferta "confiar neste aparelho" — tela PRÓPRIA, mostrada UMA vez e SÓ no caminho de
+ * sucesso, quando o backend já aceitou o código. `depois` continua de onde o boot
+ * parou, sem pagar uma segunda chamada à API. */
+function telaConfiarAparelho(depois){
+  pararEspera();
   const { id, codigo } = getIdCodigo();
-  if(!(id && codigo)) return boot();
+  const seguir = typeof depois === 'function' ? depois : boot;
+  if(!(id && codigo)) return seguir();
   document.getElementById('miolo').innerHTML = `
     <div class="state">
       <div style="font-size:var(--fs-6);line-height:1;margin-bottom:4px">🔒</div>
@@ -1041,14 +1543,63 @@ function telaConfiarAparelho(){
         <button type="button" class="ac-btn ac-primary" id="cf-sim" style="min-width:250px">Confiar neste aparelho — 30 dias</button>
         <button type="button" class="linklike" id="cf-nao">Agora não</button>
       </div>
+      <div class="ct-err" id="cf-aviso" style="min-height:18px;max-width:40ch"></div>
       <p style="margin-top:12px;color:var(--muted);font-size:var(--fs-2)">Não ative em computadores públicos ou compartilhados.</p>
     </div>`;
   document.getElementById('cf-sim').addEventListener('click', async (e)=>{
-    e.target.disabled=true; e.target.textContent='Ativando…';
-    await confiarNesteAparelho(id, codigo);
-    boot();
+    const b = e.currentTarget;
+    b.disabled=true; b.textContent='Ativando…';
+    if(await confiarNesteAparelho(id, codigo)) return seguir();
+    // Não engolir a falha: ele clicou, esperou e precisa saber que não ficou guardado.
+    const av=document.getElementById('cf-aviso');
+    if(av) av.textContent='Não consegui guardar este aparelho agora. Você entrou normalmente — dá para tentar de novo mais tarde.';
+    b.disabled=false; b.textContent='Tentar de novo';
+    const n=document.getElementById('cf-nao'); if(n) n.textContent='Continuar assim mesmo';
   });
-  document.getElementById('cf-nao').addEventListener('click', ()=> boot());
+  document.getElementById('cf-nao').addEventListener('click', ()=> seguir());
+}
+
+/* Esqueleto da home enquanto o payload não chega — mesma silhueta do conteúdo real. */
+function pintarEsqueleto(){
+  const sk = (n,h)=> (window.B4U&&window.B4U.skeleton) ? window.B4U.skeleton(n,h) : '';
+  document.getElementById('miolo').innerHTML = `
+    <div class="saudacao" style="width:100%;max-width:560px">${sk(1,26)}${sk(1,15)}</div>
+    <div class="grade" aria-hidden="true">
+      <div class="b4u-skel" style="height:120px;width:100%"></div>
+      <div class="b4u-skel" style="height:120px;width:100%"></div>
+      <div class="b4u-skel" style="height:120px;width:100%"></div>
+      <div class="b4u-skel" style="height:120px;width:100%"></div>
+    </div>
+    <p id="espera-txt" role="status" style="margin-top:20px;font-size:var(--fs-3);color:var(--muted)">Carregando o seu painel…</p>`;
+}
+
+/* 20s olhando a mesma frase é lido como "travou" — e ele recarrega, jogando fora o
+   pedido que já estava a caminho. Trocar o texto é barato e compra paciência. */
+let _tEspera = [];
+function comecarEspera(){
+  pararEspera();
+  _tEspera = [
+    setTimeout(function(){ var p=document.getElementById('espera-txt');
+      if(p) p.textContent = 'Estamos buscando os seus dados na planilha…'; }, 4000),
+    setTimeout(function(){ var p=document.getElementById('espera-txt');
+      if(p) p.textContent = 'Está demorando mais que o normal — continuamos tentando.'; }, 10000)
+  ];
+}
+function pararEspera(){ _tEspera.forEach(clearTimeout); _tEspera = []; }
+
+/* Tarja discreta sobre o conteúdo pintado a partir do cache. `null` remove. */
+function tarjaAtualizando(texto){
+  const miolo = document.getElementById('miolo'); if(!miolo) return;
+  let t = document.getElementById('tarja-atu');
+  if(texto === null){ if(t) t.remove(); return; }
+  if(!t){ t = document.createElement('div'); t.id='tarja-atu'; t.className='tarja-atualizando';
+    miolo.insertBefore(t, miolo.firstChild); }
+  t.textContent = texto;
+}
+function horaDoCache(tipo, id){
+  try{ const o = JSON.parse(localStorage.getItem(B4U.cacheChave(tipo,id))||'null');
+    return o && o.ts ? new Date(o.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''; }
+  catch(e){ return ''; }
 }
 
 async function boot(){
@@ -1056,15 +1607,38 @@ async function boot(){
   if (!(id && codigo)) { if(await tentarToken()) return boot(); }   // aparelho confiável entra sem código
   if (!id) return telaLoginEmail();                          // URL sem código → e-mail primeiro
   if (!codigo) return telaAcessoExpirado(id, 'incompleto');
-  document.getElementById('miolo').innerHTML = `<div class="saudacao">${window.B4U&&window.B4U.skeleton?window.B4U.skeleton(1,26):''}</div><div class="grade">${window.B4U&&window.B4U.skeleton?window.B4U.skeleton(4,90):'<div class="spin"></div>'}</div>`;
+
+  // Cache: a segunda visita começa pintada. Não vale quando a pessoa acabou de digitar
+  // o código — aí a home antiga piscaria antes da tela de confiar.
+  const cache = (!OFERECER_CONFIAR && window.B4U && B4U.cacheLer) ? B4U.cacheLer('links', id) : null;
+  if (cache && cache.disponiveis){
+    render(id, codigo, cache.disponiveis, cache.pessoa || null);
+    tarjaAtualizando('Atualizando…');
+  } else {
+    pintarEsqueleto();
+    comecarEspera();
+  }
+
   try {
     const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=links';
     const d = await jsonp(url);
     if (d.erro) throw new Error(d.erro);
-    render(id, codigo, d.disponiveis || {}, d.pessoa || null);
+    if (window.B4U && B4U.cacheGravar) B4U.cacheGravar('links', id, d);
+    const pintar = () => render(id, codigo, d.disponiveis || {}, d.pessoa || null);
+    if (OFERECER_CONFIAR && !lerToken()){ OFERECER_CONFIAR = false; return telaConfiarAparelho(pintar); }
+    OFERECER_CONFIAR = false;
+    pintar();
   } catch (e) {
+    pararEspera();
     if(await tentarToken()) return boot();                   // código expirou mas o aparelho é confiável
-    telaAcessoExpirado(id, e.message || String(e));   // sem chave pessoal / expirado -> tela de acesso
+    // Falha de rede com cache na tela: manter o que está lá é melhor que apagar tudo.
+    if (cache && cache.disponiveis && !falhaDeEmpresa(e) && !/incompleto/i.test(String(e&&e.message||e))){
+      const h = horaDoCache('links', id);
+      tarjaAtualizando('Não consegui atualizar agora — mostrando os dados' + (h?(' de '+h):' guardados') + '.');
+      return;
+    }
+    OFERECER_CONFIAR = false;
+    telaAcessoExpirado(id, e);   // sem chave pessoal / expirado -> tela de acesso
   }
 }
 boot();

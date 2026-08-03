@@ -11,84 +11,106 @@
 <style>
   :root{
     color-scheme: light;
-    /* paleta do site back4you */
+    /* PALETA CANÔNICA — a mesma das páginas do cliente. Um nome, um valor: esta
+       página tinha apelidos próprios para tinta, fio e marca, e ninguém achava. */
     --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
-    --brand-dark:#073034; --brand-euc:#3FA680;
+    --ink:#113D39; --ink-2:#3F5854; --muted:#6E6256; --line:#E4D9C9; --line-2:#D6C3AC;
+    --brand-dark:#073034; --brand-teal:#0F8C85; --brand-euc:#3FA680;
+    /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,44:1 no receita-soft).
+       Este é o mesmo teal escurecido só para texto e fundo de texto; o --brand-teal
+       continua canônico em logo, foco, bordas e preenchimentos. */
+    --brand-teal-txt:#0C756F;
+    --amber:#E8892E; --amber-txt:#8A5A10; --vermelho:#C0392B; --verde:#2E9D5F;
+    /* Escala tipográfica — 6 passos, sem meio pixel. */
+    --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
+    /* Raios — 12 padrão, 16 para caixas grandes, 999 só para pílulas. */
+    --radius-sm:8px; --radius:12px; --radius-lg:16px; --radius-pill:999px;
     --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+    --receita-soft:#DBEFEC;
 
-    /* nomes usados pelo simulador, mapeados na paleta do site */
-    --plane:var(--canvas);
-    --ink-1:#113D39; --ink-2:#3F5854; --ink-3:#8A7D70;
-    --rule:#E4D9C9; --ring:#E4D9C9; --line-2:#D6C3AC;
-    --brand:#0F8C85; --brand-ink:#fff;
-    --good:#2E7D52; --warning:#E8892E; --critical:#8B2E22;
-    --good-bg:#E7F4EC; --warning-bg:#FCEFE0; --critical-bg:#F8E3DF; --neutral-bg:#F2ECE4;
-    --good-ink:#2E7D52; --warning-ink:#9A5B12; --critical-ink:#8B2E22;
-    --good-br:#C9E4D3; --warn-br:#F0D6B4; --crit-br:#F0C9C1;
-    --fee-bg:#EAF4F1; --fee-br:#cfe6e2;
-    --laneA:#B0611C; --laneB:#0F8C85;
+    /* Estados. Cada tinta clara já vem com o tom de texto que passa em cima dela
+       — os mesmos pares de fiscal/guias, todos acima de 4,5:1. */
+    --good:#16713E; --warning:var(--amber); --critical:var(--vermelho);
+    --good-bg:#E7F4EC; --warning-bg:#FCEFE0; --critical-bg:#F9EAE8; --neutral-bg:#F2ECE4;
+    --good-ink:#16713E; --warning-ink:#8A5A10; --critical-ink:var(--vermelho);
+    --good-br:#C9E4D3; --warn-br:#F0D6B4; --crit-br:#E9C9C4;
+    --fee-bg:#EAF4F1;
+
+    /* Séries do gráfico — slots validados do §8, um sentido por cor. */
+    --c-entra:#009488;    /* entra na conta do cliente */
+    --c-imposto:#B4530F;  /* IRPJ + CSLL */
+    --c-travado:#6B4FA0;  /* travado até o trânsito */
+    --c-exito:#7A8B3D;    /* êxito Back4You */
   }
   *{box-sizing:border-box}
-  body{margin:0;padding:0;background:var(--plane);color:var(--ink-1);
-       font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  body{margin:0;padding:0;background:var(--canvas);color:var(--ink);
+       font-family:var(--sans);font-size:var(--fs-4);line-height:1.5;-webkit-font-smoothing:antialiased}
+  /* No Safari, focar campo com menos de 16px amplia a página sozinho. Só os campos. */
+  input,select,textarea{font-size:16px}
+  /* Quem navega por Tab precisa ver onde está — inclusive em <summary> e no .seg. */
+  :focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
 
   /* ---------- barra do site ---------- */
-  .barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;
-         align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-  .barra .logo{font-weight:800;font-size:17px;letter-spacing:-.02em}
-  .barra .logo .y{color:var(--brand-euc)}
-  .barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);
-              padding:5px 11px;border-radius:20px}
+  /* Barra branca com fio, igual ao header do cliente; a b4u-bar escura fica acima. */
+  .barra{position:sticky;top:var(--b4u-bar-h,0px);z-index:60;background:var(--surface);color:var(--ink);
+         border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 20px}
+  .barra .logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em}
+  .barra .logo .b{color:var(--brand-dark)} .barra .logo .y{color:var(--brand-teal)}
+  /* Teal de texto do §8 (#0C756F): o --brand-teal só passa em corpo grande. */
+  .barra .tag{font-size:var(--fs-1);font-weight:700;color:#0C756F;background:var(--receita-soft);
+              padding:5px 12px;border-radius:var(--radius-pill)}
   .barra .spacer{flex:1}
-  .barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
-  .barra a.volta:hover{color:#fff}
+  .barra a.volta{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);
+                 text-decoration:none;font-size:var(--fs-3);font-weight:600}
+  .barra a.volta:hover{color:#0C756F}
 
   .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 70px}
-  header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
-  h1{font-size:22px;margin:0 0 5px;font-weight:800;letter-spacing:-.01em;line-height:1.25}
-  .sub{color:var(--ink-2);margin:0;max-width:74ch;font-size:13.5px}
-  .btn{flex:none;background:var(--surface);color:var(--ink-2);border:1px solid var(--line-2);
-       border-radius:999px;padding:8px 15px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
-  .btn:hover{border-color:var(--brand);color:var(--brand)}
-  .btn.solid{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+  header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  h1{font-size:var(--fs-6);margin:0 0 5px;font-weight:800;letter-spacing:-.01em;line-height:1.25}
+  .sub{color:var(--ink-2);margin:0;max-width:74ch;font-size:var(--fs-3)}
+  .btn{flex:none;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
+       background:var(--surface);color:var(--ink-2);border:1px solid var(--line-2);min-height:44px;
+       border-radius:var(--radius-pill);padding:8px 15px;font:inherit;font-size:var(--fs-3);font-weight:600;cursor:pointer}
+  .btn:hover{border-color:var(--brand-teal);color:#0C756F}
+  /* Branco sobre --brand-teal dá 4,11:1; sobre o teal de texto do §8 dá 5,54:1. */
+  .btn.solid{background:#0C756F;color:#fff;border-color:transparent}
 
   /* ---------- painel de entrada ---------- */
-  .panel{background:var(--surface);border:1px solid var(--ring);border-radius:14px;
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);
          padding:17px 19px;margin-top:18px}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
-  label.fl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
-           color:var(--ink-3);font-weight:800;margin-bottom:6px}
-  .seg{display:flex;gap:0;border:1px solid var(--line-2);border-radius:9px;overflow:hidden}
-  .seg button{flex:1;background:transparent;border:0;padding:9px 6px;font:inherit;font-size:13.5px;
+  label.fl{display:block;font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;
+           color:var(--muted);font-weight:800;margin-bottom:6px}
+  .seg{display:flex;gap:0;border:1px solid var(--line-2);border-radius:var(--radius-sm);overflow:hidden}
+  .seg button{flex:1;background:transparent;border:0;padding:9px 6px;font:inherit;font-size:var(--fs-3);min-height:44px;
               color:var(--ink-2);cursor:pointer;border-right:1px solid var(--line-2)}
   .seg button:last-child{border-right:0}
-  .seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);font-weight:700}
-  input[type=number],input[type=text]{width:100%;background:var(--surface-warm);color:var(--ink-1);
-       border:1px solid var(--line-2);border-radius:9px;padding:9px 11px;font:inherit;font-size:14.5px}
-  input[type=number]:focus,input[type=text]:focus{outline:2px solid var(--brand);outline-offset:1px}
-  input[type=range]{width:100%;accent-color:var(--brand)}
+  .seg button[aria-pressed="true"]{background:#0C756F;color:#fff;font-weight:700}
+  input[type=number],input[type=text]{width:100%;background:var(--surface-warm);color:var(--ink);
+       border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:9px 11px;font-family:inherit;font-size:16px}
+  input[type=number]:focus,input[type=text]:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+  input[type=range]{width:100%;accent-color:var(--brand-teal)}
   .rngrow{display:flex;align-items:center;gap:11px}
-  .rngrow b{font-variant-numeric:tabular-nums;min-width:52px;text-align:right;font-size:15px;font-weight:700}
-  .hintline{color:var(--ink-3);font-size:12.5px;margin:7px 0 0}
-  details.prem{margin-top:15px;border-top:1px solid var(--rule);padding-top:13px}
-  details.prem summary{cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:.06em;
-                       color:var(--brand);font-weight:800}
+  .rngrow b{font-variant-numeric:tabular-nums;min-width:52px;text-align:right;font-size:var(--fs-4);font-weight:700}
+  .hintline{color:var(--muted);font-size:var(--fs-3);margin:7px 0 0}
+  details.prem{margin-top:15px;border-top:1px solid var(--line);padding-top:13px}
+  details.prem summary{cursor:pointer;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.06em;
+                       color:#0C756F;font-weight:800;min-height:44px;display:flex;align-items:center}
   .premgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:13px;margin-top:14px}
-  .premgrid label.fl{font-size:10.5px}
-  .chk{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:var(--ink-2);margin-top:12px}
-  .chk input{margin-top:3px;accent-color:var(--brand)}
+  .chk{display:flex;align-items:flex-start;gap:9px;font-size:var(--fs-3);color:var(--ink-2);margin-top:12px}
+  .chk input{margin-top:3px;accent-color:var(--brand-teal)}
 
   /* ---------- tiras de numeros ---------- */
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:16px}
-  .tile{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:13px 15px}
-  .tile .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:800}
-  .tile .v{font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums}
-  .tile .n{font-size:12px;color:var(--ink-3);margin-top:2px}
-  .tile.acc{border-left:4px solid var(--brand)}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px}
+  .tile .k{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800}
+  .tile .v{font-size:var(--fs-5);font-weight:700;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums}
+  .tile .n{font-size:var(--fs-2);color:var(--muted);margin-top:2px}
+  .tile.acc{border-left:4px solid var(--brand-teal)}
   .tile.warnt{border-left:4px solid var(--warning)}
   .tile.critt{border-left:4px solid var(--critical)}
 
-  .banner{margin-top:16px;padding:13px 16px;border-radius:12px;font-size:13.5px;line-height:1.5;
+  .banner{margin-top:16px;padding:13px 16px;border-radius:var(--radius);font-size:var(--fs-3);line-height:1.5;
           border:1px solid transparent}
   .banner.crit{background:var(--critical-bg);border-color:var(--crit-br);color:var(--critical-ink)}
   .banner.warn{background:var(--warning-bg);border-color:var(--warn-br);color:var(--warning-ink)}
@@ -96,148 +118,221 @@
   .banner b{font-weight:700}
 
   /* ---------- canvas / linha do tempo ---------- */
-  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2);
+  h2.sec{font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2);
          margin:30px 0 3px;font-weight:800;display:flex;align-items:center;gap:8px}
-  h2.sec::after{content:"";flex:1;height:1px;background:var(--rule)}
-  .hint{color:var(--ink-3);font-size:13px;margin:0 0 10px}
-  .scroller{overflow-x:auto;background:var(--surface);border:1px solid var(--ring);border-radius:14px;
+  h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .hint{color:var(--muted);font-size:var(--fs-3);margin:0 0 10px}
+  .scroller{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);
             padding:0 0 14px}
   .canvas{position:relative}
   .canvas svg.wires{position:absolute;inset:0;overflow:visible;pointer-events:none}
 
-  .ruler{position:absolute;top:0;left:0;height:34px;border-bottom:1px solid var(--rule)}
-  .tick{position:absolute;top:0;height:34px;border-left:1px dashed var(--rule);
-        font-size:11px;color:var(--ink-3);padding-left:5px;padding-top:9px;white-space:nowrap;font-weight:600}
-  .gline{position:absolute;top:34px;border-left:1px dashed var(--rule);opacity:.55}
+  .ruler{position:absolute;top:0;left:0;height:34px;border-bottom:1px solid var(--line)}
+  .tick{position:absolute;top:0;height:34px;border-left:1px dashed var(--line);
+        font-size:var(--fs-1);color:var(--muted);padding-left:5px;padding-top:9px;white-space:nowrap;font-weight:600}
+  .gline{position:absolute;top:34px;border-left:1px dashed var(--line);opacity:.55}
 
-  .lanetag{position:absolute;left:8px;width:96px;font-size:10.5px;font-weight:800;line-height:1.25;
+  .lanetag{position:absolute;left:8px;width:96px;font-size:var(--fs-1);font-weight:800;line-height:1.25;
            text-transform:uppercase;letter-spacing:.05em}
-  .lanetag.a{color:var(--laneA)}
-  .lanetag.b{color:var(--laneB)}
-  .lanetag small{display:block;font-size:10px;font-weight:600;letter-spacing:.02em;
-                 text-transform:none;color:var(--ink-3);margin-top:2px}
-  .laneband{position:absolute;left:112px;border-top:1px solid var(--rule)}
+  /* Raia A repete o slot 2 do §8: rótulo de raia e série do gráfico nunca
+     aparecem na mesma legenda — a mesma licença que o §8 dá a ISS e DAS. */
+  .lanetag.a{color:#B4530F}
+  .lanetag.b{color:#0C756F}
+  .lanetag small{display:block;font-size:var(--fs-1);font-weight:600;letter-spacing:.02em;
+                 text-transform:none;color:var(--muted);margin-top:2px}
+  .laneband{position:absolute;left:112px;border-top:1px solid var(--line)}
 
-  .nd{position:absolute;width:174px;background:var(--surface);border:1px solid var(--ring);
-      border-radius:11px;padding:10px 12px;box-shadow:0 1px 2px rgba(7,48,52,.05);
+  .nd{position:absolute;width:174px;background:var(--surface);border:1px solid var(--line);
+      border-radius:var(--radius);padding:10px 12px;box-shadow:0 1px 2px rgba(7,48,52,.05);
       transition:opacity .22s ease, box-shadow .18s ease, transform .18s ease}
-  .nd .mo{font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--ink-3);
+  .nd .mo{font-size:var(--fs-1);font-weight:800;letter-spacing:.05em;color:var(--muted);
           text-transform:uppercase;margin-bottom:3px}
-  .nd .t{font-size:13.5px;font-weight:700;line-height:1.28}
+  .nd .t{font-size:var(--fs-3);font-weight:700;line-height:1.28}
   .nd .b{display:none}
   .nd[data-tip]{cursor:help}
   .nd.opt[data-tip]{cursor:pointer}
-  .nd.lA{border-left:4px solid var(--laneA)}
-  .nd.lB{border-left:4px solid var(--brand)}
+  .nd.lA{border-left:4px solid #B4530F}
+  .nd.lB{border-left:4px solid var(--brand-teal)}
   .nd.good{border-left:4px solid var(--good);background:var(--good-bg)}
   .nd.warn{border-left:4px solid var(--warning);background:var(--warning-bg)}
   .nd.crit{border-left:4px solid var(--critical);background:var(--critical-bg)}
-  .nd.fee{border-left:4px solid var(--brand);background:var(--fee-bg)}
-  .nd.pre{border-left:4px solid var(--ink-3);background:var(--neutral-bg)}
+  .nd.fee{border-left:4px solid var(--brand-teal);background:var(--fee-bg)}
+  .nd.pre{border-left:4px solid var(--muted);background:var(--neutral-bg)}
 
   .nd.opt{cursor:pointer}
-  .nd.opt::after{content:"clique";display:block;margin-top:6px;font-size:10px;
-                 font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand)}
-  .nd.opt.chosen::after{content:"✓ escolhido";color:var(--ink-3)}
-  .nd.opt:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(7,48,52,.12)}
+  .nd.opt::after{content:"clique";display:block;margin-top:6px;font-size:var(--fs-1);
+                 font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#0C756F}
+  .nd.opt.chosen::after{content:"✓ escolhido";color:var(--muted)}
+  .nd.opt:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(17,61,57,.10)}
 
+  /* Estados do passo. A exceção de contraste da WCAG vale para componente INATIVO —
+     e só quando o estado também é dito por algo que não seja a cor.
+       · pick  = o passo está ESPERANDO um clique, ou seja, está ativo: a exceção não
+                 cobre. Em .72 o texto caía para 2,51–3,55:1, então vai a 1. Quem o
+                 diferencia do passo já escolhido é o rótulo do ::after acima
+                 ("CLIQUE" × "✓ ESCOLHIDO"), que é palavra, não cor.
+       · ghost/dead = inativos de verdade (pointer-events:none e aria-disabled no
+                 markup). Seguem esmaecidos de propósito, mas o traço tracejado da
+                 borda e o aria-disabled dizem o mesmo sem depender de cor. */
   .st-lit{opacity:1}
-  .st-pick{opacity:.72}
+  .st-pick{opacity:1}
+  .nd.st-ghost,.nd.st-dead{border-style:dashed;border-left-style:solid}
   .st-ghost{opacity:.15;pointer-events:none}
   .st-dead{opacity:.28;pointer-events:none}
 
-  .fee-pill{display:block;margin-top:7px;padding:5px 9px;border-radius:8px;font-size:11.5px;
+  .fee-pill{display:block;margin-top:7px;padding:5px 9px;border-radius:var(--radius-sm);font-size:var(--fs-2);
             font-weight:700;background:var(--good-bg);color:var(--good-ink);
             border:1px solid var(--good-br);line-height:1.3}
-  .fee-pill em{display:block;font-style:normal;font-weight:600;font-size:10px;opacity:.85;margin-top:1px}
-  .fee-pill.no{background:var(--neutral-bg);color:var(--ink-2);border-color:var(--ring)}
+  /* Sem o opacity:.85 — ele derrubava o --good-ink de 5,35:1 para 4,01:1 sobre a
+     própria pílula. A linha de apoio já se distingue pelo corpo menor e pelo peso
+     600 contra o 700 da linha de cima; a tinta não precisa desbotar junto. */
+  .fee-pill em{display:block;font-style:normal;font-weight:600;font-size:var(--fs-1);margin-top:1px}
+  .fee-pill.no{background:var(--neutral-bg);color:var(--ink-2);border-color:var(--line)}
   .seg.mini{display:inline-flex;width:auto;margin-left:10px;vertical-align:middle}
-  .seg.mini button{padding:5px 11px;font-size:11.5px}
+  .seg.mini button{padding:5px 11px;font-size:var(--fs-2);min-height:44px}
 
   /* ---------- fecho ---------- */
-  .close{margin-top:24px;background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:19px 21px}
-  .close h3{margin:0 0 4px;font-size:17px;font-weight:800}
-  .close .cond{color:var(--ink-3);font-size:12.5px;margin:0 0 14px}
-  table.fee{width:100%;border-collapse:collapse;font-size:13.5px}
-  table.fee th,table.fee td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
-  table.fee th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:800}
+  .close{margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:19px 21px}
+  .close h3{margin:0 0 4px;font-size:var(--fs-5);font-weight:800}
+  .close .cond{color:var(--muted);font-size:var(--fs-3);margin:0 0 14px}
+  table.fee{width:100%;border-collapse:collapse;font-size:var(--fs-3)}
+  table.fee th,table.fee td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.fee th{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800}
   table.fee td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
-  table.fee tr.tot td{border-bottom:0;border-top:2px solid var(--ink-1);font-weight:800;padding-top:11px}
-  .note{font-size:12.5px;color:var(--ink-3);margin-top:14px;line-height:1.55}
-  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;
-        font-size:12px;font-weight:700;border:1px solid transparent;white-space:nowrap}
+  table.fee tr.tot td{border-bottom:0;border-top:2px solid var(--ink);font-weight:800;padding-top:11px}
+  .note{font-size:var(--fs-3);color:var(--muted);margin-top:14px;line-height:1.55}
+  /* .selo, não .chip: no resto do projeto .chip é filtro clicável, e este aqui
+     é selo de situação. Mesmo nome para papéis diferentes vira bug de CSS. */
+  .selo{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:var(--radius-pill);
+        font-size:var(--fs-2);font-weight:700;border:1px solid transparent;white-space:nowrap}
   .c-good{background:var(--good-bg);color:var(--good-ink);border-color:var(--good-br)}
   .c-warn{background:var(--warning-bg);color:var(--warning-ink);border-color:var(--warn-br)}
   .c-crit{background:var(--critical-bg);color:var(--critical-ink);border-color:var(--crit-br)}
-  .c-none{background:var(--neutral-bg);color:var(--ink-2);border-color:var(--ring)}
-  .waiting{color:var(--ink-2);font-size:14px;background:var(--surface-warm);border:1px dashed var(--line-2);
-           border-radius:10px;padding:14px 16px}
+  .c-none{background:var(--neutral-bg);color:var(--ink-2);border-color:var(--line)}
+  .waiting{color:var(--ink-2);font-size:var(--fs-4);background:var(--surface-warm);border:1px dashed var(--line-2);
+           border-radius:var(--radius);padding:14px 16px}
 
   /* ---------- fluxo de caixa trimestral ---------- */
-  .viz{--surface-1:var(--surface);--text-primary:var(--ink-1);--text-secondary:var(--ink-2);
-       --text-muted:var(--ink-3);--grid:#E4D9C9;
-       --s1:#0F8C85;--s2:#E8892E;--s3:#3FA680;--s4:#C9A227;--s6:#8B2E22;
-       --cin:#3FA680;--ctax:#A8402C;--ctax-soft:#DFA79C;--cfee:#E8892E;--ref:#8A7D70}
-  .viz{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:17px 19px;margin-top:14px}
-  .viz h4{margin:0 0 2px;font-size:15px;font-weight:800}
-  .viz .cap{color:var(--ink-3);font-size:12.5px;margin:0 0 12px}
+  .viz{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:17px 19px;margin-top:14px}
+  .viz h4{margin:0 0 2px;font-size:var(--fs-4);font-weight:800}
+  .viz .cap{color:var(--muted);font-size:var(--fs-3);margin:0 0 12px}
   .vlegend{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 10px;align-items:center}
-  .vlegend span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
-  .sw{width:11px;height:11px;border-radius:3px;flex:none}
-  .sw.dash{width:18px;height:0;border-radius:0;border-top:2px dashed var(--ref)}
+  .vlegend span{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-3);color:var(--ink-2)}
+  /* Amostra de cor da legenda — token compartilhado, um tamanho só em todas as páginas. */
+  .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;display:inline-block}
+  .sw.dash{width:18px;height:0;border-radius:0;border-top:2px dashed var(--muted)}
   .vscroll{overflow-x:auto}
   .viz svg{display:block}
   .viz svg text{font-family:inherit}
-  .gl{stroke:var(--grid);stroke-width:1}
-  .axl{fill:var(--text-muted);font-size:10.5px}
-  .qlb{fill:var(--text-secondary);font-size:11px;font-weight:700}
+  .gl{stroke:var(--line);stroke-width:1}
+  /* 9px de rótulo de eixo não se lê em tela nenhuma: piso de 11px. */
+  .axl{fill:var(--muted);font-size:var(--fs-1)}
+  .qlb{fill:var(--ink-2);font-size:var(--fs-2);font-weight:700}
   .qhit{fill:transparent;cursor:default}
   .qhit:hover ~ .qhl,.qg:hover .qhl{opacity:1}
-  .qhl{fill:var(--ink-1);opacity:0;transition:opacity .12s}
+  .qhl{fill:var(--ink);opacity:0;transition:opacity .12s}
   .tip{position:fixed;z-index:80;pointer-events:none;background:var(--surface);border:1px solid var(--line-2);
-       border-radius:10px;padding:10px 12px;font-size:12.5px;box-shadow:0 8px 26px rgba(7,48,52,.18);
+       border-radius:var(--radius);padding:10px 12px;font-size:var(--fs-3);box-shadow:0 8px 26px rgba(7,48,52,.18);
        max-width:270px;display:none}
-  .tip .th{font-weight:800;margin-bottom:6px;font-size:13px}
+  .tip .th{font-weight:800;margin-bottom:6px;font-size:var(--fs-3)}
   .tip table{border-collapse:collapse;width:100%}
   .tip td{padding:2px 0;vertical-align:top}
   .tip td.n{text-align:right;font-variant-numeric:tabular-nums;padding-left:12px;font-weight:700}
-  .tip .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
-  details.tbl{margin-top:14px;border-top:1px solid var(--rule);padding-top:12px}
-  details.tbl summary{cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:.06em;
-                      color:var(--brand);font-weight:800}
-  table.q{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:12px}
-  table.q th,table.q td{padding:6px 8px;border-bottom:1px solid var(--rule);white-space:nowrap}
-  table.q th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);text-align:right}
+  .tip .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+  details.tbl{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  details.tbl summary{cursor:pointer;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.06em;
+                      color:#0C756F;font-weight:800;min-height:44px;display:flex;align-items:center}
+  table.q{width:100%;border-collapse:collapse;font-size:var(--fs-3);margin-top:12px}
+  table.q th,table.q td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.q th{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:right}
   table.q th:first-child,table.q td:first-child{text-align:left}
   table.q td{text-align:right;font-variant-numeric:tabular-nums}
-  footer.fine{margin-top:26px;font-size:11.5px;color:var(--ink-3);line-height:1.6;max-width:96ch}
+  /* display:flex apaga o marcador nativo do <summary>. Sem uma seta explícita
+     ninguém descobre que o bloco abre — e o conteúdo recolhido some de vez. */
+  summary{list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"›";margin-left:auto;padding-left:10px;font-size:var(--fs-5);line-height:1;
+    transform:rotate(90deg);transition:transform .15s}
+  details[open]>summary::after{transform:rotate(-90deg)}
+
+  footer.fine{margin-top:26px;font-size:var(--fs-2);color:var(--muted);line-height:1.6;max-width:96ch}
 
   /* ---------- bloqueio por chave ---------- */
   .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
          min-height:62vh;text-align:center;padding:0 24px}
-  .state h1{font-size:20px;font-weight:800}
-  .state p{color:var(--ink-3);font-size:14px;max-width:48ch}
-  .state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--ring);font-size:13px}
+  .state h1{font-size:var(--fs-5);font-weight:800;max-width:24ch;line-height:1.3}
+  .state p{color:var(--ink-2);font-size:var(--fs-4);max-width:48ch}
   .cad{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);
-       display:flex;align-items:center;justify-content:center;font-size:20px}
+       display:flex;align-items:center;justify-content:center;font-size:var(--fs-5)}
   @media(max-width:560px){.wrap{padding:16px 14px 60px}}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+<!--B4U-BAR:START ═══════ back4you · barra compartilhada ═══════════════════
+     Mesmo componente, mesmas classes e mesmos valores das páginas do cliente:
+     o prospect que vira cliente não pode sentir que trocou de empresa. Vai sem
+     o modal de chamado porque página comercial não tem ID nem código de cliente
+     para abrir ticket — só a barra e o WhatsApp. Mantenha idêntico nas três. -->
+<style>
+.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 18px;background:var(--brand-dark);color:#fff;box-shadow:0 2px 12px rgba(7,48,52,.20);
+  font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+/* min-height nos três: no celular a barra inteira ficava com ~34px de alto e o dedo
+   errava o alvo. 44px é o mínimo que a mão acerta de primeira. */
+.b4u-bar .b4u-logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;margin-right:auto;
+  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1;min-height:44px}
+.b4u-bar .b4u-logo .y{color:var(--brand-euc)}
+.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;min-height:44px;
+  font-family:inherit;font-weight:600;font-size:var(--fs-3);padding:8px 13px;border-radius:var(--radius-sm);
+  text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
+.b4u-btn svg{width:16px;height:16px;flex-shrink:0}
+.b4u-btn .b4u-lbl{color:inherit;text-transform:none;letter-spacing:normal;font-size:var(--fs-3)}
+.b4u-btn:active{transform:translateY(1px)}
+.b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
+.b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
+/* Branco sobre o verde do WhatsApp dá 1,98:1 — ilegível no sol. Verde-escuro: 7,23:1.
+   É o botão que ele usa para pedir socorro; não pode ser o mais difícil de ler. */
+.b4u-btn.wa{background:#25D366;color:#06302b}
+.b4u-btn.wa:hover{background:#20bd5a}
+.b4u-btn.call{background:var(--brand-teal-txt);color:#fff}
+.b4u-btn.call:hover{background:#0A5F5A}
+.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;
+  padding:0;border:0;cursor:pointer;border-radius:var(--radius-sm);background:rgba(255,255,255,.10);color:#fff;
+  transition:background .15s}
+.b4u-icobtn:hover{background:rgba(255,255,255,.18)}
+.b4u-icobtn svg{width:17px;height:17px}
+@media(max-width:640px){
+  .b4u-bar{gap:7px;padding:9px 12px}
+  /* display:none tira o nome da árvore de acessibilidade e o leitor anuncia
+     "link, link, botão". Some da TELA, continua existindo para quem ouve. */
+  .b4u-btn .b4u-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  /* sem rótulo o botão fica só com o ícone de 16px: 11px de folga dava 38px de
+     largura. 14px fecha os 44px nos dois eixos. */
+  .b4u-btn{padding:9px 14px}
+}
+</style>
+<div class="b4u-bar">
+  <a class="b4u-logo" id="b4u-logo" href="comercial.html"><span>back</span><span class="y">4you</span></a>
+  <a class="b4u-btn wa" id="b4u-wa" href="#" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>
+    <span class="b4u-lbl">WhatsApp</span></a>
+</div>
+<!--B4U-BAR:END-->
+
 <div class="barra">
-  <span class="logo">back<span class="y">4you</span></span>
+  <span class="logo"><span class="b">back</span><span class="y">4you</span></span>
   <span class="tag">Comercial · Simulador</span>
   <span class="spacer"></span>
-  <a class="volta" id="volta" href="comercial.html">← Materiais</a>
+  <a class="volta" id="volta" href="comercial.html">← Painel</a>
 </div>
 
 <div id="gate" hidden>
   <div class="state">
-    <div class="cad">🔒</div>
-    <h1>Acesso restrito</h1>
-    <p>Esta é uma área interna da equipe. Abra pelo hub do comercial, com a
-       <code>chave</code> no endereço.</p>
+    <div class="cad">💬</div>
+    <h1>Este material é aberto pelo seu consultor back4you durante a conversa.</h1>
+    <p>Quer ver a sua simulação? Fale com a gente.</p>
+    <a class="btn solid" id="gate-wa" href="#" target="_blank" rel="noopener">Falar no WhatsApp</a>
   </div>
 </div>
 
@@ -321,7 +416,7 @@
 <div class="close" id="close"></div>
 
 <h2 class="sec">Comparativo direto — MS favorável × MS desfavorável</h2>
-<p class="hint">O <b style="color:#C2704F">vermelho claro</b> é a janela do mandado de segurança: a base
+<p class="hint">O <b style="color:var(--c-travado)">roxo</b> é a janela do mandado de segurança: a base
    reduzida conta como se valesse desde a impetração, e a diferença recolhida nesses meses fica travada
    até o trânsito em julgado — é ela que a Modalidade C recupera. Passe o mouse em qualquer barra ou
    marco para ver os números.</p>
@@ -690,6 +785,10 @@ function render(){
     const st = statusOf(n);
     const chosen = n.opt && S.choices[n.opt.bkey]===n.opt.oid;
     el.className = 'nd '+(n.kind||'')+(n.opt?' opt':'')+(chosen?' chosen':'')+' st-'+st;
+    /* Ghost e dead ficam esmaecidos de propósito. Esmaecer é cor: sozinho não conta
+       como aviso. O aria-disabled diz o mesmo ao leitor de tela e a borda tracejada
+       diz na tela — aí a exceção de "componente inativo" da WCAG se sustenta. */
+    if(st==='ghost' || st==='dead') el.setAttribute('aria-disabled','true');
     el.style.left = n.x+'px';
     el.style.top  = PAD_T+'px';
     el.dataset.row = n.row;
@@ -762,7 +861,7 @@ function drawWires(){
     if(!a||!b) continue;
     const st = stMap[e.to];
     const op = st==='lit'?0.85 : st==='pick'?0.5 : st==='dead'?0.18 : 0.10;
-    const col = st==='lit' ? 'var(--brand)' : 'var(--ink-3)';
+    const col = st==='lit' ? 'var(--brand-teal)' : 'var(--muted)';
     const x1=a.x+a.w, y1=a.y+Math.min(a.h/2,30), x2=b.x, y2=b.y+Math.min(b.h/2,30);
     const mx = x1 + Math.max(14,(x2-x1)/2);
     const d = (Math.abs(y1-y2)<3)
@@ -812,7 +911,7 @@ function renderClose(){
   const clienteProc  = 0;
   const ultimoMes = Math.max(...term.map(n=>n.month));
 
-  const est = (txt, cls) => `<span class="chip ${cls}">${txt}</span>`;
+  const est = (txt, cls) => `<span class="selo ${cls}">${txt}</span>`;
   const linhas = [
     ['Modalidade A — restituição retroativa', `${M.retro} competências`,
       aDue ? (aRisco ? ['devida, com direito a devolução','c-warn'] : ['devida','c-good'])
@@ -876,10 +975,10 @@ function renderTopo(){
   const esc = v => (v/hoje)*(BW-LB-92);
   const barra = (lab, v, col, sub) => `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
-      <div style="width:${LB}px;flex:none;font-size:12.5px;color:var(--ink-2)">${lab}</div>
-      <div style="height:${BH}px;width:${Math.max(4,esc(v))}px;background:${col};border-radius:0 5px 5px 0"></div>
-      <b style="font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap">${brl(v)}</b>
-      ${sub?`<span class="axl" style="font-size:11px">${sub}</span>`:''}
+      <div style="width:${LB}px;flex:none;font-size:var(--fs-3);color:var(--ink-2)">${lab}</div>
+      <div style="height:${BH}px;width:${Math.max(4,esc(v))}px;background:${col};border-radius:0 var(--radius-sm) var(--radius-sm) 0"></div>
+      <b style="font-size:var(--fs-4);font-variant-numeric:tabular-nums;white-space:nowrap">${brl(v)}</b>
+      ${sub?`<span class="axl">${sub}</span>`:''}
     </div>`;
 
   /* --- composicao da base retroativa --- */
@@ -910,48 +1009,49 @@ function renderTopo(){
   let tl = '';
   pos.forEach(k=>{
     const xm = tx(k.m), yb = 48 + k.fila*36;
-    const col = k.t.indexOf('Base reduzida')===0 ? 'var(--cin)' : 'var(--brand)';
+    const col = k.t.indexOf('Base reduzida')===0 ? 'var(--c-entra)' : 'var(--brand-teal)';
     tl += `<path d="M ${xm} 26 L ${xm} ${yb-16} L ${k.x+3} ${yb-16}" fill="none" stroke="${col}"
             stroke-width="1" stroke-opacity=".4" stroke-dasharray="3 3"/>`;
     tl += `<circle cx="${xm}" cy="26" r="5.5" fill="var(--surface)" stroke="${col}" stroke-width="2.5"/>`;
-    tl += `<text x="${k.x}" y="${yb}" style="font-size:11.5px;font-weight:700;fill:var(--ink-1)">${k.t}</text>`;
-    tl += `<text x="${k.x}" y="${yb+13}" class="axl" style="font-size:10px">mês ${k.m} · ${k.s}</text>`;
+    tl += `<text x="${k.x}" y="${yb}" style="font-size:var(--fs-2);font-weight:700;fill:var(--ink)">${k.t}</text>`;
+    tl += `<text x="${k.x}" y="${yb+13}" class="axl">mês ${k.m} · ${k.s}</text>`;
   });
   const TH = 48 + 2*36 + 6;
 
   document.getElementById('topo').innerHTML = `
     <div class="viz" style="margin-top:16px">
-      <div style="display:grid;grid-template-columns:minmax(340px,1.1fr) minmax(280px,1fr);gap:26px">
+      <!-- auto-fit: as duas colunas fixas somavam 646px e estouravam a tela do celular. -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px">
         <div>
           <h4 style="margin-bottom:10px">Carga mensal de IRPJ e CSLL</h4>
-          ${barra('Hoje, a 32%', hoje, 'var(--ctax)')}
-          ${barra('Com 8% e 12%', dep, 'var(--cin)')}
-          <div style="margin-top:12px;padding-top:11px;border-top:1px solid var(--rule);display:flex;gap:26px">
-            <div><div class="k" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700">Economia por mês</div>
-              <div style="font-size:20px;font-weight:700;color:var(--good-ink)">${brl(E)}</div></div>
-            <div><div class="k" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700">Em 12 meses</div>
-              <div style="font-size:20px;font-weight:700;color:var(--good-ink)">${brl(E*12)}</div></div>
+          ${barra('Hoje, a 32%', hoje, 'var(--c-imposto)')}
+          ${barra('Com 8% e 12%', dep, 'var(--c-entra)')}
+          <div style="margin-top:12px;padding-top:11px;border-top:1px solid var(--line);display:flex;gap:26px">
+            <div><div class="k" style="font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700">Economia por mês</div>
+              <div style="font-size:var(--fs-5);font-weight:700;color:var(--good-ink)">${brl(E)}</div></div>
+            <div><div class="k" style="font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700">Em 12 meses</div>
+              <div style="font-size:var(--fs-5);font-weight:700;color:var(--good-ink)">${brl(E*12)}</div></div>
           </div>
         </div>
         <div>
           <h4 style="margin-bottom:10px">Base retroativa · ${M.retro} competências</h4>
-          <div style="display:flex;height:${BH}px;border-radius:5px;overflow:hidden;background:var(--neutral-bg)"
+          <div style="display:flex;height:${BH}px;border-radius:var(--radius-sm);overflow:hidden;background:var(--neutral-bg)"
                data-tip="Nominal de ${brl(nom)} mais SELIC de ${brl(sel)}, corrigida de cada competência até a data de recebimento."
                data-tip-title="Base retroativa">
-            <div style="width:${pN}%;background:var(--cin)"></div>
-            <div style="width:${100-pN}%;background:var(--cfee)"></div>
+            <div style="width:${pN}%;background:var(--c-entra)"></div>
+            <div style="width:${100-pN}%;background:var(--c-exito)"></div>
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px">
-            <span><i class="sw" style="background:var(--cin);display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px"></i>nominal ${brl(nom)}</span>
-            <span><i class="sw" style="background:var(--cfee);display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px"></i>SELIC ${brl(sel)}</span>
+          <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:var(--fs-2)">
+            <span><i class="sw" style="background:var(--c-entra);margin-right:5px"></i>nominal ${brl(nom)}</span>
+            <span><i class="sw" style="background:var(--c-exito);margin-right:5px"></i>SELIC ${brl(sel)}</span>
           </div>
-          <div style="font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:12px">${brl(tot)}</div>
-          <div class="axl" style="font-size:11.5px">sobre ${brl(c.equip)} equiparáveis por mês</div>
+          <div style="font-size:var(--fs-6);font-weight:800;letter-spacing:-.02em;margin-top:12px">${brl(tot)}</div>
+          <div class="axl" style="font-size:var(--fs-2)">sobre ${brl(c.equip)} equiparáveis por mês</div>
         </div>
       </div>
-      <div style="border-top:1px solid var(--rule);margin-top:16px;padding-top:12px">
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:12px">
         <div class="vscroll"><svg width="${TW}" height="${TH}" viewBox="0 0 ${TW} ${TH}">
-          <line x1="${TL}" y1="26" x2="${TW-14}" y2="26" stroke="var(--rule)" stroke-width="2"/>
+          <line x1="${TL}" y1="26" x2="${TW-14}" y2="26" stroke="var(--line)" stroke-width="2"/>
           ${tl}
         </svg></div>
       </div>
@@ -1103,11 +1203,11 @@ function comparativo(){
            totEntF, totSaiF, totRefF, totBrutoA, ganho: totEntF - totSaiF + totRefF };
 }
 
-const CIN  = {k:'ent', label:'Entra na conta do cliente', col:'var(--cin)'};
+const CIN  = {k:'ent', label:'Entra na conta do cliente', col:'var(--c-entra)'};
 const COUT = [
-  {k:'imposto', label:'IRPJ + CSLL', col:'var(--ctax)'},
-  {k:'travado', label:'Travado até o trânsito', col:'var(--ctax-soft)'},
-  {k:'exito',   label:'Êxito Back4You', col:'var(--cfee)'},
+  {k:'imposto', label:'IRPJ + CSLL', col:'var(--c-imposto)'},
+  {k:'travado', label:'Travado até o trânsito', col:'var(--c-travado)'},
+  {k:'exito',   label:'Êxito Back4You', col:'var(--c-exito)'},
 ];
 
 function renderComp(){
@@ -1127,7 +1227,7 @@ function renderComp(){
     ev.filter(e=>isFinite(e.m)).forEach(e=>{
       const mx = LM + e.m*SW;
       const col = e.k==='good'?'var(--good)':e.k==='crit'?'var(--critical)':
-                  e.k==='fee'?'var(--brand)':'var(--ink-3)';
+                  e.k==='fee'?'var(--brand-teal)':'var(--muted)';
       o += `<g class="evg" data-tip="${e.d.replace(/"/g,'&quot;')}" data-tip-title="${e.t}">
         <circle cx="${mx}" cy="${y+EVH/2}" r="7" fill="var(--surface)" stroke="${col}" stroke-width="2"/>
         <circle cx="${mx}" cy="${y+EVH/2}" r="3" fill="${col}"/>
@@ -1142,21 +1242,21 @@ function renderComp(){
     {ev:K.evDes, d:K.des, lab:'Desfavorável', sub:'nada dá certo'},
   ];
   cen.forEach((C,ci)=>{
-    out += `<text x="4" y="${y+13}" class="qlb" style="font-size:12px">${C.lab}</text>`;
-    out += `<text x="4" y="${y+26}" class="axl" style="font-size:9.5px">${C.sub||'cenário'}</text>`;
+    out += `<text x="4" y="${y+13}" class="qlb">${C.lab}</text>`;
+    out += `<text x="4" y="${y+26}" class="axl">${C.sub||'cenário'}</text>`;
     out += evLane(C.ev, y);
     y += EVH + 2;
     const zero = y + UP;
-    out += `<line x1="${LM-8}" y1="${zero}" x2="${W-12}" y2="${zero}" stroke="var(--text-secondary)" stroke-opacity=".55"/>`;
-    out += `<text x="4" y="${zero-6}" class="axl" style="font-size:9.5px">entra</text>`;
-    out += `<text x="4" y="${zero+13}" class="axl" style="font-size:9.5px">sai</text>`;
+    out += `<line x1="${LM-8}" y1="${zero}" x2="${W-12}" y2="${zero}" stroke="var(--ink-2)" stroke-opacity=".55"/>`;
+    out += `<text x="4" y="${zero-6}" class="axl">entra</text>`;
+    out += `<text x="4" y="${zero+13}" class="axl">sai</text>`;
     // referencia: imposto de hoje
     const yr = zero + (K.taxFull/maxS)*DN;
-    out += `<line x1="${LM}" y1="${yr}" x2="${W-12}" y2="${yr}" stroke="var(--ref)" stroke-width="1.5"
+    out += `<line x1="${LM}" y1="${yr}" x2="${W-12}" y2="${yr}" stroke="var(--muted)" stroke-width="1.5"
              stroke-dasharray="4 4" stroke-opacity=".8"/>`;
     if(!C.d.some(r=>r.ent>0.5)){
       out += `<text x="${LM+(W-LM)/2}" y="${zero-UP/2}" class="axl" text-anchor="middle"
-               style="font-size:11px">nada entra na conta</text>`;
+               >nada entra na conta</text>`;
     }
     C.d.forEach(r=>{
       const xc = LM + r.m*SW;
@@ -1176,18 +1276,22 @@ function renderComp(){
       const tipo = ci===0?'MS favorável':'MS desfavorável';
       const det = `<table>
         <tr><td><i class="dot" style="background:${CIN.col}"></i>Entra na conta${r.qtd?' ('+r.qtd+' PER/DCOMP)':''}</td><td class="n">${brl(r.ent)}</td></tr>
-        ${r.brutoA>0.5?`<tr><td style="color:var(--ink-3);padding-left:15px">restituição bruta ${brl(r.brutoA)}, já líquida do êxito de 30%</td><td class="n" style="color:var(--ink-3)">−${brl(r.retidoA)}</td></tr>`:''}
+        ${r.brutoA>0.5?`<tr><td style="color:var(--muted);padding-left:15px">restituição bruta ${brl(r.brutoA)}, já líquida do êxito de 30%</td><td class="n" style="color:var(--muted)">−${brl(r.retidoA)}</td></tr>`:''}
         ${COUT.map(sr=>(r[sr.k]||0)>0.5?`<tr><td><i class="dot" style="background:${sr.col}"></i>${sr.label}</td><td class="n">${brl(r[sr.k])}</td></tr>`:'').join('')}
-        ${r.travado>0.5?`<tr><td style="color:var(--ink-3);padding-left:15px">recolhido cheio agora porque o crédito só pode ser usado depois do trânsito; quando voltar, a Modalidade C fica com 100% desse valor</td><td></td></tr>`:''}
-        <tr><td style="border-top:1px solid var(--rule);padding-top:5px"><b>Saldo do mês</b></td>
-            <td class="n" style="border-top:1px solid var(--rule);padding-top:5px;color:${(r.ent-r.sai)>=0?'var(--good-ink)':'var(--ink-1)'}">${brl(r.ent-r.sai)}</td></tr>
-        <tr><td style="color:var(--ink-3)">Pagaria hoje só de imposto</td><td class="n" style="color:var(--ink-3)">${brl(r.ref)}</td></tr></table>`;
+        ${r.travado>0.5?`<tr><td style="color:var(--muted);padding-left:15px">recolhido cheio agora porque o crédito só pode ser usado depois do trânsito; quando voltar, a Modalidade C fica com 100% desse valor</td><td></td></tr>`:''}
+        <tr><td style="border-top:1px solid var(--line);padding-top:5px"><b>Saldo do mês</b></td>
+            <td class="n" style="border-top:1px solid var(--line);padding-top:5px;color:${(r.ent-r.sai)>=0?'var(--good-ink)':'var(--ink)'}">${brl(r.ent-r.sai)}</td></tr>
+        <tr><td style="color:var(--muted)">Pagaria hoje só de imposto</td><td class="n" style="color:var(--muted)">${brl(r.ref)}</td></tr></table>`;
       out += `<rect x="${xc-SW/2}" y="${y}" width="${SW}" height="${BAH-14}" fill="transparent"
                data-tip="${det.replace(/"/g,'&quot;')}" data-tip-title="${tipo} · mês ${r.m}"/>`;
     });
-    y += BAH - 14 + 8;
+    /* 8px de folga não bastavam: a linha tracejada do "pagaria hoje" fica no máximo em
+       zero+DN, exatamente onde começava o topo dos glifos de m0…m30 — o traço cortava
+       a letra e o par caía para 2,30:1. Com 18px o rótulo desce para zero+DN+18 e a
+       linha nunca o alcança, para qualquer dado. */
+    y += BAH - 14 + 18;
     for(let m=0; m<=K.H; m+=6){
-      out += `<text x="${LM+m*SW}" y="${y}" class="axl" text-anchor="middle" style="font-size:9.5px">m${m}</text>`;
+      out += `<text x="${LM+m*SW}" y="${y}" class="axl" text-anchor="middle">m${m}</text>`;
     }
     y += GAP + 12;
   });
@@ -1206,23 +1310,23 @@ function renderComp(){
   for(let i=0;i<=4;i++){
     const v = acMax*i/4, yy = cyOf(v);
     cur += `<line class="gl" x1="${LM}" y1="${yy}" x2="${W-12}" y2="${yy}"/>`;
-    cur += `<text x="${LM-8}" y="${yy+3.5}" class="axl" text-anchor="end" style="font-size:9px">${i===0?'0':kbrl(v)}</text>`;
+    cur += `<text x="${LM-8}" y="${yy+3.5}" class="axl" text-anchor="end">${i===0?'0':kbrl(v)}</text>`;
   }
   cur += `<path d="${curva.map((pt,i)=>(i?'L':'M')+cxOf(pt.m)+' '+cyOf(pt.v)).join(' ')}"
-           fill="none" stroke="var(--cin)" stroke-width="2.5" stroke-linejoin="round"/>`;
+           fill="none" stroke="var(--c-entra)" stroke-width="2.5" stroke-linejoin="round"/>`;
   cur += `<path d="${curva.map((pt,i)=>(i?'L':'M')+cxOf(pt.m)+' '+cyOf(pt.v)).join(' ')} L ${cxOf(K.H)} ${cyOf(0)} L ${cxOf(0)} ${cyOf(0)} Z"
-           fill="var(--cin)" fill-opacity=".10"/>`;
+           fill="var(--c-entra)" fill-opacity=".10"/>`;
   // marcos: sentenca, fim de B e janela da Modalidade C
   [[K.mRed,'sentença'],[K.mRed+9,'fim do êxito B']].forEach(([mm,lb])=>{
     const pt = curva.find(x=>x.m===mm); if(!pt) return;
     cur += `<line x1="${cxOf(mm)}" y1="${cyOf(pt.v)}" x2="${cxOf(mm)}" y2="${cyOf(0)}"
-             stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3" stroke-opacity=".5"/>`;
-    cur += `<circle cx="${cxOf(mm)}" cy="${cyOf(pt.v)}" r="4" fill="var(--surface)" stroke="var(--cin)" stroke-width="2"/>`;
-    cur += `<text x="${cxOf(mm)}" y="${cyOf(0)+13}" class="axl" text-anchor="middle" style="font-size:9px">${lb}</text>`;
+             stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" stroke-opacity=".5"/>`;
+    cur += `<circle cx="${cxOf(mm)}" cy="${cyOf(pt.v)}" r="4" fill="var(--surface)" stroke="var(--c-entra)" stroke-width="2"/>`;
+    cur += `<text x="${cxOf(mm)}" y="${cyOf(0)+13}" class="axl" text-anchor="middle">${lb}</text>`;
   });
   const fim = curva[curva.length-1];
   cur += `<text x="${Math.min(W-14, cxOf(fim.m)+8)}" y="${cyOf(fim.v)+4}" text-anchor="end"
-           style="font-size:12px;font-weight:800;fill:var(--good-ink)">${brl(fim.v)}</text>`;
+           style="font-size:var(--fs-2);font-weight:800;fill:var(--good-ink)">${brl(fim.v)}</text>`;
   curva.forEach(pt=>{
     cur += `<rect x="${cxOf(pt.m)-SW/2}" y="${CTOP}" width="${SW}" height="${CH-18}" fill="transparent"
              data-tip="Somando o que já foi restituído, líquido do êxito, com o imposto que deixou de pagar até aqui: <b>${brl(pt.v)}</b>. A curva nunca cai — nos meses da Modalidade C o que entra e o que sai se anulam, e a economia mensal continua somando."
@@ -1241,10 +1345,10 @@ function renderComp(){
         <button data-v="com" aria-pressed="${S.desfav==='com'}">crédito já usufruído</button>
       </span></span></div>
      <div class="vscroll"><svg width="${W}" height="${y}" viewBox="0 0 ${W} ${y}">${out}</svg></div>
-     <div style="border-top:1px solid var(--rule);margin-top:14px;padding-top:12px">
+     <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">
        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
-         <div><b style="font-size:13.5px">Benefício acumulado do cliente</b>
-           <span class="axl" style="display:block;font-size:11.5px">restituição recebida + imposto que deixou de pagar, já descontado o êxito</span></div>
+         <div><b style="font-size:var(--fs-3)">Benefício acumulado do cliente</b>
+           <span class="axl" style="display:block;font-size:var(--fs-2)">restituição recebida + imposto que deixou de pagar, já descontado o êxito</span></div>
        </div>
        <div class="vscroll"><svg width="${W}" height="${CH}" viewBox="0 0 ${W} ${CH}">${cur}</svg></div>
      </div>
@@ -1311,11 +1415,29 @@ function chaveAtual(){
   const h=(location.hash||'').replace('#','').trim();
   return (q||h||'').trim();
 }
+
+/* WhatsApp comercial — o mesmo número da calculadora. É a saída de quem cai
+   aqui sem chave: em vez de "acesso restrito", um caminho para falar com a gente. */
+const WA_NUMBER='5512981723773';
+const WA_URL='https://wa.me/'+WA_NUMBER+'?text='+
+  encodeURIComponent('Olá! Quero ver a simulação da equiparação hospitalar da minha clínica.');
+
+/* A barra branca gruda logo abaixo da b4u-bar — mesma conta das páginas do cliente. */
+function medirBarra(){
+  const b=document.querySelector('.b4u-bar'); if(!b) return;
+  document.documentElement.style.setProperty('--b4u-bar-h', b.offsetHeight+'px');
+}
 (function boot(){
+  medirBarra();
+  window.addEventListener('resize',medirBarra);
+  window.addEventListener('load',medirBarra);
+  ['b4u-wa','gate-wa'].forEach(id=>{ const a=document.getElementById(id); if(a) a.href=WA_URL; });
+
   const ch=chaveAtual();
   if(ch!==CHAVE_OK){ document.getElementById('gate').hidden=false; return; }
   document.getElementById('app').hidden=false;
   document.getElementById('volta').href='comercial.html?chave='+encodeURIComponent(ch);
+  document.getElementById('b4u-logo').href='comercial.html?chave='+encodeURIComponent(ch);
   render();
 })();
 </script>

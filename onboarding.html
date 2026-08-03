@@ -7,25 +7,38 @@
 <title>Cadastro de cliente mudou de lugar — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Duas origens porque o /exec responde 302 para a segunda: sem isto o aparelho paga
+     DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte não pode segurar a primeira pintura: entra como preload e vira folha depois. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
 <style>
 :root{
   /* Paleta canonica da equipe — a mesma em todas as telas. */
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
   --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,37:1 no canvas).
+     Este e o mesmo teal escurecido so para letra e fundo de letra; o --brand-teal
+     segue canonico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
-  --radius:12px;--radius-lg:16px;
+  /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
+  --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
+  --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;flex-wrap:wrap;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:19px;color:inherit;text-decoration:none}
+.barra .logo{font-weight:800;font-size:19px;color:inherit;text-decoration:none}
 .barra .logo .y{color:var(--brand-euc)}
 .barra .logo:hover{opacity:.82}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill)}
 .barra .spacer{flex:1}
 .barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
 .barra a.volta:hover{text-decoration:underline}
@@ -35,17 +48,17 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .card h1{font-size:19px;font-weight:800;margin:10px 0 8px}
 .card p{color:var(--ink-2);font-size:15px;margin-bottom:12px}
 .card p.mini{color:var(--muted);font-size:13px}
-.card code{background:var(--surface-warm);border:1px solid var(--line);border-radius:10px;padding:2px 7px;font-size:13px}
+.card code{background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-sm);padding:2px 7px;font-size:13px}
 .acoes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0 4px}
 /* ---------- botao (B.8): uma base, tres papeis ---------- */
 .btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
-  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;text-decoration:none;display:inline-block;
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:var(--radius-sm);text-decoration:none;display:inline-block;
   transition:border-color .12s,transform .1s}
 .btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
-.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
 .btn--pri:hover{background:#0C7871;border-color:#0C7871}
 .btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
-.btn--pill{border-radius:999px;padding:12px 20px}
+.btn--pill{border-radius:var(--radius-pill);padding:12px 20px}
 .conta{font-size:12px;font-weight:700;color:var(--muted);margin-top:12px}
 :focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

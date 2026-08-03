@@ -7,44 +7,82 @@
 <title>Societário — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- São DUAS origens porque o /exec responde 302 para a segunda: sem isto o aparelho
+     paga DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte deixa de bloquear a primeira pintura: o esqueleto aparece antes dela. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"></noscript>
 <style>
 :root{
   /* PALETA CANÔNICA — igual nas 7 páginas do cliente. Não redeclare tons aqui. */
   --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
   --ink:#113D39; --ink-2:#3F5854; --muted:#6E6256; --line:#E4D9C9; --line-2:#D6C3AC;
   --brand-dark:#073034; --brand-teal:#0F8C85; --brand-euc:#3FA680;
-  --amber:#E8892E; --amber-txt:#B05F12; --vermelho:#C0392B; --verde:#2E9D5F;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,44:1 no receita-soft).
+     Este é o mesmo teal escurecido só para texto e fundo de texto; o --brand-teal
+     continua canônico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E; --amber-txt:#8A5A10; --vermelho:#C0392B; --verde:#2E9D5F;
   /* Escala tipográfica — 6 passos, sem meio pixel. */
   --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
   /* Raios — 12 padrão, 16 para caixas grandes, 999 só para pílulas. */
   --radius-sm:8px; --radius:12px; --radius-lg:16px; --radius-pill:999px;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
   --brand-eucalipto2:var(--brand-euc);
-  --receita:var(--brand-teal); --receita-soft:#DCEFEC;
-  --andamento:#A7715D; --andamento-soft:#F1E1D8;
+  --receita:var(--brand-teal); --receita-soft:#DBEFEC;
+  /* #A7715D pinta ponto e preenchimento; como TEXTO sobre o creme ele dá 3,20:1.
+     O --andamento-txt é o mesmo tom escurecido só para letra: 5,26:1. Mesmo par e
+     mesma correção do --sinal/--sinal-txt do fiscal e do guias. */
+  --andamento:#A7715D; --andamento-soft:#F1E1D8; --andamento-txt:#8A4B33;
   --aguardando:var(--muted); --aguardando-soft:#EDE7DD;
+  /* Escala de padding — três degraus no lugar dos valores avulsos que havia aqui. */
+  --pad-sm: 14px 16px;
+  --pad:    18px 20px;
+  --pad-lg: 24px 26px;
+  --lift:   0 8px 20px rgba(17,61,57,.10);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:var(--fs-4);line-height:1.55;-webkit-font-smoothing:antialiased}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
-:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
-.wrap{max-width:900px;margin:0 auto;padding:0 24px 72px}
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:var(--radius-sm)}
+/* Campo com menos de 16px faz o Safari ampliar a página inteira ao focar. Só os campos. */
+input,select,textarea{font-size:16px}
+/* Uma amostra de cor só — antes cada lugar tinha o seu tamanho. */
+.sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;display:inline-block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 60px}
+/* Esta página não tinha NENHUM ajuste de celular: ficava com 24px de respiro lateral
+   numa tela de 390px. */
+@media(max-width:640px){
+  :root{--pad-sm:12px 13px;--pad:15px 16px;--pad-lg:18px 18px}
+  .wrap{padding:0 14px 60px}
+  .bar{padding:12px 14px;gap:10px}
+  /* razão social + CNPJ do cliente não podem virar 11px: ficam menores que o texto ao lado */
+  .brand-sub{font-size:var(--fs-3)}
+  .sec-head{margin:24px 0 10px}
+  .lista{padding:8px 16px}
+  .item{flex-wrap:wrap}
+  footer{flex-direction:column;gap:4px}
+}
 
 header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:var(--b4u-bar-h,0px);z-index:30}
-.bar{max-width:900px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.bar{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;line-height:1}
 .logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
-.brand-sub{font-size:var(--fs-4);color:var(--brand-teal);font-weight:700;margin-top:2px}
+/* Razão social + CNPJ é o que confirma "esta é a minha empresa": 15px em teal
+   puro dá 4,11:1. Escurecido, 5,54:1. */
+.brand-sub{font-size:var(--fs-4);color:var(--brand-teal-txt);font-weight:700;margin-top:2px}
 .voltar{display:inline-block;font-size:var(--fs-1);font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:4px}
-.voltar:hover{color:var(--brand-teal)}
+.voltar:hover{color:var(--brand-teal-txt)}
 .spacer{flex:1}
-.badge-topo{font-size:var(--fs-1);font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:5px 12px;border-radius:var(--radius-pill)}
+/* 11px sobre o verde claro: teal puro dá 3,44:1. Escurecido, 4,64:1. */
+.badge-topo{font-size:var(--fs-1);font-weight:700;color:var(--brand-teal-txt);background:var(--receita-soft);padding:5px 12px;border-radius:var(--radius-pill)}
 
 .busca{margin:28px 0 24px}
 .busca input{
-  width:100%;font-family:var(--sans);font-size:var(--fs-4);padding:12px 16px;border-radius:var(--radius-pill);
+  width:100%;font-family:var(--sans);padding:12px 16px;border-radius:var(--radius-pill);
   border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
 }
 .busca input::placeholder{color:var(--muted)}
@@ -54,7 +92,7 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .busca-info.on{display:flex}
 .busca-info b{color:var(--ink);font-weight:700}
 .busca-limpar{background:none;border:0;padding:0;font-family:inherit;font-size:var(--fs-2);font-weight:700;
-  color:var(--brand-teal);cursor:pointer;text-decoration:underline}
+  color:var(--brand-teal-txt);cursor:pointer;text-decoration:underline}
 .busca-vazio{display:none;margin:14px 0 0;padding:22px 20px;text-align:center;background:var(--surface);
   border:1px dashed var(--line-2);border-radius:var(--radius);color:var(--muted);font-size:var(--fs-3)}
 .busca-vazio.on{display:block}
@@ -62,21 +100,52 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .busca-dica{display:block;margin-top:6px;font-size:var(--fs-2)}
 
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:30px 0 14px}
-.sec-head h2{font-size:var(--fs-4);font-weight:700;letter-spacing:-.01em}
+/* Título de seção e texto corrido tinham os mesmos 15px: não havia hierarquia. */
+.sec-head h2{font-size:var(--fs-5);font-weight:700;letter-spacing:-.01em}
 .sec-head p{font-size:var(--fs-3);color:var(--muted)}
 
-.processo-card{padding:20px 22px;margin-bottom:14px}
+/* ════════ Topo: em que pé está o processo, e com quem está a bola ════════
+   O primeiro elemento da página era um campo de busca vazio. Quem entra aqui
+   quer saber se anda alguma coisa e se a vez é dele. */
+.heroi{margin:22px 0 0;padding:var(--pad-lg);border:none;border-radius:var(--radius-lg);color:#fff;
+  /* O gradiente da marca clareia no canto de baixo: medido a 390px, o branco cai para
+     4,38:1 justamente na última linha. O véu escuro devolve o contraste sem trocar a cor. */
+  background:linear-gradient(180deg,rgba(7,48,52,0) 45%,rgba(7,48,52,.22) 100%),
+             linear-gradient(124deg,var(--brand-dark) 0%,var(--brand-teal) 100%);
+  box-shadow:0 18px 38px -18px rgba(6,48,51,.6)}
+/* 11px maiúsculo sobre o lado claro do gradiente não pode ser branco a 82% (3,7:1). */
+.heroi .lbl{font-size:var(--fs-1);letter-spacing:.09em;text-transform:uppercase;font-weight:600;color:#fff}
+.heroi-v{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-top:8px;overflow-wrap:anywhere}
+@media(min-width:720px){.heroi-v{font-size:40px}}
+/* branco a 90% sobre o lado claro do gradiente dá 4,24:1 a 390px — texto corrido
+   de 15px precisa de 4,5. Branco cheio; a hierarquia fica no <b>, não na opacidade.
+   Sem font-weight: o link do Montserrat não traz o 500 e o navegador sintetizava
+   o peso, engrossando o traço na marra. Mesmo peso do contábil e da equiparação. */
+.heroi-sub{font-size:var(--fs-4);color:#fff;margin-top:10px;line-height:1.5;max-width:60ch}
+.heroi-sub b{color:#fff;font-weight:800}
+.heroi-pe{font-size:var(--fs-4);color:#fff;font-weight:600;margin-top:14px;max-width:60ch;line-height:1.5}
+/* Quando a vez é DELE, a frase não pode ter o mesmo peso de "está na Junta". */
+.heroi-pe.voce{background:#FCEFE0;color:#8A5A10;border:1px solid #E7C79A;
+  border-radius:var(--radius);padding:12px 14px;font-weight:800;display:inline-block}
+
+/* Tarja de cache: o que está na tela é do último acesso e já está sendo atualizado. */
+.tarja-atualizando{font-size:var(--fs-2);font-weight:600;color:var(--brand-dark);
+  background:var(--receita-soft);border-radius:var(--radius-pill);padding:6px 14px;margin:14px 0 0;
+  display:inline-flex;align-items:center;gap:8px}
+.tarja-atualizando.falhou{background:#FCEFE0;color:#8A5A10}
+
+.processo-card{padding:var(--pad);margin-bottom:14px}
 .processo-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
 .processo-head h3{font-size:var(--fs-4);font-weight:700}
 .status-chip{font-size:var(--fs-1);font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:var(--radius-sm);white-space:nowrap}
-.status-concluido{background:var(--receita-soft);color:var(--receita)}
-.status-andamento{background:var(--andamento-soft);color:var(--andamento)}
+.status-concluido{background:var(--receita-soft);color:var(--brand-teal-txt)}
+.status-andamento{background:var(--andamento-soft);color:var(--andamento-txt)}
 
 /* stepper horizontal (linha do tempo resumida) */
 .stepper{margin:0 0 16px}
 .stepper-topo{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
 .stepper-cap{font-size:var(--fs-2);color:var(--muted)}
-.stepper-pct{font-size:var(--fs-3);font-weight:800;color:var(--receita)}
+.stepper-pct{font-size:var(--fs-3);font-weight:800;color:var(--brand-teal-txt)}
 .stepper-track{height:6px;background:var(--line);border-radius:var(--radius-pill);overflow:hidden}
 .stepper-fill{height:100%;background:linear-gradient(90deg,var(--brand-teal),var(--brand-eucalipto2));border-radius:var(--radius-pill);transition:width .4s}
 .stepper-passos{display:flex;align-items:center;gap:6px;margin-top:9px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
@@ -97,10 +166,17 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .etapa-nome{font-size:var(--fs-3);font-weight:600}
 .etapa-meta{font-size:var(--fs-2);color:var(--muted);margin-top:2px;display:flex;gap:8px;align-items:center}
 .etapa-status{font-size:var(--fs-1);font-weight:700;padding:1px 7px;border-radius:var(--radius-sm)}
-.etapa-status.concluido{background:var(--receita-soft);color:var(--receita)}
-.etapa-status.andamento{background:var(--andamento-soft);color:var(--andamento)}
+.etapa-status.concluido{background:var(--receita-soft);color:var(--brand-teal-txt)}
+.etapa-status.andamento{background:var(--andamento-soft);color:var(--andamento-txt)}
 .etapa-status.aguardando{background:var(--aguardando-soft);color:var(--aguardando)}
-.processo-card.recolhido{padding:0}
+/* Com quem está a bola nesta etapa. A linha "com você" não se distingue só pela cor:
+   ela tem texto próprio, fundo e borda — e some quando não dá para saber. */
+.etapa-resp{font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin-top:4px}
+.etapa-resp.voce{display:inline-block;color:#8A5A10;background:#FCEFE0;border:1px solid #E7C79A;
+  border-radius:var(--radius-sm);padding:3px 9px;font-weight:800}
+/* Cartão clicável levanta — mesma regra das outras páginas do cliente. */
+.processo-card.recolhido{padding:0;transition:transform .12s,box-shadow .12s,border-color .12s}
+.processo-card.recolhido:hover{transform:translateY(-2px);box-shadow:var(--lift);border-color:var(--brand-teal)}
 .processo-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:18px 22px;background:none;border:none;cursor:pointer;font-family:var(--sans);color:var(--ink);text-align:left}
 .processo-toggle .lado{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -116,7 +192,7 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .item:first-child{border-top:none}
 .item .nome{font-size:var(--fs-3);font-weight:600}
 .item .cat{font-size:var(--fs-1);color:var(--muted);margin-top:2px}
-.item a{font-size:var(--fs-2);font-weight:700;color:var(--brand-teal);text-decoration:none;white-space:nowrap}
+.item a{font-size:var(--fs-2);font-weight:700;color:var(--brand-teal-txt);text-decoration:none;white-space:nowrap}
 .item a:hover{color:var(--brand-dark)}
 .item .em-breve{font-size:var(--fs-1);font-weight:600;color:var(--muted);white-space:nowrap}
 
@@ -134,24 +210,19 @@ header{border-bottom:1px solid var(--line);background:var(--surface);position:st
 .grupo-cat-body .item:first-child{border-top:none}
 .venc{display:inline-block;font-size:var(--fs-1);font-weight:600;margin-top:3px}
 .venc.venc-ok{color:var(--muted)}
-.venc.venc-atencao{color:var(--andamento)}
+.venc.venc-atencao{color:var(--andamento-txt)}
 .venc.venc-vencido{color:#8B2E22;font-weight:700}
 
 .vazio{color:var(--muted);font-size:var(--fs-3);padding:16px 0;text-align:center}
 
-.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
-.state h1{font-size:var(--fs-5);font-weight:700}
-.state p{color:var(--muted);font-size:var(--fs-4);max-width:44ch}
-.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:var(--fs-3)}
-.spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
 footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:var(--fs-2);color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
 <!--B4U:START-->
-<style id="b4u-oculta-chamado">/* "Abrir chamado" oculto por ora (topo #b4u-open e rodape #ac-abrir) */ #b4u-open,#ac-abrir,#b4u-help{display:none!important}</style>
+<style id="b4u-oculta-chamado">/* Abertura de chamado oculta por ora. O "?" (#b4u-help) abre ESTE MESMO modal:
+   deixá-lo visível era uma porta de serviço para um recurso que decidimos segurar. */ #b4u-open,#ac-abrir,#b4u-help{display:none!important}</style>
 <script>window.B4U = { area:'societario' };</script>
 <!-- ═══════════ back4you · cabeçalho + chamados (compartilhado) ═══════════
      Bloco único, autocontido e com prefixo .b4u- (não conflita com o CSS da
@@ -162,13 +233,15 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
      home:true  -> esconde o botão "Início" (usar só no index).
      Para reaproveitar em todas as páginas, mantenha este bloco IDÊNTICO. ─── -->
 <style>
-.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;
+.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   padding:10px 18px;background:var(--brand-dark);color:#fff;box-shadow:0 2px 12px rgba(7,48,52,.20);
   font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+/* min-height nos três: no celular a barra inteira ficava com ~34px de alto e o dedo
+   errava o alvo. 44px é o mínimo que a mão acerta de primeira. */
 .b4u-bar .b4u-logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;margin-right:auto;
-  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1}
+  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1;min-height:44px}
 .b4u-bar .b4u-logo .y{color:var(--brand-euc)}
-.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;
+.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;min-height:44px;
   font-family:inherit;font-weight:600;font-size:var(--fs-3);padding:8px 13px;border-radius:var(--radius-sm);
   text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
 .b4u-btn svg{width:16px;height:16px;flex-shrink:0}
@@ -176,19 +249,25 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 .b4u-btn:active{transform:translateY(1px)}
 .b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
 .b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
-.b4u-btn.wa{background:#25D366;color:#fff}
+/* Branco sobre o verde do WhatsApp dá 1,98:1 — ilegível no sol. Verde-escuro: 7,23:1.
+   É o botão que ele usa para pedir socorro; não pode ser o mais difícil de ler. */
+.b4u-btn.wa{background:#25D366;color:#06302b}
 .b4u-btn.wa:hover{background:#20bd5a}
-.b4u-btn.call{background:var(--brand-teal);color:#fff}
-.b4u-btn.call:hover{background:#0c756f}
-.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+.b4u-btn.call{background:var(--brand-teal-txt);color:#fff}
+.b4u-btn.call:hover{background:#0A5F5A}
+.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;
   padding:0;border:0;cursor:pointer;border-radius:var(--radius-sm);background:rgba(255,255,255,.10);color:#fff;
   transition:background .15s}
 .b4u-icobtn:hover{background:rgba(255,255,255,.18)}
 .b4u-icobtn svg{width:17px;height:17px}
 @media(max-width:640px){
   .b4u-bar{gap:7px;padding:9px 12px}
-  .b4u-btn .b4u-lbl{display:none}
-  .b4u-btn{padding:9px 11px}
+  /* display:none tira o nome da árvore de acessibilidade e o leitor anuncia
+     "link, link, botão". Some da TELA, continua existindo para quem ouve. */
+  .b4u-btn .b4u-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  /* sem rótulo o botão fica só com o ícone de 16px: 11px de folga dava 38px de
+     largura. 14px fecha os 44px nos dois eixos. */
+  .b4u-btn{padding:9px 14px}
 }
 .b4u-ov{position:fixed;inset:0;z-index:1000;background:rgba(7,48,52,.45);
   display:none;align-items:flex-end;justify-content:center;
@@ -202,15 +281,15 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 .b4u-modal .b4u-sub{font-size:var(--fs-2);color:#6E6256;padding:0 20px 10px;line-height:1.5}
 .b4u-fld{padding:7px 20px}
 .b4u-fld label{display:block;font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin-bottom:5px}
-.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:var(--fs-4);
+.b4u-fld select,.b4u-fld input,.b4u-fld textarea{width:100%;font-family:inherit;font-size:16px;
   padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink)}
 .b4u-fld textarea{min-height:120px;resize:vertical;line-height:1.5}
 .b4u-fld select:focus,.b4u-fld input:focus,.b4u-fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:1px;border-color:transparent}
 .b4u-err{color:var(--vermelho);font-size:var(--fs-2);padding:2px 20px 0;min-height:16px}
 .b4u-foot{display:flex;gap:10px;padding:14px 20px 20px;position:sticky;bottom:0;background:var(--surface)}
 .b4u-foot .b4u-btn{flex:1;justify-content:center;padding:12px}
-.b4u-foot .primary{background:var(--brand-teal);color:#fff}
-.b4u-foot .primary:hover{background:#0c756f}
+.b4u-foot .primary{background:var(--brand-teal-txt);color:#fff}
+.b4u-foot .primary:hover{background:#0A5F5A}
 .b4u-foot .primary[disabled]{opacity:.6;cursor:default}
 .b4u-foot .cancel{background:var(--canvas);color:var(--ink-2)}
 .b4u-foot .cancel:hover{background:#e8dccb}
@@ -228,7 +307,7 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 @media(prefers-reduced-motion:reduce){.b4u-skel{animation:none}}
 /* Puxar para atualizar (mobile) */
 .b4u-ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;
-  height:0;overflow:hidden;color:var(--brand-teal);z-index:1500;pointer-events:none;
+  height:0;overflow:hidden;color:var(--brand-teal-txt);z-index:1500;pointer-events:none;
   font-family:'Montserrat',system-ui,sans-serif;font-size:var(--fs-2);font-weight:700;gap:8px}
 .b4u-ptr .ring{width:18px;height:18px;border:2.5px solid #cfe6e2;border-top-color:var(--brand-teal);border-radius:50%}
 .b4u-ptr.spin .ring{animation:b4uspin .7s linear infinite}
@@ -309,18 +388,90 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
+  /* Traduz qualquer erro para uma frase que o cliente entende — e que não o culpa.
+     `e.message` NUNCA vai para a tela: ele é vocabulário nosso, não dele. */
+  function msgAmigavel(e){
+    var m = String((e && e.message) || e || '');
+    if (/API|alcançar|respondeu|network|timeout|Failed to fetch/i.test(m))
+      return 'Não consegui falar com o sistema agora. Confira a sua internet e tente de '
+           + 'novo em alguns segundos — nada do que você digitou foi perdido.';
+    if (/restrito|acesso|código|senha|contato/i.test(m))
+      return 'Este link não está mais valendo. Peça um novo acesso para a gente que '
+           + 'reenviamos na hora.';
+    return 'Deu um problema do nosso lado, não seu. A equipe já foi avisada. Se for '
+         + 'urgente, chame no WhatsApp.';
+  }
+
+  /* A segunda visita não precisa recomeçar do esqueleto. Guardamos o último payload por
+     6h e pintamos com ele na hora, com tarja de "atualizando"; quando a resposta chega,
+     redesenhamos. Dado financeiro no aparelho dele — por isso prazo curto e limpeza no
+     logout (B4U.limparCache), junto do aparelho confiável. */
+  var CACHE_MS = 6 * 60 * 60 * 1000;
+  function cacheChave(tipo, id){ return 'b4u_pl_' + tipo + '_' + id; }
+  function cacheLer(tipo, id){
+    try {
+      var o = JSON.parse(localStorage.getItem(cacheChave(tipo, id)) || 'null');
+      if (!o || (Date.now() - o.ts) > CACHE_MS) return null;
+      return o.raw;
+    } catch (e) { return null; }
+  }
+  function cacheGravar(tipo, id, raw){
+    try { localStorage.setItem(cacheChave(tipo, id),
+          JSON.stringify({ ts: Date.now(), raw: raw })); } catch (e) {}
+  }
+  function limparCache(){
+    /* Sai o payload e sai também o b4u_disp_ (quais áreas o cliente tem): num aparelho
+       compartilhado, a barra do próximo não pode herdar o mapa de painéis do anterior. */
+    try { Object.keys(localStorage).forEach(function (k) {
+          if (k.indexOf('b4u_pl_') === 0 || k.indexOf('b4u_disp_') === 0) localStorage.removeItem(k); }); } catch (e) {}
+  }
+
   var IC = {
     home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
     wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>',
     chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/></svg>',
     help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>',
-    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>'
+    chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>',
+    guias:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m8.5 15 2 2 4-4"/></svg>',
+    pessoal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><path d="M16 4.2c1.7.4 3 2 3 3.8s-1.3 3.4-3 3.8M23 20c0-2.8-2.3-5.1-5.4-5.8"/></svg>',
+    fiscal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>',
+    equiparacao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>'
   };
 
   var C = idc();
   var linkHome = 'index.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var linkTickets = 'meustickets.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
+
+  // ---- links de área na própria barra --------------------------------------
+  /* Do fiscal para a agenda não havia caminho: era voltar para a home e pagar outra
+     chamada à API. Os links saem do `disponiveis` que a HOME já recebeu e gravou no
+     aparelho (b4u_disp_<id>) — assim respeitam PAINEIS_OCULTOS e o acesso da pessoa
+     sem esta página perguntar nada. Sem esse registro, só a agenda, que quem tem
+     fiscal ou pessoal sempre tem. */
+  var AREAS_LINK = [
+    ['guias.html',       'Agenda',       'guias',       IC.guias],
+    ['fiscal.html',      'Fiscal',       'fiscal',      IC.fiscal],
+    ['dptopessoal.html', 'Pessoal',      'pessoal',     IC.pessoal],
+    ['equiparacao.html', 'Equiparação',  'equiparacao', IC.equiparacao]
+  ];
+  function disponiveisSalvos(){
+    try { var o = JSON.parse(localStorage.getItem('b4u_disp_'+C.id)||'null');
+          return (o && (o.disponiveis || o)) || null; } catch(e){ return null; }
+  }
+  function linksDeArea(){
+    var disp = disponiveisSalvos();
+    var aqui = (location.pathname.split('/').pop()||'').toLowerCase();
+    return AREAS_LINK.filter(function(a){
+      if (a[0].toLowerCase() === aqui) return false;                       // não linkar a página atual
+      if (a[2] === 'guias') return !disp || !!(disp.fiscal || disp.pessoal);
+      return !!(disp && disp[a[2]]);
+    }).slice(0, 2)                                                          // 2 links: a barra ainda tem 3 botões fixos
+     .map(function(a){
+       return '<a class="b4u-btn ghost" href="'+esc(a[0]+(C.id?('#'+C.id+(C.codigo?'-'+C.codigo:'')):''))+'" '+
+              'title="'+esc(a[1])+'">'+a[3]+'<span class="b4u-lbl">'+esc(a[1])+'</span></a>';
+     }).join('');
+  }
 
   // ---- barra fixa ----------------------------------------------------------
   var bar = document.createElement('div');
@@ -329,6 +480,7 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
     '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
     (CFG.home ? '' :
       '<a class="b4u-btn ghost" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
+    (CFG.home ? '' : linksDeArea()) +
     '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
     '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
     '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
@@ -344,7 +496,39 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
   ov.className = 'b4u-ov';
   document.body.appendChild(ov);
 
-  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; }
+  function fecharModal(){ ov.classList.remove('on'); ov.innerHTML=''; ESQ_ATUAL=''; }
+
+  /* Fechar por clique no fundo ou Esc NÃO pode apagar o que ele escreveu. Só é
+     "limpo" o que ainda for igual ao esqueleto pré-preenchido do tipo escolhido. */
+  var ESQ_ATUAL = '';
+  function modalSujo(){
+    var t = ov.querySelector('#b4u-msg'), a = ov.querySelector('#b4u-assunto');
+    if(!t) return false;
+    return String(t.value||'').trim() !== String(ESQ_ATUAL||'').trim()
+        || !!(a && a.value.trim());
+  }
+  function tentarFechar(){ if(modalSujo()) pedirDescartar(); else fecharModal(); }
+  function montarFoot(){
+    var foot = ov.querySelector('.b4u-foot'); if(!foot) return;
+    foot.innerHTML =
+      '<button type="button" class="b4u-btn cancel" id="b4u-cancel">Cancelar</button>' +
+      '<button type="button" class="b4u-btn primary" id="b4u-send">Enviar chamado</button>';
+    foot.querySelector('#b4u-cancel').addEventListener('click', tentarFechar);
+    foot.querySelector('#b4u-send').addEventListener('click', enviar);
+  }
+  function pedirDescartar(){
+    var foot = ov.querySelector('.b4u-foot'); if(!foot){ fecharModal(); return; }
+    foot.innerHTML =
+      '<button type="button" class="b4u-btn cancel" id="b4u-keep">Continuar escrevendo</button>' +
+      '<button type="button" class="b4u-btn primary" id="b4u-discard">Descartar o que escrevi</button>';
+    var err = ov.querySelector('#b4u-erro');
+    if(err) err.textContent = 'Você escreveu algo neste chamado. Quer mesmo sair sem enviar?';
+    foot.querySelector('#b4u-keep').addEventListener('click', function(){
+      if(err) err.textContent=''; montarFoot();
+      var t = ov.querySelector('#b4u-msg'); if(t) t.focus();
+    });
+    foot.querySelector('#b4u-discard').addEventListener('click', fecharModal);
+  }
 
   function abrir(opts){
     opts = opts || {};
@@ -383,6 +567,7 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
     function aplicaSkeleton(force){
       var esq = TIPOS[selTipo.value] ? TIPOS[selTipo.value][1] : '';
       if(force || !txt.value.trim()) txt.value = esq;
+      ESQ_ATUAL = esq;                 // referência do que ainda é "vazio", não texto dele
     }
     aplicaSkeleton(true);
     selTipo.addEventListener('change', function(){ aplicaSkeleton(true); txt.focus(); });
@@ -391,8 +576,8 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
       selTipo.innerHTML = opcoesTipo(this.value, selTipo.value);
       aplicaSkeleton(true);
     });
-    ov.querySelector('#b4u-cancel').addEventListener('click', fecharModal);
-    ov.addEventListener('click', function(e){ if(e.target===ov) fecharModal(); });
+    ov.querySelector('#b4u-cancel').addEventListener('click', tentarFechar);
+    ov.addEventListener('click', function(e){ if(e.target===ov) tentarFechar(); });
     ov.querySelector('#b4u-send').addEventListener('click', enviar);
     // o seletor de "tipo do documento" só aparece quando há um arquivo anexado
     var fileEl = ov.querySelector('#b4u-file');
@@ -418,7 +603,7 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
     var file = fileEl && fileEl.files && fileEl.files[0];
     if(file && file.size > 10*1024*1024){ erroEl.textContent = 'O anexo tem mais de 10 MB. Envie um arquivo menor.'; return; }
     btn.disabled = true; btn.textContent = 'Enviando…';
-    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = (e&&e.message)||String(e); };
+    var falhou = function(e){ btn.disabled=false; btn.textContent='Enviar chamado'; erroEl.textContent = msgAmigavel(e); };
     if(file){
       // COM arquivo -> POST (JSONP/GET não comporta base64)
       var reader = new FileReader();
@@ -474,7 +659,7 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 
   bar.querySelector('#b4u-open').addEventListener('click', function(){ abrir({}); });
   bar.querySelector('#b4u-help').addEventListener('click', function(){ abrir({ area:'outros', tipo:'livre' }); });
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) fecharModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && ov.classList.contains('on')) tentarFechar(); });
 
   // ---- Puxar para atualizar (mobile) --------------------------------------
   // Só age quando a página está no topo e o gesto é para baixo; recarrega ao soltar
@@ -506,6 +691,9 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
   })();
 
   window.B4U = { __ready:true, area: CFG.area||'outros', abrirChamado: abrir, meusTickets: linkTickets,
+    msgAmigavel: msgAmigavel,
+    CACHE_MS: CACHE_MS, cacheChave: cacheChave, cacheLer: cacheLer,
+    cacheGravar: cacheGravar, limparCache: limparCache,
     // helper de skeleton: devolve N barrinhas "carregando" (as páginas usam no lugar do spinner)
     skeleton: function(linhas, alt){ var h=alt||16, g=[]; for(var i=0;i<(linhas||3);i++){
       var w=[92,78,85,60][i%4]; g.push('<div class="b4u-skel" style="height:'+h+'px;width:'+w+'%;margin:0 auto 12px"></div>'); }
@@ -525,10 +713,21 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 
 
 
+<!-- Esqueleto com a silhueta REAL da página (cabeçalho, herói do processo, o cartão
+     com a linha do tempo e as listas de documentos): uma bolinha girando não diz o
+     que está chegando. render() apaga tudo. -->
 <div id="app">
-  <div class="state">
-    <div class="spin" role="status" aria-label="Carregando"></div>
-    <p>Carregando o painel…</p>
+  <div class="wrap" role="status" aria-live="polite">
+    <div class="b4u-skel" style="height:22px;width:200px;margin:22px 0 8px"></div>
+    <div class="b4u-skel" style="height:13px;width:72%;max-width:340px;margin-bottom:22px"></div>
+    <div class="b4u-skel" style="height:168px;border-radius:var(--radius-lg);margin-bottom:26px"></div>
+    <div class="b4u-skel" style="height:15px;width:230px;margin-bottom:12px"></div>
+    <div class="b4u-skel" style="height:190px;border-radius:var(--radius);margin-bottom:26px"></div>
+    <div class="b4u-skel" style="height:15px;width:150px;margin-bottom:12px"></div>
+    <div class="b4u-skel" style="height:52px;border-radius:var(--radius);margin-bottom:9px"></div>
+    <div class="b4u-skel" style="height:52px;border-radius:var(--radius);margin-bottom:9px"></div>
+    <div class="b4u-skel" style="height:52px;border-radius:var(--radius);opacity:.45"></div>
+    <p id="espera-txt" style="text-align:center;color:var(--muted);font-size:var(--fs-3);margin-top:18px">Carregando o painel…</p>
   </div>
 </div>
 
@@ -642,6 +841,23 @@ function render(M, modelos){
   const wrap = el('<div class="wrap"></div>');
   app.appendChild(wrap);
 
+  /* Estado do processo ANTES de tudo. Antes o primeiro elemento da página era um
+     campo de busca vazio, e o cliente tinha de rolar para descobrir se andava algo. */
+  appendAll(wrap, `
+    <div class="heroi">
+      <span class="lbl" id="heroi-lbl"></span>
+      <div class="heroi-v" id="heroi-v"></div>
+      <div class="heroi-sub" id="heroi-sub"></div>
+      <div class="heroi-pe" id="heroi-pe"></div>
+    </div>
+    <div id="tarja-slot"></div>`);
+
+  appendAll(wrap, `
+    <div class="sec-head" id="sec-alteracoes"><div><h2>Mudanças no contrato da empresa</h2><p>Entrada ou saída de sócio, abertura de filial, mudança de endereço ou de atividade.</p></div></div>
+    <div id="alteracoes"></div>`);
+
+  // A busca desce para depois dos processos: ela serve às listas longas, não à
+  // primeira pergunta de quem abre a página.
   appendAll(wrap, `
     <div class="busca">
       <input type="search" id="busca" placeholder="Buscar documento, modelo ou processo… (tecle /)" aria-label="Buscar no painel">
@@ -652,10 +868,6 @@ function render(M, modelos){
   appendAll(wrap, `
     <div class="sec-head" id="sec-venc" style="display:none"><div><h2>Certificados e licenças</h2><p>Vencimentos para acompanhar</p></div></div>
     <div class="card lista" id="vencimentos" style="display:none"></div>`);
-
-  appendAll(wrap, `
-    <div class="sec-head" id="sec-alteracoes"><div><h2>Alterações societárias</h2></div></div>
-    <div id="alteracoes"></div>`);
 
   appendAll(wrap, `
     <div class="sec-head" id="sec-documentos"><div><h2>Documentos</h2></div></div>
@@ -669,6 +881,7 @@ function render(M, modelos){
       <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
     </footer>`));
 
+  desenharHeroi(M.alteracoes || []);
   desenharVencimentos(M);
   desenharAlteracoes(M.alteracoes || []);
   desenharDocumentos(M.documentos || []);
@@ -677,6 +890,9 @@ function render(M, modelos){
   memorizarSecoes();
   document.getElementById('busca').addEventListener('input', e => filtrar(e.target.value));
   atalhosDeBusca('busca', () => filtrar(''));
+  // Busca vinda do endereço (F5 / link compartilhado) já entra aplicada.
+  const campoBusca = document.getElementById('busca');
+  if (TERMO_URL){ campoBusca.value = TERMO_URL; filtrar(TERMO_URL); }
 }
 
 function periodoEtapa(e){
@@ -690,21 +906,98 @@ function periodoEtapa(e){
   return partes.join(' · ');
 }
 
+/* Com quem está a bola nesta etapa. Sai do STATUS que vem da planilha (Aguardando /
+   Em andamento / Concluído / Não se aplica) cruzado com o NOME da etapa, que é quem
+   nomeia o órgão. Quando nada disso é conclusivo devolvemos null e a linha não
+   aparece — chutar "está com a gente" é pior do que não dizer nada. */
+const ORGAO_FORA = /cart[oó]rio|conselho|cremes|cremer|crm|prefeitura|receita|caixa|cef|banco/;
+function responsavelEtapa(e){
+  const st = normTxt(e && e.status);
+  const nm = normTxt(e && e.nome);
+  if (!st) return null;
+  if (/conclu|finaliz|encerrad|nao se aplica/.test(st)) return null;   // etapa fechada: ninguém deve nada
+  if (/assinatur|assinar|com o cliente|aguardando cliente|com voce|do cliente/.test(st + ' ' + nm))
+    return { txt:'Com você — precisamos da sua assinatura', voce:true };
+  if (/junta|juce/.test(nm)) return { txt:'Com a Junta Comercial' };
+  if (ORGAO_FORA.test(nm)) return null;            // outro órgão: sabemos que não é conosco, mas não o nome certo
+  if (/andament/.test(st)) return { txt:'Com a back4you' };
+  return null;                                     // "Aguardando" sem órgão conhecido
+}
+
 function timelineHTML(p){
   // Observações (livres e internas) por etapa NÃO aparecem para o cliente.
   return `<div class="timeline">
     ${(p.etapas||[]).map((e)=>{
       const cl = classeStatus(e.status);
       const per = periodoEtapa(e);
+      const r = responsavelEtapa(e);
       return `<div class="etapa ${cl}">
         <div class="etapa-nome">${esc(e.nome)}</div>
         <div class="etapa-meta">
           ${per ? `<span class="etapa-datas">${esc(per)}</span>` : ''}
           <span class="etapa-status ${cl}">${esc(e.status || '—')}</span>
         </div>
+        ${r ? `<div class="etapa-resp${r.voce?' voce':''}">${esc(r.txt)}</div>` : ''}
       </div>`;
     }).join('')}
   </div>`;
+}
+
+/** Índice da etapa que está valendo agora: a em andamento; senão a primeira que
+    ainda não concluiu; senão a última. */
+function indiceEtapaAtual(p){
+  const et = p.etapas || [];
+  let i = et.findIndex(e => classeStatus(e.status) === 'andamento');
+  if (i < 0) i = et.findIndex(e => classeStatus(e.status) !== 'concluido');
+  if (i < 0) i = et.length - 1;
+  return i;
+}
+
+/* Herói: em que etapa está o processo e com quem está a bola. Um processo parado
+   há 40 dias na Junta e um esperando a assinatura DELE eram visualmente idênticos. */
+function desenharHeroi(alteracoes){
+  const lbl = document.getElementById('heroi-lbl');
+  const hv  = document.getElementById('heroi-v');
+  const hs  = document.getElementById('heroi-sub');
+  const hp  = document.getElementById('heroi-pe');
+  if (!lbl || !hv || !hs || !hp) return;
+  hp.className = 'heroi-pe';
+
+  const andando = (alteracoes||[]).filter(p => !p.concluido);
+  if (!andando.length){
+    lbl.textContent = '';
+    hv.textContent  = 'Nenhum processo em andamento';
+    hs.textContent  = 'Nada da sua empresa está tramitando. Seus documentos e contratos estão logo abaixo.';
+    hp.textContent  = '';
+    return;
+  }
+
+  const p = andando[0];
+  const et = p.etapas || [];
+  lbl.textContent = andando.length > 1 ? 'Seus processos em andamento' : 'Seu processo em andamento';
+  hv.textContent  = p.processo || 'Processo em andamento';
+
+  if (et.length){
+    const i = indiceEtapaAtual(p);
+    const atual = et[i] || {};
+    const desde = String(atual.data_inicio || atual.inicio || atual.data || '').trim();
+    hs.innerHTML = `Etapa ${i+1} de ${et.length} — <b>${esc(atual.nome || '—')}</b>` +
+                   (desde ? `, desde ${esc(dBR(desde))}` : '') + '.';
+    const r = responsavelEtapa(atual);
+    if (r && r.voce){
+      hp.className = 'heroi-pe voce';
+      hp.textContent = 'Está com você — precisamos da sua assinatura para seguir.';
+    } else if (r && /Junta/.test(r.txt)){
+      hp.textContent = 'Está com a Junta Comercial. Você não precisa fazer nada agora — avisamos assim que sair.';
+    } else if (r){
+      hp.textContent = 'Está com a back4you. Você não precisa fazer nada agora — avisamos assim que andar.';
+    } else {
+      hp.textContent = '';        // sem saber de quem é a vez, não prometemos nada
+    }
+  } else {
+    hs.textContent = p.status_geral || 'Em andamento.';
+    hp.textContent = '';
+  }
 }
 
 /* Barra de progresso horizontal (linha do tempo resumida): etapa 1 → 2 → 3. */
@@ -828,8 +1121,15 @@ function desenharDocumentos(documentos){
   }).join('');
 }
 
+/** `modelos === null` = ainda vindo (a página não espera por eles para pintar). */
 function desenharModelos(modelos){
   const box = document.getElementById('modelos');
+  if (!box) return;
+  if (modelos === null){
+    box.innerHTML = '<div style="padding:8px 0">' +
+      ((window.B4U && B4U.skeleton) ? B4U.skeleton(2, 14) : '') + '</div>';
+    return;
+  }
   const visiveis = modelos.filter(m => normTxt(m.categoria) !== normTxt(CATEGORIA_EXCLUIDA));
   if (!visiveis.length){ box.innerHTML = '<div class="vazio">Nenhum modelo cadastrado ainda.</div>'; return; }
 
@@ -931,6 +1231,23 @@ function filtrar(termo){
   });
 
   mostrarResumoBusca(termo, achados);
+  sincronizarURL(String(termo || '').trim());
+}
+
+/* ---------- a busca sobrevive ao F5 ----------
+   O `#id-codigo` do endereço é a CREDENCIAL da sessão: mexemos só na query e
+   devolvemos o hash intacto — sobrescrevê-lo derruba o acesso do cliente. */
+let TERMO_URL = '';
+function lerURL(){
+  try { TERMO_URL = new URLSearchParams(location.search).get('q') || ''; }
+  catch(e){ TERMO_URL = ''; }
+}
+function sincronizarURL(termo){
+  try {
+    const u = new URL(location.href);
+    if (termo) u.searchParams.set('q', termo); else u.searchParams.delete('q');
+    history.replaceState(null, '', u.pathname + u.search + u.hash);
+  } catch(e){}
 }
 
 function mostrarResumoBusca(termo, achados){
@@ -960,8 +1277,9 @@ function appendAll(parent, h){
 }
 
 // Sem login (id/codigo) volta ao index; com login, mostra aviso amigável (sem loop de redirecionamento).
-function erro(msg){
+function erro(e){
   var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
+  var amigavel=(window.B4U&&B4U.msgAmigavel)?B4U.msgAmigavel(e):'';
   if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
   var volta='index.html#'+id+(codigo?('-'+codigo):'');
   document.body.innerHTML=
@@ -971,25 +1289,70 @@ function erro(msg){
    +'border-radius:var(--radius-lg);padding:32px 28px;box-shadow:0 6px 24px rgba(7,48,52,.06)">'
    +'<div style="font-size:var(--fs-6);line-height:1;margin-bottom:10px">📄</div>'
    +'<h2 style="margin:0 0 8px;font-size:var(--fs-5)">Não foi possível carregar suas informações agora.</h2>'
-   +'<p style="margin:0 0 20px;font-size:var(--fs-4);line-height:1.5;color:#3F5854">Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.</p>'
-   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#0F8C85;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:var(--radius-pill);font-size:var(--fs-4)">Falar com o atendimento</a>'
-   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#0F8C85;font-size:var(--fs-3);text-decoration:none">Voltar ao início</a></div>'
+   +'<p style="margin:0 0 20px;font-size:var(--fs-4);line-height:1.5;color:#3F5854">'+(amigavel||'Se você acredita que isto é um erro, fale com o nosso atendimento que resolvemos rápido.')+'</p>'
+   +'<a href="https://wa.me/5511937173906" target="_blank" rel="noopener" style="display:inline-block;background:#0C756F;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:var(--radius-pill);font-size:var(--fs-4)">Falar com o atendimento</a>'
+   +'<div style="margin-top:14px"><a href="'+volta+'" style="color:#0C756F;font-size:var(--fs-3);text-decoration:none">Voltar ao início</a></div>'
    +'</div></div>';
+}
+
+/* 20s olhando a mesma frase é lido como "travou" — e ele recarrega, jogando fora o
+   pedido que já estava a caminho. Trocar o texto é barato e compra paciência. */
+var _tEspera = [
+  setTimeout(function(){ var p=document.getElementById('espera-txt');
+    if(p) p.textContent = 'Estamos buscando os seus dados na planilha…'; }, 4000),
+  setTimeout(function(){ var p=document.getElementById('espera-txt');
+    if(p) p.textContent = 'Está demorando mais que o normal — continuamos tentando.'; }, 10000)
+];
+function pararEspera(){ _tEspera.forEach(clearTimeout); }
+
+/* Tarja discreta do cache: diz que o que está na tela veio do último acesso.
+   Fica logo abaixo do herói — nunca por cima do estado do processo. */
+function tarja(texto, falhou){
+  const slot = document.getElementById('tarja-slot'); if(!slot) return;
+  slot.innerHTML = texto ? `<div class="tarja-atualizando${falhou?' falhou':''}">${esc(texto)}</div>` : '';
+}
+function horaCache(ts){ return ts ? new Date(ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}) : 'antes'; }
+
+/* Os modelos são a última seção da página e são iguais para todo cliente: não faz
+   sentido a página inteira esperar por uma segunda execução do Apps Script. */
+function carregarModelos(){
+  return carregarTipo('modelos').then(r => r.modelos || []).catch(()=>[]);
 }
 
 (async function(){
   const { id, codigo } = getIdCodigo();
   IDENTIDADE = { id, codigo };
-  if (!id || !codigo) return erro('Informe o ID e o código de acesso no final do endereço.');
-  try {
-    const [dados, modelosResp] = await Promise.all([
-      carregarTipo(TIPO),
-      carregarTipo('modelos').catch(()=>({modelos:[]})),
-    ]);
-    render(dados, modelosResp.modelos || []);
-  } catch (e) {
-    erro(e.message || String(e));
+  if (!id || !codigo) return erro(new Error('Informe o ID e o código de acesso no final do endereço.'));
+  lerURL();
+
+  let pintadoDoCache = false, tsCache = 0;
+  /* A segunda visita não recomeça do esqueleto: pintamos com o último payload (6h de
+     validade) e atualizamos por baixo. Se a atualização falhar, o que está na tela
+     continua — apagar dado bom por causa de uma rede ruim é pior que dado de 1h atrás. */
+  if (API_URL && id && window.B4U && B4U.cacheLer){
+    const bruto = B4U.cacheLer(TIPO, id);
+    if (bruto){
+      try{
+        pararEspera(); render(bruto, null); tarja('Atualizando…');
+        pintadoDoCache = true; tsCache = bruto.atualizado_em ? new Date(bruto.atualizado_em).getTime() : 0;
+      }catch(err){ /* cache velho ou de outro formato: ignora e busca de novo */ }
+    }
   }
+
+  try {
+    const dados = await carregarTipo(TIPO);
+    if (API_URL && id && window.B4U && B4U.cacheGravar) B4U.cacheGravar(TIPO, id, dados);
+    pararEspera(); render(dados, null); tarja('');
+  } catch (e) {
+    if (pintadoDoCache){ tarja('Não consegui atualizar agora — mostrando os dados de '+horaCache(tsCache)+'.', true); }
+    else { return erro(e); }
+  }
+  // Modelos entram quando chegarem; a busca em curso é reaplicada sobre eles.
+  carregarModelos().then(ms => {
+    desenharModelos(ms);
+    const campo = document.getElementById('busca');
+    if (campo && campo.value.trim()) filtrar(campo.value);
+  });
 })();
 </script>
 </body>

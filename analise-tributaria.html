@@ -10,129 +10,218 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
-  --ink:#113D39;--ink-2:#3F5854;--muted:#8A7D70;--line:#E4D9C9;--line-2:#D6C3AC;
-  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
-  --vermelho:#8B2E22;--vermelho-bg:#F8E3DF;--vermelho-line:#F0C9C1;
-  --good-bg:#E7F4EC;--good-ink:#2E7D52;--good-br:#C9E4D3;
+  /* PALETA CANÔNICA — a mesma das páginas do cliente. Não redeclare tons aqui:
+     material comercial e painel do cliente têm que ser a mesma casa. */
+  --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
+  --ink:#113D39; --ink-2:#3F5854; --muted:#6E6256; --line:#E4D9C9; --line-2:#D6C3AC;
+  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-euc:#3FA680;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,44:1 no receita-soft).
+     Este é o mesmo teal escurecido só para texto e fundo de texto; o --brand-teal
+     continua canônico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E; --amber-txt:#8A5A10; --vermelho:#C0392B; --verde:#2E9D5F;
+  /* Escala tipográfica — 6 passos, sem meio pixel. */
+  --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
+  /* Raios — 12 padrão, 16 para caixas grandes, 999 só para pílulas. */
+  --radius-sm:8px; --radius:12px; --radius-lg:16px; --radius-pill:999px;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+  --receita-soft:#DBEFEC;
+  /* Tintas de estado: os mesmos pares de fiscal/guias, todos acima de 4,5:1.
+     A tinta é clara porque quem lê é o texto escuro por cima dela. */
+  --amber-soft:#FCEFE0; --amber-line:#F0D6B4;
+  --vermelho-bg:#F9EAE8; --vermelho-line:#E9C9C4;
+  --good-bg:#E7F4EC; --good-ink:#16713E; --good-br:#C9E4D3;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:800;font-size:17px;letter-spacing:-.02em}
-.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:20px}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:var(--fs-4);line-height:1.5;-webkit-font-smoothing:antialiased}
+/* No Safari, focar campo com menos de 16px amplia a página sozinho. Só os campos. */
+input,select,textarea{font-size:16px}
+/* Quem navega por Tab precisa ver onde está — inclusive em <summary> e botão. */
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
+
+/* Barra branca com fio, igual ao header do cliente; a b4u-bar escura fica acima. */
+.barra{position:sticky;top:var(--b4u-bar-h,0px);z-index:60;background:var(--surface);color:var(--ink);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 20px}
+.barra .logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em}
+.barra .logo .b{color:var(--brand-dark)} .barra .logo .y{color:var(--brand-teal)}
+/* Teal de texto do §8 (#0C756F): o --brand-teal só passa em corpo grande. */
+.barra .tag{font-size:var(--fs-1);font-weight:700;color:var(--brand-teal-txt);background:var(--receita-soft);padding:5px 12px;border-radius:var(--radius-pill)}
 .barra .spacer{flex:1}
-.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
-.barra a.volta:hover{color:#fff}
+.barra a.volta{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);text-decoration:none;font-size:var(--fs-3);font-weight:600}
+.barra a.volta:hover{color:var(--brand-teal-txt)}
 
 .wrap{max-width:1180px;margin:0 auto;padding:22px 20px 80px}
-header.top h1{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.25}
-header.top .sub{color:var(--ink-2);font-size:13.5px;margin-top:6px;max-width:88ch}
+header.top h1{font-size:var(--fs-6);font-weight:800;letter-spacing:-.01em;line-height:1.25}
+header.top .sub{color:var(--ink-2);font-size:var(--fs-3);margin-top:6px;max-width:88ch}
 
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px 19px;margin-top:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:17px 19px;margin-top:18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
-label.fl{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800;margin-bottom:6px}
-label.fl small{display:block;text-transform:none;letter-spacing:0;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+label.fl{display:block;font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800;margin-bottom:6px}
+label.fl small{display:block;text-transform:none;letter-spacing:0;font-size:var(--fs-1);font-weight:600;color:var(--muted);margin-top:2px}
 input[type=number],input[type=text],select{width:100%;background:var(--surface-warm);color:var(--ink);
-  border:1px solid var(--line-2);border-radius:9px;padding:9px 11px;font:inherit;font-size:14.5px}
+  border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:9px 11px;font-family:inherit;font-size:16px}
 input:focus,select:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+/* Os 7 campos técnicos e as 5 opções ficam aqui: quem abre a página quer o
+   veredito, não o RAT. Quem precisa afinar abre. */
+details.ajustes{margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}
+details.ajustes>summary{cursor:pointer;font-size:var(--fs-2);font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--brand-teal-txt);min-height:44px;display:flex;align-items:center}
+details.ajustes .grid{margin-top:12px}
 .opts{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}
-.chk{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--ink-2);cursor:pointer;max-width:50ch}
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:var(--fs-3);color:var(--ink-2);cursor:pointer;max-width:50ch}
 .chk input{margin-top:2px;accent-color:var(--brand-teal);flex:none}
 .acoes{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
-.btn{display:inline-flex;align-items:center;gap:7px;font-family:inherit;font-size:13.5px;font-weight:700;
-  border-radius:999px;padding:10px 17px;cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2)}
-.btn:hover{border-color:var(--brand-teal);color:var(--brand-teal)}
-.btn.solid{background:var(--brand-teal);border-color:transparent;color:#fff}
-.btn.solid:hover{background:#0c7a74}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;text-decoration:none;font-family:inherit;font-size:var(--fs-3);font-weight:700;
+  border-radius:var(--radius-pill);padding:10px 17px;cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2)}
+.btn:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+/* Branco sobre --brand-teal dá 4,11:1; sobre o teal de texto do §8 dá 5,54:1. */
+.btn.solid{background:var(--brand-teal-txt);border-color:transparent;color:#fff}
+.btn.solid:hover{background:var(--brand-dark);color:#fff}
 
-.veredito{margin-top:16px;border-radius:14px;padding:18px 20px;border:1px solid var(--good-br);background:var(--good-bg)}
-.veredito .eyebrow{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--good-ink)}
-.veredito h2{font-size:21px;font-weight:800;margin-top:5px;letter-spacing:-.01em}
-.veredito .det{font-size:13.5px;color:var(--ink-2);margin-top:7px;max-width:80ch}
+.veredito{margin-top:16px;border-radius:var(--radius-lg);padding:18px 20px;border:1px solid var(--good-br);background:var(--good-bg)}
+.veredito .eyebrow{font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--good-ink)}
+.veredito h2{font-size:var(--fs-5);font-weight:800;margin-top:5px;letter-spacing:-.01em}
+.veredito .det{font-size:var(--fs-3);color:var(--ink-2);margin-top:7px;max-width:80ch}
 .veredito.alerta{background:var(--amber-soft);border-color:var(--amber-line)}
-.veredito.alerta .eyebrow{color:#9A5B12}
+.veredito.alerta .eyebrow{color:#8A5A10}
 
 .avisos{margin-top:12px;display:flex;flex-direction:column;gap:8px}
-.aviso{font-size:12.5px;line-height:1.5;border-radius:10px;padding:11px 14px;border:1px solid var(--amber-line);background:var(--amber-soft);color:#7a4a10}
+/* O --amber-txt agora É #8A5A10: sobre esta tinta âmbar dá 5,23:1 (o antigo #B05F12
+   dava 4,10:1 e reprovava). Um valor só, e pelo token. */
+.aviso{font-size:var(--fs-3);line-height:1.5;border-radius:var(--radius);padding:11px 14px;border:1px solid var(--amber-line);background:var(--amber-soft);color:var(--amber-txt)}
 .aviso.bad{border-color:var(--vermelho-line);background:var(--vermelho-bg);color:var(--vermelho)}
 .aviso b{font-weight:800}
 
-.sec-tit{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin:26px 0 11px;display:flex;align-items:center;gap:8px}
+.sec-tit{font-size:var(--fs-2);font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin:26px 0 11px;display:flex;align-items:center;gap:8px}
 .sec-tit::after{content:"";flex:1;height:1px;background:var(--line)}
 
 /* ---------- barras ---------- */
-.barras{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px 19px}
+.barras{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:17px 19px}
 .brow{display:flex;align-items:center;gap:12px;margin-bottom:11px}
 .brow:last-child{margin-bottom:0}
-.brow .rot{width:190px;flex:none;font-size:12.5px;font-weight:700;line-height:1.25}
-.brow .rot small{display:block;font-weight:600;color:var(--muted);font-size:11px}
-.btrack{flex:1;height:26px;background:var(--surface-warm);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex}
+.brow .rot{width:190px;flex:none;font-size:var(--fs-3);font-weight:700;line-height:1.25}
+.brow .rot small{display:block;font-weight:600;color:var(--muted);font-size:var(--fs-1)}
+.btrack{flex:1;height:26px;background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;display:flex}
 .btrack i{height:100%;display:block}
-.brow .val{width:132px;flex:none;text-align:right;font-size:14.5px;font-weight:800;font-variant-numeric:tabular-nums}
-.brow .pct{width:60px;flex:none;text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.brow .val{width:132px;flex:none;text-align:right;font-size:var(--fs-4);font-weight:800;font-variant-numeric:tabular-nums}
+.brow .pct{width:60px;flex:none;text-align:right;font-size:var(--fs-2);color:var(--muted);font-variant-numeric:tabular-nums}
 .brow.melhor .val{color:var(--good-ink)}
 .legenda{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.legenda span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2)}
-.sw{width:11px;height:11px;border-radius:3px;flex:none}
+.legenda span{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-2);color:var(--ink-2)}
+/* Amostra de cor da legenda — token compartilhado, um tamanho só em todas as páginas. */
+.sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;display:inline-block}
 
 /* ---------- tabela ---------- */
-.tabwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
-table.cmp{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+.tabwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg)}
+table.cmp{width:100%;border-collapse:collapse;font-size:var(--fs-3);min-width:760px}
 table.cmp th,table.cmp td{padding:9px 13px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
 table.cmp th:first-child,table.cmp td:first-child{text-align:left;white-space:normal;min-width:230px}
-table.cmp thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800;background:var(--surface-warm);position:sticky;top:0}
+table.cmp thead th{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800;background:var(--surface-warm);position:sticky;top:0}
 table.cmp thead th.win{color:var(--good-ink);background:var(--good-bg)}
-table.cmp tr.grupo td{background:var(--surface-warm);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+table.cmp tr.grupo td{background:var(--surface-warm);font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
 table.cmp tr.sub td:first-child{padding-left:26px;color:var(--ink-2)}
-table.cmp tr.tot td{font-weight:800;border-top:2px solid var(--ink);border-bottom:none;font-size:14px}
+table.cmp tr.tot td{font-weight:800;border-top:2px solid var(--ink);border-bottom:none;font-size:var(--fs-4)}
 table.cmp tr.tot td.win{color:var(--good-ink)}
-table.cmp tr.pct td{color:var(--muted);font-size:12px;border-top:none}
+table.cmp tr.pct td{color:var(--muted);font-size:var(--fs-2);border-top:none}
 table.cmp td.na{color:var(--muted)}
-table.cmp .nota-lin{display:block;font-size:11px;color:var(--muted);font-weight:600;white-space:normal}
+table.cmp .nota-lin{display:block;font-size:var(--fs-1);color:var(--muted);font-weight:600;white-space:normal}
 
-details.prem{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 18px}
-details.prem summary{cursor:pointer;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--brand-teal)}
-details.prem .corpo{font-size:12.5px;color:var(--ink-2);line-height:1.65;margin-top:12px}
-details.prem h4{font-size:13px;font-weight:800;color:var(--ink);margin:14px 0 5px}
+details.prem{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:15px 18px}
+details.prem summary{cursor:pointer;font-size:var(--fs-2);font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--brand-teal-txt);min-height:44px;display:flex;align-items:center}
+details.prem .corpo{font-size:var(--fs-3);color:var(--ink-2);line-height:1.65;margin-top:12px}
+details.prem h4{font-size:var(--fs-3);font-weight:800;color:var(--ink);margin:14px 0 5px}
 details.prem ul{margin:0 0 0 18px}
 details.prem li{margin-bottom:4px}
-details.prem code{background:var(--surface-warm);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:11.5px}
-details.prem table.p{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+details.prem code{background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-sm);padding:1px 5px;font-size:var(--fs-2)}
+details.prem table.p{width:100%;border-collapse:collapse;font-size:var(--fs-2);margin-top:8px}
 details.prem table.p th,details.prem table.p td{padding:5px 9px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
 details.prem table.p th:first-child,details.prem table.p td:first-child{text-align:left}
-details.prem table.p th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+details.prem table.p th{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 
-footer.fine{margin-top:26px;font-size:11.5px;color:var(--muted);line-height:1.65}
+/* display:flex apaga o marcador nativo do <summary>. Sem uma seta explícita
+   ninguém descobre que o bloco abre — e o conteúdo recolhido some de vez. */
+summary{list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"›";margin-left:auto;padding-left:10px;font-size:var(--fs-5);line-height:1;
+  transform:rotate(90deg);transition:transform .15s}
+details[open]>summary::after{transform:rotate(-90deg)}
+
+footer.fine{margin-top:26px;font-size:var(--fs-2);color:var(--muted);line-height:1.65}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:90;background:var(--brand-dark);color:#fff;
-  font-size:13px;font-weight:600;padding:11px 18px;border-radius:999px;box-shadow:0 8px 26px rgba(7,48,52,.28);display:none}
+  font-size:var(--fs-3);font-weight:600;padding:11px 18px;border-radius:var(--radius-pill);box-shadow:0 8px 26px rgba(7,48,52,.28);display:none}
 
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:62vh;text-align:center;padding:0 24px}
-.state h1{font-size:20px;font-weight:800}
-.state p{color:var(--muted);font-size:14px;max-width:48ch}
-.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
-.cad{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-size:20px}
-@media(max-width:640px){.brow .rot{width:120px}.brow .val{width:104px;font-size:13px}}
+.state h1{font-size:var(--fs-5);font-weight:800;max-width:24ch;line-height:1.3}
+.state p{color:var(--ink-2);font-size:var(--fs-4);max-width:48ch}
+.cad{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-size:var(--fs-5)}
+@media(max-width:640px){.brow .rot{width:120px}.brow .val{width:104px;font-size:var(--fs-3)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+<!--B4U-BAR:START ═══════ back4you · barra compartilhada ═══════════════════
+     Mesmo componente, mesmas classes e mesmos valores das páginas do cliente:
+     o prospect que vira cliente não pode sentir que trocou de empresa. Vai sem
+     o modal de chamado porque página comercial não tem ID nem código de cliente
+     para abrir ticket — só a barra e o WhatsApp. Mantenha idêntico nas três. -->
+<style>
+.b4u-bar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 18px;background:var(--brand-dark);color:#fff;box-shadow:0 2px 12px rgba(7,48,52,.20);
+  font-family:'Montserrat',system-ui,-apple-system,sans-serif}
+/* min-height nos três: no celular a barra inteira ficava com ~34px de alto e o dedo
+   errava o alvo. 44px é o mínimo que a mão acerta de primeira. */
+.b4u-bar .b4u-logo{font-weight:800;font-size:var(--fs-5);letter-spacing:-.02em;margin-right:auto;
+  color:#fff;text-decoration:none;display:inline-flex;align-items:center;line-height:1;min-height:44px}
+.b4u-bar .b4u-logo .y{color:var(--brand-euc)}
+.b4u-btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;min-height:44px;
+  font-family:inherit;font-weight:600;font-size:var(--fs-3);padding:8px 13px;border-radius:var(--radius-sm);
+  text-decoration:none;transition:background .15s,transform .08s;line-height:1;white-space:nowrap}
+.b4u-btn svg{width:16px;height:16px;flex-shrink:0}
+.b4u-btn .b4u-lbl{color:inherit;text-transform:none;letter-spacing:normal;font-size:var(--fs-3)}
+.b4u-btn:active{transform:translateY(1px)}
+.b4u-btn.ghost{background:rgba(255,255,255,.10);color:#fff}
+.b4u-btn.ghost:hover{background:rgba(255,255,255,.18)}
+/* Branco sobre o verde do WhatsApp dá 1,98:1 — ilegível no sol. Verde-escuro: 7,23:1.
+   É o botão que ele usa para pedir socorro; não pode ser o mais difícil de ler. */
+.b4u-btn.wa{background:#25D366;color:#06302b}
+.b4u-btn.wa:hover{background:#20bd5a}
+.b4u-btn.call{background:var(--brand-teal-txt);color:#fff}
+.b4u-btn.call:hover{background:#0A5F5A}
+.b4u-icobtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;
+  padding:0;border:0;cursor:pointer;border-radius:var(--radius-sm);background:rgba(255,255,255,.10);color:#fff;
+  transition:background .15s}
+.b4u-icobtn:hover{background:rgba(255,255,255,.18)}
+.b4u-icobtn svg{width:17px;height:17px}
+@media(max-width:640px){
+  .b4u-bar{gap:7px;padding:9px 12px}
+  /* display:none tira o nome da árvore de acessibilidade e o leitor anuncia
+     "link, link, botão". Some da TELA, continua existindo para quem ouve. */
+  .b4u-btn .b4u-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  /* sem rótulo o botão fica só com o ícone de 16px: 11px de folga dava 38px de
+     largura. 14px fecha os 44px nos dois eixos. */
+  .b4u-btn{padding:9px 14px}
+}
+</style>
+<div class="b4u-bar">
+  <a class="b4u-logo" id="b4u-logo" href="comercial.html"><span>back</span><span class="y">4you</span></a>
+  <a class="b4u-btn wa" id="b4u-wa" href="#" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>
+    <span class="b4u-lbl">WhatsApp</span></a>
+</div>
+<!--B4U-BAR:END-->
+
 <div class="barra">
-  <span class="logo">back<span class="y">4you</span></span>
+  <span class="logo"><span class="b">back</span><span class="y">4you</span></span>
   <span class="tag">Comercial · Análise tributária</span>
   <span class="spacer"></span>
-  <a class="volta" id="volta" href="comercial.html">← Materiais</a>
+  <a class="volta" id="volta" href="comercial.html">← Painel</a>
 </div>
 
 <div id="gate" hidden>
   <div class="state">
-    <div class="cad">🔒</div>
-    <h1>Acesso restrito</h1>
-    <p>Esta é uma área interna da equipe. Abra pelo hub do comercial, com a
-       <code>chave</code> no endereço.</p>
+    <div class="cad">💬</div>
+    <h1>Este material é aberto pelo seu consultor back4you durante a conversa.</h1>
+    <p>Quer ver a sua simulação? Fale com a gente.</p>
+    <a class="btn solid" id="gate-wa" href="#" target="_blank" rel="noopener">Falar no WhatsApp</a>
   </div>
 </div>
 
@@ -140,11 +229,15 @@ footer.fine{margin-top:26px;font-size:11.5px;color:var(--muted);line-height:1.65
 <div class="wrap">
 
 <header class="top">
-  <h1>Análise tributária — Simples Nacional × Lucro Presumido × Equiparação</h1>
-  <p class="sub">Compara a carga mensal dos três caminhos no mesmo faturamento, incluindo o que sai da
-     empresa (tributos e encargos) e o que sai do sócio (INSS, IRRF do pró-labore e retenção sobre
-     dividendos). Parâmetros de 2026 — todos abertos em “Premissas e base legal”.</p>
+  <h1>Onde a sua empresa paga menos imposto</h1>
+  <p class="sub">Comparamos Simples, Lucro Presumido e Equiparação com os seus números.</p>
 </header>
+
+<!-- O veredito vem ANTES das entradas, já preenchido com o cenário padrão: é a
+     única coisa na tela que responde a pergunta do título. Dez campos e cinco
+     caixas antes dele empurravam a resposta para baixo da dobra. -->
+<div id="veredito"></div>
+<div class="avisos" id="avisos"></div>
 
 <!-- ============ ENTRADAS ============ -->
 <div class="panel">
@@ -161,62 +254,65 @@ footer.fine{margin-top:26px;font-size:11.5px;color:var(--muted);line-height:1.65
       <label class="fl">Pró-labore mensal<small>total dos sócios</small></label>
       <input type="number" id="prolab" value="1621" min="0" step="500">
     </div>
-    <div>
-      <label class="fl">Nº de sócios<small>para dividir o lucro</small></label>
-      <input type="number" id="socios" value="2" min="1" max="20" step="1">
-    </div>
-    <div>
-      <label class="fl">Anexo do Simples<small>como enquadrar a atividade</small></label>
-      <select id="anexo">
-        <option value="auto" selected>Saúde — III ou V pelo fator R</option>
-        <option value="III">Anexo III (sempre)</option>
-        <option value="V">Anexo V (sempre)</option>
-        <option value="IV">Anexo IV (advocacia, limpeza, construção)</option>
-      </select>
-    </div>
-    <div>
-      <label class="fl">ISS do município (%)<small>alíquota sobre a receita</small></label>
-      <input type="number" id="iss" value="2" min="0" max="5" step="0.5">
-    </div>
-    <div>
-      <label class="fl">% equiparável<small>receita com natureza hospitalar</small></label>
-      <input type="number" id="equip" value="80" min="0" max="100" step="5">
-    </div>
-    <div>
-      <label class="fl">RAT ajustado (%)<small>RAT × FAP, só sobre a folha</small></label>
-      <input type="number" id="rat" value="3" min="0" max="6" step="0.5">
-    </div>
-    <div>
-      <label class="fl">Terceiros (%)<small>só sobre a folha; 0 no Simples</small></label>
-      <input type="number" id="terceiros" value="5.8" min="0" max="8" step="0.1">
-    </div>
-    <div>
-      <label class="fl">ISS fixo (R$/mês)<small>uniprofissional; 0 = usa o %</small></label>
-      <input type="number" id="issfixo" value="0" min="0" step="100">
-    </div>
   </div>
 
-  <div class="opts">
-    <label class="chk"><input type="checkbox" id="cAjuste" checked>
-      <span>Ajustar o pró-labore para o <b>fator R chegar a 28%</b> no Simples (mantém o pró-labore digitado no Lucro Presumido).</span></label>
-    <label class="chk"><input type="checkbox" id="cLC224" checked>
-      <span>Aplicar o acréscimo de 10% na presunção sobre a receita anual acima de R$ 5 mi (<b>LC 224/2025</b>).</span></label>
-    <label class="chk"><input type="checkbox" id="cRedutor" checked>
-      <span>Aplicar o <b>redutor do IRPF</b> da Lei 15.270/2025 no pró-labore.</span></label>
-    <label class="chk"><input type="checkbox" id="cDiv" checked>
-      <span>Retenção de <b>10% sobre dividendos</b> acima de R$ 50 mil por sócio no mês.</span></label>
-    <label class="chk"><input type="checkbox" id="cPF" checked>
-      <span>Somar no total o que sai <b>do sócio</b> (INSS e IRRF), não só o que sai da empresa.</span></label>
-  </div>
+  <details class="ajustes">
+    <summary>Ajustes finos (RAT, terceiros, ISS, anexo)</summary>
+    <div class="grid">
+      <div>
+        <label class="fl">Nº de sócios<small>para dividir o lucro</small></label>
+        <input type="number" id="socios" value="2" min="1" max="20" step="1">
+      </div>
+      <div>
+        <label class="fl">Anexo do Simples<small>como enquadrar a atividade</small></label>
+        <select id="anexo">
+          <option value="auto" selected>Saúde — III ou V pelo fator R</option>
+          <option value="III">Anexo III (sempre)</option>
+          <option value="V">Anexo V (sempre)</option>
+          <option value="IV">Anexo IV (advocacia, limpeza, construção)</option>
+        </select>
+      </div>
+      <div>
+        <label class="fl">ISS do município (%)<small>alíquota sobre a receita</small></label>
+        <input type="number" id="iss" value="2" min="0" max="5" step="0.5">
+      </div>
+      <div>
+        <label class="fl">% equiparável<small>receita com natureza hospitalar</small></label>
+        <input type="number" id="equip" value="80" min="0" max="100" step="5">
+      </div>
+      <div>
+        <label class="fl">RAT ajustado (%)<small>RAT × FAP, só sobre a folha</small></label>
+        <input type="number" id="rat" value="3" min="0" max="6" step="0.5">
+      </div>
+      <div>
+        <label class="fl">Terceiros (%)<small>só sobre a folha; 0 no Simples</small></label>
+        <input type="number" id="terceiros" value="5.8" min="0" max="8" step="0.1">
+      </div>
+      <div>
+        <label class="fl">ISS fixo (R$/mês)<small>uniprofissional; 0 = usa o %</small></label>
+        <input type="number" id="issfixo" value="0" min="0" step="100">
+      </div>
+    </div>
+
+    <div class="opts">
+      <label class="chk"><input type="checkbox" id="cAjuste" checked>
+        <span>Ajustar o pró-labore para o <b>fator R chegar a 28%</b> no Simples (mantém o pró-labore digitado no Lucro Presumido).</span></label>
+      <label class="chk"><input type="checkbox" id="cLC224" checked>
+        <span>Aplicar o acréscimo de 10% na presunção sobre a receita anual acima de R$ 5 mi (<b>LC 224/2025</b>).</span></label>
+      <label class="chk"><input type="checkbox" id="cRedutor" checked>
+        <span>Aplicar o <b>redutor do IRPF</b> da Lei 15.270/2025 no pró-labore.</span></label>
+      <label class="chk"><input type="checkbox" id="cDiv" checked>
+        <span>Retenção de <b>10% sobre dividendos</b> acima de R$ 50 mil por sócio no mês.</span></label>
+      <label class="chk"><input type="checkbox" id="cPF" checked>
+        <span>Somar no total o que sai <b>do sócio</b> (INSS e IRRF), não só o que sai da empresa.</span></label>
+    </div>
+  </details>
 
   <div class="acoes">
     <button type="button" class="btn solid" id="btn-copiar">Copiar resumo</button>
     <button type="button" class="btn" id="btn-reset">Reiniciar</button>
   </div>
 </div>
-
-<div id="veredito"></div>
-<div class="avisos" id="avisos"></div>
 
 <div class="sec-tit">Carga mensal total</div>
 <div class="barras" id="barras"></div>
@@ -250,6 +346,12 @@ function chaveAtual(){
   const h=(location.hash||'').replace('#','').trim();
   return (q||h||'').trim();
 }
+
+/* WhatsApp comercial — o mesmo número da calculadora. É a saída de quem cai
+   aqui sem chave: em vez de "acesso restrito", um caminho para falar com a gente. */
+const WA_NUMBER='5512981723773';
+const WA_URL='https://wa.me/'+WA_NUMBER+'?text='+
+  encodeURIComponent('Olá! Quero ver a simulação tributária da minha empresa.');
 
 /* =========================================================
    PARÂMETROS 2026  (tudo o que muda de ano fica aqui)
@@ -539,7 +641,9 @@ function pintarAvisos(X){
   document.getElementById('avisos').innerHTML=av.map(a=>`<div class="aviso ${a[0]}">${a[1]}</div>`).join('');
 }
 
-const COR={rec:'#8B2E22', pat:'#E8892E', pf:'#0F8C85'};
+/* Slots validados do §8 — três séries que nunca se confundem entre si nem com
+   o bege do canvas. Nada de amarrar a cor da barra a um token de texto. */
+const COR={rec:'#B4530F', pat:'#7A8B3D', pf:'#009488'};
 function pintarBarras(X){
   const {lista,melhor}=X;
   const max=Math.max(...lista.map(r=>r.total),1);
@@ -635,9 +739,9 @@ function pintarPremissas(X){
       <li>Tabelas em vigor desde 2018 e <b>inalteradas em 2026</b>:</li>
     </ul>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:6px">
-      <div><b style="font-size:12px">Anexo III</b>${tab('III',P.anexos.III)}</div>
-      <div><b style="font-size:12px">Anexo IV</b>${tab('IV',P.anexos.IV)}</div>
-      <div><b style="font-size:12px">Anexo V</b>${tab('V',P.anexos.V)}</div>
+      <div><b style="font-size:var(--fs-2)">Anexo III</b>${tab('III',P.anexos.III)}</div>
+      <div><b style="font-size:var(--fs-2)">Anexo IV</b>${tab('IV',P.anexos.IV)}</div>
+      <div><b style="font-size:var(--fs-2)">Anexo V</b>${tab('V',P.anexos.V)}</div>
     </div>
 
     <h4>Lucro Presumido</h4>
@@ -717,11 +821,22 @@ function fb(txt,ok){
    BOOT
    ========================================================= */
 const PADRAO={fat:200000,folha:30000,prolab:1621,socios:2,anexo:'auto',iss:2,equip:80,rat:3,terceiros:5.8,issfixo:0};
+/* A barra branca gruda logo abaixo da b4u-bar — mesma conta das páginas do cliente. */
+function medirBarra(){
+  const b=document.querySelector('.b4u-bar'); if(!b) return;
+  document.documentElement.style.setProperty('--b4u-bar-h', b.offsetHeight+'px');
+}
 function boot(){
+  medirBarra();
+  window.addEventListener('resize',medirBarra);
+  window.addEventListener('load',medirBarra);
+  ['b4u-wa','gate-wa'].forEach(id=>{ const a=document.getElementById(id); if(a) a.href=WA_URL; });
+
   const ch=chaveAtual();
   if(ch!==CHAVE_OK){ document.getElementById('gate').hidden=false; return; }
   document.getElementById('app').hidden=false;
   document.getElementById('volta').href='comercial.html?chave='+encodeURIComponent(ch);
+  document.getElementById('b4u-logo').href='comercial.html?chave='+encodeURIComponent(ch);
 
   ['fat','folha','prolab','socios','anexo','iss','equip','rat','terceiros','issfixo',
    'cAjuste','cLC224','cRedutor','cDiv','cPF'].forEach(id=>{

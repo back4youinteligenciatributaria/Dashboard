@@ -9,17 +9,33 @@
 <title>Controle de licenças (equipe) — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Duas origens porque o /exec responde 302 para a segunda: sem isto o aparelho paga
+     DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte não pode segurar a primeira pintura: entra como preload e vira folha depois. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
 <style>
 :root{
   /* Paleta canonica da equipe — a mesma em todas as telas. */
   --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
   --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
   --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --amber:#E8892E;--amber-txt:#B05F12;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,37:1 no canvas).
+     Este e o mesmo teal escurecido so para letra e fundo de letra; o --brand-teal
+     segue canonico em logo, foco, bordas e preenchimentos. */
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  /* Sufixo -2 = a mesma tinta um degrau mais escura, para quando ela vira FUNDO de
+     texto branco: o --amber da 2,61:1 com #fff, o --amber-2 da 4,68:1. Como
+     preenchimento de barra, icone ou borda, o --amber original continua valendo. */
+  --amber-2:#B05F12;
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
-  /* Raios: 12 padrao, 16 nos blocos grandes, 999px so em pilula, 10px em campo. */
-  --radius:12px;--radius-lg:16px;
+  /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
+  --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
+  --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -27,30 +43,32 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 
 /* ---------- barra superior (igual às páginas irmãs) ---------- */
 .barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:900;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:999px;white-space:nowrap}
+.barra .logo{font-weight:800;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill);white-space:nowrap}
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd;white-space:nowrap}
 .barra a.volta,.barra a.plan{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
-.barra a.plan{border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 11px}
-.save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
+.barra a.plan{border:1px solid rgba(255,255,255,.25);border-radius:var(--radius-pill);padding:4px 11px}
+.save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:var(--radius-pill);background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
-.save-status.saving{background:var(--amber);color:#fff}.save-status.ok{background:var(--verde);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
+/* Branco sobre --amber da 2,61:1 e sobre --verde 3,44:1 — o rotulo do proprio
+   status de gravacao some. Um degrau mais escuro na MESMA familia: 4,68:1 e 4,92:1. */
+.save-status.saving{background:var(--amber-2);color:#fff}.save-status.ok{background:var(--verde-2);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
 
 /* ---------- topo: filtros + busca ---------- */
 .topo{padding:14px 16px 6px}
 .linha-filtros{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
 .grupo{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
 .grupo .rot{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px;align-self:center}
-.chip{font-size:13px;font-weight:700;border-radius:999px;padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
+.chip{font-size:13px;font-weight:700;border-radius:var(--radius-pill);padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
 .chip:hover{border-color:var(--brand-teal)}
-.chip.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
-.chip .n{background:rgba(0,0,0,.10);border-radius:999px;padding:1px 7px;margin-left:6px;font-size:11px}
+.chip.on{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
+.chip .n{background:rgba(0,0,0,.10);border-radius:var(--radius-pill);padding:1px 7px;margin-left:6px;font-size:11px}
 .chip.on .n{background:rgba(255,255,255,.25)}
 .chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
 .chip.falta.on{background:var(--amber);border-color:var(--amber)}
 .chip.limpar{border-style:dashed;color:var(--muted)}
 /* B.7: a busca é a pílula larga da tela. */
-.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 
 /* ---------- cards de resumo ---------- */
@@ -59,12 +77,12 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .rhead{padding:9px 13px;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff}
 .rcard.vencidos .rhead{background:var(--vermelho)}
 .rcard.d30 .rhead{background:var(--amber)}
-.rcard.d60 .rhead{background:var(--brand-teal)}
+.rcard.d60 .rhead{background:var(--brand-teal-txt)}
 .rcard.falta .rhead{background:#6B8486}
-.rhead .n{background:rgba(255,255,255,.25);border-radius:999px;padding:2px 9px;font-size:11px}
+.rhead .n{background:rgba(255,255,255,.25);border-radius:var(--radius-pill);padding:2px 9px;font-size:11px}
 .rlista{max-height:150px;overflow:auto;padding:5px}
 .tk{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;font-family:var(--sans);font-size:12px;
-  border:0;background:transparent;color:inherit;padding:6px 8px;border-radius:10px;cursor:pointer}
+  border:0;background:transparent;color:inherit;padding:6px 8px;border-radius:var(--radius-sm);cursor:pointer}
 .tk:hover{background:var(--surface-warm)}
 .tk .d{font-weight:800;white-space:nowrap;color:var(--ink)}
 .tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -95,23 +113,23 @@ th.col-nome,td.col-nome{left:76px;min-width:196px;max-width:216px}
 td.col-id,td.col-nome{position:sticky;z-index:15}
 thead tr.grupos th.col-id,thead tr.grupos th.col-nome{z-index:28}
 thead tr.cols th.col-id,thead tr.cols th.col-nome{z-index:26}
-td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal);padding:7px 9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
+td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal-txt);padding:7px 9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
 td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.25;padding:7px 9px;white-space:normal;box-shadow:2px 0 6px rgba(7,48,52,.07)}
 tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
-td.col-nome .flag{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.3px;border-radius:999px;padding:2px 8px}
+td.col-nome .flag{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.3px;border-radius:var(--radius-pill);padding:2px 8px}
 td.col-nome .flag.nova{background:var(--amber-soft);color:var(--amber-txt);border:1px solid var(--amber-line)}
 td.col-nome .flag.inativo{background:#EEE9E2;color:var(--muted);border:1px solid var(--line)}
 tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}
 
 /* ---------- campos da grade ---------- */
 input[type=text],input[type=date],input[type=password]{font-family:var(--sans);font-size:12px;padding:6px 8px;border:1px solid var(--line-2);
-  border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
+  border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);width:100%}
 input:focus{outline:2px solid var(--brand-teal);outline-offset:0}
 .ro{padding:6px 8px;font-size:12px;color:var(--muted);background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(0,0,0,.02) 6px,rgba(0,0,0,.02) 12px);
-  border:1px dashed var(--line-2);border-radius:10px;white-space:normal;word-break:break-word}
+  border:1px dashed var(--line-2);border-radius:var(--radius-sm);white-space:normal;word-break:break-word}
 .dt{display:flex;align-items:center;gap:4px;min-width:186px}
 .dt input{flex:1;min-width:104px}
-.tag-d{flex:none;font-size:11px;font-weight:800;border-radius:999px;padding:3px 7px;white-space:nowrap;min-width:44px;text-align:center}
+.tag-d{flex:none;font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:3px 7px;white-space:nowrap;min-width:44px;text-align:center}
 .tag-d.vazio{background:var(--amber-soft);color:var(--amber-txt)}
 .tag-d.na{background:#EEE9E2;color:var(--muted)}
 .tag-d.venc{background:#F7DFDC;color:var(--vermelho)}
@@ -126,17 +144,17 @@ input:focus{outline:2px solid var(--brand-teal);outline-offset:0}
 .lk-cel input,.lk-cel .ro{flex:1;min-width:110px}
 .lk-ir{flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
   font-size:13px;font-weight:800;line-height:1;text-decoration:none;border:1px solid var(--line-2);
-  border-radius:10px;background:var(--surface);color:var(--brand-teal)}
+  border-radius:var(--radius-sm);background:var(--surface);color:var(--brand-teal-txt)}
 .lk-ir:hover{border-color:var(--brand-teal);background:#EAF5F4}
 /* Sem URL válida o atalho fica apagado e não clica — não abre guia em branco. */
 .lk-ir.off{color:var(--line-2);border-style:dashed;background:transparent;cursor:default}
 
 /* ---------- botao (B.8): uma base, tres papeis ---------- */
 .btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
-  font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;transition:border-color .12s,transform .1s}
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:var(--radius-sm);transition:border-color .12s,transform .1s}
 .btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
-.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
 .btn--pri:hover{background:#0C7871;border-color:#0C7871}
 .btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
 .btn--danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
@@ -144,16 +162,16 @@ input:focus{outline:2px solid var(--brand-teal);outline-offset:0}
 .btn--danger-out{background:var(--surface);color:var(--vermelho);border-color:var(--line-2)}
 .btn--danger-out:hover{border-color:var(--vermelho)}
 .btn--mini{padding:6px 11px;font-size:12px}
-.btn--pill{border-radius:999px;padding:12px 20px}
+.btn--pill{border-radius:var(--radius-pill);padding:12px 20px}
 /* Densidade da grade: cabe ao lado de um campo sem empurrar a coluna. */
 .btn--micro{padding:5px 7px;font-size:11px;line-height:1;flex:none;white-space:nowrap}
 .btn.modo{color:var(--muted);border-style:dashed;font-weight:800}
-.btn.modo:hover{border-style:solid;color:var(--brand-teal)}
+.btn.modo:hover{border-style:solid;color:var(--brand-teal-txt)}
 
 /* ---------- estados ---------- */
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:48vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:60ch}
-.state code{background:var(--surface-warm);padding:2px 6px;border-radius:10px;border:1px solid var(--line)}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line)}
 .state ol{text-align:left;color:var(--ink-2);font-size:13px;max-width:60ch;line-height:1.7;padding-left:20px}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -174,13 +192,13 @@ details.ajuda>summary::after{content:" \25BE";color:var(--muted)}
 details.ajuda[open]>summary::after{content:" \25B4"}
 details.ajuda>.txt{padding:0 12px 11px;font-size:12px;color:var(--muted);line-height:1.55}
 details.ajuda>.txt b{color:var(--ink-2)}
-details.ajuda>.txt a{color:var(--brand-teal)}
+details.ajuda>.txt a{color:var(--brand-teal-txt)}
 /* ---------- o que nao gravou (C.3) ----------
    A linha (ou o campo) fica marcada e o "tentar de novo" nasce ali mesmo. */
 .falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
 tr.falhou>td{background:#FBEAE7!important}
 .btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
-  border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:999px;padding:2px 9px;white-space:nowrap}
+  border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap}
 .btn-retry:disabled{opacity:.6;cursor:default}
 /* ---------- padroes compartilhados (B.10 e B.12) ---------- */
 /* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
@@ -657,6 +675,16 @@ function agendarSalvar(id,coluna,ms){
   s.timer=setTimeout(()=>salvar(k),ms==null?700:ms);
   setSave('saving','Salvando…');
 }
+/* Enter não espera o debounce: quem apertou já saiu da linha e precisa ver o
+   "Salvo ✓" enquanto ainda lembra do que digitou. */
+function salvarAgora(id,coluna){
+  const k=String(id);
+  let s=SUJOS.get(k);
+  if(!s){s={timer:null,campos:new Set()};SUJOS.set(k,s);}
+  s.campos.add(coluna);
+  clearTimeout(s.timer);
+  salvar(k);
+}
 async function salvar(id){
   const k=String(id);
   const s=SUJOS.get(k); if(!s) return;
@@ -702,16 +730,24 @@ document.addEventListener('input',e=>{
   const antigo=cx.querySelector('.lk-ir'); if(!antigo) return;
   antigo.outerHTML=atalhoAbrir(el.value);
 });
-document.addEventListener('change',e=>{
-  const el=e.target; if(!el.dataset||!el.dataset.c) return;
-  const l=linhaDo(el); if(!l) return;
+/* Passa o que está no campo para a linha em memória e reacerta a etiqueta de prazo
+   ao lado. É o mesmo caminho para quem sai do campo e para quem dá Enter. */
+function aplicarCampo(el){
+  if(!el||!el.dataset||!el.dataset.c) return null;
+  const l=linhaDo(el); if(!l) return null;
   const c=el.dataset.c;
   l.valores[c]=el.value;
   esquecerBusca(l);
   const cx=el.closest('.dt');
   if(cx){const st=estado(l.valores[c]);cx.className='dt '+st.cl;
     const tag=cx.querySelector('.tag-d');if(tag){tag.className='tag-d '+st.cl;tag.textContent=st.txt;}}
-  agendarSalvar(l.id,c);
+  return {l:l,c:c};
+}
+document.addEventListener('change',e=>{
+  const r=aplicarCampo(e.target); if(!r) return;
+  // sair do campo depois do Enter dispara change com o mesmo valor: não grava duas vezes
+  if(e.target._jaGravado===e.target.value){e.target._jaGravado=null;return;}
+  agendarSalvar(r.l.id,r.c);
 });
 document.addEventListener('click',async e=>{
   const rt=e.target.closest('.btn-retry[data-retry]');
@@ -759,6 +795,52 @@ document.addEventListener('click',async e=>{
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto);return;}
 });
+/* ---------- Enter grava e desce (C.14) ----------
+   Esta tela é digitação em massa, uma coluna inteira de cada vez: Enter fecha a
+   linha e cai na MESMA coluna da linha seguinte; Shift+Enter volta. Na última
+   linha grava e fica onde está — dar a volta faria a pessoa reescrever a primeira
+   linha sem perceber. */
+/* Linha vizinha que dá para editar. O filtro tira a linha da grade, mas se ela
+   estiver só escondida a gente pula do mesmo jeito: quem filtrou não quer o
+   cursor caindo justamente no que mandou sumir. */
+function linhaVizinha(tr,passo){
+  let p=tr;
+  for(;;){
+    p=passo>0?p.nextElementSibling:p.previousElementSibling;
+    if(!p) return null;
+    if(!p.dataset||!p.dataset.id) continue;      // a linha do "Nada com esse filtro"
+    if(!p.getClientRects().length) continue;     // escondida
+    return p;
+  }
+}
+/* Campo da mesma coluna na linha de destino. Coluna espelhada/só leitura não tem
+   campo nenhum (é um <div class="ro">), então o Enter segue para a próxima
+   editável em vez de largar o foco no nada. */
+function campoDestino(tr,coluna){
+  const ok=el=>!!el&&!el.disabled&&!el.readOnly;
+  const igual=tr.querySelector('[data-c="'+CSS.escape(coluna)+'"]');
+  if(ok(igual)) return igual;
+  const cols=gradeCols();
+  for(let j=cols.indexOf(coluna)+1;j<cols.length;j++){
+    const el=tr.querySelector('[data-c="'+CSS.escape(cols[j])+'"]');
+    if(ok(el)) return el;
+  }
+  return null;
+}
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||e.ctrlKey||e.metaKey||e.altKey) return;
+  const el=e.target;
+  if(!el.dataset||!el.dataset.c||el.tagName==='TEXTAREA') return;
+  const tr=el.closest('tr[data-id]'); if(!tr) return;
+  e.preventDefault();
+  const r=aplicarCampo(el);
+  if(r){ el._jaGravado=el.value; salvarAgora(r.l.id,r.c); }
+  const prox=linhaVizinha(tr,e.shiftKey?-1:1);
+  if(!prox) return;
+  const alvo=campoDestino(prox,el.dataset.c);
+  // campo de data não aceita select() — por isso a tentativa é protegida
+  if(alvo){alvo.focus();try{if(alvo.select)alvo.select();}catch(_){}}
+});
 /* Atalhos de busca (C.4): "/" foca, Esc limpa — e não atrapalham quem já está
    digitando noutro campo da grade. */
 document.addEventListener('keydown',e=>{
@@ -791,7 +873,7 @@ function layout(){
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">Editar aqui grava direto na planilha${META.aba?' (aba <b>'+esc(META.aba)+'</b>)':''}. O atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. Coluna de endereço tem o atalho <b>↗</b> ao lado, que abre o documento em outra guia quando o campo é mesmo um link.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do <b>Registro</b> por fórmula — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html">Registros de clientes</a>.<br>Na grade, a faixa escura acima dos cabeçalhos junta as colunas por <b>assunto</b> (o mesmo documento, o mesmo portal), para não se perder na rolagem lateral. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
+    <div class="txt">Editar aqui grava direto na planilha${META.aba?' (aba <b>'+esc(META.aba)+'</b>)':''}. O atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. Coluna de endereço tem o atalho <b>↗</b> ao lado, que abre o documento em outra guia quando o campo é mesmo um link.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do <b>Registro</b> por fórmula — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>Na grade, a faixa escura acima dos cabeçalhos junta as colunas por <b>assunto</b> (o mesmo documento, o mesmo portal), para não se perder na rolagem lateral. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
   </details>
   <div class="resumo" id="resumo"></div>
   <div class="tabela-wrap"><table>
