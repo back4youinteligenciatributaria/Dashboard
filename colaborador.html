@@ -262,6 +262,7 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
 .barra{flex-wrap:wrap}
 @media(max-width:560px){.barra .cnt{display:none}}
 </style>
+<script src="config.js"></script>
 </head>
 <body>
 <div class="barra">
@@ -308,7 +309,10 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+// A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
+// é reserva: se o config.js não carregar, a página continua de pé.
+const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
+  'https://script.google.com/macros/s/AKfycbxJ63h8C5A6lgDgd_xp9XIPk3uaa0ks04CD1hQTptcZNTDfGwQadPej5xResVknzshe/exec';
 // Chave da equipe ("por ora sem senha"): o link já vem com ela. Troque aqui e no TEAM_KEY (Equipe.gs).
 const CHAVE_PADRAO = 'b4u-equipe-2026';
 
@@ -871,9 +875,11 @@ function boot(){
   const bc=$busca(); if(bc) bc.value=url.q;
   ligarDropCentrais();
   pintarCentrais();                 // render imediato (fallback)
-  jsonp(API_URL+'?tipo=links_equipe&chave='+encodeURIComponent(chaveAtual()))   // atualiza com os links vivos da Config
-    .then(d=>{ if(d && !d.erro && d.centrais && d.centrais.length){ pintarCentrais(d.centrais); pintarRestituicao(); } })
-    .catch(()=>{});
+  // Os links vivos da Config vêm DENTRO do payload de tipo=equipe (logo abaixo).
+  // Antes havia aqui um segundo jsonp para tipo=links_equipe disparado junto do
+  // de baixo: as duas chamadas pegavam o cache frio ao mesmo tempo, liam as
+  // mesmas planilhas em paralelo e terminavam mais lentas do que qualquer uma
+  // sozinha — 15s e 17s no log, contra ~8s isoladas.
   ligarCombo();
   const nc=document.getElementById('novo-cliente');
   if(nc) nc.href=comChave('registro.html');
@@ -882,6 +888,8 @@ function boot(){
     .then(d=>{
       if(d.erro) throw new Error(d.erro);
       TODOS=d.clientes||[]; apiOk=true;
+      // centrais vêm no mesmo payload (era uma chamada separada, ver acima)
+      if(d.centrais && d.centrais.length){ pintarCentrais(d.centrais); pintarRestituicao(); }
       document.getElementById('cnt').textContent = TODOS.length+' clientes';
       document.getElementById('dica').innerHTML = 'Digite para filtrar ou clique no campo para ver todos os '+TODOS.length+' clientes.';
       PEND=calcPendencias();          // alimenta o selo do card de Certificados — sem chamada nova

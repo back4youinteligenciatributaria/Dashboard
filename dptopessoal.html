@@ -268,6 +268,7 @@ table.func tbody tr:last-child td{border-bottom:none}
 footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:var(--fs-2);color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
+<script src="config.js"></script>
 </head>
 <body>
 <!--B4U:START-->
@@ -369,7 +370,7 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
   if (CFG.__ready) return;
 
   var WA = '5511937173906';                        // +55 11 93717-3906
-  var API_FALLBACK = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+  var API_FALLBACK = 'https://script.google.com/macros/s/AKfycbxJ63h8C5A6lgDgd_xp9XIPk3uaa0ks04CD1hQTptcZNTDfGwQadPej5xResVknzshe/exec';
   function api(){ try{ if(typeof API_URL==='string' && API_URL) return API_URL; }catch(e){} return API_FALLBACK; }
 
   var AREAS = [
@@ -816,7 +817,10 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+// A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
+// é reserva: se o config.js não carregar, a página continua de pé.
+const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
+  'https://script.google.com/macros/s/AKfycbxJ63h8C5A6lgDgd_xp9XIPk3uaa0ks04CD1hQTptcZNTDfGwQadPej5xResVknzshe/exec';
 const TIPO = 'pessoal';
 const TITULO_PAGINA = 'Departamento Pessoal';
 const CATEGORIA_MODELOS = 'Departamento Pessoal';

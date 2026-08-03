@@ -189,6 +189,7 @@ tr.falhou>td{background:#FBEAE7!important}
 .barra{flex-wrap:wrap}
 @media(max-width:560px){.barra .cnt{display:none}}
 </style>
+<script src="config.js"></script>
 </head>
 <body>
 <div class="barra">
@@ -216,7 +217,10 @@ tr.falhou>td{background:#FBEAE7!important}
 </div></div>
 
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
+// A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
+// é reserva: se o config.js não carregar, a página continua de pé.
+const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
+  'https://script.google.com/macros/s/AKfycbxJ63h8C5A6lgDgd_xp9XIPk3uaa0ks04CD1hQTptcZNTDfGwQadPej5xResVknzshe/exec';
 const CHAVE_PADRAO='b4u-equipe-2026';
 const STATUS=['','Aguardando','Em andamento','Concluído','Não se aplica'];
 function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');const h=(location.hash||'').replace('#','').trim();return q||h||CHAVE_PADRAO;}
