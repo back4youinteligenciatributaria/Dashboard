@@ -285,7 +285,12 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
   <span class="cnt" id="cnt"></span>
 </div>
 
-<div class="wrap">
+<!-- PORTARIA — o que se vê enquanto a API não confirma a chave. Ver boot(). -->
+<div class="wrap" id="portaria">
+  <div class="dica"><span class="spin"></span> Verificando o seu acesso…</div>
+</div>
+
+<div class="wrap" id="wrap" hidden>
   <!-- FERRAMENTAS DA EQUIPE — é o que a equipe mais usa, então vem primeiro -->
   <div class="sec-tit">Ferramentas da equipe</div>
   <div class="fer-topo">
@@ -301,7 +306,7 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
     <span class="arw">▸</span><span>Acesso rápido — planilhas centrais</span><span class="n" id="centrais-n"></span>
   </button>
   <div id="bloco-centrais" hidden>
-    <div class="aviso-off" id="aviso-centrais" hidden>⚠️ Sem resposta da Config — mostrando a lista guardada no painel. Um link trocado recentemente pode não estar aqui.</div>
+    <div class="aviso-off" id="aviso-centrais" hidden>⚠️ A Config não devolveu os links centrais desta vez. Recarregue a página em alguns segundos.</div>
     <div class="centrais" id="centrais"></div>
   </div>
 
@@ -332,24 +337,19 @@ const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
    volta a existir uma senha compartilhada que não expira e não diz quem é quem. */
 const CHAVE_PADRAO = '';
 
-// Planilhas centrais — vêm DINAMICAMENTE da Config (tipo=links_equipe).
-// CENTRAIS_VIVOS guarda o que a Config devolveu; enquanto estiver vazio, a tela usa
-// a CÓPIA DE EMERGÊNCIA abaixo e mostra um aviso — assim ninguém confia num link
-// velho sem perceber. Essa cópia existe só para o painel não morrer se a API cair.
+/* Planilhas centrais — vêm da Config, pelo payload de tipo=equipe. NÃO existe
+   cópia de emergência aqui, e é de propósito.
+
+   Existia: 11 endereços de planilha interna escritos neste arquivo, para o painel
+   não ficar sem atalhos quando a API caísse. Só que este arquivo é servido pelo
+   GitHub Pages — é público. "Ver código-fonte" entregava o mapa inteiro do
+   sistema para quem abrisse a página, com chave, com chave errada ou sem chave
+   nenhuma. E desde que o painel passou a só desenhar depois do sim da API, a
+   cópia nem seria usada: não dá para autorizar com o autorizador fora do ar.
+
+   Ficou sem rede de segurança de propósito. Se a API cair, os atalhos somem e
+   quem precisa abre a planilha pelo Drive. Não recoloque a lista aqui. */
 let CENTRAIS_VIVOS=null;
-const CENTRAIS_FALLBACK = [
-  {nome:'Registro Clientes',     url:'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=667079147#gid=667079147'},
-  {nome:'Societária Mestra',     url:'https://docs.google.com/spreadsheets/d/1xcmKoj1hORiFQLdrUDxBicZri-tOXkwFiyqVF1NUGUg/edit?gid=1875565821#gid=1875565821'},
-  {nome:'Tickets',               url:'https://docs.google.com/spreadsheets/d/1ZQVgRsn5FwytaO7MyHLPATD88xQziUfZhOddV_I4j30/edit?gid=207987257#gid=207987257'},
-  {nome:'Contatos',              url:'https://docs.google.com/spreadsheets/d/17Yrjylaj0b-fgaH-ujFjLkeT-G4egKzV8yEg4q4yrzE/edit?gid=1163717920#gid=1163717920'},
-  {nome:'Feriados',              url:'https://docs.google.com/spreadsheets/d/1Gpn84rlS0fbd1j-gOxWZc8s3TJ6CzRYwrm-QsBZwhCI/edit?gid=59736689#gid=59736689'},
-  {nome:'Modelos',               url:'https://docs.google.com/spreadsheets/d/1NAzY_xSsdAYVwXZIy23dNXOkqLnt89UkFXPPeiEbHdI/edit?gid=1026418437#gid=1026418437'},
-  {nome:'Config Tributário',     url:'https://docs.google.com/spreadsheets/d/1JiOjIfTXrOZPGuD_i4zmjXXVTaqPLlKD1fDCcMrDU4k/edit?gid=1736790632#gid=1736790632'},
-  {nome:'Certificados e Procurações', url:'https://docs.google.com/spreadsheets/d/1BYpw0mOMMSrC-L5lW1H0IU_rjbBmj3DBeyew7m8w2T8/edit?gid=1519487343#gid=1519487343'},
-  {nome:'Equiparação Controle',  url:'https://docs.google.com/spreadsheets/d/18wIzGZtwIaDOxvIfWdBNBcWKcLzbNgxRB3C2-r8ymzg/edit?gid=619398478#gid=619398478'},
-  {nome:'Controle de Licenças',  url:'https://docs.google.com/spreadsheets/d/1burCu35PnytjjcpGzLZ_w0Y5nfVs9svC/edit?gid=777551400#gid=777551400'},
-  {nome:'Extratos Pendentes',    url:'https://docs.google.com/spreadsheets/d/1TFnX4AHZDkHbyapI7FDi3cCJB_RzqB0ySNQ4NBWaq54/edit?gid=1183432994#gid=1183432994'}
-];
 // ícone por nome (normalizado) e quais vão pro dropdown "Outros"
 const ICONE_CENTRAL={'site links':'🗂️','registro clientes':'🗂️','societaria mestra':'🏛️','tickets':'🎫','contatos':'👥','feriados':'📅','modelos':'📄','config tributario':'⚙️','certificados e procuracoes':'🔐','certificados digitais':'🔐','equiparacao controle':'⚖️','controle de licencas':'📜','extratos pendentes':'🏦'};
 const CENTRAIS_NO_OUTROS=['site links','registro clientes','tickets','feriados','modelos','config tributario'];
@@ -482,8 +482,7 @@ function iconeCentral(nome){ return ICONE_CENTRAL[normTxt(nome)] || '📄'; }
 const NOMES_REGISTRO=['registro clientes','site links'];
 function urlRegistros(validos){   // aba Registro, derivada do link dessa planilha
   const sl=validos.find(p=>NOMES_REGISTRO.includes(normTxt(p.nome)));
-  if(sl && sl.url) return sl.url.replace(/gid=\d+/g,'gid=667079147');
-  return 'https://docs.google.com/spreadsheets/d/1fAtzWi62jRDhKa7haJ9L2p8bMxw8j2optS8b9ig3gNc/edit?gid=667079147#gid=667079147';
+  return (sl && sl.url) ? sl.url.replace(/gid=\d+/g,'gid=667079147') : '';
 }
 function botaoCentral(l){
   return `<a class="central-lk" href="${esc(l.url)}" target="_blank" rel="noopener"><span class="ic">${l.ic}</span><span>${esc(l.nome)}</span><span class="arw">›</span></a>`;
@@ -491,9 +490,9 @@ function botaoCentral(l){
 function pintarCentrais(pares){
   if(pares && pares.length) CENTRAIS_VIVOS=pares;
   const offline=!(pares && pares.length);
-  const validos=(offline?CENTRAIS_FALLBACK:pares).filter(p=>p.url && /^https?:/.test(p.url));
+  const validos=(pares||[]).filter(p=>p.url && /^https?:/.test(p.url));
   const registros={nome:'Registros de clientes', url:urlRegistros(validos), ic:'📇'};
-  const diretos=[registros].concat(validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))<0)
+  const diretos=[registros].filter(l=>l.url).concat(validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))<0)
     .map(p=>({nome:p.nome, url:p.url, ic:iconeCentral(p.nome)})));
   // A lista fica separada do HTML porque é ela que o contador soma: somar a string
   // pronta devolvia o número de caracteres ("279" no lugar de 5).
@@ -518,7 +517,7 @@ function pintarCentrais(pares){
   const av=document.getElementById('aviso-centrais');
   if(av) av.hidden=!offline;
   const n=document.getElementById('centrais-n');
-  if(n) n.textContent=(diretos.length+recolhidos.length)+(offline?' · lista local':'');
+  if(n) n.textContent=(diretos.length+recolhidos.length)+(offline?' · sem resposta da Config':'');
 }
 
 /* Planilhas centrais ficam recolhidas: são o atalho para a planilha crua, não
@@ -544,11 +543,10 @@ const LINKS_RESTITUICAO=[
   {nome:'MFBD',    code:'031029'}
 ];
 // O link do Controle sai da Config (chave "Equiparacao Controle"), igual aos outros.
-// A constante abaixo é só a cópia de emergência de quando a API não responde.
-const CONTROLE_URL_FALLBACK='https://docs.google.com/spreadsheets/d/18wIzGZtwIaDOxvIfWdBNBcWKcLzbNgxRB3C2-r8ymzg/edit?gid=619398478#gid=619398478';
+// Sem cópia de emergência aqui — mesmo motivo do CENTRAIS_VIVOS lá em cima.
 function urlControle(){
   const p=(CENTRAIS_VIVOS||[]).find(x=>normTxt(x.nome).indexOf('equiparacao controle')>=0);
-  return (p && p.url) || CONTROLE_URL_FALLBACK;
+  return (p && p.url) || '';
 }
 function pintarRestituicao(){
   const menu=document.getElementById('menu-restituicao'); if(!menu) return;
@@ -918,7 +916,11 @@ function ligarCombo(){
   });
 }
 
-function boot(){
+/* Abre o painel de verdade. Só é chamado DEPOIS que a API aceitou a chave. */
+function abrirPainel(){
+  document.getElementById('portaria').hidden = true;
+  document.getElementById('wrap').hidden = false;
+
   const url=lerURL();               // a visão vem do endereço (C.10)
   const bf=document.getElementById('busca-fer');
   if(bf) bf.value=url.fer;           // antes de pintar: o filtro já entra valendo
@@ -926,22 +928,42 @@ function boot(){
   if(bf) bf.addEventListener('input',()=>{pintarFerramentas();sincronizarURL();});
   const bc=$busca(); if(bc) bc.value=url.q;
   ligarDropCentrais();
-  pintarCentrais();                 // render imediato (fallback)
-  // Os links vivos da Config vêm DENTRO do payload de tipo=equipe (logo abaixo).
-  // Antes havia aqui um segundo jsonp para tipo=links_equipe disparado junto do
-  // de baixo: as duas chamadas pegavam o cache frio ao mesmo tempo, liam as
-  // mesmas planilhas em paralelo e terminavam mais lentas do que qualquer uma
-  // sozinha — 15s e 17s no log, contra ~8s isoladas.
   ligarCombo();
   const nc=document.getElementById('novo-cliente');
   if(nc) nc.href=comChave('registro.html');
+  return url;
+}
 
+/* NADA aparece antes de a API dizer que a chave vale.
+ *
+ * Esta página guarda, dentro do próprio arquivo, os links das 11 planilhas
+ * internas — a cópia de emergência para quando a API não responde. Enquanto o
+ * desenho vinha ANTES da resposta, abrir colaborador.html com qualquer coisa
+ * depois de ?chave= já mostrava o mapa inteiro do sistema; e a guarda lá de cima
+ * não pegava, porque ela só age quando a chave está VAZIA, não quando está
+ * errada. Quem apontou foi o Gian, em 04/08/2026, testando com a chave velha.
+ *
+ * O preço de fechar: com a API fora do ar, os atalhos de emergência somem junto.
+ * É o preço certo — não dá para autorizar sem o autorizador. Quem precisar das
+ * planilhas nesse cenário abre pelo Drive.
+ *
+ * Chave recusada é tratada igual a chave ausente: volta para a porta única
+ * (index.html), que identifica pelo e-mail e manda o código do dia. Erro de rede
+ * é outra coisa e continua na tela, porque aí tentar de novo resolve.
+ */
+function boot(){
   jsonp(API_URL+'?tipo=equipe&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{
       if(d.erro) throw new Error(d.erro);
+      const url = abrirPainel();
       TODOS=d.clientes||[]; apiOk=true;
-      // centrais vêm no mesmo payload (era uma chamada separada, ver acima)
-      if(d.centrais && d.centrais.length){ pintarCentrais(d.centrais); pintarRestituicao(); }
+      // Os links vivos da Config vêm DENTRO deste payload. Antes havia um segundo
+      // jsonp para tipo=links_equipe disparado junto: as duas chamadas pegavam o
+      // cache frio ao mesmo tempo, liam as mesmas planilhas em paralelo e
+      // terminavam mais lentas do que qualquer uma sozinha — 15s e 17s no log,
+      // contra ~8s isoladas.
+      pintarCentrais(d.centrais && d.centrais.length ? d.centrais : null);
+      pintarRestituicao();
       document.getElementById('cnt').textContent = TODOS.length+' clientes';
       document.getElementById('dica').innerHTML = 'Digite para filtrar ou clique no campo para escolher entre os '+TODOS.length+' clientes.';
       PEND=calcPendencias();          // alimenta o selo do card de Certificados — sem chamada nova
@@ -949,9 +971,15 @@ function boot(){
       restaurarCliente(url.cli);      // e volta para o cliente que estava aberto
     })
     .catch(e=>{
-      document.getElementById('dica').innerHTML =
-        '<span style="color:var(--vermelho-2)">Não consegui carregar os clientes: '+esc(e.message||String(e))+'.</span> '+
-        'Confira a <code>chave</code> da equipe no endereço e se o Web App foi republicado. Os atalhos das planilhas centrais acima seguem funcionando.';
+      const msg = String((e && e.message) || e);
+      if(/restrit/i.test(msg)){       // "Acesso restrito à equipe." — chave errada, de ontem, ou de ninguém
+        location.replace('index.html?destino=' + encodeURIComponent(
+          location.pathname.split('/').pop() + location.search + location.hash));
+        return;
+      }
+      document.getElementById('portaria').innerHTML =
+        '<div class="dica"><span style="color:var(--vermelho-2)">Não consegui falar com o sistema: '+esc(msg)+'.</span><br>' +
+        'Tente de novo em alguns segundos. Se persistir, confira se o Web App foi republicado.</div>';
     });
 }
 
