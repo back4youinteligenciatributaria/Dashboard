@@ -1480,6 +1480,7 @@ function telaCodigoEmail(email, mascarado){
       const d = await jsonp(API_URL+'?tipo=login_email_verificar&email='+encodeURIComponent(email)+'&codigo='+encodeURIComponent(code));
       if(d.erro) throw new Error(d.erro);
       if(!d.ok){ btn.disabled=false; btn.textContent='Continuar'; errEl.textContent = d.mensagem||'Código incorreto.'; otp.clear(); return; }
+      if(d.destino && irParaEquipe(d.destino)) return;
       if(d.multi && d.empresas && d.empresas.length){ return telaEscolherEmpresa(d.empresas); }
       location.hash = d.hash;
       OFERECER_CONFIAR = true;   // a oferta de confiar sai no fim do boot, com o acesso já aceito
@@ -1493,6 +1494,38 @@ function telaCodigoEmail(email, mascarado){
       errEl.textContent = d.encontrado ? 'Código reenviado. Confira o seu e-mail.' : 'E-mail não encontrado.'; otp.clear(); }
     catch(e){ errEl.textContent = 'Não consegui reenviar agora.'; }
   });
+}
+
+/* ---------- Colaborador: mesma porta, outro destino ----------
+   Quem é da equipe não tem painel de cliente para abrir. O back devolve
+   `destino` (colaborador.html?chave=CÓDIGO DO DIA) e a gente sai daqui.
+
+   Se a pessoa tinha clicado num link direto de outra página da equipe, a
+   guarda daquela página mandou ela para cá com ?destino=. Nesse caso o alvo é
+   aquela página — só falta enxertar a chave do dia nela. É o que faz a volta
+   ao ponto de partida funcionar em vez de largar todo mundo na home.
+
+   Só caminho RELATIVO passa. `destino` chega pela URL, e URL é coisa que
+   qualquer um escreve: sem esta checagem, um link
+   index.html?destino=https://site-falso/… viraria um redirecionamento com a
+   cara do painel — e ainda levando a chave do dia junto. */
+function irParaEquipe(destinoDoBack){
+  const relativo = (u)=> !!u && !/^[a-z]+:/i.test(u) && u.slice(0,2) !== '//';
+  if(!relativo(destinoDoBack)) return false;
+
+  const chave = new URLSearchParams((destinoDoBack.split('?')[1]||'').split('#')[0]).get('chave')||'';
+  const pedido = new URLSearchParams(location.search).get('destino')||'';
+
+  if(chave && relativo(pedido)){
+    const [semHash, hash=''] = pedido.split('#');
+    const [caminho, busca=''] = semHash.split('?');
+    const qs = new URLSearchParams(busca);
+    qs.set('chave', chave);
+    location.href = caminho + '?' + qs.toString() + (hash ? '#'+hash : '');
+  } else {
+    location.href = destinoDoBack;
+  }
+  return true;
 }
 
 /* ---------- E-mail com acesso a várias empresas: escolher qual abrir ---------- */

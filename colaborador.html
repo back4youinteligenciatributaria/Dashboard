@@ -326,8 +326,11 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
 // é reserva: se o config.js não carregar, a página continua de pé.
 const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
   'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
-// Chave da equipe ("por ora sem senha"): o link já vem com ela. Troque aqui e no TEAM_KEY (Equipe.gs).
-const CHAVE_PADRAO = 'b4u-equipe-2026';
+/* A chave da equipe não é mais fixa: é o código do dia de cada colaborador
+   (aba "Colaboradores" da planilha de Contatos), que chega por e-mail no
+   index.html. Esta constante ficou vazia de propósito — se voltar a ter valor,
+   volta a existir uma senha compartilhada que não expira e não diz quem é quem. */
+const CHAVE_PADRAO = '';
 
 // Planilhas centrais — vêm DINAMICAMENTE da Config (tipo=links_equipe).
 // CENTRAIS_VIVOS guarda o que a Config devolveu; enquanto estiver vazio, a tela usa
@@ -352,6 +355,17 @@ const ICONE_CENTRAL={'site links':'🗂️','registro clientes':'🗂️','socie
 const CENTRAIS_NO_OUTROS=['site links','registro clientes','tickets','feriados','modelos','config tributario'];
 
 function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); const h=(location.hash||'').replace('#','').trim(); return q || h || CHAVE_PADRAO; }
+
+/* Sem chave na URL não há painel da equipe. A porta é o index.html: a pessoa
+   digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
+   serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
+   longe do que ela tinha clicado.
+   Até 04/08/2026 existia uma chave fixa ('b4u-equipe-2026') escrita aqui como
+   padrão: quem abrisse a página sem chave nenhuma entrava assim mesmo. */
+if (!chaveAtual()) {
+  location.replace('index.html?destino=' + encodeURIComponent(
+    location.pathname.split('/').pop() + location.search + location.hash));
+}
 /* Quem está mexendo. Vem do ?cod= na URL, é repassado para as páginas de edição e
    vira a coluna "Colaborador" da aba log de cada planilha. Sem ?cod= o log grava
    só "equipe"; para sair o nome, cada pessoa usa um atalho com o próprio código

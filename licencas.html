@@ -200,48 +200,14 @@ input:focus{outline:2px solid var(--brand-teal);outline-offset:0}
 .dt.venc input[type=date]{border-color:var(--vermelho)}
 .dt.d30 input[type=date]{border-color:var(--amber)}
 .sig{display:flex;align-items:center;gap:4px;min-width:158px}
-/* ---------- coluna de LINK: documento, não URL ----------
-   O que a equipe quer da célula é o DOCUMENTO — abrir o que já tem, ou mandar o
-   que ainda falta. A URL crua no meio da grade só ocupava espaço e convidava a
-   apagar sem querer. Ela continua a um clique, atrás do "⋯". */
-.lk-cel{display:flex;align-items:center;gap:4px;min-width:132px}
+/* ---------- coluna de LINK: campo de URL + atalho para abrir ---------- */
+.lk-cel{display:flex;align-items:center;gap:4px;min-width:190px}
 .lk-cel input,.lk-cel .ro{flex:1;min-width:110px}
-/* Abrir / Enviar: mesma caixa, papéis opostos — cheio é teal, vazio é tracejado. */
-.lk-bt{flex:none;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;
-  font-family:var(--sans);font-size:12px;font-weight:800;line-height:1;cursor:pointer;
-  text-decoration:none;white-space:nowrap;border:1px solid var(--line-2);
-  border-radius:var(--radius-sm);background:var(--surface);color:var(--brand-teal-txt)}
-.lk-bt:hover{border-color:var(--brand-teal);background:#EAF5F4;text-decoration:none}
-.lk-bt.vazio{color:var(--muted);border-style:dashed;font-weight:700}
-.lk-bt.vazio:hover{color:var(--brand-teal-txt);border-style:solid}
-.lk-bt:disabled{opacity:.55;cursor:default}
-.lk-bt svg{width:13px;height:13px;flex:none}
-/* "⋯" — o que dá para estragar mora aqui dentro, não na frente do dedo. */
-.lk-mais{flex:none;width:24px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;
-  font-family:var(--sans);font-size:14px;font-weight:800;line-height:1;cursor:pointer;color:var(--muted);
-  border:1px solid transparent;border-radius:var(--radius-sm);background:transparent}
-.lk-mais:hover{color:var(--ink);border-color:var(--line-2);background:var(--surface)}
-/* Seis colunas × 111 linhas = 666 "⋯" na tela. Onde existe mouse ele fica quase
-   apagado e acende quando a mão chega perto; no toque (sem hover) fica sempre
-   visível, senão vira um botão que ninguém descobre. */
-@media(hover:hover){
-  .lk-mais{opacity:.32;transition:opacity .12s}
-  .lk-cel:hover .lk-mais,.lk-mais:focus-visible{opacity:1}
-}
-/* Anotação solta na coluna de link ("aguardando", "n/a"): não é endereço, então
-   não vira botão — fica como legenda curta, sem roubar a linha. */
-.lk-nota{flex:1;min-width:0;font-size:11.5px;color:var(--muted);font-style:italic;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* enviando: o nome do arquivo fica à vista para saber QUAL está subindo */
-.lk-env{display:flex;align-items:center;gap:6px;min-width:132px;font-size:11.5px;color:var(--muted)}
-.lk-env .spin{width:13px;height:13px;border-width:2px;flex:none}
-.lk-env b{font-weight:700;color:var(--ink-2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lk-erro{display:block;font-size:11px;color:var(--vermelho);font-weight:700;margin-top:3px;max-width:230px}
-/* Sem URL válida o atalho fica apagado e não clica — não abre guia em branco. */
 .lk-ir{flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
   font-size:13px;font-weight:800;line-height:1;text-decoration:none;border:1px solid var(--line-2);
   border-radius:var(--radius-sm);background:var(--surface);color:var(--brand-teal-txt)}
 .lk-ir:hover{border-color:var(--brand-teal);background:#EAF5F4}
+/* Sem URL válida o atalho fica apagado e não clica — não abre guia em branco. */
 .lk-ir.off{color:var(--line-2);border-style:dashed;background:transparent;cursor:default}
 
 /* ---------- botao (B.8): uma base, tres papeis ---------- */
@@ -325,8 +291,23 @@ tr.falhou>td{background:#FBEAE7!important}
 // é reserva: se o config.js não carregar, a página continua de pé.
 const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
   'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
-const CHAVE_PADRAO='b4u-equipe-2026';
+/* A chave da equipe não é mais fixa: é o código do dia de cada colaborador
+   (aba "Colaboradores" da planilha de Contatos), que chega por e-mail no
+   index.html. Esta constante ficou vazia de propósito — se voltar a ter valor,
+   volta a existir uma senha compartilhada que não expira e não diz quem é quem. */
+const CHAVE_PADRAO = '';
 function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');return q?q.trim():CHAVE_PADRAO;}
+
+/* Sem chave na URL não há painel da equipe. A porta é o index.html: a pessoa
+   digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
+   serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
+   longe do que ela tinha clicado.
+   Até 04/08/2026 existia uma chave fixa ('b4u-equipe-2026') escrita aqui como
+   padrão: quem abrisse a página sem chave nenhuma entrava assim mesmo. */
+if (!chaveAtual()) {
+  location.replace('index.html?destino=' + encodeURIComponent(
+    location.pathname.split('/').pop() + location.search + location.hash));
+}
 // Código do colaborador: aceita ?cod= (vindo do painel) e também o #hash.
 // Vira a coluna "Colaborador" da aba log.
 function respAtual(){const q=(new URLSearchParams(location.search).get('cod')||'').trim();if(q)return q;
@@ -380,28 +361,7 @@ function jsonp(url){
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
-/* O JSONP tem teto de tempo; o POST não tinha. Num envio de arquivo isso vira
-   travamento de verdade: resposta perdida no meio de um corpo de ~13 MB deixa a
-   promise pendurada para sempre — o spinner nunca sai da célula e, como envio em
-   trânsito conta como pendência, a guia passa a pedir confirmação para fechar.
-   Com prazo, o erro aparece e a pessoa decide o que fazer. */
-const POST_TETO=120000;
-async function postAcao(obj,ms){
-  const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));
-  const ac=(typeof AbortController==='function')?new AbortController():null;
-  const t=ac?setTimeout(()=>ac.abort(),ms||POST_TETO):null;
-  try{
-    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body,signal:ac?ac.signal:undefined});
-    const d=await r.json();
-    if(d&&d.erro)throw new Error(d.erro);
-    return d;
-  }catch(e){
-    if(e&&(e.name==='AbortError'||e.name==='TimeoutError'))
-      throw new Error('a API não respondeu a tempo');
-    throw e;
-  }finally{ if(t)clearTimeout(t); }
-}
+async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 
 /* ---------------- estado ---------------- */
 let LINHAS=[], COLUNAS=[], ESPELHADAS=[], EDITAVEIS=[], SIGILOSAS=[], DATAS=[], LINKS=[], META={}, GRUPOS=[];
@@ -415,11 +375,6 @@ let SO_ATIVOS=true;
 let VER_CADASTRO=false;  // mostrar as colunas espelhadas do Registro (só leitura)
 let SORT={key:'urgencia',dir:'asc'};
 const REVELADAS=new Set();
-/* célula de link: quem está com o "⋯" aberto, quem está subindo arquivo agora e
-   qual erro de envio ainda precisa ser lido. Chave: id + '|' + coluna. */
-const ABERTAS=new Set();
-const ENVIANDO=new Map();   // id|coluna -> nome do arquivo em trânsito
-const ERRO_UP=new Map();    // id|coluna -> mensagem do último envio que falhou
 const hoje=new Date(); hoje.setHours(0,0,0,0);
 
 /* ---------------- revelação progressiva ---------------- */
@@ -669,68 +624,20 @@ function atalhoAbrir(v){
     ? `<a class="lk-ir" href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="Abrir em outra guia">↗</a>`
     : `<span class="lk-ir off" title="Sem endereço válido para abrir" aria-hidden="true">↗</span>`;
 }
-/* ---------------- coluna de link: abrir ou enviar ----------------
-   A célula de link tem três estados, e só um deles aparece por vez:
-     vazio      -> [⬆ Enviar]  ⋯
-     com link   -> [Abrir ↗]   ⋯
-     enviando   -> spinner + nome do arquivo
-   O "⋯" abre a versão de sempre (campo de URL editável + trocar arquivo). Foi
-   a escolha deliberada: quem edita link à mão é minoria, e deixar a URL crua na
-   frente convidava a apagá-la com um clique distraído. */
-const ICO_ABRIR=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>`;
-const ICO_ENVIAR=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V4"/><path d="m7 9 5-5 5 5"/><path d="M4 20h16"/></svg>`;
-
 function celLink(l,c){
-  const v=String(l.valores[c]||'').trim();
-  const k=l.id+'|'+c;
-
-  const env=ENVIANDO.get(k);
-  if(env) return `<div class="lk-env"><span class="spin"></span><b title="${esc(env)}">${esc(env)}</b></div>`;
-
-  const err=ERRO_UP.get(k);
-  const aviso=err?`<span class="lk-erro">${esc(err)}</span>`:'';
-
-  /* Coluna que NÃO gravou fica aberta à força. Fechada, ela mostraria "Abrir ↗"
-     apontando para uma URL que só existe na memória do navegador — a tela diria
-     "documento guardado" com a planilha vazia. Aberta, o campo vermelho e o
-     "tentar de novo" continuam onde a pessoa consegue ver. */
-  const f=FALHAS.get(String(l.id));
-  const naoGravou=!!(f&&f.campos.has(c));
-
-  /* modo aberto pelo "⋯": tudo que dá para estragar, junto e visível */
-  if(ABERTAS.has(k)||naoGravou) return `<div class="lk-cel">
-    <input type="text" class="${naoGravou?'falhou':''}" data-c="${esc(c)}" data-link="1" value="${esc(v)}" placeholder="https://…" inputmode="url" spellcheck="false">
-    ${atalhoAbrir(v)}
-    <button type="button" class="lk-bt" data-up="${esc(c)}" title="Escolher um arquivo do computador e substituir">${ICO_ENVIAR}</button>
-    <button type="button" class="lk-mais" data-fechar="${esc(c)}" title="Pronto" aria-label="Fechar edição do link">✕</button>
-  </div>${aviso}`;
-
-  const mais=`<button type="button" class="lk-mais" data-abrir-edicao="${esc(c)}" title="Colar link à mão ou trocar o arquivo" aria-label="Mais opções para ${esc(curto(c))}">⋯</button>`;
-
-  if(urlOk(v)) return `<div class="lk-cel">
-    <a class="lk-bt" href="${esc(v)}" target="_blank" rel="noopener noreferrer"
-       title="Abrir o documento em outra guia">${ICO_ABRIR}Abrir</a>${mais}
-  </div>${aviso}`;
-
-  /* Anotação solta ("aguardando", "n/a") não é link: mostra o texto e deixa
-     enviar do mesmo jeito — o campo não está vazio, mas documento não tem. */
-  const nota=v?`<span class="lk-nota" title="${esc(v)} — texto digitado na planilha, não é um endereço">${esc(v)}</span>`:'';
+  const v=String(l.valores[c]||'');
   return `<div class="lk-cel">
-    <button type="button" class="lk-bt vazio" data-up="${esc(c)}"
-      title="Escolher um arquivo do computador e enviar para a pasta Societário e Jurídico deste cliente">${ICO_ENVIAR}Enviar</button>${nota}${mais}
-  </div>${aviso}`;
+    <input type="text" data-c="${esc(c)}" data-link="1" value="${esc(v)}" placeholder="https://…" inputmode="url" spellcheck="false">
+    ${atalhoAbrir(v)}
+  </div>`;
 }
 function celSoLeitura(l,c){
   const v=String(l.valores[c]||'');
   const t=ehEspelhada(c)?'Espelho do Registro (fórmula IMPORTRANGE) — edite em Registros de clientes'
                         :'Coluna mantida pelo sistema — só leitura';
-  /* link só de leitura: vira o mesmo botão "Abrir", sem o "⋯" (não há o que
-     editar aqui). Sem endereço, some — um botão morto não ajuda ninguém. */
-  if(ehLink(c)) return urlOk(v)
-    ? `<div class="lk-cel"><a class="lk-bt" href="${esc(v)}" target="_blank" rel="noopener noreferrer"
-        title="${esc(t)}">${ICO_ABRIR}Abrir</a></div>`
-    : `<div class="ro" title="${esc(t)}">${esc(v||'—')}</div>`;
-  return `<div class="ro" title="${esc(t)}">${esc(v||'—')}</div>`;
+  const caixa=`<div class="ro" title="${esc(t)}">${esc(v||'—')}</div>`;
+  /* link só de leitura continua abrindo: some o campo, fica o atalho */
+  return ehLink(c)?`<div class="lk-cel">${caixa}${atalhoAbrir(v)}</div>`:caixa;
 }
 function cel(l,c){
   if(ehSoLeitura(c)) return celSoLeitura(l,c);
@@ -780,7 +687,7 @@ function atalhoDrive(l){
 function linhaHTML(l){
   const at=ativoDe(l);
   const flags=at===false?'<span class="flag inativo">inativo</span>':'';
-  const tds=GRUPOS.map(g=>g.cols.map((c,j)=>`<td class="${j===0?'ini':''}" data-col="${esc(c)}">${cel(l,c)}</td>`).join('')).join('');
+  const tds=GRUPOS.map(g=>g.cols.map((c,j)=>`<td class="${j===0?'ini':''}">${cel(l,c)}</td>`).join('')).join('');
   return `<tr data-id="${esc(l.id)}">
     <td class="col-id">${esc(l.id)}</td>
     <td class="col-nome">${esc(l.nome_cliente||'(sem nome)')}${atalhoDrive(l)}<br>${flags}</td>
@@ -935,9 +842,7 @@ const SUJOS=new Map();    // id (texto) -> {timer,campos:Set}
    FALHAS = o servidor recusou e o dado só existe na tela. A linha e o campo ficam
    marcados, nasce um "tentar de novo" ali mesmo e fechar a aba pede confirmação. */
 const FALHAS=new Map();   // id (texto) -> {campos:Set}
-/* Um arquivo em trânsito também é pendência: fechar a guia no meio do upload
-   deixaria o documento sem link na planilha. */
-function temPendencia(){return SUJOS.size>0||FALHAS.size>0||ENVIANDO.size>0;}
+function temPendencia(){return SUJOS.size>0||FALHAS.size>0;}
 function setSave(cl,txt){const el=document.getElementById('saveStatus');el.className='save-status '+(cl||'');el.textContent=txt||'';}
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function marcarFalha(id,falhou){
@@ -1010,105 +915,6 @@ function tentarDeNovo(id){
   salvar(k);
 }
 
-/* ---------------- envio de documento (coluna de link) ----------------
-   O arquivo vai para a pasta "Societário e Jurídico" DO CLIENTE (o backend acha
-   dentro da pasta do Drive dele) e o link volta gravado na célula. Só um seletor
-   de arquivo na página inteira: 111 linhas × 6 colunas dariam 666 <input file>
-   no DOM sem que nenhum deles chegue a ser usado. */
-const UP_MAX_BYTES=10*1024*1024;
-let ALVO_UP=null;                 // {id, coluna} da célula que pediu o arquivo
-function seletorArquivo(){
-  let el=document.getElementById('up-file');
-  if(el) return el;
-  el=document.createElement('input');
-  el.type='file'; el.id='up-file'; el.tabIndex=-1; el.setAttribute('aria-hidden','true');
-  /* Fora da tela em vez de display:none — Safari já ignorou .click() em input
-     de arquivo escondido com display, e aqui o clique é sempre programático. */
-  el.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';
-  /* Aceita o que a equipe realmente manda; imagem entra porque muita prefeitura
-     ainda devolve alvará como foto. Não é trava: o backend aceita qualquer tipo. */
-  el.accept='.pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx,application/pdf,image/*';
-  el.addEventListener('change',()=>{
-    const f=el.files&&el.files[0], alvo=ALVO_UP;
-    el.value=''; ALVO_UP=null;                 // permite reenviar o MESMO arquivo depois
-    if(!f||!alvo) return;
-    const l=LINHAS.find(x=>String(x.id)===String(alvo.id));
-    if(l) enviarArquivo(l,alvo.coluna,f);
-    else setSave('err','Perdi a linha desse cliente — recarregue a página e tente de novo.');
-  });
-  document.body.appendChild(el);
-  return el;
-}
-function escolherArquivo(l,coluna){
-  ALVO_UP={id:String(l.id),coluna:coluna};
-  seletorArquivo().click();
-}
-/** Célula de link redesenhada no lugar, sem refazer a tabela — quem está
- *  enviando não pode perder a rolagem nem o que digitou em outra linha. */
-function repintarLink(id,coluna){
-  const tr=document.querySelector('tr[data-id="'+CSS.escape(String(id))+'"]');
-  if(!tr) return;
-  const td=tr.querySelector('td[data-col="'+CSS.escape(coluna)+'"]');
-  const l=LINHAS.find(x=>String(x.id)===String(id));
-  if(td&&l) td.innerHTML=cel(l,coluna);
-}
-function lerBase64(file){
-  return new Promise((ok,fail)=>{
-    const fr=new FileReader();
-    fr.onerror=()=>fail(new Error('Não consegui ler o arquivo do seu computador.'));
-    /* readAsDataURL devolve "data:<tipo>;base64,XXXX" — o backend quer só o XXXX */
-    fr.onload=()=>{const s=String(fr.result||'');const i=s.indexOf(',');ok(i<0?'':s.slice(i+1));};
-    fr.readAsDataURL(file);
-  });
-}
-/* O aviso vermelho da célula tem prazo: sem isso ele atravessa filtro, busca e
-   ordenação e continua ali meia hora depois, apontando um problema que a pessoa
-   já resolveu de outro jeito. */
-function avisarErro(l,coluna,msg){
-  const k=l.id+'|'+coluna;
-  ERRO_UP.set(k,msg);
-  repintarLink(l.id,coluna);
-  setTimeout(()=>{ if(ERRO_UP.get(k)===msg){ ERRO_UP.delete(k); repintarLink(l.id,coluna); } },45000);
-}
-async function enviarArquivo(l,coluna,file){
-  const k=l.id+'|'+coluna;
-  ERRO_UP.delete(k);
-  if(file.size>UP_MAX_BYTES){
-    avisarErro(l,coluna,(file.size/1048576).toFixed(1)+' MB — o limite é 10 MB. Comprima o PDF ou cole o link pelo “⋯”.');
-    setSave('err','Arquivo grande demais.');
-    return;
-  }
-  ENVIANDO.set(k,file.name);
-  ABERTAS.delete(k);
-  repintarLink(l.id,coluna);
-  setSave('saving','Enviando '+file.name+'…');
-  try{
-    const b64=await lerBase64(file);
-    const r=await postAcao({acao:'licenca_upload',id:l.id,coluna,
-      arquivo_nome:file.name,arquivo_tipo:file.type||'',arquivo_base64:b64,
-      cliente:l.nome_cliente||'',cod:respAtual()});
-    /* Só sobrescreve com endereço de verdade. Resposta estranha sem `url` não
-       pode apagar o link que já estava lá — o velho vale mais que o vazio. */
-    if(r&&r.url) l.valores[coluna]=String(r.url);
-    esquecerBusca(l);
-    ENVIANDO.delete(k);
-    repintarLink(l.id,coluna);
-    /* Nada de redesenhar resumo/chips aqui: a contagem de pendência olha só
-       para as colunas de VENCIMENTO. Link não entra nela — e refazer a tabela
-       no meio de um envio custaria a rolagem de quem está trabalhando. */
-    setSave('ok',(r.substituiu?'Substituído':'Enviado')+' ✓ '+horaAgora()+' · '+(r.pasta||'Societário e Jurídico'));
-  }catch(err){
-    ENVIANDO.delete(k);
-    const m=String((err&&err.message)||err);
-    /* Quando o que falhou foi a ESPERA, o arquivo pode ter subido: o servidor
-       grava dentro do lock e só depois responde. Reenviar às cegas duplicaria o
-       documento na pasta — por isso a mensagem manda recarregar antes. */
-    const talvezSubiu=/não respondeu a tempo|Failed to fetch|NetworkError/i.test(m);
-    avisarErro(l,coluna,m+(talvezSubiu?' — recarregue a página antes de reenviar: o arquivo pode ter subido.':''));
-    setSave('err','Não enviou: '+m);
-  }
-}
-
 /* ---------------- eventos ---------------- */
 function linhaDo(el){
   const tr=el.closest('tr[data-id]'); if(!tr) return null;
@@ -1144,30 +950,6 @@ document.addEventListener('change',e=>{
 document.addEventListener('click',async e=>{
   const rt=e.target.closest('.btn-retry[data-retry]');
   if(rt){rt.disabled=true;tentarDeNovo(rt.dataset.retry);return;}
-  /* ---- célula de link: enviar arquivo / abrir edição / fechar ---- */
-  const up=e.target.closest('button[data-up]');
-  if(up){
-    const l=linhaDo(up); if(!l) return;
-    escolherArquivo(l,up.dataset.up);
-    return;
-  }
-  const ab=e.target.closest('button[data-abrir-edicao]');
-  if(ab){
-    const l=linhaDo(ab); if(!l) return;
-    const c=ab.dataset.abrirEdicao;
-    ABERTAS.add(l.id+'|'+c); ERRO_UP.delete(l.id+'|'+c);
-    const td=ab.closest('td'); td.innerHTML=celLink(l,c);
-    const inp=td.querySelector('input[data-link]'); if(inp){inp.focus();inp.select();}
-    return;
-  }
-  const fc=e.target.closest('button[data-fechar]');
-  if(fc){
-    const l=linhaDo(fc); if(!l) return;
-    const c=fc.dataset.fechar;
-    ABERTAS.delete(l.id+'|'+c);
-    fc.closest('td').innerHTML=celLink(l,c);
-    return;
-  }
   const md=e.target.closest('.modo[data-modo]');
   if(md){
     const l=linhaDo(md); if(!l) return;
@@ -1239,20 +1021,6 @@ function campoDestino(tr,coluna){
   const ok=el=>!!el&&!el.disabled&&!el.readOnly;
   const igual=tr.querySelector('[data-c="'+CSS.escape(coluna)+'"]');
   if(ok(igual)) return igual;
-  /* Coluna de link com a célula FECHADA também não tem campo — mas, ao
-     contrário de uma coluna espelhada, ela é editável: basta abrir. Sem isto o
-     Enter escorregaria para a próxima coluna e a URL seguinte seria colada na
-     coluna errada, gravando na planilha. */
-  if(ehLink(coluna)&&!ehSoLeitura(coluna)){
-    const l=LINHAS.find(x=>String(x.id)===tr.dataset.id);
-    const td=tr.querySelector('td[data-col="'+CSS.escape(coluna)+'"]');
-    if(l&&td&&!ENVIANDO.has(l.id+'|'+coluna)){
-      ABERTAS.add(l.id+'|'+coluna);
-      td.innerHTML=celLink(l,coluna);
-      const novo=td.querySelector('input[data-c]');
-      if(ok(novo)) return novo;
-    }
-  }
   const cols=gradeCols();
   for(let j=cols.indexOf(coluna)+1;j<cols.length;j++){
     const el=tr.querySelector('[data-c="'+CSS.escape(cols[j])+'"]');
@@ -1332,7 +1100,7 @@ function layout(){
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">Editar aqui grava direto na planilha${META.aba?' (aba <b>'+esc(META.aba)+'</b>)':''}. O atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. Coluna de <b>documento</b> não mostra mais o endereço cru: quando o arquivo já existe aparece <b>Abrir</b>; quando não existe, <b>Enviar</b> — escolha o arquivo do computador (até 10 MB) e ele sobe para a pasta <b>Societário e Jurídico</b> deste cliente no Drive, com o link gravado aqui sozinho. O arquivo herda a permissão da pasta: quem não tinha acesso continua sem. O <b>⋯</b> ao lado guarda o que é raro — colar um link à mão ou trocar o arquivo já enviado.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do <b>Registro</b> por fórmula — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>Na grade, a faixa escura acima dos cabeçalhos junta as colunas por <b>assunto</b> (o mesmo documento, o mesmo portal), para não se perder na rolagem lateral. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
+    <div class="txt">Editar aqui grava direto na planilha${META.aba?' (aba <b>'+esc(META.aba)+'</b>)':''}. O atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. Coluna de endereço tem o atalho <b>↗</b> ao lado, que abre o documento em outra guia quando o campo é mesmo um link.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do <b>Registro</b> por fórmula — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>Na grade, a faixa escura acima dos cabeçalhos junta as colunas por <b>assunto</b> (o mesmo documento, o mesmo portal), para não se perder na rolagem lateral. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
   </details>
   <details class="ajuda situacao" id="det-situacao">
     <summary>Ver quem está em cada situação</summary>

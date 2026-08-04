@@ -98,7 +98,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
    para lá, preservando ?chave= e ?cod= (e o #hash, que os atalhos antigos
    usavam como chave).
    =================================================================== */
-const CHAVE_PADRAO='b4u-equipe-2026';
+/* A chave da equipe não é mais fixa: é o código do dia de cada colaborador
+   (aba "Colaboradores" da planilha de Contatos), que chega por e-mail no
+   index.html. Esta constante ficou vazia de propósito — se voltar a ter valor,
+   volta a existir uma senha compartilhada que não expira e não diz quem é quem. */
+const CHAVE_PADRAO = '';
 const SEGUNDOS=5;
 
 function chaveAtual(){

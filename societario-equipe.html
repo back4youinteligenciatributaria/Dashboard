@@ -261,9 +261,24 @@ tr.falhou>td{background:#FBEAE7!important}
 // é reserva: se o config.js não carregar, a página continua de pé.
 const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
   'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
-const CHAVE_PADRAO='b4u-equipe-2026';
+/* A chave da equipe não é mais fixa: é o código do dia de cada colaborador
+   (aba "Colaboradores" da planilha de Contatos), que chega por e-mail no
+   index.html. Esta constante ficou vazia de propósito — se voltar a ter valor,
+   volta a existir uma senha compartilhada que não expira e não diz quem é quem. */
+const CHAVE_PADRAO = '';
 const STATUS=['','Aguardando','Em andamento','Concluído','Não se aplica'];
 function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');const h=(location.hash||'').replace('#','').trim();return q||h||CHAVE_PADRAO;}
+
+/* Sem chave na URL não há painel da equipe. A porta é o index.html: a pessoa
+   digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
+   serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
+   longe do que ela tinha clicado.
+   Até 04/08/2026 existia uma chave fixa ('b4u-equipe-2026') escrita aqui como
+   padrão: quem abrisse a página sem chave nenhuma entrava assim mesmo. */
+if (!chaveAtual()) {
+  location.replace('index.html?destino=' + encodeURIComponent(
+    location.pathname.split('/').pop() + location.search + location.hash));
+}
 // Código do colaborador (?cod=) — vira a coluna "Colaborador" da aba log.
 // Aqui o hash já é fallback da chave, então só lemos o parâmetro.
 function codAtual(){return (new URLSearchParams(location.search).get('cod')||'').trim();}
