@@ -271,6 +271,17 @@ tr.falhou>td{background:#FBEAE7!important}
 /* A barra nunca estoura: quebra de linha e o contador some no celular. */
 .barra{flex-wrap:wrap}
 @media(max-width:560px){.barra .cnt{display:none}}
+
+/* ---- quem é a pessoa (sócio / médico / função) ----
+   Fica numa segunda linha, abaixo dos campos de contato, porque é informação de
+   CADASTRO e não de acesso: quem abre esta tela quase sempre vem mexer em e-mail,
+   telefone ou permissão. CRM e endereço só aparecem quando a resposta os torna
+   possíveis — campo que não se aplica atrapalha mais do que ajuda. */
+.perfil{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:8px;
+  padding-top:8px;border-top:1px dashed var(--linha,#E4D9C9)}
+.perfil .cp{min-width:140px}
+.perfil .cp.larga{flex:1 1 240px}
+.perfil .sn-falta{align-self:center;font-size:11px;color:#8A7D70}
 </style>
 <script src="config.js"></script>
 </head>
@@ -524,6 +535,28 @@ function areasHTML(c){
   return `<span class="rot-a">Áreas</span>${chips}`+(pr?'<span class="nota">Principal enxerga todas as áreas</span>':'');
 }
 function btnRemover(c){return `<button class="btn btn--mini btn--danger-out" type="button" data-del="${esc(c.row)}">Remover</button>`;}
+/* Três estados no SIM/NÃO: sim, não e "ninguém respondeu ainda".
+   Vazio não é "não" — é pergunta em aberto, e é isso que deixa a tela poder
+   cobrar depois sem acusar quem nunca foi perguntado. */
+function triSel(v){ return v===true?'sim':(v===false?'nao':''); }
+function perfilHTML(c){
+  const p=c.perfil||{};
+  const socio=triSel(p.socio), medico=triSel(p.medico);
+  const tri=(k,rot,val)=>`<label class="cp"><span>${rot}</span><select class="in" data-p="${k}">
+      <option value=""${val===''?' selected':''}>—</option>
+      <option value="sim"${val==='sim'?' selected':''}>Sim</option>
+      <option value="nao"${val==='nao'?' selected':''}>Não</option></select></label>`;
+  return `<div class="perfil">
+    ${tri('socio','Sócio?',socio)}
+    ${tri('medico','Médico?',medico)}
+    <label class="cp larga"><span>Função</span><input class="in" data-p="funcao" value="${esc(p.funcao||'')}"
+      placeholder="sócio investidor, secretária, concierge…"></label>
+    ${medico==='sim'?`<label class="cp"><span>CRM</span><input class="in" data-p="crm" value="${esc(p.crm||'')}" placeholder="CRM/UF 00000"></label>`:''}
+    ${socio==='sim'?`<label class="cp larga"><span>Endereço pessoal</span><input class="in" data-p="endereco" value="${esc(p.endereco||'')}" placeholder="rua, nº, cidade"></label>`:''}
+    ${(!p.funcao&&!socio&&!medico)?`<span class="sn-falta">sem informação de quem é a pessoa</span>`:''}
+  </div>`;
+}
+
 function contatoHTML(c,t){
   const pr=c.papel==='Principal';
   const semMail=!String(c.email||'').trim(),semTel=!String(c.telefone||'').trim();
@@ -535,6 +568,7 @@ function contatoHTML(c,t){
       <label class="cp"><span>Papel</span><select class="in" data-k="papel">
         <option${pr?' selected':''}>Principal</option><option${pr?'':' selected'}>Secundário</option></select></label>
     </div>
+    ${perfilHTML(c)}
     <div class="areas-linha" data-areas>${areasHTML(c)}</div>
     <div class="rodape">
       ${c.codigo?`<span class="ro">código de hoje <b>${esc(c.codigo)}</b><button class="lk" type="button" data-copy="${esc(c.codigo)}">copiar</button></span>`:''}
@@ -732,6 +766,29 @@ function agendarSalvar(row,ms){
   SUJOS.set(String(row),setTimeout(()=>salvarContato(row),ms==null?700:ms));
   setSave('saving','Salvando…');
 }
+/* O perfil vive no mesmo objeto do contato. Trocar "Médico?" para Sim precisa
+   redesenhar a linha (o campo de CRM passa a existir), e por isso este caminho é
+   separado do dos outros campos. */
+function aplicarPerfil(el){
+  const box=el.closest('.ctt'); if(!box) return null;
+  const c=contatoDe(box.dataset.row); if(!c) return null;
+  c.perfil=c.perfil||{};
+  const k=el.dataset.p;
+  c.perfil[k]= (k==='socio'||k==='medico') ? (el.value===''?null:el.value==='sim') : el.value;
+  if(k==='socio'||k==='medico'){
+    if(c.perfil.medico!==true) c.perfil.crm='';
+    if(c.perfil.socio!==true)  c.perfil.endereco='';
+    const alvo=box.querySelector('.perfil');
+    if(alvo) alvo.outerHTML=perfilHTML(c);
+  }
+  return c;
+}
+function perfilDe(c){
+  const p=c.perfil||{};
+  return { socio:p.socio, medico:p.medico, funcao:p.funcao||'',
+           crm:p.crm||'', endereco:p.endereco||'' };
+}
+
 async function salvarContato(row){
   const k=String(row);
   clearTimeout(SUJOS.get(k));SUJOS.delete(k);
@@ -743,7 +800,7 @@ async function salvarContato(row){
     await postAcao({
       acao:'contato_salvar',row:c.row,cliente_id:c.cliente_id,
       nome:nome,email:email,telefone:String(c.telefone||'').trim(),
-      papel:c.papel,areas:areasSel(c),email_atual:c._email0||'',
+      papel:c.papel,areas:areasSel(c),perfil:perfilDe(c),email_atual:c._email0||'',
       cliente:nomeCli(c.cliente_id),cod:respAtual()
     });
     c._email0=email;                       // a linha agora é este e-mail
@@ -823,6 +880,7 @@ async function adicionarContato(btn){
       acao:'contato_salvar',cliente_id:id,nome:nome,email:email,
       telefone:document.getElementById('m-tel').value.trim(),
       papel:papel,areas:areas,
+      perfil:{ socio:null, medico:null, funcao:'', crm:'', endereco:'' },
       cliente:nomeCli(id),cod:respAtual()
     });
     fecharModal();
@@ -896,6 +954,7 @@ document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='busca'){TERMO=el.value;aplicarBusca();return;}
   if(el.id==='m-cli'){validarCliModal();return;}
+  if(el.dataset&&el.dataset.p){ const c=aplicarPerfil(el); if(c) agendarSalvar(c.row); return; }
   if(!el.dataset||!el.dataset.k||el.dataset.k==='papel')return;
   const ctt=el.closest('.ctt');if(!ctt)return;
   const c=contatoDe(ctt.dataset.row);if(!c)return;
@@ -906,6 +965,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const el=e.target;
   if(el.id==='m-papel'){pintarAreasModal();return;}
+  if(el.dataset&&el.dataset.p){ const c=aplicarPerfil(el); if(c) agendarSalvar(c.row,150); return; }
   if(!el.dataset||!el.dataset.k)return;
   const ctt=el.closest('.ctt');if(!ctt)return;
   const c=contatoDe(ctt.dataset.row);if(!c)return;

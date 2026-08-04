@@ -708,9 +708,28 @@ function desenharResumo(){
     base.filter(c=>!valorDe(c,COL.cnpj)),c=>itemResumo(c,'sem CNPJ')));
   if(COL.inicio)cards.push(cardResumo('semdado2','Sem data de início',
     'Clientes não inativos sem data de início da contabilidade.',
-    base.filter(c=>!valorDe(c,COL.inicio)),c=>itemResumo(c,'sem início')));
+    base.filter(c=>exigeInicio(c)&&!valorDe(c,COL.inicio)),c=>itemResumo(c,'sem início')));
   el.innerHTML=cards.join('');
 }
+
+/* Cliente SÓ de equiparação não tem data de início da contabilidade — não existe
+   contabilidade para começar. Cobrar o campo dele enche a lista de "faltando" com
+   uma pendência que ninguém pode resolver, e pendência que não se resolve treina
+   a equipe a ignorar a lista inteira.
+   O teste é sobre os PRODUTOS: se sobra alguma coisa depois de tirar as palavras
+   de equiparação, é cliente de contabilidade também e a data volta a ser exigida. */
+function soEquiparacao(c){
+  const p=normTxt(valorDe(c,COL.produtos)||'');
+  if(!p) return false;                       // sem produto declarado não dá para afirmar nada
+  // "Equiparação Hospitalar" e "Restituição Tributária" são o mesmo produto com
+  // sobrenome — os qualificadores saem junto, senão sobra palavra e o cliente
+  // volta a ser cobrado pela data que ele não tem.
+  const resto=p.replace(/equipara[cç][aã]o|restitui[cç][aã]o/g,'')
+               .replace(/hospitalar|tribut[aá]ria?|previdenci[aá]ria?/g,'')
+               .replace(/[^a-z0-9]+/g,'');
+  return resto==='';
+}
+function exigeInicio(c){ return !soEquiparacao(c); }
 
 function ehTravada(col){return TRAVADAS.has(norm(col));}
 function valorDe(cli,col){return col?String((cli.valores||{})[col]||'').trim():'';}
@@ -770,7 +789,7 @@ const FILTROS=[
   {k:'inativos',rot:'Inativos',fn:c=>situacaoDe(c)==='inativo',dep:'ativo'},
   {k:'sem_cnpj',rot:'Sem CNPJ',fn:c=>!valorDe(c,COL.cnpj),dep:'cnpj',cls:'falta'},
   {k:'sem_regime',rot:'Sem regime',fn:c=>!valorDe(c,COL.regime),dep:'regime',cls:'falta'},
-  {k:'sem_inicio',rot:'Sem data de início da contabilidade',fn:c=>!valorDe(c,COL.inicio),dep:'inicio',cls:'falta'},
+  {k:'sem_inicio',rot:'Sem data de início da contabilidade',fn:c=>exigeInicio(c)&&!valorDe(c,COL.inicio),dep:'inicio',cls:'falta'},
   {k:'sem_produtos',rot:'Sem produtos',fn:c=>!valorDe(c,COL.produtos),dep:'produtos',cls:'falta'},
   {k:'sem_drive',rot:'Sem pasta no Drive',fn:c=>!valorDe(c,COL.drive),dep:'drive',cls:'falta'}
 ];
@@ -920,7 +939,7 @@ function desenharResumoLista(){
   const quantos=fn=>CLIENTES.filter(fn).length;
   const p=[(vis===tot?String(tot):vis+' de '+tot)+' clientes'];
   if(COL.ativo){const a=quantos(c=>situacaoDe(c)==='ativo');if(a)p.push(a+' ativos');}
-  if(COL.inicio){const s=quantos(c=>!valorDe(c,COL.inicio));if(s)p.push(s+' sem data de início');}
+  if(COL.inicio){const s=quantos(c=>exigeInicio(c)&&!valorDe(c,COL.inicio));if(s)p.push(s+' sem data de início');}
   if(COL.cnpj){const s=quantos(c=>!valorDe(c,COL.cnpj));if(s)p.push(s+' sem CNPJ');}
   if(COL.regime){const s=quantos(c=>!valorDe(c,COL.regime));if(s)p.push(s+' sem regime');}
   el.textContent=p.join(' · ');

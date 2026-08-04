@@ -271,6 +271,26 @@ tr.falhou>td{background:#FBEAE7!important}
 /* A barra nunca estoura: quebra de linha e o contador some no celular. */
 .barra{flex-wrap:wrap}
 @media(max-width:560px){.barra .cnt{display:none}}
+/* ---- coluna de documento (Abrir / Enviar) ----
+   O endereço cru saiu da tela: quem trabalha aqui quer ABRIR o documento ou
+   MANDAR um, e não ler uma URL de 120 caracteres. O campo de URL continua
+   existindo atrás do "⋯", porque colar link ainda acontece — só deixou de ser
+   o estado padrão de 666 células. */
+.doc{display:flex;align-items:center;gap:6px;min-width:0}
+.doc-bt{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;font-weight:700;
+  padding:5px 9px;border-radius:7px;border:1px solid transparent;text-decoration:none;cursor:pointer;background:none}
+.doc-ir{color:#0F8C85;border-color:#cfe6e2;background:#F2F9F8}
+.doc-ir:hover{background:#EAF4F1}
+.doc-env{color:#8A7D70;border:1px dashed #D8CFC3;background:none}
+.doc-env:hover{color:#0F8C85;border-color:#0F8C85}
+.doc-obs{font-style:italic;color:#8A7D70;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-mais{border:none;background:none;color:#B8AFA6;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;border-radius:6px}
+.doc-mais:hover{color:#113D39;background:#F1ECE4}
+@media (hover:hover){ .doc .doc-mais{opacity:.32} .doc:hover .doc-mais,.doc:focus-within .doc-mais{opacity:1} }
+.doc-spin{display:inline-block;width:12px;height:12px;border:2px solid #cfe6e2;border-top-color:#0F8C85;
+  border-radius:50%;animation:docgira .8s linear infinite}
+@keyframes docgira{to{transform:rotate(360deg)}}
+.doc-erro{display:block;color:#A4303F;font-size:11px;line-height:1.3;margin-top:3px}
 </style>
 <script src="config.js"></script>
 </head>
@@ -361,7 +381,24 @@ function jsonp(url){
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
-async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
+/* O JSONP sempre teve teto; o POST não tinha. Uma resposta perdida no meio de um
+   corpo de ~13 MB deixava a promise pendurada para sempre: spinner eterno na
+   célula (que sobrevive a filtro e ordenação) e o aviso de "sair sem salvar"
+   pedindo confirmação até o F5. Agora há prazo, e quem estourar sabe. */
+async function postAcao(obj,ms){
+  const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));
+  const ctl=new AbortController();
+  const t=setTimeout(()=>ctl.abort(),ms||120000);
+  try{
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,signal:ctl.signal});
+    const d=await r.json();
+    if(d&&d.erro)throw new Error(d.erro);
+    return d;
+  }catch(e){
+    if(e&&e.name==='AbortError') throw new Error('A resposta demorou demais.');
+    throw e;
+  }finally{ clearTimeout(t); }
+}
 
 /* ---------------- estado ---------------- */
 let LINHAS=[], COLUNAS=[], ESPELHADAS=[], EDITAVEIS=[], SIGILOSAS=[], DATAS=[], LINKS=[], META={}, GRUPOS=[];
@@ -624,13 +661,111 @@ function atalhoAbrir(v){
     ? `<a class="lk-ir" href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="Abrir em outra guia">↗</a>`
     : `<span class="lk-ir off" title="Sem endereço válido para abrir" aria-hidden="true">↗</span>`;
 }
-function celLink(l,c){
-  const v=String(l.valores[c]||'');
-  return `<div class="lk-cel">
-    <input type="text" data-c="${esc(c)}" data-link="1" value="${esc(v)}" placeholder="https://…" inputmode="url" spellcheck="false">
-    ${atalhoAbrir(v)}
-  </div>`;
+/* Células com o campo de URL à mostra (o "⋯" aberto), por id|coluna. */
+const ABERTAS=new Set();
+/* Envios em andamento: id|coluna -> nome do arquivo. */
+const ENVIANDO=new Map();
+/* Erro por célula, com validade — id|coluna -> {txt, ate}. Um aviso que fica
+   para sempre atravessa filtro e busca e ainda está lá meia hora depois. */
+const ERROS=new Map();
+const chaveCel=(id,c)=>String(id)+'|'+c;
+
+function erroDaCel(l,c){
+  const e=ERROS.get(chaveCel(l.id,c));
+  if(!e) return '';
+  if(Date.now()>e.ate){ ERROS.delete(chaveCel(l.id,c)); return ''; }
+  return `<span class="doc-erro">${esc(e.txt)}</span>`;
 }
+
+/* A coluna de link não mostra mais o endereço: mostra o DOCUMENTO.
+     tem link ......... Abrir ↗            + ⋯
+     vazia ............ Enviar ⬆           + ⋯
+     texto solto ...... Enviar ⬆ + a anotação em itálico + ⋯
+     enviando ......... roda + nome do arquivo
+   O "⋯" guarda o que é raro e o que dá para estragar: o campo de URL editável e
+   a troca do arquivo. Coluna que FALHOU ao gravar fica aberta à força — fechar
+   mostraria um "Abrir ↗" verde apontando um endereço que só existe na memória
+   deste navegador. */
+function celLink(l,c){
+  const v=String(l.valores[c]||'').trim();
+  const k=chaveCel(l.id,c);
+  const f=FALHAS.get(String(l.id));
+  const falhou=!!(f&&f.campos&&f.campos.has(c));
+  const enviando=ENVIANDO.get(k);
+
+  if(enviando!==undefined){
+    return `<div class="doc" data-cel="${esc(k)}"><span class="doc-spin"></span>
+      <span class="doc-obs">${esc(enviando)}</span></div>`;
+  }
+
+  if(ABERTAS.has(k)||falhou){
+    return `<div class="doc" data-cel="${esc(k)}">
+      <div class="lk-cel">
+        <input type="text" data-c="${esc(c)}" data-link="1" value="${esc(v)}" placeholder="https://…" inputmode="url" spellcheck="false">
+        ${atalhoAbrir(v)}
+      </div>
+      <button type="button" class="doc-mais" data-mais="${esc(c)}" title="Fechar">✕</button>
+      ${erroDaCel(l,c)}</div>`;
+  }
+
+  const acao=urlOk(v)
+    ? `<a class="doc-bt doc-ir" href="${esc(v)}" target="_blank" rel="noopener noreferrer">Abrir ↗</a>`
+    : `<button type="button" class="doc-bt doc-env" data-env="${esc(c)}">Enviar ⬆</button>` +
+      (v?`<span class="doc-obs" title="${esc(v)}">${esc(v)}</span>`:'');
+  return `<div class="doc" data-cel="${esc(k)}">${acao}
+    <button type="button" class="doc-mais" data-mais="${esc(c)}" title="Trocar o arquivo ou colar um endereço">⋯</button>
+    ${erroDaCel(l,c)}</div>`;
+}
+/* ---------------- envio do documento ---------------- */
+const DOC_MAX=10*1024*1024;                 // igual ao anexo de chamado
+let DOC_ALVO=null;                          // {id, coluna} do clique que abriu o seletor
+
+function repintarCel(l,c){
+  const td=document.querySelector('tr[data-id="'+CSS.escape(String(l.id))+'"] [data-cel="'+CSS.escape(chaveCel(l.id,c))+'"]');
+  if(td&&td.parentElement) td.parentElement.innerHTML=celLink(l,c);
+}
+function erroNaCel(l,c,txt){
+  ERROS.set(chaveCel(l.id,c),{txt:txt,ate:Date.now()+45000});
+  repintarCel(l,c);
+}
+function lerBase64(file){
+  return new Promise((ok,fail)=>{
+    const fr=new FileReader();
+    fr.onerror=()=>fail(new Error('Não consegui ler o arquivo.'));
+    fr.onload=()=>{ const s=String(fr.result||''); ok(s.slice(s.indexOf(',')+1)); };
+    fr.readAsDataURL(file);
+  });
+}
+async function enviarDocumento(l,c,file){
+  if(file.size>DOC_MAX){
+    erroNaCel(l,c,'O arquivo tem '+(file.size/1048576).toFixed(1)+' MB e o limite é 10 MB.');
+    return;
+  }
+  const k=chaveCel(l.id,c);
+  ERROS.delete(k); ENVIANDO.set(k,file.name); repintarCel(l,c);
+  setSave('saving','Enviando '+file.name+'…');
+  try{
+    const b64=await lerBase64(file);
+    const d=await postAcao({acao:'cert_upload', id:l.id, coluna:c,
+      cliente:l.valores['Nome']||'', cod:respAtual(),
+      arquivo_nome:file.name, arquivo_tipo:file.type||'application/octet-stream',
+      arquivo_base64:b64});
+    // resposta sem url NÃO apaga o link que já estava lá
+    if(d&&d.url){ l.valores[c]=d.url; esquecerBusca(l); }
+    setSave('ok',(d&&d.substituiu?'Documento substituído ✓ ':'Documento enviado ✓ ')+horaAgora());
+  }catch(e){
+    const msg=String((e&&e.message)||e);
+    /* No timeout o arquivo PODE ter subido: o servidor grava dentro do lock e só
+       depois responde. Reenviar às cegas duplicaria o documento na pasta. */
+    erroNaCel(l,c, msg.indexOf('demorou')>-1
+      ? 'Demorou demais. O arquivo pode ter subido — recarregue antes de mandar de novo.'
+      : msg);
+    setSave('err','Não enviou: '+msg);
+  }finally{
+    ENVIANDO.delete(k); repintarCel(l,c);
+  }
+}
+
 function celSoLeitura(l,c){
   const v=String(l.valores[c]||'');
   const t=ehEspelhada(c)?'Espelho do Registro (fórmula IMPORTRANGE) — edite em Registros de clientes'
@@ -950,6 +1085,23 @@ document.addEventListener('change',e=>{
 document.addEventListener('click',async e=>{
   const rt=e.target.closest('.btn-retry[data-retry]');
   if(rt){rt.disabled=true;tentarDeNovo(rt.dataset.retry);return;}
+  const env=e.target.closest('[data-env]');
+  if(env){
+    const l=linhaDo(env); if(!l) return;
+    DOC_ALVO={id:l.id, coluna:env.dataset.env};
+    const inp=document.getElementById('doc-file'); inp.value=''; inp.click();
+    return;
+  }
+  const mais=e.target.closest('[data-mais]');
+  if(mais){
+    const l=linhaDo(mais); if(!l) return;
+    const c=mais.dataset.mais, k=chaveCel(l.id,c);
+    if(ABERTAS.has(k)) ABERTAS.delete(k); else ABERTAS.add(k);
+    repintarCel(l,c);
+    const campo=document.querySelector('tr[data-id="'+CSS.escape(String(l.id))+'"] [data-c="'+CSS.escape(c)+'"]');
+    if(campo&&ABERTAS.has(k)) campo.focus();
+    return;
+  }
   const md=e.target.closest('.modo[data-modo]');
   if(md){
     const l=linhaDo(md); if(!l) return;
@@ -1017,10 +1169,34 @@ function linhaVizinha(tr,passo){
 /* Campo da mesma coluna na linha de destino. Coluna espelhada/só leitura não tem
    campo nenhum (é um <div class="ro">), então o Enter segue para a próxima
    editável em vez de largar o foco no nada. */
+/* Um seletor de arquivo só, reaproveitado por todas as células. */
+(function(){
+  const inp=document.createElement('input');
+  inp.type='file'; inp.id='doc-file'; inp.hidden=true;
+  inp.addEventListener('change',()=>{
+    const f=inp.files&&inp.files[0], alvo=DOC_ALVO;
+    inp.value=''; DOC_ALVO=null;
+    if(!f||!alvo) return;
+    const l=LINHAS.find(x=>String(x.id)===String(alvo.id));
+    if(l) enviarDocumento(l,alvo.coluna,f);
+  });
+  document.body.appendChild(inp);
+})();
+
 function campoDestino(tr,coluna){
   const ok=el=>!!el&&!el.disabled&&!el.readOnly;
   const igual=tr.querySelector('[data-c="'+CSS.escape(coluna)+'"]');
   if(ok(igual)) return igual;
+  /* Coluna de documento FECHADA também não tem campo — e a regra de "pula para a
+     próxima editável" foi escrita para coluna espelhada, não para esta. Sem este
+     desvio, colar links em lote jogaria a URL seguinte em OUTRA coluna, gravando
+     de verdade. Se a coluna é de link e é editável, a célula abre e recebe o foco. */
+  if(ehLink(coluna)&&!ehSoLeitura(coluna)){
+    const id=tr.dataset.id, l=LINHAS.find(x=>String(x.id)===String(id));
+    if(l){ ABERTAS.add(chaveCel(l.id,coluna)); repintarCel(l,coluna);
+           const novo=tr.querySelector('[data-c="'+CSS.escape(coluna)+'"]');
+           if(ok(novo)) return novo; }
+  }
   const cols=gradeCols();
   for(let j=cols.indexOf(coluna)+1;j<cols.length;j++){
     const el=tr.querySelector('[data-c="'+CSS.escape(cols[j])+'"]');

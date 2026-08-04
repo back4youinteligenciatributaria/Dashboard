@@ -577,27 +577,34 @@ function pintarRestituicao(){
 /* ---- Ferramentas da equipe: lista única, renderizada e filtrável ----
    `alias` é só para a busca: são as palavras que a pessoa realmente digita
    quando está procurando aquela ferramenta (e não o nome oficial dela). */
+/* Declarados ANTES do FERRAMENTAS de propósito: o array lá embaixo usa estas
+   listas no próprio literal, e `const` não é içado — declarar depois derruba a
+   página inteira com ReferenceError antes de qualquer coisa desenhar. */
+const AREAS_OPERACAO=['fiscal','contabil','pessoal','societario'];
+const AREAS_TODAS=['fiscal','contabil','pessoal','societario','equiparacao','financeiro'];
+const AREAS_CARTEIRA=['fiscal','contabil','pessoal','societario','financeiro'];
+
 const FERRAMENTAS=[
-  {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:'📇',
+  {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:'📇', area:AREAS_OPERACAO,
    desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
    alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj'},
   {id:'fp-certificados',  nome:'Certificados e acessos',        url:'certificados.html',      ic:'🔐',
    desc:'Vencimentos de certificado, e-CAC e SPE, com o responsável legal.',
    alias:'certificado digital procuracao e-cac ecac spe vencimento responsavel legal',
    badge:seloCertificados},
-  {id:'fp-licencas',      nome:'Documentos e licenças',         url:'licencas.html',          ic:'📜',
+  {id:'fp-licencas',      nome:'Documentos e licenças',         url:'licencas.html',          ic:'📜', area:'societario',
    desc:'Alvará, sanitária e demais licenças, com a data de cada renovação.',
    alias:'licenca alvara sanitario crm pj cli licenciamento integrado regularidade cnes'},
-  {id:'fp-contatos',      nome:'Contatos',                      url:'contatos-equipe.html',   ic:'👥',
+  {id:'fp-contatos',      nome:'Contatos',                      url:'contatos-equipe.html',   ic:'👥', area:AREAS_TODAS,
    desc:'Quem fala pelo cliente: e-mail, telefone, papel e permissão de acesso.',
    alias:'contato email e-mail telefone acesso permissao papel principal secundario'},
-  {id:'fp-societario',    nome:'Societário — processos em andamento e finalizados', url:'societario-equipe.html', ic:'🏛️',
+  {id:'fp-societario',    nome:'Societário — processos em andamento e finalizados', url:'societario-equipe.html', ic:'🏛️', area:'societario',
    desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
    alias:'societario mestra alteracao contratual junta etapa processo protocolo'},
   {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:'💸', area:'equiparacao',
    desc:'Relatório de cada colaborador e a planilha de controle da equiparação.',
    alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
-  {id:'fp-ativos',        nome:'Clientes ativos / mês',         url:'clientes-ativos.html',   ic:'📈',
+  {id:'fp-ativos',        nome:'Clientes ativos / mês',         url:'clientes-ativos.html',   ic:'📈', area:AREAS_CARTEIRA,
    desc:'Quantos clientes ativos em cada competência, mês a mês.',
    alias:'ativos competencia mes calendario quantos clientes'},
   {id:'fp-comercial',     nome:'Comercial — materiais',         url:'comercial.html',         ic:'📣', area:'comercial',
@@ -614,10 +621,16 @@ let EU=null;
    card é atalho, não fechadura. Quem barra de verdade é o exigirAreaEquipe_ no
    servidor, e ele responde dizendo qual área falta — bem melhor do que um card
    que some sem explicação. */
+/* `a` pode ser uma área ou uma LISTA — lista é "qualquer uma serve". A maior
+   parte destas telas não é de uma área só: o cadastro de clientes interessa a
+   fiscal, contábil, pessoal e societário do mesmo jeito, e exigir uma área
+   específica obrigaria a marcar Fiscal em quem não é do fiscal. */
 function podeArea(a){
   if(!a) return true;
   if(!EU) return true;
-  return !!(EU.pleno || (EU.areas||{})[a]);
+  if(EU.pleno) return true;
+  const areas=EU.areas||{};
+  return (Array.isArray(a)?a:[a]).some(x=>!!areas[x]);
 }
 
 function pintarFerramentas(){
