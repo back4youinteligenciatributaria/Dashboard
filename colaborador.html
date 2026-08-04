@@ -581,17 +581,17 @@ const FERRAMENTAS=[
   {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:'📇',
    desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
    alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj'},
-  {id:'fp-certificados',  nome:'Certificados e procurações',    url:'certificados.html',      ic:'🔐',
+  {id:'fp-certificados',  nome:'Certificados e acessos',        url:'certificados.html',      ic:'🔐',
    desc:'Vencimentos de certificado, e-CAC e SPE, com o responsável legal.',
    alias:'certificado digital procuracao e-cac ecac spe vencimento responsavel legal',
    badge:seloCertificados},
-  {id:'fp-licencas',      nome:'Controle de licenças',          url:'licencas.html',          ic:'📜',
+  {id:'fp-licencas',      nome:'Documentos e licenças',         url:'licencas.html',          ic:'📜',
    desc:'Alvará, sanitária e demais licenças, com a data de cada renovação.',
    alias:'licenca alvara sanitario crm pj cli licenciamento integrado regularidade cnes'},
-  {id:'fp-contatos',      nome:'Contatos — gerir & permissões', url:'contatos-equipe.html',   ic:'👥',
+  {id:'fp-contatos',      nome:'Contatos',                      url:'contatos-equipe.html',   ic:'👥',
    desc:'Quem fala pelo cliente: e-mail, telefone, papel e permissão de acesso.',
    alias:'contato email e-mail telefone acesso permissao papel principal secundario'},
-  {id:'fp-societario',    nome:'Societário — editar processos', url:'societario-equipe.html', ic:'🏛️',
+  {id:'fp-societario',    nome:'Societário — processos em andamento e finalizados', url:'societario-equipe.html', ic:'🏛️',
    desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
    alias:'societario mestra alteracao contratual junta etapa processo protocolo'},
   {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:'💸', area:'equiparacao',
@@ -665,12 +665,17 @@ function painelCliente(c){
     ${blocoInfo(c)}
     ${alertas?`<div class="alertas">${alertas}</div>`:''}
     ${drive?`<div class="linha"><span class="rot">Drive</span>${drive}</div>`:''}
+    <!-- SEM Societário: a planilha "Societario XXXXXX" foi aposentada em 07/2026 e
+         o painel societário se monta do Controle de Licenças + Mestra. O link
+         apontava para um arquivo que não existe mais.
+         Os outros só aparecem para quem tem a área. Aqui o esconder é conforto:
+         o link é uma URL do Drive, e quem barra de verdade é a permissão do
+         próprio arquivo. -->
     <div class="linha"><span class="rot">Planilhas</span>
-      ${lkArea('Fiscal',a.fiscal,'📊')}
-      ${lkArea('Equiparação',a.equiparacao,'⚖️')}
-      ${lkArea('Societário',a.societario,'🏛️')}
-      ${lkArea('Contábil',a.contabil,'📒')}
-      ${lkArea('Pessoal',a.pessoal,'👥')}
+      ${podeArea('fiscal')      ? lkArea('Fiscal',a.fiscal,'📊') : ''}
+      ${podeArea('equiparacao') ? lkArea('Equiparação',a.equiparacao,'⚖️') : ''}
+      ${podeArea('contabil')    ? lkArea('Contábil',a.contabil,'📒') : ''}
+      ${podeArea('pessoal')     ? lkArea('Pessoal',a.pessoal,'👥') : ''}
     </div>
     ${blocoCertificado(cert,c.id)}
   </div>
@@ -763,7 +768,7 @@ function secLicencas(lic){
     const campos=(lic.campos||[]).slice(0,12).map(c=>`<div class="lic-row"><span>${esc(c.nome)}</span><b>${esc(c.valor)}</b></div>`).join('');
     body=campos?('<div class="lic-grid">'+campos+'</div>'):'<div class="ex-vazio">Cliente encontrado, mas sem datas de vencimento reconhecidas.</div>';
   }
-  return exSec('📜','Controle de licenças',body);
+  return exSec('📜','Documentos e licenças',body);
 }
 function secMestra(arr){
   arr=arr||[]; if(!arr.length) return '';
@@ -793,12 +798,18 @@ function secEquiparacao(arr){
   }).join('');
   return exSec('⚖️','Equiparação (Controle)',body+`<a class="ex-lk" href="${esc(urlControle())}" target="_blank" rel="noopener">Abrir Equiparação Controle ›</a>`);
 }
+/* `mestra` e `equiparacao` chegam como null quando quem pediu não tem a área —
+   quem decide é o montarClienteExtras_, no servidor. Aqui só não se desenha o
+   que não veio. null é diferente de lista vazia de propósito: "sem acesso" não
+   pode se confundir com "sem nada". */
 function renderExtras(x){
-  return secContatos(x.contatos)+secLicencas(x.licencas)+secMestra(x.mestra)+secEquiparacao(x.equiparacao);
+  return secContatos(x.contatos)+secLicencas(x.licencas)+
+         (x.mestra ? secMestra(x.mestra) : '')+
+         (x.equiparacao ? secEquiparacao(x.equiparacao) : '');
 }
 function carregarExtras(c){
   const box=document.getElementById('extras'); if(!box) return;
-  box.innerHTML='<div class="ex-sec"><div class="ex-load"><span class="spin"></span> Carregando contatos, licenças e processos…</div></div>';
+  box.innerHTML='<div class="ex-sec"><div class="ex-load"><span class="spin"></span> Carregando os dados do cliente…</div></div>';
   const u=API_URL+'?tipo=cliente_extras&id='+encodeURIComponent(c.id)+'&cnpj='+encodeURIComponent(c.cnpj||'')+'&chave='+encodeURIComponent(chaveAtual());
   jsonp(u).then(x=>{ if(x.erro) throw new Error(x.erro); box.innerHTML=renderExtras(x); })
     .catch(e=>{ box.innerHTML='<div class="ex-sec"><div class="ex-erro">Não consegui carregar os dados do cliente: '+esc(e.message||String(e))+'</div></div>'; });
@@ -831,7 +842,7 @@ function calcPendencias(){
   });
   return g;
 }
-/* Selo do card "Certificados e procurações": vencidos + a vencer em 60 dias. */
+/* Selo do card "Certificados e acessos": vencidos + a vencer em 60 dias. */
 function seloCertificados(){
   if(!PEND) return null;
   const n=PEND.venc.length+PEND.d30.length+PEND.d60.length;
