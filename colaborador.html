@@ -231,7 +231,18 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
   transition:background .14s,border-color .14s}
 .fer-card:hover .fer-ic{background:#EAF4F1;border-color:#cfe6e2}
 .fer-nome{font-size:15px;font-weight:700;line-height:1.25;letter-spacing:-.01em;color:var(--ink)}
-.fer-desc{font-size:13px;font-weight:400;line-height:1.4;color:var(--ink-2);margin-top:4px}
+/* A descrição saiu do card e virou balão de hover.
+   Oito cards com três linhas de texto cada viravam um parágrafo só: para achar
+   uma ferramenta a pessoa lia tudo, quando ela já sabe o que procura pelo nome.
+   O texto continua existindo — na busca (que casa por descrição e apelido) e
+   aqui, para quem parar em cima. Só onde existe mouse: no toque não há hover, e
+   um balão que só abre no toque atrapalha quem só queria tocar no card. */
+@media (hover:hover){
+  .fer-card[data-dica]:hover::after{
+    content:attr(data-dica);position:absolute;left:12px;right:12px;top:calc(100% + 6px);z-index:30;
+    background:var(--ink);color:#fff;font-size:12px;font-weight:400;line-height:1.35;
+    padding:8px 10px;border-radius:8px;box-shadow:var(--lift);pointer-events:none;white-space:normal}
+}
 .fer-arw{flex:none;font-size:13px;font-weight:900;color:var(--muted);transition:color .14s,transform .15s}
 .fer-card:hover .fer-arw{color:var(--brand-teal-txt)}
 button.fer-card[aria-expanded="true"]{border-color:var(--brand-teal)}
@@ -555,10 +566,9 @@ function pintarRestituicao(){
     `<a href="restituicao.html?chave=${ch}#${encodeURIComponent(p.code)}" target="_blank" rel="noopener"><span class="ic">💸</span>${esc(p.nome)}</a>`).join('');
   const controle=`<a href="${esc(urlControle())}" target="_blank" rel="noopener"><span class="ic">⚖️</span>Controle (planilha)</a>`;
   const fer=FERRAMENTAS.filter(f=>f.id==='menu-restituicao')[0]||{};
-  menu.innerHTML=`<button type="button" class="fer-card" id="btn-restituicao" aria-expanded="false">
+  menu.innerHTML=`<button type="button" class="fer-card" id="btn-restituicao" aria-expanded="false" data-dica="${esc(fer.desc||'')}">
       <span class="fer-cab"><span class="fer-ic">💸</span><span class="fer-arw">▾</span></span>
       <span class="fer-nome">Restituição</span>
-      <span class="fer-desc">${esc(fer.desc||'')}</span>
     </button><div class="menu-pop" id="pop-restituicao" hidden>${pessoas}${controle}</div>`;
   const btn=document.getElementById('btn-restituicao'), pop=document.getElementById('pop-restituicao');
   btn.addEventListener('click', e=>{ e.stopPropagation(); const abrir=pop.hidden; pop.hidden=!abrir;
@@ -584,20 +594,37 @@ const FERRAMENTAS=[
   {id:'fp-societario',    nome:'Societário — editar processos', url:'societario-equipe.html', ic:'🏛️',
    desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
    alias:'societario mestra alteracao contratual junta etapa processo protocolo'},
-  {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:'💸',
+  {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:'💸', area:'equiparacao',
    desc:'Relatório de cada colaborador e a planilha de controle da equiparação.',
    alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
   {id:'fp-ativos',        nome:'Clientes ativos / mês',         url:'clientes-ativos.html',   ic:'📈',
    desc:'Quantos clientes ativos em cada competência, mês a mês.',
    alias:'ativos competencia mes calendario quantos clientes'},
-  {id:'fp-comercial',     nome:'Comercial — materiais',         url:'comercial.html',         ic:'📣',
+  {id:'fp-comercial',     nome:'Comercial — materiais',         url:'comercial.html',         ic:'📣', area:'comercial',
    desc:'Material de proposta, simulador e calculadora para o comercial.',
    alias:'comercial material proposta marketing simulador calculadora'}
 ];
+/* Quem está usando o painel, com as permissões da aba Colaboradores. Vem no
+   payload de tipo=equipe, montado FORA do cache (o cache é por rota, não por
+   pessoa). */
+let EU=null;
+
+/* Se a ferramenta pede uma área, a pessoa precisa tê-la — ou ser Principal.
+   Sem `EU` (backend antigo, ou payload de cache anterior ao deploy) libera: o
+   card é atalho, não fechadura. Quem barra de verdade é o exigirAreaEquipe_ no
+   servidor, e ele responde dizendo qual área falta — bem melhor do que um card
+   que some sem explicação. */
+function podeArea(a){
+  if(!a) return true;
+  if(!EU) return true;
+  return !!(EU.pleno || (EU.areas||{})[a]);
+}
+
 function pintarFerramentas(){
   const cx=document.getElementById('ferramentas'); if(!cx) return;
   const termo=normTxt((document.getElementById('busca-fer')||{}).value||'');
-  const lista=FERRAMENTAS.filter(f=>!termo||normTxt(f.nome+' '+(f.desc||'')+' '+(f.alias||'')).includes(termo));
+  const lista=FERRAMENTAS.filter(f=>podeArea(f.area))
+    .filter(f=>!termo||normTxt(f.nome+' '+(f.desc||'')+' '+(f.alias||'')).includes(termo));
   cx.innerHTML=lista.map(f=>{
     if(f.tipo==='menu') return `<div class="menu" id="${f.id}"></div>`;
     // `badge` é opcional: uma função que devolve {n,tit} quando a ferramenta tem
@@ -605,16 +632,16 @@ function pintarFerramentas(){
     // licenças, contatos e afins ficam sem, porque isso exigiria chamada nova.
     const b=(typeof f.badge==='function')?f.badge():null;
     const selo=(b&&b.n)?`<span class="fer-selo" title="${esc(b.tit||'')}">${esc(String(b.n))} ⚠</span>`:'';
-    return `<a class="fer-card" id="${f.id}" href="${esc(comChave(f.url))}">
+    return `<a class="fer-card" id="${f.id}" href="${esc(comChave(f.url))}" data-dica="${esc(f.desc||'')}">
       <span class="fer-cab"><span class="fer-ic">${f.ic}</span>${selo}<span class="fer-arw">›</span></span>
       <span class="fer-nome">${esc(f.nome)}</span>
-      <span class="fer-desc">${esc(f.desc||'')}</span>
     </a>`;
   }).join('');
   if(lista.some(f=>f.tipo==='menu')) pintarRestituicao();
   const vazio=document.getElementById('fer-vazio'); if(vazio) vazio.hidden=lista.length>0;
   const cnt=document.getElementById('fer-cnt');
-  if(cnt) cnt.textContent = termo ? lista.length+' de '+FERRAMENTAS.length : '';
+  const totalVisivel=FERRAMENTAS.filter(f=>podeArea(f.area)).length;
+  if(cnt) cnt.textContent = termo ? lista.length+' de '+totalVisivel : '';
 }
 
 function fecharRestituicao(){
@@ -955,6 +982,7 @@ function boot(){
   jsonp(API_URL+'?tipo=equipe&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{
       if(d.erro) throw new Error(d.erro);
+      EU = d.eu || null;              // ANTES de abrirPainel: é ele que pinta os cards
       const url = abrirPainel();
       TODOS=d.clientes||[]; apiOk=true;
       // Os links vivos da Config vêm DENTRO deste payload. Antes havia um segundo

@@ -925,7 +925,6 @@ details.como[open]>summary .car{transform:rotate(180deg)}
      sem esta página perguntar nada. Sem esse registro, só a agenda, que quem tem
      fiscal ou pessoal sempre tem. */
   var AREAS_LINK = [
-    ['guias.html',       'Agenda',       'guias',       IC.guias],
     ['fiscal.html',      'Fiscal',       'fiscal',      IC.fiscal],
     ['dptopessoal.html', 'Pessoal',      'pessoal',     IC.pessoal],
     ['equiparacao.html', 'Equiparação',  'equiparacao', IC.equiparacao]
@@ -1822,10 +1821,8 @@ function render(M){
   wrap.appendChild(el('<div id="div-editor"></div>'));
   wrap.appendChild(el('<div id="prov"></div>'));
 
-  appendAll(wrap,`<a class="ir-guias" href="guias.html#${M.id}-${getIdCodigo().codigo}">
-      <div class="ir-ico">📅</div>
-      <div class="ir-txt"><b>Agenda de pagamentos</b><span>Calendário de vencimentos, provisionamento e controle das guias (agendada/paga)</span></div>
-      <div class="ir-seta">→</div></a>`);
+  /* O convite para a "Agenda de pagamentos" saiu em 04/08/2026 junto com a
+     agenda. Ver o comentário no index.html. */
 
   appendAll(wrap,`<div class="sec-head"><div><h2>Histórico e composição</h2></div></div>
     <div class="charts">

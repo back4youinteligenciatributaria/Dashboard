@@ -477,7 +477,6 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
      sem esta página perguntar nada. Sem esse registro, só a agenda, que quem tem
      fiscal ou pessoal sempre tem. */
   var AREAS_LINK = [
-    ['guias.html',       'Agenda',       'guias',       IC.guias],
     ['fiscal.html',      'Fiscal',       'fiscal',      IC.fiscal],
     ['dptopessoal.html', 'Pessoal',      'pessoal',     IC.pessoal],
     ['equiparacao.html', 'Equiparação',  'equiparacao', IC.equiparacao]
@@ -491,7 +490,6 @@ footer{padding:18px 24px;text-align:center;font-size:var(--fs-2);color:var(--mut
     var aqui = (location.pathname.split('/').pop()||'').toLowerCase();
     return AREAS_LINK.filter(function(a){
       if (a[0].toLowerCase() === aqui) return false;                       // não linkar a página atual
-      if (a[2] === 'guias') return !disp || !!(disp.fiscal || disp.pessoal);
       return !!(disp && disp[a[2]]);
     }).slice(0, 2)                                                          // 2 links: a barra ainda tem 3 botões fixos
      .map(function(a){
@@ -848,13 +846,12 @@ function render(id, codigo, disponiveis, pessoa){
   const destino = pagina => `${pagina}#${id}-${codigo}`;
   const areasP = pessoa && Array.isArray(pessoa.areas) ? pessoa.areas : null;   // login por e-mail
   const visiveis = DEFINICOES.filter(d => disponiveis[d.chave] && (!areasP || areasP.indexOf(d.chave)>=0));
-  // Agenda de pagamentos: quem tem fiscal OU pessoal (junta impostos + INSS/FGTS)
-  const temGuias = (disponiveis.fiscal || disponiveis.pessoal) && (!areasP || areasP.indexOf('fiscal')>=0 || areasP.indexOf('pessoal')>=0);
-  const cardGuias = destino('guias.html') && temGuias ? `<a class="opcao opcao-destaque" href="${destino('guias.html')}">
-      <div class="icone">${ICONES.guias}</div>
-      <h2>Agenda de pagamentos</h2>
-      <p>Vencimentos, provisionamento e controle das guias — marque agendada ou paga, por você.</p>
-      <span class="seta">→</span></a>` : '';
+  /* Agenda de pagamentos SEGURADA (04/08/2026): o cliente não vê calendário de
+     vencimentos em lugar nenhum por enquanto. A página guias.html continua no
+     repositório, inteira e funcionando — o que saiu foram os caminhos até ela.
+     Quem manda é o servidor: PAINEIS_OCULTOS.guias barra a rota e a ação, então
+     nem digitando o endereço se chega. Para voltar, é lá que se mexe primeiro. */
+  const cardGuias = '';
   const totalCards = (cardGuias ? 1 : 0) + visiveis.length;
   // O nome já vai na saudação; aqui fica só o que ela não diz (o papel do acesso).
   const primeiro = String((pessoa && pessoa.nome) || '').trim().split(/\s+/)[0] || '';
@@ -934,7 +931,7 @@ function render(id, codigo, disponiveis, pessoa){
  * divisão, e lia o silêncio como "está tudo em dia". Então ela mesma busca o
  * `tipo=fiscal` e conta as pendências. O localStorage do fiscal continua servindo
  * para pintar na hora, enquanto a resposta não chega. */
-const PAGINAS_ALERTA = { fiscal:'fiscal.html', guias:'guias.html', contabil:'contabil.html',
+const PAGINAS_ALERTA = { fiscal:'fiscal.html', contabil:'contabil.html',
   equiparacao:'equiparacao.html', societario:'societario.html', dptopessoal:'dptopessoal.html', pessoal:'dptopessoal.html' };
 
 function pintarAlertas(id, codigo, itens){
@@ -1066,29 +1063,11 @@ function pendenciasDoFiscal(raw){
       total += chaves.reduce((s,k)=>s+(r?numH(metrica(r,k)):mediaDe(k)),0); }
     return Math.round(total*100)/100;
   };
-  const agenda = raw.agenda||{};
-  const ontem = new Date(HOJE_HOME); ontem.setDate(ontem.getDate()-1);
-  // Janela de 60 dias (dois ciclos). O calendário cobre três anos e quase ninguém
-  // marcou "paga" no passado: sem o limite, a home gritaria uma dívida histórica que
-  // na verdade é só falta de marcação. O que ainda dá para resolver é o recente.
-  const limite = new Date(HOJE_HOME); limite.setDate(limite.getDate()-60);
-  const vencidas = (raw.calendario||[])
-    .filter(c=>/^R\d+$/.test(String(c.id_regra||'')) && c.vencimento)
-    .map(c=>{ const st = agenda[(c.id_regra||'')+'|'+(c.competencia_ref||'')] || {};
-      const ov = (st.venc && /^\d{4}-\d{2}-\d{2}/.test(st.venc)) ? String(st.venc).slice(0,10) : '';
-      return { venc: ov||c.vencimento, status:String(st.status||'').toLowerCase(), valor: valorDe(c) }; })
-    .filter(g=>g.status!=='paga' && g.valor>0
-             && String(g.venc) < diaH(HOJE_HOME) && String(g.venc) >= diaH(limite));
-  if(vencidas.length){
-    const total = vencidas.reduce((s,g)=>s+g.valor,0);
-    const ultima = vencidas.map(g=>String(g.venc)).sort().pop();
-    const quando = ultima===diaH(ontem) ? 'ontem' : ('em '+ultima.slice(8,10)+'/'+ultima.slice(5,7));
-    itens.push({ area:'guias',
-      titulo: vencidas.length===1 ? `Uma guia de ${brlH(total)} venceu` : `${vencidas.length} guias vencidas · ${brlH(total)}`,
-      detalhe:'Confira na agenda de pagamentos e marque como paga.',
-      frase: vencidas.length===1 ? `uma guia de ${brlH(total)} venceu ${quando}`
-                                 : `${vencidas.length} guias vencidas somam ${brlH(total)}` });
-  }
+  /* AQUI ficava o alerta de "guias vencidas" na home. Saiu junto com a agenda em
+     04/08/2026: ele é feito do calendário (raw.calendario), e apontava para uma
+     página que o cliente não alcança mais — alerta que não leva a lugar nenhum é
+     pior do que alerta nenhum. O cálculo está preservado no histórico do arquivo;
+     quando a agenda voltar, ele volta com ela. */
 
   // -- notas do ano sem divisão definida --------------------------------------
   let semDiv = 0;
