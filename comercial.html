@@ -175,7 +175,7 @@ header.top .sub{color:var(--ink-2);font-size:var(--fs-3);margin-top:6px;max-widt
 </div>
 
 <script>
-const CHAVE_OK='b4u-equipe-2026';
+/* CHAVE_OK removida: era a chave fixa, aposentada em 04/08/2026. */
 
 /* Materiais do comercial — para acrescentar um novo, basta uma linha aqui.
    breve:true deixa o cartão visível, em cinza e sem link (em produção). */
@@ -225,12 +225,23 @@ function boot(){
 
   const ch=chaveAtual();
   /* A volta leva a chave (e o código de quem está usando) junto para o painel. */
-  let href='colaborador.html?chave='+encodeURIComponent(ch||CHAVE_OK);
+  let href='colaborador.html?chave='+encodeURIComponent(ch);
   const cod=(new URLSearchParams(location.search).get('cod')||'').trim();
   if(cod)href+='&cod='+encodeURIComponent(cod);
   ['volta','logo-home'].forEach(id=>{ const a=document.getElementById(id); if(a)a.href=href; });
 
-  if(ch!==CHAVE_OK){ document.getElementById('gate').hidden=false; return; }
+  /* Esta página comparava a chave com uma constante fixa ('b4u-equipe-2026') —
+     e por isso passou a recusar TODO MUNDO quando a chave virou o código do dia,
+     inclusive quem é Principal. Não existe mais chave certa para comparar aqui.
+     Quem decide se a pessoa vê Comercial é o card no painel (área 'comercial') e,
+     para qualquer coisa que leia dado, o servidor. Esta tela é só uma lista de
+     atalhos estáticos: sem chave nenhuma, manda para a porta única; com chave,
+     abre. */
+  if(!ch){
+    location.replace('index.html?destino=' + encodeURIComponent(
+      location.pathname.split('/').pop() + location.search + location.hash));
+    return;
+  }
   document.getElementById('app').hidden=false;
   const disponiveis=MATERIAIS.filter(m=>!m.breve).length;
   document.getElementById('cnt').textContent=disponiveis+(disponiveis===1?' material':' materiais');

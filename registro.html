@@ -303,6 +303,28 @@ tr.falhou>td{background:#FBEAE7!important}
 /* A barra nunca estoura: quebra de linha e o contador some no celular. */
 .barra{flex-wrap:wrap}
 @media(max-width:560px){.barra .cnt{display:none}}
+
+/* ---- formulário de cliente novo: seções recolhíveis ----
+   O formulário inteiro aberto são ~35 campos numa tela só, e o efeito disso não
+   é "completo", é assustador: quem abre desiste antes de começar. Recolhido, a
+   pessoa vê 5 assuntos e decide por onde entrar.
+   Identificação e Produtos ficam abertos porque é o mínimo para criar o cliente;
+   o resto abre quando alguém tiver a informação. O contador ao lado do título é
+   o que impede a seção fechada de virar esconderijo — ela diz quantos campos já
+   têm resposta sem precisar abrir. */
+details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary h2{margin:0;flex:1}
+details.sec>summary .arw{color:var(--muted,#8A7D70);transition:transform .15s;font-size:12px}
+details.sec[open]>summary .arw{transform:rotate(90deg)}
+details.sec>summary .cnt-sec{font-size:11px;color:var(--muted,#8A7D70);font-weight:600;
+  background:#F1ECE4;border-radius:999px;padding:2px 8px}
+details.sec>summary .cnt-sec.falta{color:#A4303F;background:#FBEDEE}
+details.sec .grid{margin-top:10px}
+/* ---- contatos do cliente novo ---- */
+.ct-novo{display:grid;grid-template-columns:1.2fr 1.4fr .9fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}
+.ct-novo .fld{margin:0}
+@media(max-width:760px){.ct-novo{grid-template-columns:1fr 1fr;}}
 </style>
 <script src="config.js"></script>
 </head>
@@ -1112,8 +1134,17 @@ function renderNovo(){
       <p class="hint">Os produtos definem quais planilhas serão criadas: <b>Equiparação</b> → planilha de Equiparação · <b>Contabilidade/Controladoria</b> → Fiscal + Contábil + DP · <b>DP pessoa física</b> → DP. INSS e Agora Tem Especialistas não geram planilha por ora.</p>
     </div>`;
   secs.forEach(sc=>{
-    html+=`<div class="sec"><h2><span class="dot"></span>${esc(sc)}</h2><div class="grid">${NOVO_CAMPOS.map((f,i)=>f.s===sc?campoHTML(f,i):'').join('')}</div></div>`;
+    // Identificação aberta: sem ela não dá para criar o cliente.
+    const aberta = sc==='Identificação';
+    const nCampos = NOVO_CAMPOS.filter(f=>f.s===sc).length;
+    const nReq = NOVO_CAMPOS.filter(f=>f.s===sc&&f.req).length;
+    html+=`<details class="sec" data-sec="${esc(sc)}"${aberta?' open':''}>
+      <summary><span class="arw">▶</span><h2><span class="dot"></span>${esc(sc)}</h2>
+        <span class="cnt-sec${nReq?' falta':''}" data-cnt="${esc(sc)}">0 de ${nCampos}${nReq?' · '+nReq+' obrigatório'+(nReq>1?'s':''):''}</span>
+      </summary>
+      <div class="grid">${NOVO_CAMPOS.map((f,i)=>f.s===sc?campoHTML(f,i):'').join('')}</div></details>`;
   });
+  html+=blocoContatosNovo();
   html+=`<div class="msg" id="msg"></div>
     <div class="foot"><button class="btn btn--sec btn--pill" id="cancelar" type="button">Cancelar</button><button class="btn btn--pri btn--pill" id="criar" type="button">Criar cliente</button></div>`;
   const body=document.getElementById('modalBody');
@@ -1128,7 +1159,10 @@ function renderNovo(){
     novoVal[e.target.dataset.col]=v;
     e.target.closest('.fld').classList.remove('miss');
     if(e.target.dataset.col===NOVO_ROLE.razao)atualizarNomePrev();
+    contarSecoes();
   }));
+  ligarContatosNovo();
+  contarSecoes();
   document.getElementById('cancelar').addEventListener('click',fecharModal);
   document.getElementById('criar').addEventListener('click',criarCliente);
   atualizarNomePrev();
@@ -1157,6 +1191,83 @@ function fecharModal(){
   document.getElementById('modal').hidden=true;
   document.body.style.overflow='';
 }
+/* Quantos campos de cada seção já têm resposta — é o que deixa fechar sem
+   esconder. Falta obrigatório vira vermelho, e aí a seção pede para ser aberta
+   antes de a pessoa apertar Criar. */
+function contarSecoes(){
+  document.querySelectorAll('[data-cnt]').forEach(el=>{
+    const sc=el.dataset.cnt;
+    const campos=NOVO_CAMPOS.filter(f=>f.s===sc);
+    const cheios=campos.filter(f=>String(novoVal[f.col]||'').trim()).length;
+    const faltaReq=campos.filter(f=>f.req&&!String(novoVal[f.col]||'').trim()).length;
+    el.textContent=cheios+' de '+campos.length+(faltaReq?' · '+faltaReq+' obrigatório'+(faltaReq>1?'s':''):'');
+    el.classList.toggle('falta',!!faltaReq);
+  });
+}
+
+/* ---------- contatos junto com o cliente novo ----------
+   O momento em que se sabe quem responde pelo cliente é o do cadastro. Deixar
+   para depois é o que produz cliente sem contato nenhum — e cliente sem contato
+   não recebe acesso, nem cobrança, nem aviso de vencimento. */
+let CT_NOVOS=[{nome:'',email:'',telefone:'',papel:'Principal'}];
+function linhaContatoNovo(c,i){
+  return `<div class="ct-novo" data-ct="${i}">
+    <label class="fld"><span class="lbl">Nome</span><input class="in" data-ctk="nome" value="${esc(c.nome||'')}" placeholder="Nome do contato"></label>
+    <label class="fld"><span class="lbl">E-mail</span><input class="in" type="email" data-ctk="email" value="${esc(c.email||'')}" placeholder="email@exemplo.com"></label>
+    <label class="fld"><span class="lbl">Telefone</span><input class="in" data-ctk="telefone" value="${esc(c.telefone||'')}" placeholder="55DDD9…"></label>
+    <label class="fld"><span class="lbl">Papel</span><select class="in" data-ctk="papel">
+      <option${c.papel==='Principal'?' selected':''}>Principal</option>
+      <option${c.papel==='Principal'?'':' selected'}>Secundário</option></select></label>
+    <button type="button" class="btn btn--mini btn--danger-out" data-ctdel="${i}"${CT_NOVOS.length<2?' style="visibility:hidden"':''}>Remover</button>
+  </div>`;
+}
+function blocoContatosNovo(){
+  return `<details class="sec" data-sec="Contatos">
+    <summary><span class="arw">▶</span><h2><span class="dot"></span>Contatos</h2>
+      <span class="cnt-sec" id="cnt-ct">nenhum</span></summary>
+    <div id="ct-lista">${CT_NOVOS.map(linhaContatoNovo).join('')}</div>
+    <button type="button" class="btn btn--sec btn--mini" id="ct-add">+ Outro contato</button>
+    <p class="hint">Opcional. Quem for <b>Principal</b> acessa todas as áreas do painel; Secundário entra sem área nenhuma marcada e você ajusta depois em Contatos. Linha em branco é ignorada.</p>
+  </details>`;
+}
+function contarContatosNovo(){
+  const n=CT_NOVOS.filter(c=>String(c.nome||'').trim()||String(c.email||'').trim()).length;
+  const el=document.getElementById('cnt-ct');
+  if(el) el.textContent = n? (n+' contato'+(n>1?'s':'')) : 'nenhum';
+}
+function redesenharContatosNovo(){
+  const box=document.getElementById('ct-lista'); if(!box) return;
+  box.innerHTML=CT_NOVOS.map(linhaContatoNovo).join('');
+  contarContatosNovo();
+}
+function ligarContatosNovo(){
+  const body=document.getElementById('modalBody');
+  body.addEventListener('input',e=>{
+    const el=e.target; if(!el.dataset||!el.dataset.ctk) return;
+    const i=+el.closest('[data-ct]').dataset.ct;
+    CT_NOVOS[i][el.dataset.ctk]=el.value; contarContatosNovo();
+  });
+  body.addEventListener('change',e=>{
+    const el=e.target; if(!el.dataset||el.dataset.ctk!=='papel') return;
+    const i=+el.closest('[data-ct]').dataset.ct;
+    CT_NOVOS[i].papel=el.value;
+  });
+  body.addEventListener('click',e=>{
+    const add=e.target.closest('#ct-add');
+    if(add){ CT_NOVOS.push({nome:'',email:'',telefone:'',papel:'Secundário'}); redesenharContatosNovo(); return; }
+    const del=e.target.closest('[data-ctdel]');
+    if(del){ CT_NOVOS.splice(+del.dataset.ctdel,1); if(!CT_NOVOS.length)CT_NOVOS.push({nome:'',email:'',telefone:'',papel:'Principal'}); redesenharContatosNovo(); }
+  });
+}
+function contatosNovoPayload(){
+  return CT_NOVOS
+    .filter(c=>String(c.nome||'').trim()||String(c.email||'').trim())
+    .map(c=>({ nome:String(c.nome||'').trim(), email:String(c.email||'').trim(),
+               telefone:String(c.telefone||'').trim(), papel:c.papel||'Secundário',
+               areas: c.papel==='Principal' ? AREAS_CONTATO : [] }));
+}
+const AREAS_CONTATO=['fiscal','contabil','pessoal','societario','equiparacao','financeiro'];
+
 async function criarCliente(){
   const msg=document.getElementById('msg');msg.className='msg';msg.textContent='';
   let faltou=false;
@@ -1166,14 +1277,23 @@ async function criarCliente(){
   });
   if(!prodSel.size){document.getElementById('prods').closest('.sec').style.outline='2px solid var(--vermelho)';faltou=true;}
   if(faltou){msg.className='msg err';msg.textContent='Preencha os campos obrigatórios (marcados com *).';
-    document.querySelector('#modalBody .miss,#modalBody .sec').scrollIntoView({block:'center',behavior:'smooth'});return;}
+    // Campo obrigatório vazio dentro de seção FECHADA seria um erro invisível: a
+    // mensagem apontaria para algo que a pessoa não consegue ver.
+    document.querySelectorAll('#modalBody .miss').forEach(el=>{
+      const d=el.closest('details.sec'); if(d) d.open=true;
+    });
+    contarSecoes();
+    const alvo=document.querySelector('#modalBody .miss')||document.querySelector('#modalBody .sec');
+    if(alvo) alvo.scrollIntoView({block:'center',behavior:'smooth'});
+    return;}
 
   const btn=document.getElementById('criar');btn.disabled=true;btn.textContent='Criando… (até ~1 min)';
   criando=true;
   msg.className='msg';msg.textContent='Criando pastas no Drive e planilhas… não feche a página.';
   setSave('saving','Criando cliente…');
   try{
-    const d=await postAcao({acao:'onboard',produtos:[...prodSel],registro:novoVal,cod:codAtual()});
+    const d=await postAcao({acao:'onboard',produtos:[...prodSel],registro:novoVal,
+                            contatos:contatosNovoPayload(),cod:codAtual()});
     criando=false;
     setSave('ok','Cliente '+(d.id||'')+' criado ✓ '+horaAgora());
     sucessoNovo(d);

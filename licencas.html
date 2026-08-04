@@ -292,6 +292,55 @@ tr.falhou>td{background:#FBEAE7!important}
   border-radius:50%;animation:docgira .8s linear infinite}
 @keyframes docgira{to{transform:rotate(360deg)}}
 .doc-erro{display:block;color:#A4303F;font-size:11px;line-height:1.3;margin-top:3px}
+
+/* ---- modo FICHAS ----
+   A grade continua sendo uma <table> — e isso é decisão, não preguiça. Toda a
+   edição desta tela (Enter que desce na mesma coluna, foco, o upload, o
+   desfazer) navega por `tr[data-id]` e `td`. Trocar por <div> obrigaria a
+   reescrever tudo isso, e o pedido era de LEITURA: 25 colunas lado a lado
+   ninguém entende, mas cada campo com o nome do lado, sim.
+   Então é só CSS: a linha vira bloco, a célula vira "rótulo: valor", e o
+   cabeçalho some (o rótulo agora está em cada campo). Nenhum handler mudou. */
+body.fichas .tabela-wrap table thead{display:none}
+body.fichas .tabela-wrap table,body.fichas .tabela-wrap table tbody{display:block;width:100%}
+body.fichas .tabela-wrap table tbody tr{display:block;background:var(--card,#fff);border:1px solid var(--linha,#E4D9C9);
+  border-radius:12px;padding:10px 12px;margin-bottom:12px;box-shadow:0 1px 2px rgba(17,61,57,.05)}
+body.fichas .tabela-wrap table tbody td{display:grid;grid-template-columns:minmax(150px,32%) 1fr;gap:10px;
+  align-items:center;border:0;padding:5px 0;width:auto}
+body.fichas .tabela-wrap table tbody td::before{content:attr(data-rot);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.03em;color:var(--muted,#8A7D70)}
+body.fichas .tabela-wrap table tbody td.col-id,body.fichas .tabela-wrap table tbody td.col-nome{
+  grid-template-columns:1fr;border-bottom:1px solid var(--linha,#E4D9C9);margin-bottom:6px;padding-bottom:8px}
+body.fichas .tabela-wrap table tbody td.col-id::before,body.fichas .tabela-wrap table tbody td.col-nome::before{display:none}
+body.fichas .tabela-wrap table tbody td.col-id{font-size:12px;color:var(--muted,#8A7D70);padding-bottom:0;border:0;margin:0}
+body.fichas .tabela-wrap table tbody td.col-nome{font-size:16px;font-weight:700}
+body.fichas .tabela-wrap table tbody td input,body.fichas .tabela-wrap table tbody td select,body.fichas .tabela-wrap table tbody td .ro{width:100%}
+/* célula vazia em ficha é ruído: 25 rótulos com "—" escondem os 3 que importam */
+body.fichas .tabela-wrap table tbody td.vazia{display:none}
+body.fichas #btn-vazias{display:inline-flex}
+body.fichas.com-vazias .grade tbody td.vazia{display:grid}
+#btn-vazias{display:none}
+@media(max-width:760px){ .grade tbody td::before{content:attr(data-rot)} }
+
+/* ---- grupos dentro da ficha ----
+   Sem isto a ficha é uma lista de 25 rótulos em sequência: melhor que a tabela,
+   mas ainda sem hierarquia. Agora cada assunto ("Alvará Sanitário") é um bloco,
+   com o documento e o vencimento dele juntos — que é como a pessoa pensa, e não
+   em "coluna de link" e "coluna de data" em partes opostas da linha.
+   O bloco abre e fecha: quem veio conferir uma coisa não precisa passar os olhos
+   pelas outras seis. */
+body.fichas .tabela-wrap table tbody td.grp{grid-template-columns:1fr;cursor:pointer;
+  margin:10px 0 2px;padding:6px 8px;border-radius:8px;background:#F7F3EC;
+  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#113D39;
+  display:flex;align-items:center;gap:8px;user-select:none}
+body.fichas .tabela-wrap table tbody td.grp::before{display:none}
+body.fichas .tabela-wrap table tbody td.grp:hover{background:#EFE8DC}
+body.fichas .tabela-wrap table tbody td.grp .arw{font-size:10px;color:#8A7D70;transition:transform .15s}
+body.fichas .tabela-wrap table tbody td.grp.fechado .arw{transform:rotate(-90deg)}
+body.fichas .tabela-wrap table tbody td.grp .n{margin-left:auto;font-weight:600;text-transform:none;
+  letter-spacing:0;color:#8A7D70;font-size:11px}
+body.fichas .tabela-wrap table tbody td[data-g].oculto{display:none}
+.tabela-wrap table tbody td.grp{display:none}
 </style>
 <script src="config.js"></script>
 </head>
@@ -808,13 +857,90 @@ function atalhoDrive(l){
 function linhaHTML(l){
   const at=ativoDe(l);
   const flags=at===false?'<span class="flag inativo">inativo</span>':'';
-  const tds=GRUPOS.map(g=>g.cols.map((c,j)=>`<td class="${j===0?'ini':''}">${cel(l,c)}</td>`).join('')).join('');
+  /* data-rot vira o rótulo no modo ficha (CSS ::before) e data-g diz de qual
+     bloco a célula é. O <td class="grp"> antes de cada bloco é o título — some
+     no modo tabela, onde quem separa os assuntos é a faixa do cabeçalho. */
+    const tds=GRUPOS.map((g,gi)=>{
+      const fech=grupoFechado(l.id,gi);
+      const preenchidos=g.cols.filter(c=>String(l.valores[c]||'').trim()).length;
+      const tit=`<td class="grp${fech?' fechado':''}" data-grp="${gi}" data-g="${gi}"><span class="arw">▼</span>${esc(g.nome)}<span class="n">${preenchidos} de ${g.cols.length}</span></td>`;
+      return tit + g.cols.map((c,j)=>{
+        /* Coluna de documento em branco NÃO é "campo vazio a esconder": é onde
+           mora o botão Enviar. Esconder o vazio ali sumiria justamente com a ação
+           que a ficha existe para oferecer. */
+        const vazio=!String(l.valores[c]||'').trim() && !ehLink(c);
+        return `<td class="${j===0?'ini':''}${vazio?' vazia':''}${fech?' oculto':''}" data-g="${gi}" data-rot="${esc(rotFicha(c,g.nome))}">${cel(l,c)}</td>`;
+      }).join('');
+    }).join('');
   return `<tr data-id="${esc(l.id)}">
     <td class="col-id">${esc(l.id)}</td>
     <td class="col-nome">${esc(l.nome_cliente||'(sem nome)')}${atalhoDrive(l)}<br>${flags}</td>
     ${tds}
   </tr>`;
 }
+
+/* Fichas x tabela. A escolha fica no aparelho: quem gosta de uma não quer
+   escolher de novo a cada visita. Fichas é o padrão — 25 colunas lado a lado é
+   planilha, e para planilha existe a planilha. */
+const FICHAS_KEY='b4u_fichas_'+location.pathname.split('/').pop();
+function modoFichas(){ try{ const v=localStorage.getItem(FICHAS_KEY); return v===null?true:v==='1'; }catch(e){ return true; } }
+function aplicarModo(){
+  const f=modoFichas();
+  document.body.classList.toggle('fichas',f);
+  const b=document.getElementById('btn-fichas');
+  if(b){ b.classList.toggle('on',f); b.textContent=f?'📋 Ver como tabela':'🗂️ Ver como fichas'; }
+}
+function ligarModo(){
+  const b=document.getElementById('btn-fichas');
+  if(b) b.addEventListener('click',()=>{
+    try{ localStorage.setItem(FICHAS_KEY, modoFichas()?'0':'1'); }catch(e){}
+    aplicarModo(); desenharTabela();
+  });
+  const v=document.getElementById('btn-vazias');
+  if(v) v.addEventListener('click',()=>{
+    document.body.classList.toggle('com-vazias');
+    v.classList.toggle('on');
+    v.textContent=document.body.classList.contains('com-vazias')?'Esconder campos vazios':'Mostrar campos vazios';
+  });
+  aplicarModo();
+}
+
+
+/* Rótulo do campo dentro da ficha. "Link Contrato Social" é nome de COLUNA de
+   planilha; na ficha o assunto já está no título do bloco, então o campo só
+   precisa dizer o que ele é. */
+function rotFicha(c,grupo){
+  let t=String(c||'').replace(/^link\s+/i,'').trim();
+  if(/^vencimento/i.test(t)) return 'Vencimento';
+  if(grupo){
+    const g=normTxt(grupo);
+    const tn=normTxt(t);
+    if(tn===g) return 'Documento';
+    if(tn.startsWith(g+' ')) t=t.slice(grupo.length).trim();
+  }
+  return t||c;
+}
+/* Blocos fechados por linha: id -> Set de índices de grupo. Fica só na memória
+   da sessão, de propósito — abrir tudo de novo é um clique, e guardar isso por
+   cliente viraria estado que ninguém lembra de ter criado. */
+const GRP_FECHADOS=new Map();
+function grupoFechado(id,g){ const s=GRP_FECHADOS.get(String(id)); return !!(s&&s.has(g)); }
+function alternarGrupo(id,g){
+  const k=String(id); if(!GRP_FECHADOS.has(k)) GRP_FECHADOS.set(k,new Set());
+  const s=GRP_FECHADOS.get(k); if(s.has(g)) s.delete(g); else s.add(g);
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('td.grp'); if(!t) return;
+  const tr=t.closest('tr[data-id]'); if(!tr) return;
+  const g=+t.dataset.grp;
+  alternarGrupo(tr.dataset.id,g);
+  const fechado=grupoFechado(tr.dataset.id,g);
+  t.classList.toggle('fechado',fechado);
+  /* :not(.grp) — o próprio título carrega o índice do bloco; sem esta exclusão
+     ele se esconderia junto e o bloco fechado não teria mais como reabrir. */
+  tr.querySelectorAll('td[data-g="'+g+'"]:not(.grp)').forEach(td=>td.classList.toggle('oculto',fechado));
+});
+
 function desenharTabela(){
   GRUPOS=montarGrupos(colsVisiveis());
   const th=document.getElementById('thead');
@@ -875,7 +1001,7 @@ function limparFiltros(){
   const b=document.getElementById('busca');if(b)b.value='';
   redesenhar();
 }
-function desenharChips(){
+function desenharChips(){ setTimeout(ligarModo,0);
   const keys=colsData();
   const base=l=>(!SO_ATIVOS||ativoDe(l)!==false);
   const nUrg=(min,max)=>LINHAS.filter(l=>{if(!base(l))return false;const u=urgencia(l,keys);return u!==null&&u>=min&&u<=max;}).length;
@@ -895,6 +1021,7 @@ function desenharChips(){
   document.getElementById('chipsDoc').innerHTML=
     `<span class="rot">Vencimento</span>`+d('todos','Todos')+DATAS.map(x=>d(x,curto(x))).join('')+
     `<button type="button" class="chip ${SO_ATIVOS?'on':''}" id="chipAtivos">Só ativos</button>`+
+    `<button type="button" class="chip" id="btn-fichas" title="Alternar entre fichas e tabela">🗂️ Fichas</button><button type="button" class="chip" id="btn-vazias" title="Mostrar também os campos em branco">Mostrar campos vazios</button>` +
     (ESPELHADAS.length?`<button type="button" class="chip ${VER_CADASTRO?'on':''}" id="chipCadastro" title="Colunas que vêm do Registro por fórmula — aqui são só leitura">Dados do cadastro</button>`:'');
 }
 /* A contagem em texto é o que permite recolher os chips e os cartões sem esconder

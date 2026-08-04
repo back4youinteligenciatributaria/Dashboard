@@ -377,10 +377,11 @@ if (!chaveAtual()) {
   location.replace('index.html?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
 }
-/* Quem está mexendo. Vem do ?cod= na URL, é repassado para as páginas de edição e
-   vira a coluna "Colaborador" da aba log de cada planilha. Sem ?cod= o log grava
-   só "equipe"; para sair o nome, cada pessoa usa um atalho com o próprio código
-   (colaborador.html?chave=…&cod=985911), como já é feito na restituição. */
+/* Quem está mexendo — HERANÇA, e hoje quase sempre vazio.
+   Vinha de um ?cod= na URL para o log saber o autor. Não é mais necessário: a
+   chave do dia identifica a pessoa na porta e o servidor carimba o nome e o
+   e-mail no log sozinho. Continua sendo repassado para não quebrar atalho
+   antigo que alguém tenha guardado. */
 function codAtual(){ return (new URLSearchParams(location.search).get('cod')||'').trim(); }
 function comChave(base){
   const u=base.split('#')[0].split('?')[0];
@@ -547,12 +548,13 @@ function fecharOutros(){
   if(pop && !pop.hidden){ pop.hidden=true; btn.setAttribute('aria-expanded','false'); }
 }
 
-/* ---- Restituição: dropdown com o link de cada colaborador (código embutido) + Controle ---- */
-const LINKS_RESTITUICAO=[
-  {nome:'Fabiano', code:'985911'},
-  {nome:'Kareane', code:'853176'},
-  {nome:'MFBD',    code:'031029'}
-];
+/* ---- Restituição ----
+   Aqui existia um dropdown com o NOME e o CÓDIGO de cada colaborador escritos
+   neste arquivo — e este arquivo é servido pelo GitHub Pages, ou seja, público.
+   Além do vazamento, era errado de uso: quem entra vê a própria carteira, não
+   um menu para escolher a de quem quiser.
+   Agora o link é um só e não leva código nenhum: o servidor já sabe quem entrou
+   pela chave do dia e devolve a carteira dessa pessoa (Principal vê todas). */
 // O link do Controle sai da Config (chave "Equiparacao Controle"), igual aos outros.
 // Sem cópia de emergência aqui — mesmo motivo do CENTRAIS_VIVOS lá em cima.
 function urlControle(){
@@ -562,14 +564,17 @@ function urlControle(){
 function pintarRestituicao(){
   const menu=document.getElementById('menu-restituicao'); if(!menu) return;
   const ch=encodeURIComponent(chaveAtual());
-  const pessoas=LINKS_RESTITUICAO.map(p=>
-    `<a href="restituicao.html?chave=${ch}#${encodeURIComponent(p.code)}" target="_blank" rel="noopener"><span class="ic">💸</span>${esc(p.nome)}</a>`).join('');
-  const controle=`<a href="${esc(urlControle())}" target="_blank" rel="noopener"><span class="ic">⚖️</span>Controle (planilha)</a>`;
+  const pleno=!!(EU&&EU.pleno);
+  const rot=pleno?'Restituição (todos)':'Minha restituição';
+  const minha=`<a href="restituicao.html?chave=${ch}" target="_blank" rel="noopener"><span class="ic">💸</span>${esc(rot)}</a>`;
+  /* A planilha de Controle é a fonte inteira, sem filtro de responsável — só faz
+     sentido para quem enxerga a carteira toda. */
+  const controle=pleno?`<a href="${esc(urlControle())}" target="_blank" rel="noopener"><span class="ic">⚖️</span>Controle (planilha)</a>`:'';
   const fer=FERRAMENTAS.filter(f=>f.id==='menu-restituicao')[0]||{};
   menu.innerHTML=`<button type="button" class="fer-card" id="btn-restituicao" aria-expanded="false" data-dica="${esc(fer.desc||'')}">
       <span class="fer-cab"><span class="fer-ic">💸</span><span class="fer-arw">▾</span></span>
       <span class="fer-nome">Restituição</span>
-    </button><div class="menu-pop" id="pop-restituicao" hidden>${pessoas}${controle}</div>`;
+    </button><div class="menu-pop" id="pop-restituicao" hidden>${minha}${controle}</div>`;
   const btn=document.getElementById('btn-restituicao'), pop=document.getElementById('pop-restituicao');
   btn.addEventListener('click', e=>{ e.stopPropagation(); const abrir=pop.hidden; pop.hidden=!abrir;
     btn.setAttribute('aria-expanded',abrir?'true':'false'); menu.classList.toggle('aberto',abrir); });
@@ -588,7 +593,7 @@ const FERRAMENTAS=[
   {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:'📇', area:AREAS_OPERACAO,
    desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
    alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj'},
-  {id:'fp-certificados',  nome:'Certificados e acessos',        url:'certificados.html',      ic:'🔐',
+  {id:'fp-certificados',  nome:'Certificados e acessos',        url:'certificados.html',      ic:'🔐', area:AREAS_OPERACAO,
    desc:'Vencimentos de certificado, e-CAC e SPE, com o responsável legal.',
    alias:'certificado digital procuracao e-cac ecac spe vencimento responsavel legal',
    badge:seloCertificados},
