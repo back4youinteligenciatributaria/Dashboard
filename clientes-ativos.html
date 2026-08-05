@@ -34,28 +34,46 @@
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
   /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
   --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  /* Escala de texto e o teal claro: as outras telas ja tinham, esta nao. Sem eles
+     o CSS compartilhado (regua de acoes, teto de lista) cai no valor herdado e
+     desalinha — e cada tamanho passa a ser escrito a mao, que e como nasceram os
+     13px daqui contra os 13px de la que ninguem consegue conferir. */
+  --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
+  --receita-soft:#DBEFEC;
   /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
   --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:800;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill)}
-.barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
+/* ---------- barra superior (igual às páginas irmãs) ----------
+   O nowrap no tag, no contador e no "← Painel" é o que impede a barra de quebrar
+   em duas linhas antes de precisar — é assim no registro.html. */
+.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:800;font-size:var(--fs-5)}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:var(--fs-2);font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill);white-space:nowrap}
+.barra .spacer{flex:1}.barra .cnt{font-size:var(--fs-2);color:#bcd;white-space:nowrap}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:var(--fs-3);font-weight:600;white-space:nowrap}
 .wrap{max-width:1040px;margin:0 auto;padding:18px 20px 80px}
 .toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:3px;margin-bottom:12px}
-.toggle button{font-family:var(--sans);font-size:13px;font-weight:700;border:none;background:none;color:var(--ink-2);padding:8px 16px;border-radius:var(--radius-pill);cursor:pointer}
+.toggle button{font-family:var(--sans);font-size:var(--fs-3);font-weight:700;border:none;background:none;color:var(--ink-2);padding:8px 16px;border-radius:var(--radius-pill);cursor:pointer}
 .toggle button.on{background:var(--brand-teal-txt);color:#fff}
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
-.chip{font-family:var(--sans);line-height:1.5;font-size:13px;font-weight:700;border-radius:var(--radius-pill);padding:6px 12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
-.chip.on{background:var(--brand-euc);border-color:var(--brand-euc);color:#fff}
-.busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+/* Chip idêntico ao do registro.html: mesmo tamanho, mesmo respiro e o mesmo
+   contorno teal ao passar o mouse — sem ele o chip daqui não respondia e parecia
+   um rótulo, não um filtro. */
+.chip{font-family:var(--sans);line-height:1.5;font-size:var(--fs-3);font-weight:700;border-radius:var(--radius-pill);padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.chip:hover{border-color:var(--brand-teal)}
+/* Ligado, o chip usa o teal de TEXTO (#0C756F). Estava no --brand-euc, que com
+   letra branca dá 2,64:1: o rótulo do filtro sumia justamente quando ele estava
+   ativo. É o mesmo par do registro.html. */
+.chip.on{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
+.busca{width:100%;font-family:var(--sans);font-size:var(--fs-4);padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .resumo-top{background:linear-gradient(135deg,rgba(15,140,133,.12),rgba(63,166,128,.07));border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin:10px 0 14px;display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
-.resumo-top .big{font-size:24px;font-weight:800;color:var(--brand-teal);line-height:1}
-.resumo-top .lbl{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+/* Mesmo cartão de identificação do registro.html (.idcard): mesmo degradê, mesmo
+   número grande em 24px e o mesmo rótulo pequeno em caixa alta. */
+.resumo-top .big{font-size:var(--fs-6);font-weight:800;color:var(--brand-teal);line-height:1}
+.resumo-top .lbl{font-size:var(--fs-1);color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.05em}
 /* ---------- botao (B.8): uma base, tres papeis ---------- */
 .btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
   font-weight:700;font-size:13px;padding:10px 14px;border-radius:var(--radius-sm);transition:border-color .12s,transform .1s}
@@ -82,17 +100,17 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra-acoes .campo-busca:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
 .btn-filtros{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;
   border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);
-  color:var(--ink);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+  color:var(--ink);font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
 .btn-filtros:hover{border-color:var(--brand-teal)}
-.btn-filtros[aria-expanded="true"]{background:#EAF4F1;border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.btn-filtros[aria-expanded="true"]{background:var(--receita-soft);border-color:var(--brand-teal);color:var(--brand-teal-txt)}
 .btn-filtros svg{width:15px;height:15px;flex:none}
 .cont-filtros{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
   padding:0 5px;border-radius:var(--radius-pill);background:var(--brand-teal-txt);color:#fff;
-  font-size:11px;font-weight:800}
+  font-size:var(--fs-1);font-weight:800}
 /* display:inline-flex ganha do atributo hidden — sem esta linha o selo mostrava
    um "0" permanente ao lado de Filtros. */
 .cont-filtros[hidden]{display:none}
-.resumo-lista{font-size:13px;color:var(--ink-2);white-space:nowrap}
+.resumo-lista{font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
 /* Três números não cabem numa linha só no celular; sem isto o nowrap do contrato
    empurraria a página para o lado. */
 @media(max-width:560px){.resumo-lista{white-space:normal}}
@@ -102,16 +120,16 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .painel-filtros[hidden]{display:none}
 /* Cada grupo ocupa a fileira inteira: Produto e Atalhos não se misturam. */
 .painel-filtros .grupo{width:100%;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-.painel-filtros .grupo .rot{font-size:11px;font-weight:800;letter-spacing:.5px;
+.painel-filtros .grupo .rot{font-size:var(--fs-1);font-weight:800;letter-spacing:.5px;
   text-transform:uppercase;color:var(--muted);margin-right:2px}
 .btn-limpar{min-height:38px;padding:0 15px;border-radius:var(--radius-pill);border:1px dashed var(--line-2);
-  background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:12px;cursor:pointer}
+  background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:var(--fs-2);cursor:pointer}
 .btn-limpar:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
 .lista-mais{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 4px}
 .lista-mais button{min-height:44px;padding:0 18px;border-radius:var(--radius-pill);
   border:1px solid var(--line);background:var(--surface);color:var(--brand-teal-txt);
-  font:inherit;font-weight:700;font-size:13px;cursor:pointer}
-.lista-mais button:hover{border-color:var(--brand-teal);background:#EAF4F1}
+  font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
+.lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
 .lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
 /* Dentro do dropdown o rodapé é rodapé mesmo: encostado na borda, fora das duas
    colunas da lista, senão ele viraria mais um item no meio dos clientes. */
@@ -186,15 +204,22 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 /* por cliente */
 .cli{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
 .cli-main{flex:1;min-width:220px}
-.cli-nome{font-weight:700;font-size:15px}
+.cli-nome{font-weight:700;font-size:var(--fs-4)}
 .cli-prod{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
-.pchip{font-size:11px;font-weight:700;border-radius:var(--radius-sm);padding:2px 7px;background:#EAF4F1;color:#0c6b64;border:1px solid #cfe6e2}
-.cli-datas{text-align:right;font-size:13px;color:var(--ink-2);white-space:nowrap}
-.bdg{font-size:11px;font-weight:800;border-radius:var(--radius-sm);padding:3px 8px;display:inline-block}
-.bdg.ativo{background:#E7F4EC;color:#2E7D52}
-.bdg.enc{background:#F2ECE4;color:var(--muted)}
-.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line)}
+/* Etiqueta de produto: exatamente o `.c-tag` da lista do registro.html — pílula
+   inteira, fundo morno, contorno de fio. Era um retângulo teal claro só aqui, e
+   o mesmo produto aparecia de dois jeitos em duas telas do mesmo menu. */
+.pchip{font-size:var(--fs-1);font-weight:700;border-radius:var(--radius-pill);padding:2px 8px;background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line);white-space:nowrap}
+.cli-datas{text-align:right;font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
+/* Selo de situação do cliente: a mesma pílula do registro.html. "Ativo" usa o
+   verde do `.pill.sit-ativo`; o selo de encerramento usa o cinza do
+   `.pill.sit-sem`, que é o tom de "sem informação a comemorar". */
+.bdg{font-size:var(--fs-1);font-weight:800;border-radius:var(--radius-pill);padding:2px 9px;display:inline-block;white-space:nowrap;letter-spacing:.2px;border:1px solid transparent}
+.bdg.ativo{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.bdg.enc{background:#EEE9E2;color:var(--muted);border-color:var(--line)}
+/* Mesma caixa de estado das telas irmãs: 48vh de altura mínima e 52ch de medida. */
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:48vh;text-align:center;padding:0 24px}
+.state h1{font-size:var(--fs-5)}.state p{color:var(--muted);font-size:var(--fs-4);max-width:52ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

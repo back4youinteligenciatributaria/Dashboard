@@ -66,6 +66,7 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chip.espera.on{background:#007EB5;border-color:#007EB5}
 .chip.zero{opacity:.5}
 .chip.limpar{border-style:dashed;color:var(--muted)}
+.chip .ord{margin-left:5px;font-size:11px;opacity:.9}
 /* faixa de filtros rapidos, logo acima da tabela */
 .filtros{padding:0 16px 10px}
 .busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
@@ -99,43 +100,173 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tk .tp{font-size:11px;font-weight:700;color:var(--muted)}
 .rvazio{color:var(--muted);font-size:12px;padding:10px 9px}
-.tabela-wrap{overflow:auto;max-height:calc(100vh - 130px);border-top:1px solid var(--line)}
-table{border-collapse:separate;border-spacing:0;font-size:13px}
-thead th{position:sticky;top:0;z-index:20;background:var(--brand-dark);color:#fff;font-weight:700;text-align:left;
-  padding:9px 10px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);font-size:12px;cursor:pointer;user-select:none}
-thead th:hover{background:#0a4247}
-tbody td{padding:3px 5px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:top;background:var(--surface)}
-tbody tr:nth-child(even) td{background:var(--surface-warm)}
-/* colunas congeladas: ID e Nome */
-th.col-id,td.col-id{position:sticky;left:0;width:74px;min-width:74px;max-width:74px}
-th.col-nome,td.col-nome{position:sticky;left:74px;min-width:210px;max-width:230px}
-thead th.col-id,thead th.col-nome{z-index:26}
-td.col-id,td.col-nome{z-index:15}
-td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal-txt);padding:6px 9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
-td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.25;padding:6px 9px;white-space:normal;box-shadow:2px 0 6px rgba(7,48,52,.07)}
-tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
-/* atalho para a planilha de equiparação do cliente, sempre visível (coluna congelada) */
-td.col-nome a.eq{display:inline-block;margin-top:5px;font-size:11px;font-weight:800;letter-spacing:.2px;
-  color:#fff;background:var(--brand-teal-txt);border-radius:var(--radius-pill);padding:3px 9px;text-decoration:none;white-space:nowrap}
-td.col-nome a.eq:hover{background:var(--brand-euc)}
-.cel{display:flex;gap:4px;align-items:center}
-.cel input,.cel textarea,.cel select{font-family:var(--sans);font-size:13px;padding:6px 8px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);width:100%}
-.cel textarea{resize:both;min-height:34px;line-height:1.35}
-.cel select{font-weight:600;cursor:pointer}
-.cel input:focus,.cel textarea:focus,.cel select:focus{outline:2px solid var(--brand-teal);outline-offset:0}
-.cel a.abrir{color:var(--brand-teal-txt);text-decoration:none;font-weight:800;font-size:15px;flex:none}
-/* somente-leitura — sem "..." : CNPJ e e-mails aparecem por extenso (para copiar) */
-.ro{padding:6px 8px;font-size:13px;color:var(--ink-2);white-space:normal;word-break:break-word;text-overflow:clip}
-.ro.roarea{white-space:pre-wrap;max-height:58px;overflow:auto;line-height:1.3;font-size:12px}
-/* URL não precisa aparecer por extenso (senão a linha fica altíssima) — use o ↗ */
-.ro.rourl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:12px}
-.ro.romails{line-height:1.35}
-.ro.romails a{display:block;color:var(--brand-teal-txt);text-decoration:none;font-weight:600}
-.ro.romails a:hover{text-decoration:underline}
-.robadge{display:inline-block;padding:4px 9px;border-radius:var(--radius-sm);font-size:12px;font-weight:800;white-space:nowrap}
+/* ---------- a linha da lista: colunas-chave alinhadas, respiro de lista ----------
+   Seis colunas por linha (ID · Cliente · Responsável · Etapa atual · Prazo ·
+   Situação) e o controle inteiro na ficha, que abre ao clicar. NÃO é <table> de
+   propósito: a grade do CSS convive com os cartões e os blocos recolhíveis que
+   já existem aqui, e a tabela de 28 colunas obrigava a rolar para o lado — era
+   rolando que se perdia de vista justamente o nome de quem se estava editando.
+   O cabeçalho (.lista-cab) repete a MESMA régua de colunas — as duas larguras
+   moram na mesma regra justamente para não desalinharem quando alguém mexer. */
+/* Fecha em 4px porque a régua "Mostrando N de M" e os botões de mostrar mais
+   vêm logo abaixo, fora do quadro: o respiro do fim da página é deles. */
+.lista{padding:12px 16px 4px;display:flex;flex-direction:column;gap:8px}
+#lista-mais{padding-bottom:44px}
+.cli{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cli.aberto{border-color:var(--brand-teal);box-shadow:0 5px 20px rgba(7,48,52,.10)}
+/* Faixa lateral pela URGÊNCIA, e não pelo STATUS: o STATUS já está na pílula da
+   última coluna, com a cor exata da planilha, e repeti-lo na faixa não diria
+   nada de novo. O que a lista fechada precisa entregar de relance é "em quem eu
+   preciso mexer hoje": atrasado, vencendo esta semana, ou parado com o cliente. */
+.cli.urg-atrasado{border-left:4px solid var(--vermelho)}
+.cli.urg-semana{border-left:4px solid var(--amber)}
+.cli.urg-espera{border-left:4px solid #007EB5}
+.cli.urg-ok{border-left:4px solid var(--verde)}
+.lista-cab,.cli-head{display:grid;
+  /* O nome é o que a pessoa procura na lista e era o primeiro a ser cortado —
+     "AJUB - Cirurgia de Cab…" não identifica ninguém. Ele leva o maior peso; a
+     etapa cede, porque ali o texto é curto e sempre o mesmo punhado de rótulos. */
+  grid-template-columns:58px minmax(0,2.2fr) minmax(0,1.1fr) minmax(0,1.3fr) 104px minmax(0,162px);
+  gap:12px;align-items:center}
+.lista-cab{padding:2px 14px 0;font-size:var(--fs-1);font-weight:800;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--muted)}
+/* O cabeçalho também ordena: cada rótulo é um botão. É o que restou do "clique
+   em qualquer cabeçalho" da grade antiga — e abaixo de 900px, onde a régua some,
+   os mesmos critérios continuam nos chips "Ordenar por" do painel de filtros. */
+.lista-cab button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
+  text-transform:inherit;letter-spacing:inherit;text-align:inherit}
+.lista-cab button:hover{color:var(--brand-teal-txt)}
+.cli-head{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
+  cursor:pointer;font-family:var(--sans);color:inherit}
+.cli-head:hover{background:var(--surface-warm)}
+/* O .cli tem overflow:hidden e o contorno global (offset 2px) sairia cortado na
+   borda do cartão: aqui ele entra para dentro, senão o foco de teclado some. */
+.cli-head:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.c-id{font-size:var(--fs-2);font-weight:700;color:var(--muted);white-space:nowrap}
+.c-nome{font-weight:600;font-size:var(--fs-4);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-resp,.c-etapa{font-size:var(--fs-3);color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Valor e data em algarismo de largura fixa e alinhados à direita: uma coluna de
+   números desalinhados é justamente o que se lê errado quando se confere uma
+   linha atrás da outra. */
+.c-val{font-size:var(--fs-3);color:var(--ink-2);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.c-val.atrasado{color:var(--vermelho);font-weight:800}
+.c-val.semana{color:var(--amber-txt);font-weight:800}
+.c-fim{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:0}
+/* Coluna em branco continua dizendo o NOME do que falta ("sem responsável",
+   "sem prazo") em vez de um vazio mudo — é o sinal de tarefa que a linha sempre
+   deu. Classe própria: o `.vazio` da lista sem resultado tem 15px e padding de
+   30px, e já inchou um selo destes num balão de 80px de altura. */
+.c-falta{font-size:var(--fs-2);color:var(--muted);font-weight:600}
+/* Abaixo de 900px as seis colunas não cabem lado a lado: nome e situação ficam na
+   primeira linha da MESMA faixa e o resto desce para uma segunda, menor. Continua
+   sendo uma linha clicável só — não vira dois cartões. */
+@media(max-width:900px){
+  .lista-cab{display:none}
+  .cli-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+  /* Quebra forçada: sem ela o "resto" subiria para a primeira linha sempre que sobrasse espaço. */
+  .cli-head::after{content:"";order:3;flex:0 0 100%;height:0}
+  .c-nome{order:1;flex:1 1 auto}
+  .c-fim{order:2;flex:none;flex-direction:row;align-items:center;gap:6px}
+  .c-id,.c-resp,.c-etapa,.c-val{order:4;flex:0 1 auto;font-size:var(--fs-2);color:var(--muted);text-align:left}
+}
+/* Pílula de situação: é o STATUS da planilha, com a MESMA cor da formatação
+   condicional (corDe + textoContraste). Ela NUNCA corta o próprio texto —
+   "PROSPECTIVO SOMENTE PROTOCOLADO" cortado não identifica situação nenhuma —,
+   então quebra em duas linhas quando precisa. Sem status é cinza e diz "sem
+   status", nunca fica em branco. */
+.pill{font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:2px 9px;letter-spacing:.2px;
+  border:1px solid transparent;white-space:normal;line-height:1.3;text-align:center}
+.pill.sem{background:#EEE9E2;color:var(--muted);border-color:var(--line)}
+.vazio{padding:30px 16px;text-align:center;color:var(--muted);font-size:15px}
+
+/* ---------- a ficha do cliente (o modal) ----------
+   O mesmo desenho do registro.html: véu escuro, caixa com cabeçalho fixo, miolo
+   que rola e rodapé sempre à vista com o indicador de gravação e os botões. */
+.modal[hidden]{display:none}
+.modal{position:fixed;inset:0;z-index:90;background:rgba(7,48,52,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto}
+/* O modal cobre a janela inteira (position:fixed;inset:0), inclusive a faixa dos
+   264px onde mora o menu lateral — e o menu é z-index:940. Com os 90 daqui, o
+   menu ficava POR CIMA do véu: clicável enquanto se digita, e um clique
+   distraído troca de página com a ficha aberta e o texto por gravar.
+   A regra é escopada em `body.b4s` de propósito: sem o b4u-shell.js a página
+   continua com os 90 originais e nada muda. */
+body.b4s .modal{z-index:960}
+/* Esta regra garante o 960 também quando o b4u-shell.js não carregou (aí o
+   `body.b4s` não existe) — a ficha é onde se DIGITA. */
+.modal.modal-cad{z-index:960}
+.modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;max-width:920px;overflow:hidden;box-shadow:0 20px 60px rgba(7,48,52,.35)}
+/* Rodapé fixo: a caixa é uma coluna com altura de tela, o miolo rola e o rodapé
+   (status + salvar + fechar) fica sempre à vista. */
+.modal-cad .modal-box{display:flex;flex-direction:column;max-height:calc(100vh - 72px);margin:36px auto}
+.modal-cad .modal-body{flex:1;min-height:0;overflow:auto}
+.modal-cad .modal-foot{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  padding:11px 16px;background:var(--surface);border-top:1px solid var(--line)}
+.modal-cad .modal-foot .spacer{flex:1}
+.modal-top{position:sticky;top:0;z-index:2;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:10px;padding:13px 16px}
+.modal-top b{font-size:15px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-top .cad-id{font-size:12px;font-weight:700;color:#cfe6e2;white-space:nowrap}
+.modal-top .spacer{flex:1}
+.modal-top button{font-family:var(--sans);font-size:19px;font-weight:800;line-height:1;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:var(--radius-pill);width:32px;height:32px;cursor:pointer}
+.modal-body{padding:16px}
+/* O MESMO indicador aparece em dois lugares: a faixa da barra escura e o rodapé
+   da ficha (claro). Só o estado neutro precisa de outra tinta — o da barra é
+   feito para fundo escuro e sumiria no branco. Vem ANTES dos estados coloridos
+   de propósito: mesma especificidade, quem vier depois ganha. */
+.save-status.claro{background:var(--surface-warm);color:var(--ink-2)}
+/* Aviso de "tem coisa por gravar": aparece no primeiro pedido de fechar e o
+   segundo fecha assim mesmo — confirmação em dois tempos, sem caixa do navegador. */
+.cad-aviso{font-size:12px;font-weight:700;color:#8a5117;background:var(--amber-soft);
+  border:1px solid var(--amber-line);border-radius:var(--radius-sm);padding:6px 10px}
+.cad-aviso[hidden]{display:none}
+@media(max-width:640px){
+  .modal-cad{padding:8px}
+  .modal-cad .modal-box{max-height:calc(100vh - 16px)}
+}
+/* ---------- o conteúdo da ficha: os mesmos campos, agrupados por assunto ----------
+   As seções saem do pareamento que a tela já usa (etapa + prazo + link), então
+   não existe uma segunda lista de colunas para manter em dia. */
+.corpo{padding:0}
+.gsec{margin-bottom:13px}
+.gsec:last-of-type{margin-bottom:6px}
+.gsec h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark);display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.gsec h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--brand-teal);flex:none}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.fld{display:flex;flex-direction:column;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld>.lbl{font-size:11px;font-weight:800;color:var(--ink-2);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fld .cad{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.3px}
+.fld input,.fld select,.fld textarea{font-family:var(--sans);font-size:13px;padding:8px 10px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);width:100%}
+.fld textarea{resize:vertical;min-height:52px;line-height:1.35}
+.fld select{font-weight:600;cursor:pointer}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:0}
+.fld .linha-campo{display:flex;gap:7px;align-items:center}
+.fld .linha-campo a.abrir{color:var(--brand-teal-txt);text-decoration:none;font-weight:800;font-size:15px;flex:none}
+/* Somente-leitura dentro da ficha: caixa tracejada, do mesmo jeito do registro.
+   CNPJ e e-mail continuam POR EXTENSO, sem reticências, porque são para copiar;
+   a URL continua cortada com "…" (senão a ficha fica altíssima) e tem o ↗ ao lado. */
+.fld .ro{font-size:13px;padding:8px 10px;border:1px dashed var(--line-2);border-radius:var(--radius-sm);
+  background:#EFE8DE;color:var(--ink-2);min-height:38px;word-break:break-word;
+  display:flex;align-items:center;gap:7px;cursor:not-allowed;white-space:normal;text-overflow:clip}
+.fld .ro.roarea{display:block;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.35;font-size:12px;cursor:auto}
+.fld .ro.rourl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:12px;display:block}
+.fld .ro.romails{display:block;line-height:1.35;cursor:auto}
+.fld .ro.romails a{display:block;color:var(--brand-teal-txt);text-decoration:none;font-weight:600}
+.fld .ro.romails a:hover{text-decoration:underline}
+/* A etiqueta colorida de valor só-leitura tem a largura do texto: dentro do .fld,
+   que é uma coluna flex, sem isto ela se estica de ponta a ponta e vira faixa. */
+.robadge{display:inline-block;align-self:flex-start;padding:4px 9px;border-radius:var(--radius-sm);font-size:12px;font-weight:800;white-space:normal}
+/* Rodapé da ficha: a mesma frase do registro sobre o salvamento e os links do
+   cliente (a pasta no Drive e a planilha de equiparação). */
+.rodape{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--muted)}
+.rodape .lk{color:var(--brand-teal-txt);text-decoration:none;font-weight:800;font-size:12px}
+.ign{background:var(--amber-soft);border:1px solid var(--amber-line);color:#8a5117;border-radius:var(--radius-sm);padding:8px 11px;font-size:12px;font-weight:700;margin-bottom:10px}
+.ign:empty{display:none}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
 @keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
 .flash{animation:fl 1.7s ease}
-tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}   /* realce da linha por 5s ao clicar numa tarefa */
+/* realce da linha por 5s ao clicar numa tarefa do resumo */
+.cli.destaque{background:#FFF3B0;transition:background .4s ease}
+.cli.destaque .cli-head{background:transparent}
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
 .state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}.state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
@@ -209,8 +340,11 @@ details.ajuda>.txt b{color:var(--ink-2)}
 /* ---------- o que nao gravou (C.3) ----------
    A linha (ou o campo) fica marcada e o "tentar de novo" nasce ali mesmo. */
 .falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
-tr.falhou>td{background:#FBEAE7!important}
-.btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
+/* A linha continua marcada na lista mesmo com a ficha fechada: é o que mostra,
+   de longe, que aquele cliente tem coisa que não gravou. */
+.cli.falhou{background:#FBEAE7}
+.cli.falhou .cli-head{background:transparent}
+.btn-retry{display:inline-block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
   border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap}
 .btn-retry:disabled{opacity:.6;cursor:default}
 /* ---------- padroes compartilhados (B.10 e B.12) ---------- */
@@ -240,6 +374,29 @@ tr.falhou>td{background:#FBEAE7!important}
   <a class="volta" id="volta" href="colaborador.html" target="_self">← Painel</a>
 </div>
 <div id="app"><div class="state"><div class="spin"></div><p>Carregando restituição…</p></div></div>
+
+<!-- A ficha do cliente. Fica FORA do #app de propósito: render() repinta o #app
+     inteiro, e uma recarga (o hashchange, por exemplo) não pode apagar a ficha
+     que alguém está preenchendo. -->
+<div class="modal modal-cad" id="modalCad" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cadTitulo" tabindex="-1">
+    <div class="modal-top">
+      <b id="cadTitulo">Cliente</b>
+      <span class="cad-id" id="cadId"></span>
+      <span class="pill sem" id="cadSit"></span>
+      <span class="spacer"></span>
+      <button type="button" id="fechaCad" title="Fechar" aria-label="Fechar a ficha">×</button>
+    </div>
+    <div class="modal-body" id="cadBody"></div>
+    <div class="modal-foot">
+      <span class="save-status claro" id="saveStatusCad"></span>
+      <span class="cad-aviso" id="cadAviso" hidden>Ainda não gravei o que você mudou. Use <b>Salvar alterações</b> — ou clique de novo em Fechar para sair assim mesmo.</span>
+      <span class="spacer"></span>
+      <button class="btn btn--sec" id="cadFechar" type="button">Fechar</button>
+      <button class="btn btn--pri" id="cadSalvar" type="button">Salvar alterações</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
@@ -390,12 +547,15 @@ const COLS=[
   {k:'link_def',label:'Link Rel. Exec. Definitivo',t:'url',w:150},
   {k:'tarefas',label:'Tarefas Ativas',t:'area',w:260}
 ];
+/* Etapa, prazo e link da MESMA etapa numa entrada só. O `lk` entrou aqui, e não
+   numa segunda lista, porque é este pareamento que a ficha usa para virar seções
+   por assunto — a mesma informação que já servia aos prazos e aos chips. */
 const TAREFAS=[
-  {k:'prazo_adequacao',stk:'rel_adequacao',label:'Rel. de Adequação'},
-  {k:'prazo_prelim',stk:'rel_prelim',label:'Rel. Exec. Preliminar'},
+  {k:'prazo_adequacao',stk:'rel_adequacao',lk:'link_adequacao',label:'Rel. de Adequação'},
+  {k:'prazo_prelim',stk:'rel_prelim',lk:'link_prelim',label:'Rel. Exec. Preliminar'},
   {k:'prazo_apuracao',stk:'apuracao_nfs',label:'Apuração NFs'},
   {k:'prazo_protocolo',stk:'protocolo',label:'Protocolo'},
-  {k:'prazo_def',stk:'rel_def',label:'Rel. Exec. Definitivo'}
+  {k:'prazo_def',stk:'rel_def',lk:'link_def',label:'Rel. Exec. Definitivo'}
 ];
 // Etapas em que "Enviado ao cliente" = a bola está com o CLIENTE (não é atraso da
 // equipe): saem dos 3 quadros de prazo e entram em "Cobrar o cliente de retorno".
@@ -432,7 +592,17 @@ function textoContraste(hex){if(!hex)return '';const r=parseInt(hex.substr(1,2),
 function statusConcluido(stk,v){const n=normTxt(v);if(!n)return false;if(/nao feito/.test(n))return false;if(/aprovad|finaliz|conclu|protocolado|^feito$/.test(n))return true;if(stk==='rel_def'&&/enviad. ao cliente/.test(n))return true;return false;}
 /** "Enviado ao cliente" / "Enviada ao cliente" = esperando retorno do cliente. */
 function aguardandoCliente(stk,v){return !!ESPERA_STK[stk]&&/enviad[oa] ao cliente/.test(normTxt(v));}
-function setSave(cls,txt){const el=document.getElementById('saveStatus');if(el){el.className='save-status '+(cls||'');el.textContent=txt||'';}}
+/* Um texto de gravação, dois lugares: a faixa da barra (#saveStatus, a de sempre)
+   e o rodapé da ficha. Com a ficha aberta a barra fica atrás do véu — e o
+   indicador não pode sumir justamente na tela em que se digita. A classe "claro"
+   só troca a tinta do estado neutro, que foi desenhado para fundo escuro. */
+function setSave(cls,txt){
+  const base='save-status '+(cls||'');
+  const el=document.getElementById('saveStatus');
+  if(el){el.className=base;el.textContent=txt||'';}
+  const cad=document.getElementById('saveStatusCad');
+  if(cad){cad.className=base+' claro';cad.textContent=txt||'';}
+}
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 const MES3={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
 function parseData(s){
@@ -447,6 +617,91 @@ function addDias(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n
 function fmtBR(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}
 /** dd/mm; acrescenta /aa quando não é do ano corrente (importa no quadro "Mais adiante"). */
 function fmtBRano(d){return fmtBR(d)+(d.getFullYear()!==new Date().getFullYear()?('/'+String(d.getFullYear()).slice(-2)):'');}
+/** dd/mm/aaaa — a data por extenso da lista. Nos quadros de prazo continua o
+ *  dd/mm curto, que é onde cabem cinco linhas de cliente numa caixa de 168px. */
+function fmtBR4(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
+
+/* ---------- as colunas da lista (ID · Cliente · Responsável · … · Situação) ----------
+   Os nomes das colunas vêm do backend em tempo de execução e mudam: em vez de
+   cravar "responsavel" no código, a lista PROCURA a coluna pelo nome normalizado
+   entre as que a planilha realmente mandou (a chave do objeto e o rótulo de COLS).
+   Quando a coluna não existe, a lista não fica com um espaço em branco: ela cai
+   para o dado que responde a MESMA pergunta ("preciso agir neste cliente?") e o
+   rótulo do cabeçalho muda junto — a tela nunca promete o que não está mostrando. */
+let K_RESP='',K_COMP='',K_VAL='';
+function acharCampo(re){
+  const rot={};COLS.forEach(c=>rot[c.k]=c.label);
+  const vistos=new Set();
+  for(const l of LINHAS){
+    for(const k of Object.keys(l)){
+      if(vistos.has(k))continue;
+      vistos.add(k);
+      if(l[k]&&typeof l[k]==='object')continue;      // espera_log é mapa, não coluna
+      if(re.test(normTxt(k+' '+(rot[k]||''))))return k;
+    }
+  }
+  return '';
+}
+function mapearColunasLista(){
+  K_RESP=acharCampo(/responsav|consultor/);
+  K_COMP=acharCampo(/competencia|periodo|referencia/);
+  K_VAL=acharCampo(/valor|montante|credito/);
+}
+/** Rótulo da coluna: o nome que o backend deu, quando ela é uma das conhecidas;
+ *  senão o nome canônico da coluna da lista — nunca a chave crua do objeto, que
+ *  é vocabulário nosso ("responsavel" sem acento na régua não é nome de coluna). */
+function rotuloDe(k,padrao){const c=COLS.find(x=>x.k===k);return c?c.label:padrao;}
+function rotResp(){return rotuloDe(K_RESP,'Responsável');}
+function rotComp(){return K_COMP?rotuloDe(K_COMP,'Competência'):'Etapa atual';}
+function rotVal(){return K_VAL?rotuloDe(K_VAL,'Valor'):'Prazo';}
+/** "R$ 1.234,56", "1234.56" ou "1.234,56" viram número; o que não é número, não vira. */
+function numDe(v){
+  let s=String(v==null?'':v).replace(/[^\d,.\-]/g,'').trim();
+  if(!s)return NaN;
+  if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');
+  const n=parseFloat(s);
+  return isFinite(n)?n:NaN;
+}
+/** Separador de milhar sempre, duas casas — coluna de dinheiro se lê pela vírgula. */
+function fmtValor(v){
+  const n=numDe(v);
+  if(!isFinite(n))return String(v==null?'':v).trim();   // texto livre continua como está
+  return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+/** Responsável da linha; sem a coluna vale quem o servidor identificou pela chave
+ *  (é dele a carteira que veio) — o mesmo nome que já aparece na tarja da barra. */
+function textoResp(l){return K_RESP?String(l[K_RESP]==null?'':l[K_RESP]).trim():(RESPNOME||'');}
+/** Em que etapa o cliente está parado — o MESMO cálculo do chip "Etapa atual",
+ *  para não existirem duas verdades na página. */
+function etapaRot(l){
+  const k=etapaAtual(l);
+  if(k===ETAPA_OK)return 'Tudo concluído';
+  const tf=TAREFAS_ATIVAS.find(t=>t.k===k);
+  return tf?tf.label:'';
+}
+/** Competência quando a planilha tem essa coluna; senão a etapa atual. */
+function textoComp(l){return K_COMP?String(l[K_COMP]==null?'':l[K_COMP]).trim():etapaRot(l);}
+/** A quinta coluna: o valor, quando a planilha tem um; senão o prazo mais próximo
+ *  ainda em aberto, que é o que diz se este cliente precisa de mão hoje. */
+function dadoVal(l){
+  if(K_VAL){
+    const v=String(l[K_VAL]==null?'':l[K_VAL]).trim();
+    return {txt:v?fmtValor(v):'',cls:'',falta:'sem valor'};
+  }
+  const ps=prazosEmAberto(l);
+  if(!ps.length)return {txt:'',cls:'',falta:esperandoAlgo(l)?'com o cliente':'sem prazo'};
+  const g=Math.min.apply(null,ps),j=janelas();
+  return {txt:fmtBR4(new Date(g)),cls:g<j.t0?'atrasado':(g<=j.semana?'semana':''),falta:''};
+}
+/** Faixa lateral: a urgência da linha, na mesma régua dos quadros de resumo. */
+function classeUrg(l){
+  const ps=prazosEmAberto(l),j=janelas();
+  if(ps.some(g=>g<j.t0))return 'urg-atrasado';
+  if(ps.some(g=>g>=j.t0&&g<=j.semana))return 'urg-semana';
+  if(esperandoAlgo(l))return 'urg-espera';
+  if(etapaAtual(l)===ETAPA_OK)return 'urg-ok';
+  return '';
+}
 
 let LINHAS=[],RESPNOME='',SORT={key:'id',dir:'asc'};
 function telaChave(titulo,msg){
@@ -529,23 +784,25 @@ function render(){
       </div>
       <div id="painel-filtros" class="painel-filtros" hidden>
         <div class="grupo" id="filtros"></div>
+        <div class="grupo chips" id="ordChips"></div>
         <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro e sem busca">Limpar filtros</button>
       </div>
       <details class="ajuda" id="ajuda">
         <summary>ⓘ Como funciona esta tela</summary>
-        <div class="txt">Clique num cabeçalho para ordenar (A→Z / Z→A). Só os campos de status/observação/links/tarefas são editáveis — salvam sozinhos, e <b>Enter</b> grava e desce para a mesma coluna da linha seguinte. Etapa em <b>“Enviado ao cliente”</b> não conta como atrasada: aparece em <b>“Cobrar o cliente de retorno”</b>, com os dias corridos de espera (a data é carimbada sozinha e pode ser corrigida na coluna “Esperando retorno desde”). Os <b>filtros rápidos</b> ficam no botão <b>Filtros</b> e combinam entre si, com a busca e com a ordenação.</div>
+        <div class="txt">A lista é só de leitura: cada linha traz <b>ID, cliente, responsável, etapa atual, prazo</b> e a <b>situação</b> (o STATUS da planilha, com a cor dela). Coluna em branco diz o que falta (<b>sem responsável</b>, <b>sem prazo</b>) em vez de ficar vazia, e o que não coube aparece ao passar o mouse na linha.<br>Clicar na linha — ou apertar <b>Enter</b> nela — abre a <b>ficha</b> do cliente por cima da lista, e é lá que se edita: status, observações, links, tarefas e a data de espera. O que você muda continua <b>salvando sozinho</b>; o botão <b>Salvar alterações</b> antecipa a gravação que já estava a caminho e fecha a ficha quando ela entra. Se alguma coisa não gravar, a ficha continua aberta com o aviso e o botão de tentar de novo.<br>Etapa em <b>“Enviado ao cliente”</b> não conta como atrasada: aparece em <b>“Cobrar o cliente de retorno”</b>, com os dias corridos de espera (a data é carimbada sozinha e pode ser corrigida em “Esperando retorno desde”). Os <b>filtros rápidos</b> e a <b>ordenação</b> ficam no botão <b>Filtros</b> e combinam entre si e com a busca; no computador dá para ordenar clicando no cabeçalho da lista.</div>
       </details>
     </div>
     <details class="ajuda situacao" id="det-situacao">
       <summary>Ver quem está em cada situação</summary>
       <div class="resumo" id="resumo"></div>
     </details>
-    <div class="tabela-wrap"><table id="tab"></table></div>
+    <div class="lista" id="lista"></div>
     <div class="mostrando" id="mostrando"></div>
     <div id="lista-mais"></div>`;
   document.getElementById('busca').addEventListener('input',()=>{TETO=PASSO;redesenhar();});
   ligarDetalhes(document.getElementById('ajuda'),'b4u.restituicao.ajuda');
   mapearColunas();
+  mapearColunasLista();   // quais colunas a lista consegue mostrar nesta carga
   atualizarResumo();
   FILTROS_UI=ligarFiltros('restituicao',filtrosPainel);   // depois do layout: o painel já existe
   redesenhar();
@@ -775,9 +1032,25 @@ function desenharResumoLista(){
   if(r.cobrar.length)p.push(r.cobrar.length+' esperando o cliente');
   el.textContent=p.join(' · ');
 }
+/* Ordenar por: os mesmos seis critérios do cabeçalho da lista, em chip. Abaixo de
+   900px o cabeçalho some, e sem estes chips a ordenação sumiria junto — no
+   celular ela é justamente o jeito de achar o mais atrasado. */
+function ordens(){
+  return [{k:'id',rot:'ID'},{k:'nome',rot:'Cliente'},{k:'resp',rot:rotResp()},
+          {k:'comp',rot:rotComp()},{k:'val',rot:rotVal()},{k:'status',rot:'Situação'}];
+}
+function desenharOrdem(){
+  const cx=document.getElementById('ordChips');if(!cx)return;
+  cx.innerHTML='<span class="rot">Ordenar por</span>'+ordens().map(o=>{
+    const at=SORT.key===o.k;
+    return '<button type="button" class="chip'+(at?' on':'')+'" data-sort="'+esc(o.k)+'">'+esc(o.rot)+
+      (at?'<span class="ord">'+(SORT.dir==='asc'?'▲':'▼')+'</span>':'')+'</button>';
+  }).join('');
+}
 function redesenhar(){
   const b=document.getElementById('busca');
   desenharChips();
+  desenharOrdem();
   desenhar(b?b.value:'');
   desenharResumoLista();
   if(FILTROS_UI)FILTROS_UI.atualizarContador();
@@ -785,10 +1058,26 @@ function redesenhar(){
 }
 function ehNum(s){return /^\s*-?\d+([.,]\d+)?\s*$/.test(String(s));}
 function valCmp(a,b){if(ehNum(a)&&ehNum(b))return parseFloat(String(a).replace(',','.'))-parseFloat(String(b).replace(',','.'));return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});}
+/* As três colunas calculadas da lista (responsável de fallback, etapa atual e
+   prazo mais próximo) não existem na linha crua: o valor de ordenação delas sai
+   da mesma função que pinta a coluna, para a ordem bater com o que se lê. */
+function valOrd(l,key){
+  if(key==='resp')return textoResp(l);
+  if(key==='comp')return textoComp(l);
+  if(key==='val'){
+    if(K_VAL){const n=numDe(l[K_VAL]);return isFinite(n)?String(n):'';}
+    const ps=prazosEmAberto(l);
+    return ps.length?fmtBR4(new Date(Math.min.apply(null,ps))):'';
+  }
+  return l[key]==null?'':l[key];
+}
 function ordenar(arr){
-  const key=SORT.key,dir=SORT.dir,col=COLS.find(c=>c.k===key),isData=col&&col.sort==='date';
+  const key=SORT.key,dir=SORT.dir,col=COLS.find(c=>c.k===key);
+  /* a coluna calculada de prazo ordena por data interpretada, igual às colunas
+     de prazo da planilha; a de valor ordena por número */
+  const isData=(col&&col.sort==='date')||(key==='val'&&!K_VAL);
   return arr.slice().sort((x,y)=>{
-    let va=x[key]==null?'':x[key],vb=y[key]==null?'':y[key];
+    let va=valOrd(x,key),vb=valOrd(y,key);
     const ea=String(va).trim()==='',eb=String(vb).trim()==='';
     if(ea&&eb)return 0;if(ea)return 1;if(eb)return -1;
     let r;
@@ -806,50 +1095,156 @@ function porBusca(termo){
 }
 function filtradas(termo){return aplicaChips(porBusca(termo),null);}
 function seta(key){return SORT.key===key?(SORT.dir==='asc'?' ▲':' ▼'):'';}
-function celHTML(l,c){
+/* Um campo da ficha: rótulo em cima, controle embaixo — o mesmo desenho do
+   cadastro do registro.html. O que era `<div class="cel">` dentro da célula da
+   grade virou `.fld`; os atributos data-k continuam idênticos, porque é por eles
+   que coletar() monta o que vai para a planilha. As larguras em pixel saíram: na
+   ficha quem manda é a grade de duas colunas, e o que era largo vira full. */
+function campoFichaHTML(l,c){
   const v=l[c.k]==null?'':l[c.k];
   const abrir=(c.t==='url'&&/^https?:/i.test(v))?`<a class="abrir" href="${esc(v)}" target="_blank" rel="noopener" title="abrir">↗</a>`:'';
+  const largo=c.t==='area'||c.t==='mails'||c.t==='url'||c.w>=200;
   let campo;
   if(c.ro){
     if(c.opt&&corDe(c.opt,v)){const cor=corDe(c.opt,v);campo=`<span class="robadge" style="background:${cor};color:${textoContraste(cor)}">${esc(v)}</span>`;}
-    else if(c.t==='area')campo=`<div class="ro roarea" style="width:${c.w}px">${esc(v)}</div>`;
+    else if(c.t==='area')campo=`<div class="ro roarea">${esc(v)||'—'}</div>`;
     else if(c.t==='mails'){
       const mails=String(v).split(/[,;\s]+/).map(x=>x.trim()).filter(x=>x.indexOf('@')>0);
-      campo=`<div class="ro romails" style="width:${c.w}px">`+(mails.length?mails.map(m=>`<a href="mailto:${esc(m)}">${esc(m)}</a>`).join(''):'—')+`</div>`;
+      campo=`<div class="ro romails">`+(mails.length?mails.map(m=>`<a href="mailto:${esc(m)}">${esc(m)}</a>`).join(''):'—')+`</div>`;
     }
-    else if(c.t==='url')campo=`<div class="ro rourl" style="width:${c.w}px" title="${esc(v)}">${esc(v)||'—'}</div>`;
-    else campo=`<div class="ro" style="width:${c.w}px" title="${esc(v)}">${esc(v)}</div>`;
+    else if(c.t==='url')campo=`<div class="ro rourl" title="${esc(v)}">${esc(v)||'—'}</div>`;
+    else campo=`<div class="ro" title="${esc(v)}">${esc(v)||'—'}</div>`;
   }else if(c.t==='select'){
     const opts=OPT[c.opt].slice();if(v&&opts.indexOf(v)<0)opts.unshift(v);
-    const cor=corDe(c.opt,v);const st=`width:${c.w}px`+(cor?`;background:${cor};color:${textoContraste(cor)};font-weight:700`:'');
+    const cor=corDe(c.opt,v);const st=cor?`background:${cor};color:${textoContraste(cor)};font-weight:700`:'';
     campo=`<select data-k="${c.k}" data-opt="${c.opt}" style="${st}"><option value=""${v===''?' selected':''}>—</option>`+opts.map(o=>`<option value="${esc(o)}"${o===v?' selected':''}>${esc(o)}</option>`).join('')+`</select>`;
-  }else if(c.t==='area')campo=`<textarea data-k="${c.k}" style="width:${c.w}px">${esc(v)}</textarea>`;
-  else campo=`<input data-k="${c.k}" type="text" value="${esc(v)}"${c.dica?` placeholder="${esc(c.dica)}"`:''} style="width:${c.w}px">`;
-  return `<td><div class="cel" data-cell="${c.k}">${campo}${abrir}</div></td>`;
+  }else if(c.t==='area')campo=`<textarea data-k="${c.k}" rows="3">${esc(v)}</textarea>`;
+  else campo=`<input data-k="${c.k}" type="text" value="${esc(v)}"${c.dica?` placeholder="${esc(c.dica)}"`:''}>`;
+  const rot=`<span class="lbl">${esc(c.label)}${c.ro?' <span class="cad" title="Coluna mantida pela planilha — não dá para editar por aqui.">🔒</span>':''}</span>`;
+  /* data-campo em TODO campo, inclusive nos 🔒: é por ele que o clique num quadro
+     de prazo acha o campo daquela tarefa para piscar, e prazo é só leitura — com
+     o data-k sozinho (que só os editáveis têm) o destaque nunca chegaria lá. */
+  return `<div class="fld${largo?' full':''}" data-campo="${esc(c.k)}">${rot}`+(abrir?`<span class="linha-campo">${campo}${abrir}</span>`:campo)+`</div>`;
 }
-/** Chip "Planilha ↗" na coluna congelada do Nome: abre a planilha de equiparação
- *  do cliente sem precisar rolar a tabela até a coluna do link. */
-function atalhoEquip(l){
-  const u=String(l.link_equip||'').trim();
-  if(!/^https?:/i.test(u))return '';
-  return `<br><a class="eq" href="${esc(u)}" target="_blank" rel="noopener" title="Abrir a planilha de equiparação de ${esc(l.nome||l.id)}">Planilha ↗</a>`;
+/* ---------- as seções da ficha ----------
+   Cliente e Equiparação são a identificação (só leitura); "Situação" reúne o que
+   se mexe todo dia; e cada etapa do fluxo vira uma seção com o seu status, o seu
+   prazo e o seu link juntos — é o MESMO pareamento de TAREFAS que já alimenta os
+   quadros de prazo e os chips, não uma segunda lista de colunas para manter.
+   O que sobrar cai em "Outras informações": coluna que a planilha ganhar não pode
+   sumir da ficha sem ninguém perceber. */
+const SEC_CLIENTE=['cnpj','email','natureza_juridica','natureza_empresarial','prospectivo','link_drive','link_equip'];
+const SEC_SITUACAO=['status','obs_status','tarefas','espera_desde'];
+const SEC_EQUIP=['visao_geral','estrategia'];
+function montarSecoes(){
+  const porK={};COLS.forEach(c=>porK[c.k]=c);
+  const usadas=new Set(),secs=[];
+  const add=(titulo,ks)=>{
+    const cs=ks.filter(k=>k&&porK[k]&&!usadas.has(k)).map(k=>{usadas.add(k);return porK[k];});
+    if(cs.length)secs.push({titulo:titulo,cols:cs});
+  };
+  add('Cliente',SEC_CLIENTE);
+  add('Situação e observações',SEC_SITUACAO);
+  add('Equiparação',SEC_EQUIP);
+  TAREFAS.forEach(tf=>add(tf.label,[tf.stk,tf.k,tf.lk]));
+  add('Outras informações',COLS.map(c=>c.k));
+  return secs;
+}
+/* A ficha inteira. O data-row e o data-id ficam AQUI, no mesmo lugar em que
+   estavam no <tr>: agendarSalvar() e coletar() continuam lendo os dois do
+   elemento que embrulha os campos, sem saber que trocaram de casa. */
+function corpoHTML(l){
+  const blocos=montarSecoes().map(s=>`<div class="gsec"><h3><span class="dot"></span>${esc(s.titulo)}</h3>
+      <div class="grid">${s.cols.map(c=>campoFichaHTML(l,c)).join('')}</div></div>`).join('');
+  const drive=String(l.link_drive||'').trim(),plan=String(l.link_equip||'').trim();
+  /* O "Planilha ↗" morava na coluna congelada do Nome para não obrigar a rolar a
+     grade até a coluna do link. Sem grade e sem rolagem lateral, ele vem para o
+     rodapé da ficha, ao lado da pasta do Drive — continua a um clique do nome. */
+  return `<div class="corpo" data-row="${esc(String(l.row))}" data-id="${esc(l.id)}">
+    <div class="ign"></div>
+    ${blocos}
+    <div class="rodape">
+      <span>As alterações salvam sozinhas. Campos com 🔒 são mantidos pela planilha.</span>
+      ${/^https?:/i.test(drive)?`<a class="lk" href="${esc(drive)}" target="_blank" rel="noopener">📁 Pasta no Drive ↗</a>`:''}
+      ${/^https?:/i.test(plan)?`<a class="lk" href="${esc(plan)}" target="_blank" rel="noopener" aria-label="Abrir a planilha de equiparação de ${esc(l.nome||l.id)}">Planilha de equiparação ↗</a>`:''}
+    </div>
+  </div>`;
+}
+/* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS) e some
+   abaixo de 900px, onde a linha deixa de ser seis colunas. Cada rótulo é um
+   botão que ordena — por isso ele NÃO é aria-hidden: aqui não é enfeite. */
+function cabecalhoLista(){
+  const bt=(k,rot,estilo)=>`<span${estilo?' style="'+estilo+'"':''}><button type="button" data-sort="${esc(k)}" title="Ordenar por ${esc(rot)}">${esc(rot)}${seta(k)}</button></span>`;
+  return `<div class="lista-cab">`+bt('id','ID')+bt('nome','Cliente')+bt('resp',rotResp())+
+    bt('comp',rotComp())+bt('val',rotVal(),'text-align:right')+bt('status','Situação','text-align:right')+`</div>`;
+}
+/** O que não coube nas seis colunas vira o title da linha: dá para conferir sem
+ *  abrir a ficha — inclusive quais etapas estão paradas com o cliente. */
+function tituloLinha(l){
+  const p=['CNPJ: '+(String(l.cnpj||'').trim()||'em branco')];
+  p.push('Status: '+(String(l.status||'').trim()||'em branco'));
+  if(K_COMP)p.push('Etapa atual: '+etapaRot(l));
+  if(K_VAL){const ps=prazosEmAberto(l);p.push('Prazo mais próximo: '+(ps.length?fmtBR4(new Date(Math.min.apply(null,ps))):'nenhum em aberto'));}
+  const esp=ESPERA_ATIVAS.filter(e=>aguardandoCliente(e.stk,l[e.stk])).map(e=>e.label);
+  if(esp.length)p.push('Esperando o cliente: '+esp.join(', '));
+  const tar=String(l.tarefas||'').trim();
+  if(tar)p.push('Tarefas ativas: '+tar.replace(/\s+/g,' ').slice(0,120));
+  p.push('Clique para abrir a ficha.');
+  return p.join(' · ');
+}
+/* A linha da lista: ID · Cliente · Responsável · Etapa atual · Prazo · Situação.
+   Nenhum campo aqui dentro — a lista é só de leitura, e é isso que impede alterar
+   sem querer. É um role="button" (e não um <button>) porque dentro dele há pílula
+   com title próprio; o teclado é atendido à mão no keydown (Enter e Espaço). */
+function linhaHTML(l){
+  const st=String(l.status==null?'':l.status).trim();
+  const cor=corDe('status',st);
+  const pill=st
+    ?`<span class="pill" style="${cor?`background:${cor};color:${textoContraste(cor)};border-color:${cor}`:''}" title="${esc('STATUS: '+st)}">${esc(st)}</span>`
+    :'<span class="pill sem" title="Coluna STATUS em branco">sem status</span>';
+  const resp=textoResp(l),comp=textoComp(l),val=dadoVal(l);
+  return `<div class="cli-head" role="button" tabindex="0" aria-haspopup="dialog" title="${esc(tituloLinha(l))}">
+      <span class="c-id">${esc(l.id)}</span>
+      <span class="c-nome">${esc(l.nome||'(sem nome)')}</span>
+      <span class="c-resp">${resp?esc(resp):'<span class="c-falta">sem responsável</span>'}</span>
+      <span class="c-etapa">${comp?esc(comp):'<span class="c-falta">—</span>'}</span>
+      <span class="c-val ${val.cls}">${val.txt?esc(val.txt):'<span class="c-falta">'+esc(val.falta)+'</span>'}</span>
+      <span class="c-fim">${pill}</span>
+    </div>`;
 }
 function desenhar(termo){
   const arr=ordenar(filtradas(termo));
   document.getElementById('cnt').textContent=arr.length+' de '+baseRows().length+' clientes';
-  /* Teto de 20: a tela abre com o começo da grade, não com as 110 linhas. */
+  /* Teto de 20: a tela abre com o começo da lista, não com as 110 linhas. */
   const n=Math.min(TETO,arr.length);
-  const head='<thead><tr>'
-    +'<th class="col-id" data-sort="id">ID'+seta('id')+'</th>'
-    +'<th class="col-nome" data-sort="nome">Nome'+seta('nome')+'</th>'
-    +COLS.map(c=>`<th data-sort="${c.k}" style="min-width:${c.w+16}px">${esc(c.label)}${seta(c.k)}</th>`).join('')+'</tr></thead>';
-  const body='<tbody>'+(arr.slice(0,n).map(l=>`<tr data-row="${l.row}" data-id="${esc(l.id)}"><td class="col-id">${esc(l.id)}</td><td class="col-nome">${esc(l.nome||'')}${atalhoEquip(l)}</td>${COLS.map(c=>celHTML(l,c)).join('')}</tr>`).join('')||`<tr><td colspan="${COLS.length+2}" style="padding:18px;color:var(--muted)">Nenhum cliente com os filtros de agora. <button type="button" class="chip limpar" data-limpar>Limpar filtros e busca</button></td></tr>`)+'</tbody>';
-  document.getElementById('tab').innerHTML=head+body;
+  const el=document.getElementById('lista');
+  el.innerHTML=arr.length
+    ?cabecalhoLista()+arr.slice(0,n).map(l=>`<div class="cli ${classeUrg(l)}${ABERTA===String(l.row)?' aberto':''}" data-row="${esc(String(l.row))}" data-id="${esc(l.id)}">${linhaHTML(l)}</div>`).join('')
+    :`<div class="vazio">Nenhum cliente com os filtros de agora. <button type="button" class="chip limpar" data-limpar>Limpar filtros e busca</button></div>`;
   const mo=document.getElementById('mostrando');
   if(mo)mo.textContent=arr.length>n?('Mostrando '+n+' de '+arr.length+' clientes.'):'';
   const lm=document.getElementById('lista-mais');
   if(lm)lm.innerHTML=rodapeLista(n,arr.length);
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
+}
+/* Repinta UMA linha depois de gravar. Os campos vivem na ficha, não mais dentro
+   da linha: repintá-la aqui não tira o foco de ninguém — e assim o status, a
+   etapa e o prazo acompanham a edição. Redesenhar a LISTA inteira durante a
+   digitação continua proibido. */
+function atualizarLinha(row){
+  const l=LINHAS.find(x=>String(x.row)===String(row));if(!l)return;
+  const no=document.querySelector('.cli[data-row="'+CSS.escape(String(row))+'"]');
+  if(no){
+    /* Se o foco estava NA linha (é onde ele volta ao fechar a ficha), ele volta
+       para ela depois da repintura: uma gravação que termina meio segundo depois
+       não pode jogar quem navega por teclado de volta para o topo da página. */
+    const cabeca=no.querySelector('.cli-head');
+    const tinhaFoco=!!cabeca&&document.activeElement===cabeca;
+    no.innerHTML=linhaHTML(l);
+    if(tinhaFoco){const nova=no.querySelector('.cli-head');if(nova)nova.focus();}
+    no.className='cli '+classeUrg(l)+(ABERTA===String(row)?' aberto':'')+(FALHAS.has(String(row))?' falhou':'');
+  }
+  atualizarTopoFicha(row);   // e o topo da ficha mostra o nome e a situação novos
 }
 function irPara(row,k){
   // a linha precisa estar visível: solta a busca e os chips antes de rolar até ela
@@ -861,31 +1256,178 @@ function irPara(row,k){
   if(pos>=TETO){TETO=Math.ceil((pos+1)/PASSO)*PASSO;mexeu=true;}
   if(mexeu)redesenhar();
   requestAnimationFrame(()=>{
-    const tr=document.querySelector(`#tab tr[data-row="${row}"]`);if(!tr)return;
-    tr.scrollIntoView({block:'center'});
-    tr.classList.add('destaque');setTimeout(()=>tr.classList.remove('destaque'),5000);   // 5 segundos na linha
-    const cel=tr.querySelector(`[data-cell="${k}"]`);if(cel){cel.classList.add('flash');setTimeout(()=>cel.classList.remove('flash'),1700);}
+    const no=document.querySelector('.cli[data-row="'+CSS.escape(String(row))+'"]');if(!no)return;
+    no.scrollIntoView({block:'center'});
+    no.classList.add('destaque');setTimeout(()=>no.classList.remove('destaque'),5000);   // 5 segundos na linha
+    /* Quem clicou num quadro de prazo veio por causa DAQUELA tarefa: a ficha abre
+       e o campo dela pisca lá dentro, que é onde a edição acontece agora. */
+    abrirFicha(row);
+    if(!k)return;
+    const cel=document.querySelector('.corpo .fld[data-campo="'+CSS.escape(k)+'"]');
+    if(cel){cel.classList.add('flash');cel.scrollIntoView({block:'center'});setTimeout(()=>cel.classList.remove('flash'),1700);}
   });
 }
+/* Todo [data-k] de dentro do elemento vira campo do salvamento — é o contrato de
+   `rest_salvar` e ele não mudou. O parâmetro continua se chamando `tr` porque a
+   função é a mesma: só que o elemento que embrulha os campos deixou de ser a
+   linha da tabela e passou a ser o .corpo da ficha. */
 function coletar(tr){const campos={};tr.querySelectorAll('[data-k]').forEach(el=>campos[el.dataset.k]=el.value);return campos;}
+
+/* ===================================================================
+   A ficha do cliente (o modal)
+   -------------------------------------------------------------------
+   A lista mostra as colunas que a equipe lê de relance; o controle inteiro abre
+   aqui, por cima, sem trocar de página e sem empurrar as outras linhas. Os
+   campos são os MESMOS de sempre (mesmo data-k, mesmas opções, mesmas travas) —
+   só mudou onde eles são pintados. E é isso que faz a lista ficar limpa: com
+   nenhum campo na linha, ninguém altera sem querer.
+   =================================================================== */
+let ABERTA='';           // qual linha está com a ficha aberta (acende na lista)
+let CAD_ROW='';          // de quem é a ficha aberta
+let CAD_AVISADO=false;   // já avisamos que tem coisa por gravar? (fechar em 2 tempos)
+function elCad(){return document.getElementById('modalCad');}
+function cadAberto(){const m=elCad();return !!m&&!m.hidden;}
+/** Aviso de "tem alteração por gravar" no rodapé; o botão passa a dizer que sai assim mesmo. */
+function avisoCad(mostrar){
+  const a=document.getElementById('cadAviso');if(a)a.hidden=!mostrar;
+  const b=document.getElementById('cadFechar');if(b)b.textContent=mostrar?'Fechar assim mesmo':'Fechar';
+}
+/** Nome, ID e situação no topo da ficha — acompanham a edição sem redesenhar nada. */
+function atualizarTopoFicha(row){
+  if(!cadAberto()||String(CAD_ROW)!==String(row))return;
+  const l=LINHAS.find(x=>String(x.row)===String(row));if(!l)return;
+  const t=document.getElementById('cadTitulo');if(t)t.textContent=l.nome||'(sem nome)';
+  const i=document.getElementById('cadId');if(i)i.textContent=l.id;
+  const p=document.getElementById('cadSit');
+  if(p){
+    const st=String(l.status==null?'':l.status).trim(),cor=corDe('status',st);
+    p.className='pill'+(st?'':' sem');
+    p.textContent=st||'sem status';
+    p.title=st?('STATUS: '+st):'Coluna STATUS em branco';
+    p.style.background=st&&cor?cor:'';
+    p.style.color=st&&cor?textoContraste(cor):'';
+    p.style.borderColor=st&&cor?cor:'';
+  }
+}
+/** Acende na lista a linha da ficha que está aberta. */
+function marcarLinhaAberta(){
+  document.querySelectorAll('.cli').forEach(n=>n.classList.toggle('aberto',String(n.dataset.row)===String(ABERTA)));
+}
+function abrirFicha(row){
+  const l=LINHAS.find(x=>String(x.row)===String(row));if(!l)return;
+  const m=elCad();if(!m)return;
+  CAD_ROW=String(l.row);CAD_AVISADO=false;
+  document.getElementById('cadBody').innerHTML=corpoHTML(l);
+  m.hidden=false;
+  /* Enquanto a ficha está aberta a página atrás não rola: rolar por baixo do véu
+     faz perder de vista a linha para onde o foco volta ao fechar. */
+  document.body.style.overflow='hidden';
+  atualizarTopoFicha(CAD_ROW);
+  avisoCad(false);
+  ABERTA=CAD_ROW;marcarLinhaAberta();
+  /* Reabrir não pode apagar o que não gravou: a faixa e o "tentar de novo"
+     nascem de novo junto com os campos. */
+  if(FALHAS.has(CAD_ROW))marcarFalha(CAD_ROW,true);
+  const cx=m.querySelector('.modal-box');if(cx)cx.focus();
+}
+/* Grava agora o que estava esperando o debounce. É o salvar() de sempre, só sem
+   os 450 ms de espera — e com o que está na tela AGORA. */
+function descarregarPendentes(){
+  const cx=document.querySelector('.corpo[data-row]');
+  if(!cx||!PENDENTES.has(String(cx.dataset.row)))return;
+  clearTimeout(timers[cx.dataset.row]);
+  salvar(cx.dataset.row,cx.dataset.id,coletar(cx));
+}
+/* Fechar com alteração por gravar avisa antes, em dois tempos como o resto da
+   casa (nunca uma caixa do navegador): o primeiro Fechar/Esc/clique no véu
+   explica, o segundo sai. Ao sair assim mesmo a gravação pendente é DESCARREGADA
+   na hora — deixar o debounce correndo com a ficha fora da tela é exatamente o
+   jeito de perder o que foi digitado. */
+function fecharFicha(){
+  const m=elCad();if(!m||m.hidden)return;
+  if(temPendencia()&&!CAD_AVISADO){CAD_AVISADO=true;avisoCad(true);return;}
+  descarregarPendentes();
+  m.hidden=true;
+  document.body.style.overflow='';
+  const row=CAD_ROW;CAD_ROW='';CAD_AVISADO=false;
+  avisoCad(false);
+  ABERTA='';marcarLinhaAberta();
+  document.getElementById('cadBody').innerHTML='';
+  /* O foco volta para a linha de onde saiu: quem navega por teclado não é jogado
+     de volta para o topo da página. */
+  const no=document.querySelector('.cli[data-row="'+CSS.escape(String(row))+'"] .cli-head');
+  if(no)no.focus();
+}
+/* O botão "Salvar alterações" NÃO substitui o autosave: cada edição continua
+   chamando agendarSalvar(), e é ele que impede perder texto digitado — foi para
+   isso que ele existe nesta tela. O botão ANTECIPA a gravação pendente (mata o
+   debounce e salva na hora), reenvia o que falhou e, quando tudo entrou, FECHA a
+   ficha: salvar é o gesto de encerrar, e ficar com a ficha aberta depois de
+   confirmar faz a pessoa clicar em Fechar sem saber se gravou.
+
+   Só fecha se gravou MESMO. Falha mantém a ficha na tela: fechar por cima de uma
+   gravação que não foi levaria embora o aviso e a chance de tentar de novo, e a
+   pessoa sairia achando que salvou. */
+async function salvarAgoraCad(){
+  const btn=document.getElementById('cadSalvar');
+  if(temPendencia()){
+    if(btn){btn.disabled=true;btn.dataset.rot=btn.textContent;btn.textContent='Salvando…';}
+    try{
+      const fila=[];
+      /* o que falhou antes volta para a fila com os MESMOS campos que não entraram */
+      FALHAS.forEach((f,k)=>fila.push({row:k,id:f.id,campos:f.campos}));
+      /* e a gravação que ainda estava no debounce sai na hora, com o que está na
+         tela agora — que é mais novo do que qualquer coisa da fila */
+      const cx=document.querySelector('.corpo[data-row]');
+      if(cx&&PENDENTES.has(String(cx.dataset.row))){
+        clearTimeout(timers[cx.dataset.row]);
+        const item={row:cx.dataset.row,id:cx.dataset.id,campos:coletar(cx)};
+        const j=fila.findIndex(x=>String(x.row)===String(item.row));
+        if(j>=0)fila[j]=item;else fila.push(item);
+      }
+      FALHAS.clear();
+      await Promise.all(fila.map(x=>salvar(x.row,x.id,x.campos)));
+    }catch(e){ /* salvar() já registra a falha em FALHAS e avisa na tela */ }
+    if(btn){btn.disabled=false;btn.textContent=btn.dataset.rot||'Salvar alterações';}
+  }
+  if(temPendencia())return;            // não gravou: a ficha continua aberta
+  CAD_AVISADO=false;avisoCad(false);
+  fecharFicha();
+}
 let timers={};
 /* ---------- pendências e falhas de gravação (C.3) ----------
    PENDENTES = alteração ainda no debounce. FALHAS = o servidor recusou e o dado
-   só existe na tela. Nos dois casos fechar a aba pede confirmação, e a falha
-   deixa a linha marcada com um "tentar de novo" ao lado do ID. */
+   só existe na tela. Nos dois casos fechar a aba pede confirmação; a linha fica
+   marcada na lista (para se ver de longe) e o "tentar de novo" nasce dentro da
+   ficha, que é onde o texto que não gravou está. */
 const PENDENTES=new Set();
 const FALHAS=new Map();
 function temPendencia(){return PENDENTES.size>0||FALHAS.size>0;}
 function marcarFalha(row,falhou){
-  const tr=document.querySelector('#tab tr[data-row="'+row+'"]');
-  if(!tr)return;
-  tr.classList.toggle('falhou',!!falhou);
-  const cel=tr.querySelector('td.col-id');if(!cel)return;
-  const antigo=cel.querySelector('.btn-retry');
-  if(falhou&&!antigo)cel.insertAdjacentHTML('beforeend',
-    '<button type="button" class="btn-retry" data-retry="'+esc(String(row))+'">tentar de novo</button>');
-  if(!falhou&&antigo)antigo.remove();
+  const chave=CSS.escape(String(row));
+  /* A LINHA continua marcada na lista mesmo com a ficha fechada — é o que mostra,
+     de longe, que aquele cliente tem coisa que não gravou. */
+  const no=document.querySelector('.cli[data-row="'+chave+'"]');
+  if(no)no.classList.toggle('falhou',!!falhou);
+  /* A faixa e o "tentar de novo" vivem no .corpo, que hoje é pintado dentro da
+     ficha: procurar pelo .corpo funciona esteja ele onde estiver (e não existe
+     quando a ficha está fechada, que é o caso em que não há o que marcar). */
+  const corpo=document.querySelector('.corpo[data-row="'+chave+'"]');
+  if(!corpo)return;
+  const cx=corpo.querySelector('.ign');
+  if(!cx)return;
+  if(falhou&&!cx.querySelector('.btn-retry')){
+    /* O motivo técnico da recusa não vai para a tela; o que a pessoa precisa
+       saber é que o texto continua aqui e que dá para mandar de novo. */
+    cx.innerHTML='Não gravei o que você mudou aqui — o texto continua na tela. ';
+    cx.insertAdjacentHTML('beforeend',
+      '<button type="button" class="btn-retry" data-retry="'+esc(String(row))+'">não salvou — tentar de novo</button>');
+  }
+  if(!falhou)cx.innerHTML='';
 }
+/* O maquinário de gravação é o mesmo de antes da ficha: 450 ms de debounce, a
+   linha inteira em cada envio, `rest_salvar`. O que mudou foi só de ONDE ele é
+   chamado — do .corpo da ficha, e não mais do <tr> da grade. */
 function agendarSalvar(tr){
   const row=tr.dataset.row,campos=coletar(tr);
   setSave('saving','Alterado…');
@@ -902,7 +1444,12 @@ async function salvar(row,id,campos){
     PENDENTES.delete(String(row));FALHAS.delete(String(row));marcarFalha(row,false);
     setSave('ok','Salvo ✓ '+horaAgora());
     atualizarResumo();
-    /* só os chips e a contagem: redesenhar a tabela tiraria o foco de quem está digitando */
+    /* Uma linha só, e os chips e a contagem: redesenhar a LISTA inteira tiraria
+       do lugar a linha que a pessoa acabou de abrir. */
+    atualizarLinha(row);
+    /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé da ficha sai, e o
+       Fechar volta a ser Fechar. */
+    if(!temPendencia()){CAD_AVISADO=false;avisoCad(false);}
     desenharChips();desenharResumoLista();
     if(FILTROS_UI)FILTROS_UI.atualizarContador();
   }catch(e){
@@ -920,13 +1467,33 @@ window.addEventListener('beforeunload',e=>{if(temPendencia()){e.preventDefault()
 document.addEventListener('change',e=>{
   const el=e.target;if(!el.dataset||!el.dataset.k)return;
   if(el.tagName==='SELECT'&&el.dataset.opt){const cor=corDe(el.dataset.opt,el.value);el.style.background=cor||'';el.style.color=cor?textoContraste(cor):'';el.style.fontWeight=cor?'700':'600';}
-  const tr=el.closest('tr[data-row]');if(tr)agendarSalvar(tr);
+  /* O data-row/data-id que era do <tr> agora é do .corpo da ficha: agendarSalvar
+     continua recebendo o elemento que embrulha os campos daquela linha. */
+  const cx=el.closest('.corpo[data-row]');if(cx)agendarSalvar(cx);
 });
 document.addEventListener('click',e=>{
-  const th=e.target.closest('th[data-sort]');
+  /* O "tentar de novo" mora dentro da ficha; para o clique nele não escorrer
+     para nada mais, ele é o primeiro e para aqui. */
+  const rt=e.target.closest('[data-retry]');
+  if(rt){
+    e.stopPropagation();
+    const k=rt.dataset.retry,f=FALHAS.get(k);
+    if(f){rt.textContent='enviando…';rt.disabled=true;salvar(k,f.id,f.campos);}
+    return;
+  }
+  /* Rodapé da ficha: salvar agora, fechar, e o × do topo. Vêm ANTES do teste do
+     véu, senão o clique no botão contaria como clique fora. */
+  if(e.target.closest('#cadSalvar')){salvarAgoraCad();return;}
+  if(e.target.closest('#cadFechar')||e.target.closest('#fechaCad')){fecharFicha();return;}
+  if(e.target.id==='modalCad'){fecharFicha();return;}
+  /* Clicar na linha abre a ficha — é o único jeito de editar agora. */
+  const head=e.target.closest('.cli-head');
+  if(head){const no=head.closest('.cli');if(no)abrirFicha(no.dataset.row);return;}
+  /* Ordenar: pelo cabeçalho da lista ou pelos chips "Ordenar por" do painel. */
+  const th=e.target.closest('[data-sort]');
   if(th){const k=th.dataset.sort;if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}
-    TETO=PASSO;                                // outra ordem, outro começo de grade
-    desenhar(document.getElementById('busca').value);return;}
+    TETO=PASSO;                                // outra ordem, outro começo de lista
+    desenharOrdem();desenhar(document.getElementById('busca').value);return;}
   const chip=e.target.closest('.chip[data-dim]');
   if(chip){
     const d=chip.dataset.dim,v=chip.dataset.v;
@@ -937,63 +1504,35 @@ document.addEventListener('click',e=>{
   /* "mais 20" para quem está lendo, "todos" para quem vai usar Ctrl+F. */
   if(e.target.closest('.btn-mais')){TETO+=PASSO;desenhar(document.getElementById('busca').value);return;}
   if(e.target.closest('.btn-todos')){TETO=baseRows().length;desenhar(document.getElementById('busca').value);return;}
-  const rt=e.target.closest('[data-retry]');
-  if(rt){
-    const k=rt.dataset.retry,f=FALHAS.get(k);
-    if(f){rt.textContent='enviando…';rt.disabled=true;salvar(k,f.id,f.campos);}
-    return;
-  }
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto,tk.dataset.k);return;}
 });
-/* Enter num campo da tabela grava e desce para a MESMA coluna da linha seguinte (C.14);
-   Shift+Enter sobe. Da última linha grava e fica onde está — dar a volta faria a pessoa
-   reescrever a primeira linha sem perceber. Mesmas duas funções de certificados/licenças:
-   as três grades são a mesma grade para quem digita. */
-/* Linha vizinha que dá para editar. O filtro tira a linha da grade, mas se ela
-   estiver só escondida a gente pula do mesmo jeito: quem filtrou não quer o
-   cursor caindo justamente no que mandou sumir. */
-function linhaVizinha(tr,passo){
-  let p=tr;
-  for(;;){
-    p=passo>0?p.nextElementSibling:p.previousElementSibling;
-    if(!p) return null;
-    if(!p.dataset||!p.dataset.row) continue;     // a linha do "Nenhum cliente com os filtros"
-    if(!p.getClientRects().length) continue;     // escondida
-    return p;
-  }
-}
-/* Campo da mesma coluna na linha de destino. Coluna espelhada/só leitura não tem
-   campo nenhum (é um <div class="ro">), então o Enter segue para a próxima
-   editável em vez de largar o foco no nada. */
-function campoDestino(tr,coluna){
-  const ok=el=>!!el&&!el.disabled&&!el.readOnly;
-  const igual=tr.querySelector('[data-k="'+CSS.escape(coluna)+'"]');
-  if(ok(igual)) return igual;
-  const cols=COLS.map(c=>c.k);
-  for(let j=cols.indexOf(coluna)+1;j<cols.length;j++){
-    const el=tr.querySelector('[data-k="'+CSS.escape(cols[j])+'"]');
-    if(ok(el)) return el;
-  }
-  return null;
-}
+/* Enter num campo da ficha grava a linha inteira NA HORA (C.14) — é o mesmo gesto
+   que existia na grade, onde ele também descia para a mesma coluna da linha
+   seguinte. Aqui não há linha seguinte: a ficha é de um cliente só, e a próxima
+   se abre pela lista. O que fazia diferença de verdade — não esperar os 450 ms
+   com o texto ainda só na tela — continua igual. */
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter'||e.ctrlKey||e.metaKey||e.altKey)return;
   const el=e.target;
   if(!el.dataset||!el.dataset.k||el.tagName==='TEXTAREA')return;   // no textarea Enter é quebra de linha
-  const tr=el.closest('tr[data-row]');if(!tr)return;
+  const cx=el.closest('.corpo[data-row]');if(!cx)return;
   e.preventDefault();
-  clearTimeout(timers[tr.dataset.row]);
-  salvar(tr.dataset.row,tr.dataset.id,coletar(tr));
-  const prox=linhaVizinha(tr,e.shiftKey?-1:1);
-  if(!prox)return;
-  const alvo=campoDestino(prox,el.dataset.k);
-  // campo de data não aceita select() — por isso a tentativa é protegida
-  if(alvo){alvo.focus();try{if(alvo.select)alvo.select();}catch(_){}}
+  clearTimeout(timers[cx.dataset.row]);
+  salvar(cx.dataset.row,cx.dataset.id,coletar(cx));
 });
 /* Atalhos de busca (C.4): "/" foca, Esc limpa. Não atrapalha quem digita noutro
-   campo — só o Esc dentro da própria busca continua valendo. */
+   campo — só o Esc dentro da própria busca continua valendo. Com a ficha aberta,
+   Esc é dela antes de tudo, e a linha da lista (role="button") abre com Enter e
+   Espaço: sem isto a tela ficaria só para o mouse. */
 document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&cadAberto()){e.preventDefault();fecharFicha();return;}
+  const linha=e.target&&e.target.closest&&e.target.closest('.cli-head');
+  if(linha&&(e.key==='Enter'||e.key===' '||e.key==='Spacebar')){
+    e.preventDefault();
+    const no=linha.closest('.cli');if(no)abrirFicha(no.dataset.row);
+    return;
+  }
   const b=document.getElementById('busca');if(!b)return;
   const a=document.activeElement,tag=a&&a.tagName;
   const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);

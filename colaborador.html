@@ -45,16 +45,26 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.barra{position:sticky;top:0;z-index:50;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:14px;padding:12px 22px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
-.barra .logo{font-weight:800;font-size:19px;letter-spacing:-.02em}
+/* ---------- barra superior (igual às páginas irmãs) ----------
+   Os números vêm do registro.html, que é a tela de referência: mesmo z-index,
+   mesmo gap e mesmo padding. Eram 14/22px aqui e 12/20px lá — uma diferença
+   pequena demais para alguém defender e grande o bastante para a barra "pular"
+   de lugar ao trocar de tela pelo menu lateral. O nowrap no tag e no contador
+   é o que impede a barra de virar duas linhas antes da hora. */
+.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:800;font-size:19px}
 .barra .logo .y{color:var(--brand-euc)}
-.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill)}
+.barra .tag{font-size:var(--fs-2);font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill);white-space:nowrap}
 .barra .spacer{flex:1}
-.barra .cnt{font-size:12px;color:#bcd;opacity:.9}
+.barra .cnt{font-size:var(--fs-2);color:#bcd;white-space:nowrap}
 .wrap{max-width:1000px;margin:0 auto;padding:20px 22px 70px}
 
-/* Títulos de seção */
-.sec-tit{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin:2px 0 10px;display:flex;align-items:center;gap:8px}
+/* Títulos de seção
+   Mesmo tratamento do registro.html (.gsec h3): 12px, 800, caixa alta, meio pixel
+   de espaçamento e a tinta escura da marca. Estava em .06em e --ink-2, o que dava
+   um título mais claro e mais espaçado que o das telas irmãs — lado a lado no mesmo
+   menu, a diferença lia como "outra página, outro sistema". */
+.sec-tit{font-size:var(--fs-2);font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark);margin:2px 0 10px;display:flex;align-items:center;gap:8px}
 .sec-tit::after{content:"";flex:1;height:1px;background:var(--line)}
 
 /* Acesso rápido (planilhas centrais) */
@@ -131,7 +141,8 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .cli-nome{font-size:15px;font-weight:700;line-height:1.3;flex:1}
 .cli-cnpj{font-size:12px;color:var(--muted);margin-top:2px;font-weight:400}  /* idem .opt-cnpj: 500 não existe na fonte */
 .linha{display:flex;flex-wrap:wrap;gap:6px}
-.rot{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);width:100%;margin-top:2px}
+/* Rótulo de grupo: o mesmo do `.chips .rot` do registro.html (11px, 800, .5px). */
+.rot{font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);width:100%;margin-top:2px}
 .lk{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;text-decoration:none;
   padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--line);background:var(--surface-warm);color:var(--ink);transition:border-color .12s,transform .1s}
 .lk:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
@@ -140,17 +151,24 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .lk .ic{font-size:13px}
 .lk.off{opacity:.4;pointer-events:none}
 .alertas{display:flex;flex-wrap:wrap;gap:6px}
-.al{font-size:11px;font-weight:700;border-radius:var(--radius-sm);padding:4px 9px;display:inline-flex;gap:5px;align-items:center}
-.al.ok{background:#E7F4EC;color:#2E7D52}
-.al.aten{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
-.al.venc{background:#F8E3DF;color:var(--vermelho)}
+/* Alerta de prazo: mesma forma da pílula de situação do registro.html (pílula
+   inteira, 800, .2px, contorno de 1px na cor da família). Aqui ela era um
+   retângulo de canto 10px sem contorno — a mesma informação em dois desenhos
+   diferentes dentro do mesmo painel. */
+.al{font-size:var(--fs-1);font-weight:800;border-radius:var(--radius-pill);padding:2px 9px;display:inline-flex;gap:5px;align-items:center;letter-spacing:.2px;border:1px solid transparent}
+.al.ok{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.al.aten{background:var(--amber-soft);color:#8A4B12;border-color:var(--amber)}
+.al.venc{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
 .placeholder{margin-top:16px;background:var(--surface-warm);border:1px dashed var(--line-2);border-radius:var(--radius);padding:22px;text-align:center;color:var(--muted);font-size:15px}
 .cli-status{font-size:13px;color:var(--muted);margin-top:6px}
 
-.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:40vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:46ch}
-.state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line);font-size:13px}
-.spin{width:22px;height:22px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:middle}
+/* Estados (portaria e erro) com a mesma caixa das telas irmãs: 48vh de altura
+   mínima e 52ch de medida de linha. Com 40vh/46ch a mesma frase nascia mais
+   acima e mais estreita aqui do que no registro.html. */
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:48vh;text-align:center;padding:0 24px}
+.state h1{font-size:var(--fs-5)}.state p{color:var(--muted);font-size:var(--fs-4);max-width:52ch}
+.state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line);font-size:var(--fs-3)}
+.spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media(max-width:560px){.wrap{padding:16px 14px 60px}.centrais{grid-template-columns:1fr}
 }
@@ -159,7 +177,9 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 /* Dossiê do cliente (contatos, licenças, certificado, mestra, equiparação) */
 .extras{margin-top:14px;display:flex;flex-direction:column;gap:12px}
 .ex-sec{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
-.ex-tit{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin-bottom:8px}
+/* Título de bloco do dossiê: mesmo tratamento do `.sec-tit` acima e do
+   registro.html — caixa alta, 800, meio pixel, tinta escura da marca. */
+.ex-tit{font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark);margin-bottom:8px}
 .ex-load,.ex-erro,.ex-vazio{color:var(--muted);font-size:13px;padding:4px 0}
 .ex-erro{color:var(--vermelho)}
 .ex-lk{display:inline-block;margin-top:8px;font-size:13px;font-weight:700;color:var(--brand-teal-txt);text-decoration:none}
@@ -169,9 +189,10 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .ct-nome{font-weight:700;font-size:13px}
 .ct-meta{font-size:13px;color:var(--ink-2);margin-top:2px}
 .ct-meta a{color:var(--brand-teal-txt);text-decoration:none}
-.tag-papel{font-size:11px;font-weight:800;padding:1px 7px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px}
-.tag-papel.pr{background:#E7F4EC;color:#2E7D52}
-.tag-papel.sec{background:var(--surface-warm);color:var(--muted)}
+/* Papel do contato: a mesma pílula do registro.html, com o mesmo verde. */
+.tag-papel{font-size:var(--fs-1);font-weight:800;padding:2px 9px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px;letter-spacing:.2px;border:1px solid transparent}
+.tag-papel.pr{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.tag-papel.sec{background:var(--surface-warm);color:var(--muted);border-color:var(--line)}
 /* busca das ferramentas + seção recolhível das planilhas centrais */
 .fer-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .busca-fer{flex:1;min-width:0;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);
@@ -179,17 +200,21 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .busca-fer:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 .fer-cnt{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
 .fer-vazio{color:var(--muted);font-size:13px;padding:2px 0 22px}
+/* Este botão é um título de seção que abre — então usa exatamente o desenho do
+   `.sec-tit` acima, e não um segundo dialeto de título na mesma tela. */
 .sec-drop{display:flex;align-items:center;gap:8px;width:100%;margin:2px 0 10px;padding:0;cursor:pointer;
-  background:none;border:0;font-family:var(--sans);font-size:12px;font-weight:800;text-transform:uppercase;
-  letter-spacing:.06em;color:var(--ink-2);text-align:left}
+  background:none;border:0;font-family:var(--sans);font-size:var(--fs-2);font-weight:800;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--brand-dark);text-align:left}
 .sec-drop::after{content:"";flex:1;height:1px;background:var(--line)}
 .sec-drop:hover{color:var(--brand-teal-txt)}
 .sec-drop .arw{font-size:11px;color:var(--muted);transition:transform .15s}
 .sec-drop[aria-expanded="true"] .arw{transform:rotate(90deg);color:var(--brand-teal-txt)}
 .sec-drop .n{font-size:11px;font-weight:700;color:var(--muted);text-transform:none;letter-spacing:0}
 #bloco-centrais[hidden]{display:none}
-.aviso-off{background:var(--amber-soft);border:1px solid #F0D6B4;border-left:3px solid var(--amber);
-  border-radius:var(--radius-sm);padding:8px 11px;margin-bottom:9px;font-size:13px;color:#8a5117;font-weight:600}
+/* Aviso âmbar: mesma receita do `.ign`/`.avisos` do registro.html, e a borda pelo
+   token --amber-line em vez do hex solto, que era o mesmo valor escrito à mão. */
+.aviso-off{background:var(--amber-soft);border:1px solid var(--amber-line);border-left:3px solid var(--amber);
+  border-radius:var(--radius-sm);padding:8px 11px;margin-bottom:9px;font-size:var(--fs-3);color:#8a5117;font-weight:600}
 .cd{display:flex;flex-direction:column;gap:4px;margin-top:2px}
 .cd-val{color:var(--ink)!important;font-weight:700;font-size:13px;text-align:right}
 .cd-obs{font-size:12px;line-height:1.4;color:var(--ink-2);background:var(--surface-warm);
@@ -201,17 +226,25 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .cd-row,.lic-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0}
 .lic-grid{display:flex;flex-direction:column;gap:2px}
 .lic-row span,.cd-row span{color:var(--ink-2)}
-.pill{font-size:11px;font-weight:700;border-radius:var(--radius-sm);padding:3px 9px;background:var(--surface-warm);color:var(--ink-2);white-space:nowrap}
-.pill.ok{background:#E7F4EC;color:#2E7D52}
-.pill.aten{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
-.pill.venc{background:#F8E3DF;color:var(--vermelho)}
+/* Pílula de situação: a mesma do registro.html (.pill / .pill.sit-*), inclusive
+   nas tintas. Sem modificador ela é o "sem informação" cinza de lá; ok/aten/venc
+   recebem o verde, o âmbar e o vermelho na versão que passa em contraste. Todas
+   com contorno de 1px: sem ele o degrau de cor some no cartão branco. */
+.pill{font-size:var(--fs-1);font-weight:800;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap;letter-spacing:.2px;
+  background:#EEE9E2;color:var(--muted);border:1px solid var(--line)}
+.pill.ok{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.pill.aten{background:var(--amber-soft);color:#8A4B12;border-color:var(--amber)}
+.pill.venc{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
 .card{background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:8px}
 .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
 .mini{font-size:13px;color:var(--ink-2);margin-top:4px}
 .info-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
-.ic-chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--radius-pill);background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
-.ic-chip.ok{background:#E7F4EC;color:#2E7D52;border-color:#cfe6e2}
-.ic-chip.bad{background:#F8E3DF;color:var(--vermelho);border-color:#F0C9C1}
+/* Chip de informação: a mesma etiqueta do `.c-tag` da lista do registro.html
+   (11px, 700, pílula, fundo morno) e, quando ganha cor, as mesmas tintas da
+   pílula de situação — para não existirem dois verdes e dois vermelhos na tela. */
+.ic-chip{font-size:var(--fs-1);font-weight:700;padding:2px 8px;border-radius:var(--radius-pill);background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
+.ic-chip.ok{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.ic-chip.bad{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
 /* ---- Ferramentas da equipe: o centro do painel ----
    Cards grandes, com ícone em destaque, nome forte e uma linha do que se faz ali.
    As planilhas centrais continuam discretas de propósito — é o contraste entre as
@@ -261,11 +294,13 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
 .st-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.01em;
   padding:5px 12px;border-radius:var(--radius-pill);border:1px solid var(--line);background:var(--surface-warm);color:var(--muted)}
 .st-chip::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--line-2)}
-.st-chip.ok{background:#E7F4EC;color:#276B47;border-color:#BFE0CD}
-.st-chip.ok::before{background:#2E7D52}
-.st-chip.aten{background:var(--amber-soft);color:#8A5117;border-color:var(--amber-line)}
+/* As três tintas são as mesmas da pílula de situação do registro.html — este chip
+   só é maior e ganha o ponto colorido; a cor não pode ser outra. */
+.st-chip.ok{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.st-chip.ok::before{background:#1f6b45}
+.st-chip.aten{background:var(--amber-soft);color:#8A4B12;border-color:var(--amber)}
 .st-chip.aten::before{background:var(--amber)}
-.st-chip.bad{background:#F8E3DF;color:var(--vermelho);border-color:#F0C9C1}
+.st-chip.bad{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
 .st-chip.bad::before{background:var(--vermelho)}
 /* Início da contabilidade: a data é o protagonista, o tempo decorrido vem em segundo plano. */
 .chip-inicio{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 10px;

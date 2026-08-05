@@ -37,8 +37,10 @@
   /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
   --lift:0 8px 20px rgba(17,61,57,.10);
   /* Tamanhos e o teal claro vem das paginas irmas: a regua de acoes e colada
-     literal do contrato, entao os nomes que ela usa tem de existir aqui. */
-  --fs-1:11px;--fs-2:12px;--fs-3:13px;
+     literal do contrato, entao os nomes que ela usa tem de existir aqui.
+     O --fs-4 entrou com a lista de leitura: e o corpo do NOME do cliente, que
+     tem de ser maior que o resto da linha para o olho cair nele primeiro. */
+  --fs-1:11px;--fs-2:12px;--fs-3:13px;--fs-4:15px;
   --receita-soft:#DBEFEC;
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
@@ -54,6 +56,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra a.plan{border:1px solid rgba(255,255,255,.25);border-radius:var(--radius-pill);padding:4px 11px}
 .save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:var(--radius-pill);background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
+/* O MESMO indicador aparece em dois lugares: a faixa da barra escura e o rodape
+   da ficha (claro). So o estado neutro precisa de outra tinta — o da barra e
+   feito para fundo escuro e sumiria no branco. Vem ANTES dos estados coloridos
+   de proposito: mesma especificidade, quem vier depois ganha. */
+.save-status.claro{background:var(--surface-warm);color:var(--ink-2)}
 /* Branco sobre --amber da 2,61:1 e sobre --verde 3,44:1 — o rotulo do proprio
    status de gravacao some. Um degrau mais escuro na MESMA familia: 4,68:1 e 4,92:1. */
 .save-status.saving{background:var(--amber-2);color:#fff}.save-status.ok{background:var(--verde-2);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
@@ -69,6 +76,15 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chip.on .n{background:rgba(255,255,255,.25)}
 .chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
 .chip.falta.on{background:var(--amber);border-color:var(--amber)}
+/* ---------- ordenacao ----------
+   A grade era ordenada clicando no cabecalho da coluna; a lista de leitura nao
+   tem cabecalho clicavel, entao os criterios viraram chips no painel de filtros.
+   A frase abaixo deles diz o que a ordem quer dizer — "ID crescente" nao explica
+   nada a quem chegou agora. */
+.chip .ord{margin-left:5px;font-size:11px;opacity:.9}
+.ord-info{font-size:12px;color:var(--muted);font-weight:700}
+.ord-info b{color:var(--ink-2)}
+.ord-info:empty{display:none}
 /* B.7: a busca é a pílula larga da tela. */
 .busca{flex:1;min-width:220px;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
 .busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
@@ -112,10 +128,9 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
   font:inherit;font-weight:700;font-size:var(--fs-3);cursor:pointer}
 .lista-mais button:hover{border-color:var(--brand-teal);background:var(--receita-soft)}
 .lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
-/* O rodapé da grade fica FORA do quadro que rola: com 12 colunas, quem rolasse
-   para o lado perderia de vista o botão de mostrar mais. */
-#rodape-lista{padding:0 16px 10px}
-#rodape-lista .quanto{display:block;text-align:center;font-size:var(--fs-2);color:var(--muted);margin-top:6px}
+/* Quanto da lista está desenhado. Vazio quando tudo cabe no teto — sem linha à toa. */
+.dica{font-size:var(--fs-2);color:var(--muted);padding:8px 16px 0}
+.dica:empty{display:none}
 
 /* ---------- cards de resumo ---------- */
 .resumo{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;padding:0 16px 12px}
@@ -141,85 +156,97 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .tk .tp{font-size:11px;font-weight:800;color:var(--muted);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
 .rvazio{color:var(--muted);font-size:12px;padding:9px}
 
-/* ---------- grade ---------- */
-.tabela-wrap{overflow:auto;max-height:calc(100vh - 190px);border-top:1px solid var(--line)}
-table{border-collapse:separate;border-spacing:0;font-size:12px}
-thead th{position:sticky;background:var(--brand-dark);color:#fff;text-align:left;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08)}
-/* Faixa de grupo (assunto) por cima dos cabeçalhos — a âncora na rolagem lateral.
-   O tom mais escuro e o risco teal embaixo dizem quem manda em quem: a faixa é o
-   assunto, a linha de baixo são as colunas dele. Sem essa separação as duas
-   faixas escuras viravam um bloco só e ninguém achava onde um grupo terminava.
-   A altura fica travada em 26px de propósito: é dela que sai o `top` da linha
-   de cabeçalhos logo abaixo, e as duas grudadas é que fazem o topo colar. */
-thead tr.grupos th{top:0;z-index:22;height:26px;padding:4px 10px;font-size:11px;font-weight:800;
-  letter-spacing:.4px;text-transform:uppercase;color:#9FC7C3;background:#052528;
-  box-shadow:inset 0 -3px 0 var(--brand-teal)}
-thead tr.grupos th.alt{background:#0A4247}
-thead tr.cols th{top:26px;z-index:20;padding:9px 10px;font-size:11px;font-weight:700}
-thead.sem-faixa tr.cols th{top:0}
-thead tr.cols th[data-sort]{cursor:pointer;user-select:none}
-thead tr.cols th[data-sort]:hover{background:#0a4247}
-thead tr.cols th .ord{opacity:.55;font-size:11px;margin-left:4px}
-thead tr.cols th .lock{opacity:.6;font-size:11px;margin-left:4px}
-/* Separador vertical no começo de cada grupo — vale no cabeçalho e no corpo. */
-thead th.ini{border-left:2px solid rgba(255,255,255,.30)}
-tbody td.ini{border-left:2px solid var(--line-2)}
-/* Respiro vertical: a grade nasceu com 4px e, com 111 linhas, virava um paredão
-   em que o olho pula de linha no meio da rolagem lateral. */
-tbody td{padding:7px 8px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:middle;background:var(--surface)}
-/* Listras discretas: só a diferença entre o branco e o creme da paleta, nada de
-   cor nova. É o suficiente para o olho não trocar de linha ao rolar de lado. */
-tbody tr:nth-child(even) td{background:var(--surface-warm)}
-/* Largura mínima por coluna: sem ela o navegador espreme "Vencimento" em duas
-   linhas e o campo de data fica menor que a própria data. Vale só no modo
-   tabela — na ficha a célula é um "rótulo: valor" que tem de caber no celular,
-   e o `body:not(.fichas)` evita ter de desfazer isso lá embaixo. */
-body:not(.fichas) thead tr.cols th:not(.col-id):not(.col-nome){min-width:150px}
-body:not(.fichas) tbody td:not(.col-id):not(.col-nome):not(.grp){min-width:150px}
-th.col-id,td.col-id{left:0;width:76px;min-width:76px;max-width:76px}
-th.col-nome,td.col-nome{left:76px;min-width:196px;max-width:216px}
-td.col-id,td.col-nome{position:sticky;z-index:15}
-thead tr.grupos th.col-id,thead tr.grupos th.col-nome{z-index:28}
-thead tr.cols th.col-id,thead tr.cols th.col-nome{z-index:26}
-/* O cabeçalho do ID acompanha o corpo: número centralizado dos dois lados. */
-thead tr.cols th.col-id{text-align:center}
-td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal-txt);padding:9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
-/* A borda de rolagem precisa parecer uma parede: o conteúdo que passa por baixo
-   das colunas fixas estava encostando no nome do cliente e dava a impressão de
-   texto sobreposto. Fio firme + sombra curta, e o fundo das fixas acompanha a
-   listra, o cursor e o foco (regras abaixo) para não virar uma faixa branca. */
-td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.3;padding:9px;white-space:normal;vertical-align:top;
-  box-shadow:1px 0 0 var(--line-2),7px 0 8px -6px rgba(7,48,52,.30)}
-tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
-/* Linha sob o cursor e linha em edição — numa grade larga, saber em que cliente
-   se está mexendo é metade do trabalho. Precisa citar as colunas presas, senão o
-   realce parava na borda de rolagem e a linha "quebrava" no meio; e vale só no
-   modo tabela, porque na ficha isso pintaria o cartão inteiro. O foco vem depois
-   do cursor de propósito: quem está digitando ganha do que está só passando. */
-body:not(.fichas) tbody tr:hover>td,
-body:not(.fichas) tbody tr:hover>td.col-id,
-body:not(.fichas) tbody tr:hover>td.col-nome{background:var(--canvas)}
-body:not(.fichas) tbody tr:focus-within>td,
-body:not(.fichas) tbody tr:focus-within>td.col-id,
-body:not(.fichas) tbody tr:focus-within>td.col-nome{background:var(--receita-soft)}
-/* Alinhamento: número e data no meio, texto à esquerda — texto centralizado
-   serrilha a coluna e o olho não acha onde a palavra começa. Só no modo tabela:
-   na ficha o ID é a primeira linha do cartão, alinhada com o nome logo abaixo, e
-   centralizar deixaria o número solto no meio do bloco. */
-body:not(.fichas) td.col-id{text-align:center}
-td.col-nome .flag{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.3px;border-radius:var(--radius-pill);padding:2px 8px}
-/* Atalho para a pasta do cliente no Drive, colado no nome. É o pulo que a equipe
-   mais faz à mão a partir daqui; sem endereço cadastrado o ícone nem aparece,
-   para ninguém clicar e cair numa guia em branco. */
-td.col-nome .drive{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
-  margin-left:5px;vertical-align:-5px;border-radius:var(--radius-sm);border:1px solid var(--line);
-  background:var(--surface-warm);color:var(--brand-teal-txt);text-decoration:none;flex:none}
-td.col-nome .drive svg{width:13px;height:13px}
-td.col-nome .drive:hover{border-color:var(--brand-teal);background:#EAF5F4}
-td.col-nome .drive:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
-td.col-nome .flag.nova{background:var(--amber-soft);color:var(--amber-txt);border:1px solid var(--amber-line)}
-td.col-nome .flag.inativo{background:#EEE9E2;color:var(--muted);border:1px solid var(--line)}
-tr.destaque>td{background:#FFF3B0!important;transition:background .4s ease}
+/* ---------- a lista: só leitura, uma linha por cliente ----------
+   A grade de 17 colunas com campo em cada célula acabou: "a lista fica limpa e
+   ninguém altera sem querer". Aqui só se LÊ — nenhum input, select ou textarea
+   dentro da linha —, e toda a edição acontece no modal que a linha abre.
+   Seis colunas por linha (ID · Cliente · CNPJ · Venc. do certificado digital ·
+   Venc. das procurações · Situação) e o resto da ficha no modal.
+   NÃO é <table> de propósito: a grade do CSS convive com os cartões de resumo
+   que já existem aqui, e a tabela obrigava as duas colunas presas, a rolagem
+   lateral e o cabeçalho de dois andares — que era justamente o que ninguém
+   entendia. O cabeçalho (.lista-cab) repete a MESMA régua de colunas; as duas
+   larguras moram na mesma regra para não desalinharem quando alguém mexer. */
+.lista{padding:12px 16px 48px;display:flex;flex-direction:column;gap:8px}
+.cli{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cli.aberto{border-color:var(--brand-teal);box-shadow:0 5px 20px rgba(7,48,52,.10)}
+/* Situação do cliente: faixa lateral colorida para bater o olho na lista e ver
+   na hora quem precisa de ação — sem precisar abrir a ficha. Só o que cobra
+   ganha cor: quem está em dia não precisa de faixa nenhuma. */
+.cli.sit-venc,.cli.aberto.sit-venc{border-left:4px solid var(--vermelho)}
+.cli.sit-d30,.cli.aberto.sit-d30{border-left:4px solid var(--amber)}
+.cli.sit-sem,.cli.aberto.sit-sem{border-left:4px solid var(--line-2)}
+.cli.sit-inativo,.cli.aberto.sit-inativo{border-left:4px solid var(--muted)}
+.lista-cab,.cli-head{display:grid;
+  /* O nome é o que a pessoa procura na lista, e era o primeiro a ser cortado —
+     "AJUB - Cirurgia de Cab…" não identifica ninguém. Ele leva o maior peso; as
+     colunas de data cedem, porque ali o corte já é explícito, com o "+N". */
+  grid-template-columns:60px minmax(0,2.6fr) 136px minmax(0,1.15fr) minmax(0,1.15fr) minmax(0,142px);
+  gap:12px;align-items:center}
+.lista-cab{padding:2px 14px 0;font-size:var(--fs-1);font-weight:800;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--muted)}
+.cli-head{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
+  cursor:pointer;font-family:var(--sans);color:inherit}
+.cli-head:hover{background:var(--surface-warm)}
+/* O .cli tem overflow:hidden e o contorno global (offset 2px) sairia cortado na
+   borda do cartão: aqui ele entra para dentro, senão o foco de teclado some. */
+.cli-head:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.c-id{font-size:var(--fs-2);font-weight:700;color:var(--muted);white-space:nowrap}
+.c-nome{font-weight:600;font-size:var(--fs-4);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-doc{font-size:var(--fs-3);color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Documento e data em algarismo de largura fixa: uma coluna de CNPJ desalinhado
+   é justamente o que se lê errado quando se confere um cadastro atrás do outro. */
+.c-doc,.c-data{font-variant-numeric:tabular-nums}
+.c-data{font-size:var(--fs-3);color:var(--ink-2);display:flex;align-items:center;gap:6px;min-width:0}
+/* Só a DATA encolhe: a etiqueta de prazo ao lado dela nunca é cortada. O
+   min-width:0 na etiqueta desfaz os 44px que ela tem na ficha (lá ela alinha uma
+   coluna de campos); na linha ela ocupa só o que a palavra pede, e é isso que
+   sobra de largura para a data ao lado entre 900 e 1200px. */
+.c-data .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-data .tag-d{min-width:0}
+/* Sem max-width e sem reticências, de propósito: etiqueta cortada ("venci…") não
+   diz prazo nenhum, e era pior que mostrar uma a menos. Quem manda no corte é a
+   CONTAGEM, que sempre sobra num "+N" honesto. */
+.c-tag{font-size:var(--fs-1);font-weight:700;color:var(--ink-2);background:var(--surface-warm);
+  border:1px solid var(--line);border-radius:var(--radius-pill);padding:2px 8px;
+  white-space:nowrap;flex-shrink:0}
+.c-tag.mais{background:transparent;border-style:dashed;color:var(--muted)}
+.c-fim{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:0}
+/* Coluna em branco continua dizendo o NOME do que falta ("sem CNPJ", "sem data")
+   em vez de um vazio mudo — é o sinal de tarefa que a grade sempre deu. Classe
+   própria: o `.vazio` da lista sem resultado tem 15px e padding de 30px. */
+.c-falta{font-size:var(--fs-2);color:var(--muted);font-weight:600;white-space:nowrap}
+/* Abaixo de 1180px as seis colunas não cabem lado a lado: nome e situação ficam
+   na primeira linha da MESMA faixa e o resto desce para uma segunda, menor.
+   Continua sendo uma linha clicável só — não vira dois cartões.
+   O corte é MAIS ALTO que o das telas irmãs (900px) por causa das duas colunas
+   de vencimento: cada uma leva uma data E a etiqueta de prazo ao lado, e a data
+   é o tipo de informação que não sobrevive a reticências — "2…" e "21/0…" não
+   dizem prazo nenhum, dizem defeito. Com o menu lateral ocupando 264px, um
+   monitor de 1100px já cai nessa faixa. Abaixo de 900px, como manda o contrato,
+   continua sendo duas linhas. */
+@media(max-width:1180px){
+  .lista-cab{display:none}
+  .cli-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+  /* Quebra forçada: sem ela o "resto" subiria para a primeira linha sempre que sobrasse espaço. */
+  .cli-head::after{content:"";order:3;flex:0 0 100%;height:0}
+  .c-nome{order:1;flex:1 1 auto}
+  .c-fim{order:2;flex:none;flex-direction:row;align-items:center;gap:6px}
+  .c-id,.c-doc,.c-data{order:4;flex:0 1 auto;font-size:var(--fs-2);color:var(--muted);text-align:left}
+}
+/* Selo de situação da linha: Vencido (vermelho) · Vence em 30 dias (âmbar) ·
+   Vence em 60 dias (teal) · Em dia (verde) · Sem data (cinza) · Inativo. É a
+   última coluna da linha, e responde "preciso agir neste cliente?". */
+.pill{font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap;letter-spacing:.2px;border:1px solid transparent}
+.pill.sit-venc{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
+.pill.sit-d30{background:var(--amber-soft);color:#8A4B12;border-color:var(--amber)}
+.pill.sit-d60{background:#E1F0EE;color:#0b6c66;border-color:#BBDCD8}
+.pill.sit-ok{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.pill.sit-sem{background:#EEE9E2;color:var(--muted);border-color:var(--line)}
+.pill.sit-inativo{background:#EEE9E2;color:var(--muted);border-color:var(--line-2)}
+.vazio{padding:30px 16px;text-align:center;color:var(--muted);font-size:15px}
+@keyframes fl{0%{background:#FFE79A}100%{background:transparent}}
+.flash{animation:fl 1.8s ease}
 
 /* ---------- campos da grade ---------- */
 input[type=text],input[type=date],input[type=password]{font-family:var(--sans);font-size:12px;padding:6px 8px;border:1px solid var(--line-2);
@@ -229,12 +256,9 @@ input:focus{outline:2px solid var(--brand-teal);outline-offset:0}
   border:1px dashed var(--line-2);border-radius:var(--radius-sm);white-space:normal;word-break:break-word}
 .dt{display:flex;align-items:center;gap:4px;min-width:186px}
 .dt input{flex:1;min-width:104px}
-/* Alinhamento da grade: texto à esquerda (o padrão), data e número no centro —
-   uma coluna de vencimento só se lê de cima a baixo se os dias caírem na mesma
-   prumada. O ID, que também é número, leva o mesmo tratamento lá em cima.
-   Vale só no modo tabela: na ficha o campo ocupa a largura toda ao lado do
-   rótulo e a data centralizada fica longe do nome do campo. */
-body:not(.fichas) .dt input[type=date]{text-align:center}
+/* A data deixou de ser centralizada: aquilo existia para as datas caírem na
+   mesma prumada NA COLUNA da grade. Dentro da ficha o campo ocupa a largura
+   toda ao lado do rótulo, e centralizar só afastava o número do nome do campo. */
 .tag-d{flex:none;font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:3px 7px;white-space:nowrap;min-width:44px;text-align:center}
 .tag-d.vazio{background:var(--amber-soft);color:var(--amber-txt)}
 .tag-d.na{background:#EEE9E2;color:var(--muted)}
@@ -247,6 +271,10 @@ body:not(.fichas) .dt input[type=date]{text-align:center}
 .sig{display:flex;align-items:center;gap:4px;min-width:158px}
 /* ---------- coluna de LINK: campo de URL + atalho para abrir ---------- */
 .lk-cel{display:flex;align-items:center;gap:4px;min-width:190px}
+/* Dentro da célula de documento aberta, o campo de endereço divide a fileira com
+   "Enviar outro arquivo" e o ✕. Sem o flex-grow ele ficava nos 190px mínimos e
+   uma URL do Drive aparecia pela metade, que é o que se veio conferir. */
+.doc .lk-cel{flex:1 1 240px}
 .lk-cel input,.lk-cel .ro{flex:1;min-width:110px}
 .lk-ir{flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
   font-size:13px;font-weight:800;line-height:1;text-decoration:none;border:1px solid var(--line-2);
@@ -306,7 +334,7 @@ details.situacao>.resumo{padding:0 12px 12px}
 /* ---------- o que nao gravou (C.3) ----------
    A linha (ou o campo) fica marcada e o "tentar de novo" nasce ali mesmo. */
 .falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
-tr.falhou>td{background:#FBEAE7!important}
+.cli.falhou{background:#FBEAE7}
 .btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
   border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap}
 .btn-retry:disabled{opacity:.6;cursor:default}
@@ -321,7 +349,10 @@ tr.falhou>td{background:#FBEAE7!important}
    MANDAR um, e não ler uma URL de 120 caracteres. O campo de URL continua
    existindo atrás do "⋯", porque colar link ainda acontece — só deixou de ser
    o estado padrão de 666 células. */
-.doc{display:flex;align-items:center;gap:6px;min-width:0}
+/* flex-wrap: dentro da ficha a célula preenchida chega a ter campo de URL, ↗,
+   "Enviar outro arquivo" e o ✕ na mesma linha — no celular isso tem de quebrar
+   em vez de empurrar o modal para o lado. */
+.doc{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
 .doc-bt{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;font-weight:700;
   padding:5px 9px;border-radius:7px;border:1px solid transparent;text-decoration:none;cursor:pointer;background:none}
 .doc-ir{color:#0F8C85;border-color:#cfe6e2;background:#F2F9F8}
@@ -337,57 +368,66 @@ tr.falhou>td{background:#FBEAE7!important}
 @keyframes docgira{to{transform:rotate(360deg)}}
 .doc-erro{display:block;color:#A4303F;font-size:11px;line-height:1.3;margin-top:3px}
 
-/* ---- modo FICHAS ----
-   A grade continua sendo uma <table> — e isso é decisão, não preguiça. Toda a
-   edição desta tela (Enter que desce na mesma coluna, foco, o upload, o
-   desfazer) navega por `tr[data-id]` e `td`. Trocar por <div> obrigaria a
-   reescrever tudo isso, e o pedido era de LEITURA: 25 colunas lado a lado
-   ninguém entende, mas cada campo com o nome do lado, sim.
-   Então é só CSS: a linha vira bloco, a célula vira "rótulo: valor", e o
-   cabeçalho some (o rótulo agora está em cada campo). Nenhum handler mudou. */
-body.fichas .tabela-wrap table thead{display:none}
-body.fichas .tabela-wrap table,body.fichas .tabela-wrap table tbody{display:block;width:100%}
-body.fichas .tabela-wrap table tbody tr{display:block;background:var(--card,#fff);border:1px solid var(--linha,#E4D9C9);
-  border-radius:12px;padding:10px 12px;margin-bottom:12px;box-shadow:0 1px 2px rgba(17,61,57,.05)}
-body.fichas .tabela-wrap table tbody td{display:grid;grid-template-columns:minmax(150px,32%) 1fr;gap:10px;
-  align-items:center;border:0;padding:5px 0;width:auto}
-body.fichas .tabela-wrap table tbody td::before{content:attr(data-rot);font-size:11px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.03em;color:var(--muted,#8A7D70)}
-/* box-shadow:none — a sombra das colunas fixas marca a borda de rolagem da
-   tabela; dentro do cartão não há rolagem lateral nenhuma, ela só sujaria a
-   lateral direita do bloco. */
-body.fichas .tabela-wrap table tbody td.col-id,body.fichas .tabela-wrap table tbody td.col-nome{
-  grid-template-columns:1fr;border-bottom:1px solid var(--linha,#E4D9C9);margin-bottom:6px;padding-bottom:8px;box-shadow:none}
-body.fichas .tabela-wrap table tbody td.col-id::before,body.fichas .tabela-wrap table tbody td.col-nome::before{display:none}
-body.fichas .tabela-wrap table tbody td.col-id{font-size:12px;color:var(--muted,#8A7D70);padding-bottom:0;border:0;margin:0}
-body.fichas .tabela-wrap table tbody td.col-nome{font-size:16px;font-weight:700}
-body.fichas .tabela-wrap table tbody td input,body.fichas .tabela-wrap table tbody td select,body.fichas .tabela-wrap table tbody td .ro{width:100%}
-/* célula vazia em ficha é ruído: 25 rótulos com "—" escondem os 3 que importam */
-body.fichas .tabela-wrap table tbody td.vazia{display:none}
-body.fichas #btn-vazias{display:inline-flex}
-body.fichas.com-vazias .grade tbody td.vazia{display:grid}
-#btn-vazias{display:none}
-@media(max-width:760px){ .grade tbody td::before{content:attr(data-rot)} }
+/* ---- a ficha, agora dentro do modal ----
+   Era o "modo fichas": a mesma <table> da grade, virada em cartão só por CSS.
+   Agora a ficha é a ÚNICA forma de editar, e ela abre por cima da lista quando
+   se clica na linha. O conteúdo é o mesmo de sempre — os mesmos tipos de célula,
+   o mesmo upload, o mesmo autosave —, só mudou onde ele é pintado. */
+.corpo{padding:0}
+.gsec{margin-bottom:13px}
+.gsec:last-of-type{margin-bottom:6px}
+.gsec h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark);display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.gsec h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--brand-teal);flex:none}
+.gsec h3 .n{margin-left:auto;font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fld{display:flex;flex-direction:column;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld>.lbl{font-size:11px;font-weight:800;color:var(--ink-2);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fld .cad{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.3px}
+.fld input,.fld .ro{width:100%}
+.rodape{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--muted)}
+.rodape .lk{color:var(--brand-teal-txt);text-decoration:none;font-weight:800;font-size:12px}
+.ign{background:var(--amber-soft);border:1px solid var(--amber-line);color:#8a5117;border-radius:var(--radius-sm);padding:8px 11px;font-size:12px;font-weight:700;margin-bottom:10px}
+.ign:empty{display:none}
 
-/* ---- grupos dentro da ficha ----
-   Sem isto a ficha é uma lista de 25 rótulos em sequência: melhor que a tabela,
-   mas ainda sem hierarquia. Agora cada assunto ("Alvará Sanitário") é um bloco,
-   com o documento e o vencimento dele juntos — que é como a pessoa pensa, e não
-   em "coluna de link" e "coluna de data" em partes opostas da linha.
-   O bloco abre e fecha: quem veio conferir uma coisa não precisa passar os olhos
-   pelas outras seis. */
-body.fichas .tabela-wrap table tbody td.grp{grid-template-columns:1fr;cursor:pointer;
-  margin:10px 0 2px;padding:6px 8px;border-radius:8px;background:#F7F3EC;
-  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#113D39;
-  display:flex;align-items:center;gap:8px;user-select:none}
-body.fichas .tabela-wrap table tbody td.grp::before{display:none}
-body.fichas .tabela-wrap table tbody td.grp:hover{background:#EFE8DC}
-body.fichas .tabela-wrap table tbody td.grp .arw{font-size:10px;color:#8A7D70;transition:transform .15s}
-body.fichas .tabela-wrap table tbody td.grp.fechado .arw{transform:rotate(-90deg)}
-body.fichas .tabela-wrap table tbody td.grp .n{margin-left:auto;font-weight:600;text-transform:none;
-  letter-spacing:0;color:#8A7D70;font-size:11px}
-body.fichas .tabela-wrap table tbody td[data-g].oculto{display:none}
-.tabela-wrap table tbody td.grp{display:none}
+/* ---------- o modal da ficha ---------- */
+.modal[hidden]{display:none}
+.modal{position:fixed;inset:0;z-index:90;background:rgba(7,48,52,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto}
+/* O modal cobre a janela inteira (position:fixed;inset:0), inclusive a faixa dos
+   264px onde mora o menu lateral — e o menu é z-index:940. Com os 90 daqui, o
+   menu ficava POR CIMA do véu: clicável enquanto se digita, e um clique
+   distraído troca de página com a ficha aberta.
+   A regra `.modal-cad` garante o 960 mesmo quando o b4u-shell.js não carregou
+   (aí o `body.b4s` não existe). */
+body.b4s .modal{z-index:960}
+.modal.modal-cad{z-index:960}
+/* A ficha tem rodapé fixo: a caixa é uma coluna com altura de tela, o miolo rola
+   e o rodapé (status + salvar + fechar) fica sempre à vista. */
+.modal-cad .modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;max-width:920px;
+  overflow:hidden;box-shadow:0 20px 60px rgba(7,48,52,.35);display:flex;flex-direction:column;
+  max-height:calc(100vh - 72px);margin:36px auto}
+.modal-cad .modal-body{flex:1;min-height:0;overflow:auto}
+.modal-cad .modal-foot{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  padding:11px 16px;background:var(--surface);border-top:1px solid var(--line)}
+.modal-cad .modal-foot .spacer{flex:1}
+.modal-top{position:sticky;top:0;z-index:2;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:10px;padding:13px 16px}
+.modal-top b{font-size:15px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-top .cad-id{font-size:12px;font-weight:700;color:#cfe6e2;white-space:nowrap}
+.modal-top .spacer{flex:1}
+.modal-top button{font-family:var(--sans);font-size:19px;font-weight:800;line-height:1;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:var(--radius-pill);width:32px;height:32px;cursor:pointer}
+.modal-body{padding:16px}
+.modal .grid{grid-template-columns:repeat(2,1fr)}
+/* Aviso de "tem coisa por gravar": aparece no primeiro pedido de fechar e o
+   segundo fecha mesmo assim — confirmação em dois tempos, sem caixa do navegador. */
+.cad-aviso{font-size:12px;font-weight:700;color:#8a5117;background:var(--amber-soft);
+  border:1px solid var(--amber-line);border-radius:var(--radius-sm);padding:6px 10px}
+.cad-aviso[hidden]{display:none}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){
+  .modal-cad{padding:8px}
+  .modal-cad .modal-box{max-height:calc(100vh - 16px);margin:0 auto}
+}
+@media(max-width:600px){.grid,.modal .grid{grid-template-columns:1fr}}
 </style>
 <script src="config.js"></script>
 <!-- A tela de espera mora num arquivo só (b4u-espera.js) — antes cada página
@@ -411,6 +451,29 @@ body.fichas .tabela-wrap table tbody td[data-g].oculto{display:none}
   <a class="volta" id="volta" href="colaborador.html" target="_self">← Painel</a>
 </div>
 <div id="app"><div class="state"><div class="spin"></div><p>Carregando certificados e acessos…</p></div></div>
+
+<!-- A ficha do cliente. Fica FORA do #app de propósito: carregar() repinta o
+     #app inteiro, e uma recarga não pode apagar a ficha que alguém está
+     preenchendo. -->
+<div class="modal modal-cad" id="modalCad" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cadTitulo" tabindex="-1">
+    <div class="modal-top">
+      <b id="cadTitulo">Ficha</b>
+      <span class="cad-id" id="cadId"></span>
+      <span class="pill sit-sem" id="cadSit"></span>
+      <span class="spacer"></span>
+      <button type="button" id="fechaCad" title="Fechar" aria-label="Fechar a ficha">×</button>
+    </div>
+    <div class="modal-body" id="cadBody"></div>
+    <div class="modal-foot">
+      <span class="save-status claro" id="saveStatusCad"></span>
+      <span class="cad-aviso" id="cadAviso" hidden>Ainda não gravei o que você mudou. Use <b>Salvar alterações</b> — ou clique de novo em Fechar para sair assim mesmo.</span>
+      <span class="spacer"></span>
+      <button class="btn btn--sec" id="cadFechar" type="button">Fechar</button>
+      <button class="btn btn--pri" id="cadSalvar" type="button">Salvar alterações</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
@@ -668,7 +731,10 @@ function montarGrupos(cols){
   });
   return grupos;
 }
-/** Dentro de um grupo o cabeçalho mostra só o que a faixa ainda não disse. */
+/** Dentro de um grupo, o rótulo mostra só o que o título do grupo ainda não
+    disse: em "Certificado Digital", a coluna "Senha Certificado Digital" vira
+    "Senha". Se não sobrar nada (a coluna É o assunto), quem chama devolve o
+    nome inteiro. */
 function rotuloNoGrupo(col,grupo){
   const sobrando=tokens(grupo).map(tnorm);
   const resto=[];
@@ -677,13 +743,21 @@ function rotuloNoGrupo(col,grupo){
     if(i>=0){sobrando.splice(i,1);return;}
     resto.push(t);
   });
-  return resto.filter(t=>!PALAVRINHAS.has(tnorm(t))).join(' ').trim()||curto(col);
+  return resto.filter(t=>!PALAVRINHAS.has(tnorm(t))).join(' ').trim();
 }
-
 /* ---------------- datas ---------------- */
 function diasAte(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;
   return Math.round((new Date(+m[1],+m[2]-1,+m[3])-hoje)/864e5);}
 function fmtBR(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:String(iso||'');}
+/* CNPJ/CPF com pontuação na lista: a coluna vem da planilha só com dígitos, e
+   catorze números colados não se confere de relance. Valor que não tem 11 nem
+   14 dígitos sai como veio — melhor cru que mascarado errado. */
+function fmtDoc(v){
+  const d=soDigitos(v);
+  if(d.length===14)return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+  if(d.length===11)return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  return String(v==null?'':v).trim();
+}
 function estado(v){
   const s=String(v==null?'':v).trim();
   if(!s) return {cl:'vazio',dias:null,txt:'falta'};
@@ -698,6 +772,59 @@ function estado(v){
 function ativoDe(l){const s=normTxt(l.ativo);if(!s)return null;
   if(/^(sim|s|true|verdadeiro|1|x|ativo)$/.test(s))return true;
   if(/^(nao|n|false|falso|0|-|inativo)$/.test(s))return false;return null;}
+
+/* ---------------- as colunas-chave da lista ----------------
+   A lista mostra seis colunas: ID · Cliente · CNPJ · Venc. do certificado
+   digital · Venc. das procurações · Situação. As três do meio saem da planilha,
+   e a planilha MUDA SOZINHA — nome de coluna cru escrito aqui quebraria calado
+   na primeira vez que alguém renomeasse "Procuração e-CAC Vencimento".
+   Por isso a descoberta é em tempo de execução e por nome normalizado (sem
+   acento, sem caixa), com plano B para cada caso:
+     · CNPJ  — vem espelhado do cadastro do cliente; se não vier, a coluna
+               simplesmente não cobra nada (veja cabecaHTML).
+     · certificado digital — as colunas de DATA que falam de "certificado";
+               na falta delas, as datas que não são de procuração.
+     · procurações — as colunas de DATA que falam de "procuração"; na falta
+               delas, as datas que sobraram depois do certificado.
+   São CONJUNTOS, e não uma coluna só, porque hoje já são duas procurações
+   (e-CAC e SPE) e amanhã pode ser outra: a célula mostra a mais urgente e diz
+   num "+N" quantas outras existem. */
+const COLS_LINHA={cnpj:'',cert:[],proc:[]};
+/** Primeira coluna cujo nome normalizado casa — igual antes, "contém" depois. */
+function colDe(alts){
+  for(const a of alts){const c=COLUNAS.find(x=>normTxt(x)===a);if(c)return c;}
+  for(const a of alts){const c=COLUNAS.find(x=>normTxt(x).indexOf(a)>=0);if(c)return c;}
+  return '';
+}
+function mapearColunasLinha(){
+  COLS_LINHA.cnpj=colDe(['cnpj ou cpf','cnpj/cpf','cnpj','cpf','documento']);
+  const proc=DATAS.filter(c=>normTxt(c).indexOf('procuracao')>=0);
+  const cert=DATAS.filter(c=>normTxt(c).indexOf('certificado')>=0);
+  COLS_LINHA.cert=cert.length?cert:DATAS.filter(c=>proc.indexOf(c)<0);
+  COLS_LINHA.proc=proc.length?proc:DATAS.filter(c=>COLS_LINHA.cert.indexOf(c)<0);
+}
+/* Situação da linha: a resposta de "preciso agir neste cliente?". Sai do
+   vencimento mais próximo entre as colunas de data que o filtro de Vencimento
+   deixou de pé — é a mesma conta dos chips, para o selo nunca contradizer o
+   número que está logo acima dele. */
+const SITUACOES={
+  venc:{rot:'Vencido',dica:'Tem vencimento com data já passada.'},
+  d30:{rot:'Vence em 30 dias',dica:'O vencimento mais próximo cai nos próximos 30 dias.'},
+  d60:{rot:'Vence em 60 dias',dica:'O vencimento mais próximo cai entre 31 e 60 dias.'},
+  ok:{rot:'Em dia',dica:'Nenhum vencimento nos próximos 60 dias.'},
+  sem:{rot:'Sem data',dica:'Nenhum vencimento preenchido — não dá para saber o prazo deste cliente.'},
+  inativo:{rot:'Inativo',dica:'Cliente marcado como inativo no cadastro.'}
+};
+function situacaoDe(l){
+  if(ativoDe(l)===false) return 'inativo';
+  const u=urgencia(l,colsData());
+  if(u===null) return 'sem';
+  if(u<0) return 'venc';
+  if(u<=30) return 'd30';
+  if(u<=60) return 'd60';
+  return 'ok';
+}
+function classeSituacao(l){return 'sit-'+situacaoDe(l);}
 
 function colsData(){return DOC==='todos'?DATAS:[DOC];}
 function urgencia(l,keys){
@@ -820,7 +947,15 @@ function erroDaCel(l,c){
    O "⋯" guarda o que é raro e o que dá para estragar: o campo de URL editável e
    a troca do arquivo. Coluna que FALHOU ao gravar fica aberta à força — fechar
    mostraria um "Abrir ↗" verde apontando um endereço que só existe na memória
-   deste navegador. */
+   deste navegador.
+   ENVIAR OUTRO ARQUIVO: até agora não havia caminho nenhum para trocar o
+   documento por outro — quem tinha um "Abrir ↗" só podia colar uma URL nova à
+   mão. O backend já substituía (o `cert_upload` devolve `d.substituiu` e a
+   mensagem "Documento substituído ✓" estava pronta e nunca aparecia, porque
+   nenhum botão a alcançava). Agora o "⋯" da célula PREENCHIDA oferece o envio
+   ao lado do campo de URL. Só na célula preenchida: na vazia o "Enviar ⬆" já
+   está à mostra, e repetir o botão dentro do "⋯" seria dois caminhos para a
+   mesma coisa. */
 function celLink(l,c){
   const v=String(l.valores[c]||'').trim();
   const k=chaveCel(l.id,c);
@@ -852,6 +987,7 @@ function celLink(l,c){
         <input type="text" data-c="${esc(c)}" data-link="1" value="${esc(v)}" placeholder="https://…" inputmode="url" spellcheck="false">
         ${atalhoAbrir(v)}
       </div>
+      ${urlOk(v)?`<button type="button" class="doc-bt doc-env" data-env="${esc(c)}" title="Manda um arquivo novo no lugar deste — o documento de agora é substituído">Enviar outro arquivo ⬆</button>`:''}
       <button type="button" class="doc-mais" data-mais="${esc(c)}" title="Fechar">✕</button>
       ${erroDaCel(l,c)}</div>`;
   }
@@ -868,9 +1004,16 @@ function celLink(l,c){
 const DOC_MAX=10*1024*1024;                 // igual ao anexo de chamado
 let DOC_ALVO=null;                          // {id, coluna} do clique que abriu o seletor
 
+/* A célula vive dentro da ficha (o `.corpo` pintado no modal), não mais numa
+   linha da grade. Procurar pelo `.corpo[data-id]` funciona esteja ele onde
+   estiver — e simplesmente não acha nada quando a ficha está fechada, que é
+   justamente o caso em que não há o que repintar. */
 function repintarCel(l,c){
-  const td=document.querySelector('tr[data-id="'+CSS.escape(String(l.id))+'"] [data-cel="'+CSS.escape(chaveCel(l.id,c))+'"]');
-  if(td&&td.parentElement) td.parentElement.innerHTML=celLink(l,c);
+  const cel=document.querySelector('.corpo[data-id="'+CSS.escape(String(l.id))+'"] [data-cel="'+CSS.escape(chaveCel(l.id,c))+'"]');
+  /* outerHTML, e não innerHTML do pai: na grade a célula ocupava o <td> inteiro,
+     mas na ficha ela divide o `.fld` com o RÓTULO do campo — repintar o pai
+     levava o rótulo junto e o campo ficava sem nome. */
+  if(cel) cel.outerHTML=celLink(l,c);
 }
 function erroNaCel(l,c,txt){
   ERROS.set(chaveCel(l.id,c),{txt:txt,ate:Date.now()+45000});
@@ -940,157 +1083,169 @@ function cel(l,c){
 function colsVisiveis(){
   return COLUNAS.filter(c=>!ocultaSempre(c)&&(VER_CADASTRO||!ehEspelhada(c)));
 }
-function gradeCols(){return GRUPOS.reduce((a,g)=>a.concat(g.cols),[]);}
-/* Se nenhuma família tiver duas colunas, a faixa não teria o que dizer — some. */
-function temFaixa(){return GRUPOS.some(g=>g.cols.length>1);}
-function cabecalho(){
-  const seta=k=>SORT.key===k?`<span class="ord">${SORT.dir==='asc'?'▲':'▼'}</span>`:'';
-  const faixa=GRUPOS.map((g,i)=>
-    `<th scope="colgroup" class="ini ${i%2?'alt':''}" colspan="${g.cols.length}">${g.cols.length>1?esc(g.nome):''}</th>`).join('');
-  const cols=GRUPOS.map(g=>g.cols.map((c,j)=>{
-    const rot=g.cols.length>1?rotuloNoGrupo(c,g.nome):curto(c);
-    const trav=ehSoLeitura(c);
-    /* senha não é critério de ordenação — ordenar por ela já contaria demais */
-    if(ehSigilosa(c)) return `<th scope="col" class="${j===0?'ini':''}">${esc(rot)}</th>`;
-    const k=ehData(c)?'urgencia':c;
-    return `<th scope="col" class="${j===0?'ini':''}" data-sort="${esc(k)}"${trav?' title="Só leitura"':''}>`+
-      `${esc(rot)}${trav?'<span class="lock">🔒</span>':''}${seta(k)}</th>`;
-  }).join('')).join('');
-  return (temFaixa()?`<tr class="grupos"><th class="col-id"></th><th class="col-nome"></th>${faixa}</tr>`:'')+
-  `<tr class="cols"><th scope="col" class="col-id" data-sort="id">ID${seta('id')}</th>
-    <th scope="col" class="col-nome" data-sort="nome_cliente">Cliente${seta('nome_cliente')}</th>${cols}</tr>`;
-}
-/* Pasta do cliente no Drive (vem do cadastro, no payload da grade). Só vira
-   botão quando há endereço de verdade — campo vazio some, em vez de virar um
-   link morto. */
-function atalhoDrive(l){
-  const u=String(l.drive||'').trim();
-  if(!urlOk(u)) return '';
-  return `<a class="drive" href="${esc(u)}" target="_blank" rel="noopener noreferrer"`
-    +` title="Abrir a pasta deste cliente no Drive" aria-label="Abrir a pasta de `
-    +`${esc(l.nome_cliente||l.id)} no Drive">`
-    +`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`
-    +`<path d="M4 20h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-7.5L10 4H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1z"/></svg></a>`;
-}
+function valDe(l,c){return c?String((l.valores||{})[c]||'').trim():'';}
 
-function linhaHTML(l){
-  const at=ativoDe(l);
-  const flags=at===false?'<span class="flag inativo">inativo</span>':'';
-  /* data-rot vira o rótulo no modo ficha (CSS ::before) e data-g diz de qual
-     bloco a célula é. O <td class="grp"> antes de cada bloco é o título — some
-     no modo tabela, onde quem separa os assuntos é a faixa do cabeçalho. */
-    const tds=GRUPOS.map((g,gi)=>{
-      const fech=grupoFechado(l.id,gi);
-      const preenchidos=g.cols.filter(c=>String(l.valores[c]||'').trim()).length;
-      /* Se TODA coluna do grupo vai sumir por estar vazia, o título tem de sumir
-         junto. Sem isto sobrava um cabeçalho solto — "Certificado Digital
-         Responsável Legal" com nada embaixo —, que lê como defeito da tela quando
-         na verdade é campo em branco. O botão "Mostrar campos vazios" traz os dois
-         de volta, título e campos. */
-      const todoVazio=g.cols.every(c=>!String(l.valores[c]||'').trim() && !ehLink(c));
-      const tit=`<td class="grp${fech?' fechado':''}${todoVazio?' vazia':''}" data-grp="${gi}" data-g="${gi}"><span class="arw">▼</span>${esc(g.nome)}<span class="n">${preenchidos} de ${g.cols.length}</span></td>`;
-      return tit + g.cols.map((c,j)=>{
-        /* Coluna de documento em branco NÃO é "campo vazio a esconder": é onde
-           mora o botão Enviar. Esconder o vazio ali sumiria justamente com a ação
-           que a ficha existe para oferecer. */
-        const vazio=!String(l.valores[c]||'').trim() && !ehLink(c);
-        return `<td class="${j===0?'ini':''}${vazio?' vazia':''}${fech?' oculto':''}" data-g="${gi}" data-rot="${esc(rotFicha(c,g.nome))}">${cel(l,c)}</td>`;
-      }).join('');
-    }).join('');
-  return `<tr data-id="${esc(l.id)}">
-    <td class="col-id">${esc(l.id)}</td>
-    <td class="col-nome">${esc(l.nome_cliente||'(sem nome)')}${atalhoDrive(l)}<br>${flags}</td>
-    ${tds}
-  </tr>`;
-}
+/* ---------------- a linha da lista ----------------
+   Seis colunas, nenhum campo: quem lê a lista não altera nada sem querer. É um
+   role="button" (e não um <button>) porque dentro dele há etiquetas de prazo com
+   title próprio; o teclado é atendido à mão no keydown (Enter e Espaço). */
 
-/* Fichas x tabela. A escolha fica no aparelho: quem gosta de uma não quer
-   escolher de novo a cada visita. O padrão passou a ser a TABELA, a pedido do
-   dono: quem abre esta tela vem conferir e comparar muitos clientes de uma vez,
-   e em fichas isso vira rolagem sem fim. As fichas continuam a um clique no
-   botão, e quem já tinha escolhido antes mantém a escolha — sem preferência
-   guardada o localStorage devolve nada, que não é '1', e a tabela ganha. */
-/* Chave NOVA de propósito. A antiga (b4u_fichas_…) guardava a escolha de quando
-   cartão era o padrão da tela, e preferência salva ganha de padrão: quem tinha
-   aquele valor continuaria abrindo em cartão para sempre, mesmo depois de o dono
-   pedir tabela. Trocar a chave zera a preferência uma vez, sem apagar nada. */
-const FICHAS_KEY='b4u_modo_'+location.pathname.split('/').pop();
-function modoFichas(){ try{ return localStorage.getItem(FICHAS_KEY)==='1'; }catch(e){ return false; } }
-function aplicarModo(){
-  const f=modoFichas();
-  document.body.classList.toggle('fichas',f);
-  const b=document.getElementById('btn-fichas');
-  if(b){ b.classList.toggle('on',f); b.textContent=f?'📋 Ver como tabela':'🗂️ Ver como fichas'; }
-}
-function ligarModo(){
-  const b=document.getElementById('btn-fichas');
-  if(b) b.addEventListener('click',()=>{
-    try{ localStorage.setItem(FICHAS_KEY, modoFichas()?'0':'1'); }catch(e){}
-    aplicarModo(); desenharTabela();
+/** Entre as colunas de data de um assunto, a que cobra primeiro. Texto solto
+    ("N/A", "Não localizado") entra por último: é informação, mas não é prazo, e
+    não pode ganhar de uma data de verdade na hora de escolher o que mostrar. */
+function maisUrgente(l,cols){
+  let alvo='',melhor=null;
+  (cols||[]).forEach(c=>{
+    const v=valDe(l,c); if(!v) return;
+    const st=estado(v);
+    const peso=st.dias==null?Infinity:st.dias;
+    if(melhor===null||peso<melhor){melhor=peso;alvo=c;}
   });
-  const v=document.getElementById('btn-vazias');
-  if(v) v.addEventListener('click',()=>{
-    document.body.classList.toggle('com-vazias');
-    v.classList.toggle('on');
-    v.textContent=document.body.classList.contains('com-vazias')?'Esconder campos vazios':'Mostrar campos vazios';
-  });
-  aplicarModo();
+  return alvo;
+}
+/** O miolo de uma célula de vencimento na lista: a data que cobra primeiro, a
+    etiqueta de prazo dela e um "+N" com quantas outras do mesmo assunto estão
+    preenchidas. O "+N" existe porque a etiqueta NUNCA é cortada — duas datas
+    inteiras dizem mais que três pela metade —, e o que sobra vai para o title
+    da linha, que lista assunto por assunto. */
+function celDataLista(l,cols){
+  if(!cols.length) return '<span class="c-falta">—</span>';
+  const alvo=maisUrgente(l,cols);
+  if(!alvo) return '<span class="c-falta">sem data</span>';
+  const v=valDe(l,alvo),st=estado(v);
+  const outras=cols.filter(c=>c!==alvo&&valDe(l,c)).length;
+  /* A etiqueta só aparece quando ela COBRA alguma coisa (vencido, ou faltam N
+     dias). No estado "ok" ela dizia "02/2027" — o mês e o ano da data que já
+     está escrita ao lado, palavra por palavra. Na grade isso fazia sentido,
+     porque ali a data morava dentro de um campo; aqui era só repetição. */
+  const cobra=st.dias!=null&&st.dias<=90;
+  return `<span class="txt">${esc(st.dias==null?v:fmtBR(v))}</span>`
+    +(cobra?`<span class="tag-d ${st.cl}">${esc(st.txt)}</span>`:'')
+    +(outras?`<span class="c-tag mais" title="Este assunto tem mais ${outras} data preenchida — passe o mouse na linha para ver todas.">+${outras}</span>`:'');
+}
+/** O que não coube nas seis colunas vira o title da linha: dá para conferir sem
+ *  abrir nada — inclusive as datas que não têm coluna própria aqui. */
+function tituloCabeca(l){
+  const p=[];
+  if(COLS_LINHA.cnpj)p.push('CNPJ: '+(valDe(l,COLS_LINHA.cnpj)?fmtDoc(valDe(l,COLS_LINHA.cnpj)):'em branco'));
+  const add=c=>{const v=valDe(l,c);p.push(curto(c)+': '+(v?(estado(v).dias==null?v:fmtBR(v)):'em branco'));};
+  COLS_LINHA.cert.forEach(add);
+  COLS_LINHA.proc.forEach(add);
+  DATAS.filter(c=>COLS_LINHA.cert.indexOf(c)<0&&COLS_LINHA.proc.indexOf(c)<0).forEach(add);
+  p.push('Situação: '+SITUACOES[situacaoDe(l)].rot);
+  p.push('Clique para abrir a ficha.');
+  return p.join(' · ');
+}
+function cabecaHTML(l){
+  const s=situacaoDe(l),info=SITUACOES[s];
+  const doc=valDe(l,COLS_LINHA.cnpj);
+  /* Coluna em branco diz o NOME do que falta. Mas quando a PLANILHA não tem
+     coluna de CNPJ nenhuma, a célula não cobra nada: escrever "sem CNPJ" em
+     todas as linhas seria acusar a equipe de um dado que a tela nem tem onde
+     guardar — e ninguém saberia onde preencher. */
+  const docHTML=doc?esc(fmtDoc(doc))
+    :(COLS_LINHA.cnpj?'<span class="c-falta">sem CNPJ</span>':'<span class="c-falta">—</span>');
+  return `<div class="cli-head" role="button" tabindex="0" aria-haspopup="dialog" title="${esc(tituloCabeca(l))}">
+      <span class="c-id">${esc(l.id)}</span>
+      <span class="c-nome">${esc(l.nome_cliente||'(sem nome)')}</span>
+      <span class="c-doc">${docHTML}</span>
+      <span class="c-data">${celDataLista(l,COLS_LINHA.cert)}</span>
+      <span class="c-data">${celDataLista(l,COLS_LINHA.proc)}</span>
+      <span class="c-fim"><span class="pill sit-${s}" title="${esc(info.dica)}">${esc(info.rot)}</span></span>
+    </div>`;
+}
+/* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS) e some
+   abaixo de 900px, onde a linha deixa de ser seis colunas. aria-hidden porque é
+   rótulo de desenho: quem usa leitor de tela ouve o title da própria linha. */
+function cabecalhoLista(){
+  return `<div class="lista-cab" aria-hidden="true">
+      <span>ID</span><span>Cliente</span><span>CNPJ</span>
+      <span>Venc. do certificado digital</span><span>Venc. das procurações</span>
+      <span style="text-align:right">Situação</span>
+    </div>`;
 }
 
+/* ---------------- a ficha (o miolo do modal) ----------------
+   O agrupamento por assunto que a grade já sabia montar (montarGrupos/assuntoDe)
+   vira a divisão em seções: é a mesma informação, e cada bloco traz o documento
+   e o vencimento dele juntos — que é como a pessoa pensa, e não em "coluna de
+   link" e "coluna de data" em partes opostas da linha. */
+function campoFichaHTML(l,c,grupo){
+  const trav=ehSoLeitura(c);
+  const rot=`<span class="lbl" title="${esc(c)}">${esc(rotFicha(c,grupo))}${trav?' <span class="cad">🔒</span>':''}</span>`;
+  /* Endereço e observação ocupam a fileira inteira: URL e texto corrido em meia
+     coluna viram três linhas de reticências. */
+  const full=ehLink(c)||normTxt(c).indexOf('observac')>=0;
+  return `<div class="fld${full?' full':''}">${rot}${cel(l,c)}</div>`;
+}
+function corpoHTML(l){
+  /* Título de grupo com nada embaixo lê como defeito da tela — foi o caso do
+     "Certificado Digital Responsável Legal", que aparecia sozinho quando todas
+     as colunas dele estavam vazias e sumiam. Aqui a ficha mostra TODOS os
+     campos, cheios ou vazios (é onde se preenche), então o título nunca fica
+     órfão; a guarda abaixo cobre o único jeito que restou de isso acontecer:
+     um grupo que ficou sem coluna nenhuma visível. */
+  const blocos=GRUPOS.map(g=>{
+    if(!g.cols.length) return '';
+    const preenchidos=g.cols.filter(c=>valDe(l,c)).length;
+    return `<div class="gsec"><h3><span class="dot"></span>${esc(g.nome)}`
+      +`<span class="n">${preenchidos} de ${g.cols.length}</span></h3>`
+      +`<div class="grid">${g.cols.map(c=>campoFichaHTML(l,c,g.nome)).join('')}</div></div>`;
+  }).join('');
+  /* Pasta do cliente no Drive (vem do cadastro, no payload da grade). Só vira
+     link quando há endereço de verdade — campo vazio some, em vez de virar um
+     link morto. Era um ícone colado no nome na grade; aqui mora no rodapé da
+     ficha, junto dos outros atalhos. */
+  const drive=String(l.drive||'').trim();
+  return `<div class="corpo" data-id="${esc(l.id)}">
+    <div class="ign" id="ign_${esc(l.id)}"></div>
+    ${blocos||'<div class="vazio">Esse cliente não tem colunas para mostrar.</div>'}
+    <div class="rodape">
+      <span>As alterações salvam sozinhas. Campos com 🔒 são mantidos pelo sistema.</span>
+      ${urlOk(drive)?`<a class="lk" href="${esc(drive)}" target="_blank" rel="noopener noreferrer" aria-label="Abrir a pasta de ${esc(l.nome_cliente||l.id)} no Drive">📁 Pasta no Drive ↗</a>`:''}
+      ${META.planilha_url?`<a class="lk" href="${esc(META.planilha_url)}" target="_blank" rel="noopener noreferrer">Planilha ↗</a>`:''}
+    </div>
+  </div>`;
+}
 
-/* Rótulo do campo dentro da ficha. "Link Contrato Social" é nome de COLUNA de
-   planilha; na ficha o assunto já está no título do bloco, então o campo só
-   precisa dizer o que ele é. */
+/* Rótulo do campo dentro da ficha. "Senha Certificado Digital" é nome de COLUNA
+   de planilha; na ficha o assunto já está no título da seção, então o campo só
+   precisa dizer o que ele é ("Senha"). O nome cru continua no title do rótulo,
+   para quem precisar casar o campo com a coluna do cadastro. */
 function rotFicha(c,grupo){
-  let t=String(c||'').replace(/^link\s+/i,'').trim();
-  if(/^vencimento/i.test(t)) return 'Vencimento';
-  if(grupo){
-    const g=normTxt(grupo);
-    const tn=normTxt(t);
-    if(tn===g) return 'Documento';
-    if(tn.startsWith(g+' ')) t=t.slice(grupo.length).trim();
-  }
-  return t||c;
+  /* Coluna de link tem DOIS papéis nesta tela, e o rótulo tem de dizer qual:
+     documento de verdade, que aceita arquivo ("Certificado Digital Link"), ou
+     endereço de acesso, que é um portal e nunca aceita ("Link Prefeitura",
+     "Link CRM"). Chamar os dois de "Documento" foi exatamente o engano que
+     levou alguém a procurar o arquivo da prefeitura para subir. */
+  if(ehLink(c)) return ehLinkPuro(c)?'Endereço':'Documento';
+  /* Coluna que É o assunto não sobra nada depois de tirar o nome do grupo — aí
+     o rótulo é o nome inteiro mesmo. */
+  return (grupo?rotuloNoGrupo(c,grupo):'')||curto(c);
 }
-/* Blocos fechados por linha: id -> Set de índices de grupo. Fica só na memória
-   da sessão, de propósito — abrir tudo de novo é um clique, e guardar isso por
-   cliente viraria estado que ninguém lembra de ter criado. */
-const GRP_FECHADOS=new Map();
-function grupoFechado(id,g){ const s=GRP_FECHADOS.get(String(id)); return !!(s&&s.has(g)); }
-function alternarGrupo(id,g){
-  const k=String(id); if(!GRP_FECHADOS.has(k)) GRP_FECHADOS.set(k,new Set());
-  const s=GRP_FECHADOS.get(k); if(s.has(g)) s.delete(g); else s.add(g);
-}
-document.addEventListener('click',e=>{
-  const t=e.target.closest('td.grp'); if(!t) return;
-  const tr=t.closest('tr[data-id]'); if(!tr) return;
-  const g=+t.dataset.grp;
-  alternarGrupo(tr.dataset.id,g);
-  const fechado=grupoFechado(tr.dataset.id,g);
-  t.classList.toggle('fechado',fechado);
-  /* :not(.grp) — o próprio título carrega o índice do bloco; sem esta exclusão
-     ele se esconderia junto e o bloco fechado não teria mais como reabrir. */
-  tr.querySelectorAll('td[data-g="'+g+'"]:not(.grp)').forEach(td=>td.classList.toggle('oculto',fechado));
-});
 
-function desenharTabela(){
+/* Quais linhas estão com a ficha aberta. É um Set (e não um id solto) porque é
+   ele que acende a linha na lista e sobrevive a um redesenho. */
+const ABERTOS=new Set();
+function desenharLista(){
   GRUPOS=montarGrupos(colsVisiveis());
-  const th=document.getElementById('thead');
-  th.className=temFaixa()?'':'sem-faixa';
-  th.innerHTML=cabecalho();
   const arr=visiveis();
   document.getElementById('cnt').textContent=arr.length+' de '+LINHAS.length+' clientes';
-  /* A grade nasce com 20 linhas: 111 linhas × 12 colunas de campo era a parede
-     que o dono do produto reclamou. Quem digita em massa pede "todas" uma vez e
-     segue igual; quem só veio conferir um cliente nunca paga por 111. */
+  const el=document.getElementById('lista'),dica=document.getElementById('dica');
+  if(!el) return;
   const total=arr.length;
+  if(!total){
+    el.innerHTML=`<div class="vazio">${LINHAS.length?'Nenhum cliente com esse filtro ou essa busca.':'Nenhum cliente para mostrar.'}</div>`;
+    if(dica)dica.textContent='';
+    return;
+  }
+  /* A lista nasce com 20 linhas: 111 linhas de uma vez era a parede que o dono
+     reclamou. Quem veio conferir um cliente nunca paga por 111. */
   const n=Math.min(TETO,total);
-  document.getElementById('tbody').innerHTML=total
-    ? arr.slice(0,n).map(linhaHTML).join('')
-    : `<tr><td colspan="${gradeCols().length+2}" style="padding:26px;text-align:center;color:var(--muted)">Nada com esse filtro.</td></tr>`;
-  const rod=document.getElementById('rodape-lista');
-  if(rod)rod.innerHTML=rodapeLista(n,total)+
-    (total>n?`<span class="quanto">Mostrando ${n} de ${total} linhas.</span>`:'');
+  el.innerHTML=cabecalhoLista()+
+    arr.slice(0,n).map(l=>`<div class="cli ${classeSituacao(l)}${ABERTOS.has(String(l.id))?' aberto':''}" data-id="${esc(l.id)}">${cabecaHTML(l)}</div>`).join('')+
+    rodapeLista(n,total);
+  if(dica)dica.textContent=total>n?('Mostrando '+n+' de '+total+'.'):'';
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
 }
 function itemResumo(l,c){
@@ -1124,16 +1279,42 @@ function desenharResumo(){
 }
 /* Quantos filtros estão pegando agora — vira o selo ao lado do botão Filtros (C.5).
    Só conta o que está ESCONDIDO no painel: a busca fica à vista na régua, e um
-   selo dizendo "1 filtro" por causa dela faria a pessoa procurar o que não sumiu. */
+   selo dizendo "1 filtro" por causa dela faria a pessoa procurar o que não sumiu.
+   A ordenação entra porque também mora no painel e também muda o que aparece. */
 function filtrosPainel(){
-  return (FILTRO!=='todos'?1:0)+(DOC!=='todos'?1:0)+(SO_ATIVOS?0:1);
+  return (FILTRO!=='todos'?1:0)+(DOC!=='todos'?1:0)+(SO_ATIVOS?0:1)+
+         (SORT.key!=='urgencia'||SORT.dir!=='asc'?1:0);
 }
 function limparFiltros(){
   FILTRO='todos';DOC='todos';TERMO='';SO_ATIVOS=true;TETO=PASSO;
+  SORT={key:'urgencia',dir:'asc'};
   const b=document.getElementById('busca');if(b)b.value='';
   redesenhar();
 }
-function desenharChips(){ setTimeout(ligarModo,0);
+/* ---------- ordenação ----------
+   A grade era ordenada clicando no cabeçalho da coluna. A lista de leitura não
+   tem 17 cabeçalhos para clicar, então os critérios viraram chips no painel de
+   filtros — os mesmos três que respondem por esta tela. Clicar de novo no mesmo
+   critério inverte, como a seta do cabeçalho fazia. Um ?ord= antigo apontando
+   para uma coluna continua ordenando (validarURL cuida disso); ele só não tem
+   chip aceso. */
+const ORDENS=[
+  {k:'urgencia',rot:'Vencimento mais próximo',asc:'do mais urgente para o menos',desc:'do menos urgente para o mais'},
+  {k:'id',rot:'ID',asc:'do menor para o maior',desc:'do maior para o menor'},
+  {k:'nome_cliente',rot:'Cliente',asc:'de A a Z',desc:'de Z a A'}
+];
+function desenharOrdem(){
+  const el=document.getElementById('ordChips');if(!el)return;
+  el.innerHTML='<span class="rot">Ordenar por</span>'+ORDENS.map(o=>
+    `<button type="button" class="chip ${SORT.key===o.k?'on':''}" data-s="${o.k}">${esc(o.rot)}`+
+    (SORT.key===o.k?`<span class="ord">${SORT.dir==='asc'?'▲':'▼'}</span>`:'')+`</button>`).join('');
+  const info=document.getElementById('ordInfo');
+  const at=ORDENS.find(o=>o.k===SORT.key);
+  if(info)info.innerHTML=at
+    ?('Ordenado por <b>'+esc(at.rot)+'</b> — '+esc(SORT.dir==='asc'?at.asc:at.desc)+'. Clicar de novo no mesmo critério inverte.')
+    :'';
+}
+function desenharChips(){
   const keys=colsData();
   const base=l=>(!SO_ATIVOS||ativoDe(l)!==false);
   const nUrg=(min,max)=>LINHAS.filter(l=>{if(!base(l))return false;const u=urgencia(l,keys);return u!==null&&u>=min&&u<=max;}).length;
@@ -1153,8 +1334,8 @@ function desenharChips(){ setTimeout(ligarModo,0);
   document.getElementById('chipsDoc').innerHTML=
     `<span class="rot">Vencimento</span>`+d('todos','Todos')+DATAS.map(x=>d(x,curto(x))).join('')+
     `<button type="button" class="chip ${SO_ATIVOS?'on':''}" id="chipAtivos">Só ativos</button>`+
-    `<button type="button" class="chip" id="btn-fichas" title="Alternar entre fichas e tabela">🗂️ Fichas</button><button type="button" class="chip" id="btn-vazias" title="Mostrar também os campos em branco">Mostrar campos vazios</button>` +
-    (ESPELHADAS.length?`<button type="button" class="chip ${VER_CADASTRO?'on':''}" id="chipCadastro" title="Vêm do cadastro do cliente — aqui são só leitura">Dados do cadastro</button>`:'');
+    (ESPELHADAS.length?`<button type="button" class="chip ${VER_CADASTRO?'on':''}" id="chipCadastro" title="Vêm do cadastro do cliente — na ficha são só leitura">Dados do cadastro</button>`:'');
+  desenharOrdem();
 }
 /* A contagem em texto é o que permite recolher os chips e os cartões sem esconder
    pendência: os números continuam na primeira linha da tela, filtrada ou não. */
@@ -1171,11 +1352,11 @@ function desenharResumoLista(){
   const n30=nUrg(-99999,30);   if(n30)p.push(n30+' vencem em 30 dias');
   el.textContent=p.join(' · ');
 }
-function redesenhar(){desenharChips();desenharResumo();desenharTabela();desenharResumoLista();
+function redesenhar(){desenharChips();desenharResumo();desenharLista();desenharResumoLista();
   if(FILTROS_UI)FILTROS_UI.atualizarContador();
   sincronizarURL();}
 function aplicarBusca(){TETO=PASSO;   // resultado novo, teto novo
-  desenharChips();desenharTabela();desenharResumoLista();sincronizarURL();}
+  desenharChips();desenharLista();desenharResumoLista();sincronizarURL();}
 
 /* ---------- busca e filtros no endereço (C.10) ----------
    F5 volta para a mesma visão; chave, cod e #hash ficam intactos.
@@ -1223,21 +1404,37 @@ const SUJOS=new Map();    // id (texto) -> {timer,campos:Set}
    marcados, nasce um "tentar de novo" ali mesmo e fechar a aba pede confirmação. */
 const FALHAS=new Map();   // id (texto) -> {campos:Set}
 function temPendencia(){return SUJOS.size>0||FALHAS.size>0;}
-function setSave(cl,txt){const el=document.getElementById('saveStatus');el.className='save-status '+(cl||'');el.textContent=txt||'';}
+/* O MESMO indicador em dois lugares: a faixa da barra escura e o rodapé da
+   ficha. Quem está com a ficha aberta não vê a barra lá em cima — e é
+   justamente ali que se digita. */
+function setSave(cl,txt,tit){
+  const base='save-status '+(cl||'');
+  const barra=document.getElementById('saveStatus');
+  if(barra){barra.className=base;barra.textContent=txt||'';barra.title=tit||'';}
+  const cad=document.getElementById('saveStatusCad');
+  if(cad){cad.className=base+' claro';cad.textContent=txt||'';cad.title=tit||'';}
+}
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function marcarFalha(id,falhou){
-  const tr=document.querySelector('tr[data-id="'+CSS.escape(String(id))+'"]');
-  if(!tr)return;
-  tr.classList.toggle('falhou',!!falhou);
-  const nome=tr.querySelector('td.col-nome');
-  if(nome){
-    const antigo=nome.querySelector('.btn-retry');
-    if(falhou&&!antigo)nome.insertAdjacentHTML('beforeend',
+  const chave=CSS.escape(String(id));
+  /* A LINHA continua marcada na lista mesmo com a ficha fechada — é o que
+     mostra, de longe, que aquele cliente tem coisa que não gravou. */
+  const no=document.querySelector('.cli[data-id="'+chave+'"]');
+  if(no)no.classList.toggle('falhou',!!falhou);
+  /* A faixa e os campos vivem no .corpo, que hoje é pintado dentro do modal:
+     procurar pelo .corpo funciona esteja ele onde estiver (e não existe quando a
+     ficha está fechada, que é o caso em que não há o que marcar). */
+  const corpo=document.querySelector('.corpo[data-id="'+chave+'"]');
+  if(!corpo)return;
+  const cx=corpo.querySelector('.ign');
+  if(cx){
+    const antigo=cx.querySelector('.btn-retry');
+    if(falhou&&!antigo)cx.insertAdjacentHTML('beforeend',
       '<button type="button" class="btn-retry" data-retry="'+esc(String(id))+'">não salvou — tentar de novo</button>');
     if(!falhou&&antigo)antigo.remove();
   }
   const f=FALHAS.get(String(id));
-  tr.querySelectorAll('[data-c]').forEach(el=>{
+  corpo.querySelectorAll('[data-c]').forEach(el=>{
     el.classList.toggle('falhou',!!(falhou&&f&&f.campos.has(el.dataset.c)));
   });
 }
@@ -1252,8 +1449,8 @@ function agendarSalvar(id,coluna,ms){
   s.timer=setTimeout(()=>salvar(k),ms==null?700:ms);
   setSave('saving','Salvando…');
 }
-/* Enter não espera o debounce: quem apertou já saiu da linha e precisa ver o
-   "Salvo ✓" enquanto ainda lembra do que digitou. */
+/* Enter não espera o debounce: quem apertou precisa ver o "Salvo ✓" enquanto
+   ainda lembra do que digitou. */
 function salvarAgora(id,coluna){
   const k=String(id);
   let s=SUJOS.get(k);
@@ -1269,15 +1466,24 @@ async function salvar(id){
   SUJOS.delete(k);
   const l=LINHAS.find(x=>String(x.id)===k); if(!l) return;
   const campos={}; s.campos.forEach(c=>campos[c]=l.valores[c]==null?'':l.valores[c]);
+  const ign=document.getElementById('ign_'+k);
   try{
     setSave('saving','Salvando…');
     const r=await postAcao({acao:'cert_salvar',id:l.id,campos,
       cliente:l.nome_cliente||'',cod:respAtual()});
     // avisa baixinho se o backend recusou alguma coluna (espelho do Registro)
-    const ign=(r&&r.ignoradas)||[];
+    const ignoradas=((r&&r.ignoradas)||[]).filter(Boolean);
     FALHAS.delete(k); marcarFalha(k,false);
-    setSave('ok','Salvo ✓ '+horaAgora()+(ign.length?' · '+ign.length+' campo(s) só de leitura':''));
+    setSave('ok','Salvo ✓ '+horaAgora()+(ignoradas.length?' · '+ignoradas.length+' campo(s) só de leitura':''),
+      ignoradas.length?('Não gravadas: '+ignoradas.join(', ')):'');
+    /* A faixa dentro da ficha diz QUAIS colunas o servidor recusou — o rodapé só
+       dá o número, e "1 campo só de leitura" não diz qual foi. */
+    if(ign)ign.innerHTML=ignoradas.length?('Não gravei: <b>'+ignoradas.map(esc).join('</b>, <b>')+'</b> — coluna travada ou que não existe mais no cadastro.'):'';
+    /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé da ficha sai, e o
+       Fechar volta a ser Fechar. */
+    if(!temPendencia()){CAD_AVISADO=false;avisoCad(false);}
     // a contagem da régua também é pendência: gravar um vencimento muda o número
+    atualizarLinha(k);
     desenharResumo();desenharChips();desenharResumoLista();
   }catch(e){
     FALHAS.set(k,{campos:s.campos});
@@ -1297,11 +1503,140 @@ function tentarDeNovo(id){
   clearTimeout(s.timer);
   salvar(k);
 }
+/* Só a LINHA daquele cliente é repintada — nunca a lista inteira: redesenhar
+   durante a digitação tiraria o foco de quem está preenchendo a ficha. Como os
+   campos vivem no modal e não dentro da linha, repintar aqui não incomoda
+   ninguém, e assim CNPJ, vencimentos e situação acompanham a edição. */
+function atualizarLinha(id){
+  const l=LINHAS.find(x=>String(x.id)===String(id)); if(!l) return;
+  const no=document.querySelector('.cli[data-id="'+CSS.escape(String(id))+'"]');
+  if(no){
+    /* Se o foco estava NA linha (é onde ele volta ao fechar a ficha), ele volta
+       para ela depois da repintura: uma gravação que termina meio segundo depois
+       não pode jogar quem navega por teclado de volta para o topo da página. */
+    const cabeca=no.querySelector('.cli-head');
+    const tinhaFoco=!!cabeca&&document.activeElement===cabeca;
+    no.innerHTML=cabecaHTML(l);
+    if(tinhaFoco){const nova=no.querySelector('.cli-head');if(nova)nova.focus();}
+    /* a faixa lateral acompanha a mudança de situação sem redesenhar a lista */
+    no.classList.remove('sit-venc','sit-d30','sit-d60','sit-ok','sit-sem','sit-inativo');
+    no.classList.add(classeSituacao(l));
+  }
+  atualizarTopoCad(id);   // e o topo da ficha mostra o nome e a situação novos
+}
+
+/* ===================================================================
+   A ficha no modal
+   -------------------------------------------------------------------
+   A lista mostra as colunas que a equipe lê de relance; o resto abre
+   aqui, por cima, sem trocar de página. O conteúdo é o MESMO cel() de
+   sempre — os quatro tipos de célula, o upload, a etiqueta de prazo —,
+   só mudou onde ele é pintado.
+   =================================================================== */
+let CAD_ID='';           // de quem é a ficha aberta
+let CAD_AVISADO=false;   // já avisamos que tem coisa por gravar? (fechar em 2 tempos)
+function elCad(){return document.getElementById('modalCad');}
+function cadAberto(){const m=elCad();return !!m&&!m.hidden;}
+/** Aviso de "tem alteração por gravar" no rodapé; o botão passa a dizer que sai assim mesmo. */
+function avisoCad(mostrar){
+  const a=document.getElementById('cadAviso');if(a)a.hidden=!mostrar;
+  const b=document.getElementById('cadFechar');if(b)b.textContent=mostrar?'Fechar assim mesmo':'Fechar';
+}
+/** Nome, ID e situação no topo da ficha — acompanham a edição sem redesenhar nada. */
+function atualizarTopoCad(id){
+  if(!cadAberto()||String(CAD_ID)!==String(id))return;
+  const l=LINHAS.find(x=>String(x.id)===String(id));if(!l)return;
+  const s=situacaoDe(l),info=SITUACOES[s];
+  const t=document.getElementById('cadTitulo');if(t)t.textContent=l.nome_cliente||'(sem nome)';
+  const i=document.getElementById('cadId');if(i)i.textContent=l.id;
+  const p=document.getElementById('cadSit');
+  if(p){p.className='pill sit-'+s;p.title=info.dica;p.textContent=info.rot;}
+}
+/** Acende na lista a linha da ficha que está aberta. */
+function marcarLinhaAberta(){
+  document.querySelectorAll('.cli').forEach(n=>n.classList.toggle('aberto',ABERTOS.has(n.dataset.id)));
+}
+function abrirFicha(id){
+  const l=LINHAS.find(x=>String(x.id)===String(id));if(!l)return;
+  const m=elCad();if(!m)return;
+  CAD_ID=String(l.id);CAD_AVISADO=false;
+  document.getElementById('cadBody').innerHTML=corpoHTML(l);
+  m.hidden=false;
+  /* Enquanto a ficha está aberta a página atrás não rola. */
+  document.body.style.overflow='hidden';
+  atualizarTopoCad(CAD_ID);
+  avisoCad(false);
+  ABERTOS.clear();ABERTOS.add(CAD_ID);
+  marcarLinhaAberta();
+  /* Reabrir não pode apagar o que não gravou: a faixa e o "tentar de novo"
+     nascem de novo junto com os campos. */
+  if(FALHAS.has(CAD_ID))marcarFalha(CAD_ID,true);
+  const cx=m.querySelector('.modal-box');if(cx)cx.focus();
+}
+/* Grava agora o que estava esperando o debounce. É o salvar() de sempre, só sem
+   os 700 ms de espera. */
+function descarregarPendentes(){
+  Array.from(SUJOS.keys()).forEach(id=>{const s=SUJOS.get(id);if(s)clearTimeout(s.timer);salvar(id);});
+}
+/* Fechar com alteração por gravar avisa antes, em dois tempos como o resto da
+   casa (nunca uma caixa do navegador): o primeiro Fechar/Esc/clique no véu
+   explica, o segundo sai. Ao sair assim mesmo a gravação pendente é DESCARREGADA
+   na hora — deixar o debounce correndo com a ficha fora da tela é exatamente o
+   jeito de perder o que foi digitado. */
+function fecharFicha(){
+  const m=elCad();if(!m||m.hidden)return;
+  if(temPendencia()&&!CAD_AVISADO){CAD_AVISADO=true;avisoCad(true);return;}
+  if(SUJOS.size)descarregarPendentes();
+  m.hidden=true;
+  document.body.style.overflow='';
+  const id=CAD_ID;CAD_ID='';CAD_AVISADO=false;
+  avisoCad(false);
+  ABERTOS.delete(String(id));marcarLinhaAberta();
+  document.getElementById('cadBody').innerHTML='';
+  /* O foco volta para a linha de onde saiu: quem navega por teclado não é jogado
+     de volta para o topo da página. */
+  const no=document.querySelector('.cli[data-id="'+CSS.escape(String(id))+'"] .cli-head');
+  if(no)no.focus();
+}
+/* O botão "Salvar alterações" NÃO substitui o autosave: cada edição continua
+   chamando agendarSalvar(), e é ele que impede perder texto digitado — foi para
+   isso que ele existe nesta tela. O botão ANTECIPA a gravação pendente (mata o
+   debounce e salva na hora), reenvia o que falhou e, quando tudo entrou, FECHA a
+   ficha: salvar é o gesto de encerrar, e ficar com a ficha aberta depois de
+   confirmar faz a pessoa clicar em Fechar sem saber se gravou.
+
+   Só fecha se gravou MESMO. Falha mantém a ficha na tela: fechar por cima de uma
+   gravação que não foi levaria embora o aviso e a chance de tentar de novo, e a
+   pessoa sairia achando que salvou. */
+async function salvarAgoraCad(){
+  const id=CAD_ID, btn=document.getElementById('cadSalvar');
+  if(temPendencia()){
+    if(btn){btn.disabled=true;btn.dataset.rot=btn.textContent;btn.textContent='Salvando…';}
+    try{
+      /* o que falhou antes volta para a fila de sujos antes do disparo */
+      if(id&&FALHAS.has(String(id))){
+        const f=FALHAS.get(String(id));
+        const su=SUJOS.get(String(id))||{timer:null,campos:new Set()};
+        f.campos.forEach(c=>su.campos.add(c));
+        SUJOS.set(String(id),su);FALHAS.delete(String(id));
+      }
+      const ids=Array.from(SUJOS.keys());
+      ids.forEach(k=>{const su=SUJOS.get(k);if(su)clearTimeout(su.timer);});
+      await Promise.all(ids.map(k=>salvar(k)));
+    }catch(e){ /* salvar() já registra a falha em FALHAS e avisa na tela */ }
+    if(btn){btn.disabled=false;btn.textContent=btn.dataset.rot||'Salvar alterações';}
+  }
+  if(temPendencia())return;            // não gravou: a ficha continua aberta
+  CAD_AVISADO=false;avisoCad(false);
+  fecharFicha();
+}
 
 /* ---------------- eventos ---------------- */
+/* Todo campo editável vive dentro do `.corpo` da ficha — não há mais campo
+   nenhum na lista, que é só leitura. */
 function linhaDo(el){
-  const tr=el.closest('tr[data-id]'); if(!tr) return null;
-  return LINHAS.find(x=>String(x.id)===tr.dataset.id)||null;
+  const corpo=el.closest('.corpo[data-id]'); if(!corpo) return null;
+  return LINHAS.find(x=>String(x.id)===corpo.dataset.id)||null;
 }
 /* enquanto se digita num link, o atalho ↗ acende ou apaga na hora */
 document.addEventListener('input',e=>{
@@ -1332,7 +1667,7 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('click',async e=>{
   const rt=e.target.closest('.btn-retry[data-retry]');
-  if(rt){rt.disabled=true;tentarDeNovo(rt.dataset.retry);return;}
+  if(rt){e.stopPropagation();rt.disabled=true;tentarDeNovo(rt.dataset.retry);return;}
   const env=e.target.closest('[data-env]');
   if(env){
     const l=linhaDo(env); if(!l) return;
@@ -1346,7 +1681,7 @@ document.addEventListener('click',async e=>{
     const c=mais.dataset.mais, k=chaveCel(l.id,c);
     if(ABERTAS.has(k)) ABERTAS.delete(k); else ABERTAS.add(k);
     repintarCel(l,c);
-    const campo=document.querySelector('tr[data-id="'+CSS.escape(String(l.id))+'"] [data-c="'+CSS.escape(c)+'"]');
+    const campo=document.querySelector('.corpo[data-id="'+CSS.escape(String(l.id))+'"] [data-c="'+CSS.escape(c)+'"]');
     if(campo&&ABERTAS.has(k)) campo.focus();
     return;
   }
@@ -1357,7 +1692,7 @@ document.addEventListener('click',async e=>{
     if(/^\d{4}-\d{2}-\d{2}$/.test(atual)) return;      // nunca mexe numa data preenchida
     l.valores[c]=(md.dataset.para==='texto')?'N/A':'';
     esquecerBusca(l);
-    md.closest('td').innerHTML=celData(l,c);
+    const fld=md.closest('.fld'); if(fld){const dt=fld.querySelector('.dt'); if(dt)dt.outerHTML=celData(l,c);}
     agendarSalvar(l.id,c,120);
     return;
   }
@@ -1366,7 +1701,7 @@ document.addEventListener('click',async e=>{
     const l=linhaDo(ver); if(!l) return;
     const c=ver.dataset.ver, k=l.id+'|'+c;
     if(REVELADAS.has(k)) REVELADAS.delete(k); else REVELADAS.add(k);
-    ver.closest('td').innerHTML=celSigilosa(l,c);
+    const sig=ver.closest('.sig'); if(sig)sig.outerHTML=celSigilosa(l,c);
     return;
   }
   const cp=e.target.closest('button[data-copiar]');
@@ -1379,6 +1714,11 @@ document.addEventListener('click',async e=>{
     const antes=cp.textContent; cp.textContent='✓'; setTimeout(()=>{cp.textContent=antes;},1200);
     return;
   }
+  /* Rodapé da ficha: salvar agora, fechar, e o × do topo. Vêm ANTES do teste do
+     véu, senão o clique no botão contaria como clique fora. */
+  if(e.target.closest('#cadSalvar')){salvarAgoraCad();return;}
+  if(e.target.closest('#cadFechar')||e.target.closest('#fechaCad')){fecharFicha();return;}
+  if(e.target.id==='modalCad'){fecharFicha();return;}
   if(e.target.closest('#btn-limpar')){limparFiltros();return;}
   const chip=e.target.closest('.chip[data-f]');
   if(chip){FILTRO=chip.dataset.f;TETO=PASSO;redesenhar();return;}
@@ -1387,36 +1727,23 @@ document.addEventListener('click',async e=>{
   if(e.target.closest('#chipAtivos')){SO_ATIVOS=!SO_ATIVOS;TETO=PASSO;redesenhar();return;}
   /* "Dados do cadastro" mexe em COLUNA, não em linha: o teto fica onde está. */
   if(e.target.closest('#chipCadastro')){VER_CADASTRO=!VER_CADASTRO;redesenhar();return;}
-  if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharTabela();return;}
-  if(e.target.closest('.btn-todos')){TETO=LINHAS.length;desenharTabela();return;}
-  const th=e.target.closest('th[data-sort]');
-  if(th){const k=th.dataset.sort;
+  if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
+  if(e.target.closest('.btn-todos')){TETO=LINHAS.length;desenharLista();return;}
+  const ord=e.target.closest('.chip[data-s]');
+  if(ord){const k=ord.dataset.s;
     if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}
-    desenharTabela();sincronizarURL();return;}
+    TETO=PASSO;                                // outra ordem, outro começo de lista
+    desenharOrdem();desenharLista();sincronizarURL();
+    if(FILTROS_UI)FILTROS_UI.atualizarContador();
+    return;}
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto);return;}
+  /* A linha da lista é o gesto de abrir a ficha. Vem por último: qualquer botão
+     de dentro da ficha já saiu acima, e a lista não tem mais nada clicável
+     dentro dela. */
+  const head=e.target.closest('.cli-head');
+  if(head){const no=head.closest('.cli');if(no)abrirFicha(no.dataset.id);return;}
 });
-/* ---------- Enter grava e desce (C.14) ----------
-   Esta tela é digitação em massa, uma coluna inteira de cada vez: Enter fecha a
-   linha e cai na MESMA coluna da linha seguinte; Shift+Enter volta. Na última
-   linha grava e fica onde está — dar a volta faria a pessoa reescrever a primeira
-   linha sem perceber. */
-/* Linha vizinha que dá para editar. O filtro tira a linha da grade, mas se ela
-   estiver só escondida a gente pula do mesmo jeito: quem filtrou não quer o
-   cursor caindo justamente no que mandou sumir. */
-function linhaVizinha(tr,passo){
-  let p=tr;
-  for(;;){
-    p=passo>0?p.nextElementSibling:p.previousElementSibling;
-    if(!p) return null;
-    if(!p.dataset||!p.dataset.id) continue;      // a linha do "Nada com esse filtro"
-    if(!p.getClientRects().length) continue;     // escondida
-    return p;
-  }
-}
-/* Campo da mesma coluna na linha de destino. Coluna espelhada/só leitura não tem
-   campo nenhum (é um <div class="ro">), então o Enter segue para a próxima
-   editável em vez de largar o foco no nada. */
 /* Um seletor de arquivo só, reaproveitado por todas as células. */
 (function(){
   const inp=document.createElement('input');
@@ -1430,63 +1757,42 @@ function linhaVizinha(tr,passo){
   });
   document.body.appendChild(inp);
 })();
-
-function campoDestino(tr,coluna){
-  const ok=el=>!!el&&!el.disabled&&!el.readOnly;
-  const igual=tr.querySelector('[data-c="'+CSS.escape(coluna)+'"]');
-  if(ok(igual)) return igual;
-  /* Coluna de documento FECHADA também não tem campo — e a regra de "pula para a
-     próxima editável" foi escrita para coluna espelhada, não para esta. Sem este
-     desvio, colar links em lote jogaria a URL seguinte em OUTRA coluna, gravando
-     de verdade. Se a coluna é de link e é editável, a célula abre e recebe o foco. */
-  if(ehLink(coluna)&&!ehSoLeitura(coluna)){
-    const id=tr.dataset.id, l=LINHAS.find(x=>String(x.id)===String(id));
-    if(l){ ABERTAS.add(chaveCel(l.id,coluna)); repintarCel(l,coluna);
-           const novo=tr.querySelector('[data-c="'+CSS.escape(coluna)+'"]');
-           if(ok(novo)) return novo; }
-  }
-  const cols=gradeCols();
-  for(let j=cols.indexOf(coluna)+1;j<cols.length;j++){
-    const el=tr.querySelector('[data-c="'+CSS.escape(cols[j])+'"]');
-    if(ok(el)) return el;
-  }
-  return null;
-}
+/* ---------- Enter grava na hora (C.14) ----------
+   Enter continua sendo "gravei, pode sair": mata o debounce e manda na hora, com
+   a ficha ainda aberta. O que ele NÃO faz mais é descer para a mesma coluna do
+   cliente seguinte — aquilo era digitação em massa direto na grade, e a grade
+   acabou: agora cada cliente é uma ficha, e a de baixo nem está na tela. */
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter'||e.ctrlKey||e.metaKey||e.altKey) return;
   const el=e.target;
   if(!el.dataset||!el.dataset.c||el.tagName==='TEXTAREA') return;
-  const tr=el.closest('tr[data-id]'); if(!tr) return;
   e.preventDefault();
   const r=aplicarCampo(el);
   if(r){ el._jaGravado=el.value; salvarAgora(r.l.id,r.c); }
-  let prox=linhaVizinha(tr,e.shiftKey?-1:1);
-  /* Quem está descendo a coluna não pode esbarrar no teto: se a última linha
-     desenhada não é a última do filtro, a grade cresce sozinha e o Enter segue.
-     Bloquear aqui seria trocar uma parede de informação por uma parede de fato. */
-  if(!prox&&!e.shiftKey&&TETO<visiveis().length){
-    const daqui=tr.dataset.id;
-    TETO+=PASSO; desenharTabela();
-    const atual=document.querySelector('tr[data-id="'+CSS.escape(daqui)+'"]');
-    if(atual)prox=linhaVizinha(atual,1);
-  }
-  if(!prox) return;
-  const alvo=campoDestino(prox,el.dataset.c);
-  // campo de data não aceita select() — por isso a tentativa é protegida
-  if(alvo){alvo.focus();try{if(alvo.select)alvo.select();}catch(_){}}
 });
-/* Atalhos de busca (C.4): "/" foca, Esc limpa — e não atrapalham quem já está
-   digitando noutro campo da grade. */
+/* Atalhos (C.4): Esc fecha a ficha antes de tudo; depois "/" foca a busca e Esc
+   limpa — e nenhum deles atrapalha quem já está digitando num campo. A linha da
+   lista é um role="button": sem o Enter e o Espaço daqui, a tela ficaria só para
+   o mouse. */
 document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&cadAberto()){e.preventDefault();fecharFicha();return;}
+  const linha=e.target&&e.target.closest&&e.target.closest('.cli-head');
+  if(linha&&(e.key==='Enter'||e.key===' '||e.key==='Spacebar')){
+    e.preventDefault();
+    const no=linha.closest('.cli');if(no)abrirFicha(no.dataset.id);
+    return;
+  }
   const b=document.getElementById('busca');if(!b)return;
   const a=document.activeElement,tag=a&&a.tagName;
   const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
   if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!digitando){e.preventDefault();b.focus();b.select();return;}
   if(e.key==='Escape'&&(a===b||!digitando)&&b.value){e.preventDefault();b.value='';TERMO='';aplicarBusca();}
 });
+/* Dos cartões de resumo para a linha: acha, destaca e abre a ficha — que é o que
+   quem clicou num vencimento veio fazer. */
 function irPara(id){
   const alvo=String(id);
-  const achar=()=>document.querySelector(`tr[data-id="${CSS.escape(alvo)}"]`);
+  const achar=()=>document.querySelector('.cli[data-id="'+CSS.escape(alvo)+'"]');
   if(!achar()){
     if(!visiveis().some(l=>String(l.id)===alvo)){
       FILTRO='todos';TERMO=alvo;TETO=PASSO;
@@ -1497,15 +1803,16 @@ function irPara(id){
     if(pos>=TETO)TETO=Math.ceil((pos+1)/PASSO)*PASSO;
     redesenhar();
   }
-  const tr=achar(); if(!tr) return;
-  tr.scrollIntoView({block:'center',behavior:'smooth'});
-  tr.classList.add('destaque'); setTimeout(()=>tr.classList.remove('destaque'),3500);
+  const no=achar(); if(!no) return;
+  no.scrollIntoView({block:'center',behavior:'smooth'});
+  no.classList.add('flash'); setTimeout(()=>no.classList.remove('flash'),1800);
+  abrirFicha(alvo);
 }
-
 /* ---------------- carregar ---------------- */
 /* A ordem aqui é a da tela: primeiro o que responde (busca e contagem), depois o
-   que refina (os doze chips, recolhidos), depois os exemplos, e só então a grade.
-   Os chips e os cartões continuam existindo — deixaram de ser pedágio. */
+   que refina (os chips e a ordenação, recolhidos), depois os exemplos, e só
+   então a lista. Os chips e os cartões continuam existindo — deixaram de ser
+   pedágio. */
 function layout(){
   return `<div class="topo">
     <div class="barra-acoes">
@@ -1519,22 +1826,21 @@ function layout(){
     <div id="painel-filtros" class="painel-filtros" hidden>
       <div class="grupo" id="chipsSit"></div>
       <div class="grupo" id="chipsDoc"></div>
-      <button type="button" class="btn-limpar" id="btn-limpar">Limpar filtros</button>
+      <div class="grupo" id="ordChips"></div>
+      <div class="grupo ord-info" id="ordInfo"></div>
+      <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro, sem busca e na ordem de vencimento">Limpar filtros</button>
     </div>
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">O que você editar salva sozinho. O atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. Coluna de endereço tem o atalho <b>↗</b> ao lado, que abre o documento em outra guia quando o campo é mesmo um link.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do cadastro do cliente — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>Na grade, a faixa escura acima dos cabeçalhos junta as colunas por <b>assunto</b> (o mesmo documento, o mesmo portal), para não se perder na rolagem lateral. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
+    <div class="txt">A lista é <b>só de leitura</b>: ela mostra ID, cliente, CNPJ, o vencimento do <b>certificado digital</b>, o das <b>procurações</b> e a <b>situação</b> de cada um — assim ninguém altera nada sem querer ao passar o olho. <b>Clique na linha</b> (ou aperte Enter nela) para abrir a ficha completa por cima, sem sair da tela; o que não coube nas colunas aparece ao passar o mouse na linha.<br>Dentro da ficha, o que você editar salva sozinho, e o botão <b>Salvar alterações</b> antecipa a gravação que já estava a caminho e fecha a ficha quando ela entra. Se alguma coisa não gravar, a ficha continua aberta com o aviso. Os campos vêm agrupados por <b>assunto</b> (o mesmo documento, o mesmo portal), com o arquivo e o vencimento dele lado a lado.<br>O atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. Célula de documento oferece <b>Abrir ↗</b> ou <b>Enviar ⬆</b>; no <b>⋯</b> ficam o campo de endereço e o <b>Enviar outro arquivo</b>, que substitui o documento que já está lá. Campo de endereço puro (Prefeitura, CRM) não pede arquivo: é portal, não documento.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do cadastro do cliente — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
   </details>
   <details class="ajuda situacao" id="det-situacao">
     <summary>Ver quem está em cada situação</summary>
     <div class="resumo" id="resumo"></div>
   </details>
-  <div class="tabela-wrap"><table>
-    <thead id="thead"></thead>
-    <tbody id="tbody"></tbody>
-  </table></div>
-  <div id="rodape-lista"></div>`;
+  <div class="dica" id="dica"></div>
+  <div class="lista" id="lista"></div>`;
 }
 async function carregar(){
   try{
@@ -1546,6 +1852,7 @@ async function carregar(){
     LINHAS.forEach(l=>COLUNAS.forEach(c=>{if(l.valores[c]==null)l.valores[c]='';}));
     META=d;
     validarURL();                                  // a visão vem do endereço (C.10)
+    mapearColunasLinha();                          // quais colunas a lista mostra
     document.getElementById('app').innerHTML=layout();
     ligarDetalhes(document.getElementById('ajuda'),'b4u.certificados.ajuda');
     FILTROS_UI=ligarFiltros('certificados',filtrosPainel);   // depois do layout: o painel já existe

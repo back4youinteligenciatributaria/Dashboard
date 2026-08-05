@@ -46,6 +46,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
 .save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:var(--radius-pill);background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
+/* O MESMO indicador aparece em dois lugares: a faixa da barra escura e o rodapé
+   do modal da ficha (claro). Só o estado neutro precisa de outra tinta — o da
+   barra é feito para fundo escuro e sumiria no branco. Vem ANTES dos estados
+   coloridos de propósito: mesma especificidade, quem vier depois ganha. */
+.save-status.claro{background:var(--surface-warm);color:var(--ink-2)}
 /* Branco sobre --amber da 2,61:1 e sobre --verde 3,44:1 — o rotulo do proprio
    status de gravacao some. Um degrau mais escuro na MESMA familia: 4,68:1 e 4,92:1. */
 .save-status.saving{background:var(--amber-2);color:#fff}
@@ -135,15 +140,79 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
   font:inherit;font-weight:700;font-size:13px;cursor:pointer}
 .lista-mais button:hover{border-color:var(--brand-teal);background:#EAF4F1}
 .lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
-.lista{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+/* ---------- a lista de processos: só leitura ----------
+   Seis colunas por linha (ID · Cliente · Processo · Etapa atual · Última
+   movimentação · Situação) e TODA a edição dentro do modal. Nenhum input,
+   select ou textarea na linha: "a lista fica limpa e ninguém altera sem
+   querer". NÃO é <table> de propósito — a grade do CSS convive com os chips,
+   o rodapé de teto e o cartão que a tela já tinha.
+   O cabeçalho (.lista-cab) repete a MESMA régua de colunas: as duas larguras
+   moram na mesma regra justamente para não desalinharem quando alguém mexer. */
+.lista{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .proc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-.proc-h{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;cursor:pointer}
+.proc.aberto{border-color:var(--brand-teal);box-shadow:0 5px 20px rgba(7,48,52,.10)}
+/* Faixa lateral só onde ela quer dizer "aja hoje": processo em aberto e sem
+   nenhuma data de etapa mexida nos últimos 30 dias. Pintar faixa em toda
+   situação faria a lista inteira virar faixa — e faixa em tudo não avisa nada. */
+.proc.sit-parado,.proc.aberto.sit-parado{border-left:4px solid var(--vermelho)}
+.lista-cab,.proc-h{display:grid;
+  /* O cliente é o que a pessoa procura na lista e leva o maior peso — nome
+     cortado ("AJUB - Cirurgia de Cab…") não identifica ninguém. Processo e
+     etapa vêm logo atrás; movimentação e situação têm largura fixa para não
+     dançarem de linha para linha. */
+  grid-template-columns:62px minmax(0,2.2fr) minmax(0,1.9fr) minmax(0,1.6fr) 122px minmax(0,132px);
+  gap:12px;align-items:center}
+.lista-cab{padding:2px 14px 0;font-size:11px;font-weight:800;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--muted)}
+.proc-h{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
+  cursor:pointer;font-family:var(--sans);color:inherit}
 .proc-h:hover{background:var(--surface-warm)}
-.pid{font-size:11px;font-weight:800;color:#fff;background:var(--brand-teal-txt);border-radius:var(--radius-sm);padding:3px 8px;white-space:nowrap;margin-top:1px}
-.pmain{flex:1;min-width:0}
-.pnome{font-size:15px;font-weight:700;line-height:1.3}
-.pproc{font-size:12px;color:var(--ink-2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.pmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+/* O .proc tem overflow:hidden e o contorno global (offset 2px) sairia cortado
+   na borda do cartão: aqui ele entra para dentro, senão o foco de teclado some. */
+.proc-h:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.c-id{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.c-nome{font-weight:600;font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-proc,.c-etapa{font-size:13px;color:var(--ink-2);min-width:0;display:flex;align-items:center;gap:6px}
+.c-proc .txt,.c-etapa .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Pílula da lista: nunca corta o próprio texto — "B4Y - 0…" não é código de
+   processo nenhum, e "3/7" pela metade não é contagem. Quem cede é o texto ao
+   lado, que tem reticências honestas. */
+.c-tag{font-size:11px;font-weight:700;color:var(--ink-2);background:var(--surface-warm);
+  border:1px solid var(--line);border-radius:var(--radius-pill);padding:2px 8px;
+  white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums}
+/* Data em algarismo de largura fixa: uma coluna de datas desalinhada é
+   justamente o que se lê errado ao conferir um processo atrás do outro. */
+.c-mov{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;
+  color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+/* "há N dias" só nasce em quem está parado — é o sinal que pede ação hoje. */
+.c-mov .parado{font-size:11px;font-weight:800;color:var(--amber-txt)}
+.c-fim{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:0}
+/* Coluna em branco continua dizendo o NOME do que falta ("sem data", "sem
+   etapas") em vez de um vazio mudo — é o sinal de tarefa da linha fechada. */
+.c-falta{font-size:12px;color:var(--muted);font-weight:600}
+/* Selo de situação: Concluído (verde) · Em andamento (âmbar) · Parado
+   (vermelho) · Aguardando e Não se aplica (cinza) · sem status (cinza claro).
+   É a última coluna da linha. */
+.pill{font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap;letter-spacing:.2px;border:1px solid transparent}
+.pill.sit-conc{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.pill.sit-and{background:var(--amber-soft);color:#8A4B12;border-color:var(--amber-line)}
+.pill.sit-parado{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
+.pill.sit-agu{background:#EEF3F1;color:#4a6360;border-color:#D9E5E2}
+.pill.sit-na{background:#F2ECE4;color:var(--muted);border-color:var(--line)}
+.pill.sit-sem{background:#EEE9E2;color:var(--muted);border-color:var(--line)}
+/* Abaixo de 900px as seis colunas não cabem lado a lado: cliente e situação
+   ficam na primeira linha da MESMA faixa e o resto desce para uma segunda,
+   menor. Continua sendo uma linha clicável só — não vira dois cartões. */
+@media(max-width:900px){
+  .lista-cab{display:none}
+  .proc-h{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+  /* Quebra forçada: sem ela o "resto" subiria para a primeira linha sempre que sobrasse espaço. */
+  .proc-h::after{content:"";order:3;flex:0 0 100%;height:0}
+  .c-nome{order:1;flex:1 1 auto}
+  .c-fim{order:2;flex:none;flex-direction:row;align-items:center;gap:6px}
+  .c-id,.c-proc,.c-etapa,.c-mov{order:4;flex:0 1 auto;font-size:12px;color:var(--muted);text-align:left}
+  .c-mov{flex-direction:row;align-items:baseline;gap:6px}
+}
 .bdg{font-size:11px;font-weight:700;border-radius:var(--radius-sm);padding:3px 8px}
 .bdg.and{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
 .bdg.ok{background:#E7F4EC;color:#2E7D52}
@@ -152,14 +221,17 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .bdg.dur{background:var(--brand-dark);color:#fff;border:1px solid var(--brand-dark);font-size:11px;font-weight:800}
 .bdg.dur.ok{background:var(--verde);border-color:var(--verde);color:#fff}
 .bdg.dur.na{background:#F2ECE4;border:1px solid var(--line);color:var(--muted);font-weight:700}
-/* Chevron = affordance de "isto abre". Em --line-2 ele dava 1,40-1,71:1 sobre
-   branco e sobre o canvas: praticamente invisivel. --muted e o token de texto
-   secundario mais proximo que passa (5,92:1 no branco, 4,85:1 no canvas) — e o
-   mesmo que dptopessoal/societario/meustickets ja usam na seta deles. */
-.chev{color:var(--muted);font-weight:900;font-size:19px;margin-top:2px}
-.editor{border-top:1px solid var(--line);padding:15px;display:none;background:var(--surface-warm)}
-.proc.open .editor{display:block}
-.proc.open .chev{color:var(--brand-teal-txt);transform:rotate(90deg)}
+/* O editor é o MESMO de sempre; só mudou onde ele é pintado. Dentro do modal
+   ele não precisa mais da moldura que o separava da linha de cima, e some a
+   regra que o escondia até a linha abrir — no modal ele é o conteúdo. */
+.editor{padding:0;background:transparent}
+/* Resumo do processo no alto da ficha: os mesmos badges (⏱ duração, status,
+   etapas ok, código) que antes ficavam na linha da lista e que a lista de
+   leitura não comporta mais. */
+.pmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+/* Faixa do "não gravou" dentro da ficha — o botão de tentar de novo nasce aqui. */
+.ign:empty{display:none}
+.ign{margin-bottom:10px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fld{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
 .fld label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
@@ -185,7 +257,10 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .etapa.aberta .etapa-body{display:block}
 .etapa-top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .etapa-n{flex:none;font-size:11px;font-weight:800;color:#fff;background:var(--brand-euc);border-radius:var(--radius-sm);padding:3px 7px;white-space:nowrap}
-.barra-salvar{position:sticky;bottom:0;background:var(--surface-warm);padding-top:12px;margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+/* Deixou de ser sticky: quem segura o indicador de gravação e os botões agora é
+   o rodapé fixo do modal, que já está sempre à vista. Sticky aqui se ancorava na
+   JANELA, não no painel, e subia por cima do menu lateral. */
+.barra-salvar{background:transparent;border-top:1px solid var(--line);padding-top:10px;margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .msg{font-size:13px;font-weight:600}
 .msg.ok{color:#2E7D52}.msg.err{color:var(--vermelho)}
 .autosave{font-size:13px;font-weight:600;color:var(--muted)}
@@ -197,6 +272,44 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .modal.on{display:flex}
 .modal-card{background:var(--surface);border-radius:var(--radius-lg);padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
 .modal-card h2{font-size:19px;margin-bottom:12px}
+/* ---------- a ficha do processo (modal) ----------
+   O modal cobre a janela inteira (position:fixed;inset:0), inclusive a faixa
+   dos 264px onde mora o menu lateral — e o menu é z-index:940. Com os 80 do
+   .modal desta página o menu ficava POR CIMA do véu: clicável enquanto alguém
+   preenchia a ficha, e um clique distraído trocava de página com o formulário
+   aberto. O b4u-shell.js já sobe o .modal para 960 quando carrega; esta regra
+   garante o mesmo quando ele não carregou (aí o `body.b4s` não existe). */
+.modal-cad[hidden]{display:none}
+.modal-cad{display:flex;align-items:flex-start;justify-content:center;
+  background:rgba(7,48,52,.55);padding:20px 12px;overflow:auto;z-index:960}
+/* A ficha tem rodapé fixo: a caixa é uma coluna com altura de tela, o miolo
+   rola e o rodapé (status + salvar + fechar) fica sempre à vista. */
+.modal-cad .modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;
+  max-width:920px;overflow:hidden;box-shadow:0 20px 60px rgba(7,48,52,.35);
+  display:flex;flex-direction:column;max-height:calc(100vh - 72px);margin:36px auto}
+.modal-cad .modal-body{flex:1;min-height:0;overflow:auto;padding:16px}
+.modal-cad .modal-foot{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  padding:11px 16px;background:var(--surface);border-top:1px solid var(--line)}
+.modal-cad .modal-foot .spacer{flex:1}
+.modal-top{position:sticky;top:0;z-index:2;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:10px;padding:13px 16px}
+.modal-top b{font-size:15px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-top .spacer{flex:1}
+.modal-top .cad-id{font-size:12px;font-weight:700;color:#cfe6e2;white-space:nowrap}
+.modal-top button{font-family:var(--sans);font-size:19px;font-weight:800;line-height:1;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:var(--radius-pill);width:32px;height:32px;cursor:pointer}
+/* Aviso de "tem coisa por gravar": aparece no primeiro pedido de fechar e o
+   segundo fecha assim mesmo — confirmação em dois tempos, sem caixa do navegador. */
+.cad-aviso{font-size:12px;font-weight:700;color:#8a5117;background:var(--amber-soft);
+  border:1px solid var(--amber-line);border-radius:var(--radius-sm);padding:6px 10px}
+.cad-aviso[hidden]{display:none}
+@media(max-width:640px){
+  .modal-cad{padding:8px}
+  .modal-cad .modal-box{max-height:calc(100vh - 16px);margin:8px auto}
+  /* No celular o ID mais o código não deixavam nem três letras do cliente
+     ("AJUB - CI…"): o nome passa a ocupar a primeira linha inteira e o resto
+     desce, com o × continuando no canto. */
+  .modal-top{flex-wrap:wrap}
+  .modal-top b{flex:1 0 100%}
+}
 @media(max-width:620px){.grid2{grid-template-columns:1fr}.wrap{padding:14px 12px 70px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* Todo link abre em guia nova (<base target="_blank">) — o colaborador nunca
@@ -253,12 +366,34 @@ tr.falhou>td{background:#FBEAE7!important}
   <div class="fld"><label>Código Processo</label><input id="n-cod" placeholder="ex.: B4Y - 040"></div>
   <div class="fld"><label>Processo *</label><textarea id="n-proc" placeholder="Descrição do processo (ex.: 4ª ACS …)"></textarea></div>
   <div class="fld"><label>Status Geral</label><select id="n-stg"></select></div>
-  <div class="barra-salvar" style="position:static;background:none;padding:0">
+  <div class="barra-salvar" style="position:static;background:none;padding:0;border-top:0;margin-top:0">
     <button class="btn btn--pri" id="n-criar">Criar processo</button>
     <button class="btn btn--sec" id="n-cancelar">Cancelar</button>
     <span class="msg" id="n-msg"></span>
   </div>
 </div></div>
+
+<!-- A ficha do processo. A lista é só leitura; tudo o que se edita mora aqui,
+     por cima dela, sem trocar de página e sem empurrar as outras linhas. -->
+<div class="modal modal-cad" id="modalCad" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cadTitulo" tabindex="-1">
+    <div class="modal-top">
+      <b id="cadTitulo">Processo</b>
+      <span class="cad-id" id="cadId"></span>
+      <span class="pill sit-sem" id="cadSit"></span>
+      <span class="spacer"></span>
+      <button type="button" id="fechaCad" title="Fechar" aria-label="Fechar o processo">×</button>
+    </div>
+    <div class="modal-body" id="cadBody"></div>
+    <div class="modal-foot">
+      <span class="save-status claro" id="saveStatusCad"></span>
+      <span class="cad-aviso" id="cadAviso" hidden>Ainda não gravei o que você mudou. Use <b>Salvar alterações</b> — ou clique de novo em Fechar para sair assim mesmo.</span>
+      <span class="spacer"></span>
+      <button class="btn btn--sec" id="cadFechar" type="button">Fechar</button>
+      <button class="btn btn--pri" id="cadSalvar" type="button">Salvar alterações</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
@@ -325,7 +460,21 @@ function jsonp(url){
   });
 }
 async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual(),cod:codAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
-function selectHTML(cls,val){return `<select class="${cls}">`+STATUS.map(o=>`<option value="${esc(o)}"${normTxt(o)===normTxt(val)?' selected':''}>${o||'—'}</option>`).join('')+`</select>`;}
+/* Status que já está gravado e não está na lista ("Aguardando documentação do
+   cliente", "Exigência") entra na lista assim mesmo, logo abaixo do vazio e com
+   o aviso "(fora da lista)". Sem isso o select nascia em "—" e o primeiro
+   autosave apagava o que a equipe tinha escrito: a tela NUNCA troca nem apaga
+   sozinha, o valor só muda quando alguém escolhe outro à mão. */
+function selectHTML(cls,val){
+  const bruto=String(val==null?'':val).trim();
+  const opts=STATUS.slice();
+  const fora=!!bruto&&!opts.some(o=>normTxt(o)===normTxt(bruto));
+  if(fora)opts.splice(1,0,bruto);
+  return `<select class="${cls}">`+opts.map(o=>{
+    const rot=o?esc(o)+(fora&&o===bruto?' (fora da lista)':''):'—';
+    return `<option value="${esc(o)}"${normTxt(o)===normTxt(bruto)?' selected':''}>${rot}</option>`;
+  }).join('')+`</select>`;
+}
 function bdgStatus(s){const n=normTxt(s);let cl='agu';if(/conclu|finaliz|encerr/.test(n))cl='ok';else if(/andamento/.test(n))cl='and';else if(/nao se aplica|não se aplica/.test(n))cl='na';return `<span class="bdg ${cl}">${esc(s||'—')}</span>`;}
 
 /* ===== duração do processo =====
@@ -707,7 +856,7 @@ function render(){
       </div>
       <details class="ajuda" id="ajuda">
         <summary>ⓘ Como funciona esta tela</summary>
-        <div class="txt">Filtro, busca e ordenação funcionam juntos — os chips ficam no botão <b>Filtros</b>. Clique num processo para editar. Dentro dele, clique no nome da etapa para abrir os detalhes. Tudo salva automaticamente ao mudar de campo; as observações datadas entram pelo botão "Adicionar". Atalhos: <b>/</b> foca a busca e <b>Esc</b> limpa.</div>
+        <div class="txt">Filtro, busca e ordenação funcionam juntos — os chips ficam no botão <b>Filtros</b>.<br>Cada linha traz <b>ID, cliente, processo, etapa atual, última movimentação</b> e a <b>situação</b>: <b>Parado</b> em vermelho e com faixa na lateral é quem está em aberto e não anda há mais de 30 dias. Coluna em branco diz o que falta (<b>sem data</b>, <b>sem etapas</b>) em vez de ficar vazia, e o que não coube — o código, a duração ⏱, o responsável — aparece ao passar o mouse na linha.<br>A lista é só de leitura: clicar na linha (ou apertar Enter nela) abre o processo por cima dela, sem sair da tela, e é ali que se edita tudo — inclusive as etapas (clique no nome da etapa para abrir os detalhes) e as observações datadas, que entram pelo botão <b>Adicionar</b>. O que você muda continua salvando sozinho; o botão <b>Salvar alterações</b> antecipa a gravação que já estava a caminho e fecha a ficha quando ela entra. Se alguma coisa não gravar, a ficha continua aberta com o aviso.<br>Atalhos: <b>/</b> foca a busca e <b>Esc</b> limpa a busca — ou fecha a ficha, quando ela está aberta.</div>
       </details>
     </div>
     <div class="lista" id="lista"></div></div>`;
@@ -726,7 +875,9 @@ function desenhar(){
   /* O teto corta o DESENHO, nunca a contagem: os totais de cima seguem falando da
      lista inteira (arr.length), com ou sem rodapé. */
   const n=Math.min(TETO,arr.length);
-  if(lista)lista.innerHTML=(arr.slice(0,n).map(x=>cardHTML(x.p)).join('')+rodapeLista(n,arr.length))||vazioHTML();
+  if(lista)lista.innerHTML=arr.length
+    ?(cabecalhoLista()+arr.slice(0,n).map(x=>linhaHTML(x.p,x.r)).join('')+rodapeLista(n,arr.length))
+    :vazioHTML();
   const cnt=document.getElementById('cnt');
   if(cnt)cnt.textContent=arr.length+' de '+PROCS.length+' processos';
   desenharResumoLista();
@@ -735,14 +886,11 @@ function desenhar(){
   restaurarFoco(foco);
   sincronizarURL();
 }
-/* Estender o teto não pode fechar o editor que a pessoa está preenchendo: guardamos
-   qual processo estava aberto e reabrimos depois do redesenho. */
-function crescerTeto(novo){
-  const aberto=document.querySelector('.proc.open');
-  const row=aberto?aberto.dataset.row:'';
-  TETO=novo;desenhar();
-  if(row&&document.querySelector('.proc[data-row="'+row+'"]'))abrirEditor(row);
-}
+/* Estender o teto não fecha mais a ficha que a pessoa está preenchendo: ela vive
+   no modal, fora do #lista, e redesenhar a lista não a toca. O que o redesenho
+   precisa refazer é só a marca de qual linha está aberta — quem faz isso é o
+   próprio linhaHTML(), lendo FICHA_ROW. */
+function crescerTeto(novo){TETO=novo;desenhar();}
 /* O processo recém-criado não pode nascer atrás do teto — ele entra sem datas e a
    ordem padrão (mais tempo em aberto primeiro) joga quem não tem data para o fim. */
 function garantirVisivel(row){
@@ -750,19 +898,117 @@ function garantirVisivel(row){
   const pos=arr.findIndex(x=>String(x.p.row)===String(row));
   if(pos>=TETO){TETO=Math.ceil((pos+1)/PASSO)*PASSO;desenhar();}
 }
-function cardHTML(p){
-  return `<div class="proc" data-row="${p.row}">
-    <div class="proc-h" data-toggle="${p.row}">
-      <span class="pid">${esc(p.id)}</span>
-      <div class="pmain">
-        <div class="pnome">${esc(p.nome||'(sem nome)')}</div>
-        <div class="pproc">${esc(p.processo||'')}</div>
-        <div class="pmeta">${metaHTML(p)}</div>
-      </div>
-      <span class="chev">›</span>
-    </div>
-    <div class="editor" id="ed-${p.row}"></div>
-  </div>`;
+/* ===================================================================
+   A linha da lista — só leitura
+   -------------------------------------------------------------------
+   Seis colunas que respondem "preciso agir neste processo?": de quem é,
+   que processo é, em que etapa está, quando andou pela última vez e
+   como está a situação. Nenhum campo aqui dentro: tudo o que se edita
+   (inclusive as observações datadas) abre no modal, ao clicar.
+   =================================================================== */
+/* Situação do processo: uma família só por linha, na mesma ordem de urgência dos
+   chips. "Parado" tem família própria — e ganha de "em andamento" — porque é o
+   único estado que pede ação HOJE; é o mesmo critério do chip "Parados há +30
+   dias", para a lista não dizer uma coisa e o filtro outra. */
+const SITUACOES={
+  parado:{rot:'Parado',dica:'Em aberto e sem nenhuma data de etapa mexida nos últimos '+PARADO_DIAS+' dias.'},
+  and:{rot:'Em andamento',dica:'Status Geral em andamento.'},
+  agu:{rot:'Aguardando',dica:'Status Geral aguardando alguma coisa (análise, protocolo, exigência…).'},
+  na:{rot:'Não se aplica',dica:'Processo que não segue: cancelado, arquivado ou fora de escopo.'},
+  conc:{rot:'Concluído',dica:'Status Geral concluído, ou todas as etapas nomeadas concluídas.'},
+  sem:{rot:'sem status',dica:'Status Geral em branco.'}
+};
+function situacaoDe(p,r){
+  if(r.conc)return 'conc';
+  if(/nao se aplica|cancel|desist|arquiv/.test(r.stk))return 'na';
+  if(r.paradoDias!=null&&r.paradoDias>PARADO_DIAS)return 'parado';
+  if(!r.stk)return 'sem';
+  if(/andamento/.test(r.stk))return 'and';
+  return 'agu';
+}
+/* A pílula nunca corta o próprio texto. Quando a grafia que a equipe escreveu
+   cabe, é ELA que aparece — é o vocabulário de quem usa. Quando não cabe, entra
+   o rótulo curto da família, e o texto inteiro continua no title da linha e na
+   ficha. Cortar daria "Aguardando docum…", que não é status nenhum. */
+const SIT_LARGURA=18;
+function rotuloSituacao(p,s){
+  const bruto=String(p.status_geral==null?'':p.status_geral).replace(/\s+/g,' ').trim();
+  if(s!=='parado'&&s!=='sem'&&bruto&&bruto.length<=SIT_LARGURA)return bruto;
+  return SITUACOES[s].rot;
+}
+/* Etapa atual = a primeira etapa NOMEADA que ainda não está concluída — é ela
+   que responde "onde o processo está". Com todas concluídas mostramos a última:
+   é onde ele terminou, e a coluna Situação já diz que acabou. */
+function etapasNomeadas(p){return etapasOrdenadas(p).filter(e=>String(e.nome||'').trim());}
+function etapaAtual(p){
+  const ns=etapasNomeadas(p);
+  if(!ns.length)return null;
+  return ns.find(e=>!RE_CONCLUIDO.test(normTxt(e.status)))||ns[ns.length-1];
+}
+function celulaEtapa(p){
+  const ns=etapasNomeadas(p);
+  if(!ns.length)return '<span class="c-falta">sem etapas</span>';
+  const nOk=ns.filter(e=>RE_CONCLUIDO.test(normTxt(e.status))).length;
+  const e=etapaAtual(p);
+  return `<span class="c-tag" title="${nOk} de ${ns.length} etapas concluídas">${nOk}/${ns.length}</span>`+
+    `<span class="txt">${esc(String(e.nome).trim())}</span>`;
+}
+function celulaProcesso(p){
+  const cod=String(p.codigo_processo||'').trim();
+  const txt=String(p.processo||'').trim();
+  return (cod?`<span class="c-tag">${esc(cod)}</span>`:'')+
+    (txt?`<span class="txt">${esc(txt)}</span>`:(cod?'':'<span class="c-falta">sem descrição</span>'));
+}
+function celulaMov(p,r){
+  const mov=ultimaMov(p);
+  if(!mov)return '<span class="c-falta">sem data</span>';
+  const parado=!r.conc&&r.paradoDias!=null&&r.paradoDias>PARADO_DIAS;
+  return `<span>${esc(mov.rot)}</span>`+(parado?`<span class="parado">há ${r.paradoDias} dias</span>`:'');
+}
+/* O que não coube nas seis colunas vai para o title da linha — dá para conferir
+   sem abrir nada, inclusive a duração ⏱, que é a ordenação padrão da tela. */
+function tituloLinha(p,r){
+  const t=[];
+  if(String(p.codigo_processo||'').trim())t.push('Código: '+p.codigo_processo);
+  t.push('Processo: '+(String(p.processo||'').trim()||'em branco'));
+  t.push('Status geral: '+(String(p.status_geral||'').trim()||'em branco'));
+  const c=calcDuracao(p);
+  t.push('Duração: '+(c?(c.estimado?'~':'')+fmtDuracao(c.dias)+(c.concluido?' (concluído)':' (em andamento)'):'sem data de início'));
+  const mov=ultimaMov(p);
+  t.push('Última movimentação: '+(mov?mov.rot+(r.paradoDias!=null?' (há '+r.paradoDias+' dias)':''):'nenhuma'));
+  const e=etapaAtual(p);
+  if(e)t.push('Etapa atual: '+String(e.nome).trim()+(String(e.status||'').trim()?' — '+e.status:''));
+  t.push('Responsável: '+(String((p.extras&&p.extras.responsavel)||'').trim()||'em branco'));
+  t.push('Clique para abrir o processo.');
+  return t.join(' · ');
+}
+/* É um role="button" (e não um <button>) porque dentro dele há pílulas com title
+   próprio; o teclado é atendido à mão no keydown (Enter e Espaço). Fica separado
+   do invólucro porque é ele, sozinho, que é repintado depois de cada gravação. */
+function cabecaHTML(p,r){
+  const s=situacaoDe(p,r),info=SITUACOES[s];
+  return `<div class="proc-h" role="button" tabindex="0" aria-haspopup="dialog" data-toggle="${esc(String(p.row))}" title="${esc(tituloLinha(p,r))}">
+      <span class="c-id">${esc(p.id)}</span>
+      <span class="c-nome">${esc(p.nome||'(sem nome)')}</span>
+      <span class="c-proc">${celulaProcesso(p)}</span>
+      <span class="c-etapa">${celulaEtapa(p)}</span>
+      <span class="c-mov">${celulaMov(p,r)}</span>
+      <span class="c-fim"><span class="pill sit-${s}" title="${esc(info.dica)}">${esc(rotuloSituacao(p,s))}</span></span>
+    </div>`;
+}
+const SIT_CLASSES=['sit-parado','sit-and','sit-agu','sit-na','sit-conc','sit-sem'];
+function linhaHTML(p,r){
+  return `<div class="proc sit-${situacaoDe(p,r)}${String(FICHA_ROW)===String(p.row)?' aberto':''}" data-row="${esc(String(p.row))}">${cabecaHTML(p,r)}</div>`;
+}
+/* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS) e some
+   abaixo de 900px, onde a linha deixa de ser seis colunas. aria-hidden porque é
+   rótulo de desenho: quem usa leitor de tela ouve o title da própria linha. */
+function cabecalhoLista(){
+  return `<div class="lista-cab" aria-hidden="true">
+      <span>ID</span><span>Cliente</span><span>Processo</span><span>Etapa atual</span>
+      <span style="text-align:center">Movimentação</span>
+      <span style="text-align:right">Situação</span>
+    </div>`;
 }
 function rotuloData(v){
   const bruto=String(v==null?'':v).trim();
@@ -826,7 +1072,13 @@ function sincronizarEtapa(campo){
 function editorHTML(p){
   const etv=[];for(let n=1;n<=p._visN;n++)etv.push(p.etapas[n-1]);
   const glog=p.observacoes_internas||'';
-  return `<div class="grid2">
+  /* O resumo em badges (⏱ duração, status geral, etapas ok, código) abre a ficha:
+     é a mesma informação que a linha da lista não comporta mais, montada pela
+     mesma metaHTML() de sempre. Logo acima dela mora a faixa do "não gravou". */
+  return `<div class="ign"></div>
+    <div class="pmeta">${metaHTML(p)}</div>
+    <div class="sub">O processo</div>
+    <div class="grid2">
       <div class="fld"><label>Nome / razão social</label><input class="f-nome" value="${esc(p.nome)}"></div>
       <div class="fld"><label>Código Processo</label><input class="f-cod" value="${esc(p.codigo_processo)}"></div>
     </div>
@@ -852,19 +1104,123 @@ function editorHTML(p){
     </div>
 
     <div class="barra-salvar">
-      <span class="autosave">✓ Salva automaticamente — o status aparece no topo da página</span>
+      <span class="autosave">✓ Salva automaticamente — o status aparece no rodapé desta ficha e na barra do topo. As observações datadas entram pelo botão <b>Adicionar</b>.</span>
     </div>`;
 }
-function abrirEditor(row){
-  const proc=document.querySelector(`.proc[data-row="${row}"]`);
-  const ed=document.getElementById('ed-'+row);
-  const p=PROCS.find(x=>x.row==row);
-  if(proc.classList.contains('open')){proc.classList.remove('open');ed.innerHTML='';return;}
-  document.querySelectorAll('.proc.open').forEach(el=>{el.classList.remove('open');el.querySelector('.editor').innerHTML='';});
-  ed.innerHTML=editorHTML(p);proc.classList.add('open');
-  proc.scrollIntoView({block:'nearest'});
+/* ===================================================================
+   A ficha do processo, no modal
+   -------------------------------------------------------------------
+   A lista mostra as colunas que a equipe lê de relance; o processo
+   inteiro abre aqui, por cima, sem trocar de página e sem empurrar as
+   outras linhas para baixo. O conteúdo é o MESMO editorHTML() de
+   sempre — e ele continua morando num #ed-<row>, então coletar(),
+   agendarSalvar(), addObs() e addEtapa() não mudaram uma linha.
+   =================================================================== */
+let FICHA_ROW='';        // de qual processo é a ficha aberta
+let CAD_AVISADO=false;   // já avisamos que tem coisa por gravar? (fechar em 2 tempos)
+function elCad(){return document.getElementById('modalCad');}
+function cadAberto(){const m=elCad();return !!m&&!m.hidden;}
+/** Aviso de "tem alteração por gravar" no rodapé; o botão passa a dizer que sai assim mesmo. */
+function avisoCad(mostrar){
+  const a=document.getElementById('cadAviso');if(a)a.hidden=!mostrar;
+  const b=document.getElementById('cadFechar');if(b)b.textContent=mostrar?'Fechar assim mesmo':'Fechar';
 }
-function reabrir(row){const ed=document.getElementById('ed-'+row);const p=PROCS.find(x=>x.row==row);if(ed)ed.innerHTML=editorHTML(p);}
+/** Cliente, ID e situação no topo da ficha — acompanham a edição sem redesenhar nada. */
+function atualizarTopoCad(row){
+  if(!cadAberto()||String(FICHA_ROW)!==String(row))return;
+  const p=PROCS.find(x=>x.row==row);if(!p)return;
+  const s=situacaoDe(p,resumoProc(p)),info=SITUACOES[s];
+  const t=document.getElementById('cadTitulo');if(t)t.textContent=p.nome||'(sem nome)';
+  const i=document.getElementById('cadId');
+  if(i)i.textContent=String(p.id||'')+(String(p.codigo_processo||'').trim()?' · '+p.codigo_processo:'');
+  const q=document.getElementById('cadSit');
+  if(q){q.className='pill sit-'+s;q.title=info.dica;q.textContent=rotuloSituacao(p,s);}
+}
+/** Acende na lista a linha da ficha que está aberta. */
+function marcarLinhaAberta(){
+  document.querySelectorAll('.proc').forEach(n=>n.classList.toggle('aberto',String(n.dataset.row)===String(FICHA_ROW)));
+}
+/* O nome ficou: `abrirEditor` é chamado de outros pontos (o processo recém-criado
+   abre por ele) e o que ele faz continua sendo o mesmo — mostrar o editor daquele
+   processo. Só um por vez, agora por construção: só existe uma ficha. */
+function abrirEditor(row){
+  const p=PROCS.find(x=>x.row==row);if(!p)return;
+  const m=elCad();if(!m)return;
+  FICHA_ROW=String(p.row);CAD_AVISADO=false;
+  document.getElementById('cadBody').innerHTML=
+    `<div class="editor" id="ed-${esc(String(p.row))}" data-row="${esc(String(p.row))}">${editorHTML(p)}</div>`;
+  m.hidden=false;
+  /* Enquanto a ficha está aberta a página atrás não rola — o mesmo gesto do modal
+     de processo novo. */
+  document.body.style.overflow='hidden';
+  atualizarTopoCad(FICHA_ROW);
+  avisoCad(false);
+  marcarLinhaAberta();
+  /* Reabrir não pode apagar o que não gravou: a faixa e o "tentar de novo" nascem
+     de novo junto com os campos. */
+  if(FALHAS.has(String(p.row)))marcarFalha(p.row,true);
+  const cx=m.querySelector('.modal-box');if(cx)cx.focus();
+}
+function reabrir(row){
+  const ed=document.getElementById('ed-'+row);const p=PROCS.find(x=>x.row==row);
+  if(!ed||!p)return;
+  ed.innerHTML=editorHTML(p);
+  if(FALHAS.has(String(row)))marcarFalha(row,true);   // repintar não apaga o que não gravou
+}
+/* Fechar com alteração por gravar avisa antes, em dois tempos como o resto da casa
+   (nunca uma caixa do navegador): o primeiro Fechar/Esc/clique no véu explica, o
+   segundo sai. Ao sair assim mesmo a gravação pendente é DESCARREGADA na hora —
+   deixar o debounce correndo com a ficha fora da tela é exatamente o jeito de
+   perder o que foi digitado. */
+function fecharFicha(){
+  const m=elCad();if(!m||m.hidden)return;
+  if(temPendencia()&&!CAD_AVISADO){CAD_AVISADO=true;avisoCad(true);return;}
+  if(PEND_DADOS.size)descarregarPendentes();
+  m.hidden=true;
+  document.body.style.overflow='';
+  const row=FICHA_ROW;FICHA_ROW='';CAD_AVISADO=false;
+  avisoCad(false);
+  marcarLinhaAberta();
+  document.getElementById('cadBody').innerHTML='';
+  /* O foco volta para a linha de onde saiu: quem navega por teclado não é jogado
+     de volta para o topo da página. */
+  const no=document.querySelector('.proc[data-row="'+row+'"] .proc-h');
+  if(no)no.focus();
+}
+/* O botão "Salvar alterações" NÃO substitui o autosave: cada mudança de campo
+   continua chamando agendarSalvar(), e é ele que impede perder texto digitado —
+   foi para isso que ele existe nesta tela. O botão ANTECIPA a gravação pendente
+   (mata o debounce e salva na hora), espera a que já está no ar, reenvia o que
+   falhou e, quando tudo entrou, FECHA a ficha: salvar é o gesto de encerrar, e
+   ficar com a ficha aberta depois de confirmar faz a pessoa clicar em Fechar sem
+   saber se gravou.
+
+   Só fecha se gravou MESMO. Falha mantém a ficha na tela: fechar por cima de uma
+   gravação que não foi levaria embora o aviso e a chance de tentar de novo, e a
+   pessoa sairia achando que salvou. */
+async function salvarAgoraCad(){
+  const btn=document.getElementById('cadSalvar');
+  if(temPendencia()){
+    if(btn){btn.disabled=true;btn.dataset.rot=btn.textContent;btn.textContent='Salvando…';}
+    try{
+      /* o que está no debounce e o que falhou antes entram juntos na mesma leva */
+      const alvos=new Map();
+      PEND_DADOS.forEach((d,k)=>alvos.set(k,d));
+      FALHAS.forEach((d,k)=>{if(!alvos.has(k))alvos.set(k,d);});
+      alvos.forEach((d,k)=>{clearTimeout(saveTimers[k]);PEND_DADOS.delete(k);FALHAS.delete(k);});
+      const disparos=[];
+      alvos.forEach((d,k)=>disparos.push(disparar(k,d)));
+      /* e o que JÁ estava viajando quando a pessoa clicou também é esperado —
+         senão o botão terminava antes da resposta e a ficha não fechava nunca. */
+      EMVOO.forEach(pr=>disparos.push(pr));
+      await Promise.all(disparos);
+    }catch(e){ /* salvarAuto() já registra a falha em FALHAS e avisa na tela */ }
+    if(btn){btn.disabled=false;btn.textContent=btn.dataset.rot||'Salvar alterações';}
+  }
+  if(temPendencia())return;            // não gravou: a ficha continua aberta
+  CAD_AVISADO=false;avisoCad(false);
+  fecharFicha();
+}
 
 function coletar(row){
   const ed=document.getElementById('ed-'+row);
@@ -873,19 +1229,50 @@ function coletar(row){
 }
 let saveTimers={};
 /* ---------- pendências e falhas de gravação (C.3) ----------
-   PENDENTES = alteração ainda no debounce. FALHAS = o servidor recusou e o dado
-   só existe na tela. Nos dois casos fechar a aba pede confirmação, e a falha
-   deixa o processo marcado com um "tentar de novo". */
+   PENDENTES = alteração ainda no debounce ou já viajando. FALHAS = o servidor
+   recusou e o dado só existe na tela. Nos dois casos fechar a aba pede
+   confirmação, e a falha deixa o processo marcado com um "tentar de novo". */
 const PENDENTES=new Set();
 const FALHAS=new Map();   // row -> dados que não foram gravados
+/* O que está esperando o debounce, capturado no momento em que a pessoa mexeu.
+   O botão "Salvar alterações" e o Fechar precisam poder disparar ESSES dados sem
+   esperar os 450 ms — e sem depender de a ficha ainda estar na tela. */
+const PEND_DADOS=new Map();   // row -> dados capturados por agendarSalvar
+/* Gravações já disparadas. O botão espera por elas antes de decidir se fecha:
+   sem isto, clicar em Salvar durante um autosave em voo terminava antes da
+   resposta e a ficha ficava aberta como se nada tivesse entrado. */
+const EMVOO=new Map();        // row -> promessa da gravação em andamento
 function temPendencia(){return PENDENTES.size>0||FALHAS.size>0;}
+function disparar(row,dados){
+  const k=String(row);
+  const pr=salvarAuto(row,dados);
+  EMVOO.set(k,pr);
+  const solta=()=>{if(EMVOO.get(k)===pr)EMVOO.delete(k);};
+  pr.then(solta,solta);
+  return pr;
+}
+/* Grava agora o que estava esperando o debounce. É o salvarAuto() de sempre, só
+   sem os 450 ms de espera. */
+function descarregarPendentes(){
+  Array.from(PEND_DADOS.keys()).forEach(k=>{
+    const d=PEND_DADOS.get(k);
+    clearTimeout(saveTimers[k]);PEND_DADOS.delete(k);
+    if(d)disparar(k,d);
+  });
+}
 function marcarFalha(row,falhou){
+  /* A LINHA continua marcada na lista mesmo com a ficha fechada — é o que mostra,
+     de longe, que aquele processo tem coisa que não gravou. */
   const cx=document.querySelector('.proc[data-row="'+row+'"]');
-  if(!cx)return;
-  cx.classList.toggle('falhou',!!falhou);
-  const cab=cx.querySelector('.pmeta');if(!cab)return;
-  const antigo=cab.querySelector('.btn-retry');
-  if(falhou&&!antigo)cab.insertAdjacentHTML('beforeend',
+  if(cx)cx.classList.toggle('falhou',!!falhou);
+  /* A faixa e o botão vivem no editor, que hoje é pintado dentro do modal: achar
+     o #ed-<row> funciona esteja ele onde estiver — e ele não existe quando a
+     ficha está fechada, que é justamente o caso em que não há o que marcar. */
+  const ed=document.getElementById('ed-'+row);
+  const ign=ed&&ed.querySelector('.ign');
+  if(!ign)return;
+  const antigo=ign.querySelector('.btn-retry');
+  if(falhou&&!antigo)ign.insertAdjacentHTML('beforeend',
     '<button type="button" class="btn-retry" data-retry="'+esc(String(row))+'">não salvou — tentar de novo</button>');
   if(!falhou&&antigo)antigo.remove();
 }
@@ -893,29 +1280,37 @@ function marcarFalha(row,falhou){
 window.addEventListener('beforeunload',e=>{if(temPendencia()){e.preventDefault();e.returnValue='';}});
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function setMsg(row,cls,txt){
+  const cl='save-status '+(/ok/.test(cls)?'ok':/err/.test(cls)?'err':'saving');
   const el=document.getElementById('saveStatus');   // status VISÍVEL no topo (barra fixa)
-  if(el){el.className='save-status '+(/ok/.test(cls)?'ok':/err/.test(cls)?'err':'saving');el.textContent=txt;}
+  if(el){el.className=cl;el.textContent=txt;}
+  /* O mesmo recado no rodapé da ficha: com o modal aberto a barra do topo fica
+     atrás do véu, e "não foi possível salvar" atrás do véu é aviso que ninguém lê. */
+  const ec=document.getElementById('saveStatusCad');
+  if(ec){ec.className=cl+' claro';ec.textContent=txt;}
 }
 function agendarSalvar(row){
-  const dados=coletar(row);                       // captura AGORA (mesmo que feche o editor depois)
+  const dados=coletar(row);                       // captura AGORA (mesmo que feche a ficha depois)
   setMsg(row,'autosave','Alterado…');
   PENDENTES.add(String(row));
+  PEND_DADOS.set(String(row),dados);              // o botão "Salvar alterações" antecipa ESTES dados
   clearTimeout(saveTimers[row]);
-  saveTimers[row]=setTimeout(()=>salvarAuto(row,dados),450);
+  saveTimers[row]=setTimeout(()=>disparar(row,dados),450);
 }
 async function salvarAuto(row,dados){
   const p=PROCS.find(x=>x.row==row);if(!p)return;
   setMsg(row,'autosave','Salvando…');
   PENDENTES.add(String(row));
+  PEND_DADOS.delete(String(row));                 // daqui para a frente está no ar, não mais no debounce
   try{
     await postAcao(Object.assign({acao:'soc_salvar',row:p.row,id:p.id},dados));
     Object.assign(p,{nome:dados.nome,codigo_processo:dados.codigo_processo,processo:dados.processo,status_geral:dados.status_geral,extras:dados.extras});
     dados.etapas.forEach(e=>{const alvo=p.etapas[e.n-1];if(alvo){alvo.nome=e.nome;alvo.status=e.status;alvo.data_inicio=e.data_inicio;alvo.data_fim=e.data_fim;}});
     setMsg(row,'msg ok','Salvo ✓ '+horaAgora());
-    const h=document.querySelector(`.proc[data-row="${row}"] .pmeta`);
-    if(h)h.innerHTML=metaHTML(p);
-    const nome=document.querySelector(`.proc[data-row="${row}"] .pnome`);if(nome)nome.textContent=p.nome||'(sem nome)';
+    atualizarLinha(row);
     PENDENTES.delete(String(row));FALHAS.delete(String(row));marcarFalha(row,false);
+    /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé da ficha sai, e o
+       Fechar volta a ser Fechar. */
+    if(!temPendencia()){CAD_AVISADO=false;avisoCad(false);}
     try{atualizarChips();}catch(_){}   // contagem dos chips em dia; a lista fica como está
   }catch(e){
     PENDENTES.delete(String(row));
@@ -925,6 +1320,31 @@ async function salvarAuto(row,dados){
        não entra na tela — é vocabulário de quem mantém o painel, não de quem usa. */
     setMsg(row,'msg err','Não foi possível salvar. Tente de novo.');
   }
+}
+/* Depois de gravar, a linha da lista acompanha o que mudou — cliente, processo,
+   etapa atual, movimentação e situação — sem redesenhar a lista inteira. Os campos
+   vivem no modal, então repintar a linha aqui não tira o foco de ninguém; e se o
+   foco estava NA linha (é onde ele volta ao fechar a ficha), ele volta para ela
+   depois da repintura, em vez de ser jogado para o topo da página. */
+function atualizarLinha(row){
+  const p=PROCS.find(x=>x.row==row);if(!p)return;
+  const r=resumoProc(p);
+  const no=document.querySelector('.proc[data-row="'+row+'"]');
+  if(no){
+    const cab=no.querySelector('.proc-h');
+    const tinhaFoco=!!cab&&document.activeElement===cab;
+    no.innerHTML=cabecaHTML(p,r);
+    if(tinhaFoco){const nova=no.querySelector('.proc-h');if(nova)nova.focus();}
+    /* a faixa lateral acompanha a mudança de situação sem redesenhar a lista */
+    SIT_CLASSES.forEach(c=>no.classList.remove(c));
+    no.classList.add('sit-'+situacaoDe(p,r));
+  }
+  /* e a ficha aberta mostra o cliente, o código e a situação novos — mais o resumo
+     de badges (⏱ duração, status, etapas ok) que mora no alto dela. */
+  atualizarTopoCad(row);
+  const ed=document.getElementById('ed-'+row);
+  const meta=ed&&ed.querySelector('.pmeta');
+  if(meta)meta.innerHTML=metaHTML(p);
 }
 async function addObs(row,btn,tipo,n){
   const p=PROCS.find(x=>x.row==row);const ed=document.getElementById('ed-'+row);
@@ -971,9 +1391,14 @@ document.addEventListener('click',e=>{
   if(rt){
     e.stopPropagation();
     const k=rt.dataset.retry,d=FALHAS.get(k);
-    if(d){rt.textContent='enviando…';rt.disabled=true;salvarAuto(k,d);}
+    if(d){rt.textContent='enviando…';rt.disabled=true;disparar(k,d);}
     return;
   }
+  /* Rodapé da ficha: salvar agora, fechar, e o × do topo. Vêm antes do teste do
+     véu, senão o clique no botão contaria como clique fora. */
+  if(e.target.closest('#cadSalvar')){salvarAgoraCad();return;}
+  if(e.target.closest('#cadFechar')||e.target.closest('#fechaCad')){fecharFicha();return;}
+  if(e.target.id==='modalCad'){fecharFicha();return;}
   const cf=e.target.closest('.chip[data-f]');
   if(cf){FILTRO=cf.dataset.f;TETO=PASSO;desenhar();return;}
   const co=e.target.closest('.chip[data-ord]');
@@ -983,20 +1408,27 @@ document.addEventListener('click',e=>{
   if(e.target.closest('.btn-todos')){crescerTeto(PROCS.length);return;}
   const et=e.target.closest('[data-etapa-toggle]');if(et){alternarEtapa(et);return;}
   const tg=e.target.closest('[data-toggle]');if(tg){abrirEditor(tg.dataset.toggle);return;}
-  const ag=e.target.closest('[data-addgeral]');if(ag){addObs(ag.closest('.proc').dataset.row,ag,'geral');return;}
-  const ae=e.target.closest('[data-addet]');if(ae){addObs(ae.closest('.proc').dataset.row,ae,'etapa',+ae.dataset.addet);return;}
-  const at=e.target.closest('[data-addetapa]');if(at){addEtapa(at.closest('.proc').dataset.row);return;}
+  /* De qual processo é este botão: o editor deixou de morar dentro da linha
+     (.proc) e passou a ser o miolo do modal, então quem carrega o row agora é o
+     próprio #ed-<row>. Procurar pela linha aqui devolvia null e o clique não
+     chegava a salvar nada. */
+  const ag=e.target.closest('[data-addgeral]');if(ag){addObs(rowDoEditor(ag),ag,'geral');return;}
+  const ae=e.target.closest('[data-addet]');if(ae){addObs(rowDoEditor(ae),ae,'etapa',+ae.dataset.addet);return;}
+  const at=e.target.closest('[data-addetapa]');if(at){addEtapa(rowDoEditor(at));return;}
   if(e.target.id==='n-criar')criarNovo(e.target);
   if(e.target.id==='n-cancelar')fecharNovo();
   if(e.target.id==='modal')fecharNovo();
 });
+/* De qual processo é este campo. O editor é o #ed-<row> que a ficha pinta, e é
+   ele que carrega o data-row — a linha da lista não o contém mais. */
+function rowDoEditor(el){const ed=el&&el.closest&&el.closest('.editor');return ed?ed.dataset.row:'';}
 // SALVAMENTO AUTOMÁTICO: qualquer alteração num campo do editor salva sozinha.
 document.addEventListener('change',e=>{
   const ed=e.target.closest('.editor');if(!ed)return;
   const f=e.target;if(!f.matches||!f.matches('input,select,textarea'))return;
   if(f.matches('[data-gobs],[data-etobs]'))return;   // as observações têm botão próprio (log com data)
   if(f.closest('.etapa'))sincronizarEtapa(f);
-  const proc=e.target.closest('.proc');if(proc)agendarSalvar(proc.dataset.row);
+  if(ed.dataset.row)agendarSalvar(ed.dataset.row);
 });
 // enquanto digita, o cabeçalho recolhido da etapa acompanha nome/datas
 document.addEventListener('input',e=>{
@@ -1007,8 +1439,21 @@ document.addEventListener('input',e=>{
 /* Atalhos de busca (C.4): "/" foca, Esc limpa. Com o modal aberto, Esc fecha o
    modal — e o atalho não atrapalha quem já está digitando noutro campo. */
 document.addEventListener('keydown',e=>{
+  /* A ficha é o modal de cima: com ela aberta, Esc é dela antes de tudo. */
+  if(e.key==='Escape'&&cadAberto()){e.preventDefault();fecharFicha();return;}
   const modal=document.getElementById('modal');
   if(e.key==='Escape'&&modal&&modal.classList.contains('on')){fecharNovo();return;}
+  /* A linha da lista é um role="button": sem isto, Enter e Espaço não abririam a
+     ficha para quem navega por teclado — e a tela ficaria só para o mouse. */
+  const linha=e.target&&e.target.closest&&e.target.closest('.proc-h');
+  if(linha&&(e.key==='Enter'||e.key===' '||e.key==='Spacebar')){
+    e.preventDefault();
+    abrirEditor(linha.dataset.toggle);
+    return;
+  }
+  /* Com a ficha aberta o teclado é dela: sem esta linha, um "/" distraído mandava
+     o foco para a busca ATRÁS do véu, onde a pessoa digitava sem ver. */
+  if(cadAberto())return;
   const b=document.getElementById('busca');if(!b)return;
   const a=document.activeElement,tag=a&&a.tagName;
   const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
