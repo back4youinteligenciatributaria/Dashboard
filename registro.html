@@ -54,6 +54,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra a.plan{border:1px solid rgba(255,255,255,.25);border-radius:var(--radius-pill);padding:4px 11px}
 .save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:var(--radius-pill);background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
+/* O MESMO indicador aparece em dois lugares: a faixa da barra escura e o rodape
+   do modal de cadastro (claro). So o estado neutro precisa de outra tinta — o da
+   barra e feito para fundo escuro e sumiria no branco. Vem ANTES dos estados
+   coloridos de proposito: mesma especificidade, quem vier depois ganha. */
+.save-status.claro{background:var(--surface-warm);color:var(--ink-2)}
 /* Branco sobre --amber da 2,61:1 e sobre --verde 3,44:1 — o rotulo do proprio
    status de gravacao some. Um degrau mais escuro na MESMA familia: 4,68:1 e 4,92:1. */
 .save-status.saving{background:var(--amber-2);color:#fff}.save-status.ok{background:var(--verde-2);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
@@ -112,27 +117,79 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
    e ver na hora quem não está ativo — sem precisar abrir o cadastro. */
 .cli.sit-inativando,.cli.aberto.sit-inativando{border-left:4px solid var(--amber)}
 .cli.sit-inativo,.cli.aberto.sit-inativo{border-left:4px solid var(--vermelho)}
-.cli-head{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:0;padding:11px 13px;cursor:pointer;font-family:var(--sans);color:inherit;flex-wrap:wrap}
+/* ---------- a linha da lista: colunas-chave alinhadas, respiro de lista ----------
+   Sete colunas por linha (ID · Nome · CNPJ/CPF · Cidade · Produtos · Início ·
+   Situação) e o resto do cadastro no modal. NÃO é <table> de propósito: a grade
+   do CSS convive com os cartões e os blocos recolhíveis que já existem aqui, e
+   uma tabela obrigaria a reescrever tudo o que pinta a lista.
+   O cabeçalho (.lista-cab) repete a MESMA régua de colunas — as duas larguras
+   moram na mesma regra justamente para não desalinharem quando alguém mexer. */
+.lista-cab,.cli-head{display:grid;
+  /* O nome e o que a pessoa procura na lista, e era o primeiro a ser cortado —
+     "AJUB - Cirurgia de Cab…" nao identifica ninguem. Ele leva o maior peso; a
+     coluna de produtos cede, porque ali o corte ja e explicito, com o "+N". */
+  grid-template-columns:60px minmax(0,2.2fr) 142px minmax(0,.9fr) minmax(0,2fr) 96px minmax(0,146px);
+  gap:12px;align-items:center}
+.lista-cab{padding:2px 14px 0;font-size:var(--fs-1);font-weight:800;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--muted)}
+.cli-head{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
+  cursor:pointer;font-family:var(--sans);color:inherit}
 .cli-head:hover{background:var(--surface-warm)}
-.cli-id{font-weight:800;color:var(--brand-teal-txt);font-size:13px;white-space:nowrap;min-width:54px}
-.cli-nome{font-weight:700;font-size:15px;flex:1 1 200px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cli-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end;flex:2 1 260px;min-width:0}
-.mt{font-size:11px;font-weight:700;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap;max-width:250px;overflow:hidden;text-overflow:ellipsis}
-/* O `.vazio` da lista sem resultado (15px, padding de 30px) estava vencendo aqui e
-   inchava o selo "sem CNPJ" num balão de 80px de altura. Repete o tamanho do .mt. */
-.mt.vazio{color:var(--muted);font-weight:600;background:transparent;border-style:dashed;font-size:11px;padding:2px 9px}
+/* O .cli tem overflow:hidden e o contorno global (offset 2px) sairia cortado na
+   borda do cartão: aqui ele entra para dentro, senão o foco de teclado some. */
+.cli-head:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.c-id{font-size:var(--fs-2);font-weight:700;color:var(--muted);white-space:nowrap}
+.c-nome{font-weight:600;font-size:var(--fs-4);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-doc,.c-cid{font-size:var(--fs-3);color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Documento e data em algarismo de largura fixa: uma coluna de CNPJ desalinhado
+   é justamente o que se lê errado quando se confere um cadastro atrás do outro. */
+.c-doc,.c-data{font-variant-numeric:tabular-nums}
+.c-data{font-size:var(--fs-3);color:var(--ink-2);text-align:center;white-space:nowrap}
+.c-prod{display:flex;gap:4px;min-width:0;overflow:hidden}
+/* Sem max-width e sem reticencias, de proposito: pilula cortada ("Equi…") nao
+   identifica produto nenhum, e era pior que mostrar uma a menos. Quem manda no
+   corte agora e a CONTAGEM (PROD_TETO), que sempre sobra num "+N" honesto. O
+   flex-shrink:0 impede que a coluna aperte as pilulas quando a janela encolhe. */
+.c-tag{font-size:var(--fs-1);font-weight:700;color:var(--ink-2);background:var(--surface-warm);
+  border:1px solid var(--line);border-radius:var(--radius-pill);padding:2px 8px;
+  white-space:nowrap;flex-shrink:0}
+.c-tag.mais{background:transparent;border-style:dashed;color:var(--muted)}
+.c-fim{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:0}
+/* Coluna em branco continua dizendo o NOME do que falta ("sem CNPJ", "sem
+   produtos") em vez de um vazio mudo — é o sinal de tarefa que a linha fechada
+   sempre deu. Classe própria: o `.vazio` da lista sem resultado tem 15px e
+   padding de 30px, e já inchou um selo destes num balão de 80px de altura. */
+.c-falta{font-size:var(--fs-2);color:var(--muted);font-weight:600}
+/* Abaixo de 900px as sete colunas não cabem lado a lado: nome e situação ficam na
+   primeira linha da MESMA faixa e o resto desce para uma segunda, menor. Continua
+   sendo uma linha clicável só — não vira dois cartões. */
+@media(max-width:900px){
+  .lista-cab{display:none}
+  .cli-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+  /* Quebra forçada: sem ela o "resto" subiria para a primeira linha sempre que sobrasse espaço. */
+  .cli-head::after{content:"";order:3;flex:0 0 100%;height:0}
+  .c-nome{order:1;flex:1 1 auto}
+  .c-fim{order:2;flex:none;flex-direction:row;align-items:center;gap:6px}
+  .c-id,.c-doc,.c-cid,.c-prod,.c-data{order:4;flex:0 1 auto;font-size:var(--fs-2);color:var(--muted);text-align:left}
+  /* Na segunda linha os produtos são mais uma informação entre outras: sem a
+     moldura de pilula eles param de empilhar a faixa em três alturas. */
+  .c-prod{flex-wrap:wrap;gap:0 8px}
+  .c-tag{background:transparent;border-color:transparent;padding:0;font-size:var(--fs-2);
+    font-weight:600;color:var(--muted);max-width:none}
+}
 /* Selo de situação: Ativo (verde discreto) · Em inativação (âmbar) · Inativo
-   (vermelho) · sem informação (cinza). Aparece na linha fechada da lista. */
+   (vermelho) · sem informação (cinza). É a última coluna da linha. */
 .pill{font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap;letter-spacing:.2px;border:1px solid transparent}
 .pill.sit-ativo{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
 .pill.sit-inativando{background:var(--amber-soft);color:#8A4B12;border-color:var(--amber)}
 .pill.sit-inativo{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
 .pill.sit-sem{background:#EEE9E2;color:var(--muted);border-color:var(--line)}
-.chev{flex:none;color:var(--muted);font-size:19px;font-weight:800;transition:transform .15s;line-height:1}
-.cli.aberto .chev{transform:rotate(90deg);color:var(--brand-teal-txt)}
 
-/* ---------- dropdown com o cadastro completo ---------- */
+/* ---------- o cadastro completo (hoje dentro do modal) ----------
+   O corpoHTML() é o mesmo de sempre; só mudou onde ele é pintado. Dentro do
+   modal ele não precisa mais da moldura que o separava da linha de cima. */
 .corpo{border-top:1px solid var(--line);background:var(--surface-warm);padding:13px 13px 16px}
+.modal-cad .corpo{border-top:0;background:transparent;padding:0}
 .gsec{margin-bottom:13px}
 .gsec:last-of-type{margin-bottom:6px}
 .gsec h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark);display:flex;align-items:center;gap:7px;margin-bottom:8px}
@@ -160,7 +217,7 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .ign{background:var(--amber-soft);border:1px solid var(--amber-line);color:#8a5117;border-radius:var(--radius-sm);padding:8px 11px;font-size:12px;font-weight:700;margin-bottom:10px}
 .ign:empty{display:none}
 
-/* ---------- modal de cliente novo ---------- */
+/* ---------- modais (cliente novo e cadastro) ---------- */
 .modal[hidden]{display:none}
 .modal{position:fixed;inset:0;z-index:90;background:rgba(7,48,52,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto}
 /* O modal cobre a janela inteira (position:fixed;inset:0), inclusive a faixa dos
@@ -170,7 +227,31 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
    A regra é escopada em `body.b4s` de propósito: sem o b4u-shell.js a página
    continua com os 90 originais e nada muda. */
 body.b4s .modal{z-index:960}
+/* O mesmo motivo vale para o cadastro, que é onde se DIGITA: se o menu lateral
+   ficar por cima do véu, a faixa da esquerda continua clicável e um clique
+   distraído troca de página com o formulário aberto. Esta regra garante o 960
+   também quando o b4u-shell.js não carregou (aí o `body.b4s` não existe). */
+.modal.modal-cad{z-index:960}
 .modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;max-width:860px;overflow:hidden;box-shadow:0 20px 60px rgba(7,48,52,.35)}
+/* O cadastro tem rodapé fixo: a caixa é uma coluna com altura de tela, o miolo
+   rola e o rodapé (status + salvar + fechar) fica sempre à vista. */
+.modal-cad .modal-box{max-width:920px;display:flex;flex-direction:column;
+  max-height:calc(100vh - 72px);margin:36px auto}
+.modal-cad .modal-body{flex:1;min-height:0;overflow:auto}
+.modal-cad .modal-foot{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  padding:11px 16px;background:var(--surface);border-top:1px solid var(--line)}
+.modal-cad .modal-foot .spacer{flex:1}
+.modal-top .cad-id{font-size:12px;font-weight:700;color:#cfe6e2;white-space:nowrap}
+.modal-top b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Aviso de "tem coisa por gravar": aparece no primeiro pedido de fechar e o
+   segundo fecha mesmo assim — confirmação em dois tempos, sem caixa do navegador. */
+.cad-aviso{font-size:12px;font-weight:700;color:#8a5117;background:var(--amber-soft);
+  border:1px solid var(--amber-line);border-radius:var(--radius-sm);padding:6px 10px}
+.cad-aviso[hidden]{display:none}
+@media(max-width:640px){
+  .modal-cad{padding:8px}
+  .modal-cad .modal-box{max-height:calc(100vh - 16px)}
+}
 .modal-top{position:sticky;top:0;z-index:2;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:10px;padding:13px 16px}
 .modal-top b{font-size:15px;font-weight:800}
 .modal-top .spacer{flex:1}
@@ -228,8 +309,6 @@ body.b4s .modal{z-index:960}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){
   .barra .tag,.barra .cnt{display:none}
-  .cli-meta{justify-content:flex-start;flex-basis:100%;order:3}
-  .cli-nome{flex-basis:auto}
   .linha-busca{flex-wrap:wrap}
   .busca{flex-basis:100%}
   .btn-novo{flex:1;text-align:center}
@@ -359,6 +438,29 @@ details.sec .grid{margin-top:10px}
   </div>
 </div>
 
+<!-- Cadastro do cliente. Fica FORA do #app de propósito: carregar() repinta o
+     #app inteiro, e uma recarga em segundo plano não pode apagar o formulário
+     que alguém está preenchendo. -->
+<div class="modal modal-cad" id="modalCad" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cadTitulo" tabindex="-1">
+    <div class="modal-top">
+      <b id="cadTitulo">Cadastro</b>
+      <span class="cad-id" id="cadId"></span>
+      <span class="pill sit-sem" id="cadSit"></span>
+      <span class="spacer"></span>
+      <button type="button" id="fechaCad" title="Fechar" aria-label="Fechar o cadastro">×</button>
+    </div>
+    <div class="modal-body" id="cadBody"></div>
+    <div class="modal-foot">
+      <span class="save-status claro" id="saveStatusCad"></span>
+      <span class="cad-aviso" id="cadAviso" hidden>Ainda não gravei o que você mudou. Use <b>Salvar alterações</b> — ou clique de novo em Fechar para sair assim mesmo.</span>
+      <span class="spacer"></span>
+      <button class="btn btn--sec" id="cadFechar" type="button">Fechar</button>
+      <button class="btn btn--pri" id="cadSalvar" type="button">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
 // é reserva: se o config.js não carregar, a página continua de pé.
@@ -480,7 +582,18 @@ function jsonp(url){
 async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
 /* normaliza rótulo de coluna igual ao backend (sem acento, minúsculo, sem ?:. no fim) */
 function norm(s){return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim().replace(/[?:.]+$/,'');}
-function setSave(cl,txt,tit){const el=document.getElementById('saveStatus');el.className='save-status '+(cl||'');el.textContent=txt||'';el.title=tit||'';}
+/* Um texto de gravação, dois lugares: a faixa da barra (#saveStatus, que continua
+   sendo a de sempre) e o rodapé do modal de cadastro. Com o cadastro aberto a
+   barra fica atrás do véu — e o indicador não pode sumir justamente na tela em
+   que se digita. A classe "claro" só troca a tinta do estado neutro, que foi
+   desenhado para fundo escuro. */
+function setSave(cl,txt,tit){
+  const base='save-status '+(cl||'');
+  const barra=document.getElementById('saveStatus');
+  if(barra){barra.className=base;barra.textContent=txt||'';barra.title=tit||'';}
+  const cad=document.getElementById('saveStatusCad');
+  if(cad){cad.className=base+' claro';cad.textContent=txt||'';cad.title=tit||'';}
+}
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 
 /* ===================================================================
@@ -609,6 +722,10 @@ function montarCampos(headers,modo){
    Estado da lista
    =================================================================== */
 let COLUNAS=[],TRAVADAS=new Set(),CLIENTES=[],META={},CAMPOS_EDIT=[],COL={};
+/* ABERTOS não expande mais a linha (o cadastro virou modal), mas continua sendo
+   quem sabe QUAL cadastro está aberto: acende a linha na lista e guarda o cliente
+   recém-criado que o carregar({expandir}) marca ANTES de a lista existir. Continua
+   Set porque essa marcação acontece fora do modal, sem ninguém para fechar. */
 let ABERTOS=new Set(),FILTRO='todos',TERMO='';
 
 /* ===================================================================
@@ -786,6 +903,22 @@ function mapearColunas(){
     drive:colDe(['drive']),
     inicio:colDe(['data de inicio da contabilidade'])
   };
+  mapearLinha();
+}
+/* As colunas que a LINHA da lista mostra. O mapa COL já resolve os apelidos de
+   cada uma; este segundo passo é a rede de segurança para o dia em que a planilha
+   renomear um cabeçalho: sem entrada no mapa, a coluna é procurada de novo pelo
+   nome normalizado antes de a linha ficar muda. Resolvido uma vez por carga, e
+   não a cada linha desenhada. */
+let COLS_LINHA={};
+function mapearLinha(){
+  const pega=(k,alts)=>COL[k]||colDe(alts);
+  COLS_LINHA={
+    cnpj:pega('cnpj',['cnpj ou cpf','cnpj/cpf','cnpj','cpf']),
+    cidade:pega('cidade',['cidade','municipio']),
+    produtos:pega('produtos',['produtos back4you','produtos']),
+    inicio:pega('inicio',['data de inicio da contabilidade','inicio da contabilidade','data de inicio'])
+  };
 }
 function simNao(v){const s=normTxt(v);if(!s)return null;
   if(/^(sim|s|true|verdadeiro|1|x|ativo)$/.test(s))return true;
@@ -845,41 +978,89 @@ function visiveis(){
 }
 
 /* ---------------- lista ---------------- */
-/* A linha fechada mostra só o que pede ação: o campo QUE FALTA (sem CNPJ, sem
-   regime, sem produtos), a situação quando NÃO é "Ativo" e o selo de completude.
-   O valor preenchido — o CNPJ inteiro, a lista de produtos — é informação, não
-   tarefa: some da linha e continua no cadastro (um clique) e no title do
-   cabeçalho (passar o mouse). Eram 5 selos por ficha em 110 fichas. */
-function metaHTML(cli){
-  const its=[];
-  const add=(col,rot)=>{if(!col)return;if(valorDe(cli,col))return;
-    its.push(`<span class="mt vazio" title="${esc(rot+': em branco')}">${esc('sem '+rot.toLowerCase())}</span>`);};
-  add(COL.cnpj,'CNPJ');add(COL.regime,'Regime');add(COL.produtos,'Produtos');
-  /* Toda situação que não seja "Ativo" continua na linha fechada — inclusive a
-     em branco. "Ativo" é o esperado de 87 dos 110: repeti-lo é ruído. */
-  if(COL.ativo||cli.ativo){
-    const s=situacaoDe(cli),info=SITUACOES[s];
-    if(s!=='ativo')its.push(`<span class="pill sit-${s}" title="${esc(info.dica)}">${esc(info.rot)}</span>`);
-  }
-  its.push(seloHTML(cli));
-  return its.filter(Boolean).join('');
+/* CNPJ e CPF chegam da planilha ora pontuados, ora crus. A linha mostra sempre
+   pontuado, para a coluna inteira ler igual; o que não tem 11 nem 14 dígitos vai
+   como está — inventar máscara em documento estranho esconderia o erro de
+   digitação de quem cadastrou. */
+function fmtDoc(v){
+  const d=soDigitos(v);
+  if(d.length===14)return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+  if(d.length===11)return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  return String(v==null?'':v);
 }
-/** O que saiu dos selos vira o title da linha: dá para conferir sem abrir nada. */
+/* Data no formato de quem lê: dd/mm/aaaa. Texto livre ("a definir") passa
+   inteiro — a planilha aceita, e reescrever viraria data inventada. */
+function fmtData(v){
+  const s=String(v==null?'':v).trim();
+  const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m?(m[3]+'/'+m[2]+'/'+m[1]):s;
+}
+/* "Produtos Back4you" é uma lista separada por vírgula. Cabem até três pilulas na
+   coluna; o resto vira "+N", que continua dizendo que há mais (a lista inteira
+   está no title da linha e no cadastro).
+   O corte não é só pela CONTAGEM: com nomes longos ("Agora Tem Especialistas"),
+   três pilulas viravam três reticências ("Cont…", "Cont…", "I…"), que não dizem
+   nada. Por isso há também um orçamento de caracteres — a primeira entra sempre,
+   as outras só se ainda couberem. */
+/* Duas pilulas INTEIRAS dizem mais que tres cortadas: "Equi…" e "Conta…" nao
+   identificam produto nenhum. O que nao cabe vira "+N", que ao menos e honesto. */
+const PROD_TETO=2, PROD_LARGURA=26;
+function produtosHTML(cli){
+  const v=valorDe(cli,COLS_LINHA.produtos);
+  const ps=v.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+  if(!ps.length)return '<span class="c-falta">sem produtos</span>';
+  const mostrar=[];let sobra=PROD_LARGURA;
+  for(const p of ps){
+    if(mostrar.length>=PROD_TETO)break;
+    if(mostrar.length&&p.length>sobra)break;
+    sobra-=p.length+1;mostrar.push(p);
+  }
+  const resto=ps.length-mostrar.length;
+  return mostrar.map(p=>`<span class="c-tag">${esc(p)}</span>`).join('')+
+    (resto>0?`<span class="c-tag mais" title="${esc(ps.slice(mostrar.length).join(', '))}">+${resto}</span>`:'');
+}
+/** O que não cabe nas sete colunas vira o title da linha: dá para conferir sem
+ *  abrir nada — inclusive o Regime, que tem chip de filtro mas não tem coluna. */
 function tituloCabeca(cli){
   const p=[];
-  const add=(col,rot)=>{if(!col)return;const v=valorDe(cli,col);if(v)p.push(rot+': '+v);};
+  const add=(col,rot)=>{if(!col)return;const v=valorDe(cli,col);p.push(rot+': '+(v||'em branco'));};
   add(COL.cnpj,'CNPJ');add(COL.regime,'Regime');add(COL.produtos,'Produtos');
   if(COL.ativo||cli.ativo)p.push('Situação: '+SITUACOES[situacaoDe(cli)].rot);
   p.push('Clique para abrir o cadastro.');
   return p.join(' · ');
 }
+/* A linha da lista: ID · Nome · CNPJ/CPF · Cidade · Produtos · Início · Situação.
+   É um role="button" (e não um <button>) porque dentro dele há pilulas e selos com
+   title próprio; o teclado é atendido à mão no keydown (Enter e Espaço). */
 function cabecaHTML(cli){
-  return `<button type="button" class="cli-head" aria-expanded="${ABERTOS.has(cli.id)?'true':'false'}" title="${esc(tituloCabeca(cli))}">
-      <span class="cli-id">${esc(cli.id)}</span>
-      <span class="cli-nome">${esc(cli.nome||'(sem nome)')}</span>
-      <span class="cli-meta">${metaHTML(cli)}</span>
-      <span class="chev">›</span>
-    </button>`;
+  const s=situacaoDe(cli),info=SITUACOES[s];
+  const doc=valorDe(cli,COLS_LINHA.cnpj);
+  const cid=valorDe(cli,COLS_LINHA.cidade);
+  const ini=valorDe(cli,COLS_LINHA.inicio);
+  /* Data em branco só vira cobrança para quem tem contabilidade: cliente só de
+     equiparação não tem data de início para dar, e cobrá-la todo dia treina a
+     equipe a ignorar a coluna inteira. */
+  const dataHTML=ini?esc(fmtData(ini))
+    :(exigeInicio(cli)?'<span class="c-falta">sem data</span>':'<span class="c-falta">—</span>');
+  return `<div class="cli-head" role="button" tabindex="0" aria-haspopup="dialog" title="${esc(tituloCabeca(cli))}">
+      <span class="c-id">${esc(cli.id)}</span>
+      <span class="c-nome">${esc(cli.nome||'(sem nome)')}</span>
+      <span class="c-doc">${doc?esc(fmtDoc(doc)):'<span class="c-falta">sem CNPJ</span>'}</span>
+      <span class="c-cid">${cid?esc(cid):'<span class="c-falta">—</span>'}</span>
+      <span class="c-prod">${produtosHTML(cli)}</span>
+      <span class="c-data">${dataHTML}</span>
+      <span class="c-fim"><span class="pill sit-${s}" title="${esc(info.dica)}">${esc(info.rot)}</span>${seloHTML(cli)}</span>
+    </div>`;
+}
+/* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS) e some
+   abaixo de 900px, onde a linha deixa de ser sete colunas. aria-hidden porque é
+   rótulo de desenho: quem usa leitor de tela ouve o title da própria linha. */
+function cabecalhoLista(){
+  return `<div class="lista-cab" aria-hidden="true">
+      <span>ID</span><span>Nome</span><span>CNPJ / CPF</span><span>Cidade</span>
+      <span>Produtos</span><span style="text-align:center">Início</span>
+      <span style="text-align:right">Situação</span>
+    </div>`;
 }
 function campoEditHTML(cli,f){
   const col=f.col,v=valorDe(cli,col);
@@ -956,9 +1137,12 @@ function desenharLista(){
     desenharChips();desenharResumoLista();sincronizarURL();
     return;
   }
-  /* Teto de 20: a tela abre com o começo da lista, não com as 110 fichas. */
+  /* Teto de 20: a tela abre com o começo da lista, não com as 110 linhas. */
   const n=Math.min(TETO,arr.length);
-  el.innerHTML=arr.slice(0,n).map(c=>`<div class="cli ${classeSituacao(c)}${ABERTOS.has(c.id)?' aberto':''}" data-id="${esc(c.id)}">${cabecaHTML(c)}${ABERTOS.has(c.id)?corpoHTML(c):''}</div>`).join('')+
+  /* A linha não expande mais: o cadastro abre no modal. O que ABERTOS marca aqui
+     é só QUAL linha está com o cadastro aberto, para ela ficar acesa na lista. */
+  el.innerHTML=cabecalhoLista()+
+    arr.slice(0,n).map(c=>`<div class="cli ${classeSituacao(c)}${ABERTOS.has(c.id)?' aberto':''}" data-id="${esc(c.id)}">${cabecaHTML(c)}</div>`).join('')+
     rodapeLista(n,arr.length);
   if(dica)dica.textContent=arr.length>n?('Mostrando '+n+' de '+arr.length+'.'):'';
   desenharChips();desenharResumoLista();
@@ -1004,19 +1188,94 @@ function lerURL(){
 }
 
 function clientePorId(id){return CLIENTES.find(c=>String(c.id)===String(id));}
-function alternar(id,forcar){
+
+/* ===================================================================
+   O cadastro no modal
+   -------------------------------------------------------------------
+   A lista mostra as colunas que a equipe lê de relance; o resto do
+   cadastro abre aqui, por cima, sem trocar de página e sem empurrar as
+   outras linhas para baixo. O conteúdo é o MESMO corpoHTML() de sempre —
+   só mudou onde ele é pintado, então campos, travas, destaque de campo
+   vazio e faixa de "não gravei" continuam idênticos.
+   =================================================================== */
+let CAD_ID='';           // de quem é o cadastro aberto
+let CAD_AVISADO=false;   // já avisamos que tem coisa por gravar? (fechar em 2 tempos)
+function elCad(){return document.getElementById('modalCad');}
+function cadAberto(){const m=elCad();return !!m&&!m.hidden;}
+/** Aviso de "tem alteração por gravar" no rodapé; o botão passa a dizer que sai assim mesmo. */
+function avisoCad(mostrar){
+  const a=document.getElementById('cadAviso');if(a)a.hidden=!mostrar;
+  const b=document.getElementById('cadFechar');if(b)b.textContent=mostrar?'Fechar assim mesmo':'Fechar';
+}
+/** Nome, ID e situação no topo do modal — acompanham a edição sem redesenhar nada. */
+function atualizarTopoCad(id){
+  if(!cadAberto()||String(CAD_ID)!==String(id))return;
   const cli=clientePorId(id);if(!cli)return;
-  const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
-  const abrir=forcar==null?!ABERTOS.has(id):!!forcar;
-  const corpo=no.querySelector('.corpo');
-  if(abrir){
-    ABERTOS.add(id);no.classList.add('aberto');
-    if(!corpo)no.insertAdjacentHTML('beforeend',corpoHTML(cli));
-  }else{
-    ABERTOS.delete(id);no.classList.remove('aberto');
-    if(corpo)corpo.remove();
-  }
-  const bt=no.querySelector('.cli-head');if(bt)bt.setAttribute('aria-expanded',abrir?'true':'false');
+  const s=situacaoDe(cli),info=SITUACOES[s];
+  const t=document.getElementById('cadTitulo');if(t)t.textContent=cli.nome||'(sem nome)';
+  const i=document.getElementById('cadId');if(i)i.textContent=cli.id;
+  const p=document.getElementById('cadSit');
+  if(p){p.className='pill sit-'+s;p.title=info.dica;p.textContent=info.rot;}
+}
+/** Acende na lista a linha do cadastro que está aberto. */
+function marcarLinhaAberta(){
+  document.querySelectorAll('.cli').forEach(n=>n.classList.toggle('aberto',ABERTOS.has(n.dataset.id)));
+}
+function abrirCadastro(id){
+  const cli=clientePorId(id);if(!cli)return;
+  const m=elCad();if(!m)return;
+  CAD_ID=String(cli.id);CAD_AVISADO=false;
+  document.getElementById('cadBody').innerHTML=corpoHTML(cli);
+  m.hidden=false;
+  /* Enquanto o cadastro está aberto a página atrás não rola — o mesmo gesto do
+     modal de cliente novo. */
+  document.body.style.overflow='hidden';
+  atualizarTopoCad(CAD_ID);
+  avisoCad(false);
+  /* ABERTOS deixou de expandir a linha, mas continua dizendo QUAL cadastro está
+     aberto: é ele que acende a linha e é nele que carregar({expandir}) marca o
+     cliente recém-criado antes de a lista existir. */
+  ABERTOS.clear();ABERTOS.add(CAD_ID);
+  marcarLinhaAberta();
+  /* Reabrir não pode apagar o que não gravou: a faixa e o "tentar de novo"
+     nascem de novo junto com os campos. */
+  if(FALHAS.has(CAD_ID))marcarFalha(CAD_ID,true);
+  const cx=m.querySelector('.modal-box');if(cx)cx.focus();
+}
+/* Grava agora o que estava esperando o debounce. É o salvar() de sempre, só sem
+   os 700 ms de espera. */
+function descarregarPendentes(){
+  Array.from(SUJOS.keys()).forEach(id=>{const s=SUJOS.get(id);if(s)clearTimeout(s.timer);salvar(id);});
+}
+/* Fechar com alteração por gravar avisa antes, em dois tempos como o resto da
+   casa (nunca uma caixa do navegador): o primeiro Fechar/Esc/clique no véu
+   explica, o segundo sai. Ao sair assim mesmo a gravação pendente é DESCARREGADA
+   na hora — deixar o debounce correndo com o formulário fora da tela é
+   exatamente o jeito de perder o que foi digitado. */
+function fecharCadastro(){
+  const m=elCad();if(!m||m.hidden)return;
+  if(temPendencia()&&!CAD_AVISADO){CAD_AVISADO=true;avisoCad(true);return;}
+  if(SUJOS.size)descarregarPendentes();
+  m.hidden=true;
+  document.body.style.overflow='';
+  const id=CAD_ID;CAD_ID='';CAD_AVISADO=false;
+  avisoCad(false);
+  ABERTOS.delete(String(id));marcarLinhaAberta();
+  document.getElementById('cadBody').innerHTML='';
+  /* O foco volta para a linha de onde saiu: quem navega por teclado não é jogado
+     de volta para o topo da página. */
+  const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"] .cli-head`);
+  if(no)no.focus();
+}
+/* O botão "Salvar alterações" NÃO substitui o autosave: cada edição continua
+   chamando agendarSalvar(), e é ele que impede perder texto digitado — foi para
+   isso que ele existe nesta tela. O botão só ANTECIPA a gravação pendente (mata o
+   debounce e salva na hora) para quem prefere confirmar com um clique, e reenvia
+   o que falhou. Trocar por "só salva no botão" reabriria a porta da perda. */
+function salvarAgoraCad(){
+  if(SUJOS.size){descarregarPendentes();CAD_AVISADO=false;avisoCad(false);return;}
+  if(CAD_ID&&FALHAS.has(CAD_ID)){tentarDeNovo(CAD_ID);return;}
+  setSave('','Nada novo para salvar.');
 }
 function irPara(id){
   const alvo=String(id);let mexeu=false;
@@ -1028,9 +1287,14 @@ function irPara(id){
   if(pos>=TETO){TETO=Math.ceil((pos+1)/PASSO)*PASSO;mexeu=true;}
   if(mexeu)redesenhar();
   const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
-  alternar(id,true);
   no.scrollIntoView({block:'center',behavior:'smooth'});
   no.classList.add('flash');setTimeout(()=>no.classList.remove('flash'),1800);
+  /* Enquanto o "Novo cliente" está na tela (inclusive na tela de sucesso, que
+     recarrega a lista por baixo), o cadastro NÃO sobe por cima: dois modais
+     empilhados roubariam a tela de quem acabou de criar o cliente. Ali quem abre
+     é o botão "Ver o cadastro". */
+  const novo=document.getElementById('modal');
+  if(!novo||novo.hidden)abrirCadastro(id);
 }
 
 /* ---------------- salvar (auto-save com debounce) ---------------- */
@@ -1041,10 +1305,17 @@ const SUJOS=new Map();   // id -> {timer, colunas:Set}
 const FALHAS=new Map();   // id -> {colunas:Set}
 function temPendencia(){return SUJOS.size>0||FALHAS.size>0;}
 function marcarFalha(id,falhou){
-  const no=document.querySelector('.cli[data-id="'+CSS.escape(String(id))+'"]');
-  if(!no)return;
-  no.classList.toggle('falhou',!!falhou);
-  const cx=no.querySelector('.ign');
+  const chave=CSS.escape(String(id));
+  /* A LINHA continua marcada na lista mesmo com o cadastro fechado — é o que
+     mostra, de longe, que aquele cliente tem coisa que não gravou. */
+  const no=document.querySelector('.cli[data-id="'+chave+'"]');
+  if(no)no.classList.toggle('falhou',!!falhou);
+  /* A faixa e os campos vivem no .corpo, que hoje é pintado dentro do modal:
+     procurar pelo .corpo funciona esteja ele onde estiver (e não existe quando o
+     cadastro está fechado, que é o caso em que não há o que marcar). */
+  const corpo=document.querySelector('.corpo[data-id="'+chave+'"]');
+  if(!corpo)return;
+  const cx=corpo.querySelector('.ign');
   if(cx){
     const antigo=cx.querySelector('.btn-retry');
     if(falhou&&!antigo)cx.insertAdjacentHTML('beforeend',
@@ -1053,7 +1324,7 @@ function marcarFalha(id,falhou){
   }
   /* o campo que não gravou também fica marcado, para não sobrar dúvida de onde foi */
   const f=FALHAS.get(String(id));
-  no.querySelectorAll('[data-ecol]').forEach(el=>{
+  corpo.querySelectorAll('[data-ecol]').forEach(el=>{
     el.classList.toggle('falhou',!!(falhou&&f&&f.colunas.has(el.dataset.ecol)));
   });
 }
@@ -1085,6 +1356,9 @@ async function salvar(id){
     if(COL.ativo)cli.ativo=valorDe(cli,COL.ativo);
     cli._b=null;cli._bd=null;cli._v=null;
     FALHAS.delete(String(id));marcarFalha(id,false);
+    /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé do modal sai, e o
+       Fechar volta a ser Fechar. */
+    if(!temPendencia()){CAD_AVISADO=false;avisoCad(false);}
     atualizarCabeca(id);
     desenharChips();desenharResumo();
   }catch(e){
@@ -1109,13 +1383,24 @@ function tentarDeNovo(id){
 }
 function atualizarCabeca(id){
   const cli=clientePorId(id);if(!cli)return;
-  const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
-  const nm=no.querySelector('.cli-nome');if(nm)nm.textContent=cli.nome||'(sem nome)';
-  const mt=no.querySelector('.cli-meta');if(mt)mt.innerHTML=metaHTML(cli);
-  const bt=no.querySelector('.cli-head');if(bt)bt.title=tituloCabeca(cli);   // o title carrega o que saiu dos selos
-  /* a faixa lateral acompanha a mudança de situação sem redesenhar a lista */
-  no.classList.remove('sit-ativo','sit-inativando','sit-inativo','sit-sem');
-  no.classList.add(classeSituacao(cli));
+  const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);
+  if(no){
+    /* Os campos vivem no modal, não mais dentro da linha: repintar a linha inteira
+       aqui não tira o foco de ninguém — e assim CNPJ, cidade, produtos e data
+       acompanham a edição, não só o nome. Redesenhar a LISTA continua proibido
+       durante a digitação. */
+    /* Se o foco estava NA linha (é onde ele volta ao fechar o cadastro), ele volta
+       para ela depois da repintura: uma gravação que termina meio segundo depois
+       não pode jogar quem navega por teclado de volta para o topo da página. */
+    const cabeca=no.querySelector('.cli-head');
+    const tinhaFoco=!!cabeca&&document.activeElement===cabeca;
+    no.innerHTML=cabecaHTML(cli);
+    if(tinhaFoco){const nova=no.querySelector('.cli-head');if(nova)nova.focus();}
+    /* a faixa lateral acompanha a mudança de situação sem redesenhar a lista */
+    no.classList.remove('sit-ativo','sit-inativando','sit-inativo','sit-sem');
+    no.classList.add(classeSituacao(cli));
+  }
+  atualizarTopoCad(id);   // e o topo do modal mostra o nome e a situação novos
 }
 
 /* ===================================================================
@@ -1370,8 +1655,13 @@ document.addEventListener('click',e=>{
   /* "mais 20" para quem está lendo, "todos" para quem vai usar Ctrl+F. */
   if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
   if(e.target.closest('.btn-todos')){TETO=CLIENTES.length;desenharLista();return;}
+  /* Rodapé do cadastro: salvar agora, fechar, e o × do topo. Vêm antes do teste
+     do véu, senão o clique no botão contaria como clique fora. */
+  if(e.target.closest('#cadSalvar')){salvarAgoraCad();return;}
+  if(e.target.closest('#cadFechar')||e.target.closest('#fechaCad')){fecharCadastro();return;}
+  if(e.target.id==='modalCad'){fecharCadastro();return;}
   const head=e.target.closest('.cli-head');
-  if(head){const no=head.closest('.cli');if(no)alternar(no.dataset.id);return;}
+  if(head){const no=head.closest('.cli');if(no)abrirCadastro(no.dataset.id);return;}
   const chip=e.target.closest('.chip[data-f]');
   if(chip){FILTRO=chip.dataset.f;TETO=PASSO;redesenhar();return;}
   const ord=e.target.closest('.chip[data-s]');
@@ -1405,10 +1695,20 @@ function anotar(el){
 }
 document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
 document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
-/* Atalhos de busca (C.4): "/" foca, Esc limpa. Com o modal aberto, Esc fecha o
+/* Atalhos de busca (C.4): "/" foca, Esc limpa. Com um modal aberto, Esc fecha o
    modal — e o atalho não atrapalha quem já está digitando noutro campo. */
 document.addEventListener('keydown',e=>{
+  /* O cadastro é o modal de cima: com ele aberto, Esc é dele antes de tudo. */
+  if(e.key==='Escape'&&cadAberto()){e.preventDefault();fecharCadastro();return;}
   if(e.key==='Escape'&&!document.getElementById('modal').hidden){fecharModal();return;}
+  /* A linha da lista é um role="button": sem isto, Enter e Espaço não abririam o
+     cadastro para quem navega por teclado — e a tela ficaria só para o mouse. */
+  const linha=e.target&&e.target.closest&&e.target.closest('.cli-head');
+  if(linha&&(e.key==='Enter'||e.key===' '||e.key==='Spacebar')){
+    e.preventDefault();
+    const no=linha.closest('.cli');if(no)abrirCadastro(no.dataset.id);
+    return;
+  }
   const b=document.getElementById('busca');if(!b)return;
   const a=document.activeElement,tag=a&&a.tagName;
   const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
@@ -1443,7 +1743,7 @@ function layout(){
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho. Cliente novo nasce pelo botão do topo — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Esses mesmos campos, quando estão em branco, ficam com um <b>fundo avermelhado</b> no cadastro aberto: é só dica visual do que falta preencher. Os cards ignoram quem está inativo.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. Os filtros e a ordenação ficam no botão <b>Filtros</b>, que avisa com um número quando algum está pegando.<br>Na linha fechada aparece só o que pede ação: o campo <b>em branco</b> (sem CNPJ, sem regime, sem produtos), os campos vazios e a situação quando <b>não</b> é Ativo — <b>Em inativação</b> em laranja, <b>Inativo</b> em vermelho, cinza quando a coluna Ativo está em branco, cada um com uma faixa na lateral. O que está preenchido fica no cadastro (é só clicar) e no rótulo que aparece ao passar o mouse na linha.</div>
+    <div class="txt">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho. Cliente novo nasce pelo botão do topo — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Esses mesmos campos, quando estão em branco, ficam com um <b>fundo avermelhado</b> no cadastro aberto: é só dica visual do que falta preencher. Os cards ignoram quem está inativo.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. Os filtros e a ordenação ficam no botão <b>Filtros</b>, que avisa com um número quando algum está pegando.<br>Cada linha traz <b>ID, nome, CNPJ/CPF, cidade, produtos, data de início</b> e a <b>situação</b> — Ativo em verde, <b>Em inativação</b> em laranja, <b>Inativo</b> em vermelho e cinza quando a coluna Ativo está em branco, cada uma com uma faixa na lateral. Coluna em branco diz o que falta (<b>sem CNPJ</b>, <b>sem produtos</b>, <b>sem data</b>) em vez de ficar vazia. Clicar na linha — ou apertar Enter nela — abre o cadastro completo por cima da lista, sem sair da tela; o que não coube nas colunas (o Regime, por exemplo) aparece ao passar o mouse na linha. Dentro do cadastro o que você edita continua salvando sozinho: o botão <b>Salvar alterações</b> só antecipa a gravação que já estava a caminho.</div>
   </details>
   <details class="ajuda situacao" id="det-situacao">
     <summary>Ver quem está em cada situação</summary>
