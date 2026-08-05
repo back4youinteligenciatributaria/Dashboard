@@ -145,9 +145,15 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .tabela-wrap{overflow:auto;max-height:calc(100vh - 190px);border-top:1px solid var(--line)}
 table{border-collapse:separate;border-spacing:0;font-size:12px}
 thead th{position:sticky;background:var(--brand-dark);color:#fff;text-align:left;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08)}
-/* Faixa de grupo (assunto) por cima dos cabeçalhos — a âncora na rolagem lateral. */
+/* Faixa de grupo (assunto) por cima dos cabeçalhos — a âncora na rolagem lateral.
+   O tom mais escuro e o risco teal embaixo dizem quem manda em quem: a faixa é o
+   assunto, a linha de baixo são as colunas dele. Sem essa separação as duas
+   faixas escuras viravam um bloco só e ninguém achava onde um grupo terminava.
+   A altura fica travada em 26px de propósito: é dela que sai o `top` da linha
+   de cabeçalhos logo abaixo, e as duas grudadas é que fazem o topo colar. */
 thead tr.grupos th{top:0;z-index:22;height:26px;padding:4px 10px;font-size:11px;font-weight:800;
-  letter-spacing:.4px;text-transform:uppercase;color:#9FC7C3;background:#052528}
+  letter-spacing:.4px;text-transform:uppercase;color:#9FC7C3;background:#052528;
+  box-shadow:inset 0 -3px 0 var(--brand-teal)}
 thead tr.grupos th.alt{background:#0A4247}
 thead tr.cols th{top:26px;z-index:20;padding:9px 10px;font-size:11px;font-weight:700}
 thead.sem-faixa tr.cols th{top:0}
@@ -158,16 +164,49 @@ thead tr.cols th .lock{opacity:.6;font-size:11px;margin-left:4px}
 /* Separador vertical no começo de cada grupo — vale no cabeçalho e no corpo. */
 thead th.ini{border-left:2px solid rgba(255,255,255,.30)}
 tbody td.ini{border-left:2px solid var(--line-2)}
-tbody td{padding:4px 6px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:top;background:var(--surface)}
+/* Respiro vertical: a grade nasceu com 4px e, com 111 linhas, virava um paredão
+   em que o olho pula de linha no meio da rolagem lateral. */
+tbody td{padding:7px 8px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:middle;background:var(--surface)}
+/* Listras discretas: só a diferença entre o branco e o creme da paleta, nada de
+   cor nova. É o suficiente para o olho não trocar de linha ao rolar de lado. */
 tbody tr:nth-child(even) td{background:var(--surface-warm)}
+/* Largura mínima por coluna: sem ela o navegador espreme "Vencimento" em duas
+   linhas e o campo de data fica menor que a própria data. Vale só no modo
+   tabela — na ficha a célula é um "rótulo: valor" que tem de caber no celular,
+   e o `body:not(.fichas)` evita ter de desfazer isso lá embaixo. */
+body:not(.fichas) thead tr.cols th:not(.col-id):not(.col-nome){min-width:150px}
+body:not(.fichas) tbody td:not(.col-id):not(.col-nome):not(.grp){min-width:150px}
 th.col-id,td.col-id{left:0;width:76px;min-width:76px;max-width:76px}
 th.col-nome,td.col-nome{left:76px;min-width:196px;max-width:216px}
 td.col-id,td.col-nome{position:sticky;z-index:15}
 thead tr.grupos th.col-id,thead tr.grupos th.col-nome{z-index:28}
 thead tr.cols th.col-id,thead tr.cols th.col-nome{z-index:26}
-td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal-txt);padding:7px 9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
-td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.25;padding:7px 9px;white-space:normal;box-shadow:2px 0 6px rgba(7,48,52,.07)}
+/* O cabeçalho do ID acompanha o corpo: número centralizado dos dois lados. */
+thead tr.cols th.col-id{text-align:center}
+td.col-id{background:var(--surface);font-weight:800;color:var(--brand-teal-txt);padding:9px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
+/* A borda de rolagem precisa parecer uma parede: o conteúdo que passa por baixo
+   das colunas fixas estava encostando no nome do cliente e dava a impressão de
+   texto sobreposto. Fio firme + sombra curta, e o fundo das fixas acompanha a
+   listra, o cursor e o foco (regras abaixo) para não virar uma faixa branca. */
+td.col-nome{background:var(--surface);font-weight:700;font-size:12px;line-height:1.3;padding:9px;white-space:normal;vertical-align:top;
+  box-shadow:1px 0 0 var(--line-2),7px 0 8px -6px rgba(7,48,52,.30)}
 tbody tr:nth-child(even) td.col-id,tbody tr:nth-child(even) td.col-nome{background:var(--surface-warm)}
+/* Linha sob o cursor e linha em edição — numa grade larga, saber em que cliente
+   se está mexendo é metade do trabalho. Precisa citar as colunas presas, senão o
+   realce parava na borda de rolagem e a linha "quebrava" no meio; e vale só no
+   modo tabela, porque na ficha isso pintaria o cartão inteiro. O foco vem depois
+   do cursor de propósito: quem está digitando ganha do que está só passando. */
+body:not(.fichas) tbody tr:hover>td,
+body:not(.fichas) tbody tr:hover>td.col-id,
+body:not(.fichas) tbody tr:hover>td.col-nome{background:var(--canvas)}
+body:not(.fichas) tbody tr:focus-within>td,
+body:not(.fichas) tbody tr:focus-within>td.col-id,
+body:not(.fichas) tbody tr:focus-within>td.col-nome{background:var(--receita-soft)}
+/* Alinhamento: número e data no meio, texto à esquerda — texto centralizado
+   serrilha a coluna e o olho não acha onde a palavra começa. Só no modo tabela:
+   na ficha o ID é a primeira linha do cartão, alinhada com o nome logo abaixo, e
+   centralizar deixaria o número solto no meio do bloco. */
+body:not(.fichas) td.col-id{text-align:center}
 td.col-nome .flag{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.3px;border-radius:var(--radius-pill);padding:2px 8px}
 /* Atalho para a pasta do cliente no Drive, colado no nome. É o pulo que a equipe
    mais faz à mão a partir daqui; sem endereço cadastrado o ícone nem aparece,
@@ -190,6 +229,12 @@ input:focus{outline:2px solid var(--brand-teal);outline-offset:0}
   border:1px dashed var(--line-2);border-radius:var(--radius-sm);white-space:normal;word-break:break-word}
 .dt{display:flex;align-items:center;gap:4px;min-width:186px}
 .dt input{flex:1;min-width:104px}
+/* Alinhamento da grade: texto à esquerda (o padrão), data e número no centro —
+   uma coluna de vencimento só se lê de cima a baixo se os dias caírem na mesma
+   prumada. O ID, que também é número, leva o mesmo tratamento lá em cima.
+   Vale só no modo tabela: na ficha o campo ocupa a largura toda ao lado do
+   rótulo e a data centralizada fica longe do nome do campo. */
+body:not(.fichas) .dt input[type=date]{text-align:center}
 .tag-d{flex:none;font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:3px 7px;white-space:nowrap;min-width:44px;text-align:center}
 .tag-d.vazio{background:var(--amber-soft);color:var(--amber-txt)}
 .tag-d.na{background:#EEE9E2;color:var(--muted)}
@@ -308,8 +353,11 @@ body.fichas .tabela-wrap table tbody td{display:grid;grid-template-columns:minma
   align-items:center;border:0;padding:5px 0;width:auto}
 body.fichas .tabela-wrap table tbody td::before{content:attr(data-rot);font-size:11px;font-weight:700;
   text-transform:uppercase;letter-spacing:.03em;color:var(--muted,#8A7D70)}
+/* box-shadow:none — a sombra das colunas fixas marca a borda de rolagem da
+   tabela; dentro do cartão não há rolagem lateral nenhuma, ela só sujaria a
+   lateral direita do bloco. */
 body.fichas .tabela-wrap table tbody td.col-id,body.fichas .tabela-wrap table tbody td.col-nome{
-  grid-template-columns:1fr;border-bottom:1px solid var(--linha,#E4D9C9);margin-bottom:6px;padding-bottom:8px}
+  grid-template-columns:1fr;border-bottom:1px solid var(--linha,#E4D9C9);margin-bottom:6px;padding-bottom:8px;box-shadow:none}
 body.fichas .tabela-wrap table tbody td.col-id::before,body.fichas .tabela-wrap table tbody td.col-nome::before{display:none}
 body.fichas .tabela-wrap table tbody td.col-id{font-size:12px;color:var(--muted,#8A7D70);padding-bottom:0;border:0;margin:0}
 body.fichas .tabela-wrap table tbody td.col-nome{font-size:16px;font-weight:700}
@@ -342,8 +390,17 @@ body.fichas .tabela-wrap table tbody td[data-g].oculto{display:none}
 .tabela-wrap table tbody td.grp{display:none}
 </style>
 <script src="config.js"></script>
+<!-- A tela de espera mora num arquivo só (b4u-espera.js) — antes cada página
+     tinha a sua, e cada uma envelhecia de um jeito. Se ele não carregar, a
+     página segue de pé: toda chamada é protegida por `window.B4UEspera &&`. -->
+<script src="b4u-espera.js" charset="utf-8"></script>
+<!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
+     chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
+<script src="b4u-shell.js" charset="utf-8"></script>
 </head>
-<body>
+<!-- O atributo liga a espera sozinha ao abrir; "equipe" escolhe as frases de
+     quem trabalha aqui dentro, não as do cliente. -->
+<body data-b4u-espera="equipe">
 <div class="barra">
   <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag">🔐 Certificados e acessos</span>
@@ -371,8 +428,10 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
    digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
    serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
    longe do que ela tinha clicado.
-   Até 04/08/2026 existia uma chave fixa ('b4u-equipe-2026') escrita aqui como
-   padrão: quem abrisse a página sem chave nenhuma entrava assim mesmo. */
+   Até 04/08/2026 existia uma chave fixa antiga escrita aqui como padrão: quem
+   abrisse a página sem chave nenhuma entrava assim mesmo, sem se identificar.
+   A string não se repete neste arquivo de propósito — ele é servido ao
+   navegador, e comentário vaza igual a código. */
 if (!chaveAtual()) {
   location.replace('index.html?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
@@ -412,21 +471,21 @@ const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
 function jsonpRepetivel(url){
   return !/[?&]acao=[^&]/.test(url) && !/[?&]tipo=(login_email_|entrar_token)/.test(url);
 }
-function jsonpAviso(txt){
-  const p = document.getElementById('espera-txt')
-       || document.querySelector('#app .state p')
-       || document.querySelector('.state p');
-  if(p) p.textContent = txt;
-}
+/* Vazia de propósito. Ela existia só para trocar o texto da espera por frases que
+   falavam em lentidão e em nova tentativa — quem lia aquilo entendia "vai dar
+   errado" e recarregava a página bem quando a resposta já vinha chegando. Quem
+   cuida do que a pessoa lê enquanto espera agora é o b4u-espera.js. A função fica
+   no lugar porque é chamada de outros pontos. */
+function jsonpAviso(){}
 function jsonpTentativa(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 /* Uma repetição, nunca mais que uma. A primeira execução provavelmente terminou e
-   deixou o cache quente no servidor, então a segunda costuma voltar rápido. Enquanto
-   espera, a tela diz que ainda estamos buscando — erro só se a segunda também falhar. */
+   deixou o cache quente no servidor, então a segunda costuma voltar rápido. A tela
+   de espera continua correndo por cima durante a segunda tentativa — de propósito:
+   a pessoa não precisa saber que houve retentativa, só que ainda estamos
+   trabalhando. Erro só se a segunda também falhar. */
 function jsonp(url){
   return jsonpTentativa(url).catch(e=>{
     if(!jsonpRepetivel(url)) throw e;
-    if(typeof pararEspera === 'function'){ try{ pararEspera(); }catch(_){} }
-    jsonpAviso('Ainda estou buscando — tentando de novo…');
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
@@ -513,6 +572,22 @@ const ehEspelhada=c=>eh(ESPELHADAS,c);
 const ehSigilosa=c=>eh(SIGILOSAS,c);
 const ehData=c=>eh(DATAS,c);
 const ehLink=c=>eh(LINKS,c);
+/* Link PURO = endereço da web, não documento. A coluna "Link Prefeitura" é o
+   caso que originou isto: a célula oferecia "Enviar ⬆" e alguém foi procurar o
+   arquivo da prefeitura para subir. Ninguém faz upload de um portal — cola a
+   URL e pronto. As outras colunas de link (documento, cópia, certidão, alvará…)
+   continuam com o envio, que é o que a equipe faz nelas.
+   O critério é o nome COMEÇAR com "Link" ("Link Prefeitura", "Link do portal").
+   O teste roda nas duas telas mesmo onde ainda não há coluna assim: a lista de
+   colunas vem do backend em tempo de execução, então basta o cadastro ganhar
+   uma "Link …" para a célula errada aparecer sem ninguém mexer aqui.
+   Se amanhã aparecer outra coluna de endereço com nome fora desse padrão, é
+   aqui — e só aqui — que se ajusta. */
+function ehLinkPuro(c){
+  if(!ehLink(c)) return false;
+  const p=tnorm(tokens(c)[0]||'');            // por tnorm: vem "LINK ", "Link", "link"
+  return p==='link'||p==='links';
+}
 /* O backend manda a lista de colunas editáveis. Coluna fora dela vira só leitura —
    mas senha, data e link continuam editáveis, porque são tipos de campo, não papéis.
    Backend antigo (sem a lista) deixa tudo como está. */
@@ -534,9 +609,13 @@ function curto(c){return String(c).replace(/^Vencimento\s+/i,'').replace(/^Certi
         "Certificado Digital Senha"    -> "Certificado Digital"
         "Link Prefeitura"              -> "Prefeitura"
         "Vencimento Alvará Sanitário"  -> "Alvará Sanitário"
-   2) assuntos que começam pela mesma palavra viram um grupo só, batizado com o
-      maior pedaço de nome que todos compartilham:
-        "Procuração RFB" + "Procuração e-CAC" -> "Procuração"
+   2) assunto que TERMINA em outro assunto é o mesmo assunto, e o grupo leva o
+      nome do pedaço menor — o mais específico:
+        "Certificado de CLI" termina em "CLI" -> grupo CLI = [arquivo, vencimento]
+      Antes a junção era pelo COMEÇO, e "Certificado de CLI" + "Certificado de
+      CRM" viravam um grupo "Certificado de" com os dois documentos dentro e os
+      vencimentos jogados em grupos à parte. O dono pediu o contrário: um assunto
+      por grupo, cada um com o seu arquivo e a sua data ao lado.
    3) o cabeçalho da coluna passa a mostrar só o PAPEL; o assunto vira a faixa. */
 const PAPEIS=new Set(['link','links','url','endereco','vencimento','vencto','venc','vence','validade',
   'valido','data','datas','emissao','expedicao','senha','password','login','usuario','user','acesso',
@@ -552,35 +631,40 @@ function assuntoDe(c){
   while(t.length>1&&ehPalavraDePapel(t[t.length-1])) t=t.slice(0,-1);
   return t.join(' ')||String(c||'');
 }
-/** Maior pedaço de nome (em palavras) comum a todos os assuntos da lista. */
-function prefixoComum(lista){
-  const t=lista.map(tokens);
-  let n=0;
-  while(n<t[0].length&&t.every(x=>n<x.length&&tnorm(x[n])===tnorm(t[0][n]))) n++;
-  return (n?t[0].slice(0,n):t[0].slice(0,1)).join(' ');
+/** "Certificado de CLI" termina em "CLI"? Compara palavra a palavra e sempre por
+    tnorm: os nomes vêm do cadastro com acento, caixa alta e espaço sobrando, e
+    igualdade crua de string deixaria "vencimento  CLI" de fora do grupo. */
+function terminaEm(assunto,fim){
+  const a=tokens(assunto).map(tnorm), f=tokens(fim).map(tnorm);
+  if(!f.length||f.length>a.length) return false;
+  return f.every((t,i)=>t===a[a.length-f.length+i]);
 }
+/** Nome do grupo de um assunto: o MENOR assunto da grade em que ele termina.
+    Como todo sufixo mais curto também é sufixo dos maiores, pegar sempre o menor
+    já resolve a cadeia inteira de uma vez e não depende da ordem das colunas. */
+function assuntoDoGrupo(assunto,todos){
+  let nome=assunto, n=tokens(assunto).length;
+  todos.forEach(a=>{
+    const m=tokens(a).length;
+    if(m&&m<n&&terminaEm(assunto,a)){ nome=a; n=m; }
+  });
+  return nome;
+}
+/** Duas colunas podem chegar com o mesmo assunto escrito de jeitos diferentes
+    ("CLI" e " cli "); o grupo é o mesmo, então a chave dele é normalizada. */
+function chaveDeGrupo(nome){return tokens(nome).map(tnorm).join(' ');}
 function montarGrupos(cols){
   const assunto=new Map();
   cols.forEach(c=>assunto.set(c,assuntoDe(c)));
-  /* assuntos que dividem a primeira palavra entram no mesmo grupo */
-  const porPrimeira=new Map();
-  cols.forEach(c=>{
-    const a=assunto.get(c), p=tnorm(tokens(a)[0]||'');
-    if(!porPrimeira.has(p)) porPrimeira.set(p,[]);
-    if(porPrimeira.get(p).indexOf(a)<0) porPrimeira.get(p).push(a);
-  });
-  const nomeDoGrupo=new Map();
-  porPrimeira.forEach((lista,p)=>{
-    const nome=(lista.length>1&&p)?prefixoComum(lista):lista[0];
-    lista.forEach(a=>nomeDoGrupo.set(a,nome));
-  });
+  const todos=cols.map(c=>assunto.get(c));
   /* Partição estável: o grupo nasce onde a primeira coluna dele aparece e as irmãs
      se encostam nele — coluna só troca de lugar se uma irmã veio antes. */
   const grupos=[], onde=new Map();
   cols.forEach(c=>{
-    const nome=nomeDoGrupo.get(assunto.get(c))||curto(c);
-    if(!onde.has(nome)){onde.set(nome,grupos.length);grupos.push({nome,cols:[]});}
-    grupos[onde.get(nome)].cols.push(c);
+    const nome=assuntoDoGrupo(assunto.get(c),todos)||curto(c);
+    const k=chaveDeGrupo(nome);
+    if(!onde.has(k)){onde.set(k,grupos.length);grupos.push({nome,cols:[]});}
+    grupos[onde.get(k)].cols.push(c);
   });
   return grupos;
 }
@@ -726,7 +810,9 @@ function erroDaCel(l,c){
   return `<span class="doc-erro">${esc(e.txt)}</span>`;
 }
 
-/* A coluna de link não mostra mais o endereço: mostra o DOCUMENTO.
+/* A coluna de link de DOCUMENTO não mostra mais o endereço: mostra o documento.
+   (A coluna de endereço puro — "Link Prefeitura" e afins — é outra história e
+   sai logo no começo desta função; veja ehLinkPuro.)
      tem link ......... Abrir ↗            + ⋯
      vazia ............ Enviar ⬆           + ⋯
      texto solto ...... Enviar ⬆ + a anotação em itálico + ⋯
@@ -738,6 +824,19 @@ function erroDaCel(l,c){
 function celLink(l,c){
   const v=String(l.valores[c]||'').trim();
   const k=chaveCel(l.id,c);
+  /* Coluna de endereço puro (ehLinkPuro): o campo de URL fica sempre à mostra,
+     com o atalho de abrir ao lado. Sem "Enviar ⬆" e sem o "⋯" — não há arquivo
+     para mandar nem para trocar, e esconder o campo atrás do "⋯" só somaria um
+     clique a quem veio colar um endereço. Vale igual no modo fichas, que passa
+     por esta mesma função. */
+  if(ehLinkPuro(c)){
+    return `<div class="doc" data-cel="${esc(k)}">
+      <div class="lk-cel">
+        <input type="text" data-c="${esc(c)}" data-link="1" value="${esc(v)}" placeholder="https://…" inputmode="url" spellcheck="false">
+        ${atalhoAbrir(v)}
+      </div>
+      ${erroDaCel(l,c)}</div>`;
+  }
   const f=FALHAS.get(String(l.id));
   const falhou=!!(f&&f.campos&&f.campos.has(c));
   const enviando=ENVIANDO.get(k);
@@ -803,13 +902,16 @@ async function enviarDocumento(l,c,file){
     if(d&&d.url){ l.valores[c]=d.url; esquecerBusca(l); }
     setSave('ok',(d&&d.substituiu?'Documento substituído ✓ ':'Documento enviado ✓ ')+horaAgora());
   }catch(e){
+    /* O texto da exceção continua sendo LIDO — é ele que separa o timeout do
+       resto — mas não é mais ESCRITO na célula nem na faixa de status. */
     const msg=String((e&&e.message)||e);
     /* No timeout o arquivo PODE ter subido: o servidor grava dentro do lock e só
-       depois responde. Reenviar às cegas duplicaria o documento na pasta. */
+       depois responde. Reenviar às cegas duplicaria o documento na pasta — por
+       isso este caso ganha aviso próprio, que diz o que fazer. */
     erroNaCel(l,c, msg.indexOf('demorou')>-1
       ? 'Demorou demais. O arquivo pode ter subido — recarregue antes de mandar de novo.'
-      : msg);
-    setSave('err','Não enviou: '+msg);
+      : 'Não foi possível enviar. Tente de novo.');
+    setSave('err','Não foi possível enviar. Tente de novo.');
   }finally{
     ENVIANDO.delete(k); repintarCel(l,c);
   }
@@ -817,7 +919,10 @@ async function enviarDocumento(l,c,file){
 
 function celSoLeitura(l,c){
   const v=String(l.valores[c]||'');
-  const t=ehEspelhada(c)?'Espelho do Registro (fórmula IMPORTRANGE) — edite em Registros de clientes'
+  /* A dica diz ONDE editar, não COMO o dado chega até aqui: nome de fórmula e de
+     aba são assunto de quem cuida dos bastidores, e na tela só faziam a pessoa
+     achar que precisava mexer neles. */
+  const t=ehEspelhada(c)?'Vem do cadastro do cliente — edite em Registros de clientes'
                         :'Coluna mantida pelo sistema — só leitura';
   const caixa=`<div class="ro" title="${esc(t)}">${esc(v||'—')}</div>`;
   /* link só de leitura continua abrindo: some o campo, fica o atalho */
@@ -894,10 +999,13 @@ function linhaHTML(l){
 }
 
 /* Fichas x tabela. A escolha fica no aparelho: quem gosta de uma não quer
-   escolher de novo a cada visita. Fichas é o padrão — 25 colunas lado a lado é
-   planilha, e para planilha existe a planilha. */
+   escolher de novo a cada visita. O padrão passou a ser a TABELA, a pedido do
+   dono: quem abre esta tela vem conferir e comparar muitos clientes de uma vez,
+   e em fichas isso vira rolagem sem fim. As fichas continuam a um clique no
+   botão, e quem já tinha escolhido antes mantém a escolha — sem preferência
+   guardada o localStorage devolve nada, que não é '1', e a tabela ganha. */
 const FICHAS_KEY='b4u_fichas_'+location.pathname.split('/').pop();
-function modoFichas(){ try{ const v=localStorage.getItem(FICHAS_KEY); return v===null?true:v==='1'; }catch(e){ return true; } }
+function modoFichas(){ try{ return localStorage.getItem(FICHAS_KEY)==='1'; }catch(e){ return false; } }
 function aplicarModo(){
   const f=modoFichas();
   document.body.classList.toggle('fichas',f);
@@ -1036,7 +1144,7 @@ function desenharChips(){ setTimeout(ligarModo,0);
     `<span class="rot">Vencimento</span>`+d('todos','Todos')+DATAS.map(x=>d(x,curto(x))).join('')+
     `<button type="button" class="chip ${SO_ATIVOS?'on':''}" id="chipAtivos">Só ativos</button>`+
     `<button type="button" class="chip" id="btn-fichas" title="Alternar entre fichas e tabela">🗂️ Fichas</button><button type="button" class="chip" id="btn-vazias" title="Mostrar também os campos em branco">Mostrar campos vazios</button>` +
-    (ESPELHADAS.length?`<button type="button" class="chip ${VER_CADASTRO?'on':''}" id="chipCadastro" title="Colunas que vêm do Registro por fórmula — aqui são só leitura">Dados do cadastro</button>`:'');
+    (ESPELHADAS.length?`<button type="button" class="chip ${VER_CADASTRO?'on':''}" id="chipCadastro" title="Vêm do cadastro do cliente — aqui são só leitura">Dados do cadastro</button>`:'');
 }
 /* A contagem em texto é o que permite recolher os chips e os cartões sem esconder
    pendência: os números continuam na primeira linha da tela, filtrada ou não. */
@@ -1164,7 +1272,10 @@ async function salvar(id){
   }catch(e){
     FALHAS.set(k,{campos:s.campos});
     marcarFalha(k,true);
-    setSave('err','Não salvou: '+(e.message||e));
+    /* Aviso curto e sem detalhe técnico: o que a pessoa precisa saber é que não
+       salvou e que dá para tentar de novo — a linha fica marcada como falha e o
+       "tentar de novo" reenvia os mesmos campos. */
+    setSave('err','Não foi possível salvar. Tente de novo.');
   }
 }
 function tentarDeNovo(id){
@@ -1403,7 +1514,7 @@ function layout(){
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">Editar aqui grava direto na planilha${META.aba?' (aba <b>'+esc(META.aba)+'</b>)':''}. O atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. Coluna de endereço tem o atalho <b>↗</b> ao lado, que abre o documento em outra guia quando o campo é mesmo um link.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do <b>Registro</b> por fórmula — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>Na grade, a faixa escura acima dos cabeçalhos junta as colunas por <b>assunto</b> (o mesmo documento, o mesmo portal), para não se perder na rolagem lateral. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
+    <div class="txt">O que você editar salva sozinho. O atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. Coluna de endereço tem o atalho <b>↗</b> ao lado, que abre o documento em outra guia quando o campo é mesmo um link.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do cadastro do cliente — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>Na grade, a faixa escura acima dos cabeçalhos junta as colunas por <b>assunto</b> (o mesmo documento, o mesmo portal), para não se perder na rolagem lateral. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
   </details>
   <details class="ajuda situacao" id="det-situacao">
     <summary>Ver quem está em cada situação</summary>
@@ -1433,22 +1544,49 @@ async function carregar(){
     b.value=TERMO;
     b.addEventListener('input',e=>{TERMO=e.target.value;aplicarBusca();});
     redesenhar();
+    /* A tabela já está pintada: a barra corre até 100% e o overlay sai revelando
+       a tela pronta, sem somar espera de verdade. */
+    if (window.B4UEspera) B4UEspera.concluir();
   }catch(e){
-    const msg=String(e.message||e);
-    const xlsx=/\.xlsx|Excel|Planilhas Google/i.test(msg);
-    document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1>
-      <p>${esc(msg)}</p>
-      ${xlsx?`<ol>
-        <li>Abra os <b>Certificados e Acessos</b> no Drive.</li>
-        <li><b>Arquivo → Salvar como Planilhas Google</b>.</li>
-        <li>Copie o link do arquivo NOVO.</li>
-        <li>Cole na aba <code>Config</code> da planilha <b>Links App Script</b>, linha <code>Certificados e Acessos</code>.</li>
-        <li>Rode <code>limparCacheConfig()</code> no Apps Script e recarregue esta página.</li>
-      </ol>`:`<p>Se falar em chave faltando, confira a linha <code>Certificados e Acessos</code> na aba <code>Config</code> da planilha <b>Links App Script</b> e rode <code>limparCacheConfig()</code>.</p>`}
-    </div>`;
+    /* Uma mensagem só, igual em todo o painel. Aqui saía o texto da exceção mais
+       um passo a passo de manutenção (converter .xlsx, conferir a aba de
+       configuração, limpar o cache do servidor) — receita para nós, escrita na
+       tela de quem só queria ver os certificados. O roteiro continua existindo:
+       ele agora fica com quem cuida do sistema, não com quem usa o painel. */
+    if (window.B4UEspera) B4UEspera.telaErro(document.getElementById('app'));
+    else document.getElementById('app').innerHTML =
+      '<div class="state"><h1>Não conseguimos carregar as informações</h1>'
+      + '<p>Houve um erro ao recuperar as informações. Tente novamente em alguns '
+      + 'minutos. Se o problema continuar, entre em contato com o atendimento.</p></div>';
   }
 }
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+
+/* ---------------- menu lateral ----------------
+   Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
+   URL desde a primeira linha deste script — não há o que esperar da API. E se a
+   busca falhar, o erro pinta dentro do #app com o menu inteiro de pé, que é a
+   mesma razão de o erro nunca ser pintado no <body>.
+   Sem `contexto`: esta página não sabe o NOME de quem está usando (o `cod` é
+   código de log, não nome), e um rótulo inventado seria pior que bloco nenhum.
+   Os links levam só a chave, como o logo e o "← Painel" já levavam aqui. */
+if (window.B4UShell) {
+  B4UShell.montar({
+    perfil: 'equipe',
+    ativo: 'certificados',
+    link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
+  });
+  /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
+     tela em que estava ao abrir um documento. O menu lateral é o contrário
+     disso: é navegação DENTRO do painel, e sair pela guia atual é o gesto — a
+     mesma exceção que o logo e o "← Painel" já traziam escrita à mão.
+     Só marcamos quem ainda não tem alvo próprio: assim o WhatsApp do rodapé do
+     menu (que nasce com target="_blank") continua abrindo em guia nova. */
+  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
+    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
+  });
+}
+
 lerURL();
 carregar();
 </script>

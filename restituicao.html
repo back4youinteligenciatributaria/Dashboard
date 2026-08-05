@@ -221,8 +221,16 @@ tr.falhou>td{background:#FBEAE7!important}
 @media(max-width:560px){.barra .cnt{display:none}}
 </style>
 <script src="config.js"></script>
+<!-- A tela de espera mora num arquivo só, igual em todas as telas do painel. Entra
+     depois do config.js, e se não carregar nada quebra: as chamadas são protegidas. -->
+<script src="b4u-espera.js" charset="utf-8"></script>
+<!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
+     chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
+<script src="b4u-shell.js" charset="utf-8"></script>
 </head>
-<body>
+<!-- data-b4u-espera liga a espera sozinha ao abrir; "equipe" escolhe as frases de
+     quem trabalha na lista (e não as do cliente). -->
+<body data-b4u-espera="equipe">
 <div class="barra">
   <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag" id="tag">Restituição</span>
@@ -249,8 +257,10 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
    digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
    serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
    longe do que ela tinha clicado.
-   Até 04/08/2026 existia uma chave fixa ('b4u-equipe-2026') escrita aqui como
-   padrão: quem abrisse a página sem chave nenhuma entrava assim mesmo. */
+   Até 04/08/2026 existia uma chave fixa antiga escrita aqui como padrão: quem
+   abrisse a página sem chave nenhuma entrava assim mesmo, sem se identificar.
+   A string não se repete neste arquivo de propósito — ele é servido ao
+   navegador, e comentário vaza igual a código. */
 if (!chaveAtual()) {
   location.replace('index.html?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
@@ -332,21 +342,20 @@ const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
 function jsonpRepetivel(url){
   return !/[?&]acao=[^&]/.test(url) && !/[?&]tipo=(login_email_|entrar_token)/.test(url);
 }
-function jsonpAviso(txt){
-  const p = document.getElementById('espera-txt')
-       || document.querySelector('#app .state p')
-       || document.querySelector('.state p');
-  if(p) p.textContent = txt;
-}
+/* Existia só para escrever frases de espera por cima do "Carregando…" — as que
+   falavam em lentidão e em tentar de novo, e que faziam a pessoa recarregar. A
+   espera agora é do b4u-espera.js, com barra e progresso, então a função ficou
+   vazia. Continua existindo porque é chamada de outros pontos. */
+function jsonpAviso(){}
 function jsonpTentativa(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 /* Uma repetição, nunca mais que uma. A primeira execução provavelmente terminou e
-   deixou o cache quente no servidor, então a segunda costuma voltar rápido. Enquanto
-   espera, a tela diz que ainda estamos buscando — erro só se a segunda também falhar. */
+   deixou o cache quente no servidor, então a segunda costuma voltar rápido. A
+   segunda tentativa acontece por baixo da tela de espera, sem avisar nada: dizer
+   "estou tentando de novo" no meio da espera faz a pessoa recarregar justo quando
+   a resposta já vinha vindo. Erro só se a segunda também falhar. */
 function jsonp(url){
   return jsonpTentativa(url).catch(e=>{
     if(!jsonpRepetivel(url)) throw e;
-    if(typeof pararEspera === 'function'){ try{ pararEspera(); }catch(_){} }
-    jsonpAviso('Ainda estou buscando — tentando de novo…');
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
@@ -441,21 +450,45 @@ function fmtBRano(d){return fmtBR(d)+(d.getFullYear()!==new Date().getFullYear()
 
 let LINHAS=[],RESPNOME='',SORT={key:'id',dir:'asc'};
 function telaChave(titulo,msg){
+  /* Porta fechada (chave vencida, sem permissão) não é dado carregado: a espera
+     sai sem a corrida até 100%, senão a barra comemoraria uma tela de bloqueio. */
+  if(window.B4UEspera)B4UEspera.cancelar();
   document.getElementById('app').innerHTML=`<div class="state"><div style="font-size:36px">🔒</div><h1>${esc(titulo)}</h1><p>${esc(msg)}</p></div>`;
   setSave('','');document.getElementById('tag').textContent='Restituição';document.getElementById('cnt').textContent='';
 }
+/* O código do colaborador (`cod`) é OPCIONAL — quem manda é a chave.
+   Até 04/08/2026 esta função exigia o `cod` na URL e, sem ele, mostrava "Falta a
+   chave de acesso" antes mesmo de perguntar qualquer coisa ao servidor: era esse
+   portão que barrava quem abria a página com a chave certa e sem o #. O servidor
+   nunca precisou dele — montarRestituicaoEquipe_ resolve o colaborador A PARTIR
+   DA CHAVE (exigirEquipe_ → colaboradorPorChave_) e só consulta o `cod` como
+   último recurso, quando o colaborador da chave não tem nome e não é pleno. Por
+   isso ele viaja apenas quando existe de fato na URL. Quem não é da equipe
+   continua barrado onde deve: no servidor. */
 function carregar(){
-  const cod=respAtual();   // o que vem depois do # = CÓDIGO de acesso do colaborador
-  if(!cod){telaChave('Falta a chave de acesso','Abra pelo seu link pessoal, com o seu código no fim do endereço (depois do #).');return Promise.resolve();}
+  const cod=respAtual();   // opcional: quando vem (?cod= ou #), ajuda o servidor a nomear o responsável
   setSave('saving','Carregando…');
-  return jsonp(API_URL+'?tipo=restituicao_equipe&chave='+encodeURIComponent(chaveAtual())+'&cod='+encodeURIComponent(cod))
-    .then(d=>{if(d.erro)throw new Error(d.erro);LINHAS=d.linhas||[];RESPNOME=d.responsavel||'';setSave('','');render();})
-    .catch(e=>{const m=String(e.message||e);setSave('err','Erro');
-      if(/inv[aá]lid/i.test(m))telaChave('Chave de acesso inválida','O código no fim do endereço não corresponde a nenhum colaborador. Confira o seu link.');
-      else if(/falta/i.test(m))telaChave('Falta a chave de acesso','Abra pelo seu link pessoal, com o seu código no fim do endereço (depois do #).');
-      else document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(m)}</p><p>Confira o link e se o Web App foi republicado com <code>EquipeRestituicao.gs</code>.</p></div>`;});
+  let u=API_URL+'?tipo=restituicao_equipe&chave='+encodeURIComponent(chaveAtual());
+  if(cod)u+='&cod='+encodeURIComponent(cod);
+  return jsonp(u)
+    .then(d=>{if(d.erro)throw new Error(d.erro);LINHAS=d.linhas||[];RESPNOME=d.responsavel||'';setSave('','');render();
+      /* conteúdo já pintado por baixo: a barra corre até 100% e o overlay sai */
+      if(window.B4UEspera)B4UEspera.concluir();})
+    /* O texto da exceção continua decidindo QUAL tela mostrar — ele só não pode
+       aparecer nela: nome de arquivo e recado de servidor são vocabulário nosso.
+       Os testes /inv[aá]lid/, /falta/ e /restrit/ casam com o que o servidor lança e
+       NÃO podem mudar; os títulos, sim: eles falavam em "chave de acesso", que é o
+       nome do parâmetro da URL — coisa nossa, não da pessoa que só quer entrar. */
+    .catch(e=>{const m=String((e&&e.message)||e||'');setSave('err','Não foi possível carregar.');
+      if(/inv[aá]lid/i.test(m))telaChave('Este link não está mais valendo','O seu código do dia venceu ou não confere. Volte ao painel e peça um novo acesso pelo seu e-mail.');
+      else if(/falta/i.test(m))telaChave('Abra pelo seu link pessoal','O link que abre esta tela é o que chegou no seu e-mail, com o código do dia junto.');
+      else if(/restrit/i.test(m))telaChave('Acesso restrito','Esta tela é da equipe. Se você precisa entrar aqui, fale com o atendimento.');
+      else if(window.B4UEspera)B4UEspera.telaErro(document.getElementById('app'));
+      else document.getElementById('app').innerHTML='<div class="state"><h1>Não conseguimos carregar as informações</h1>'
+        +'<p>Houve um erro ao recuperar as informações. Tente novamente em alguns minutos. '
+        +'Se o problema continuar, entre em contato com o atendimento.</p></div>';});
 }
-function baseRows(){return LINHAS;}   // o backend já entrega só as linhas do colaborador do código
+function baseRows(){return LINHAS;}   // o backend já entrega só as linhas do colaborador resolvido pela chave
 /* ---------- busca e filtros no endereço (C.10) ----------
    F5 (ou mandar o link para alguém) volta para a mesma visão. Mexemos só nos
    parâmetros desta tela — a chave, o cod e o #hash continuam intactos. */
@@ -876,7 +909,9 @@ async function salvar(row,id,campos){
     PENDENTES.delete(String(row));
     FALHAS.set(String(row),{id:id,campos:campos});
     marcarFalha(row,true);
-    setSave('err','Não salvou: '+(e.message||e));
+    /* A linha fica marcada com o "tentar de novo"; a faixa só avisa que não foi.
+       O motivo técnico da recusa não ajuda quem está digitando. */
+    setSave('err','Não foi possível salvar. Tente de novo.');
   }
 }
 /* Sair com alteração pendente (ou com uma gravação que falhou) pede confirmação. */
@@ -968,6 +1003,34 @@ document.addEventListener('keydown',e=>{
 window.addEventListener('hashchange',carregar);   // trocar o código (#) recarrega para o colaborador certo
 
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+
+/* ---------------- menu lateral ----------------
+   Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
+   URL desde a primeira linha deste script — não há o que esperar da API. E se a
+   busca falhar, a tela de bloqueio ou o erro pintam dentro do #app com o menu
+   inteiro de pé, que é a mesma razão de o erro nunca ser pintado no <body>.
+   Sem `contexto`: quando a página abre ela ainda não sabe o nome do responsável
+   (ele vem no payload, na tag da barra), e o menu ignora uma segunda montagem de
+   propósito — inventar um rótulo agora seria pior que bloco nenhum.
+   Os links levam só a chave, exatamente como o "← Painel" desta página: o `cod`
+   nunca entrou no caminho de volta daqui. */
+if (window.B4UShell) {
+  B4UShell.montar({
+    perfil: 'equipe',
+    ativo: 'restituicao',
+    link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
+  });
+  /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
+     tela em que estava ao abrir um link do cliente. O menu lateral é o contrário
+     disso: é navegação DENTRO do painel, e sair pela guia atual é o gesto — a
+     mesma exceção que o logo e o "← Painel" já traziam escrita à mão.
+     Só marcamos quem ainda não tem alvo próprio: assim o WhatsApp do rodapé do
+     menu (que nasce com target="_blank") continua abrindo em guia nova. */
+  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
+    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
+  });
+}
+
 carregar();
 </script>
 <script>

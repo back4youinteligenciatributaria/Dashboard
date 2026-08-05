@@ -287,8 +287,17 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
 @media(max-width:560px){.barra .cnt{display:none}}
 </style>
 <script src="config.js"></script>
+<!-- A tela de espera mora num arquivo só (b4u-espera.js) — antes cada página
+     tinha a sua, e cada uma envelhecia de um jeito. Se ele não carregar, a
+     página segue de pé: toda chamada é protegida por `window.B4UEspera &&`. -->
+<script src="b4u-espera.js" charset="utf-8"></script>
+<!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
+     chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
+<script src="b4u-shell.js" charset="utf-8"></script>
 </head>
-<body>
+<!-- O atributo liga a espera sozinha ao abrir; "equipe" escolhe as frases de
+     quem trabalha aqui dentro, não as do cliente. -->
+<body data-b4u-espera="equipe">
 <div class="barra">
   <span class="logo">back<span class="y">4you</span></span>
   <span class="tag">Painel da equipe</span>
@@ -371,8 +380,10 @@ function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave')
    digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
    serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
    longe do que ela tinha clicado.
-   Até 04/08/2026 existia uma chave fixa ('b4u-equipe-2026') escrita aqui como
-   padrão: quem abrisse a página sem chave nenhuma entrava assim mesmo. */
+   Até 04/08/2026 existia uma chave fixa antiga escrita aqui como padrão: quem
+   abrisse a página sem chave nenhuma entrava assim mesmo, sem se identificar.
+   A string não se repete neste arquivo de propósito — ele é servido ao
+   navegador, e comentário vaza igual a código. */
 if (!chaveAtual()) {
   location.replace('index.html?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
@@ -436,13 +447,12 @@ const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
 function jsonpRepetivel(url){
   return !/[?&]acao=[^&]/.test(url) && !/[?&]tipo=(login_email_|entrar_token)/.test(url);
 }
-function jsonpAviso(txt){
-  const p = document.getElementById('espera-txt')
-       || document.querySelector('#app .state p')
-       || document.querySelector('.state p')
-       || document.getElementById('dica');
-  if(p) p.textContent = txt;
-}
+/* Vazia de propósito. Ela existia só para trocar o texto da espera por frases que
+   falavam em lentidão e em nova tentativa — quem lia aquilo entendia "vai dar
+   errado" e recarregava a página bem quando a resposta já vinha chegando. Quem
+   cuida do que a pessoa lê enquanto espera agora é o b4u-espera.js. A função fica
+   no lugar porque é chamada de outros pontos. */
+function jsonpAviso(){}
 function jsonpTentativa(url){
   return new Promise((ok,fail)=>{
     const cb='cb_'+Math.random().toString(36).slice(2);
@@ -456,13 +466,13 @@ function jsonpTentativa(url){
   });
 }
 /* Uma repetição, nunca mais que uma. A primeira execução provavelmente terminou e
-   deixou o cache quente no servidor, então a segunda costuma voltar rápido. Enquanto
-   espera, a tela diz que ainda estamos buscando — erro só se a segunda também falhar. */
+   deixou o cache quente no servidor, então a segunda costuma voltar rápido. A tela
+   de espera continua correndo por cima durante a segunda tentativa — de propósito:
+   a pessoa não precisa saber que houve retentativa, só que ainda estamos
+   trabalhando. Erro só se a segunda também falhar. */
 function jsonp(url){
   return jsonpTentativa(url).catch(e=>{
     if(!jsonpRepetivel(url)) throw e;
-    if(typeof pararEspera === 'function'){ try{ pararEspera(); }catch(_){} }
-    jsonpAviso('Ainda estou buscando — tentando de novo…');
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
@@ -830,7 +840,10 @@ function carregarExtras(c){
   box.innerHTML='<div class="ex-sec"><div class="ex-load"><span class="spin"></span> Carregando os dados do cliente…</div></div>';
   const u=API_URL+'?tipo=cliente_extras&id='+encodeURIComponent(c.id)+'&cnpj='+encodeURIComponent(c.cnpj||'')+'&chave='+encodeURIComponent(chaveAtual());
   jsonp(u).then(x=>{ if(x.erro) throw new Error(x.erro); box.innerHTML=renderExtras(x); })
-    .catch(e=>{ box.innerHTML='<div class="ex-sec"><div class="ex-erro">Não consegui carregar os dados do cliente: '+esc(e.message||String(e))+'</div></div>'; });
+    /* O texto da exceção NÃO chega à tela. Aqui saía o e.message cru — nome de
+       aba, "chave", status — que é vocabulário nosso e do outro lado só assusta.
+       Falha de um pedaço da tela: aviso curto, sem detalhe técnico. */
+    .catch(()=>{ box.innerHTML='<div class="ex-sec"><div class="ex-erro">Não foi possível carregar. Tente novamente em alguns minutos.</div></div>'; });
 }
 
 /* ---- Contagem de pendências (usada só pelo selo do card de Certificados) ----
@@ -1026,17 +1039,29 @@ function boot(){
       PEND=calcPendencias();          // alimenta o selo do card de Certificados — sem chamada nova
       pintarFerramentas();            // repinta só para o selo aparecer
       restaurarCliente(url.cli);      // e volta para o cliente que estava aberto
+      /* Só agora a tela está de fato pronta: a barra corre até 100% e o overlay
+         sai revelando o painel já desenhado por baixo. */
+      if (window.B4UEspera) B4UEspera.concluir();
     })
     .catch(e=>{
+      /* O e.message continua sendo LIDO aqui — é ele que separa "chave recusada"
+         (volta para a porta) de "deu ruim de verdade". O que mudou é que ele não
+         é mais ESCRITO na tela. */
       const msg = String((e && e.message) || e);
       if(/restrit/i.test(msg)){       // "Acesso restrito à equipe." — chave errada, de ontem, ou de ninguém
         location.replace('index.html?destino=' + encodeURIComponent(
           location.pathname.split('/').pop() + location.search + location.hash));
         return;
       }
-      document.getElementById('portaria').innerHTML =
-        '<div class="dica"><span style="color:var(--vermelho-2)">Não consegui falar com o sistema: '+esc(msg)+'.</span><br>' +
-        'Tente de novo em alguns segundos. Se persistir, confira se o Web App foi republicado.</div>';
+      /* Uma mensagem só, igual em todo o painel. Antes saía o texto da exceção e
+         um pedido para conferir a publicação do sistema — instrução que só faz
+         sentido para nós e que fazia a pessoa ligar para o atendimento com medo. */
+      const portaria = document.getElementById('portaria');
+      if (window.B4UEspera) B4UEspera.telaErro(portaria);
+      else portaria.innerHTML =
+        '<div class="state"><h1>Não conseguimos carregar as informações</h1>'
+        + '<p>Houve um erro ao recuperar as informações. Tente novamente em alguns '
+        + 'minutos. Se o problema continuar, entre em contato com o atendimento.</p></div>';
     });
 }
 
@@ -1062,6 +1087,37 @@ document.addEventListener('keydown',e=>{
     if(mexeu){e.preventDefault();sincronizarURL();}
   }
 });
+
+/* ---------------- menu lateral ----------------
+   Montado ANTES de boot(): a identidade desta tela é a chave, que já está na URL
+   desde a primeira linha deste script — não há o que esperar da API. E se a
+   chamada falhar, a tela de erro pinta dentro do #portaria com o menu inteiro de
+   pé, que é a mesma razão de o erro nunca ser pintado no <body>.
+   A portaria continua fazendo o que veio fazer: o que ela guarda são os 11
+   endereços de planilha interna e a lista de clientes, e esses só chegam depois
+   do sim da API. O menu não acrescenta nada a isso — ele lista nomes de página
+   que já estão escritos neste mesmo arquivo (FERRAMENTAS) e no b4u-shell.js,
+   ambos servidos ao navegador. Quem barra de verdade é cada página no servidor.
+   Sem `contexto`: o payload da equipe traz `areas` e `pleno`, nunca o NOME de
+   quem entrou — e um rótulo inventado seria pior que bloco nenhum.
+   O `link` é o próprio `comChave` que os 8 cards já usam: chave (e o `cod`
+   herdado, quando houver) propagados uma vez só, escritos num lugar só. */
+if (window.B4UShell) {
+  B4UShell.montar({
+    perfil: 'equipe',
+    ativo: 'painel',            // esta é a home da equipe
+    link: comChave
+  });
+  /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
+     tela em que estava ao abrir uma planilha. O menu lateral é o contrário
+     disso: é navegação DENTRO do painel, e sair pela guia atual é o gesto — a
+     mesma exceção que o logo e o "← Painel" das irmãs já traziam escrita à mão.
+     Só marcamos quem ainda não tem alvo próprio: assim o WhatsApp do rodapé do
+     menu (que nasce com target="_blank") continua abrindo em guia nova. */
+  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
+    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
+  });
+}
 
 boot();
 </script>

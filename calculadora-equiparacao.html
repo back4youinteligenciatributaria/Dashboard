@@ -614,7 +614,9 @@ footer.fine{max-width:1060px;margin:0 auto;padding:24px 20px 70px;font-size:var(
 
 <script>
 /* ============ chave da equipe ============ */
-const CHAVE_OK='b4u-equipe-2026';
+/* CHAVE_OK removida: era a chave fixa compartilhada, aposentada em 04/08/2026.
+   Não existe mais chave certa para comparar aqui — quem confere quem é a pessoa
+   é o index.html (código do dia, por colaborador) e, para o que lê dado, o servidor. */
 function chaveAtual(){
   const q=new URLSearchParams(location.search).get('chave');
   const h=(location.hash||'').replace('#','').trim();
@@ -757,7 +759,19 @@ function boot(){
   [$('#b4u-wa'),$('#gate-wa')].forEach(a=>{ if(a) a.href=WA_URL; });
 
   const ch=chaveAtual();
-  if(ch!==CHAVE_OK){ document.getElementById('gate').hidden=false; return; }
+  /* Esta página comparava a chave com uma constante fixa — e por isso passou a
+     recusar TODO MUNDO no dia em que a chave virou o código do dia: o comercial.html
+     já monta o link deste material com o código de quem está usando, que nunca é
+     igual à string antiga, então o colaborador legítimo que clicava no cartão caía
+     na tela de bloqueio. É o mesmo estrago que o comercial.html sofreu antes.
+     Aqui não há o que proteger além de não ser indexada — a calculadora é estática
+     e não lê nada do servidor. Sem chave nenhuma, manda para a porta única (o login
+     devolve a pessoa para cá pelo `destino`); com chave, abre. */
+  if(!ch){
+    location.replace('index.html?destino=' + encodeURIComponent(
+      location.pathname.split('/').pop() + location.search + location.hash));
+    return;
+  }
   document.getElementById('app').hidden=false;
   document.getElementById('volta').href='comercial.html?chave='+encodeURIComponent(ch);
   document.getElementById('b4u-logo').href='comercial.html?chave='+encodeURIComponent(ch);

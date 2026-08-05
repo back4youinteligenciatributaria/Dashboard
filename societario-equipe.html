@@ -230,8 +230,12 @@ tr.falhou>td{background:#FBEAE7!important}
 @media(max-width:560px){.barra .cnt{display:none}}
 </style>
 <script src="config.js"></script>
+<script src="b4u-espera.js" charset="utf-8"></script>
+<!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
+     chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
+<script src="b4u-shell.js" charset="utf-8"></script>
 </head>
-<body>
+<body data-b4u-espera="equipe">
 <div class="barra">
   <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag">Societário · equipe</span>
@@ -273,8 +277,10 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
    digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
    serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
    longe do que ela tinha clicado.
-   Até 04/08/2026 existia uma chave fixa ('b4u-equipe-2026') escrita aqui como
-   padrão: quem abrisse a página sem chave nenhuma entrava assim mesmo. */
+   Até 04/08/2026 existia uma chave fixa antiga escrita aqui como padrão: quem
+   abrisse a página sem chave nenhuma entrava assim mesmo, sem se identificar.
+   A string não se repete neste arquivo de propósito — ele é servido ao
+   navegador, e comentário vaza igual a código. */
 if (!chaveAtual()) {
   location.replace('index.html?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
@@ -302,21 +308,19 @@ const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
 function jsonpRepetivel(url){
   return !/[?&]acao=[^&]/.test(url) && !/[?&]tipo=(login_email_|entrar_token)/.test(url);
 }
-function jsonpAviso(txt){
-  const p = document.getElementById('espera-txt')
-       || document.querySelector('#app .state p')
-       || document.querySelector('.state p');
-  if(p) p.textContent = txt;
-}
+/* Ficou vazia de propósito: quem cuida da espera na tela agora é o b4u-espera.js.
+   As frases que esta função escrevia falavam em demora e em tentar de novo, e era
+   lendo isso que a pessoa recarregava justo quando a resposta já vinha. A função
+   continua existindo porque ainda é chamada de outros pontos. */
+function jsonpAviso(){}
 function jsonpTentativa(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 /* Uma repetição, nunca mais que uma. A primeira execução provavelmente terminou e
-   deixou o cache quente no servidor, então a segunda costuma voltar rápido. Enquanto
-   espera, a tela diz que ainda estamos buscando — erro só se a segunda também falhar. */
+   deixou o cache quente no servidor, então a segunda costuma voltar rápido. A tela
+   de espera continua correndo por cima, sem avisar da repetição: quem lê "tentando
+   de novo" recarrega justo quando a resposta já vinha. Erro só se a segunda falhar. */
 function jsonp(url){
   return jsonpTentativa(url).catch(e=>{
     if(!jsonpRepetivel(url)) throw e;
-    if(typeof pararEspera === 'function'){ try{ pararEspera(); }catch(_){} }
-    jsonpAviso('Ainda estou buscando — tentando de novo…');
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
@@ -392,8 +396,11 @@ function duracaoHTML(p){
   const c=calcDuracao(p);
   if(!c)return `<span class="bdg dur na" title="Nenhuma etapa tem data de início preenchida.">⏱ sem data de início</span>`;
   const dicas=[];
-  if(c.ini.est)dicas.push('início estimado no dia 1 de '+c.ini.rot+' (planilha: '+c.ini.orig+')');
-  if(c.fimR&&c.fimR.est)dicas.push('fim estimado no dia 1 de '+c.fimR.rot+' (planilha: '+c.fimR.orig+')');
+  /* O tooltip mostra o texto de origem para explicar de onde saiu a estimativa —
+     mas sem dizer "planilha": de onde o dado vem é vocabulário nosso, e este balão
+     também aparece em tela que o cliente pode estar vendo por cima do ombro. */
+  if(c.ini.est)dicas.push('início estimado no dia 1 de '+c.ini.rot+' (informado como: '+c.ini.orig+')');
+  if(c.fimR&&c.fimR.est)dicas.push('fim estimado no dia 1 de '+c.fimR.rot+' (informado como: '+c.fimR.orig+')');
   dicas.push('De '+fmtData(c.ini.d)+' até '+(c.fimR?fmtData(c.fim):'hoje, '+fmtData(c.hoje)));
   const rotulo=(c.estimado?'~':'')+fmtDuracao(c.dias)+(c.concluido?' (concluído)':' (em andamento)');
   return `<span class="bdg dur ${c.concluido?'ok':''}" title="${esc(dicas.join(' · '))}">⏱ ${esc(rotulo)}</span>`;
@@ -419,8 +426,20 @@ function metaHTML(p){
 let PROCS=[];
 function carregar(){
   return jsonp(API_URL+'?tipo=societario_equipe&chave='+encodeURIComponent(chaveAtual()))
-    .then(d=>{if(d.erro)throw new Error(d.erro);PROCS=(d.processos||[]).map(p=>{p._visN=p.etapas.reduce((m,e)=>e.nome?e.n:m,0);return p;});render();})
-    .catch(e=>{document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(e.message||e)}</p><p>Confira a <code>chave</code> no endereço e se o Web App foi republicado com os arquivos <code>EquipeSocietario.gs</code> e as rotas novas.</p></div>`;});
+    .then(d=>{if(d.erro)throw new Error(d.erro);PROCS=(d.processos||[]).map(p=>{p._visN=p.etapas.reduce((m,e)=>e.nome?e.n:m,0);return p;});render();
+      /* A lista já está pintada: a barra corre até 100% e o overlay sai revelando
+         a tela pronta, sem somar espera de verdade. */
+      if(window.B4UEspera)B4UEspera.concluir();})
+    /* Uma mensagem só, sem detalhe técnico. O que estava aqui apontava arquivo do
+       servidor e parâmetro do endereço — vocabulário nosso, que na tela de quem usa
+       só assusta. Quem conserta é a equipe, pelo log; a pessoa pode tentar de novo. */
+    .catch(function(){
+      if(window.B4UEspera)B4UEspera.telaErro(document.getElementById('app'));
+      else document.getElementById('app').innerHTML=
+        '<div class="state"><h1>Não conseguimos carregar as informações</h1>'
+        +'<p>Houve um erro ao recuperar as informações. Tente novamente em alguns '
+        +'minutos. Se o problema continuar, entre em contato com o atendimento.</p></div>';
+    });
 }
 /* ===== filtros, ordenação e busca =====
    Os três combinam: o chip de situação e a ordenação sempre trabalham em cima do
@@ -660,7 +679,7 @@ function restaurarFoco(chave){
 }
 function vazioHTML(){
   const filtrando=FILTRO!=='todos'||!!BUSCA.trim();
-  return `<div class="vazio-filtro"><div>${filtrando?'Nenhum processo com esse filtro.':'Nenhum processo na planilha ainda.'}</div>`+
+  return `<div class="vazio-filtro"><div>${filtrando?'Nenhum processo com esse filtro.':'Nenhum processo cadastrado ainda.'}</div>`+
     (filtrando?`<button type="button" class="btn btn--mini" id="limparF">Limpar filtro e busca</button>`:'')+
     `</div>`;
 }
@@ -902,7 +921,9 @@ async function salvarAuto(row,dados){
     PENDENTES.delete(String(row));
     FALHAS.set(String(row),dados);
     marcarFalha(row,true);
-    setMsg(row,'msg err','Não salvou: '+(e.message||e));
+    /* A linha fica marcada e o "tentar de novo" continua ali; o texto da exceção
+       não entra na tela — é vocabulário de quem mantém o painel, não de quem usa. */
+    setMsg(row,'msg err','Não foi possível salvar. Tente de novo.');
   }
 }
 async function addObs(row,btn,tipo,n){
@@ -916,7 +937,9 @@ async function addObs(row,btn,tipo,n){
     if(tipo==='geral'){p.observacoes_internas=d.valor;const log=ed.querySelector('[data-glog]');log.textContent=d.valor;log.classList.remove('vazio');}
     else{p.etapas[n-1].obs_interna=d.valor;const log=ed.querySelector(`[data-etlog="${n}"]`);log.textContent=d.valor;log.classList.remove('vazio');}
     ta.value='';ta.scrollIntoView({block:'nearest'});
-  }catch(e){setMsg(p.row,'msg err','Não consegui salvar a observação: '+(e.message||e));}
+  /* O texto digitado continua no campo, então basta tentar de novo — sem despejar
+     a exceção na tela. */
+  }catch(e){setMsg(p.row,'msg err','Não foi possível salvar a observação. Tente de novo.');}
   btn.disabled=false;btn.textContent=txtOrig;
 }
 function addEtapa(row){const p=PROCS.find(x=>x.row==row);if(p._visN>=10)return;p._visN++;reabrir(row);}
@@ -936,7 +959,9 @@ async function criarNovo(btn){
     await carregar();   // o processo novo não pode nascer escondido por um filtro
     garantirVisivel(d.row);   // nem atrás do teto
     const el=document.querySelector(`.proc[data-row="${d.row}"]`);if(el){el.scrollIntoView({block:'center'});abrirEditor(d.row);}
-  }catch(e){msg.className='msg err';msg.textContent=e.message||e;}
+  /* O que está no formulário não se perde: a pessoa corrige ou tenta de novo, e o
+     motivo técnico fica no log do servidor, não na tela dela. */
+  }catch(e){msg.className='msg err';msg.textContent='Não foi possível criar o processo. Tente de novo.';}
   btn.disabled=false;
 }
 
@@ -992,6 +1017,34 @@ document.addEventListener('keydown',e=>{
 });
 
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+
+/* ---------------- menu lateral ----------------
+   Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
+   URL desde a primeira linha deste script — não há o que esperar da API. E se a
+   busca falhar, o erro pinta dentro do #app com o menu inteiro de pé, que é a
+   mesma razão de o erro nunca ser pintado no <body>.
+   Sem `contexto`: esta página não sabe o NOME de quem está usando (o `cod` é
+   código de log, não nome), e um rótulo inventado seria pior que bloco nenhum.
+   Os links levam só a chave, exatamente como o "← Painel" da linha acima — e aqui
+   `chaveAtual()` já aceita a chave vinda do #hash, então quem entrou pelo atalho
+   antigo continua navegando pelo menu sem perder o acesso. */
+if (window.B4UShell) {
+  B4UShell.montar({
+    perfil: 'equipe',
+    ativo: 'societario',
+    link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
+  });
+  /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
+     tela em que estava ao abrir um documento. O menu lateral é o contrário
+     disso: é navegação DENTRO do painel, e sair pela guia atual é o gesto — a
+     mesma exceção que o logo e o "← Painel" já traziam escrita à mão.
+     Só marcamos quem ainda não tem alvo próprio: assim o WhatsApp do rodapé do
+     menu (que nasce com target="_blank") continua abrindo em guia nova. */
+  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
+    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
+  });
+}
+
 carregar();
 </script>
 <script>

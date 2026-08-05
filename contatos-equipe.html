@@ -284,8 +284,17 @@ tr.falhou>td{background:#FBEAE7!important}
 .perfil .sn-falta{align-self:center;font-size:11px;color:#8A7D70}
 </style>
 <script src="config.js"></script>
+<!-- A tela de espera mora num arquivo só (b4u-espera.js) — antes cada página
+     tinha a sua, e cada uma envelhecia de um jeito. Se ele não carregar, a
+     página segue de pé: toda chamada é protegida por `window.B4UEspera &&`. -->
+<script src="b4u-espera.js" charset="utf-8"></script>
+<!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
+     chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
+<script src="b4u-shell.js" charset="utf-8"></script>
 </head>
-<body>
+<!-- O atributo liga a espera sozinha ao abrir; "equipe" escolhe as frases de
+     quem trabalha aqui dentro, não as do cliente. -->
+<body data-b4u-espera="equipe">
 <div class="barra">
   <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag">👥 Contatos · equipe</span>
@@ -337,8 +346,10 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
    digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
    serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
    longe do que ela tinha clicado.
-   Até 04/08/2026 existia uma chave fixa ('b4u-equipe-2026') escrita aqui como
-   padrão: quem abrisse a página sem chave nenhuma entrava assim mesmo. */
+   Até 04/08/2026 existia uma chave fixa antiga escrita aqui como padrão: quem
+   abrisse a página sem chave nenhuma entrava assim mesmo, sem se identificar.
+   A string não se repete neste arquivo de propósito — ele é servido ao
+   navegador, e comentário vaza igual a código. */
 if (!chaveAtual()) {
   location.replace('index.html?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
@@ -373,21 +384,21 @@ const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
 function jsonpRepetivel(url){
   return !/[?&]acao=[^&]/.test(url) && !/[?&]tipo=(login_email_|entrar_token)/.test(url);
 }
-function jsonpAviso(txt){
-  const p = document.getElementById('espera-txt')
-       || document.querySelector('#app .state p')
-       || document.querySelector('.state p');
-  if(p) p.textContent = txt;
-}
+/* Vazia de propósito. Ela existia só para trocar o texto da espera por frases que
+   falavam em lentidão e em nova tentativa — quem lia aquilo entendia "vai dar
+   errado" e recarregava a página bem quando a resposta já vinha chegando. Quem
+   cuida do que a pessoa lê enquanto espera agora é o b4u-espera.js. A função fica
+   no lugar porque é chamada de outros pontos. */
+function jsonpAviso(){}
 function jsonpTentativa(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 /* Uma repetição, nunca mais que uma. A primeira execução provavelmente terminou e
-   deixou o cache quente no servidor, então a segunda costuma voltar rápido. Enquanto
-   espera, a tela diz que ainda estamos buscando — erro só se a segunda também falhar. */
+   deixou o cache quente no servidor, então a segunda costuma voltar rápido. A tela
+   de espera continua correndo por cima durante a segunda tentativa — de propósito:
+   a pessoa não precisa saber que houve retentativa, só que ainda estamos
+   trabalhando. Erro só se a segunda também falhar. */
 function jsonp(url){
   return jsonpTentativa(url).catch(e=>{
     if(!jsonpRepetivel(url)) throw e;
-    if(typeof pararEspera === 'function'){ try{ pararEspera(); }catch(_){} }
-    jsonpAviso('Ainda estou buscando — tentando de novo…');
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
@@ -601,7 +612,7 @@ function grupoHTML(g,t){
       ${g.contatos.map(c=>contatoHTML(c,t)).join('')||'<div class="vazio">Nenhum contato cadastrado para este cliente.</div>'}
       <div class="add-linha">
         <button class="btn btn--mini btn--pri" type="button" data-add="${esc(g.id)}">+ Adicionar contato</button>
-        <span class="dica-in">O que você digitar aqui grava direto na planilha.</span>
+        <span class="dica-in">O que você digitar aqui salva sozinho.</span>
       </div></div>`:'';
   return `<div class="cli${aberto?' on':''}" data-cli="${esc(g.id)}">
     <button class="cli-h" type="button" data-toggle="${esc(g.id)}">${cabecalhoHTML(g,t)}</button>${corpo}</div>`;
@@ -679,7 +690,7 @@ function desenharLista(){
   document.getElementById('dica').innerHTML=
     (total>n?`Mostrando <b>${n} de ${arr.length}</b>. `:'')+
     (arr.length>MAX_CLI?`Desenho no máximo ${MAX_CLI} — refine a busca. `:'')+
-    'Clique no cliente para abrir. Código e link são fórmulas da planilha: dá para copiar, não para editar.';
+    'Clique no cliente para abrir. Código e link são gerados pelo sistema: dá para copiar, não para editar.';
   desenharContagem();
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
 }
@@ -808,8 +819,10 @@ async function salvarContato(row){
     setSave('ok','Salvo ✓ '+horaAgora());
     atualizarCabecalho(c.cliente_id);desenharChips();desenharResumo();desenharContagem();desenharResumoLista();
   }catch(e){
+    /* Aviso curto e sem detalhe técnico: o contato fica marcado como falha e o
+       "tentar de novo" reenvia os mesmos campos — é isso que importa saber. */
     FALHAS.add(k);marcarFalha(k,true);
-    setSave('err','Não salvou: '+(e.message||e));
+    setSave('err','Não foi possível salvar. Tente de novo.');
   }
 }
 async function flushPendentes(){
@@ -888,7 +901,11 @@ async function adicionarContato(btn){
     setSave('ok','Contato adicionado ✓ '+horaAgora());
     await carregar(false);
     irPara(id);
-  }catch(e){msg.className='msg err';msg.textContent=e.message||e;}
+  /* As checagens que a pessoa resolve ("Escolha o cliente", "Informe ao menos nome
+     ou e-mail") ficam lá em cima e continuam falando por si. O que sobra aqui é
+     falha nossa: aviso curto, sem o texto da exceção — que antes vinha inteiro
+     para dentro do modal. */
+  }catch(e){msg.className='msg err';msg.textContent='Não foi possível salvar. Tente de novo.';}
   finally{btn.disabled=false;}
 }
 function pedirConfirmacao(row){
@@ -916,7 +933,9 @@ async function removerContato(row){
     setSave('ok','Contato removido ✓ '+horaAgora());
     await carregar(false);   // as linhas de todo mundo mudam: recarrega tudo
   }catch(e){
-    setSave('err','Não removi: '+(e.message||e));
+    /* Aviso curto e sem detalhe técnico; o botão de remover volta ao lugar para
+       quem quiser tentar de novo. */
+    setSave('err','Não foi possível remover. Tente de novo.');
     if(box)box.innerHTML=btnRemover(c);
   }
 }
@@ -1123,17 +1142,54 @@ async function carregar(primeira){
     }
     preencherDatalist();
     if(primeira&&TERMO)aplicarBusca();else redesenhar();
+    /* A lista já está pintada: a barra corre até 100% e o overlay sai revelando a
+       tela pronta. Nas recargas (primeira=false) não há overlay e isto é um
+       no-op — a lista se atualiza sem piscar nada por cima. */
+    if (window.B4UEspera) B4UEspera.concluir();
   }catch(e){
     if(primeira){
-      document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1>
-        <p>${esc(e.message||e)}</p>
-        <p>Confira a <code>chave</code> no endereço e se o Web App foi republicado com <code>EquipeContatos.gs</code>.</p></div>`;
+      /* Uma mensagem só, igual em todo o painel. Aqui saía o texto da exceção e um
+         pedido para conferir a chave e a publicação do sistema — vocabulário nosso,
+         escrito na tela de quem só queria ver os contatos. */
+      if (window.B4UEspera) B4UEspera.telaErro(document.getElementById('app'));
+      else document.getElementById('app').innerHTML =
+        '<div class="state"><h1>Não conseguimos carregar as informações</h1>'
+        + '<p>Houve um erro ao recuperar as informações. Tente novamente em alguns '
+        + 'minutos. Se o problema continuar, entre em contato com o atendimento.</p></div>';
     }else{
-      setSave('err','Não consegui recarregar: '+(e.message||e));
+      /* Recarga em segundo plano: a lista na tela continua válida, então basta um
+         aviso curto na faixa de status — sem detalhe técnico. */
+      setSave('err','Não foi possível carregar.');
     }
   }
 }
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+
+/* ---------------- menu lateral ----------------
+   Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
+   URL desde a primeira linha deste script — não há o que esperar da API. E se a
+   busca falhar, o erro pinta dentro do #app com o menu inteiro de pé, que é a
+   mesma razão de o erro nunca ser pintado no <body>.
+   Sem `contexto`: esta página não sabe o NOME de quem está usando (o `cod` é
+   código de log, não nome), e um rótulo inventado seria pior que bloco nenhum.
+   Os links levam só a chave, exatamente como o "← Painel" da linha acima. */
+if (window.B4UShell) {
+  B4UShell.montar({
+    perfil: 'equipe',
+    ativo: 'contatos',
+    link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
+  });
+  /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
+     tela em que estava ao abrir um link do contato. O menu lateral é o contrário
+     disso: é navegação DENTRO do painel, e sair pela guia atual é o gesto — a
+     mesma exceção que o logo e o "← Painel" já traziam escrita à mão.
+     Só marcamos quem ainda não tem alvo próprio: assim o WhatsApp do rodapé do
+     menu (que nasce com target="_blank") continua abrindo em guia nova. */
+  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
+    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
+  });
+}
+
 carregar(true);
 </script>
 <script>

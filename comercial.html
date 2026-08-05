@@ -96,6 +96,11 @@ header.top .sub{color:var(--ink-2);font-size:var(--fs-3);margin-top:6px;max-widt
 @media(max-width:560px){.wrap{padding:16px 14px 60px}.mats{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<!-- O menu lateral do painel. Esta pagina e um item dele (Comercial), entao sem o
+     modulo ela seria um beco: o colaborador chega pelo menu e perde a navegacao.
+     Nao carrega config.js nem b4u-espera.js de proposito — aqui nao ha chamada de
+     API para esperar, so uma lista de atalhos estaticos. -->
+<script src="b4u-shell.js" charset="utf-8"></script>
 </head>
 <body>
 <!--B4U-BAR:START ═══════ back4you · barra compartilhada ═══════════════════
@@ -155,9 +160,9 @@ header.top .sub{color:var(--ink-2);font-size:var(--fs-3);margin-top:6px;max-widt
     <div class="mats" id="mats"></div>
 
     <div class="nota">
-      <b>Uso interno.</b> Estas páginas não são indexadas por buscadores e só abrem com a chave da
-      equipe no endereço. Ao mandar o link para alguém do time, copie o endereço inteiro (com
-      <code>?chave=…</code>).
+      <b>Uso interno.</b> Estas páginas não são indexadas por buscadores e só abrem para quem entrou
+      pelo painel da equipe. Ao mandar o link para alguém do time, copie o endereço inteiro da barra
+      do navegador — o pedaço final é o que dá o acesso.
     </div>
   </div>
 </div>
@@ -169,8 +174,7 @@ header.top .sub{color:var(--ink-2);font-size:var(--fs-3);margin-top:6px;max-widt
     <!-- Quem cai aqui é da equipe (o cliente nem conhece este endereço): a saída é
          abrir de novo pelo painel do colaborador, que é de onde este hub sai. Não é
          circular — o hub é este, o link com a chave é que vem de lá. -->
-    <p>Esta é uma área interna da equipe. Abra pelo link do painel do colaborador, com a
-       <code>chave</code> no endereço.</p>
+    <p>Esta é uma área interna da equipe. Abra pelo link do painel do colaborador.</p>
   </div>
 </div>
 
@@ -230,7 +234,7 @@ function boot(){
   if(cod)href+='&cod='+encodeURIComponent(cod);
   ['volta','logo-home'].forEach(id=>{ const a=document.getElementById(id); if(a)a.href=href; });
 
-  /* Esta página comparava a chave com uma constante fixa ('b4u-equipe-2026') —
+  /* Esta página comparava a chave com uma constante fixa, escrita aqui —
      e por isso passou a recusar TODO MUNDO quando a chave virou o código do dia,
      inclusive quem é Principal. Não existe mais chave certa para comparar aqui.
      Quem decide se a pessoa vê Comercial é o card no painel (área 'comercial') e,
@@ -241,6 +245,20 @@ function boot(){
     location.replace('index.html?destino=' + encodeURIComponent(
       location.pathname.split('/').pop() + location.search + location.hash));
     return;
+  }
+  /* O menu so sobe depois do guarda acima: se nao ha chave, a pagina ja saiu para a
+     porta unica e montar o menu seria pintar navegacao numa tela que vai embora. */
+  if (window.B4UShell) {
+    B4UShell.montar({
+      perfil: 'equipe',
+      ativo: 'comercial',
+      link: function (pag) { return pag + '?chave=' + encodeURIComponent(ch); }
+    });
+    /* Com <base target="_blank">, os links do menu herdariam a guia nova. Navegar
+       dentro do painel troca a guia atual — como o logo e o "Painel" ja fazem. */
+    document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
+      if (!a.getAttribute('target')) a.setAttribute('target', '_self');
+    });
   }
   document.getElementById('app').hidden=false;
   const disponiveis=MATERIAIS.filter(m=>!m.breve).length;

@@ -163,6 +163,13 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 /* ---------- modal de cliente novo ---------- */
 .modal[hidden]{display:none}
 .modal{position:fixed;inset:0;z-index:90;background:rgba(7,48,52,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto}
+/* O modal cobre a janela inteira (position:fixed;inset:0), inclusive a faixa dos
+   264px onde mora o menu lateral — e o menu é z-index:940. Com os 90 daqui, o
+   menu ficava POR CIMA do véu: clicável durante o "Criando… não feche a página",
+   que é exatamente o momento em que sair da tela custa um cliente duplicado.
+   A regra é escopada em `body.b4s` de propósito: sem o b4u-shell.js a página
+   continua com os 90 originais e nada muda. */
+body.b4s .modal{z-index:960}
 .modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;max-width:860px;overflow:hidden;box-shadow:0 20px 60px rgba(7,48,52,.35)}
 .modal-top{position:sticky;top:0;z-index:2;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:10px;padding:13px 16px}
 .modal-top b{font-size:15px;font-weight:800}
@@ -327,8 +334,12 @@ details.sec .grid{margin-top:10px}
 @media(max-width:760px){.ct-novo{grid-template-columns:1fr 1fr;}}
 </style>
 <script src="config.js"></script>
+<script src="b4u-espera.js" charset="utf-8"></script>
+<!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
+     chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
+<script src="b4u-shell.js" charset="utf-8"></script>
 </head>
-<body>
+<body data-b4u-espera="equipe">
 <div class="barra">
   <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag">📇 Registros de clientes</span>
@@ -364,8 +375,10 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
    digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
    serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
    longe do que ela tinha clicado.
-   Até 04/08/2026 existia uma chave fixa ('b4u-equipe-2026') escrita aqui como
-   padrão: quem abrisse a página sem chave nenhuma entrava assim mesmo. */
+   Até 04/08/2026 existia uma chave fixa antiga escrita aqui como padrão: quem
+   abrisse a página sem chave nenhuma entrava assim mesmo, sem se identificar.
+   A string não se repete neste arquivo de propósito — ele é servido ao
+   navegador, e comentário vaza igual a código. */
 if (!chaveAtual()) {
   location.replace('index.html?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
@@ -448,21 +461,19 @@ const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
 function jsonpRepetivel(url){
   return !/[?&]acao=[^&]/.test(url) && !/[?&]tipo=(login_email_|entrar_token)/.test(url);
 }
-function jsonpAviso(txt){
-  const p = document.getElementById('espera-txt')
-       || document.querySelector('#app .state p')
-       || document.querySelector('.state p');
-  if(p) p.textContent = txt;
-}
+/* Ficou vazia de propósito: quem cuida da espera na tela agora é o b4u-espera.js.
+   As frases que esta função escrevia falavam em demora e em tentar de novo, e era
+   lendo isso que a pessoa recarregava justo quando a resposta já vinha. A função
+   continua existindo porque ainda é chamada de outros pontos. */
+function jsonpAviso(){}
 function jsonpTentativa(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 /* Uma repetição, nunca mais que uma. A primeira execução provavelmente terminou e
-   deixou o cache quente no servidor, então a segunda costuma voltar rápido. Enquanto
-   espera, a tela diz que ainda estamos buscando — erro só se a segunda também falhar. */
+   deixou o cache quente no servidor, então a segunda costuma voltar rápido. A tela
+   de espera continua correndo por cima, sem avisar da repetição: quem lê "tentando
+   de novo" recarrega justo quando a resposta já vinha. Erro só se a segunda falhar. */
 function jsonp(url){
   return jsonpTentativa(url).catch(e=>{
     if(!jsonpRepetivel(url)) throw e;
-    if(typeof pararEspera === 'function'){ try{ pararEspera(); }catch(_){} }
-    jsonpAviso('Ainda estou buscando — tentando de novo…');
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
@@ -538,7 +549,8 @@ const HINTS_SISTEMA={
 const SEC_ORDER=['Identificação','Empresa','Fiscal / Contábil','Departamento Pessoal','Aluguel','Outros'];
 /* Campo sintético UF: NÃO é coluna do Registro (vai só p/ o Config fiscal), mas é obrigatório. */
 const UF_FIELD={s:'Identificação',col:'UF',t:'text',req:true,max:2,up:true,role:'uf'};
-/* Fallback: se o backend não devolver os cabeçalhos (ex.: Web App não republicado). */
+/* Reserva: se o servidor não devolver os cabeçalhos, a tela ainda tem quais campos
+   pedir, em vez de abrir um formulário vazio. */
 const CAMPOS_FALLBACK=['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Tem DPTO pessoal','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Aluguel para PF?','Pagamento Aluguel','Valor do Aluguel','Obs Aluguel'];
 
 /* Colunas APOSENTADAS (chave normalizada por norm()).
@@ -726,7 +738,7 @@ function desenharResumo(){
     'Clientes que não estão marcados como inativos, do mais vazio para o mais completo. Clique para abrir o cadastro.',
     incompletos,c=>itemResumo(c,vaziosDe(c)+' vazios'))];
   if(COL.cnpj)cards.push(cardResumo('semdado','Sem CNPJ ou CPF',
-    'Clientes não inativos sem CNPJ/CPF na aba Registro.',
+    'Clientes não inativos sem CNPJ/CPF.',
     base.filter(c=>!valorDe(c,COL.cnpj)),c=>itemResumo(c,'sem CNPJ')));
   if(COL.inicio)cards.push(cardResumo('semdado2','Sem data de início',
     'Clientes não inativos sem data de início da contabilidade.',
@@ -939,7 +951,7 @@ function desenharLista(){
   document.getElementById('cnt').textContent=arr.length+' de '+CLIENTES.length+' clientes';
   const el=document.getElementById('lista'),dica=document.getElementById('dica');
   if(!arr.length){
-    el.innerHTML=`<div class="vazio">${CLIENTES.length?'Nenhum cliente com esse filtro ou essa busca.':'A aba Registro está vazia.'}</div>`;
+    el.innerHTML=`<div class="vazio">${CLIENTES.length?'Nenhum cliente com esse filtro ou essa busca.':'Nenhum cliente cadastrado ainda.'}</div>`;
     if(dica)dica.textContent='';
     desenharChips();desenharResumoLista();sincronizarURL();
     return;
@@ -1067,7 +1079,7 @@ async function salvar(id){
     const ignoradas=(r&&r.ignoradas||[]).filter(Boolean);
     setSave('ok','Salvo ✓ '+horaAgora()+(ignoradas.length?' · '+ignoradas.length+' ignorada'+(ignoradas.length>1?'s':''):''),
       ignoradas.length?('Não gravadas: '+ignoradas.join(', ')):'');
-    if(ign)ign.innerHTML=ignoradas.length?('Não gravei: <b>'+ignoradas.map(esc).join('</b>, <b>')+'</b> — coluna travada ou que não existe mais na planilha.'):'';
+    if(ign)ign.innerHTML=ignoradas.length?('Não gravei: <b>'+ignoradas.map(esc).join('</b>, <b>')+'</b> — coluna travada ou que não existe mais no cadastro.'):'';
     /* o nome pode ter mudado: reflete no cabeçalho e na busca */
     cli.nome=valorDe(cli,COL.nome)||cli.nome;
     if(COL.ativo)cli.ativo=valorDe(cli,COL.ativo);
@@ -1081,7 +1093,9 @@ async function salvar(id){
     s.colunas.forEach(c=>f.colunas.add(c));
     FALHAS.set(String(id),f);
     marcarFalha(id,true);
-    setSave('err','Não salvou: '+(e.message||e),String(e.message||e));
+    /* A faixa avisa que não salvou e o "tentar de novo" continua ali; o texto da
+       exceção fica fora da tela (inclusive do title), é vocabulário nosso. */
+    setSave('err','Não foi possível salvar. Tente de novo.');
   }
 }
 /** Manda de novo o que ficou para trás naquele cadastro. */
@@ -1302,10 +1316,12 @@ async function criarCliente(){
     btn.disabled=false;btn.textContent='Criar cliente';msg.className='msg err';
     setSave('err','Não criou o cliente');
     /* "Failed to fetch": o servidor pode ter concluído mesmo assim (operação longa). */
-    const rede=/failed to fetch|networkerror|load failed|não respondeu|alcançar|timeout|rede/i.test(String(e.message||e));
+    const rede=/failed to fetch|networkerror|load failed|não respondeu|alcançar|timeout|rede/i.test(String((e&&e.message)||e));
     msg.innerHTML=rede
       ? 'A resposta não chegou (conexão/tempo). <b>O cliente pode já ter sido criado no servidor</b> — feche, atualize a lista e confira <b>antes</b> de tentar de novo. ⚠️ Não clique em "Criar" de novo às cegas: cada tentativa gera um cliente NOVO (com o próximo ID) e novas pastas.'
-      : esc((e.message||e)+'');
+      /* O aviso genérico ficou no lugar do texto da exceção: o cadastro pode ter
+         ficado pela metade, então o pedido é conferir a lista antes de repetir. */
+      : 'Não foi possível criar o cliente. Atualize a lista e confira antes de tentar de novo.';
   }
 }
 function sucessoNovo(d){
@@ -1314,7 +1330,14 @@ function sucessoNovo(d){
   if(pl.fiscal)links.push(`<a href="${esc(pl.fiscal)}" target="_blank" rel="noopener">📊 Planilha Fiscal</a>`);
   if(pl.equiparacao)links.push(`<a href="${esc(pl.equiparacao)}" target="_blank" rel="noopener">📊 Planilha Equiparação</a>`);
   if(pl.pessoal)links.push(`<a href="${esc(pl.pessoal)}" target="_blank" rel="noopener">📊 Planilha Departamento Pessoal</a>`);
-  const avisos=(d.avisos||[]).filter(Boolean);
+  /* Os avisos vêm do servidor e são escritos por nós — mas este é o mesmo canal por
+     onde, num dia ruim, sobe o texto de uma exceção do Apps Script. A peneira abaixo
+     deixa passar recado de gente e barra vocabulário de máquina: quem cadastrou um
+     cliente não precisa ler "TypeError" debaixo de "Atenção". */
+  const AVISO_TECNICO = /(exception|error|typeError|referenceerror|undefined|null\b|\bat\s+\w+\.|stack|apps ?script|\.gs\b)/i;
+  const avisos=(d.avisos||[]).filter(Boolean)
+    .map(a=>String(a))
+    .filter(a=>a.length<=200 && !AVISO_TECNICO.test(a));
   document.getElementById('modalBody').innerHTML=`
     <div class="ok-card">
       <div style="font-size:34px">✅</div>
@@ -1323,7 +1346,7 @@ function sucessoNovo(d){
       <div style="color:var(--ink-2);font-size:14px;margin-top:4px">${esc(d.nome||'')}</div>
       <div class="ok-links">${links.join('')||'<span class="hint">Nenhuma planilha gerada (confira os produtos).</span>'}</div>
       ${avisos.length?`<div class="avisos"><b>Atenção:</b><br>${avisos.map(esc).join('<br>')}</div>`:''}
-      <p class="hint">Gravado nas abas <b>Links</b> e <b>Registro</b>. Os contatos/e-mails de acesso do cliente são cadastrados à parte, na planilha de Contatos.</p>
+      <p class="hint">Cadastro gravado. Os contatos e e-mails de acesso do cliente são cadastrados à parte, em <b>Contatos</b>.</p>
       <div class="foot" style="margin-top:14px">
         <button class="btn btn--sec btn--pill" id="outro" type="button">Cadastrar outro</button>
         <button class="btn btn--pri btn--pill" id="verCad" type="button">Ver o cadastro de ${esc(d.id||'')}</button>
@@ -1420,7 +1443,7 @@ function layout(){
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho na aba <b>Registro</b>${META.aba&&META.aba!=='Registro'?' ('+esc(META.aba)+')':''}. Cliente novo nasce pelo botão do topo — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Esses mesmos campos, quando estão em branco, ficam com um <b>fundo avermelhado</b> no cadastro aberto: é só dica visual do que falta preencher. Os cards ignoram quem está inativo.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. Os filtros e a ordenação ficam no botão <b>Filtros</b>, que avisa com um número quando algum está pegando.<br>Na linha fechada aparece só o que pede ação: o campo <b>em branco</b> (sem CNPJ, sem regime, sem produtos), os campos vazios e a situação quando <b>não</b> é Ativo — <b>Em inativação</b> em laranja, <b>Inativo</b> em vermelho, cinza quando a coluna Ativo está em branco, cada um com uma faixa na lateral. O que está preenchido fica no cadastro (é só clicar) e no rótulo que aparece ao passar o mouse na linha.</div>
+    <div class="txt">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho. Cliente novo nasce pelo botão do topo — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Esses mesmos campos, quando estão em branco, ficam com um <b>fundo avermelhado</b> no cadastro aberto: é só dica visual do que falta preencher. Os cards ignoram quem está inativo.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. Os filtros e a ordenação ficam no botão <b>Filtros</b>, que avisa com um número quando algum está pegando.<br>Na linha fechada aparece só o que pede ação: o campo <b>em branco</b> (sem CNPJ, sem regime, sem produtos), os campos vazios e a situação quando <b>não</b> é Ativo — <b>Em inativação</b> em laranja, <b>Inativo</b> em vermelho, cinza quando a coluna Ativo está em branco, cada um com uma faixa na lateral. O que está preenchido fica no cadastro (é só clicar) e no rótulo que aparece ao passar o mouse na linha.</div>
   </details>
   <details class="ajuda situacao" id="det-situacao">
     <summary>Ver quem está em cada situação</summary>
@@ -1458,22 +1481,82 @@ async function carregar(op){
     if(d.planilha_url){pl.href=d.planilha_url;pl.hidden=false;}
     redesenhar();
     if(!op.silencioso)setSave('','');
+    /* A lista já está pintada: a barra corre até 100% e o overlay sai revelando a
+       tela pronta, sem somar espera de verdade. Na recarga em segundo plano não há
+       overlay nenhum, e a chamada simplesmente não faz nada. */
+    if(window.B4UEspera)B4UEspera.concluir();
     if(op.expandir){irPara(String(op.expandir));}
     else if(!op.silencioso&&window.innerWidth>760)nb.focus();
   }catch(e){
-    const m=String(e.message||e);
-    setSave('err','Erro: '+m,m);
+    /* O texto da exceção continua sendo lido para separar falta de acesso de falha
+       de carregamento, mas não vai mais para a tela: nome de arquivo do servidor,
+       nome de aba de planilha e o parâmetro do endereço são vocabulário nosso. */
+    const m=String((e&&e.message)||e);
+    setSave('err','Não foi possível carregar.');
     /* recarga em segundo plano não pode derrubar a lista que já está na tela */
-    if(op.silencioso&&document.getElementById('lista'))return;
-    if(/chave/i.test(m)){
-      document.getElementById('app').innerHTML=`<div class="state"><div style="font-size:36px">🔒</div><h1>Acesso restrito</h1><p>${esc(m)}</p><p>Abra pelo painel da equipe, com <code>?chave=</code> no endereço.</p></div>`;
+    if(op.silencioso&&document.getElementById('lista')){
+      if(window.B4UEspera)B4UEspera.concluir();
+      return;
+    }
+    /* O porteiro da equipe só tem duas negativas, e são estas duas que este teste
+       procura: "Acesso restrito à equipe." (código do dia errado, de ontem ou de
+       ninguém) e "Seu acesso não inclui a área de …" / "…nenhuma das áreas: …"
+       (é da equipe, mas esta tela não está nas áreas dele).
+       Até 04/08/2026 o teste aqui era /chave/i, e não casava com NENHUMA das duas:
+       quem chegava com o código vencido lia a mensagem genérica de falha, como se
+       o painel tivesse quebrado, em vez de "peça um acesso novo". Em compensação
+       casava com "Falta a chave X na aba Config", que é defeito de configuração
+       NOSSO — e esse tem de cair no erro genérico mesmo, não virar "Acesso
+       restrito" e mandar a pessoa procurar permissão que ela já tem. Por isso a
+       palavra chave saiu daqui. As irmãs restituicao.html e colaborador.html
+       usam /restrit/i; aqui a área entra junto porque esta rota é guardada por
+       exigirAreaEquipe_. [áa] porque não dependemos do acento chegar inteiro. */
+    if(/restrit|[áa]rea/i.test(m)){
+      /* Isto não é defeito, é fluxo — por isso não usa a tela de erro genérica:
+         ou o código do dia venceu (resolve entrando outra vez pelo painel, que já
+         traz a chave junto) ou falta a área (resolve com um responsável). O link
+         atende o primeiro caso, que é o de longe mais comum. */
+      if(window.B4UEspera)B4UEspera.cancelar();
+      document.getElementById('app').innerHTML=`<div class="state"><div style="font-size:36px">🔒</div><h1>Acesso restrito</h1><p>Esta tela é da equipe. Se o seu acesso do dia expirou, entre outra vez pelo painel do colaborador; se ele não inclui esta área, fale com um responsável principal.</p><p><a href="colaborador.html" target="_self">Ir para o painel</a></p></div>`;
+    }else if(window.B4UEspera){
+      B4UEspera.telaErro(document.getElementById('app'));
     }else{
-      document.getElementById('app').innerHTML=`<div class="state"><h1>Não consegui carregar</h1><p>${esc(m)}</p>
-        <p>Confira se o Web App foi republicado com <code>EquipeRegistro.gs</code> e se a planilha <b>Site Links</b> tem a aba <code>Registro</code>.</p></div>`;
+      document.getElementById('app').innerHTML=
+        '<div class="state"><h1>Não conseguimos carregar as informações</h1>'
+        +'<p>Houve um erro ao recuperar as informações. Tente novamente em alguns '
+        +'minutos. Se o problema continuar, entre em contato com o atendimento.</p></div>';
     }
   }
 }
 document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+
+/* ---------------- menu lateral ----------------
+   Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
+   URL desde a primeira linha deste script — não há o que esperar da API. E se a
+   busca falhar (inclusive na tela de "Acesso restrito"), o erro pinta dentro do
+   #app com o menu inteiro de pé, que é a mesma razão de o erro nunca ser pintado
+   no <body>.
+   Sem `contexto`: esta página não sabe o NOME de quem está usando (o `cod` é
+   código de log, não nome), e um rótulo inventado seria pior que bloco nenhum.
+   Os links levam só a chave, como o logo e o "← Painel" já levavam aqui — o
+   `cod` continua fora deles, igual ao #volta logo acima. */
+if (window.B4UShell) {
+  B4UShell.montar({
+    perfil: 'equipe',
+    ativo: 'registro',
+    link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
+  });
+  /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
+     tela em que estava ao abrir a planilha. O menu lateral é o contrário disso:
+     é navegação DENTRO do painel, e sair pela guia atual é o gesto — a mesma
+     exceção que o logo e o "← Painel" já traziam escrita à mão.
+     Só marcamos quem ainda não tem alvo próprio: assim o WhatsApp do rodapé do
+     menu (que nasce com target="_blank") continua abrindo em guia nova. */
+  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
+    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
+  });
+}
+
 carregar();
 </script>
 <script>
