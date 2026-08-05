@@ -152,7 +152,7 @@
    * Estado
    * ------------------------------------------------------------------ */
   var ov = null, fill = null, doc = null, pct = null, msg = null, marcos = [];
-  var t0 = 0, raf = 0, tFrase = 0, tSeg = 0, iFrase = 0, frases = [], p = 0;
+  var t0 = 0, raf = 0, tFrase = 0, tTroca = 0, tSeg = 0, iFrase = 0, frases = [], p = 0;
   var encerrando = false;
 
   function estilo() {
@@ -189,10 +189,17 @@
     raf = w.requestAnimationFrame ? w.requestAnimationFrame(passo) : setTimeout(passo, 60);
   }
 
+  /* A troca de frase acontece em dois tempos: some (300ms), troca o texto, volta.
+     O segundo tempo PRECISA ser cancelável. Antes ele não era, e o estrago era este:
+     se o dado chegava justo nesses 300ms, o `concluir()` limpava os timers mas este
+     aqui sobrevivia, disparava, via `encerrando` e voltava — sem nunca tirar a classe
+     `b4e-troca`, que é opacidade zero. Resultado na tela do cliente: a barra dizia
+     100%, e a mensagem "Pronto!" ficava invisível para sempre. */
   function trocarFrase() {
     if (!msg || encerrando) return;
     msg.classList.add('b4e-troca');
-    setTimeout(function () {
+    tTroca = setTimeout(function () {
+      tTroca = 0;
       if (!msg || encerrando) return;
       iFrase = (iFrase + 1) % frases.length;
       msg.textContent = frases[iFrase];
@@ -203,6 +210,7 @@
   function limparTimers() {
     if (raf) { if (w.cancelAnimationFrame) w.cancelAnimationFrame(raf); clearTimeout(raf); raf = 0; }
     clearInterval(tFrase); tFrase = 0;
+    clearTimeout(tTroca); tTroca = 0;
     clearTimeout(tSeg); tSeg = 0;
   }
 
@@ -275,6 +283,12 @@
       if (encerrando) { if (typeof cb === 'function') cb(); return API; }
       encerrando = true;
       limparTimers();
+      /* Fim da corrida: a barra passa a acompanhar o numero quadro a quadro. Com a
+         transicao de .28s ligada, o preenchimento chegava aos 100% bem depois do
+         texto — e quem olhava via "100%" sobre uma barra pela metade. E se a troca
+         de frase tinha acabado de apagar a mensagem, ela volta a aparecer. */
+      if (fill) fill.style.transition = 'none';
+      if (msg) msg.classList.remove('b4e-troca');
 
       var esperou = Date.now() - t0;
       var rush = esperou > CFG.semRush ? 0 : CFG.rush;

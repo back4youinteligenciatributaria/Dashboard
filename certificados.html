@@ -982,7 +982,13 @@ function linhaHTML(l){
     const tds=GRUPOS.map((g,gi)=>{
       const fech=grupoFechado(l.id,gi);
       const preenchidos=g.cols.filter(c=>String(l.valores[c]||'').trim()).length;
-      const tit=`<td class="grp${fech?' fechado':''}" data-grp="${gi}" data-g="${gi}"><span class="arw">▼</span>${esc(g.nome)}<span class="n">${preenchidos} de ${g.cols.length}</span></td>`;
+      /* Se TODA coluna do grupo vai sumir por estar vazia, o título tem de sumir
+         junto. Sem isto sobrava um cabeçalho solto — "Certificado Digital
+         Responsável Legal" com nada embaixo —, que lê como defeito da tela quando
+         na verdade é campo em branco. O botão "Mostrar campos vazios" traz os dois
+         de volta, título e campos. */
+      const todoVazio=g.cols.every(c=>!String(l.valores[c]||'').trim() && !ehLink(c));
+      const tit=`<td class="grp${fech?' fechado':''}${todoVazio?' vazia':''}" data-grp="${gi}" data-g="${gi}"><span class="arw">▼</span>${esc(g.nome)}<span class="n">${preenchidos} de ${g.cols.length}</span></td>`;
       return tit + g.cols.map((c,j)=>{
         /* Coluna de documento em branco NÃO é "campo vazio a esconder": é onde
            mora o botão Enviar. Esconder o vazio ali sumiria justamente com a ação
@@ -1004,7 +1010,11 @@ function linhaHTML(l){
    e em fichas isso vira rolagem sem fim. As fichas continuam a um clique no
    botão, e quem já tinha escolhido antes mantém a escolha — sem preferência
    guardada o localStorage devolve nada, que não é '1', e a tabela ganha. */
-const FICHAS_KEY='b4u_fichas_'+location.pathname.split('/').pop();
+/* Chave NOVA de propósito. A antiga (b4u_fichas_…) guardava a escolha de quando
+   cartão era o padrão da tela, e preferência salva ganha de padrão: quem tinha
+   aquele valor continuaria abrindo em cartão para sempre, mesmo depois de o dono
+   pedir tabela. Trocar a chave zera a preferência uma vez, sem apagar nada. */
+const FICHAS_KEY='b4u_modo_'+location.pathname.split('/').pop();
 function modoFichas(){ try{ return localStorage.getItem(FICHAS_KEY)==='1'; }catch(e){ return false; } }
 function aplicarModo(){
   const f=modoFichas();

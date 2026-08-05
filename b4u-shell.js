@@ -66,9 +66,12 @@
       { id: 'pessoal',     rot: 'Departamento Pessoal',  pag: 'dptopessoal.html',  ic: 'pessoal', area: 'pessoal' },
       { sec: 'Jurídico' },
       { id: 'equiparacao', rot: 'Equiparação hospitalar', pag: 'equiparacao.html', ic: 'escudo',  area: 'equiparacao' },
-      { id: 'societario',  rot: 'Societário',            pag: 'societario.html',   ic: 'doc',     area: 'societario' },
-      { sec: 'Atendimento' },
-      { id: 'tickets',     rot: 'Meus chamados',         pag: 'meustickets.html',  ic: 'chat' }
+      { id: 'societario',  rot: 'Societário',            pag: 'societario.html',   ic: 'doc',     area: 'societario' }
+      /* "Meus chamados" fica de fora POR ORA, a pedido: a abertura de chamado está
+         segurada (o #b4u-open e o "?" da barra já saem por CSS nas oito páginas), e
+         um menu que leva a uma lista que ninguém consegue alimentar só gera dúvida.
+         Quando o chamado voltar, é uma linha aqui — e o item volta para todo mundo
+         de uma vez, que é a graça de o menu morar num arquivo só. */
     ],
     equipe: [
       { sec: 'Carteira' },
