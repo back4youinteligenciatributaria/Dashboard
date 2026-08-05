@@ -184,6 +184,13 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
   gap:12px;align-items:center}
 .lista-cab{padding:2px 14px 0;font-size:var(--fs-1);font-weight:800;letter-spacing:.5px;
   text-transform:uppercase;color:var(--muted)}
+/* O cabeçalho também ordena: cada rótulo é um botão de verdade (Tab chega nele,
+   Enter e Espaço ordenam). É o que restou do "clique em qualquer cabeçalho" da
+   grade antiga — e abaixo de 900px, onde a régua some, os mesmos critérios
+   continuam nos chips "Ordenar por" do painel de filtros. */
+.lista-cab button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
+  text-transform:inherit;letter-spacing:inherit;text-align:inherit}
+.lista-cab button:hover{color:var(--brand-teal-txt)}
 .cli-head{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
   cursor:pointer;font-family:var(--sans);color:inherit}
 .cli-head:hover{background:var(--surface-warm)}
@@ -894,21 +901,52 @@ function passaBusca(l,termo){
   chavesBusca(l);
   return casaBusca(l._bt,l._bd,termo);
 }
+/* ---------- as chaves de ordenação da lista ----------
+   Uma entrada por COLUNA da lista, para o cabeçalho e os chips "Ordenar por"
+   ordenarem exatamente pelo que está escrito na linha. `v` devolve o valor cru
+   (nunca o texto já formatado: data ordena pelo aaaa-mm-dd, não pelo dd/mm) e
+   `t` diz como comparar. Coluna sem valor devolve '' — e vazio vai sempre para
+   o fim, nas duas direções. */
+const ORD_COLS={
+  id:            {t:'txt', v:l=>l.id},
+  nome_cliente:  {t:'txt', v:l=>l.nome_cliente},
+  cnpj:          {t:'doc', v:l=>COLS_LINHA.cnpj?l.valores[COLS_LINHA.cnpj]:''},
+  cidade:        {t:'txt', v:l=>COLS_LINHA.cidade?l.valores[COLS_LINHA.cidade]:''},
+  documento:     {t:'txt', v:l=>{const c=critico(l);return c?nomeDoc(c.c):'';}},
+  /* Vencimento: dias até o mais próximo, e não o texto da data — é a mesma conta
+     dos chips e dos cartões, para a ordem nunca contradizer a situação da linha. */
+  urgencia:      {t:'num', v:l=>{const u=urgencia(l,colsData());return u===null?'':u;}},
+  /* Situação vai pela GRAVIDADE, não pelo alfabeto: "Vencido" antes de "Em dia"
+     é a única ordem que responde "em quem eu preciso mexer hoje". */
+  situacao:      {t:'num', v:l=>{const p={venc:0,d30:1,d60:2,d90:3,ok:4,inativo:5,sem:''};
+                                 const r=p[situacaoDe(l)];return r==null?'':r;}}
+};
+/* Texto sem acento e sem caixa: "Água" e "agua" ficam juntas. */
+function cmpTxt(a,b){return normTxt(a).localeCompare(normTxt(b),'pt',{numeric:true});}
+/* Documento ordena pelos DÍGITOS: com pontuação, "08.852…" e "08852…" caíam em
+   pontos distintos da mesma coluna. */
+function cmpDoc(a,b){return soDigitos(a).localeCompare(soDigitos(b),'pt',{numeric:true});}
+function cmpNum(a,b){const x=parseFloat(String(a).replace(',','.')),y=parseFloat(String(b).replace(',','.'));
+  return (isFinite(x)?x:Infinity)-(isFinite(y)?y:Infinity);}
+function cmpOrd(a,b){
+  const def=ORD_COLS[SORT.key];
+  const va=def?def.v(a):a.valores[SORT.key],vb=def?def.v(b):b.valores[SORT.key];
+  /* Coluna em branco quer dizer "falta preencher": ela vai SEMPRE para o fim,
+     nas duas direções. Jogá-la para o topo no Z→A esconderia justamente o que a
+     pessoa abriu a tela para ver. */
+  const ea=String(va==null?'':va).trim()==='',eb=String(vb==null?'':vb).trim()==='';
+  if(ea&&eb)return 0;
+  if(ea)return 1;
+  if(eb)return -1;
+  const t=def?def.t:'txt';
+  const r=t==='num'?cmpNum(va,vb):t==='doc'?cmpDoc(va,vb):cmpTxt(va,vb);
+  return SORT.dir==='desc'?-r:r;
+}
 function visiveis(){
   const termo=String(TERMO||'').trim();
   const arr=LINHAS.filter(l=>passaFiltro(l)&&passaBusca(l,termo));
-  const dir=SORT.dir==='asc'?1:-1;
-  arr.sort((a,b)=>{
-    if(SORT.key==='urgencia'){
-      const ua=urgencia(a,colsData()),ub=urgencia(b,colsData());
-      if(ua===null&&ub===null) return String(a.id).localeCompare(String(b.id),'pt',{numeric:true});
-      if(ua===null) return 1; if(ub===null) return -1;
-      return (ua-ub)*dir;
-    }
-    if(SORT.key==='id') return String(a.id).localeCompare(String(b.id),'pt',{numeric:true})*dir;
-    if(SORT.key==='nome_cliente') return normTxt(a.nome_cliente).localeCompare(normTxt(b.nome_cliente),'pt')*dir;
-    return normTxt(a.valores[SORT.key]).localeCompare(normTxt(b.valores[SORT.key]),'pt')*dir;
-  });
+  /* Ordena o que SOBROU do filtro e da busca — nunca a lista crua. */
+  arr.sort((a,b)=>cmpOrd(a,b)||String(a.id).localeCompare(String(b.id),'pt',{numeric:true}));
   return arr;
 }
 
@@ -1198,15 +1236,27 @@ function cabecaHTML(l){
       }</span>
     </div>`;
 }
+/** Seta da coluna ativa — só ela ganha marca, senão a lista pareceria ordenada
+ *  por sete critérios ao mesmo tempo.
+ *  O espaço antes da seta é NÃO SEPARÁVEL (\u00A0) de propósito: com espaço
+ *  comum, o rótulo que quase preenche a coluna empurrava a seta sozinha para uma
+ *  segunda linha, e o cabeçalho ficava com o dobro da altura por causa dela. */
+function seta(key){return SORT.key===key?(SORT.dir==='asc'?'\u00A0▲':'\u00A0▼'):'';}
 /* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS) e some
-   abaixo de 900px, onde a linha deixa de ser sete colunas. aria-hidden porque é
-   rótulo de desenho: quem usa leitor de tela ouve o title da própria linha. */
+   abaixo de 900px, onde a linha deixa de ser sete colunas. Cada rótulo é um
+   botão que ordena — por isso ele NÃO é mais aria-hidden: aqui não é enfeite, e
+   a coluna ativa se anuncia com aria-sort. */
 function cabecalhoLista(){
-  return `<div class="lista-cab" aria-hidden="true">
-      <span>ID</span><span>Cliente</span><span>CNPJ / CPF</span><span>Cidade</span>
-      <span>Documento mais crítico</span><span style="text-align:center">Vencimento</span>
-      <span style="text-align:right">Situação</span>
-    </div>`;
+  const bt=(k,rot,estilo)=>{
+    const at=SORT.key===k;
+    return `<span role="columnheader"${estilo?' style="'+estilo+'"':''}`+
+      `${at?` aria-sort="${SORT.dir==='asc'?'ascending':'descending'}"`:''}>`+
+      `<button type="button" data-sort="${esc(k)}" title="Ordenar por ${esc(rot)}">${esc(rot)}${seta(k)}</button></span>`;
+  };
+  return `<div class="lista-cab" role="row">`+
+    bt('id','ID')+bt('nome_cliente','Cliente')+bt('cnpj','CNPJ / CPF')+bt('cidade','Cidade')+
+    bt('documento','Documento mais crítico')+bt('urgencia','Vencimento','text-align:center')+
+    bt('situacao','Situação','text-align:right')+`</div>`;
 }
 
 /* Rótulo do campo dentro da ficha. "Link Contrato Social" é nome de COLUNA de
@@ -1353,7 +1403,11 @@ function limparFiltros(){
 const ORDENS=[
   {k:'urgencia',rot:'Vencimento',asc:'mais urgente primeiro',desc:'menos urgente primeiro'},
   {k:'id',rot:'ID',asc:'do menor para o maior',desc:'do maior para o menor'},
-  {k:'nome_cliente',rot:'Cliente',asc:'A → Z',desc:'Z → A'}
+  {k:'nome_cliente',rot:'Cliente',asc:'A → Z',desc:'Z → A'},
+  {k:'cnpj',rot:'CNPJ / CPF',asc:'do menor para o maior',desc:'do maior para o menor'},
+  {k:'cidade',rot:'Cidade',asc:'A → Z',desc:'Z → A'},
+  {k:'documento',rot:'Documento mais crítico',asc:'A → Z',desc:'Z → A'},
+  {k:'situacao',rot:'Situação',asc:'vencidos primeiro',desc:'em dia primeiro'}
 ];
 function desenharOrdem(){
   const box=document.getElementById('chipsOrd'); if(!box) return;
@@ -1443,7 +1497,10 @@ function validarURL(){
     DOC=m||'todos';
   }
   const k=SORT.key;
-  const ok=k==='urgencia'||k==='id'||k==='nome_cliente'||(COLUNAS.indexOf(k)>=0&&!ehSigilosa(k));
+  /* As chaves da lista (ORD_COLS) valem sempre; um ?ord= antigo apontando para
+     uma COLUNA da planilha continua ordenando, desde que ela exista e não seja
+     sigilosa — senha nunca entra no endereço. */
+  const ok=!!ORD_COLS[k]||(COLUNAS.indexOf(k)>=0&&!ehSigilosa(k));
   if(!ok)SORT.key='urgencia';
   if(!ESPELHADAS.length)VER_CADASTRO=false;
 }
@@ -1795,9 +1852,12 @@ document.addEventListener('click',async e=>{
   if(e.target.closest('#chipCadastro')){VER_CADASTRO=!VER_CADASTRO;redesenhar();return;}
   if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
   if(e.target.closest('.btn-todos')){TETO=LINHAS.length;desenharLista();return;}
-  /* Ordenar não volta o teto ao início: a lista é a mesma, só noutra ordem. */
-  const ord=e.target.closest('.chip[data-s]');
-  if(ord){const k=ord.dataset.s;
+  /* Ordenar não volta o teto ao início: a lista é a mesma, só noutra ordem.
+     Os dois caminhos — o cabeçalho da lista e os chips "Ordenar por" do painel —
+     mexem no MESMO estado e no mesmo ?ord=/?dir=, para o F5 voltar igual. Abaixo
+     de 900px o cabeçalho some e sobram os chips. */
+  const ord=e.target.closest('.chip[data-s],[data-sort]');
+  if(ord){const k=ord.dataset.s||ord.dataset.sort;
     if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}
     desenharOrdem();desenharLista();sincronizarURL();return;}
   /* A linha inteira abre a ficha. É o único jeito de editar esta tela. */
@@ -1910,7 +1970,7 @@ function layout(){
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">A lista é só de leitura: cada linha traz <b>ID, cliente, CNPJ, cidade</b>, o <b>documento mais crítico</b>, o <b>vencimento mais próximo</b> e a <b>situação</b> — vermelho vencido, laranja até 30 dias, verde em dia e laranja claro quando não há vencimento informado, cada uma com uma faixa na lateral. Coluna em branco diz o que falta (<b>sem CNPJ</b>, <b>sem documento</b>, <b>sem data</b>) em vez de ficar vazia, e o que não coube aparece ao passar o mouse na linha.<br>Clicar na linha — ou apertar Enter nela — abre a <b>ficha do cliente</b> por cima da lista, e é lá que acontece toda a edição: um bloco por assunto, com o documento e o vencimento dele juntos. O que você editar salva sozinho; o botão <b>Salvar alterações</b> antecipa a gravação que já estava a caminho e fecha a ficha quando ela entra. Se alguma coisa não gravar, a ficha continua aberta com o aviso.<br>Na ficha, o atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. A célula de documento oferece <b>Enviar ⬆</b> quando está vazia e <b>Abrir ↗</b> quando já tem arquivo; o <b>⋯</b> guarda o campo de endereço e o <b>Enviar outro arquivo</b>, que sobe um documento no lugar do atual.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do cadastro do cliente — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
+    <div class="txt">A lista é só de leitura: cada linha traz <b>ID, cliente, CNPJ, cidade</b>, o <b>documento mais crítico</b>, o <b>vencimento mais próximo</b> e a <b>situação</b> — vermelho vencido, laranja até 30 dias, verde em dia e laranja claro quando não há vencimento informado, cada uma com uma faixa na lateral. Coluna em branco diz o que falta (<b>sem CNPJ</b>, <b>sem documento</b>, <b>sem data</b>) em vez de ficar vazia, e o que não coube aparece ao passar o mouse na linha. Os <b>filtros rápidos</b> e a <b>ordenação</b> ficam no botão <b>Filtros</b> e combinam entre si e com a busca; no computador dá para ordenar clicando no <b>cabeçalho da lista</b> — clicar de novo na mesma coluna inverte, e coluna em branco fica sempre no fim.<br>Clicar na linha — ou apertar Enter nela — abre a <b>ficha do cliente</b> por cima da lista, e é lá que acontece toda a edição: um bloco por assunto, com o documento e o vencimento dele juntos. O que você editar salva sozinho; o botão <b>Salvar alterações</b> antecipa a gravação que já estava a caminho e fecha a ficha quando ela entra. Se alguma coisa não gravar, a ficha continua aberta com o aviso.<br>Na ficha, o atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. A célula de documento oferece <b>Enviar ⬆</b> quando está vazia e <b>Abrir ↗</b> quando já tem arquivo; o <b>⋯</b> guarda o campo de endereço e o <b>Enviar outro arquivo</b>, que sobe um documento no lugar do atual.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do cadastro do cliente — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
   </details>
   <details class="ajuda situacao" id="det-situacao">
     <summary>Ver quem está em cada situação</summary>
@@ -1970,14 +2030,11 @@ if (window.B4UShell) {
     link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
   });
   /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
-     tela em que estava ao abrir um documento. O menu lateral é o contrário
-     disso: é navegação DENTRO do painel, e sair pela guia atual é o gesto — a
-     mesma exceção que o logo e o "← Painel" já traziam escrita à mão.
-     Só marcamos quem ainda não tem alvo próprio: assim o WhatsApp do rodapé do
-     menu (que nasce com target="_blank") continua abrindo em guia nova. */
-  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
-    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
-  });
+     tela em que estava ao abrir um documento. O menu lateral segue a MESMA
+     regra: o dono decidiu que tudo abre em guia nova, sem exceção, e o próprio
+     B4UShell já marca os links do menu com target="_blank" rel="noopener".
+     As duas exceções continuam sendo o logo (#logo-home) e o "← Painel"
+     (#volta), escritos à mão com target="_self": eles são o gesto de VOLTAR. */
 }
 
 lerURL();

@@ -80,6 +80,10 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
 .chip.falta.on{background:var(--amber);border-color:var(--amber)}
 .chip.limpar{border-style:dashed;color:var(--muted)}
+.chip .ord{margin-left:5px;font-size:11px;opacity:.9}
+.ord-info{font-size:12px;color:var(--muted);font-weight:700}
+.ord-info b{color:var(--ink-2)}
+.ord-info:empty{display:none}
 /* ---------- botao (B.8): uma base, tres papeis ---------- */
 .btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
   font-weight:700;font-size:13px;padding:10px 14px;border-radius:var(--radius-sm);transition:border-color .12s,transform .1s}
@@ -208,6 +212,13 @@ details.situacao>.resumo{padding:0 12px 12px}
   gap:12px;align-items:center;border-left:4px solid transparent}
 .lista-cab{padding:8px 13px 5px;font-size:var(--fs-1);font-weight:800;letter-spacing:.5px;
   text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+/* O cabeçalho também ordena: cada rótulo é um botão de verdade (Tab chega nele,
+   Enter e Espaço ordenam). É o que restou do "clique em qualquer cabeçalho" da
+   grade antiga — e abaixo de 900px, onde a régua some, os mesmos critérios
+   continuam nos chips "Ordenar por" do painel de filtros. */
+.lista-cab button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
+  text-transform:inherit;letter-spacing:inherit;text-align:inherit}
+.lista-cab button:hover{color:var(--brand-teal-txt)}
 .ctl{width:100%;text-align:left;padding:11px 13px;cursor:pointer;font-family:var(--sans);color:inherit}
 .ctl+.ctl{border-top:1px solid var(--line)}
 .ctl:hover{background:var(--surface-warm)}
@@ -557,6 +568,9 @@ let ABERTOS=new Set();
 let FILTRO='todos';   // todos | sem_principal | sem_email | sem_tel | sem_contato
 let AREA='';          // '' = todas
 let TERMO='';
+/* Ordenação da lista. 'cliente' é o padrão e reproduz a ordem de sempre: os
+   cartões por ID e, dentro deles, Principal primeiro e depois por nome. */
+let SORT={key:'cliente',dir:'asc'};
 let MODAL_AREAS={};
 
 /* ---------------- revelação progressiva ---------------- */
@@ -667,9 +681,82 @@ function bateCliente(g,t){
   return casaBusca(normTxt(g.id+' '+g.nome),soDigitos(g.id),t);
 }
 function passaBusca(g,t){return !t||bateCliente(g,t)||g.contatos.some(c=>bateContato(c,t));}
+
+/* ---------------- ordenação da lista ----------------
+   A lista tem dois níveis: o cartão é o CLIENTE e as linhas dentro dele são os
+   CONTATOS. Por isso a coluna "Cliente" ordena os cartões e as outras quatro
+   ordenam as linhas dentro de cada cartão — que é o que o cabeçalho está em
+   cima de fato. Os mesmos critérios viram chips "Ordenar por" no painel de
+   filtros: abaixo de 900px o cabeçalho some, e sem eles a ordenação sumiria
+   junto. */
+const ORDENS=[
+  {k:'cliente',rot:'Cliente',asc:'do menor ID para o maior',desc:'do maior ID para o menor'},
+  {k:'nome',rot:'Nome',asc:'A → Z',desc:'Z → A'},
+  {k:'email',rot:'E-mail',asc:'A → Z',desc:'Z → A'},
+  {k:'papel',rot:'Papel',asc:'Principal primeiro',desc:'Secundário primeiro'},
+  {k:'areas',rot:'Áreas',asc:'A → Z',desc:'Z → A'}
+];
+/* Texto sem acento e sem caixa: "Água" e "agua" ficam juntas. */
+function cmpTxt(a,b){return normTxt(a).localeCompare(normTxt(b),'pt',{numeric:true});}
+/** O que a coluna vale para ordenar. Devolve '' quando está em branco — e vazio
+ *  vai sempre para o fim, nas duas direções. */
+function valOrdCt(c){
+  if(SORT.key==='nome')return String(c.nome||'');
+  if(SORT.key==='email')return String(c.email||'');
+  if(SORT.key==='papel')return c.papel==='Principal'?'0':'1';
+  if(SORT.key==='areas'){
+    /* Principal enxerga tudo — é o que a coluna escreve, e é por isso que ele
+       ordena por esse texto e não por uma lista de áreas que ele não tem. */
+    if(c.papel==='Principal')return 'todas as áreas';
+    return AREAS.filter(a=>c.areas&&c.areas[a[0]]).map(a=>a[1]).join(', ');
+  }
+  return '';
+}
+/* Coluna em branco quer dizer "falta preencher": ela vai SEMPRE para o fim, nas
+   duas direções. Jogá-la para o topo no Z→A esconderia justamente o contato sem
+   nome ou sem e-mail, que é o que a tela existe para cobrar. */
+function cmpCt(a,b){
+  const va=valOrdCt(a),vb=valOrdCt(b);
+  const ea=va.trim()==='',eb=vb.trim()==='';
+  if(ea&&eb)return 0;
+  if(ea)return 1;
+  if(eb)return -1;
+  const r=cmpTxt(va,vb);
+  return SORT.dir==='desc'?-r:r;
+}
+/** A ordem de sempre dentro do cartão: Principal primeiro, depois por nome. */
+function ordemPadraoCt(a,b){
+  return (a.papel==='Principal'?0:1)-(b.papel==='Principal'?0:1) ||
+         cmpTxt(a.nome||a.email,b.nome||b.email);
+}
+/** Os contatos de um cartão na ordem de agora. Devolve uma CÓPIA: g.contatos é
+ *  o que a gravação e o "adicionar contato" mexem, e reordenar o vetor original
+ *  faria a lista brigar com quem está editando. */
+function contatosOrdenados(g){
+  if(SORT.key==='cliente')return g.contatos;
+  return g.contatos.slice().sort((a,b)=>cmpCt(a,b)||ordemPadraoCt(a,b));
+}
 /* t chega normalizado (normTxt) — casaBusca normaliza de novo sem efeito colateral,
    e os dígitos são os mesmos antes e depois da normalização. */
-function visiveis(){const t=normTxt(TERMO);return GRUPOS.filter(g=>passaArea(g)&&passaSit(g)&&passaBusca(g,t));}
+function visiveis(){
+  const t=normTxt(TERMO);
+  /* Ordena o que SOBROU do filtro e da busca — nunca a lista crua. */
+  const arr=GRUPOS.filter(g=>passaArea(g)&&passaSit(g)&&passaBusca(g,t));
+  const porId=(a,b)=>String(a.id).localeCompare(String(b.id),'pt',{numeric:true});
+  if(SORT.key==='cliente')
+    return arr.sort((a,b)=>SORT.dir==='desc'?-porId(a,b):porId(a,b));
+  /* Ordenando por coluna de contato, o cartão vale pelo seu PRIMEIRO contato na
+     ordem escolhida: é ele que aparece logo abaixo do cabeçalho do cliente.
+     Cartão sem contato nenhum não tem valor para comparar e cai no fim, nas duas
+     direções — como qualquer célula vazia. */
+  return arr.sort((a,b)=>{
+    const ca=contatosOrdenados(a)[0],cb=contatosOrdenados(b)[0];
+    if(!ca&&!cb)return porId(a,b);
+    if(!ca)return 1;
+    if(!cb)return -1;
+    return cmpCt(ca,cb)||porId(a,b);
+  });
+}
 
 /* destaca o trecho encontrado sem quebrar acentos */
 function hl(txt,t){
@@ -795,13 +882,25 @@ function linhaHTML(c,g,t){
     role="button" tabindex="0" aria-haspopup="dialog" data-row="${esc(c.row)}" title="${esc(tituloLinha(c,g))}"
     >${linhaConteudo(c,g)}</div>`;
 }
+/** Seta da coluna ativa — só ela ganha marca, senão a lista pareceria ordenada
+ *  por cinco critérios ao mesmo tempo.
+ *  O espaço antes da seta é NÃO SEPARÁVEL (\u00A0) de propósito: com espaço
+ *  comum, o rótulo que quase preenche a coluna empurrava a seta sozinha para uma
+ *  segunda linha, e o cabeçalho ficava com o dobro da altura por causa dela. */
+function seta(key){return SORT.key===key?(SORT.dir==='asc'?'\u00A0▲':'\u00A0▼'):'';}
 /* O cabeçalho de colunas repete a régua da linha (mesma regra de CSS) e some
-   abaixo de 900px, onde a linha deixa de ser cinco colunas. aria-hidden porque é
-   rótulo de desenho: quem usa leitor de tela ouve o title da própria linha. */
+   abaixo de 900px, onde a linha deixa de ser cinco colunas. Cada rótulo é um
+   botão que ordena — por isso ele NÃO é mais aria-hidden: aqui não é enfeite, e
+   a coluna ativa se anuncia com aria-sort. */
 function cabecalhoLista(){
-  return `<div class="lista-cab" aria-hidden="true">
-      <span>Cliente</span><span>Nome</span><span>E-mail</span><span>Papel</span><span>Áreas</span>
-    </div>`;
+  const bt=(k,rot)=>{
+    const at=SORT.key===k;
+    return `<span role="columnheader"${at?` aria-sort="${SORT.dir==='asc'?'ascending':'descending'}"`:''}>`+
+      `<button type="button" data-sort="${esc(k)}" title="Ordenar por ${esc(rot)}">${esc(rot)}${seta(k)}</button></span>`;
+  };
+  return `<div class="lista-cab" role="row">`+
+    bt('cliente','Cliente')+bt('nome','Nome')+bt('email','E-mail')+
+    bt('papel','Papel')+bt('areas','Áreas')+`</div>`;
 }
 
 /* ---------------- a ficha do contato (corpo do modal) ----------------
@@ -888,8 +987,9 @@ function cabecalhoHTML(g,t){
    fecha; dentro dele ficam o cabeçalho de colunas e as linhas de contato. */
 function grupoHTML(g,t){
   const aberto=ABERTOS.has(g.id);
+  const cts=contatosOrdenados(g);
   const corpo=aberto?`<div class="cli-b">
-      ${g.contatos.length?cabecalhoLista()+g.contatos.map(c=>linhaHTML(c,g,t)).join('')
+      ${cts.length?cabecalhoLista()+cts.map(c=>linhaHTML(c,g,t)).join('')
         :'<div class="vazio">Nenhum contato cadastrado para este cliente.</div>'}
       <div class="add-linha">
         <button class="btn btn--mini btn--pri" type="button" data-add="${esc(g.id)}">+ Adicionar contato</button>
@@ -904,10 +1004,10 @@ function grupoHTML(g,t){
    Só conta o que está ESCONDIDO no painel: a busca fica à vista na régua, e um
    selo dizendo "1 filtro" por causa dela faria a pessoa procurar o que não sumiu. */
 function filtrosPainel(){
-  return (FILTRO!=='todos'?1:0)+(AREA?1:0);
+  return (FILTRO!=='todos'?1:0)+(AREA?1:0)+(SORT.key!=='cliente'||SORT.dir!=='asc'?1:0);
 }
 function limparFiltros(){
-  FILTRO='todos';AREA='';TERMO='';TETO=PASSO;
+  FILTRO='todos';AREA='';TERMO='';TETO=PASSO;SORT={key:'cliente',dir:'asc'};
   const b=document.getElementById('busca');if(b)b.value='';
   ABERTOS.clear();
   redesenhar();
@@ -933,6 +1033,20 @@ function desenharChips(){
     '<span class="rot">Área</span>'+
     `<button class="chip ${AREA===''?'on':''}" data-area="">Todas<span class="n">${porSit.length}</span></button>`+
     AREAS.map(a=>`<button class="chip ${AREA===a[0]?'on':''}" data-area="${a[0]}">${a[1]}<span class="n">${nArea(a[0])}</span></button>`).join('');
+}
+/* Ordenar por: os mesmos cinco critérios do cabeçalho da lista, em chip. Abaixo
+   de 900px o cabeçalho some, e sem estes chips a ordenação sumiria junto — no
+   celular ela é justamente o jeito de achar quem está sem e-mail. */
+function desenharOrdem(){
+  const box=document.getElementById('chipsOrd');if(!box)return;
+  box.innerHTML='<span class="rot">Ordenar por</span>'+ORDENS.map(o=>
+    `<button type="button" class="chip ${SORT.key===o.k?'on':''}" data-s="${esc(o.k)}">${esc(o.rot)}`+
+    (SORT.key===o.k?`<span class="ord">${SORT.dir==='asc'?'▲':'▼'}</span>`:'')+`</button>`).join('');
+  const info=document.getElementById('ordInfo');if(!info)return;
+  const o=ORDENS.find(x=>x.k===SORT.key);
+  info.innerHTML=o
+    ?('Ordenado por <b>'+esc(o.rot)+'</b> — '+esc(SORT.dir==='asc'?o.asc:o.desc)+'. Clicar de novo no mesmo critério inverte.')
+    :'';
 }
 function desenharResumo(){
   const semP=GRUPOS.filter(faltaPrincipal);
@@ -971,7 +1085,8 @@ function desenharLista(){
   document.getElementById('dica').innerHTML=
     (total>n?`Mostrando <b>${n} de ${arr.length}</b>. `:'')+
     (arr.length>MAX_CLI?`Desenho no máximo ${MAX_CLI} — refine a busca. `:'')+
-    'Clique no cliente para ver os contatos e no contato para abrir a ficha — a lista é só leitura.';
+    'Clique no cliente para ver os contatos e no contato para abrir a ficha — a lista é só leitura. '+
+    'Os filtros e a ordenação ficam no botão Filtros; no computador dá para ordenar clicando no cabeçalho de colunas.';
   desenharContagem();
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
 }
@@ -1018,7 +1133,7 @@ function desenharContagem(){
     arr.length+' de '+GRUPOS.length+' clientes · '+nCt+' de '+CONTATOS.length+' contatos';
 }
 function redesenhar(){
-  desenharChips();desenharResumo();desenharLista();desenharResumoLista();
+  desenharChips();desenharOrdem();desenharResumo();desenharLista();desenharResumoLista();
   if(FILTROS_UI)FILTROS_UI.atualizarContador();
   sincronizarURL();
 }
@@ -1031,6 +1146,8 @@ function sincronizarURL(){
     set('q',TERMO);
     set('f',FILTRO==='todos'?'':FILTRO);
     set('area',AREA);
+    set('ord',SORT.key==='cliente'?'':SORT.key);
+    set('dir',SORT.dir==='asc'?'':SORT.dir);
     history.replaceState(null,'',u.pathname+u.search+u.hash);
   }catch(e){}
 }
@@ -1038,6 +1155,10 @@ function lerURL(){
   const p=new URLSearchParams(location.search);
   FILTRO=p.get('f')||'todos';
   AREA=p.get('area')||'';
+  /* ?ord= só vale se for um critério que existe: link antigo (ou editado à mão)
+     não pode deixar a lista ordenada por nada. */
+  const k=p.get('ord')||'cliente';
+  SORT={key:ORDENS.some(o=>o.k===k)?k:'cliente',dir:p.get('dir')==='desc'?'desc':'asc'};
   TERMO=p.get('q')||'';
 }
 
@@ -1530,6 +1651,17 @@ document.addEventListener('click',e=>{
   if(cf){FILTRO=cf.dataset.f;TETO=PASSO;redesenhar();return;}
   const ca=e.target.closest('.chip[data-area]');
   if(ca){AREA=ca.dataset.area;TETO=PASSO;redesenhar();return;}
+  /* Ordenar: os dois caminhos — o cabeçalho da lista e os chips "Ordenar por" do
+     painel — mexem no MESMO estado e no mesmo ?ord=/?dir=, para o F5 voltar
+     igual. Abaixo de 900px o cabeçalho some e sobram os chips. A busca, os
+     filtros e os cartões abertos ficam onde estão: só a ordem muda. */
+  const ord=e.target.closest('.chip[data-s],[data-sort]');
+  if(ord){const k=ord.dataset.s||ord.dataset.sort;
+    if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}
+    TETO=PASSO;                                // outra ordem, outro começo de lista
+    desenharOrdem();desenharLista();desenharResumoLista();sincronizarURL();
+    if(FILTROS_UI)FILTROS_UI.atualizarContador();
+    return;}
   if(e.target.closest('#btn-limpar')){limparFiltros();return;}
   if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
   if(e.target.closest('.btn-todos')){TETO=MAX_CLI;desenharLista();return;}
@@ -1609,6 +1741,8 @@ function layout(){
       <div id="painel-filtros" class="painel-filtros" hidden>
         <div class="grupo" id="chipsSit"></div>
         <div class="grupo" id="chipsArea"></div>
+        <div class="grupo" id="chipsOrd"></div>
+        <div class="grupo ord-info" id="ordInfo"></div>
         <button type="button" class="btn-limpar" id="btn-limpar">Limpar filtros</button>
       </div>
     </div>
@@ -1682,14 +1816,11 @@ if (window.B4UShell) {
     link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
   });
   /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
-     tela em que estava ao abrir um link do contato. O menu lateral é o contrário
-     disso: é navegação DENTRO do painel, e sair pela guia atual é o gesto — a
-     mesma exceção que o logo e o "← Painel" já traziam escrita à mão.
-     Só marcamos quem ainda não tem alvo próprio: assim o WhatsApp do rodapé do
-     menu (que nasce com target="_blank") continua abrindo em guia nova. */
-  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
-    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
-  });
+     tela em que estava ao abrir um link do contato. O menu lateral segue a MESMA
+     regra: o dono decidiu que tudo abre em guia nova, sem exceção, e o próprio
+     B4UShell já marca os links do menu com target="_blank" rel="noopener".
+     As duas exceções continuam sendo o logo (#logo-home) e o "← Painel"
+     (#volta), escritos à mão com target="_self": eles são o gesto de VOLTAR. */
 }
 
 carregar(true);

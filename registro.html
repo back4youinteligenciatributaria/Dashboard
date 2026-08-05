@@ -132,6 +132,13 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
   gap:12px;align-items:center}
 .lista-cab{padding:2px 14px 0;font-size:var(--fs-1);font-weight:800;letter-spacing:.5px;
   text-transform:uppercase;color:var(--muted)}
+/* O cabeçalho também ordena: cada rótulo é um botão de verdade (Tab chega nele,
+   Enter e Espaço ordenam). É o que restou do "clique em qualquer cabeçalho" da
+   grade antiga — e abaixo de 900px, onde a régua some, os mesmos critérios
+   continuam nos chips "Ordenar por" do painel de filtros. */
+.lista-cab button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
+  text-transform:inherit;letter-spacing:inherit;text-align:inherit}
+.lista-cab button:hover{color:var(--brand-teal-txt)}
 .cli-head{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
   cursor:pointer;font-family:var(--sans);color:inherit}
 .cli-head:hover{background:var(--surface-warm)}
@@ -783,9 +790,16 @@ function seloHTML(cli){
 }
 
 /* ---------------- ordenação ---------------- */
+/* Os critérios são os MESMOS do cabeçalho da lista, mais o "campos vazios", que
+   não tem coluna própria. Abaixo de 900px o cabeçalho some — sem estes chips a
+   ordenação sumiria junto, e no celular ela é justamente o jeito de achar o
+   cadastro mais atrasado. */
 const ORDENS=[
   {k:'id',rot:'ID',asc:'do menor para o maior',desc:'do maior para o menor'},
   {k:'nome',rot:'Nome',asc:'A → Z',desc:'Z → A'},
+  {k:'cnpj',rot:'CNPJ / CPF',asc:'do menor para o maior',desc:'do maior para o menor',dep:'cnpj'},
+  {k:'cidade',rot:'Cidade',asc:'A → Z',desc:'Z → A',dep:'cidade'},
+  {k:'produtos',rot:'Produtos',asc:'A → Z',desc:'Z → A',dep:'produtos'},
   {k:'inicio',rot:'Início da contabilidade',asc:'mais antigo primeiro',desc:'mais novo primeiro',dep:'inicio'},
   {k:'ativo',rot:'Situação',asc:'ativos primeiro',desc:'inativos primeiro',dep:'ativo'},
   {k:'vazios',rot:'Campos vazios',asc:'mais incompleto primeiro',desc:'mais completo primeiro'}
@@ -802,10 +816,37 @@ function chaveInicio(cli){
   if(m)return (+m[3])*10000+(+m[2])*100+(+m[1]);
   return null;
 }
+/* Texto sem acento e sem caixa: "Água" e "agua" ficam juntas, que é como quem
+   procura na lista espera. */
+function cmpTxt(a,b){return normTxt(a).localeCompare(normTxt(b),'pt',{numeric:true});}
+/* Documento ordena pelos DÍGITOS: com pontuação, "08.852…" e "08852…" caíam em
+   pontos distintos da mesma coluna. */
+function cmpDoc(a,b){return soDigitos(a).localeCompare(soDigitos(b),'pt',{numeric:true});}
+/* Coluna em branco significa "falta preencher" e vai SEMPRE para o fim, nas duas
+   direções: jogá-la para o topo no Z→A esconderia justamente o que se procura.
+   Devolve 1/-1 quando já resolveu, ou null quando os dois têm conteúdo. */
+function fimSeVazio(a,b){
+  const ea=String(a==null?'':a).trim()==='',eb=String(b==null?'':b).trim()==='';
+  if(ea&&eb)return 0;
+  if(ea)return 1;
+  if(eb)return -1;
+  return null;
+}
 function ordenar(arr){
   const d=DIR==='asc'?1:-1;
   return arr.sort((a,b)=>{
-    if(ORDEM==='nome')return normTxt(a.nome).localeCompare(normTxt(b.nome),'pt')*d||porId(a,b);
+    if(ORDEM==='nome'){
+      const z=fimSeVazio(a.nome,b.nome);
+      if(z!==null)return z||porId(a,b);
+      return cmpTxt(a.nome,b.nome)*d||porId(a,b);
+    }
+    if(ORDEM==='cnpj'||ORDEM==='cidade'||ORDEM==='produtos'){
+      const col=COLS_LINHA[ORDEM]||COL[ORDEM];
+      const x=valorDe(a,col),y=valorDe(b,col);
+      const z=fimSeVazio(x,y);
+      if(z!==null)return z||porId(a,b);
+      return (ORDEM==='cnpj'?cmpDoc(x,y):cmpTxt(x,y))*d||porId(a,b);
+    }
     if(ORDEM==='inicio'){
       const x=chaveInicio(a),y=chaveInicio(b);
       if(x==null&&y==null)return porId(a,b);
@@ -1052,15 +1093,27 @@ function cabecaHTML(cli){
       <span class="c-fim"><span class="pill sit-${s}" title="${esc(info.dica)}">${esc(info.rot)}</span>${seloHTML(cli)}</span>
     </div>`;
 }
+/** Seta da coluna ativa — só ela ganha marca, senão a lista pareceria ordenada
+ *  por sete critérios ao mesmo tempo.
+ *  O espaço antes da seta é NÃO SEPARÁVEL (\u00A0) de propósito: com espaço
+ *  comum, o rótulo que quase preenche a coluna empurrava a seta sozinha para uma
+ *  segunda linha, e o cabeçalho ficava com o dobro da altura por causa dela. */
+function seta(key){return ORDEM===key?(DIR==='asc'?'\u00A0▲':'\u00A0▼'):'';}
 /* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS) e some
-   abaixo de 900px, onde a linha deixa de ser sete colunas. aria-hidden porque é
-   rótulo de desenho: quem usa leitor de tela ouve o title da própria linha. */
+   abaixo de 900px, onde a linha deixa de ser sete colunas. Cada rótulo é um
+   botão que ordena — por isso ele NÃO é mais aria-hidden: aqui não é enfeite, e
+   a coluna ativa se anuncia com aria-sort. */
 function cabecalhoLista(){
-  return `<div class="lista-cab" aria-hidden="true">
-      <span>ID</span><span>Nome</span><span>CNPJ / CPF</span><span>Cidade</span>
-      <span>Produtos</span><span style="text-align:center">Início</span>
-      <span style="text-align:right">Situação</span>
-    </div>`;
+  const bt=(k,rot,estilo)=>{
+    const at=ORDEM===k;
+    return `<span role="columnheader"${estilo?' style="'+estilo+'"':''}`+
+      `${at?` aria-sort="${DIR==='asc'?'ascending':'descending'}"`:''}>`+
+      `<button type="button" data-sort="${esc(k)}" title="Ordenar por ${esc(rot)}">${esc(rot)}${seta(k)}</button></span>`;
+  };
+  return `<div class="lista-cab" role="row">`+
+    bt('id','ID')+bt('nome','Nome')+bt('cnpj','CNPJ / CPF')+bt('cidade','Cidade')+
+    bt('produtos','Produtos')+bt('inicio','Início','text-align:center')+
+    bt('ativo','Situação','text-align:right')+`</div>`;
 }
 function campoEditHTML(cli,f){
   const col=f.col,v=valorDe(cli,col);
@@ -1684,6 +1737,17 @@ document.addEventListener('click',e=>{
   if(e.target.id==='modalCad'){fecharCadastro();return;}
   const head=e.target.closest('.cli-head');
   if(head){const no=head.closest('.cli');if(no)abrirCadastro(no.dataset.id);return;}
+  /* Ordenar pelo cabeçalho da lista: mesma coluna inverte, coluna nova começa em
+     A→Z. Cai no MESMO estado dos chips "Ordenar por" (e no mesmo ?ord=/?dir=),
+     para o F5 voltar igual e o celular, onde o cabeçalho some, continuar
+     ordenando pelo painel de filtros. */
+  const th=e.target.closest('[data-sort]');
+  if(th){const k=th.dataset.sort;
+    if(ORDEM===k)DIR=(DIR==='asc'?'desc':'asc');else{ORDEM=k;DIR='asc';}
+    TETO=PASSO;                                // outra ordem, outro começo de lista
+    desenharOrdem();desenharLista();
+    if(FILTROS_UI)FILTROS_UI.atualizarContador();
+    return;}   // desenharLista() sincroniza a URL
   const chip=e.target.closest('.chip[data-f]');
   if(chip){FILTRO=chip.dataset.f;TETO=PASSO;redesenhar();return;}
   const ord=e.target.closest('.chip[data-s]');
@@ -1765,7 +1829,7 @@ function layout(){
   </div>
   <details class="ajuda" id="ajuda">
     <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho. Cliente novo nasce pelo botão do topo — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Esses mesmos campos, quando estão em branco, ficam com um <b>fundo avermelhado</b> no cadastro aberto: é só dica visual do que falta preencher. Os cards ignoram quem está inativo.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. Os filtros e a ordenação ficam no botão <b>Filtros</b>, que avisa com um número quando algum está pegando.<br>Cada linha traz <b>ID, nome, CNPJ/CPF, cidade, produtos, data de início</b> e a <b>situação</b> — Ativo em verde, <b>Em inativação</b> em laranja, <b>Inativo</b> em vermelho e cinza quando a coluna Ativo está em branco, cada uma com uma faixa na lateral. Coluna em branco diz o que falta (<b>sem CNPJ</b>, <b>sem produtos</b>, <b>sem data</b>) em vez de ficar vazia. Clicar na linha — ou apertar Enter nela — abre o cadastro completo por cima da lista, sem sair da tela; o que não coube nas colunas (o Regime, por exemplo) aparece ao passar o mouse na linha. Dentro do cadastro o que você edita continua salvando sozinho; o botão <b>Salvar alterações</b> antecipa a gravação que já estava a caminho e fecha a ficha quando ela entra. Se alguma coisa não gravar, a ficha continua aberta com o aviso.</div>
+    <div class="txt">Clique num cliente para abrir o cadastro completo. O que você editar salva sozinho. Cliente novo nasce pelo botão do topo — ele cria as pastas e as planilhas antes de gravar.<br>O selo <b>campos vazios</b> conta só as colunas editáveis que pelo menos 20% dos clientes preenchem — de fora ficam as 🔒 do sistema, a <b>data de fim da contabilidade</b> (em branco ali é contrato em andamento) e a coluna <b>Ativo</b>. Esses mesmos campos, quando estão em branco, ficam com um <b>fundo avermelhado</b> no cadastro aberto: é só dica visual do que falta preencher. Os cards ignoram quem está inativo.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. Os filtros e a ordenação ficam no botão <b>Filtros</b>, que avisa com um número quando algum está pegando; no computador dá para ordenar clicando no <b>cabeçalho da lista</b>.<br>Cada linha traz <b>ID, nome, CNPJ/CPF, cidade, produtos, data de início</b> e a <b>situação</b> — Ativo em verde, <b>Em inativação</b> em laranja, <b>Inativo</b> em vermelho e cinza quando a coluna Ativo está em branco, cada uma com uma faixa na lateral. Coluna em branco diz o que falta (<b>sem CNPJ</b>, <b>sem produtos</b>, <b>sem data</b>) em vez de ficar vazia. Clicar na linha — ou apertar Enter nela — abre o cadastro completo por cima da lista, sem sair da tela; o que não coube nas colunas (o Regime, por exemplo) aparece ao passar o mouse na linha. Dentro do cadastro o que você edita continua salvando sozinho; o botão <b>Salvar alterações</b> antecipa a gravação que já estava a caminho e fecha a ficha quando ela entra. Se alguma coisa não gravar, a ficha continua aberta com o aviso.</div>
   </details>
   <details class="ajuda situacao" id="det-situacao">
     <summary>Ver quem está em cada situação</summary>
@@ -1869,14 +1933,11 @@ if (window.B4UShell) {
     link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
   });
   /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
-     tela em que estava ao abrir a planilha. O menu lateral é o contrário disso:
-     é navegação DENTRO do painel, e sair pela guia atual é o gesto — a mesma
-     exceção que o logo e o "← Painel" já traziam escrita à mão.
-     Só marcamos quem ainda não tem alvo próprio: assim o WhatsApp do rodapé do
-     menu (que nasce com target="_blank") continua abrindo em guia nova. */
-  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
-    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
-  });
+     tela em que estava ao abrir a planilha. O menu lateral segue a MESMA regra:
+     o dono decidiu que tudo abre em guia nova, sem exceção, e o próprio
+     B4UShell já marca os links do menu com target="_blank" rel="noopener".
+     As duas exceções continuam sendo o logo (#logo-home) e o "← Painel"
+     (#volta), escritos à mão com target="_self": eles são o gesto de VOLTAR. */
 }
 
 carregar();

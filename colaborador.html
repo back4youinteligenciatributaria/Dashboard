@@ -366,7 +366,7 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
   </div>
 
   <!-- CLIENTES — busca com dropdown -->
-  <div class="sec-tit">Links por cliente</div>
+  <div class="sec-tit">Pesquisa rápida</div>
   <div class="combo">
     <div class="combo-row">
       <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar cliente por ID, nome ou CNPJ (com ou sem pontos)…">
@@ -792,16 +792,50 @@ function chipInicio(iso){
   const dec=(mm!=null)?`<span class="sec">· ${esc(fmtMeses(mm))}</span>`:'';
   return `<span class="chip-inicio">desde <b>${fmtBR(iso)}</b>${dec}</span>`;
 }
+/* Equiparação NÃO é sim/não, e tratá-la como bool era afirmação falsa na tela.
+   A coluna "Equiparados" do cadastro tem, hoje, estes valores reais: "Sim" (27
+   clientes), "Em processo administrativo" (41), "Não"/"Nao" (33), vazio (8),
+   "Em processo jurídico" (1) e "N/A" (1).
+
+   O teste antigo era `se não for não, é equiparado` — e com isso 43 clientes que
+   ainda estão disputando a equiparação apareciam como se já a tivessem
+   conquistado, inclusive o marcado "N/A", que passava por acidente. A diferença
+   importa: equiparado de fato muda a tributação; em processo administrativo é
+   pedido em análise; em processo judicial é briga na justiça. São três conversas
+   diferentes com o cliente, e a tela precisa dizer qual é.
+
+   Quem não está em nenhum dos três não ganha chip: ausência já diz "não". */
+function chipEquiparacao(v){
+  const t=String(v==null?'':v).trim();
+  if(!t) return '';
+  if(/^n[aã]o$|^n\/?a$|^0$|^-$|^false$/i.test(t)) return '';
+  if(/jur[ií]d|judicial/i.test(t))
+    return '<span class="st-chip aten">Equiparação · processo judicial</span>';
+  if(/administrativ|processo|andamento|an[aá]lise/i.test(t))
+    return '<span class="st-chip aten">Equiparação · processo administrativo</span>';
+  if(/^sim$|equiparad/i.test(t))
+    return '<span class="st-chip ok">Equiparado</span>';
+  /* Valor que ninguém previu: mostra o que está escrito, sem interpretar. Melhor
+     um rótulo estranho na tela que uma afirmação errada. */
+  return '<span class="st-chip">Equiparação · '+esc(t)+'</span>';
+}
+/* Os produtos contratados são a primeira pergunta de quem abre um cliente ("o que
+   a gente faz para ele?"), e não estavam em lugar nenhum do painel. Vêm do mesmo
+   cadastro, na coluna "Produtos Back4you", separados por vírgula. */
+function chipsProdutos(v){
+  return String(v==null?'':v).split(/[,;]/).map(s=>s.trim()).filter(Boolean)
+    .map(p=>'<span class="ic-chip">'+esc(p)+'</span>').join('');
+}
 function blocoInfo(c){
   const r=c.registro; if(!r) return '';
   const chips=[];
   const st=statusCliente(r.ativo);
   chips.push(`<span class="st-chip${st.cl?' '+st.cl:''}">${esc(st.txt)}</span>`);
+  if(r.produtos) chips.push(chipsProdutos(r.produtos));
   if(r.regime) chips.push(`<span class="ic-chip">${esc(String(r.regime))}</span>`);
   const fr=String(r.fator_r==null?'':r.fator_r).trim();
   if(fr && !/^(n[aã]o|nao|0|-|false)$/i.test(fr)) chips.push('<span class="ic-chip">Fator R</span>');
-  const eq=String(r.equiparado==null?'':r.equiparado).trim();
-  if(eq && !/^(n[aã]o|nao|0|-|false)$/i.test(eq)) chips.push('<span class="ic-chip">Equiparado</span>');
+  chips.push(chipEquiparacao(r.equiparado));
   chips.push(chipInicio(r.inicio_contab));
   return `<div class="info-chips">${chips.join('')}</div>`;
 }

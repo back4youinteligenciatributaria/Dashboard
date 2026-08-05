@@ -277,7 +277,20 @@
       side.className = 'b4s-side';
       side.setAttribute('aria-label', 'Menu principal');
 
-      var html = '<a class="b4s-logo" href="' + link(itens[1] ? itens[1].pag : 'index.html') + '">'
+      /* GUIA NOVA PARA TUDO, inclusive o menu.
+         É a convenção da casa ("link clicado não tira o colaborador de onde ele
+         estava") e o dono mandou valer sem exceção — antes o menu era forçado a
+         target="_self" pelas páginas, para não acumular guias, e essa exceção
+         caiu. Marcamos aqui, no próprio HTML do menu, e não com um `<base>`: o
+         shell também roda em páginas que não têm `<base target="_blank">`, e o
+         menu tem de abrir em guia nova nas duas. O rel="noopener" vem junto
+         porque toda guia nova precisa dele.
+         As únicas exceções continuam fora daqui, escritas à mão em cada página:
+         o logo do topo (#logo-home) e o "← Painel" (#volta), que são o gesto de
+         VOLTAR e trocam a guia atual. */
+      var ALVO = ' target="_blank" rel="noopener"';
+
+      var html = '<a class="b4s-logo"' + ALVO + ' href="' + link(itens[1] ? itens[1].pag : 'index.html') + '">'
                + '<span>back</span><span class="y">4you</span></a>';
 
       if (ctx.nome) {
@@ -302,7 +315,7 @@
            têm `area` e continuam sempre à mão. */
         if (it.area && !(disp && disp[it.area])) return;
         if (pendente) { html += '<div class="b4s-sec">' + pendente + '</div>'; pendente = null; }
-        html += '<a class="b4s-i' + (it.id === op.ativo ? ' on' : '') + '" href="'
+        html += '<a class="b4s-i' + (it.id === op.ativo ? ' on' : '') + '"' + ALVO + ' href="'
              + link(it.pag) + '"' + (it.id === op.ativo ? ' aria-current="page"' : '') + '>'
              + svg(it.ic) + '<span>' + it.rot + '</span></a>';
       });
@@ -334,8 +347,9 @@
       d.addEventListener('keydown', function (e) {
         if ((e.key === 'Escape' || e.keyCode === 27) && aberta) abrir(false);
       });
-      /* Navegar fecha: em SPA-de-uma-página-só isso não acontece, mas o clique num
-         link do menu com âncora na mesma página deixaria a gaveta aberta por cima. */
+      /* Clicar num item fecha a gaveta. Isso deixou de ser detalhe: como o menu
+         abre em guia nova, a página de baixo NÃO navega, e sem este fechamento a
+         gaveta ficaria aberta por cima da tela em que a pessoa continua. */
       side.addEventListener('click', function (e) {
         if (e.target.closest && e.target.closest('a')) abrir(false);
       });
