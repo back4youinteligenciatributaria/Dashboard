@@ -572,6 +572,11 @@ let TERMO='';
    cartões por ID e, dentro deles, Principal primeiro e depois por nome. */
 let SORT={key:'cliente',dir:'asc'};
 let MODAL_AREAS={};
+/* Perfil do contato NOVO ("quem é a pessoa"), no mesmo formato que o backend
+   grava: socio/medico em três estados (true, false e null = ninguém respondeu) e
+   os quatro de texto. Vive fora do DOM porque o bloco se redesenha quando a
+   resposta muda — o CRM, o endereço e a qualificação nascem e somem com ela. */
+let MODAL_PERFIL={socio:null,medico:null,funcao:'',crm:'',endereco:'',qualificacao:''};
 
 /* ---------------- revelação progressiva ---------------- */
 /* Filtros recolhidos, com memória. O contador ao lado do botão existe para
@@ -786,6 +791,20 @@ function btnRemover(c){return `<button class="btn btn--mini btn--danger-out" typ
    Vazio não é "não" — é pergunta em aberto, e é isso que deixa a tela poder
    cobrar depois sem acusar quem nunca foi perguntado. */
 function triSel(v){ return v===true?'sim':(v===false?'nao':''); }
+/* Qualificação do sócio: as do quadro societário que aparecem quase sempre.
+   A lista é atalho, não regra — a planilha do cliente pode trazer uma escrita
+   que ninguém previu, e nesse caso o valor gravado entra como PRIMEIRA opção,
+   já selecionado. É o mesmo jeito das outras telas que leem select de planilha:
+   a tela nunca troca nem apaga sozinha o que a equipe escreveu; o valor só muda
+   quando alguém escolhe outro à mão. */
+const QUALIFICACOES=['Sócio-Administrador','Sócio','Administrador','Sócio Gerente','Diretor','Presidente','Sócio Ostensivo','Titular (EI)','Outro'];
+function qualifOpcoes(val){
+  const bruto=String(val==null?'':val).trim();
+  const opts=QUALIFICACOES.slice();
+  if(bruto&&opts.indexOf(bruto)<0)opts.unshift(bruto);   // comparação exata: preservar o texto como está
+  return `<option value=""${bruto?'':' selected'}>—</option>`+
+    opts.map(o=>`<option value="${esc(o)}"${o===bruto?' selected':''}>${esc(o)}</option>`).join('');
+}
 function perfilHTML(c){
   const p=c.perfil||{};
   const socio=triSel(p.socio), medico=triSel(p.medico);
@@ -800,8 +819,72 @@ function perfilHTML(c){
       placeholder="sócio investidor, secretária, concierge…"></label>
     ${medico==='sim'?`<label class="cp"><span>CRM</span><input class="in" data-p="crm" value="${esc(p.crm||'')}" placeholder="CRM/UF 00000"></label>`:''}
     ${socio==='sim'?`<label class="cp larga"><span>Endereço pessoal</span><input class="in" data-p="endereco" value="${esc(p.endereco||'')}" placeholder="rua, nº, cidade"></label>`:''}
+    ${socio==='sim'?`<label class="cp larga"><span>Qualificação do sócio</span><select class="in" data-p="qualificacao">${qualifOpcoes(p.qualificacao)}</select></label>`:''}
     ${(!p.funcao&&!socio&&!medico)?`<span class="sn-falta">sem informação de quem é a pessoa</span>`:''}
   </div>`;
+}
+
+/* ---------------- o mesmo perfil, no contato NOVO ----------------
+   Os seis campos que o backend já grava (CONTATO_PERFIL: sócio, médico, função,
+   CRM, endereço pessoal, qualificação do sócio) faltavam no formulário de criar: dava para responder
+   "quem é a pessoa" só depois de o contato existir, abrindo a ficha de novo.
+   O desenho é o mesmo do formulário de editar — os `<label class="cp">` do
+   perfilHTML acima —, mudam só os `id`/`data-mp`, que é o que separa este bloco
+   (estado em MODAL_PERFIL) do da ficha (estado no próprio contato).
+   Duas regras do servidor valem aqui, e não é enfeite:
+     - CRM só existe para quem é médico; endereço pessoal e qualificação, só para
+       quem é sócio;
+     - responder diferente de "Sim" ESCONDE o campo e LIMPA o valor, porque é
+       exatamente o que o contatoSalvar_ faz com ele ("guardar o valor de quem
+       respondeu não deixaria dado órfão que ninguém revisa"). A tela não pode
+       prometer guardar o que o servidor vai apagar.
+   O "sem informação de quem é a pessoa" da ficha fica de fora: ali é cobrança de
+   um cadastro antigo, aqui seria acusar um formulário que a pessoa acabou de
+   abrir e ainda está preenchendo. */
+function perfilNovoHTML(){
+  const p=MODAL_PERFIL||{};
+  const socio=triSel(p.socio), medico=triSel(p.medico);
+  const tri=(k,rot,val)=>`<label class="cp" for="m-${k}"><span>${rot}</span><select class="in" id="m-${k}" data-mp="${k}">
+      <option value=""${val===''?' selected':''}>—</option>
+      <option value="sim"${val==='sim'?' selected':''}>Sim</option>
+      <option value="nao"${val==='nao'?' selected':''}>Não</option></select></label>`;
+  return tri('socio','Sócio?',socio)+tri('medico','Médico?',medico)+
+    `<label class="cp larga" for="m-funcao"><span>Função</span><input class="in" id="m-funcao" data-mp="funcao"
+      value="${esc(p.funcao||'')}" placeholder="sócio investidor, secretária, concierge…"></label>`+
+    (medico==='sim'?`<label class="cp" for="m-crm"><span>CRM</span><input class="in" id="m-crm" data-mp="crm"
+      value="${esc(p.crm||'')}" placeholder="CRM/UF 00000"></label>`:'')+
+    (socio==='sim'?`<label class="cp larga" for="m-endereco"><span>Endereço pessoal</span><input class="in" id="m-endereco" data-mp="endereco"
+      value="${esc(p.endereco||'')}" placeholder="rua, nº, cidade"></label>`:'')+
+    (socio==='sim'?`<label class="cp larga" for="m-qualificacao"><span>Qualificação do sócio</span><select class="in" id="m-qualificacao"
+      data-mp="qualificacao">${qualifOpcoes(p.qualificacao)}</select></label>`:'');
+}
+function pintarPerfilModal(){
+  const el=document.getElementById('m-perfil');
+  if(el) el.innerHTML=perfilNovoHTML();
+}
+function aplicarPerfilModal(el){
+  /* O `input` de um <select> chega antes do `change`, e o redesenho abaixo troca
+     o próprio <select> de lugar: sem esta guarda o `change` seguinte chegaria de
+     um nó que já saiu da tela e repintaria o bloco uma segunda vez. */
+  if(!el.isConnected) return;
+  const k=el.dataset.mp;
+  MODAL_PERFIL[k]=(k==='socio'||k==='medico')?(el.value===''?null:el.value==='sim'):el.value;
+  /* A trava roda a CADA mudança, e não só quando o SIM/NÃO muda: o `change` de um
+     campo de texto só chega quando ele perde o foco, e isso pode acontecer DEPOIS
+     de o bloco ter se redesenhado sem ele. Era assim que um endereço recém-digitado
+     voltava para dentro de alguém que acabara de deixar de ser sócio — e a tela
+     ficava prometendo guardar o que o servidor apaga na hora de gravar. */
+  if(MODAL_PERFIL.medico!==true) MODAL_PERFIL.crm='';
+  if(MODAL_PERFIL.socio!==true){ MODAL_PERFIL.endereco=''; MODAL_PERFIL.qualificacao=''; }
+  if(k==='socio'||k==='medico') pintarPerfilModal();
+}
+/* O objeto `perfil` que vai no acao=contato_salvar, no formato do
+   _perfilEscrever_: null vira coluna vazia, true vira SIM, false vira NÃO, e os
+   quatro de texto vão como texto. É o mesmo que o perfilDe() manda na edição. */
+function perfilModal(){
+  const p=MODAL_PERFIL||{};
+  return { socio:p.socio, medico:p.medico, funcao:p.funcao||'',
+           crm:p.crm||'', endereco:p.endereco||'', qualificacao:p.qualificacao||'' };
 }
 
 /* ---------------- a linha da lista (só leitura) ----------------
@@ -945,9 +1028,11 @@ function fichaHTML(c){
   </div>`;
 }
 /* A ficha de contato NOVO é a mesma ficha com as seções que ainda cabem: o
-   cliente (que aqui se escolhe), os campos e as áreas. Os ids são os de sempre —
-   é o que deixa resolverCliente(), validarCliModal() e adicionarContato()
-   continuarem exatamente como estavam. */
+   cliente (que aqui se escolhe), os campos, quem é a pessoa e as áreas. Ficam de
+   fora só as duas que não existem antes de o contato existir — o acesso (código
+   e link são gerados na gravação) e o remover. Os ids são os de sempre — é o que
+   deixa resolverCliente(), validarCliModal() e adicionarContato() continuarem
+   exatamente como estavam. */
 function fichaNovaHTML(){
   return `<div class="sec"><h2><span class="dot"></span>Cliente</h2>
       <div class="fld">
@@ -964,6 +1049,8 @@ function fichaNovaHTML(){
         <div class="fld"><label for="m-papel">Papel</label><select id="m-papel"><option>Secundário</option><option>Principal</option></select></div>
       </div>
     </div>
+    <div class="sec"><h2><span class="dot"></span>Quem é a pessoa</h2>
+      <div class="perfil" id="m-perfil"></div></div>
     <div class="sec"><h2><span class="dot"></span>Áreas que esse contato enxerga</h2>
       <div class="areas-linha" id="m-areas"></div></div>`;
 }
@@ -1221,9 +1308,12 @@ function aplicarPerfil(el){
   c.perfil=c.perfil||{};
   const k=el.dataset.p;
   c.perfil[k]= (k==='socio'||k==='medico') ? (el.value===''?null:el.value==='sim') : el.value;
+  /* Mesma trava do bloco do contato novo, e pela mesma razão: ela vale a cada
+     mudança, para um `change` atrasado não ressuscitar CRM, endereço ou
+     qualificação de quem já respondeu que não é médico ou não é sócio. */
+  if(c.perfil.medico!==true) c.perfil.crm='';
+  if(c.perfil.socio!==true){ c.perfil.endereco=''; c.perfil.qualificacao=''; }
   if(k==='socio'||k==='medico'){
-    if(c.perfil.medico!==true) c.perfil.crm='';
-    if(c.perfil.socio!==true)  c.perfil.endereco='';
     const alvo=box.querySelector('.perfil');
     if(alvo) alvo.outerHTML=perfilHTML(c);
   }
@@ -1232,7 +1322,7 @@ function aplicarPerfil(el){
 function perfilDe(c){
   const p=c.perfil||{};
   return { socio:p.socio, medico:p.medico, funcao:p.funcao||'',
-           crm:p.crm||'', endereco:p.endereco||'' };
+           crm:p.crm||'', endereco:p.endereco||'', qualificacao:p.qualificacao||'' };
 }
 
 async function salvarContato(row){
@@ -1437,6 +1527,8 @@ function pintarAreasModal(){
    para o Nome; pelo botão geral, o foco vai para o Cliente. */
 function abrirModal(idCliente){
   MODAL_AREAS={};
+  // ficha nova, perfil novo: nada do contato anterior pode sobrar aqui dentro
+  MODAL_PERFIL={socio:null,medico:null,funcao:'',crm:'',endereco:'',qualificacao:''};
   const m=elCad();if(!m)return;
   CAD_ROW='';CAD_NOVO=true;CAD_AVISADO=false;
   document.getElementById('m-body').innerHTML=fichaNovaHTML();
@@ -1460,6 +1552,7 @@ function abrirModal(idCliente){
   if(st){st.className='save-status claro';st.textContent='';}
   document.getElementById('m-cancelar').textContent='Cancelar';
   validarCliModal();
+  pintarPerfilModal();
   pintarAreasModal();
   m.hidden=false;
   document.body.style.overflow='hidden';
@@ -1484,7 +1577,7 @@ async function adicionarContato(btn){
       acao:'contato_salvar',cliente_id:id,nome:nome,email:email,
       telefone:document.getElementById('m-tel').value.trim(),
       papel:papel,areas:areas,
-      perfil:{ socio:null, medico:null, funcao:'', crm:'', endereco:'' },
+      perfil:perfilModal(),
       cliente:nomeCli(id),cod:respAtual()
     });
     fecharModal();
@@ -1568,6 +1661,9 @@ document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='busca'){TERMO=el.value;aplicarBusca();return;}
   if(el.id==='m-cli'){validarCliModal();return;}
+  /* `data-mp` é o perfil do contato NOVO: só mexe em memória, não agenda
+     gravação nenhuma — quem grava é o "Adicionar contato". */
+  if(el.dataset&&el.dataset.mp){ aplicarPerfilModal(el); return; }
   if(el.dataset&&el.dataset.p){ const c=aplicarPerfil(el); if(c){agendarSalvar(c.row);atualizarLinha(c.row);} return; }
   if(!el.dataset||!el.dataset.k||el.dataset.k==='papel')return;
   const ctt=el.closest('.ctt');if(!ctt)return;
@@ -1583,6 +1679,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const el=e.target;
   if(el.id==='m-papel'){pintarAreasModal();return;}
+  if(el.dataset&&el.dataset.mp){ aplicarPerfilModal(el); return; }
   if(el.dataset&&el.dataset.p){ const c=aplicarPerfil(el); if(c){agendarSalvar(c.row,150);atualizarLinha(c.row);} return; }
   if(!el.dataset||!el.dataset.k)return;
   const ctt=el.closest('.ctt');if(!ctt)return;
