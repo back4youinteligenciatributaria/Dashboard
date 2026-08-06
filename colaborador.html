@@ -39,7 +39,14 @@
      o CSS compartilhado do teto de lista cai no valor herdado e desalinha. */
   --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
   --receita-soft:#DBEFEC;
-  /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
+  /* Cartao clicavel: UMA sombra so, e discreta. O realce do hover e por COR e
+     BORDA, sem levantar nada — e o que o registro.html faz, que e a tela que o
+     dono aprovou. Antes cada cartao saltava 2px com uma sombra grande por baixo:
+     com oito cards lado a lado o efeito nao lia como "isto e clicavel", lia como
+     a pagina tremendo debaixo do cursor. */
+  --sombra-card:0 1px 2px rgba(7,48,52,.05);
+  /* Sombra de coisa que FLUTUA por cima da pagina (o balao de dica do card).
+     Nao e sombra de cartao: ali o que da profundidade e a distancia do papel. */
   --lift:0 8px 20px rgba(17,61,57,.10);
   --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
@@ -70,11 +77,12 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 /* Acesso rápido (planilhas centrais) */
 .centrais{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;margin-bottom:26px}
 .central-lk{display:flex;align-items:center;gap:10px;text-decoration:none;background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--radius);padding:12px 14px;color:var(--ink);font-weight:700;font-size:13px;transition:border-color .12s,transform .1s,box-shadow .12s}
-/* Cartão clicável levanta sempre igual (--lift): três sombras diferentes para o
-   mesmo gesto faziam a página parecer feita por três pessoas. */
-.central-lk:hover{border-color:var(--brand-teal);transform:translateY(-2px);box-shadow:var(--lift)}
-.central-lk .ic{font-size:19px;width:22px;text-align:center;flex:none}
+  border-radius:var(--radius);padding:12px 14px;color:var(--ink);font-weight:700;font-size:13px;
+  box-shadow:var(--sombra-card);transition:border-color .12s,background-color .12s}
+/* Hover = borda da marca + fundo morno, o mesmo gesto do registro.html. Nada de
+   translateY nem de sombra maior: era esse salto que ficava estranho. */
+.central-lk:hover{border-color:var(--brand-teal);background:var(--surface-warm)}
+.central-lk .ic{font-size:19px;width:22px;text-align:center;flex:none;display:flex;align-items:center;justify-content:center}
 /* Chevron = affordance de "isto abre". Em --line-2 ele dava 1,40-1,71:1 sobre
    branco e sobre o canvas: praticamente invisivel. --muted e o token de texto
    secundario mais proximo que passa (5,92:1 no branco, 4,85:1 no canvas) — e o
@@ -89,7 +97,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .menu-pop[hidden]{display:none}
 .menu-pop a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--radius-sm);text-decoration:none;color:var(--ink);font-weight:600;font-size:13px}
 .menu-pop a:hover{background:var(--surface-warm)}
-.menu-pop a .ic{font-size:15px;width:20px;text-align:center;flex:none}
+.menu-pop a .ic{font-size:15px;width:20px;flex:none;display:flex;align-items:center;justify-content:center}
 
 /* Combobox de clientes */
 .combo{position:relative}
@@ -226,6 +234,48 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .cd-row,.lic-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0}
 .lic-grid{display:flex;flex-direction:column;gap:2px}
 .lic-row span,.cd-row span{color:var(--ink-2)}
+/* ---------- célula de DOCUMENTO (cópia do desenho de licencas.html) ----------
+   O campo de documento não mostra mais o endereço: mostra o documento. Tem link
+   vira "Abrir ↗", não tem vira "Enviar ⬆", e o "⋯" guarda o que é raro (trocar o
+   arquivo, colar um endereço). Endereço de portal — "Link Prefeitura", "Link
+   CRM" — nunca ganha envio: ninguém faz upload de uma prefeitura. */
+.doc{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;min-width:0;flex:1 1 auto}
+.doc-bt{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;font-weight:700;
+  padding:5px 9px;border-radius:7px;border:1px solid transparent;text-decoration:none;cursor:pointer;background:none;
+  font-family:var(--sans)}
+.doc-ir{color:#0F8C85;border-color:#cfe6e2;background:#F2F9F8}
+.doc-ir:hover{background:#EAF4F1}
+.doc-env{color:#8A7D70;border:1px dashed #D8CFC3;background:none}
+.doc-env:hover{color:#0F8C85;border-color:#0F8C85}
+.doc-obs{font-style:italic;color:#8A7D70;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.doc-mais{border:none;background:none;color:#B8AFA6;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;border-radius:6px;
+  font-family:var(--sans)}
+.doc-mais:hover{color:#113D39;background:#F1ECE4}
+@media (hover:hover){ .doc .doc-mais{opacity:.32} .doc:hover .doc-mais,.doc:focus-within .doc-mais{opacity:1} }
+.doc-spin{display:inline-block;width:12px;height:12px;border:2px solid #cfe6e2;border-top-color:#0F8C85;
+  border-radius:50%;animation:docgira .8s linear infinite}
+@keyframes docgira{to{transform:rotate(360deg)}}
+.doc-erro,.doc-ok{flex-basis:100%;text-align:right;font-size:11px;line-height:1.3;margin-top:3px}
+.doc-erro{color:var(--vermelho)}
+.doc-ok{color:#1f6b45}
+/* campo de URL + atalho para abrir — o mesmo par de licencas.html */
+.lk-cel{display:flex;align-items:center;gap:4px;min-width:0;flex:1 1 150px}
+.lk-cel input{flex:1;min-width:0;font-family:var(--sans);font-size:12px;padding:5px 8px;
+  border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink)}
+.lk-cel input:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.lk-ir{flex:none;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+  font-size:13px;font-weight:800;line-height:1;text-decoration:none;border:1px solid var(--line-2);
+  border-radius:var(--radius-sm);background:var(--surface);color:var(--brand-teal-txt)}
+.lk-ir:hover{border-color:var(--brand-teal);background:#EAF5F4}
+/* Sem URL válida o atalho fica apagado e não clica — não abre guia em branco. */
+.lk-ir.off{color:var(--line-2);border-style:dashed;background:transparent;cursor:default}
+/* A linha do documento quebra em duas no celular: o rótulo em cima, o controle
+   embaixo — assim o botão nunca empurra a largura da tela. */
+@media(max-width:520px){
+  .lic-row.doc-linha{flex-wrap:wrap}
+  .lic-row.doc-linha>span{flex-basis:100%}
+  .lic-row.doc-linha .doc{justify-content:flex-start}
+}
 /* Pílula de situação: a mesma do registro.html (.pill / .pill.sit-*), inclusive
    nas tintas. Sem modificador ela é o "sem informação" cinza de lá; ok/aten/venc
    recebem o verde, o âmbar e o vermelho na versão que passa em contraste. Todas
@@ -255,8 +305,10 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .fer-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;width:100%;height:100%;
   text-align:left;text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);
   padding:15px 16px 16px;color:var(--ink);font-family:var(--sans);font-size:15px;cursor:pointer;
-  box-shadow:0 1px 2px rgba(7,48,52,.04);transition:border-color .14s,transform .12s,box-shadow .14s}
-.fer-card:hover{border-color:var(--brand-teal);transform:translateY(-2px);box-shadow:var(--lift)}
+  box-shadow:var(--sombra-card);transition:border-color .14s,background-color .14s}
+/* Igual ao .central-lk e ao registro.html: quem responde ao cursor é a cor, não
+   a altura. O card fica onde está. */
+.fer-card:hover{border-color:var(--brand-teal);background:var(--surface-warm)}
 .fer-card:focus-visible{outline:2px solid var(--brand-teal);outline-offset:3px}
 .fer-cab{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:10px}
 .fer-ic{margin-right:auto;flex:none;width:42px;height:42px;border-radius:var(--radius);display:flex;align-items:center;
@@ -283,8 +335,8 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
 /* Selo de pendência: no topo do card, ao lado da seta (só onde o dado já está carregado). */
 .fer-selo{flex:none;font-size:11px;font-weight:800;white-space:nowrap;
   background:#F8E3DF;color:var(--vermelho);border:1px solid #F0C9C1;border-radius:var(--radius-pill);padding:2px 8px}
-/* Restituição é um card de menu: o dropdown precisa passar por cima dos cards
-   vizinhos (o hover deles cria contexto de empilhamento por causa do transform). */
+/* Restituição é um card de menu: aberto, ele precisa passar por cima dos cards
+   vizinhos — senão a lista do dropdown nasce por baixo do card de Clientes ativos. */
 .fer-grid .menu{display:flex;flex-direction:column}
 .fer-grid .menu>.fer-card{flex:1}
 .fer-grid .menu.aberto{z-index:40}
@@ -313,6 +365,20 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
    VOLTAR, então trocam a guia atual (target="_self"). */
 .barra a.logo{color:inherit;text-decoration:none;cursor:pointer}
 .barra a.logo:hover{opacity:.82}
+
+/* ---------- ícones ----------
+   Todo ícone desta tela é SVG de traço inline, no mesmo desenho e na mesma
+   linguagem do menu lateral (b4u-shell.js): 24x24, sem preenchimento,
+   currentColor, traço 1.7. Sem biblioteca externa.
+   Emoji saiu por decisão do dono ("nada de emojis") — e ele nunca foi ícone de
+   verdade: cada sistema desenha o seu, com cor e peso próprios, e nenhum deles
+   acompanha a tinta do texto ao lado. */
+.b4i{width:1.15em;height:1.15em;flex:none;display:inline-block;vertical-align:-.18em}
+.fer-ic .b4i{width:22px;height:22px}
+.ex-tit .b4i{width:15px;height:15px;vertical-align:-.22em;margin-right:2px}
+.central-lk .ic .b4i{width:19px;height:19px}
+.menu-pop a .ic .b4i{width:17px;height:17px}
+.aviso-off .b4i{width:15px;height:15px;margin-right:4px}
 
 /* ---------- padroes compartilhados (B.10 e B.12) ---------- */
 /* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
@@ -361,7 +427,7 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
     <span class="arw">▸</span><span>Acesso rápido — planilhas centrais</span><span class="n" id="centrais-n"></span>
   </button>
   <div id="bloco-centrais" hidden>
-    <div class="aviso-off" id="aviso-centrais" hidden>⚠️ A Config não devolveu os links centrais desta vez. Recarregue a página em alguns segundos.</div>
+    <div class="aviso-off" id="aviso-centrais" hidden><svg class="b4i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 4 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4M12 17.2h.01"/></svg>A Config não devolveu os links centrais desta vez. Recarregue a página em alguns segundos.</div>
     <div class="centrais" id="centrais"></div>
   </div>
 
@@ -405,8 +471,48 @@ const CHAVE_PADRAO = '';
    Ficou sem rede de segurança de propósito. Se a API cair, os atalhos somem e
    quem precisa abre a planilha pelo Drive. Não recoloque a lista aqui. */
 let CENTRAIS_VIVOS=null;
+
+/* ---------- ícones (SVG de traço, sem biblioteca) ----------
+   Os nove primeiros são cópia literal do conjunto do b4u-shell.js — mesmo
+   desenho, mesmo traço 1.7, mesmo currentColor. Isso é de propósito: quando o
+   card e o item do menu levam à MESMA página, eles têm de levar o mesmo ícone,
+   senão o painel parece dois sistemas colados.
+   Os de baixo foram desenhados aqui seguindo o mesmo padrão, para o que o menu
+   não cobre (planilhas centrais, dossiê e avisos).
+   Onde havia emoji: além de o dono ter pedido para tirar ("nada de emojis"),
+   emoji não é ícone — cada sistema desenha o seu, em cor própria, e ele não
+   acompanha a tinta nem o peso do texto ao lado. */
+const ICONES={
+  /* — do b4u-shell.js, sem uma vírgula de diferença — */
+  pessoal:'<circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><path d="M16 4.2c1.7.4 3 2 3 3.8s-1.3 3.4-3 3.8M23 20c0-2.8-2.3-5.1-5.4-5.8"/>',
+  escudo:'<path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/>',
+  doc:'<path d="M6 2h7l5 5v15H6Z"/><path d="M13 2v5h5"/><path d="M9 13h6M9 17h4"/>',
+  chat:'<path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/>',
+  livro:'<path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2Z"/><path d="M8 7h7M8 11h7"/>',
+  calendario:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m8.5 15 2 2 4-4"/>',
+  planilha:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/>',
+  grafico:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  /* — desenhados aqui, mesmo padrão — */
+  pasta:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
+  arquivo:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M8 12h8M8 16h5"/>',
+  ticket:'<path d="M4 6h16a1 1 0 0 1 1 1v2.2a2.8 2.8 0 0 0 0 5.6V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2.2a2.8 2.8 0 0 0 0-5.6V7a1 1 0 0 1 1-1Z"/><path d="M14.5 6.8v10.4"/>',
+  engrenagem:'<circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2 7.3 7.3M16.7 16.7l2.1 2.1M18.8 5.2 16.7 7.3M7.3 16.7l-2.1 2.1"/>',
+  balanca:'<path d="M12 3.2v17M8 20.2h8"/><path d="M4 7.5h16"/><path d="M4 7.5 1.5 14h5Z"/><path d="M20 7.5 17.5 14h5Z"/>',
+  dinheiro:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/>',
+  relogio:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3 2"/>',
+  alerta:'<path d="M10.3 4 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4M12 17.2h.01"/>',
+  lapis:'<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'
+};
+/* Nome que não existe cai no `doc`: é o mesmo papel de padrão que o ícone de
+   documento já fazia nas planilhas centrais, e vale para qualquer chamada que
+   erre o nome. */
+function icone(n){
+  return '<svg class="b4i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
+       + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONES[n]||ICONES.doc) + '</svg>';
+}
+
 // ícone por nome (normalizado) e quais vão pro dropdown "Outros"
-const ICONE_CENTRAL={'site links':'🗂️','registro clientes':'🗂️','societaria mestra':'🏛️','tickets':'🎫','contatos':'👥','feriados':'📅','modelos':'📄','config tributario':'⚙️','certificados e procuracoes':'🔐','certificados digitais':'🔐','equiparacao controle':'⚖️','controle de licencas':'📜','extratos pendentes':'🏦'};
+const ICONE_CENTRAL={'site links':'arquivo','registro clientes':'arquivo','societaria mestra':'livro','tickets':'ticket','contatos':'chat','feriados':'calendario','modelos':'doc','config tributario':'engrenagem','certificados e procuracoes':'escudo','certificados digitais':'escudo','equiparacao controle':'balanca','controle de licencas':'doc','extratos pendentes':'dinheiro'};
 const CENTRAIS_NO_OUTROS=['site links','registro clientes','tickets','feriados','modelos','config tributario'];
 
 function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); const h=(location.hash||'').replace('#','').trim(); return q || h || CHAVE_PADRAO; }
@@ -512,6 +618,25 @@ function jsonp(url){
   });
 }
 
+/* ---------- escrita: POST com JSON (cópia literal do postAcao de licencas.html) ----------
+   JSONP só serve para ler: a URL do <script> não leva um arquivo de 10 MB. Toda
+   escrita desta página (hoje só o envio de documento) sai por aqui, com a chave
+   do dia no corpo e teto de 2 minutos — upload no 4G do interior demora. */
+async function postAcao(obj,ms){
+  const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));
+  const ctl=new AbortController();
+  const t=setTimeout(()=>ctl.abort(),ms||120000);
+  try{
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,signal:ctl.signal});
+    const d=await r.json();
+    if(d&&d.erro)throw new Error(d.erro);
+    return d;
+  }catch(e){
+    if(e&&e.name==='AbortError') throw new Error('A resposta demorou demais.');
+    throw e;
+  }finally{ clearTimeout(t); }
+}
+
 const hoje=new Date(); hoje.setHours(0,0,0,0);
 function alertaVenc(nome, iso){
   if(!iso) return '';
@@ -521,7 +646,7 @@ function alertaVenc(nome, iso){
   if(dias<0){ cl='venc'; txt=`${nome} vencido`; }
   else if(dias<=60){ cl='aten'; txt=`${nome} vence em ${dias}d`; }
   else return ''; // só alerta quando importa (≤60d ou vencido)
-  return `<span class="al ${cl}">⏰ ${esc(txt)}</span>`;
+  return `<span class="al ${cl}">${icone('relogio')}${esc(txt)}</span>`;
 }
 function lkArea(rot, url, ic){
   if(url && /^https?:/.test(url)) return `<a class="lk area" href="${esc(url)}" target="_blank" rel="noopener"><span class="ic">${ic}</span>${esc(rot)}</a>`;
@@ -533,7 +658,7 @@ function lkPasta(rot, url){
 }
 
 /* ---- Acesso rápido: links centrais (Config, dinâmico) + fallback ---- */
-function iconeCentral(nome){ return ICONE_CENTRAL[normTxt(nome)] || '📄'; }
+function iconeCentral(nome){ return icone(ICONE_CENTRAL[normTxt(nome)] || 'doc'); }
 // A planilha do cadastro se chamava "Site Links" e virou "Registro Clientes" na
 // Config — os dois nomes são aceitos enquanto a troca não termina.
 const NOMES_REGISTRO=['registro clientes','site links'];
@@ -548,7 +673,8 @@ function pintarCentrais(pares){
   if(pares && pares.length) CENTRAIS_VIVOS=pares;
   const offline=!(pares && pares.length);
   const validos=(pares||[]).filter(p=>p.url && /^https?:/.test(p.url));
-  const registros={nome:'Registros de clientes', url:urlRegistros(validos), ic:'📇'};
+  // mesmo ícone do card de Registros e do item do menu lateral: é a mesma planilha
+  const registros={nome:'Registros de clientes', url:urlRegistros(validos), ic:icone('pessoal')};
   const diretos=[registros].filter(l=>l.url).concat(validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))<0)
     .map(p=>({nome:p.nome, url:p.url, ic:iconeCentral(p.nome)})));
   // A lista fica separada do HTML porque é ela que o contador soma: somar a string
@@ -559,7 +685,7 @@ function pintarCentrais(pares){
   document.getElementById('centrais').innerHTML = diretos.map(botaoCentral).join('') +
     `<div class="menu" id="menu-outros">
        <button type="button" class="central-lk" id="btn-outros" aria-expanded="false">
-         <span class="ic">🗂️</span><span>Outros</span><span class="arw">▾</span>
+         <span class="ic">${icone('arquivo')}</span><span>Outros</span><span class="arw">▾</span>
        </button>
        <div class="menu-pop" id="pop-outros" hidden>${outros}</div>
      </div>`;
@@ -611,13 +737,13 @@ function pintarRestituicao(){
   const ch=encodeURIComponent(chaveAtual());
   const pleno=!!(EU&&EU.pleno);
   const rot=pleno?'Restituição (todos)':'Minha restituição';
-  const minha=`<a href="restituicao.html?chave=${ch}" target="_blank" rel="noopener"><span class="ic">💸</span>${esc(rot)}</a>`;
+  const minha=`<a href="restituicao.html?chave=${ch}" target="_blank" rel="noopener"><span class="ic">${icone('calendario')}</span>${esc(rot)}</a>`;
   /* A planilha de Controle é a fonte inteira, sem filtro de responsável — só faz
      sentido para quem enxerga a carteira toda. */
-  const controle=pleno?`<a href="${esc(urlControle())}" target="_blank" rel="noopener"><span class="ic">⚖️</span>Controle (planilha)</a>`:'';
+  const controle=pleno?`<a href="${esc(urlControle())}" target="_blank" rel="noopener"><span class="ic">${icone('balanca')}</span>Controle (planilha)</a>`:'';
   const fer=FERRAMENTAS.filter(f=>f.id==='menu-restituicao')[0]||{};
   menu.innerHTML=`<button type="button" class="fer-card" id="btn-restituicao" aria-expanded="false" data-dica="${esc(fer.desc||'')}">
-      <span class="fer-cab"><span class="fer-ic">💸</span><span class="fer-arw">▾</span></span>
+      <span class="fer-cab"><span class="fer-ic">${fer.ic||icone('calendario')}</span><span class="fer-arw">▾</span></span>
       <span class="fer-nome">Restituição</span>
     </button><div class="menu-pop" id="pop-restituicao" hidden>${minha}${controle}</div>`;
   const btn=document.getElementById('btn-restituicao'), pop=document.getElementById('pop-restituicao');
@@ -634,30 +760,34 @@ const AREAS_OPERACAO=['fiscal','contabil','pessoal','societario'];
 const AREAS_TODAS=['fiscal','contabil','pessoal','societario','equiparacao','financeiro'];
 const AREAS_CARTEIRA=['fiscal','contabil','pessoal','societario','financeiro'];
 
+/* `ic` é o ícone já montado: cada card leva EXATAMENTE o mesmo desenho que o
+   item do menu lateral que abre a mesma página (b4u-shell.js, MENU.equipe).
+   Card e menu apontando para o mesmo lugar com dois símbolos diferentes é o tipo
+   de detalhe que faz a pessoa achar que são duas telas. */
 const FERRAMENTAS=[
-  {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:'📇', area:AREAS_OPERACAO,
+  {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:icone('pessoal'), area:AREAS_OPERACAO,
    desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
    alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj'},
-  {id:'fp-certificados',  nome:'Certificados e acessos',        url:'certificados.html',      ic:'🔐', area:AREAS_OPERACAO,
+  {id:'fp-certificados',  nome:'Certificados e acessos',        url:'certificados.html',      ic:icone('escudo'), area:AREAS_OPERACAO,
    desc:'Vencimentos de certificado, e-CAC e SPE, com o responsável legal.',
    alias:'certificado digital procuracao e-cac ecac spe vencimento responsavel legal',
    badge:seloCertificados},
-  {id:'fp-licencas',      nome:'Documentos e licenças',         url:'licencas.html',          ic:'📜', area:'societario',
+  {id:'fp-licencas',      nome:'Documentos e licenças',         url:'licencas.html',          ic:icone('doc'), area:'societario',
    desc:'Alvará, sanitária e demais licenças, com a data de cada renovação.',
    alias:'licenca alvara sanitario crm pj cli licenciamento integrado regularidade cnes'},
-  {id:'fp-contatos',      nome:'Contatos',                      url:'contatos-equipe.html',   ic:'👥', area:AREAS_TODAS,
+  {id:'fp-contatos',      nome:'Contatos',                      url:'contatos-equipe.html',   ic:icone('chat'), area:AREAS_TODAS,
    desc:'Quem fala pelo cliente: e-mail, telefone, papel e permissão de acesso.',
    alias:'contato email e-mail telefone acesso permissao papel principal secundario'},
-  {id:'fp-societario',    nome:'Societário — processos em andamento e finalizados', url:'societario-equipe.html', ic:'🏛️', area:'societario',
+  {id:'fp-societario',    nome:'Societário — processos em andamento e finalizados', url:'societario-equipe.html', ic:icone('livro'), area:'societario',
    desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
    alias:'societario mestra alteracao contratual junta etapa processo protocolo'},
-  {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:'💸', area:'equiparacao',
+  {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:icone('calendario'), area:'equiparacao',
    desc:'Relatório de cada colaborador e a planilha de controle da equiparação.',
    alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
-  {id:'fp-ativos',        nome:'Clientes ativos / mês',         url:'clientes-ativos.html',   ic:'📈', area:AREAS_CARTEIRA,
+  {id:'fp-ativos',        nome:'Clientes ativos / mês',         url:'clientes-ativos.html',   ic:icone('planilha'), area:AREAS_CARTEIRA,
    desc:'Quantos clientes ativos em cada competência, mês a mês.',
    alias:'ativos competencia mes calendario quantos clientes'},
-  {id:'fp-comercial',     nome:'Comercial — materiais',         url:'comercial.html',         ic:'📣', area:'comercial',
+  {id:'fp-comercial',     nome:'Comercial — materiais',         url:'comercial.html',         ic:icone('grafico'), area:'comercial',
    desc:'Material de proposta, simulador e calculadora para o comercial.',
    alias:'comercial material proposta marketing simulador calculadora'}
 ];
@@ -694,7 +824,7 @@ function pintarFerramentas(){
     // pendência. Só as que usam dado JÁ carregado (tipo=equipe) têm selo —
     // licenças, contatos e afins ficam sem, porque isso exigiria chamada nova.
     const b=(typeof f.badge==='function')?f.badge():null;
-    const selo=(b&&b.n)?`<span class="fer-selo" title="${esc(b.tit||'')}">${esc(String(b.n))} ⚠</span>`:'';
+    const selo=(b&&b.n)?`<span class="fer-selo" title="${esc(b.tit||'')}">${esc(String(b.n))} ${icone('alerta')}</span>`:'';
     return `<a class="fer-card" id="${f.id}" href="${esc(comChave(f.url))}" data-dica="${esc(f.desc||'')}">
       <span class="fer-cab"><span class="fer-ic">${f.ic}</span>${selo}<span class="fer-arw">›</span></span>
       <span class="fer-nome">${esc(f.nome)}</span>
@@ -718,7 +848,7 @@ function painelCliente(c){
   const p=c.pastas||{}, a=c.areas||{}, cert=c.certificado||{};
   const alertas=[alertaVenc('Certificado', cert.venc_certificado), alertaVenc('e-CAC', cert.venc_ecac)].filter(Boolean).join('');
   const drive = c.drive && /^https?:/.test(c.drive)
-    ? `<a class="lk drive" href="${esc(c.drive)}" target="_blank" rel="noopener"><span class="ic">📁</span>Drive do cliente</a>` : '';
+    ? `<a class="lk drive" href="${esc(c.drive)}" target="_blank" rel="noopener"><span class="ic">${icone('pasta')}</span>Drive do cliente</a>` : '';
   // subpastas (Recebidos/Extratos/Notas/Outros) removidas do painel a pedido — só o Drive do cliente.
   return `<div class="cli">
     <div class="cli-top">
@@ -735,12 +865,15 @@ function painelCliente(c){
          o link é uma URL do Drive, e quem barra de verdade é a permissão do
          próprio arquivo. -->
     <div class="linha"><span class="rot">Planilhas</span>
-      ${podeArea('fiscal')      ? lkArea('Fiscal',a.fiscal,'📊') : ''}
-      ${podeArea('equiparacao') ? lkArea('Equiparação',a.equiparacao,'⚖️') : ''}
-      ${podeArea('contabil')    ? lkArea('Contábil',a.contabil,'📒') : ''}
-      ${podeArea('pessoal')     ? lkArea('Pessoal',a.pessoal,'👥') : ''}
+      ${podeArea('fiscal')      ? lkArea('Fiscal',a.fiscal,icone('planilha')) : ''}
+      ${podeArea('equiparacao') ? lkArea('Equiparação',a.equiparacao,icone('balanca')) : ''}
+      ${podeArea('contabil')    ? lkArea('Contábil',a.contabil,icone('livro')) : ''}
+      ${podeArea('pessoal')     ? lkArea('Pessoal',a.pessoal,icone('pessoal')) : ''}
     </div>
-    ${blocoCertificado(cert,c.id)}
+    <!-- O bloco "Certificado / procurações" saiu daqui: virou a seção
+         "Certificados e acessos" do dossiê, logo abaixo, com os mesmos
+         vencimentos e mais os endereços do certificado e dos portais. Repetir as
+         três datas duas vezes na mesma tela era o preço de deixar as duas. -->
   </div>
   <div class="extras" id="extras"></div>`;
 }
@@ -755,20 +888,9 @@ function pillVenc(iso){
   const t=fmtBR(iso)+(d<0?' · vencido':(d<=60?` · ${d}d`:''));
   return `<span class="pill ${cl}">${t}</span>`;
 }
-function blocoCertificado(cert,id){
-  cert=cert||{};
-  const datas=[['Certificado digital',cert.venc_certificado],['Procuração e-CAC',cert.venc_ecac],['Procuração SPE',cert.venc_spe]]
-    .filter(x=>x[1]).map(x=>`<div class="cd-row"><span>${esc(x[0])}</span>${pillVenc(x[1])}</div>`).join('');
-  const resp=String(cert.responsavel||'').trim();
-  const obs=String(cert.obs||'').trim();
-  const linhaResp=resp?`<div class="cd-row"><span>Responsável legal</span><span class="cd-val">${esc(resp)}</span></div>`:'';
-  const linhaObs=obs?`<div class="cd-obs"><b>Obs. interna</b>${esc(obs)}</div>`:'';
-  // atalho para editar essa linha na página de certificados (já abre filtrado no cliente)
-  const editar=`<a class="cd-edit" href="${esc(comChave('certificados.html'))}&q=${encodeURIComponent(id||'')}" target="_blank" rel="noopener">✎ editar</a>`;
-  if(!datas && !linhaResp && !linhaObs)
-    return `<div class="linha"><span class="rot">Certificado / procurações</span></div><div class="cd"><div class="cd-row"><span style="color:var(--muted)">sem dados preenchidos</span></div>${editar}</div>`;
-  return `<div class="linha"><span class="rot">Certificado / procurações</span></div><div class="cd">${linhaResp}${datas}${linhaObs}${editar}</div>`;
-}
+/* `blocoCertificado` foi embora: o conteúdo dele (responsável, vencimentos, obs.
+   interna e o atalho para editar) virou `secCertificados`, no dossiê, junto com
+   os endereços novos. Ver a seção "Certificados e acessos" mais abaixo. */
 function simNao(v){ const s=String(v==null?'':v).trim().toLowerCase(); if(!s) return null; if(/^(sim|s|true|verdadeiro|1|x|ativo|✓)$/.test(s)) return true; if(/^(n[aã]o|nao|n|false|falso|0|-|inativo)$/.test(s)) return false; return null; }
 function mesesAtivo(iso){ const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return null; const d=new Date(+m[1],+m[2]-1,+m[3]); let n=(hoje.getFullYear()-d.getFullYear())*12+(hoje.getMonth()-d.getMonth()); if(hoje.getDate()<d.getDate()) n--; return n<0?0:n; }
 function fmtMeses(n){ if(n==null) return ''; if(n<1) return 'menos de 1 mês'; const a=Math.floor(n/12),m=n%12,p=[]; if(a)p.push(a+(a>1?' anos':' ano')); if(m)p.push(m+(m>1?' meses':' mês')); return p.join(' e '); }
@@ -839,9 +961,31 @@ function blocoInfo(c){
   chips.push(chipInicio(r.inicio_contab));
   return `<div class="info-chips">${chips.join('')}</div>`;
 }
-function exSec(ic,titulo,body){ return `<div class="ex-sec"><div class="ex-tit">${ic} ${esc(titulo)}</div>${body}</div>`; }
+function exSec(ic,titulo,body){ return `<div class="ex-sec"><div class="ex-tit">${ic}${esc(titulo)}</div>${body}</div>`; }
 
-function secContatos(list){
+/* ---- Link para o painel DO CLIENTE ----
+   O painel do cliente abre em `index.html#<id>-<codigo>`, e agora dá para montar
+   esse endereço aqui: `montarEquipe_` passou a mandar, junto com o resto do
+   cliente, o `codigo` da coluna "Código de Acesso" da aba Links. Essa é a fonte
+   confiável — vem direto da célula, no formato que o painel espera — então ela
+   vem primeiro, sempre.
+   Se o `codigo` não vier (planilha antiga, coluna renomeada, cliente ainda sem
+   código), sobra a reserva de antes: o `dashboard`, da coluna "Link Dashboard"
+   da mesma aba. É uma FÓRMULA, e às vezes rende um endereço com outra cara —
+   por isso só vale quando tem mesmo id e código no `#`.
+   Não servindo nenhum dos dois, o botão simplesmente não aparece: um atalho que
+   abre "acesso negado", ou o painel errado, é pior que atalho nenhum — quem
+   clica não tem como saber que o problema é o link. */
+function linkPainelCliente(c){
+  const id=String((c&&c.id)||'').trim();
+  const cod=String((c&&c.codigo)||'').trim();
+  if(id&&cod) return 'index.html#'+encodeURIComponent(id)+'-'+encodeURIComponent(cod);
+  const u=String((c&&c.dashboard)||'').trim();
+  if(!/^https?:\/\//i.test(u)) return '';
+  return /#\d{3,}-/.test(u) ? u : '';
+}
+
+function secContatos(list,c){
   list=list||[];
   const body=list.length?list.map(ct=>{
     const mail=ct.email?`<a href="mailto:${esc(ct.email)}">${esc(ct.email)}</a>`:'';
@@ -852,20 +996,328 @@ function secContatos(list){
     return `<div class="ct-row"><div class="ct-nome">${esc(ct.nome||'(sem nome)')}${papel}</div>
       <div class="ct-meta">${[mail,tel].filter(Boolean).join(' · ')}${cod?' &nbsp; '+cod:''}</div></div>`;
   }).join(''):'<div class="ex-vazio">Nenhum contato cadastrado.</div>';
-  return exSec('👥','Contatos',body);
+  /* Guia nova (a página inteira já tem <base target="_blank">), com o target e o
+     rel="noopener" escritos assim mesmo: o painel do cliente não pode empurrar
+     de volta a aba de quem abriu. */
+  const painel=linkPainelCliente(c);
+  const lkPainel=painel
+    ? `<a class="ex-lk" href="${esc(painel)}" target="_blank" rel="noopener">Abrir o painel do cliente ›</a>` : '';
+  return exSec(icone('chat'),'Contatos',body+lkPainel);
 }
+/* ---------- documento na ficha: botão, e não endereço escrito ----------
+   O pedido do dono: "em Documentos e licenças ia ficar um botão ou de abrir, se
+   já tiver link, ou de dar upload (ou alterar o doc) se não tiver". Vale também
+   para Certificados e acessos, "se tiver algum link (seja de doc seja de portal
+   etc)".
+
+   O desenho e os nomes são cópia de licencas.html — o mesmo controle, para as
+   duas telas não virarem dois sistemas. O envio usa `licenca_upload` /
+   `cert_upload`; o backend acha sozinho a pasta destino (a "Societário e
+   Jurídico" DO CLIENTE, pela aba Links), então daqui não sai nome de pasta. */
+
+/* Normalização de nome de coluna igual à do backend (gradeNorm_): sem acento,
+   minúscula, espaços colapsados, sem pontuação no fim. */
+function docNorm(s){ return normTxt(s).replace(/\s+/g,' ').replace(/[?:.]+$/,''); }
+
+/* REDE DE SEGURANÇA. O backend não manda senha nem login nesta rota de propósito
+   — a rota 'equipe' é cacheada POR ROTA e servida a vários colaboradores. Se um
+   dia uma coluna dessas escapar para `licencas.campos`, ela morre aqui: não é
+   desenhada, não entra no DOM, não vai para o `title` da linha. */
+function docEhCredencial(nome){
+  return /senha|password|login|usuario|credencial|token|\bpin\b/.test(docNorm(nome));
+}
+/* Coluna de DATA (vencimento) continua data — não vira botão. Mesma regra do
+   gradeEhData_: "Link ..." no começo desqualifica antes de qualquer outra coisa,
+   senão "Link Certificado de Licenciamento Integrado" viraria campo de data. */
+function docEhData(nome){
+  const k=docNorm(nome);
+  if(/^link\b/.test(k)) return false;
+  return /\bvenc\b|vencimento|validade|vig[eê]ncia|^data\b/.test(k);
+}
+/* Link PURO = endereço de acesso, não documento: o nome COMEÇA com "Link".
+   É o mesmo `ehLinkPuro` de licencas.html, e o motivo é o mesmo — a célula
+   oferecia "Enviar ⬆" e alguém foi procurar o arquivo da prefeitura para subir. */
+function docEhLinkPuro(nome){ const p=docNorm(nome).split(' ')[0]; return p==='link'||p==='links'; }
+/* Valor que é data (a planilha manda aaaa-mm-dd ou dd/mm/aaaa) nunca é documento. */
+function docEhValorData(v){ return /^\d{4}-\d{2}-\d{2}/.test(String(v||'').trim())||/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(String(v||'').trim()); }
+/* O que o nome da coluna denuncia como documento, quando o valor ainda não é uma
+   URL (célula com "Não localizado", "Em constituição"…). A lista veio dos nomes
+   reais do Controle de Licenças. */
+const DOC_PALAVRAS=/alvar|certid|licenc|licenciamento|regulariz|regularidade|\bcrm\b|\bcnes\b|sanitar|contrato|contrato social|estatuto|\bata\b|documento|declarac|comprovante|cartao|inscric|procurac|certificado|habite|bombeiro|vigilanc/;
+function docEhDocumento(nome,valor){
+  if(docEhCredencial(nome)) return false;
+  if(docEhData(nome)) return false;
+  if(urlOk(valor)) return true;                 // valor é endereço http(s): é documento
+  if(docEhValorData(valor)) return false;       // data solta numa coluna sem "venc" no nome
+  return DOC_PALAVRAS.test(docNorm(nome));
+}
+/* Só abre o que é mesmo endereço — campo vazio ou com anotação solta deixa o
+   atalho apagado, para ninguém cair numa guia em branco. */
+function urlOk(v){ return /^https?:\/\/[^\s]+$/i.test(String(v==null?'':v).trim()); }
+function atalhoAbrir(v){
+  const u=String(v||'').trim();
+  return urlOk(u)
+    ? `<a class="lk-ir" href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="Abrir em outra guia">↗</a>`
+    : `<span class="lk-ir off" title="Sem endereço válido para abrir" aria-hidden="true">↗</span>`;
+}
+
+/* ---------- estado das células de documento ----------
+   Uma ficha por vez na tela, então o estado é um só e zera a cada cliente.
+   A chave é `grupo|coluna` — "lic|Link Alvará Sanitário", "cert|Link CRM". */
+const DOC_CEL=new Map();      // chave -> {coluna, acao, tipo}
+const DOC_VAL=new Map();      // chave -> valor atual (URL ou anotação)
+const DOC_ABERTAS=new Set();  // chave -> o "⋯" está aberto
+const DOC_ENVIANDO=new Map(); // chave -> nome do arquivo em trânsito
+const DOC_MSG=new Map();      // chave -> {txt, cl, ate} — aviso com validade
+const DOC_CTX={id:'',cliente:''};
+const DOC_MAX=10*1024*1024;   // igual ao de licencas.html e ao teto do backend
+let DOC_ALVO=null;            // chave do clique que abriu o seletor de arquivo
+
+function docReset(c){
+  DOC_CEL.clear(); DOC_VAL.clear(); DOC_ABERTAS.clear(); DOC_ENVIANDO.clear(); DOC_MSG.clear();
+  DOC_ALVO=null;
+  DOC_CTX.id=String((c&&c.id)||''); DOC_CTX.cliente=String((c&&c.nome)||'');
+}
+/* Registra a célula e devolve a chave. O valor só entra na primeira vez: a ficha
+   é redesenhada quando os extras chegam, e sobrescrever aqui apagaria o endereço
+   que um envio acabou de gravar. */
+function docReg(grupo,coluna,acao,tipo,valor){
+  const k=grupo+'|'+coluna;
+  DOC_CEL.set(k,{coluna:coluna,acao:acao,tipo:tipo});
+  if(!DOC_VAL.has(k)) DOC_VAL.set(k,String(valor==null?'':valor).trim());
+  return k;
+}
+/* Aviso que fica para sempre atravessa a troca de cliente e ainda está lá meia
+   hora depois — por isso ele tem validade. */
+function docMsgHtml(k){
+  const m=DOC_MSG.get(k); if(!m) return '';
+  if(Date.now()>m.ate){ DOC_MSG.delete(k); return ''; }
+  return `<span class="${m.cl==='ok'?'doc-ok':'doc-erro'}">${esc(m.txt)}</span>`;
+}
+function docMensagem(k,txt,cl){ DOC_MSG.set(k,{txt:txt,cl:cl,ate:Date.now()+45000}); }
+
+/*   tem link ......... Abrir ↗            + ⋯
+     vazia ............ Enviar ⬆           + ⋯
+     texto solto ...... Enviar ⬆ + a anotação em itálico + ⋯
+     enviando ......... roda + nome do arquivo
+   O "⋯" guarda o que é raro e o que dá para estragar: o campo de endereço e a
+   troca do arquivo. Portal (tipo 'link') não tem nem um nem outro — só abre. */
+function celDoc(k){
+  const cfg=DOC_CEL.get(k); if(!cfg) return '';
+  const v=String(DOC_VAL.get(k)||'').trim();
+  const msg=docMsgHtml(k);
+  const enviando=DOC_ENVIANDO.get(k);
+  if(enviando!==undefined){
+    return `<div class="doc" data-cel="${esc(k)}"><span class="doc-spin"></span>
+      <span class="doc-obs">${esc(enviando)}</span></div>`;
+  }
+  if(cfg.tipo==='link'){
+    /* Endereço de acesso (prefeitura, CRM, "Link ..."): ninguém faz upload de um
+       portal. Preenchido vira "Abrir ↗"; vazio diz o que falta, e quem cadastra
+       vai pelo link da seção. */
+    const corpo=urlOk(v)
+      ? `<a class="doc-bt doc-ir" href="${esc(v)}" target="_blank" rel="noopener noreferrer">Abrir ↗</a>`
+      : `<span class="doc-obs" title="${esc(v)}">${esc(v||'sem endereço')}</span>`;
+    return `<div class="doc" data-cel="${esc(k)}">${corpo}${msg}</div>`;
+  }
+  if(DOC_ABERTAS.has(k)){
+    /* As DUAS formas de trocar o documento: mandar outro arquivo (o mesmo fluxo
+       do "Enviar ⬆" — o backend grava por cima e responde `substituiu`) e colar
+       um endereço à mão. */
+    const jaTem=urlOk(v);
+    return `<div class="doc" data-cel="${esc(k)}">
+      <div class="lk-cel">
+        <input type="text" data-doc="${esc(k)}" value="${esc(v)}" placeholder="https://…" inputmode="url" spellcheck="false" aria-label="Endereço do documento">
+        ${atalhoAbrir(v)}
+      </div>
+      <button type="button" class="doc-bt doc-env" data-env="${esc(k)}" title="${jaTem?'Sobe outro arquivo no lugar do que está aqui':'Sobe o arquivo para a pasta do cliente'}">${jaTem?'Enviar outro arquivo ⬆':'Enviar ⬆'}</button>
+      <button type="button" class="doc-mais" data-mais="${esc(k)}" title="Fechar">✕</button>
+      ${msg}</div>`;
+  }
+  const acao=urlOk(v)
+    ? `<a class="doc-bt doc-ir" href="${esc(v)}" target="_blank" rel="noopener noreferrer">Abrir ↗</a>`
+    : `<button type="button" class="doc-bt doc-env" data-env="${esc(k)}">Enviar ⬆</button>`+
+      (v?`<span class="doc-obs" title="${esc(v)}">${esc(v)}</span>`:'');
+  return `<div class="doc" data-cel="${esc(k)}">${acao}
+    <button type="button" class="doc-mais" data-mais="${esc(k)}" title="Trocar o arquivo ou colar um endereço">⋯</button>
+    ${msg}</div>`;
+}
+/* A célula é trocada por ela mesma (outerHTML), e não pelo miolo da linha que a
+   contém: repintar o envelope levaria junto o rótulo do campo. */
+function docRepintar(k){
+  const cel=document.querySelector('[data-cel="'+CSS.escape(k)+'"]');
+  if(cel) cel.outerHTML=celDoc(k);
+}
+function docLinha(rot,k){ return `<div class="lic-row doc-linha"><span>${esc(rot)}</span>${celDoc(k)}</div>`; }
+
+function lerBase64(file){
+  return new Promise((ok,fail)=>{
+    const fr=new FileReader();
+    fr.onerror=()=>fail(new Error('Não consegui ler o arquivo.'));
+    fr.onload=()=>{ const s=String(fr.result||''); ok(s.slice(s.indexOf(',')+1)); };
+    fr.readAsDataURL(file);
+  });
+}
+async function enviarDocumento(k,file){
+  const cfg=DOC_CEL.get(k); if(!cfg||!cfg.acao) return;
+  if(!DOC_CTX.id){ docMensagem(k,'Sem cliente selecionado.','err'); docRepintar(k); return; }
+  if(file.size>DOC_MAX){
+    docMensagem(k,'O arquivo tem '+(file.size/1048576).toFixed(1)+' MB e o limite é 10 MB.','err');
+    docRepintar(k); return;
+  }
+  DOC_MSG.delete(k); DOC_ENVIANDO.set(k,file.name); docRepintar(k);
+  try{
+    const b64=await lerBase64(file);
+    /* Sem `pasta`: quem resolve o destino é o servidor (pastaSocietarioDoCliente_),
+       que lê a coluna "Pasta Societário e Jurídico" da aba Links do cliente. */
+    const d=await postAcao({acao:cfg.acao, id:DOC_CTX.id, coluna:cfg.coluna,
+      cliente:DOC_CTX.cliente, cod:codAtual(),
+      arquivo_nome:file.name, arquivo_tipo:file.type||'application/octet-stream',
+      arquivo_base64:b64});
+    // resposta sem url NÃO apaga o link que já estava lá
+    if(d&&d.url) DOC_VAL.set(k,d.url);
+    DOC_ABERTAS.delete(k);
+    docMensagem(k,(d&&d.substituiu)?'Documento substituído ✓':'Documento enviado ✓','ok');
+  }catch(e){
+    /* O texto da exceção é lido só para separar o timeout do resto — nunca chega
+       à tela: na célula vai um aviso em português nosso. */
+    const msg=String((e&&e.message)||e);
+    /* No timeout o arquivo PODE ter subido: o servidor grava dentro do lock e só
+       depois responde. Reenviar às cegas duplicaria o documento na pasta. */
+    docMensagem(k, msg.indexOf('demorou')>-1
+      ? 'Demorou demais. O arquivo pode ter subido — recarregue antes de mandar de novo.'
+      : 'Não foi possível enviar o documento. Tente de novo.','err');
+  }finally{
+    DOC_ENVIANDO.delete(k); docRepintar(k);
+  }
+}
+/* Colar um endereço à mão é o outro caminho do "⋯". Grava pela mesma ação que a
+   tela cheia usa (licenca_salvar / cert_salvar), com a coluna real da planilha. */
+async function salvarEnderecoDoc(k,valor){
+  const cfg=DOC_CEL.get(k); if(!cfg||!cfg.acao) return;
+  const v=String(valor||'').trim();
+  if(v===String(DOC_VAL.get(k)||'').trim()) return;
+  /* O valor entra em memória ANTES do POST, como no aplicarCampo de licencas.html:
+     sair do campo dispara `change` mais de uma vez em alguns navegadores, e sem
+     isto a mesma URL seria gravada duas vezes enquanto a primeira ainda voava. */
+  DOC_VAL.set(k,v);
+  const campos={}; campos[cfg.coluna]=v;
+  try{
+    await postAcao({acao:cfg.acao==='cert_upload'?'cert_salvar':'licenca_salvar',
+      id:DOC_CTX.id, campos:campos, cliente:DOC_CTX.cliente, cod:codAtual()});
+    docMensagem(k,'Endereço salvo ✓','ok');
+  }catch(e){
+    docMensagem(k,'Não foi possível salvar o endereço. Tente de novo.','err');
+  }
+  docRepintar(k);
+}
+
+/* Um seletor de arquivo só, reaproveitado por todas as células. */
+document.addEventListener('DOMContentLoaded',()=>{
+  const inp=document.createElement('input');
+  inp.type='file'; inp.id='doc-file'; inp.hidden=true;
+  inp.addEventListener('change',()=>{
+    const f=inp.files&&inp.files[0], alvo=DOC_ALVO;
+    inp.value=''; DOC_ALVO=null;
+    if(f&&alvo) enviarDocumento(alvo,f);
+  });
+  document.body.appendChild(inp);
+});
+/* enquanto se digita num endereço, o atalho ↗ acende ou apaga na hora */
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(!el||!el.dataset||!el.dataset.doc) return;
+  const cx=el.closest('.lk-cel'); if(!cx) return;
+  const antigo=cx.querySelector('.lk-ir'); if(!antigo) return;
+  antigo.outerHTML=atalhoAbrir(el.value);
+});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(!el||!el.dataset||!el.dataset.doc) return;
+  salvarEnderecoDoc(el.dataset.doc, el.value);
+});
+document.addEventListener('click',e=>{
+  const env=e.target.closest&&e.target.closest('[data-env]');
+  if(env){
+    DOC_ALVO=env.dataset.env;
+    const inp=document.getElementById('doc-file');
+    if(inp){ inp.value=''; inp.click(); }
+    return;
+  }
+  const mais=e.target.closest&&e.target.closest('[data-mais]');
+  if(mais){
+    const k=mais.dataset.mais;
+    if(DOC_ABERTAS.has(k)) DOC_ABERTAS.delete(k); else DOC_ABERTAS.add(k);
+    docRepintar(k);
+    const campo=document.querySelector('[data-doc="'+CSS.escape(k)+'"]');
+    if(campo&&DOC_ABERTAS.has(k)) campo.focus();
+  }
+});
+
 function secLicencas(lic){
   lic=lic||{};
   if(lic.desativado) return '';
   let body;
   if(!lic.encontrado){ body='<div class="ex-vazio">Sem registro na Controle de Licenças.</div>'; }
-  else if(lic.itens&&lic.itens.length){
-    body='<div class="lic-grid">'+lic.itens.map(it=>`<div class="lic-row"><span>${esc(it.licenca)}</span>${pillVenc(it.vence)}</div>`).join('')+'</div>';
-  } else {
-    const campos=(lic.campos||[]).slice(0,12).map(c=>`<div class="lic-row"><span>${esc(c.nome)}</span><b>${esc(c.valor)}</b></div>`).join('');
-    body=campos?('<div class="lic-grid">'+campos+'</div>'):'<div class="ex-vazio">Cliente encontrado, mas sem datas de vencimento reconhecidas.</div>';
+  else {
+    /* Senha e login não passam daqui — nem como documento, nem como texto. */
+    const campos=(lic.campos||[]).filter(x=>!docEhCredencial(x.nome));
+    const vencs=(lic.itens&&lic.itens.length)
+      ? '<div class="lic-grid">'+lic.itens.map(it=>`<div class="lic-row"><span>${esc(it.licenca)}</span>${pillVenc(it.vence)}</div>`).join('')+'</div>'
+      : '';
+    /* Documento vira controle: "Abrir ↗" quando já tem arquivo, "Enviar ⬆"
+       quando não tem. Coluna "Link ..." é endereço de acesso — só abre. */
+    const docs=campos.filter(x=>docEhLinkPuro(x.nome)||docEhDocumento(x.nome,x.valor))
+      .map(x=>{
+        const puro=docEhLinkPuro(x.nome);
+        const k=docReg('lic',x.nome,puro?'':'licenca_upload',puro?'link':'doc',x.valor);
+        return docLinha(x.nome,k);
+      }).join('');
+    const blocoDocs=docs?'<div class="lic-grid">'+docs+'</div>':'';
+    /* O resto (texto solto do cadastro) continua como estava, e só aparece
+       quando não há vencimento nem documento para mostrar. */
+    const resto=(!vencs&&!blocoDocs)
+      ? campos.slice(0,12).map(x=>`<div class="lic-row"><span>${esc(x.nome)}</span><b>${esc(x.valor)}</b></div>`).join('')
+      : '';
+    body=(vencs+blocoDocs+(resto?'<div class="lic-grid">'+resto+'</div>':''))
+      || '<div class="ex-vazio">Cliente encontrado, mas sem datas de vencimento reconhecidas.</div>';
   }
-  return exSec('📜','Documentos e licenças',body);
+  return exSec(icone('doc'),'Documentos e licenças',body);
+}
+/* ---- Certificados e acessos ----
+   Os vencimentos que a ficha já mostrava (eram o bloco "Certificado /
+   procurações" do cartão) mais os três endereços que o backend passou a mandar:
+   o ARQUIVO do certificado digital, que aceita envio, e os dois PORTAIS
+   (prefeitura e CRM), que só abrem.
+
+   SENHA E LOGIN NÃO ENTRAM AQUI: o backend não os manda nesta rota de propósito,
+   e esta tela não tem campo para eles. Quem precisa da credencial abre a tela de
+   Certificados e acessos, que mostra com botão de revelar.
+
+   O nome da coluna do arquivo é o da planilha "Certificados e Acessos"
+   ("Certificado Digital Link"): o payload manda o VALOR (`link_certificado`), e
+   o envio precisa do cabeçalho de verdade para achar a célula. Se a planilha for
+   renomeada, o servidor recusa com o nome errado à vista, em vez de gravar na
+   coluna errada. */
+const COL_CERT_LINK='Certificado Digital Link';
+function secCertificados(cert,c){
+  cert=cert||{};
+  const id=String((c&&c.id)||'');
+  const datas=[['Certificado digital',cert.venc_certificado],['Procuração e-CAC',cert.venc_ecac],['Procuração SPE',cert.venc_spe]]
+    .filter(x=>x[1]).map(x=>`<div class="cd-row"><span>${esc(x[0])}</span>${pillVenc(x[1])}</div>`).join('');
+  const resp=String(cert.responsavel||'').trim();
+  const obs=String(cert.obs||'').trim();
+  const linhaResp=resp?`<div class="cd-row"><span>Responsável legal</span><span class="cd-val">${esc(resp)}</span></div>`:'';
+  const linhaObs=obs?`<div class="cd-obs"><b>Obs. interna</b>${esc(obs)}</div>`:'';
+  const ends=[
+    docLinha('Certificado digital (arquivo)', docReg('cert',COL_CERT_LINK,'cert_upload','doc',cert.link_certificado)),
+    docLinha('Portal da prefeitura',          docReg('cert','Link Prefeitura','','link',cert.link_prefeitura)),
+    docLinha('Portal do CRM',                 docReg('cert','Link CRM','','link',cert.link_crm))
+  ].join('');
+  const vazio=(!datas&&!linhaResp)?'<div class="cd-row"><span>Sem vencimento preenchido</span></div>':'';
+  const lk=`<a class="ex-lk" href="${esc(comChave('certificados.html'))}&q=${encodeURIComponent(id)}" target="_blank" rel="noopener">Abrir em Certificados e acessos ›</a>`;
+  return exSec(icone('escudo'),'Certificados e acessos',
+    `<div class="cd">${linhaResp}${datas}${vazio}</div><div class="lic-grid">${ends}</div>${linhaObs}${lk}`);
 }
 function secMestra(arr){
   arr=arr||[]; if(!arr.length) return '';
@@ -876,7 +1328,7 @@ function secMestra(arr){
     const resp=p.responsavel?`<div class="mini">Responsável: ${esc(p.responsavel)}</div>`:'';
     return `<div class="card"><div class="card-top"><b>${esc(p.processo||'(processo)')}</b>${st}</div>${prox}${resp}</div>`;
   }).join('');
-  return exSec('🏛️','Alteração Societária (Mestra)',body+`<a class="ex-lk" href="societario-equipe.html?chave=${ch}" target="_blank" rel="noopener">Abrir na Mestra ›</a>`);
+  return exSec(icone('livro'),'Alteração Societária (Mestra)',body+`<a class="ex-lk" href="societario-equipe.html?chave=${ch}" target="_blank" rel="noopener">Abrir na Mestra ›</a>`);
 }
 function proxPrazo(pairs){
   let best=null;
@@ -893,26 +1345,35 @@ function secEquiparacao(arr){
     const lkrow=e.link_drive&&/^https?:/.test(e.link_drive)?`<a class="ex-lk" href="${esc(e.link_drive)}" target="_blank" rel="noopener">Drive ›</a> `:'';
     return `<div class="card"><div class="card-top"><b>${esc(e.nome||'Equiparação')}</b>${st}</div>${proxHtml}${tar}${lkrow}</div>`;
   }).join('');
-  return exSec('⚖️','Equiparação (Controle)',body+`<a class="ex-lk" href="${esc(urlControle())}" target="_blank" rel="noopener">Abrir Equiparação Controle ›</a>`);
+  return exSec(icone('balanca'),'Equiparação (Controle)',body+`<a class="ex-lk" href="${esc(urlControle())}" target="_blank" rel="noopener">Abrir Equiparação Controle ›</a>`);
 }
 /* `mestra` e `equiparacao` chegam como null quando quem pediu não tem a área —
    quem decide é o montarClienteExtras_, no servidor. Aqui só não se desenha o
    que não veio. null é diferente de lista vazia de propósito: "sem acesso" não
    pode se confundir com "sem nada". */
-function renderExtras(x){
-  return secContatos(x.contatos)+secLicencas(x.licencas)+
+/* `c` é o cliente do combo (o que veio em tipo=equipe): o dossiê não repete o
+   cadastro, e é dele que sai o endereço do painel do cliente. */
+/* "Certificados e acessos" vem PRIMEIRO e não depende do `cliente_extras`: os
+   vencimentos e os três endereços já chegaram no payload da equipe. Por isso ele
+   é desenhado na hora, continua na tela enquanto o resto carrega e sobrevive à
+   falha do resto — era o que o bloco do cartão fazia, e não podia piorar. */
+function renderExtras(x,c){
+  return secCertificados(c&&c.certificado,c)+
+         secContatos(x.contatos,c)+secLicencas(x.licencas)+
          (x.mestra ? secMestra(x.mestra) : '')+
          (x.equiparacao ? secEquiparacao(x.equiparacao) : '');
 }
 function carregarExtras(c){
   const box=document.getElementById('extras'); if(!box) return;
-  box.innerHTML='<div class="ex-sec"><div class="ex-load"><span class="spin"></span> Carregando os dados do cliente…</div></div>';
+  docReset(c);
+  const fixo=secCertificados(c.certificado,c);
+  box.innerHTML=fixo+'<div class="ex-sec"><div class="ex-load"><span class="spin"></span> Carregando os dados do cliente…</div></div>';
   const u=API_URL+'?tipo=cliente_extras&id='+encodeURIComponent(c.id)+'&cnpj='+encodeURIComponent(c.cnpj||'')+'&chave='+encodeURIComponent(chaveAtual());
-  jsonp(u).then(x=>{ if(x.erro) throw new Error(x.erro); box.innerHTML=renderExtras(x); })
+  jsonp(u).then(x=>{ if(x.erro) throw new Error(x.erro); box.innerHTML=renderExtras(x,c); })
     /* O texto da exceção NÃO chega à tela. Aqui saía o e.message cru — nome de
        aba, "chave", status — que é vocabulário nosso e do outro lado só assusta.
        Falha de um pedaço da tela: aviso curto, sem detalhe técnico. */
-    .catch(()=>{ box.innerHTML='<div class="ex-sec"><div class="ex-erro">Não foi possível carregar. Tente novamente em alguns minutos.</div></div>'; });
+    .catch(()=>{ box.innerHTML=fixo+'<div class="ex-sec"><div class="ex-erro">Não foi possível carregar. Tente novamente em alguns minutos.</div></div>'; });
 }
 
 /* ---- Contagem de pendências (usada só pelo selo do card de Certificados) ----
