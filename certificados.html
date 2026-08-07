@@ -527,6 +527,9 @@ const B4U_IDENT=[
   {re:/\bcpf\b/,                             tipo:'cpf',   tam:[11],    rot:'CPF'},
   {re:/\bcep\b/,                             tipo:'cep',   tam:[8],     rot:'CEP'},
   {re:/\bpis\b|\bnit\b|\bpasep\b/,           tipo:'pis',   tam:[11],    rot:'PIS/NIT'},
+  /* CNES: sete dígitos, e uma boa parte começa com zero. É número de cadastro,
+     nunca quantidade — a planilha come o zero dele igual come o do CNPJ. */
+  {re:/\bcnes\b/,                            tipo:'cnes',  tam:[7],     rot:'CNES'},
   {re:/\bmatricula\b/,                       tipo:'gen',   tam:null,    rot:'matrícula'},
   {re:/\binscricao\b|\bcadastro municipal\b|\bregistro na junta\b/, tipo:'gen', tam:null, rot:'inscrição'},
   {re:/\btelefone\b|\bcelular\b|\bwhatsapp\b|\bfone\b/, tipo:'tel', tam:null, rot:'telefone'},
@@ -839,10 +842,23 @@ const ehLink=c=>eh(LINKS,c);
    uma "Link …" para a célula errada aparecer sem ninguém mexer aqui.
    Se amanhã aparecer outra coluna de endereço com nome fora desse padrão, é
    aqui — e só aqui — que se ajusta. */
+/* ENDEREÇOS PUROS: a lista FECHADA de colunas que apontam para um lugar da web
+   em vez de um arquivo. Só elas perdem o "Enviar ⬆".
+   A regra antiga era "o nome começa com Link" — e quebrou feio: nesta planilha os
+   DOCUMENTOS também se chamam "Link Contrato Social", "Link Cartão CNPJ", "Link
+   Alvará Sanitário". Todos perderam o envio de uma vez, e a ficha virou um
+   formulário de colar URL.
+   O casamento é EXATO, por nome inteiro normalizado, e não por pedaço. Casar por
+   pedaço tem um contra-exemplo real e caro: "Link Certificado de regularidade
+   CRM PJ" contém "CRM" e viraria portal — um documento de verdade, perdido de
+   novo pela mesma classe de erro. Coluna nova entra como DOCUMENTO por padrão,
+   que é o lado seguro: sobra um botão de enviar onde não se usa, em vez de faltar
+   onde se precisa. Portal novo? Acrescente o nome aqui. */
+const ENDERECOS_PUROS=['link prefeitura','link crm','link portal','link do portal',
+                       'link e cac','link ecac','link sefaz','link gov','link site'];
 function ehLinkPuro(c){
   if(!ehLink(c)) return false;
-  const p=tnorm(tokens(c)[0]||'');            // por tnorm: vem "LINK ", "Link", "link"
-  return p==='link'||p==='links';
+  return ENDERECOS_PUROS.indexOf(normTxt(c))>=0;
 }
 /* O backend manda a lista de colunas editáveis. Coluna fora dela vira só leitura —
    mas senha, data e link continuam editáveis, porque são tipos de campo, não papéis.

@@ -196,6 +196,11 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .ct-row:first-child{border-top:none}
 .ct-nome{font-weight:700;font-size:13px}
 .ct-meta{font-size:13px;color:var(--ink-2);margin-top:2px}
+/* O atalho do painel mora na mesma linha do e-mail e do código: é sobre
+   ESTA pessoa, e separá-lo daqui faria parecer que vale para o cliente
+   inteiro — que foi justamente o engano do link único que existia antes. */
+.ct-painel{font-weight:700;color:var(--brand-teal-txt);text-decoration:none;white-space:nowrap}
+.ct-painel:hover{text-decoration:underline}
 .ct-meta a{color:var(--brand-teal-txt);text-decoration:none}
 /* Papel do contato: a mesma pílula do registro.html, com o mesmo verde. */
 .tag-papel{font-size:var(--fs-1);font-weight:800;padding:2px 9px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px;letter-spacing:.2px;border:1px solid transparent}
@@ -478,6 +483,9 @@ const B4U_IDENT=[
   {re:/\bcpf\b/,                             tipo:'cpf',   tam:[11],    rot:'CPF'},
   {re:/\bcep\b/,                             tipo:'cep',   tam:[8],     rot:'CEP'},
   {re:/\bpis\b|\bnit\b|\bpasep\b/,           tipo:'pis',   tam:[11],    rot:'PIS/NIT'},
+  /* CNES: sete dígitos, e uma boa parte começa com zero. É número de cadastro,
+     nunca quantidade — a planilha come o zero dele igual come o do CNPJ. */
+  {re:/\bcnes\b/,                            tipo:'cnes',  tam:[7],     rot:'CNES'},
   {re:/\bmatricula\b/,                       tipo:'gen',   tam:null,    rot:'matrícula'},
   {re:/\binscricao\b|\bcadastro municipal\b|\bregistro na junta\b/, tipo:'gen', tam:null, rot:'inscrição'},
   {re:/\btelefone\b|\bcelular\b|\bwhatsapp\b|\bfone\b/, tipo:'tel', tam:null, rot:'telefone'},
@@ -1162,13 +1170,28 @@ function exSec(ic,titulo,body){ return `<div class="ex-sec"><div class="ex-tit">
    Não servindo nenhum dos dois, o botão simplesmente não aparece: um atalho que
    abre "acesso negado", ou o painel errado, é pior que atalho nenhum — quem
    clica não tem como saber que o problema é o link. */
-function linkPainelCliente(c){
+/* O painel do cliente exige TRÊS partes no endereço: #ID-SENHAEMPRESA-SENHACONTATO.
+   Faltando a terceira, o servidor responde "Acesso incompleto: informe também o
+   seu código individual" — e era exatamente o que este atalho fazia, porque
+   montava só ID + senha da empresa. O botão existia, abria, e não entrava.
+
+   Além de incompleto, o link era ÚNICO: o painel do cliente é sempre visto pelos
+   olhos de UMA pessoa (o código individual é o que diz quais áreas ela enxerga),
+   então dois contatos são dois painéis diferentes, não dois caminhos para o
+   mesmo. Agora cada contato leva o seu, ao lado do próprio nome. */
+function hashPainel(c,ct){
   const id=String((c&&c.id)||'').trim();
-  const cod=String((c&&c.codigo)||'').trim();
-  if(id&&cod) return 'index.html#'+encodeURIComponent(id)+'-'+encodeURIComponent(cod);
+  const emp=String((c&&c.codigo)||'').trim();
+  const pes=String((ct&&ct.codigo)||'').trim();
+  if(!id||!emp||!pes) return '';
+  return 'index.html#'+encodeURIComponent(id)+'-'+encodeURIComponent(emp)+'-'+encodeURIComponent(pes);
+}
+/* Reserva: o endereço pronto que a planilha guarda na coluna "Link de acesso".
+   Só vale se já vier com as três partes — meio endereço leva à mesma recusa. */
+function linkPainelCliente(c){
   const u=String((c&&c.dashboard)||'').trim();
   if(!/^https?:\/\//i.test(u)) return '';
-  return /#\d{3,}-/.test(u) ? u : '';
+  return /#\d{3,}-[^-]+-/.test(u) ? u : '';
 }
 
 function secContatos(list,c){
@@ -1179,13 +1202,21 @@ function secContatos(list,c){
     const tel=ct.telefone?(telRaw.length>=10?`<a href="https://wa.me/55${telRaw}" target="_blank" rel="noopener">${esc(ct.telefone)}</a>`:esc(ct.telefone)):'';
     const cod=ct.codigo?`<span class="pill">cód ${esc(ct.codigo)}</span>`:'';
     const papel=`<span class="tag-papel ${ct.papel==='Principal'?'pr':'sec'}">${esc(ct.papel||'')}</span>`;
+    /* Um painel por contato: com o código dele, e não com o da empresa. Sem
+       código individual não há link — o atalho que abre "acesso incompleto" é
+       pior que atalho nenhum, porque quem clica não descobre o motivo. */
+    const hp=hashPainel(c,ct);
+    const lk=hp?` &nbsp; <a class="ct-painel" href="${esc(hp)}" target="_blank" rel="noopener" title="Abre o painel deste cliente como ${esc(ct.nome||'este contato')} vê">Abrir o painel ›</a>`:'';
     return `<div class="ct-row"><div class="ct-nome">${esc(ct.nome||'(sem nome)')}${papel}</div>
-      <div class="ct-meta">${[mail,tel].filter(Boolean).join(' · ')}${cod?' &nbsp; '+cod:''}</div></div>`;
+      <div class="ct-meta">${[mail,tel].filter(Boolean).join(' · ')}${cod?' &nbsp; '+cod:''}${lk}</div></div>`;
   }).join(''):'<div class="ex-vazio">Nenhum contato cadastrado.</div>';
   /* Guia nova (a página inteira já tem <base target="_blank">), com o target e o
      rel="noopener" escritos assim mesmo: o painel do cliente não pode empurrar
      de volta a aba de quem abriu. */
-  const painel=linkPainelCliente(c);
+  /* O atalho do rodapé só sobra para o caso em que NENHUM contato tem código
+     individual — aí o endereço pronto da planilha é o único caminho que existe. */
+  const algumCom=list.some(ct=>hashPainel(c,ct));
+  const painel=algumCom?'':linkPainelCliente(c);
   const lkPainel=painel
     ? `<a class="ex-lk" href="${esc(painel)}" target="_blank" rel="noopener">Abrir o painel do cliente ›</a>` : '';
   return exSec(icone('chat'),'Contatos',body+lkPainel);
@@ -1220,21 +1251,42 @@ function docEhData(nome){
   if(/^link\b/.test(k)) return false;
   return /\bvenc\b|vencimento|validade|vig[eê]ncia|^data\b/.test(k);
 }
-/* Link PURO = endereço de acesso, não documento: o nome COMEÇA com "Link".
-   É o mesmo `ehLinkPuro` de licencas.html, e o motivo é o mesmo — a célula
-   oferecia "Enviar ⬆" e alguém foi procurar o arquivo da prefeitura para subir. */
-function docEhLinkPuro(nome){ const p=docNorm(nome).split(' ')[0]; return p==='link'||p==='links'; }
+/* ENDEREÇO PURO = lugar da web, não documento. Lista FECHADA, casada por nome
+   inteiro — é o mesmo `ehLinkPuro` de licencas.html, e tem de continuar sendo.
+   A regra antiga era "o nome começa com Link", e nesta planilha isso é quase
+   todo mundo: "Link Contrato Social", "Link Cartão CNPJ", "Link Inscrição
+   Municipal", "Link Alvará Sanitário" são DOCUMENTOS, e todos apareciam aqui
+   como "sem endereço", sem jeito de subir arquivo nenhum.
+   Casar por pedaço também não serve: "Link Certificado de regularidade CRM PJ"
+   contém "CRM" e viraria portal. Coluna nova entra como documento — falta um
+   botão a menos, nunca a mais. */
+const DOC_ENDERECOS_PUROS=['link prefeitura','link crm','link portal','link do portal',
+                           'link e cac','link ecac','link sefaz','link gov','link site'];
+function docEhLinkPuro(nome){ return DOC_ENDERECOS_PUROS.indexOf(docNorm(nome))>=0; }
 /* Valor que é data (a planilha manda aaaa-mm-dd ou dd/mm/aaaa) nunca é documento. */
 function docEhValorData(v){ return /^\d{4}-\d{2}-\d{2}/.test(String(v||'').trim())||/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(String(v||'').trim()); }
 /* O que o nome da coluna denuncia como documento, quando o valor ainda não é uma
    URL (célula com "Não localizado", "Em constituição"…). A lista veio dos nomes
    reais do Controle de Licenças. */
-const DOC_PALAVRAS=/alvar|certid|licenc|licenciamento|regulariz|regularidade|\bcrm\b|\bcnes\b|sanitar|contrato|contrato social|estatuto|\bata\b|documento|declarac|comprovante|cartao|inscric|procurac|certificado|habite|bombeiro|vigilanc/;
+/* `cnes` SAIU desta lista: o CNES é o NÚMERO do estabelecimento no cadastro
+   nacional (sete dígitos, e começa com zero em boa parte deles), não um arquivo.
+   Com ele aqui, a coluna virava célula de documento e oferecia "Enviar ⬆" — um
+   convite a anexar arquivo num campo onde se digita número. Um "Link CNES", se
+   existir um dia, continua caindo em documento pelo próprio valor ser URL. */
+const DOC_PALAVRAS=/alvar|certid|licenc|licenciamento|regulariz|regularidade|\bcrm\b|sanitar|contrato|contrato social|estatuto|\bata\b|documento|declarac|comprovante|cartao|inscric|procurac|certificado|habite|bombeiro|vigilanc/;
 function docEhDocumento(nome,valor){
   if(docEhCredencial(nome)) return false;
   if(docEhData(nome)) return false;
   if(urlOk(valor)) return true;                 // valor é endereço http(s): é documento
   if(docEhValorData(valor)) return false;       // data solta numa coluna sem "venc" no nome
+  /* A convenção da planilha é "Link <o quê>", e o <o quê> é um arquivo — a menos
+     que seja um dos portais da lista fechada, que já saiu antes daqui. Confiar na
+     convenção em vez de na lista de palavras é o que faz "Link Form Diagnóstico"
+     funcionar sem ninguém precisar lembrar de acrescentar "form" numa regex, e é
+     o que vai fazer a próxima coluna "Link ..." nascer certa. A lista de palavras
+     continua valendo para as colunas de documento que NÃO seguem a convenção
+     (a "Drive" da vida, ou uma "Alvará" sem o prefixo). */
+  if(/^links?\b/.test(docNorm(nome))) return true;
   return DOC_PALAVRAS.test(docNorm(nome));
 }
 /* Só abre o que é mesmo endereço — campo vazio ou com anotação solta deixa o

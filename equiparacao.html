@@ -458,6 +458,9 @@ const B4U_IDENT=[
   {re:/\bcpf\b/,                             tipo:'cpf',   tam:[11],    rot:'CPF'},
   {re:/\bcep\b/,                             tipo:'cep',   tam:[8],     rot:'CEP'},
   {re:/\bpis\b|\bnit\b|\bpasep\b/,           tipo:'pis',   tam:[11],    rot:'PIS/NIT'},
+  /* CNES: sete dígitos, e uma boa parte começa com zero. É número de cadastro,
+     nunca quantidade — a planilha come o zero dele igual come o do CNPJ. */
+  {re:/\bcnes\b/,                            tipo:'cnes',  tam:[7],     rot:'CNES'},
   {re:/\bmatricula\b/,                       tipo:'gen',   tam:null,    rot:'matrícula'},
   {re:/\binscricao\b|\bcadastro municipal\b|\bregistro na junta\b/, tipo:'gen', tam:null, rot:'inscrição'},
   {re:/\btelefone\b|\bcelular\b|\bwhatsapp\b|\bfone\b/, tipo:'tel', tam:null, rot:'telefone'},
