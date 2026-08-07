@@ -321,13 +321,6 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 
 /* ---------- explicacao recolhida (C.2) ----------
    O dado vem primeiro; a instrucao fica a um clique e lembra a escolha. */
-details.ajuda{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin:8px 0}
-details.ajuda>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:12px;font-weight:800;color:var(--ink-2)}
-details.ajuda>summary::-webkit-details-marker{display:none}
-details.ajuda>summary::after{content:" \25BE";color:var(--muted)}
-details.ajuda[open]>summary::after{content:" \25B4"}
-details.ajuda>.txt{padding:0 12px 11px;font-size:12px;color:var(--muted);line-height:1.55}
-details.ajuda>.txt b{color:var(--ink-2)}
 /* ---------- o que nao gravou (C.3) ----------
    A linha (ou o campo) fica marcada e o "tentar de novo" nasce ali mesmo. */
 .falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
@@ -1043,15 +1036,10 @@ function render(){
         <div class="linha-filtros"><div class="grupo" id="chipsOrd"></div></div>
         <button type="button" class="btn-limpar" id="btn-limpar">Limpar filtros</button>
       </div>
-      <details class="ajuda" id="ajuda">
-        <summary>ⓘ Como funciona esta tela</summary>
-        <div class="txt">Filtro, busca e ordenação funcionam juntos — os chips ficam no botão <b>Filtros</b>.<br>Cada linha traz <b>ID, cliente, processo, etapa atual, última movimentação</b> e a <b>situação</b>: <b>Parado</b> em vermelho e com faixa na lateral é quem está em aberto e não anda há mais de 30 dias. Coluna em branco diz o que falta (<b>sem data</b>, <b>sem etapas</b>) em vez de ficar vazia, e o que não coube — o código, a duração ⏱, o responsável — aparece ao passar o mouse na linha.<br>A lista é só de leitura: clicar na linha (ou apertar Enter nela) abre o processo por cima dela, sem sair da tela, e é ali que se edita tudo — inclusive as etapas (clique no nome da etapa para abrir os detalhes) e as observações datadas, que entram pelo botão <b>Adicionar</b>. O que você muda continua salvando sozinho; o botão <b>Salvar alterações</b> antecipa a gravação que já estava a caminho e fecha a ficha quando ela entra. Se alguma coisa não gravar, a ficha continua aberta com o aviso.<br>Atalhos: <b>/</b> foca a busca e <b>Esc</b> limpa a busca — ou fecha a ficha, quando ela está aberta.</div>
-      </details>
     </div>
     <div class="lista" id="lista"></div></div>`;
   FILTROS_UI=ligarFiltros('societario-equipe',filtrosPainel);   // depois do layout: o painel já existe
   desenhar();
-  ligarDetalhes(document.getElementById('ajuda'),'b4u.societario.ajuda');
   document.getElementById('busca').addEventListener('input',e=>{BUSCA=e.target.value;TETO=PASSO;desenhar();});
   document.getElementById('novo').addEventListener('click',abrirNovo);
 }

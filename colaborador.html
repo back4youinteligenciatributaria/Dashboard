@@ -1781,10 +1781,13 @@ function secDaily(lista,c){
 }
 
 function renderExtras(x,c){
-  return secCertificados(c&&c.certificado,c)+
+  /* Contatos vem primeiro a pedido do dono: quem abre um cliente costuma estar
+     indo falar com alguém, e o telefone tem de estar no alto. */
+  return secContatos(x.contatos,c)+
+         secCertificados(c&&c.certificado,c)+
          secDaily(x.daily,c)+
          secCadastro(x.cadastro,c)+
-         secContatos(x.contatos,c)+secLicencas(x.licencas)+
+         secLicencas(x.licencas)+
          (x.mestra ? secMestra(x.mestra) : '')+
          (x.equiparacao ? secEquiparacao(x.equiparacao) : '');
 }

@@ -340,14 +340,6 @@ input:focus{outline:2px solid var(--brand-teal);outline-offset:0}
 
 /* ---------- explicacao recolhida (C.2) ----------
    O dado vem primeiro; a instrucao fica a um clique e lembra a escolha. */
-details.ajuda{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin:8px 16px}
-details.ajuda>summary{cursor:pointer;list-style:none;padding:8px 12px;font-size:12px;font-weight:800;color:var(--ink-2)}
-details.ajuda>summary::-webkit-details-marker{display:none}
-details.ajuda>summary::after{content:" \25BE";color:var(--muted)}
-details.ajuda[open]>summary::after{content:" \25B4"}
-details.ajuda>.txt{padding:0 12px 11px;font-size:12px;color:var(--muted);line-height:1.55}
-details.ajuda>.txt b{color:var(--ink-2)}
-details.ajuda>.txt a{color:var(--brand-teal-txt)}
 /* Os quatro cartões de exemplo continuam inteiros, só que a um clique de
    distância: a CONTAGEM deles já está na régua, então nada de pendência some. */
 details.situacao>summary{padding:10px 13px;font-size:13px}
@@ -2167,14 +2159,6 @@ function layout(){
       <button type="button" class="btn-limpar" id="btn-limpar">Limpar filtros</button>
     </div>
   </div>
-  <details class="ajuda" id="ajuda">
-    <summary>ⓘ Como funciona esta tela</summary>
-    <div class="txt">A lista é só de leitura: cada linha traz <b>ID, cliente, CNPJ, cidade</b>, o <b>documento mais crítico</b>, o <b>vencimento mais próximo</b> e a <b>situação</b> — vermelho vencido, laranja até 30 dias, verde em dia e laranja claro quando não há vencimento informado, cada uma com uma faixa na lateral. Coluna em branco diz o que falta (<b>sem CNPJ</b>, <b>sem documento</b>, <b>sem data</b>) em vez de ficar vazia, e o que não coube aparece ao passar o mouse na linha. Os <b>filtros rápidos</b> e a <b>ordenação</b> ficam no botão <b>Filtros</b> e combinam entre si e com a busca; no computador dá para ordenar clicando no <b>cabeçalho da lista</b> — clicar de novo na mesma coluna inverte, e coluna em branco fica sempre no fim.<br>Clicar na linha — ou apertar Enter nela — abre a <b>ficha do cliente</b> por cima da lista, e é lá que acontece toda a edição: um bloco por assunto, com o documento e o vencimento dele juntos. O que você editar salva sozinho; o botão <b>Salvar alterações</b> antecipa a gravação que já estava a caminho e fecha a ficha quando ela entra. Se alguma coisa não gravar, a ficha continua aberta com o aviso.<br>Na ficha, o atalho <b>texto</b> troca o campo de data por texto livre (“Não localizado”, “Em constituição”…) e só aparece em campo vazio — data preenchida não tem botão ao lado, para ninguém apagar sem querer. A célula de documento oferece <b>Enviar ⬆</b> quando está vazia e <b>Abrir ↗</b> quando já tem arquivo; o <b>⋯</b> guarda o campo de endereço e o <b>Enviar outro arquivo</b>, que sobe um documento no lugar do atual.<br>As senhas ficam escondidas, com botão de mostrar e de copiar, e <b>nunca</b> entram na busca nem no endereço desta página. A lista de clientes e os dados de cadastro vêm do cadastro do cliente — por isso não dá para editá-los aqui nem incluir cliente novo; faça isso em <a href="registro.html?chave=${encodeURIComponent(chaveAtual())}">Registros de clientes</a>.<br>A lista abre com os <b>20 primeiros</b> — os botões no fim dela mostram mais 20 ou todos de uma vez, e filtrar ou buscar recomeça do 20. A busca acha CNPJ com ou sem pontuação, <b>/</b> pula para ela e <b>Esc</b> limpa.</div>
-  </details>
-  <details class="ajuda situacao" id="det-situacao">
-    <summary>Ver quem está em cada situação</summary>
-    <div class="resumo" id="resumo"></div>
-  </details>
   <div class="lista" id="lista"></div>
   <div id="rodape-lista"></div>`;
 }
@@ -2190,7 +2174,6 @@ async function carregar(){
     mapearLinha();                                 // CNPJ e cidade da linha, por apelido
     validarURL();                                  // a visão vem do endereço (C.10)
     document.getElementById('app').innerHTML=layout();
-    ligarDetalhes(document.getElementById('ajuda'),'b4u.licencas.ajuda');
     FILTROS_UI=ligarFiltros('licencas',filtrosPainel);   // depois do layout: o painel já existe
     if(d.planilha_url) document.getElementById('plan').href=d.planilha_url;
     const b=document.getElementById('busca');

@@ -59,8 +59,14 @@ select.filtro{font-family:inherit;font-size:var(--fs-3);color:var(--ink);backgro
   border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:9px 13px;cursor:pointer;
   max-width:100%;min-width:0;text-overflow:ellipsis}
 select.filtro:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
-/* Filtro pegando ganha cor: sem isso a lista some pela metade e ninguém sabe por quê. */
-select.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-weight:700}
+/* Todo filtro é colorido, mesmo no padrão: a caixa que diz "Minhas tarefas"
+   está filtrando tanto quanto qualquer outra, e deixá-la cinza fazia parecer
+   que a lista era tudo o que existe. */
+select.filtro{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-weight:700}
+/* "Todo o time" é o estado que muda o significado da tela inteira — de "o que eu
+   tenho" para "o que existe". Ele se anuncia: verde cheio, letra branca. */
+select.filtro.time{background:var(--verde-2);border-color:var(--verde-2);color:#fff}
+select.filtro.time option{background:var(--surface);color:var(--ink)}
 /* Cliente é campo de DIGITAR, não de rolar: com a carteira inteira numa caixinha,
    achar "Ajub" custava rolagem e memória do nome exato. Com datalist, "ajub"
    basta — e o navegador casa por qualquer pedaço, inclusive pelo ID. */
@@ -82,9 +88,28 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 /* Grade, não <table>: abaixo de 900px a linha vira duas dentro da mesma faixa,
    e tabela não faz isso sem virar rolagem lateral. */
 .lista{display:flex;flex-direction:column;gap:6px}
+/* Cabeçalho das colunas: existe para a grade ser lida como grade. Sem ele, seis
+   informações alinhadas viram seis colunas sem nome e a pessoa adivinha qual é
+   qual pela primeira linha. Some junto com a grade abaixo de 900px. */
+.cabgrade{display:grid;grid-template-columns:var(--cols);gap:0 12px;
+  padding:2px 13px 6px;font-size:var(--fs-1);font-weight:800;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--muted)}
+.cabgrade span:last-child{text-align:right}
+/* Grade, não <table>: abaixo de 900px cada linha vira duas dentro da mesma faixa,
+   e tabela não faz isso sem virar rolagem lateral.
+   As colunas são FIXAS de propósito — ID sempre no mesmo x, área sempre no
+   mesmo x. Correr o olho por uma coluna só é o que faz uma lista de trinta
+   linhas ser lida em segundos. */
+:root{--cols:78px minmax(0,1fr) 108px 124px 128px 108px}
 .t{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-  border-left:4px solid var(--line-2);padding:10px 13px;display:grid;gap:3px 12px;
-  grid-template-columns:1fr auto;align-items:center;cursor:pointer}
+  border-left:4px solid var(--line-2);padding:10px 13px;display:grid;gap:2px 12px;
+  grid-template-columns:var(--cols);align-items:center;cursor:pointer}
+.t-id{font-size:var(--fs-2);font-weight:800;color:var(--brand-teal-txt);
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-area,.t-quem{font-size:var(--fs-2);color:var(--ink-2);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-quem .vc{color:var(--brand-teal-txt);font-weight:700}
+.t-cel{min-width:0;display:flex;justify-content:flex-end}
 .t:hover{border-color:var(--line-2);box-shadow:0 1px 5px rgba(7,48,52,.07)}
 .t:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
 /* Uma cor por situação, na faixa lateral e na pílula — as duas do mesmo tom, para
@@ -103,10 +128,9 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 .t.s-feito{border-left-color:var(--verde);opacity:.72}
 .t.s-cancelado{border-left-color:var(--line-2);opacity:.55}
 .t.venceu{border-left-color:var(--vermelho)}
-.t-assunto{font-weight:700;font-size:var(--fs-4);min-width:0;overflow-wrap:anywhere}
+.t-assunto{font-weight:700;font-size:var(--fs-4);min-width:0;overflow-wrap:anywhere;grid-column:2}
 .t.s-feito .t-assunto,.t.s-cancelado .t-assunto{text-decoration:line-through;text-decoration-thickness:1px}
-.t-meta{grid-column:1;display:flex;flex-wrap:wrap;gap:3px 10px;font-size:var(--fs-2);color:var(--muted)}
-.t-dir{grid-column:2;grid-row:1/span 2;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.t-meta{grid-column:2;display:flex;flex-wrap:wrap;gap:3px 10px;font-size:var(--fs-2);color:var(--muted)}
 .t-cli{color:var(--brand-teal-txt);font-weight:700}
 .t-prazo{font-variant-numeric:tabular-nums;white-space:nowrap}
 .t-prazo.venceu{color:var(--vermelho);font-weight:700}
@@ -122,6 +146,11 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 .pill.p-interno{background:#EFEAE3;color:var(--ink-2)}
 .vazio{background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--radius);
   padding:26px 18px;text-align:center;color:var(--muted)}
+/* "Experimente Todo o time" era texto: a saída da tela vazia estava escrita e não
+   clicável, e a pessoa tinha de achar a caixinha lá em cima sozinha. */
+.link-btn{font:inherit;font-weight:700;color:var(--verde-2);background:none;border:0;
+  padding:0 2px;cursor:pointer;text-decoration:underline}
+.link-btn:hover{color:var(--brand-teal-txt)}
 
 /* ---------- modal ---------- */
 /* z-index acima de 940: senão o menu lateral continua clicável por cima do véu
@@ -175,11 +204,17 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 .log-i.tipo-situacao .log-t b,.log-i.tipo-prazo .log-t b{font-weight:700;color:var(--ink)}
 .log-vazio{color:var(--muted);font-size:var(--fs-2);padding:6px 0}
 
-@media(max-width:760px){
-  .grid{grid-template-columns:1fr}
-  .t{grid-template-columns:1fr}
-  .t-dir{grid-column:1;grid-row:auto;flex-direction:row;align-items:center;flex-wrap:wrap}
+/* Abaixo de 900px a grade desmonta: as seis colunas viram linhas empilhadas,
+   porque 78px de ID ao lado de 108px de área num celular deixariam o assunto —
+   que é o que se lê — com uns 60px. */
+@media(max-width:900px){
+  .cabgrade{display:none}
+  .t{grid-template-columns:1fr auto;gap:3px 10px}
+  .t-assunto,.t-meta,.t-linha2{grid-column:1/-1}
+  .t-linha2{display:flex;flex-wrap:wrap;gap:3px 10px;align-items:center}
+  .t-cel{justify-content:flex-start}
 }
+@media(max-width:760px){ .grid{grid-template-columns:1fr} }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <script src="config.js"></script>
@@ -451,7 +486,8 @@ async function postAcao(obj,ms){
 let TAREFAS=[], LOGS=[], EU=null, COLABS=[], CLIENTES=[], SITUACOES=[], HOJE='';
 const TODOS_ID='TODOS';
 let PLANILHA='';
-let F_QUEM='__eu__', F_SIT='abertas', F_CLI='', TERMO='';
+let F_QUEM='__eu__', F_SIT='abertas', F_CLI='', F_AREA='', TERMO='';
+let AREAS=[];
 let ABERTA=null;                      // tarefa aberta no modal (null = nova)
 
 const ABERTAS=['A fazer','Em andamento','Esperando terceiro'];
@@ -466,7 +502,10 @@ const ehTodos=v=>String(v==null?'':v).trim().toUpperCase()===TODOS_ID;
 function resolverCliente(txt){
   const t=String(txt||'').trim();
   if(!t) return {id:'',ok:true};
-  if(ehTodos(t)) return {id:TODOS_ID,ok:true};
+  /* "Todos", "TODOS", e também "TODOS — vale para…" de um link ou colagem
+     antiga: a primeira palavra manda. Recusar por causa do que vem depois do
+     travessão seria implicância com quem colou. */
+  if(ehTodos(t)||ehTodos(t.split(/[\s—-]/)[0])) return {id:TODOS_ID,ok:true};
   const dig=soDigitos(t);
   if(dig){ const porId=CLIENTES.find(c=>String(c.id)===dig); if(porId) return {id:porId.id,ok:true}; }
   const n=normTxt(t);
@@ -476,14 +515,19 @@ function resolverCliente(txt){
   return {id:'',ok:false,msg:'Não achei esse cliente.'};
 }
 function rotuloCliente(id){
-  if(ehTodos(id)) return 'TODOS — vale para todos os clientes';
+  if(ehTodos(id)) return 'Todos';
   const c=CLIENTES.find(x=>String(x.id)===String(id));
   return c?(c.id+' · '+c.nome):(id||'');
 }
 /* Uma <datalist> só, reaproveitada pelo filtro e pela ficha. TODOS em primeiro,
    que é a praxe da casa e o caso que se escolhe sem pensar. */
+/* A opção é só "Todos". O rótulo explicativo virou o texto de ajuda embaixo do
+   campo: quando ele vinha DENTRO do <option>, escolher a opção escrevia a frase
+   inteira na caixa, e o resolvedor — que compara o texto todo — não reconhecia
+   mais "TODOS" e acusava "não achei esse cliente". A explicação foi para onde
+   ela cabe, e a caixa voltou a conter só o que é dado. */
 function datalistClientes(){
-  return `<datalist id="dl-cli"><option value="TODOS — vale para todos os clientes"></option>`+
+  return `<datalist id="dl-cli"><option value="Todos"></option>`+
     CLIENTES.map(c=>`<option value="${esc(c.id+' · '+c.nome)}"></option>`).join('')+`</datalist>`;
 }
 
@@ -503,7 +547,14 @@ function nomeCliente(id){ const c=CLIENTES.find(x=>String(x.id)===String(id)); r
    Casa pelo NOME que veio da aba Colaboradores, que é o mesmo texto gravado na
    coluna Responsável. E-mail seria mais seguro, mas a planilha guarda o nome — e
    inventar uma segunda chave aqui criaria duas verdades sobre a mesma pessoa. */
-function souEu(nome){ return EU && normTxt(nome)===normTxt(EU.nome); }
+function souEu(nome){ return !!(EU && nome && normTxt(nome)===normTxt(EU.nome)); }
+/* O nome de quem está usando a tela vem com "(você)" atrás, em toda parte: numa
+   lista com cinco nomes parecidos, achar o próprio é a primeira coisa que se faz
+   e não pode custar leitura. */
+function comVoce(nome){
+  if(!nome) return '';
+  return esc(nome)+(souEu(nome)?' <span class="vc">(você)</span>':'');
+}
 
 /* ---------- filtro ---------- */
 function visiveis(){
@@ -511,6 +562,7 @@ function visiveis(){
   return TAREFAS.filter(t=>{
     if(F_QUEM==='__eu__'){ if(!souEu(t.responsavel)) return false; }
     else if(F_QUEM && F_QUEM!=='__todos__'){ if(normTxt(t.responsavel)!==normTxt(F_QUEM)) return false; }
+    if(F_AREA && t.area!==F_AREA) return false;
     if(F_SIT==='abertas'){ if(ABERTAS.indexOf(t.situacao)<0) return false; }
     else if(F_SIT && F_SIT!=='__todas__'){ if(t.situacao!==F_SIT) return false; }
     /* Por cliente, o escopo "Todos" entra junto: é tarefa que vale para a carteira
@@ -571,18 +623,40 @@ function linhaHTML(t){
   const prazoTxt=fim
     ? (t.concluido_em?'concluída '+fmtData(t.concluido_em):(t.situacao==='Cancelado'?'cancelada':'concluída'))
     : (t.prazo?fmtData(t.prazo):'sem prazo');
-  const quem=t.responsavel?esc(t.responsavel):'<span style="color:var(--muted)">sem responsável</span>';
-  const alvo=t.escopo==='Todos'?'<span class="pill p-todos">todos os clientes</span>'
-           :(t.escopo==='Interno'?'<span class="pill p-interno">interno</span>'
-           :`<span class="t-cli">${esc(t.cliente||nomeCliente(t.cliente_id)||('cliente '+t.cliente_id))}</span>`);
+  const quem=t.responsavel?comVoce(t.responsavel):'<span style="color:var(--muted)">sem responsável</span>';
+  /* Coluna 1 é sempre a MESMA informação: o identificador do alvo. ID do cliente,
+     "Todos" ou "interno" — nunca o nome, que é longo e desalinha a coluna. */
+  const idAlvo=t.escopo==='Todos'?'Todos':(t.escopo==='Interno'?'interno':esc(t.cliente_id||'—'));
+  const nomeCli=t.escopo==='Cliente'
+    ? `<span class="t-cli">${esc(t.cliente||nomeCliente(t.cliente_id)||'')}</span>` : '';
   const nLog=LOGS.filter(l=>String(l.daily_id)===String(t.id)&&l.tipo==='nota').length;
   return `<div class="t s-${cls(t.situacao)}${d!==null&&d<0?' venceu':''}"
      role="button" tabindex="0" data-id="${esc(t.id)}"
-     title="${esc(t.detalhe||t.assunto)}">
+     title="${esc(resumoHover(t))}">
+    <div class="t-id">${idAlvo}</div>
     <div class="t-assunto">${esc(t.assunto||'(sem assunto)')}</div>
-    <div class="t-meta">${alvo}<span>${quem}</span>${nLog?`<span>· ${nLog} nota${nLog>1?'s':''}</span>`:''}</div>
-    <div class="t-dir">${pillSit(t.situacao)}<span class="t-prazo ${prazoCls}">${esc(prazoTxt)}</span></div>
+    <div class="t-area">${esc(t.area||'')}</div>
+    <div class="t-quem">${quem}</div>
+    <div class="t-cel">${pillSit(t.situacao)}</div>
+    <div class="t-cel"><span class="t-prazo ${prazoCls}">${esc(prazoTxt)}</span></div>
+    <div class="t-meta">${nomeCli}${nLog?`<span>· ${nLog} nota${nLog>1?'s':''}</span>`:''}</div>
   </div>`;
+}
+/* O que o mouse revela: o detalhe e as últimas linhas do histórico. Vai no `title`
+   nativo de propósito — um balão nosso teria de resolver posicionamento, borda de
+   tela e toque, e a linha inteira já é um botão que abre a ficha com o histórico
+   completo. Aqui é espiada, não leitura. */
+function resumoHover(t){
+  const partes=[];
+  if(t.detalhe) partes.push(t.detalhe);
+  const log=LOGS.filter(l=>String(l.daily_id)===String(t.id))
+    .slice().sort((a,b)=>String(b.quando).localeCompare(String(a.quando))).slice(0,4);
+  if(log.length){
+    partes.push('— histórico —');
+    log.forEach(l=>partes.push((l.quando||'')+'  '+(l.quem||'equipe')+': '+
+      (l.tipo==='nota'?l.texto:(l.tipo+' '+l.texto))));
+  }
+  return partes.join('\n') || t.assunto || '';
 }
 function layout(){
   const optQuem=['<option value="__eu__">Minhas tarefas</option>',
@@ -591,11 +665,14 @@ function layout(){
   const optSit=['<option value="abertas">Em aberto</option>',
                 '<option value="__todas__">Todas as situações</option>']
     .concat(SITUACOES.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`)).join('');
+  const optArea=['<option value="">Todas as áreas</option>']
+    .concat(AREAS.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`)).join('');
   return `
   <div class="topo">
     <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por assunto, cliente, pessoa…  ( / para focar)" value="${esc(TERMO)}">
     <select class="filtro" id="f-quem" aria-label="De quem">${optQuem}</select>
     <select class="filtro" id="f-sit" aria-label="Situação">${optSit}</select>
+    <select class="filtro" id="f-area" aria-label="Área">${optArea}</select>
     <input class="filtro" id="f-cli" list="dl-cli" autocomplete="off" aria-label="Cliente"
            placeholder="Cliente — digite um pedaço do nome" value="${F_CLI?esc(rotuloCliente(F_CLI)):''}">
     <button class="btn btn--primary" id="nova" type="button">+ Nova tarefa</button>
@@ -608,15 +685,20 @@ function desenharLista(){
   const vis=visiveis();
   const gs=agrupar(vis);
   document.getElementById('cont').textContent=vis.length+(vis.length===1?' tarefa':' tarefas');
+  const CAB=`<div class="cabgrade"><span>Cliente</span><span>Assunto</span><span>Área</span>
+    <span>Responsável</span><span>Situação</span><span>Prazo</span></div>`;
   box.innerHTML = gs.length
     ? gs.map(o=>`<div class="grupo ${o.g.k}"><h2>${esc(o.g.rot)}</h2><span class="n">${o.itens.length}</span></div>
-                 <div class="lista">${o.itens.map(linhaHTML).join('')}</div>`).join('')
-    : `<div class="vazio">Nada por aqui com esses filtros.${F_QUEM==='__eu__'?' Experimente <b>Todo o time</b>.':''}</div>`;
+                 ${CAB}<div class="lista">${o.itens.map(linhaHTML).join('')}</div>`).join('')
+    : `<div class="vazio">Nada por aqui com esses filtros.${F_QUEM==='__eu__'
+        ?' Ver <button type="button" class="link-btn" id="ir-time">todo o time</button>.':''}</div>`;
   /* Os selects refletem o estado: recarregar ou trocar de filtro não pode deixar
      a caixinha dizendo uma coisa e a lista mostrando outra. */
   const q=document.getElementById('f-quem'), s=document.getElementById('f-sit'), c=document.getElementById('f-cli');
-  if(q){q.value=F_QUEM;q.classList.toggle('on',F_QUEM!=='__eu__');}
-  if(s){s.value=F_SIT;s.classList.toggle('on',F_SIT!=='abertas');}
+  const a=document.getElementById('f-area');
+  if(q){q.value=F_QUEM;q.classList.toggle('time',F_QUEM==='__todos__');}
+  if(s){s.value=F_SIT;}
+  if(a){a.value=F_AREA;}
   if(c){c.classList.toggle('on',!!F_CLI);}
 }
 
@@ -629,8 +711,10 @@ function fichaHTML(t){
   const nova=!t;
   t=t||{situacao:'A fazer',responsavel:(EU&&EU.nome)||'',
         aberto_em:HOJE,prazo:'',assunto:'',detalhe:'',cliente_id:'',concluido_em:''};
-  const optColab=[{v:'',r:'— sem responsável —'}].concat(COLABS.map(c=>({v:c.nome,r:c.nome})));
+  const optColab=[{v:'',r:'— sem responsável —'}]
+    .concat(COLABS.map(c=>({v:c.nome,r:c.nome+(souEu(c.nome)?' (você)':'')})));
   const optSit=SITUACOES.map(s=>({v:s,r:s}));
+  const optArea2=[{v:'',r:'— sem área —'}].concat(AREAS.map(a=>({v:a,r:a})));
   return `
   <div class="gsec">
     <h3><span class="dot"></span>A tarefa</h3>
@@ -641,6 +725,7 @@ function fichaHTML(t){
         <textarea id="f-detalhe" placeholder="O plano. O que já aconteceu vai no histórico, abaixo.">${esc(t.detalhe)}</textarea></div>
       ${campoSelect('f-resp','Responsável',optColab,t.responsavel)}
       ${campoSelect('f-sit2','Situação',optSit,t.situacao)}
+      ${campoSelect('f-area2','Área',optArea2,t.area||'')}
       <div class="fld"><label for="f-cli2">Cliente</label>
         <input id="f-cli2" list="dl-cli" autocomplete="off" value="${t.cliente_id?esc(rotuloCliente(t.cliente_id)):''}"
                placeholder="Digite um pedaço do nome, ou TODOS">
@@ -673,6 +758,21 @@ function logHTML(id){
         l.tipo==='nota'?esc(l.texto):('mudou '+esc(l.tipo)+': <b>'+esc(l.texto)+'</b>')}</span>
     </div>`).join('');
 }
+/* O seletor de situação usa a MESMA cor da pílula da lista. Sem isso a ficha
+   dizia em texto o que a lista dizia em cor, e a pessoa tinha de traduzir entre
+   as duas telas. */
+const COR_SIT={
+  'A fazer':          ['#F3E7D5','#6B4E22'],
+  'Em andamento':     ['#DBEFEC','#0A5F59'],
+  'Esperando terceiro':['#FCEFE0','#8A5A10'],
+  'Feito':            ['#E2F2E8','#1F6B45'],
+  'Cancelado':        ['#EFEAE3','#6E6256']
+};
+function pintarSituacao(){
+  const el=document.getElementById('f-sit2'); if(!el) return;
+  const c=COR_SIT[el.value]||['','',];
+  el.style.background=c[0]||''; el.style.color=c[1]||''; el.style.fontWeight=c[0]?'700':'';
+}
 function abrirFicha(t){
   ABERTA=t||null;
   document.getElementById('m-tit').textContent=t?(t.assunto||'Tarefa'):'Nova tarefa';
@@ -684,6 +784,7 @@ function abrirFicha(t){
   document.getElementById('modal').hidden=false;
   document.body.style.overflow='hidden';
   validarCliFicha();
+  pintarSituacao();
   setTimeout(()=>{const f=document.getElementById('f-assunto');if(f)f.focus();},40);
 }
 function fecharFicha(){
@@ -709,7 +810,7 @@ async function salvarFicha(){
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
   const cli=validarCliFicha();
   const dados={ assunto:v('f-assunto'), detalhe:v('f-detalhe'), responsavel:v('f-resp'),
-                situacao:v('f-sit2'), cliente_id:cli.id,
+                situacao:v('f-sit2'), area:v('f-area2'), cliente_id:cli.id,
                 prazo:v('f-prazo'),
                 aberto_em:v('f-aberto'), concluido_em:v('f-concl') };
   if(!dados.assunto){ msg.className='msg err'; msg.textContent='Escreva o assunto.'; return; }
@@ -740,6 +841,7 @@ document.addEventListener('click',e=>{
   const linha=e.target.closest&&e.target.closest('.t');
   if(linha){ const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id); if(t) abrirFicha(t); return; }
   if(e.target.id==='nova'){ abrirFicha(null); return; }
+  if(e.target.id==='ir-time'){ F_QUEM='__todos__'; desenharLista(); return; }
   if(e.target.id==='m-x'||e.target.id==='m-fechar'){ fecharFicha(); return; }
   if(e.target.id==='m-salvar'){ salvarFicha(); return; }
   if(e.target===document.getElementById('modal')) fecharFicha();
@@ -754,6 +856,7 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('change',e=>{
   if(e.target.id==='f-quem'){ F_QUEM=e.target.value; desenharLista(); }
   if(e.target.id==='f-sit'){ F_SIT=e.target.value; desenharLista(); }
+  if(e.target.id==='f-area'){ F_AREA=e.target.value; desenharLista(); }
   if(e.target.id==='f-cli'){ F_CLI=e.target.value; desenharLista(); }
   if(e.target.id==='f-cli2'){ validarCliFicha(); }
   /* Marcou Feito: a data de hoje entra no campo AQUI, à vista, e não escondida no
@@ -761,6 +864,7 @@ document.addEventListener('change',e=>{
      depois que ficou com a data errada. Saindo de Feito a data cai: a tarefa
      deixou de estar concluída, e uma data de conclusão pendurada mentiria. */
   if(e.target.id==='f-sit2'){
+    pintarSituacao();
     const cc=document.getElementById('f-concl'); if(!cc) return;
     if(e.target.value==='Feito'){ if(!cc.value) cc.value=(HOJE||'').slice(0,10); }
     else cc.value='';
@@ -785,6 +889,7 @@ function aplicar(d){
   TAREFAS=d.tarefas||[]; LOGS=d.logs||[]; EU=d.eu||null;
   COLABS=d.colaboradores||[]; CLIENTES=d.clientes||[];
   SITUACOES=d.situacoes||['A fazer','Em andamento','Esperando terceiro','Feito','Cancelado'];
+  AREAS=d.areas||['Contábil','Pessoal','Fiscal','Jurídico','Societário','Restituição','Financeiro','Atendimento','Gestão'];
   HOJE=d.hoje||''; PLANILHA=d.planilha_url||'';
 }
 async function recarregar(){
@@ -803,6 +908,15 @@ async function boot(){
     const cli=(p.get('cli')||'').trim();
     if(cli){ F_CLI=cli; F_QUEM='__todos__'; }
     if(p.get('nova')==='1') setTimeout(()=>abrirFicha(null),60);
+    /* ?t=12 abre AQUELA tarefa. É o link que vai nos e-mails: um clique e a
+       ficha está aberta, sem procurar na lista. Vem com "todo o time" e "todas
+       as situações" porque o link pode apontar para tarefa de outra pessoa ou
+       já encerrada — e um link que abre em branco é pior que link nenhum. */
+    const alvo=(p.get('t')||'').trim();
+    if(alvo){
+      const t=TAREFAS.find(x=>String(x.id)===alvo);
+      if(t){ F_QUEM='__todos__'; F_SIT='__todas__'; setTimeout(()=>abrirFicha(t),60); }
+    }
     document.getElementById('app').innerHTML=layout();
     desenharLista();
     if(window.B4UShell) B4UShell.montar({
@@ -810,8 +924,24 @@ async function boot(){
       link:pag=>pag+'?chave='+encodeURIComponent(chaveAtual())
     });
   }catch(e){
+    /* A MENSAGEM DO SERVIDOR APARECE. Nas telas do cliente ela é escondida de
+       propósito — é vocabulário nosso e do outro lado só assusta. Aqui não: esta
+       é tela de equipe, e todo erro possível desta rota é acionável e escrito
+       para ser lido ("Falta a chave 'Planilha Daily' na aba Config…", "Acesso
+       restrito à equipe."). Trocar isso por "tente em alguns minutos" manda a
+       pessoa esperar por um problema que não passa sozinho — e foi exatamente o
+       que aconteceu na primeira vez que esta tela subiu. */
+    const txt=String((e&&e.message)||'').trim();
+    const generica='Não foi possível carregar as tarefas.';
     document.getElementById('app').innerHTML=
-      '<div class="vazio">Não foi possível carregar as tarefas. Tente novamente em alguns minutos.</div>';
+      `<div class="vazio"><b>${esc(txt||generica)}</b>${txt?'':''}
+        <div style="margin-top:10px;font-size:var(--fs-2)">
+          Se a mensagem fala em <b>chave "Planilha Daily"</b>, o link da planilha ainda não está
+          na aba Config da <b>Links App Script</b> — cole lá e rode <code>limparCacheConfig()</code>.<br>
+          Se fala em <b>acesso</b>, a chave do dia expirou: volte pelo
+          <a href="index.html">início</a>.
+        </div>
+      </div>`;
   }finally{
     if(window.B4UEspera) B4UEspera.concluir();
   }
