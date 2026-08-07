@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Guia nova por padrão: link clicado não tira o colaborador de onde ele estava. -->
+<base target="_blank">
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarefas Daily — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
+<style>
+:root{
+  /* Paleta canônica da equipe — a mesma em todas as telas. */
+  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
+  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--amber-2:#B05F12;
+  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
+  --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+  --fs-1:11px;--fs-2:12px;--fs-3:13px;--fs-4:15px;--fs-5:19px;--fs-6:24px;
+  --sans:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);
+  font-size:var(--fs-3);line-height:1.5;-webkit-font-smoothing:antialiased}
+.barra{position:sticky;top:0;z-index:30;height:52px;display:flex;align-items:center;gap:10px;
+  padding:0 14px;background:var(--brand-dark);color:#fff}
+.barra .logo{font-weight:800;font-size:17px;letter-spacing:-.02em}
+.barra .logo .y{color:var(--brand-euc)}
+.barra .titulo{background:rgba(255,255,255,.12);border-radius:var(--radius-pill);
+  padding:5px 13px;font-size:var(--fs-3);font-weight:700}
+.barra .spacer{flex:1}
+.barra .cont{font-size:var(--fs-2);color:#cfe6e2;white-space:nowrap}
+.wrap{max-width:1120px;margin:0 auto;padding:18px 16px 80px}
+
+/* ---------- topo: busca, filtros, ação ---------- */
+.topo{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.busca{flex:1;min-width:220px;font-family:inherit;font-size:var(--fs-3);color:var(--ink);
+  border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:9px 15px;background:var(--surface)}
+.busca:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
+.btn{font-family:inherit;font-size:var(--fs-3);font-weight:700;cursor:pointer;white-space:nowrap;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  border-radius:var(--radius-pill);padding:9px 15px}
+.btn:hover{border-color:var(--brand-teal)}
+.btn--primary{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--primary:hover{background:var(--brand-teal-txt)}
+/* `max-width` e `min-width:0` não são enfeite: o <select> de cliente dimensiona
+   pela OPÇÃO MAIS LONGA, e uma razão social inteira ("AJUB - CIRURGIA DE CABEÇA
+   E PESCOÇO E OTORRINOLARINGOLOGIA SOCIEDADE SIMPLES") esticava a caixa para
+   563px dentro de uma janela de 390 — a página inteira ganhava rolagem lateral
+   por causa de um nome de cliente. */
+select.filtro{font-family:inherit;font-size:var(--fs-3);color:var(--ink);background:var(--surface);
+  border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:9px 13px;cursor:pointer;
+  max-width:100%;min-width:0;text-overflow:ellipsis}
+select.filtro:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
+/* Filtro pegando ganha cor: sem isso a lista some pela metade e ninguém sabe por quê. */
+select.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-weight:700}
+
+/* ---------- grupos ---------- */
+.grupo{margin:18px 0 8px;display:flex;align-items:baseline;gap:9px}
+.grupo h2{margin:0;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.06em;
+  font-weight:800;color:var(--muted)}
+.grupo .n{font-size:var(--fs-2);color:var(--muted);font-weight:700}
+.grupo.atrasado h2{color:#8E2A1D}
+
+/* ---------- linha ---------- */
+/* Grade, não <table>: abaixo de 900px a linha vira duas dentro da mesma faixa,
+   e tabela não faz isso sem virar rolagem lateral. */
+.lista{display:flex;flex-direction:column;gap:6px}
+.t{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  border-left:4px solid var(--line-2);padding:10px 13px;display:grid;gap:3px 12px;
+  grid-template-columns:1fr auto;align-items:center;cursor:pointer}
+.t:hover{border-color:var(--line-2);box-shadow:0 1px 5px rgba(7,48,52,.07)}
+.t:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.t.s-andamento{border-left-color:var(--brand-teal)}
+.t.s-esperando{border-left-color:var(--amber)}
+.t.s-feito{border-left-color:var(--verde);opacity:.72}
+.t.s-cancelado{border-left-color:var(--line-2);opacity:.55}
+.t.venceu{border-left-color:var(--vermelho)}
+.t-assunto{font-weight:700;font-size:var(--fs-4);min-width:0;overflow-wrap:anywhere}
+.t.s-feito .t-assunto,.t.s-cancelado .t-assunto{text-decoration:line-through;text-decoration-thickness:1px}
+.t-meta{grid-column:1;display:flex;flex-wrap:wrap;gap:3px 10px;font-size:var(--fs-2);color:var(--muted)}
+.t-dir{grid-column:2;grid-row:1/span 2;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.t-cli{color:var(--brand-teal-txt);font-weight:700}
+.t-prazo{font-variant-numeric:tabular-nums;white-space:nowrap}
+.t-prazo.venceu{color:var(--vermelho);font-weight:700}
+.t-prazo.hoje{color:var(--amber-txt);font-weight:700}
+.pill{display:inline-block;font-size:var(--fs-1);font-weight:700;border-radius:var(--radius-pill);
+  padding:2px 9px;border:1px solid var(--line-2);background:var(--surface-warm);color:var(--ink-2);white-space:nowrap}
+.pill.p-andamento{background:#DBEFEC;color:#0A5F59;border-color:#9FD3CD}
+.pill.p-esperando{background:var(--amber-soft);color:var(--amber-txt);border-color:var(--amber-line)}
+.pill.p-feito{background:#E2F2E8;color:#1F6B45;border-color:#A8D9BE}
+.pill.p-cancelado{background:#EFEAE3;color:var(--muted)}
+.pill.p-todos{background:#EDE6FA;color:#5B3E9E;border-color:#CFC0EE}
+.pill.p-interno{background:#EFEAE3;color:var(--ink-2)}
+.vazio{background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--radius);
+  padding:26px 18px;text-align:center;color:var(--muted)}
+
+/* ---------- modal ---------- */
+/* z-index acima de 940: senão o menu lateral continua clicável por cima do véu
+   e um clique distraído troca de página com a ficha aberta. */
+.modal{position:fixed;inset:0;z-index:960;background:rgba(7,48,52,.45);overflow:auto;padding:24px 12px}
+.modal[hidden]{display:none}
+.modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;max-width:760px;
+  margin:0 auto;display:flex;flex-direction:column;max-height:calc(100vh - 48px);
+  box-shadow:0 20px 60px rgba(7,48,52,.35);overflow:hidden}
+.modal-top{flex:none;display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:var(--brand-dark);color:#fff}
+.modal-top b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-4)}
+.modal-top .cad-id{font-size:var(--fs-2);font-weight:700;color:#cfe6e2}
+.x{border:0;background:rgba(255,255,255,.15);color:#fff;width:30px;height:30px;border-radius:50%;
+  cursor:pointer;font-size:15px;line-height:1;flex:none}
+.x:hover{background:rgba(255,255,255,.28)}
+.modal-body{flex:1;min-height:0;overflow:auto;padding:16px}
+.modal-foot{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:11px 16px;
+  background:var(--surface);border-top:1px solid var(--line)}
+.modal-foot .spacer{flex:1}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld>label,.fld>.lbl{font-size:var(--fs-1);font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.04em}
+.fld input,.fld select,.fld textarea{font-family:inherit;font-size:var(--fs-3);color:var(--ink);
+  border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:8px 10px;background:var(--surface);width:100%}
+.fld textarea{resize:vertical;min-height:70px;line-height:1.45}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
+.fld .dica{font-size:var(--fs-1);color:var(--muted);line-height:1.35}
+.gsec{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:13px;margin-bottom:12px}
+.gsec h3{margin:0 0 10px;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.05em;
+  color:var(--muted);display:flex;align-items:center;gap:7px}
+.gsec h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--brand-euc);flex:none}
+.msg{min-height:17px;font-size:var(--fs-2)}
+.msg.err{color:var(--vermelho);font-weight:700}
+.msg.ok{color:var(--verde-2);font-weight:700}
+
+/* ---------- histórico ---------- */
+/* A conversa em ordem de tempo, mais nova em cima. Nota e mudança de estado no
+   MESMO fluxo: separar em dois lugares obrigaria a ler os dois para entender uma
+   história só. */
+.log{display:flex;flex-direction:column;gap:0}
+.log-i{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:8px 0;border-top:1px solid var(--line)}
+.log-i:first-child{border-top:0}
+.log-q{font-size:var(--fs-1);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.log-t{font-size:var(--fs-3);overflow-wrap:anywhere}
+.log-t .quem{font-weight:700}
+.log-i.tipo-situacao .log-t,.log-i.tipo-prazo .log-t,.log-i.tipo-responsavel .log-t{color:var(--ink-2)}
+.log-i.tipo-situacao .log-t b,.log-i.tipo-prazo .log-t b{font-weight:700;color:var(--ink)}
+.log-vazio{color:var(--muted);font-size:var(--fs-2);padding:6px 0}
+
+@media(max-width:760px){
+  .grid{grid-template-columns:1fr}
+  .t{grid-template-columns:1fr}
+  .t-dir{grid-column:1;grid-row:auto;flex-direction:row;align-items:center;flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<script src="config.js"></script>
+<script src="b4u-espera.js" charset="utf-8"></script>
+<script src="b4u-shell.js" charset="utf-8"></script>
+<style>
+/* Identificador que chegou da planilha com dígito faltando. O número aparece
+   como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
+   e ganha um sublinhado pontilhado âmbar mais o ⚠. O title diz quantos dígitos
+   vieram, quantos deveriam vir e onde consertar. Cor só de aviso: âmbar, não
+   vermelho, porque o cadastro não está errado, está incompleto na origem. */
+.b4u-trunc{text-decoration:underline dotted var(--amber,#E8892E);text-underline-offset:2px;cursor:help}
+.b4u-trunc-m{color:var(--amber-txt,#8A5A10);font-size:.85em;margin-left:3px;vertical-align:1px}
+/* Só para leitor de tela: o ⚠ é aria-hidden, e sem isto quem não vê a tela não
+   ficaria sabendo que o número está incompleto. */
+.b4u-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* O mesmo aviso por extenso, dentro da ficha. Na lista cabe um ⚠; aqui, com o
+   campo à vista e espaço para uma linha, cabe dizer o que aconteceu e o que
+   fazer — que é o único jeito de o dado ser corrigido na origem. */
+.fld-aviso{display:block;margin-top:4px;font-size:var(--fs-1,11px);line-height:1.35;
+  color:var(--amber-txt,#8A5A10);font-weight:600}
+</style>
+<script charset="utf-8">
+/* B4U-TEXTO:INICIO — identificador é TEXTO, nunca número.
+   Bloco copiado de _b4u-texto.js (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-texto.js`.
+
+   Em uma frase: a planilha converte para número toda célula que só tem dígito,
+   e 00.623.904/0001-73 chega no painel como 623904000173 — dois zeros a menos,
+   calado. Estas funções são a fronteira: todo identificador passa por elas antes
+   de ir para a tela e antes de voltar para a planilha. Elas NÃO completam o zero
+   que sumiu (isso esconderia erro de cadastro): mostram o número como veio e
+   sinalizam que falta dígito. O conserto definitivo é formatar a coluna como
+   Texto na planilha e ler com getDisplayValues() no backend. */
+/* String de verdade, sem notação científica.
+   `String()` só recorre a expoente a partir de 1e21 — abaixo disso ela já
+   devolve o número por extenso, e é o que esta função faz na esmagadora maioria
+   das vezes. Acima, "6.2e+21" não é só feio: `soDigitos()` extrai "62" mais o
+   expoente e a busca passa a achar cliente errado. Aí o BigInt reescreve por
+   extenso.
+
+   O caminho `toLocaleString('fullwide', …)`, que é a receita que se acha por aí,
+   está ERRADO aqui: 'fullwide' não é locale nenhum, o motor cai no locale do
+   navegador e, num pt-BR, 1234.5 volta como "1234,5". Como esta função também
+   atende o `esc()` da página inteira, isso trocaria a vírgula decimal em todo
+   valor em dinheiro da tela. */
+function b4uTexto(v){
+  if(v==null)return '';
+  if(typeof v==='number'){
+    if(!isFinite(v))return '';
+    const s=String(v);
+    if(!/e/i.test(s))return s;
+    if(Number.isInteger(v)){try{return BigInt(v).toString();}catch(_){}}
+    return s;
+  }
+  if(v instanceof Date){
+    /* Data em coluna de identificador é a planilha tendo interpretado errado.
+       Devolve ISO em vez de "Tue Aug 04 2026 ...", que ninguém consegue ler. */
+    const p=n=>String(n).padStart(2,'0');
+    return v.getFullYear()+'-'+p(v.getMonth()+1)+'-'+p(v.getDate());
+  }
+  return String(v);
+}
+
+function b4uDigitos(v){return b4uTexto(v).replace(/\D/g,'');}
+
+function b4uEsc(s){
+  return b4uTexto(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* Normalização de nome de coluna: sem acento, sem caixa, sem pontuação. Os nomes
+   reais vêm do backend em tempo de execução e mudam sozinhos quando alguém
+   renomeia a coluna na planilha — comparar string crua quebraria no primeiro
+   "CNPJ/CPF" que virasse "CNPJ ou CPF". */
+function b4uNorm(s){
+  return b4uTexto(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+
+/* Que tipo de identificador é esta coluna, e quantos dígitos ele deveria ter.
+   `tam` null = comprimento variável (telefone, inscrição): dá para garantir que
+   é texto, não dá para dizer que está faltando dígito. */
+const B4U_IDENT=[
+  {re:/\bcnpj\b.*\bcpf\b|\bcpf\b.*\bcnpj\b/, tipo:'doc',   tam:[11,14], rot:'CNPJ ou CPF'},
+  {re:/\bcnpj\b/,                            tipo:'cnpj',  tam:[14],    rot:'CNPJ'},
+  {re:/\bcpf\b/,                             tipo:'cpf',   tam:[11],    rot:'CPF'},
+  {re:/\bcep\b/,                             tipo:'cep',   tam:[8],     rot:'CEP'},
+  {re:/\bpis\b|\bnit\b|\bpasep\b/,           tipo:'pis',   tam:[11],    rot:'PIS/NIT'},
+  /* CNES: sete dígitos, e uma boa parte começa com zero. É número de cadastro,
+     nunca quantidade — a planilha come o zero dele igual come o do CNPJ. */
+  {re:/\bcnes\b/,                            tipo:'cnes',  tam:[7],     rot:'CNES'},
+  {re:/\bmatricula\b/,                       tipo:'gen',   tam:null,    rot:'matrícula'},
+  {re:/\binscricao\b|\bcadastro municipal\b|\bregistro na junta\b/, tipo:'gen', tam:null, rot:'inscrição'},
+  {re:/\btelefone\b|\bcelular\b|\bwhatsapp\b|\bfone\b/, tipo:'tel', tam:null, rot:'telefone'},
+  {re:/\bagencia\b|\bconta\b/,               tipo:'gen',   tam:null,    rot:'conta'}
+];
+function b4uIdent(coluna){
+  const n=b4uNorm(coluna);
+  for(const d of B4U_IDENT)if(d.re.test(n))return d;
+  return null;
+}
+function b4uEhIdentificador(coluna){return !!b4uIdent(coluna);}
+
+/* O diagnóstico de um valor: veio inteiro, veio truncado, ou não dá para dizer.
+   `truncado` só é true quando o valor é SÓ DÍGITO e mais curto do que o tipo
+   pede — que é exatamente a assinatura de zero comido pela planilha. Valor com
+   pontuação ("00.623.904/0001-73") chegou como texto e está a salvo; valor de
+   comprimento livre nunca é acusado. */
+function b4uEstado(valor,coluna){
+  const s=b4uTexto(valor).trim();
+  const d=b4uDigitos(s);
+  const tipo=b4uIdent(coluna);
+  const tam=tipo&&tipo.tam;
+  if(!s||!tam)return {vazio:!s,truncado:false,digitos:d,tipo:tipo,completo:!!s};
+  const completo=tam.indexOf(d.length)>=0;
+  /* Só acusa quando é dígito puro: pontuado veio como texto e está íntegro. */
+  const soDigito=/^\d+$/.test(s);
+  const esperado=tam[tam.length-1];
+  return {
+    vazio:false,
+    completo:completo,
+    truncado:!completo&&soDigito&&d.length>0&&d.length<esperado,
+    digitos:d,
+    tipo:tipo,
+    esperado:tam
+  };
+}
+
+/* Máscara só quando o número está inteiro. Documento curto vai como veio: pôr
+   máscara em 12 dígitos produziria "62.390.400/017" — um CNPJ que não existe,
+   com aparência de CNPJ que existe. */
+function b4uFmtDoc(v){
+  const d=b4uDigitos(v);
+  if(d.length===14)return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+  if(d.length===11)return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  return b4uTexto(v);
+}
+function b4uFmtCep(v){
+  const d=b4uDigitos(v);
+  return d.length===8?d.replace(/(\d{5})(\d{3})/,'$1-$2'):b4uTexto(v);
+}
+function b4uFmt(valor,coluna){
+  const t=b4uIdent(coluna);
+  if(!t)return b4uTexto(valor);
+  if(t.tipo==='cep')return b4uFmtCep(valor);
+  if(t.tipo==='doc'||t.tipo==='cnpj'||t.tipo==='cpf')return b4uFmtDoc(valor);
+  return b4uTexto(valor);
+}
+
+/* A frase que explica o estrago, no title do valor marcado. Ela precisa dizer
+   três coisas em uma linha: quantos dígitos vieram, quantos deveriam vir, e que
+   o conserto é na planilha — senão a marca vira enfeite e ninguém age. */
+function b4uAviso(e){
+  const rot=(e.tipo&&e.tipo.rot)||'identificador';
+  const alvo=e.esperado.join(' ou ');
+  const faltam=e.esperado[e.esperado.length-1]-e.digitos.length;
+  return rot+' chegou com '+e.digitos.length+' dígito'+(e.digitos.length>1?'s':'')+
+    ', e deveria ter '+alvo+': a planilha guardou a célula como número e comeu '+
+    faltam+' zero'+(faltam>1?'s':'')+' à esquerda. Para consertar, formate a coluna '+
+    'como Texto na planilha e digite o número inteiro de novo.';
+}
+
+/* O valor pronto para a tela: já mascarado, e marcado quando está truncado.
+   `vazio` é o que aparece no lugar do branco ("sem CNPJ") — a lista diz o que
+   falta em vez de deixar buraco. */
+function b4uIdentHTML(valor,coluna,vazio){
+  const e=b4uEstado(valor,coluna);
+  if(e.vazio)return vazio?'<span class="c-falta">'+b4uEsc(vazio)+'</span>':'';
+  const txt=b4uEsc(b4uFmt(valor,coluna));
+  if(!e.truncado)return txt;
+  return '<span class="b4u-trunc" title="'+b4uEsc(b4uAviso(e))+'">'+txt+
+         '<span class="b4u-trunc-m" aria-hidden="true">⚠</span>'+
+         '<span class="b4u-sr"> (faltam dígitos)</span></span>';
+}
+
+/* Volta para a planilha em forma que o Sheets NÃO consegue reinterpretar como
+   número. Enquanto a coluna não estiver formatada como Texto, gravar
+   "00623904000173" faz a planilha comer os zeros de novo — desta vez com o
+   usuário assistindo, logo depois de ele ter digitado certo. Com a máscara, a
+   célula tem ponto e barra, o Sheets desiste e guarda texto.
+   Onde não existe máscara canônica (telefone, inscrição), o valor vai como foi
+   digitado: o conserto ali depende do patch do backend. */
+function b4uParaPlanilha(valor,coluna){
+  const s=b4uTexto(valor).trim();
+  const t=b4uIdent(coluna);
+  if(!s||!t||!/^\d+$/.test(s))return s;
+  const d=b4uDigitos(s);
+  if((t.tipo==='doc'||t.tipo==='cnpj')&&d.length===14)return b4uFmtDoc(d);
+  if((t.tipo==='doc'||t.tipo==='cpf')&&d.length===11)return b4uFmtDoc(d);
+  if(t.tipo==='cep'&&d.length===8)return b4uFmtCep(d);
+  return s;
+}
+/* B4U-TEXTO:FIM */
+</script>
+</head>
+<body data-b4u-espera="equipe">
+<div class="barra">
+  <span class="logo"><span>back</span><span class="y">4you</span></span>
+  <span class="titulo">Tarefas Daily</span>
+  <span class="spacer"></span>
+  <span class="cont" id="cont"></span>
+</div>
+<div class="wrap" id="app"></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="m-tit">
+    <div class="modal-top">
+      <b id="m-tit">Tarefa</b>
+      <span class="cad-id" id="m-id"></span>
+      <button class="x" id="m-x" type="button" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body" id="m-body"></div>
+    <div class="modal-foot">
+      <span class="msg" id="m-msg"></span>
+      <span class="spacer"></span>
+      <button class="btn" id="m-fechar" type="button">Fechar</button>
+      <button class="btn btn--primary" id="m-salvar" type="button">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script charset="utf-8">
+/* ══════════════════════════════════════════════════════════════════
+   TAREFAS DAILY — a tela
+   ------------------------------------------------------------------
+   Substitui uma planilha de cinco abas, uma por colaborador. A aba por
+   pessoa parecia organização e era o contrário: incluir alguém pedia
+   uma aba nova, e a pergunta "o que vence esta semana no time" exigia
+   abrir as cinco e juntar na cabeça.
+   Aqui é uma lista só, e QUEM é um filtro — que abre em "as minhas"
+   porque é a pergunta de 90% das aberturas, e muda em um clique porque
+   os outros 10% são a daily inteira.
+   ══════════════════════════════════════════════════════════════════ */
+const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
+  'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
+
+function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); return q?q.trim():''; }
+/* Sem chave não há painel da equipe. A porta é o index.html, igual às irmãs. */
+if(!chaveAtual()){
+  location.replace('index.html?destino='+encodeURIComponent(
+    location.pathname.split('/').pop()+location.search+location.hash));
+}
+
+function esc(s){return b4uTexto(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function normTxt(s){return b4uTexto(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+function soDigitos(s){return b4uDigitos(s);}
+
+/* ---------- leitura (JSONP) e escrita (POST) ---------- */
+const JSONP_TETO=45000, JSONP_PAUSA=4000;
+function jsonpRepetivel(url){ return !/[?&]acao=[^&]/.test(url); }
+function jsonpTentativa(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);
+  const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);
+  function limpa(){clearTimeout(t);delete window[cb];s.remove();}
+  window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};
+  s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
+function jsonp(url){return jsonpTentativa(url).catch(e=>{ if(!jsonpRepetivel(url)) throw e;
+  return new Promise(r=>setTimeout(r,JSONP_PAUSA)).then(()=>jsonpTentativa(url)); });}
+async function postAcao(obj,ms){
+  const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));
+  const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),ms||45000);
+  try{
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,signal:ctl.signal});
+    const d=await r.json(); if(d&&d.erro)throw new Error(d.erro); return d;
+  }catch(e){ if(e&&e.name==='AbortError') throw new Error('A resposta demorou demais.'); throw e; }
+  finally{ clearTimeout(t); }
+}
+
+/* ---------- estado ---------- */
+let TAREFAS=[], LOGS=[], EU=null, COLABS=[], CLIENTES=[], SITUACOES=[], ESCOPOS=[], HOJE='';
+let PLANILHA='';
+let F_QUEM='__eu__', F_SIT='abertas', F_CLI='', TERMO='';
+let ABERTA=null;                      // tarefa aberta no modal (null = nova)
+
+const ABERTAS=['A fazer','Em andamento','Esperando terceiro'];
+const cls=s=>({'Em andamento':'andamento','Esperando terceiro':'esperando','Feito':'feito','Cancelado':'cancelado'}[s]||'afazer');
+
+/* ---------- datas ---------- */
+/* Comparação por STRING aaaa-mm-dd, nunca por objeto Date: Date interpreta fuso e
+   uma tarefa que vence hoje em São Paulo já apareceu como atrasada às 21h. */
+function fmtData(v){ const s=b4uTexto(v).trim(); const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m?(m[3]+'/'+m[2]+'/'+m[1]):s; }
+function diasAte(prazo){
+  if(!/^\d{4}-\d{2}-\d{2}/.test(prazo)||!/^\d{4}-\d{2}-\d{2}/.test(HOJE)) return null;
+  const a=new Date(prazo.slice(0,10)+'T12:00:00'), b=new Date(HOJE.slice(0,10)+'T12:00:00');
+  return Math.round((a-b)/864e5);
+}
+function nomeCliente(id){ const c=CLIENTES.find(x=>String(x.id)===String(id)); return c?c.nome:''; }
+
+/* ---------- quem sou eu ----------
+   Casa pelo NOME que veio da aba Colaboradores, que é o mesmo texto gravado na
+   coluna Responsável. E-mail seria mais seguro, mas a planilha guarda o nome — e
+   inventar uma segunda chave aqui criaria duas verdades sobre a mesma pessoa. */
+function souEu(nome){ return EU && normTxt(nome)===normTxt(EU.nome); }
+
+/* ---------- filtro ---------- */
+function visiveis(){
+  const termo=normTxt(TERMO), dig=soDigitos(TERMO);
+  return TAREFAS.filter(t=>{
+    if(F_QUEM==='__eu__'){ if(!souEu(t.responsavel) && !(t.acompanham&&normTxt(t.acompanham).includes(normTxt(EU?EU.nome:'')))) return false; }
+    else if(F_QUEM && F_QUEM!=='__todos__'){ if(normTxt(t.responsavel)!==normTxt(F_QUEM)) return false; }
+    if(F_SIT==='abertas'){ if(ABERTAS.indexOf(t.situacao)<0) return false; }
+    else if(F_SIT && F_SIT!=='__todas__'){ if(t.situacao!==F_SIT) return false; }
+    /* Por cliente, o escopo "Todos" entra junto: é tarefa que vale para a carteira
+       inteira, e escondê-la faria parecer que não há nada a fazer ali. */
+    if(F_CLI){ if(!(t.escopo==='Todos' || String(t.cliente_id)===String(F_CLI))) return false; }
+    if(termo){
+      const alvo=normTxt([t.assunto,t.detalhe,t.cliente,t.responsavel,t.id].join(' '));
+      if(!alvo.includes(termo) && !(dig && soDigitos(t.cliente_id+' '+t.id).includes(dig))) return false;
+    }
+    return true;
+  });
+}
+
+/* ---------- grupos ----------
+   Por DECISÃO, não por cliente nem por ordem de digitação: a lista responde
+   "o que eu faço agora?" e essa resposta é sempre uma data. */
+/* Encerrada NÃO entra na régua de prazo. Uma tarefa feita ontem com prazo de
+   anteontem apareceria em "Atrasado", em vermelho, cobrando o que já aconteceu —
+   e a lista passaria a mentir justamente para quem entregou no fim. Prazo só
+   pesa enquanto há o que fazer. */
+const ENCERRADA=t=>ABERTAS.indexOf(t.situacao)<0;
+const GRUPOS=[
+  {k:'atrasado', rot:'Atrasado',      fn:t=>{if(ENCERRADA(t))return false;const d=diasAte(t.prazo); return d!==null&&d<0;}},
+  {k:'hoje',     rot:'Hoje',          fn:t=>!ENCERRADA(t)&&diasAte(t.prazo)===0},
+  {k:'semana',   rot:'Esta semana',   fn:t=>{if(ENCERRADA(t))return false;const d=diasAte(t.prazo); return d!==null&&d>0&&d<=7;}},
+  {k:'depois',   rot:'Depois',        fn:t=>{if(ENCERRADA(t))return false;const d=diasAte(t.prazo); return d!==null&&d>7;}},
+  {k:'semprazo', rot:'Sem prazo',     fn:t=>!ENCERRADA(t)&&diasAte(t.prazo)===null},
+  /* Por último, e só quando o filtro de situação pede: quem abre a tela quer ver
+     o que falta, não o que já saiu. */
+  {k:'encerrado',rot:'Encerradas',    fn:ENCERRADA}
+];
+function agrupar(lista){
+  const out=GRUPOS.map(g=>({g:g,itens:[]}));
+  lista.forEach(t=>{ const i=GRUPOS.findIndex(g=>g.fn(t)); if(i>=0) out[i].itens.push(t); });
+  /* Dentro do grupo: prazo, depois situação, depois assunto — estável e sem
+     surpresa quando duas tarefas empatam. */
+  out.forEach(o=>o.itens.sort((a,b)=>
+    o.g.k==='encerrado'
+      ? (String(b.concluido_em||'').localeCompare(String(a.concluido_em||'')) ||
+         normTxt(a.assunto).localeCompare(normTxt(b.assunto)))
+      : ((a.prazo||'9999').localeCompare(b.prazo||'9999') ||
+         ABERTAS.indexOf(a.situacao)-ABERTAS.indexOf(b.situacao) ||
+         normTxt(a.assunto).localeCompare(normTxt(b.assunto)))));
+  return out.filter(o=>o.itens.length);
+}
+
+/* ---------- desenho ---------- */
+function pillSit(s){ return `<span class="pill p-${cls(s)}">${esc(s)}</span>`; }
+function linhaHTML(t){
+  const fim=ENCERRADA(t);
+  const d=fim?null:diasAte(t.prazo);
+  const prazoCls=d===null?'':(d<0?'venceu':(d===0?'hoje':''));
+  /* Encerrada mostra QUANDO ficou pronta, que é a informação que sobra depois.
+     O prazo dela já não cobra nada e ocuparia a linha dizendo o passado errado. */
+  const prazoTxt=fim
+    ? (t.concluido_em?'concluída '+fmtData(t.concluido_em):(t.situacao==='Cancelado'?'cancelada':'concluída'))
+    : (t.prazo?fmtData(t.prazo):'sem prazo');
+  const quem=t.responsavel?esc(t.responsavel):'<span style="color:var(--muted)">sem responsável</span>';
+  const alvo=t.escopo==='Todos'?'<span class="pill p-todos">todos os clientes</span>'
+           :(t.escopo==='Interno'?'<span class="pill p-interno">interno</span>'
+           :`<span class="t-cli">${esc(t.cliente||nomeCliente(t.cliente_id)||('cliente '+t.cliente_id))}</span>`);
+  const nLog=LOGS.filter(l=>String(l.daily_id)===String(t.id)&&l.tipo==='nota').length;
+  return `<div class="t s-${cls(t.situacao)}${d!==null&&d<0?' venceu':''}"
+     role="button" tabindex="0" data-id="${esc(t.id)}"
+     title="${esc(t.detalhe||t.assunto)}">
+    <div class="t-assunto">${esc(t.assunto||'(sem assunto)')}</div>
+    <div class="t-meta">${alvo}<span>${quem}</span>${nLog?`<span>· ${nLog} nota${nLog>1?'s':''}</span>`:''}</div>
+    <div class="t-dir">${pillSit(t.situacao)}<span class="t-prazo ${prazoCls}">${esc(prazoTxt)}</span></div>
+  </div>`;
+}
+function layout(){
+  const optQuem=['<option value="__eu__">Minhas tarefas</option>',
+                 '<option value="__todos__">Todo o time</option>']
+    .concat(COLABS.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`)).join('');
+  const optSit=['<option value="abertas">Em aberto</option>',
+                '<option value="__todas__">Todas as situações</option>']
+    .concat(SITUACOES.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`)).join('');
+  const optCli=['<option value="">Todos os clientes</option>']
+    .concat(CLIENTES.map(c=>`<option value="${esc(c.id)}">${esc(c.id)} · ${esc(c.nome)}</option>`)).join('');
+  return `
+  <div class="topo">
+    <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por assunto, cliente, pessoa…  ( / para focar)" value="${esc(TERMO)}">
+    <select class="filtro" id="f-quem" aria-label="De quem">${optQuem}</select>
+    <select class="filtro" id="f-sit" aria-label="Situação">${optSit}</select>
+    <select class="filtro" id="f-cli" aria-label="Cliente">${optCli}</select>
+    <button class="btn btn--primary" id="nova" type="button">+ Nova tarefa</button>
+  </div>
+  <div id="lista"></div>`;
+}
+function desenharLista(){
+  const box=document.getElementById('lista'); if(!box) return;
+  const vis=visiveis();
+  const gs=agrupar(vis);
+  document.getElementById('cont').textContent=vis.length+(vis.length===1?' tarefa':' tarefas');
+  box.innerHTML = gs.length
+    ? gs.map(o=>`<div class="grupo ${o.g.k}"><h2>${esc(o.g.rot)}</h2><span class="n">${o.itens.length}</span></div>
+                 <div class="lista">${o.itens.map(linhaHTML).join('')}</div>`).join('')
+    : `<div class="vazio">Nada por aqui com esses filtros.${F_QUEM==='__eu__'?' Experimente <b>Todo o time</b>.':''}</div>`;
+  /* Os selects refletem o estado: recarregar ou trocar de filtro não pode deixar
+     a caixinha dizendo uma coisa e a lista mostrando outra. */
+  const q=document.getElementById('f-quem'), s=document.getElementById('f-sit'), c=document.getElementById('f-cli');
+  if(q){q.value=F_QUEM;q.classList.toggle('on',F_QUEM!=='__eu__');}
+  if(s){s.value=F_SIT;s.classList.toggle('on',F_SIT!=='abertas');}
+  if(c){c.value=F_CLI;c.classList.toggle('on',!!F_CLI);}
+}
+
+/* ---------- ficha ---------- */
+function campoSelect(id,rot,opts,valor,full){
+  return `<div class="fld${full?' full':''}"><label for="${id}">${esc(rot)}</label>
+    <select id="${id}">${opts.map(o=>`<option value="${esc(o.v)}"${String(o.v)===String(valor)?' selected':''}>${esc(o.r)}</option>`).join('')}</select></div>`;
+}
+function fichaHTML(t){
+  const nova=!t;
+  t=t||{escopo:'Cliente',situacao:'A fazer',responsavel:(EU&&EU.nome)||'',
+        aberto_em:HOJE,prazo:'',assunto:'',detalhe:'',cliente_id:'',acompanham:'',concluido_em:''};
+  const optColab=[{v:'',r:'— sem responsável —'}].concat(COLABS.map(c=>({v:c.nome,r:c.nome})));
+  const optSit=SITUACOES.map(s=>({v:s,r:s}));
+  const optEsc=ESCOPOS.map(e=>({v:e,r:e==='Todos'?'Todos os clientes':(e==='Interno'?'Interno (sem cliente)':'Um cliente')}));
+  const optCli=[{v:'',r:'— escolha o cliente —'}].concat(CLIENTES.map(c=>({v:c.id,r:c.id+' · '+c.nome})));
+  return `
+  <div class="gsec">
+    <h3><span class="dot"></span>A tarefa</h3>
+    <div class="grid">
+      <div class="fld full"><label for="f-assunto">Assunto</label>
+        <input id="f-assunto" value="${esc(t.assunto)}" placeholder="Em uma linha: o que precisa acontecer"></div>
+      <div class="fld full"><label for="f-detalhe">Detalhe</label>
+        <textarea id="f-detalhe" placeholder="O plano. O que já aconteceu vai no histórico, abaixo.">${esc(t.detalhe)}</textarea></div>
+      ${campoSelect('f-resp','Responsável',optColab,t.responsavel)}
+      ${campoSelect('f-sit2','Situação',optSit,t.situacao)}
+      ${campoSelect('f-esc','Escopo',optEsc,t.escopo)}
+      ${campoSelect('f-cli2','Cliente',optCli,t.cliente_id)}
+      <div class="fld"><label for="f-prazo">Prazo</label><input id="f-prazo" type="date" value="${esc(t.prazo)}"></div>
+      <div class="fld"><label for="f-acomp">Acompanham</label>
+        <input id="f-acomp" value="${esc(t.acompanham)}" placeholder="quem mais precisa ver">
+        <span class="dica">Vê na lista, não responde pela tarefa.</span></div>
+      <div class="fld"><label for="f-aberto">Aberto em</label><input id="f-aberto" type="date" value="${esc(t.aberto_em||HOJE)}">
+        <span class="dica">Vem com a data de hoje; troque se a combinação foi noutro dia.</span></div>
+      <div class="fld"><label for="f-concl">Concluído em</label><input id="f-concl" type="date" value="${esc(t.concluido_em)}">
+        <span class="dica">Preenche sozinho ao marcar Feito; dá para corrigir.</span></div>
+    </div>
+  </div>
+  ${nova?'':`
+  <div class="gsec">
+    <h3><span class="dot"></span>Histórico</h3>
+    <div class="fld full" style="margin-bottom:11px">
+      <label for="f-nota">O que aconteceu</label>
+      <textarea id="f-nota" placeholder="Uma nota. Ela é ACRESCENTADA ao histórico — nada aqui é sobrescrito."></textarea>
+    </div>
+    <div class="log" id="log"></div>
+  </div>`}`;
+}
+function logHTML(id){
+  const itens=LOGS.filter(l=>String(l.daily_id)===String(id))
+    .slice().sort((a,b)=>String(b.quando).localeCompare(String(a.quando)));
+  if(!itens.length) return '<div class="log-vazio">Nada registrado ainda.</div>';
+  return itens.map(l=>`<div class="log-i tipo-${esc(normTxt(l.tipo))}">
+      <span class="log-q">${esc(l.quando)}</span>
+      <span class="log-t"><span class="quem">${esc(l.quem||'equipe')}</span> ${
+        l.tipo==='nota'?esc(l.texto):('mudou '+esc(l.tipo)+': <b>'+esc(l.texto)+'</b>')}</span>
+    </div>`).join('');
+}
+function abrirFicha(t){
+  ABERTA=t||null;
+  document.getElementById('m-tit').textContent=t?(t.assunto||'Tarefa'):'Nova tarefa';
+  document.getElementById('m-id').textContent=t?('#'+t.id):'';
+  document.getElementById('m-body').innerHTML=fichaHTML(t);
+  if(t){ const l=document.getElementById('log'); if(l) l.innerHTML=logHTML(t.id); }
+  document.getElementById('m-salvar').textContent=t?'Salvar':'Criar tarefa';
+  const msg=document.getElementById('m-msg'); msg.className='msg'; msg.textContent='';
+  document.getElementById('modal').hidden=false;
+  document.body.style.overflow='hidden';
+  sincronizarEscopo();
+  setTimeout(()=>{const f=document.getElementById('f-assunto');if(f)f.focus();},40);
+}
+function fecharFicha(){
+  document.getElementById('modal').hidden=true;
+  document.body.style.overflow='';
+  ABERTA=null;
+}
+/* Escopo manda no campo de cliente: "Todos" e "Interno" não têm cliente, e deixar
+   a caixinha ligada convidaria a escolher um que seria jogado fora na gravação. */
+function sincronizarEscopo(){
+  const e=document.getElementById('f-esc'), c=document.getElementById('f-cli2');
+  if(!e||!c) return;
+  const precisa=e.value==='Cliente';
+  c.disabled=!precisa;
+  c.closest('.fld').style.opacity=precisa?'':'.5';
+  if(!precisa) c.value='';
+}
+
+async function salvarFicha(){
+  const btn=document.getElementById('m-salvar'), msg=document.getElementById('m-msg');
+  const v=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  const dados={ assunto:v('f-assunto'), detalhe:v('f-detalhe'), responsavel:v('f-resp'),
+                situacao:v('f-sit2'), escopo:v('f-esc'), cliente_id:v('f-cli2'),
+                prazo:v('f-prazo'), acompanham:v('f-acomp'),
+                aberto_em:v('f-aberto'), concluido_em:v('f-concl') };
+  if(!dados.assunto){ msg.className='msg err'; msg.textContent='Escreva o assunto.'; return; }
+  if(dados.escopo==='Cliente' && !dados.cliente_id){
+    msg.className='msg err'; msg.textContent='Escolha o cliente — ou troque o escopo.'; return; }
+  btn.disabled=true; msg.className='msg'; msg.textContent='Salvando…';
+  try{
+    if(ABERTA){
+      const nota=v('f-nota');
+      await postAcao(Object.assign({acao:'daily_salvar',id:ABERTA.id,campos:dados},nota?{nota:nota}:{}));
+    }else{
+      await postAcao(Object.assign({acao:'daily_nova'},dados));
+    }
+    msg.className='msg ok'; msg.textContent='Salvo ✓';
+    await recarregar();
+    fecharFicha();
+  }catch(e){
+    /* O texto da exceção não vai para a tela: é vocabulário nosso e do outro lado
+       só assusta. A ficha CONTINUA ABERTA — fechar por cima de um salvamento que
+       não foi levaria embora a única pista de que deu errado. */
+    msg.className='msg err'; msg.textContent='Não foi possível salvar. Tente de novo.';
+  }finally{ btn.disabled=false; }
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click',e=>{
+  const linha=e.target.closest&&e.target.closest('.t');
+  if(linha){ const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id); if(t) abrirFicha(t); return; }
+  if(e.target.id==='nova'){ abrirFicha(null); return; }
+  if(e.target.id==='m-x'||e.target.id==='m-fechar'){ fecharFicha(); return; }
+  if(e.target.id==='m-salvar'){ salvarFicha(); return; }
+  if(e.target===document.getElementById('modal')) fecharFicha();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!document.getElementById('modal').hidden){ fecharFicha(); return; }
+  const linha=e.target&&e.target.closest&&e.target.closest('.t');
+  if(linha&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); linha.click(); return; }
+  if(e.key==='/'&&!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName||''))){
+    e.preventDefault(); const b=document.getElementById('busca'); if(b)b.focus(); }
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='f-quem'){ F_QUEM=e.target.value; desenharLista(); }
+  if(e.target.id==='f-sit'){ F_SIT=e.target.value; desenharLista(); }
+  if(e.target.id==='f-cli'){ F_CLI=e.target.value; desenharLista(); }
+  if(e.target.id==='f-esc'){ sincronizarEscopo(); }
+  /* Marcou Feito: a data de hoje entra no campo AQUI, à vista, e não escondida no
+     servidor — quem concluiu ontem corrige antes de salvar, em vez de descobrir
+     depois que ficou com a data errada. Saindo de Feito a data cai: a tarefa
+     deixou de estar concluída, e uma data de conclusão pendurada mentiria. */
+  if(e.target.id==='f-sit2'){
+    const cc=document.getElementById('f-concl'); if(!cc) return;
+    if(e.target.value==='Feito'){ if(!cc.value) cc.value=(HOJE||'').slice(0,10); }
+    else cc.value='';
+  }
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='busca'){ TERMO=e.target.value; desenharLista(); }
+});
+
+/* ---------- carga ---------- */
+function aplicar(d){
+  TAREFAS=d.tarefas||[]; LOGS=d.logs||[]; EU=d.eu||null;
+  COLABS=d.colaboradores||[]; CLIENTES=d.clientes||[];
+  SITUACOES=d.situacoes||['A fazer','Em andamento','Esperando terceiro','Feito','Cancelado'];
+  ESCOPOS=d.escopos||['Cliente','Todos','Interno'];
+  HOJE=d.hoje||''; PLANILHA=d.planilha_url||'';
+}
+async function recarregar(){
+  const d=await jsonp(API_URL+'?tipo=daily_equipe&chave='+encodeURIComponent(chaveAtual()));
+  if(d&&d.erro) throw new Error(d.erro);
+  aplicar(d); desenharLista();
+}
+async function boot(){
+  try{
+    const d=await jsonp(API_URL+'?tipo=daily_equipe&chave='+encodeURIComponent(chaveAtual()));
+    if(d&&d.erro) throw new Error(d.erro);
+    aplicar(d);
+    /* ?cli=250001 abre já filtrado naquele cliente: é assim que o painel do
+       colaborador manda para cá a partir do bloco de pendências da ficha. */
+    const p=new URLSearchParams(location.search);
+    const cli=(p.get('cli')||'').trim();
+    if(cli){ F_CLI=cli; F_QUEM='__todos__'; }
+    if(p.get('nova')==='1') setTimeout(()=>abrirFicha(null),60);
+    document.getElementById('app').innerHTML=layout();
+    desenharLista();
+    if(window.B4UShell) B4UShell.montar({
+      perfil:'equipe', ativo:'daily',
+      link:pag=>pag+'?chave='+encodeURIComponent(chaveAtual())
+    });
+  }catch(e){
+    document.getElementById('app').innerHTML=
+      '<div class="vazio">Não foi possível carregar as tarefas. Tente novamente em alguns minutos.</div>';
+  }finally{
+    if(window.B4UEspera) B4UEspera.concluir();
+  }
+}
+boot();
+</script>
+</body>
+</html>

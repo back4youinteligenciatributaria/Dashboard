@@ -192,6 +192,10 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 /* Rodapé da seção de contatos: o "+ Novo contato" e o link do painel dividem a
    linha. Embaixo de 420px eles empilham — dois atalhos lado a lado numa coluna
    de celular viram dois alvos pequenos e grudados. */
+/* Quem responde pela tarefa, ao lado do assunto: discreto, porque a pergunta da
+   ficha do cliente é "o que falta", não "de quem é" — mas presente, porque a
+   segunda pergunta vem logo depois. */
+.ex-quem{font-size:11px;color:var(--muted);font-weight:600;margin-left:6px;white-space:nowrap}
 .ct-rodape{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:8px}
 .ct-rodape .ex-lk{margin-top:0}
 /* O de criar é o gesto principal desta seção: ganha caixa, o outro fica texto. */
@@ -994,6 +998,13 @@ const FERRAMENTAS=[
   {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:icone('pessoal'), area:AREAS_OPERACAO,
    desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
    alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj'},
+  /* Primeira da lista de propósito: é a tela que se abre de manhã, antes de
+     saber qual cliente vai dar trabalho hoje. AREAS_TODAS porque não existe área
+     que não tenha o que combinar na daily. */
+  {id:'fp-daily',         nome:'Tarefas Daily',                 url:'daily.html',             ic:icone('calendario'), area:AREAS_TODAS,
+   desc:'O que cada um tem para hoje, com histórico e notas por tarefa.',
+   alias:'daily tarefa tarefas diaria pendencia pendencias prazo atrasado historico nota anotacao combinado',
+   badge:seloDaily},
   {id:'fp-certificados',  nome:'Certificados e acessos',        url:'certificados.html',      ic:icone('escudo'), area:AREAS_OPERACAO,
    desc:'Vencimentos de certificado, e-CAC e SPE, com o responsável legal.',
    alias:'certificado digital procuracao e-cac ecac spe vencimento responsavel legal',
@@ -1728,8 +1739,50 @@ document.addEventListener('input',e=>{
   CAD_TIMER.set(k,setTimeout(()=>cadSalvar(k,v),900));
 });
 
+/* ---- Daily: o que está em aberto para ESTE cliente ----
+ * Vem pronto do servidor (`_extraDaily_`), já filtrado e ordenado por prazo.
+ * O escopo "Todos" entra aqui de propósito: é tarefa que vale para a carteira
+ * inteira, e escondê-la da ficha faria alguém concluir que não há nada a fazer
+ * com aquele cliente quando há. A pílula roxa diz que ela não é só dele. */
+/* Régua de prazo da tarefa — não é a do certificado. O `pillVenc` pinta de âmbar
+   tudo que vence em 60 dias, o que faz sentido para um alvará e nenhum para uma
+   tarefa: dois meses de fila inteira em cor de urgência vira paisagem, e aí a cor
+   deixa de avisar. Aqui só vermelho para o que passou e âmbar para hoje e amanhã. */
+function pillPrazoDaily(iso){
+  const d=diasAte(iso);
+  if(d===null) return '<span class="pill">sem prazo</span>';
+  const cl = d<0 ? 'venc' : (d<=1 ? 'aten' : '');
+  const t = fmtBR(iso)+(d<0?' · atrasada':(d===0?' · hoje':''));
+  return `<span class="pill ${cl}">${t}</span>`;
+}
+function secDaily(lista,c){
+  lista=lista||[];
+  const ch=encodeURIComponent(chaveAtual());
+  const idc=String((c&&c.id)||'').trim();
+  const abrir=`daily.html?chave=${ch}${idc?'&cli='+encodeURIComponent(idc):''}`;
+  const nova=`daily.html?chave=${ch}${idc?'&cli='+encodeURIComponent(idc):''}&nova=1`;
+  /* Alimenta o selo do card sem uma segunda chamada. Só o que é MEU e vence
+     hoje ou já venceu — ver seloDaily. */
+  const meu=n=>EU&&normTxt(n||'')===normTxt(EU.nome||'');
+  let urgentes=0;
+  lista.forEach(t=>{ if(!meu(t.responsavel)) return; const d=diasAte(t.prazo); if(d!==null&&d<=0) urgentes++; });
+  DAILY_MINHAS={n:urgentes};
+
+  const body=lista.length?('<div class="lic-grid">'+lista.map(t=>{
+    const prazo=pillPrazoDaily(t.prazo);
+    const todos=t.escopo==='Todos'?'<span class="pill" style="background:#EDE6FA;color:#5B3E9E">todos</span>':'';
+    const quem=t.responsavel?`<span class="ex-quem">${esc(t.responsavel)}</span>`:'';
+    return `<div class="lic-row"><span>${esc(t.assunto||'(sem assunto)')} ${todos}${quem}</span>${prazo}</div>`;
+  }).join('')+'</div>')
+  : '<div class="ex-vazio">Nada em aberto para este cliente.</div>';
+  return exSec(icone('calendario'),'Tarefas da daily',
+    body+`<div class="ct-rodape"><a class="ex-lk ex-lk-bt" href="${nova}" target="_blank" rel="noopener">+ Nova tarefa</a>`+
+    (lista.length?`<a class="ex-lk" href="${abrir}" target="_blank" rel="noopener">Abrir na Daily ›</a>`:'')+`</div>`);
+}
+
 function renderExtras(x,c){
   return secCertificados(c&&c.certificado,c)+
+         secDaily(x.daily,c)+
          secCadastro(x.cadastro,c)+
          secContatos(x.contatos,c)+secLicencas(x.licencas)+
          (x.mestra ? secMestra(x.mestra) : '')+
@@ -1774,6 +1827,17 @@ function calcPendencias(){
     if(!/^https?:/.test(String(c.drive||'').trim())) g.semdrive.push(c);
   });
   return g;
+}
+/* Selo do card da Daily. Ele NÃO conta a fila inteira: conta o que é meu e já
+   venceu ou vence hoje. Um número que sobe com tarefa de mês que vem vira
+   paisagem em uma semana; um número que só aparece quando há algo para hoje
+   continua querendo dizer alguma coisa.
+   Sai do mesmo payload da ficha do cliente — nenhuma chamada nova — e por isso
+   só existe depois que alguém abriu um cliente. Sem dado, sem selo. */
+let DAILY_MINHAS=null;      // preenchido por secDaily quando o dossiê carrega
+function seloDaily(){
+  if(!DAILY_MINHAS||!DAILY_MINHAS.n) return null;
+  return {n:DAILY_MINHAS.n, tit:DAILY_MINHAS.n+' tarefa(s) sua(s) atrasada(s) ou para hoje'};
 }
 /* Selo do card "Certificados e acessos": vencidos + a vencer em 60 dias. */
 function seloCertificados(){

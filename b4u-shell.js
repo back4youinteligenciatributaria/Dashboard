@@ -79,6 +79,7 @@
       { id: 'registro',    rot: 'Registros de clientes', pag: 'registro.html',         ic: 'pessoal' },
       { id: 'ativos',      rot: 'Clientes ativos',       pag: 'clientes-ativos.html',  ic: 'fiscal' },
       { sec: 'Operação' },
+      { id: 'daily',       rot: 'Tarefas Daily',         pag: 'daily.html',            ic: 'guias' },
       { id: 'licencas',    rot: 'Documentos e licenças', pag: 'licencas.html',         ic: 'doc' },
       { id: 'certificados',rot: 'Certificados e acessos',pag: 'certificados.html',     ic: 'escudo' },
       { id: 'societario',  rot: 'Societário',            pag: 'societario-equipe.html',ic: 'livro' },

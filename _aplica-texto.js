@@ -49,7 +49,7 @@ const CSS = `<style>
 </style>`;
 
 const ARQUIVOS = [
-  'certificados.html', 'clientes-ativos.html', 'colaborador.html', 'comercial.html',
+  'certificados.html', 'clientes-ativos.html', 'colaborador.html', 'comercial.html', 'daily.html',
   'contabil.html', 'contatos-equipe.html', 'dptopessoal.html', 'equiparacao.html',
   'fiscal.html', 'guias.html', 'index.html', 'licencas.html', 'meustickets.html',
   'registro.html', 'restituicao.html', 'societario-equipe.html', 'societario.html'
