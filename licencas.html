@@ -874,7 +874,9 @@ const ehLink=c=>eh(LINKS,c);
    que é o lado seguro: sobra um botão de enviar onde não se usa, em vez de faltar
    onde se precisa. Portal novo? Acrescente o nome aqui. */
 const ENDERECOS_PUROS=['link prefeitura','link crm','link portal','link do portal',
-                       'link e cac','link ecac','link sefaz','link gov','link site'];
+                       'link e cac','link ecac','link sefaz','link gov','link site',
+                       /* Formulário é endereço para PREENCHER, não arquivo para anexar. */
+                       'link form diagnostico','link form','link formulario'];
 function ehLinkPuro(c){
   if(!ehLink(c)) return false;
   return ENDERECOS_PUROS.indexOf(normTxt(c))>=0;

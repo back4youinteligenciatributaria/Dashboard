@@ -184,3 +184,73 @@ lápis › Versão: Nova**, para a URL não mudar):
 Se a célula voltar alinhada à direita e sem os zeros, o item 1 não entrou — a
 implantação provavelmente subiu como "Nova implantação" e o painel está falando
 com a versão antiga.
+
+---
+
+## 4. O CNPJ do painel da equipe vem da aba errada
+
+**Arquivo:** `4_PainelEquipe.gs` · **função:** `montarEquipe_`
+
+Sintoma: no painel da equipe o CNPJ do cliente 250001 aparece como
+`8852131000109` com o ⚠, e em `registro.html` o mesmo cliente aparece
+`08852131000109`. As duas telas estão certas — elas leem **planilhas
+diferentes**:
+
+| tela | de onde vem o CNPJ |
+|---|---|
+| `registro.html` | aba **Registro** (planilha de cadastro) — lá é texto, com o zero |
+| `colaborador.html` | aba **Geral**, na planilha de **Config** — lá é número, sem o zero |
+
+O CNPJ está guardado em dois lugares, e as duas cópias discordam. Enquanto isso
+for verdade, formatar uma delas como texto conserta só metade.
+
+**A correção não custa leitura nenhuma.** O `montarEquipe_` já abre a aba
+Registro — é de lá que saem `ativo`, `regime`, `fator_r`, `produtos` e
+`inicio_contab`, no mapa `reg`. Basta o CNPJ vir junto.
+
+No mapa `reg = mapaPorId_(...)`, acrescente a linha do CNPJ:
+
+```javascript
+  var reg = mapaPorId_(SpreadsheetApp.openById(INDICE_ID), 'Registro',
+    { ativo:         ['ativo'],
+      regime:        ['regime'],
+      /* O CNPJ da aba Geral é uma SEGUNDA cópia, digitada como número — e por
+         isso sem o zero à esquerda. A Registro é onde o cadastro é editado, e é
+         ela que manda. Sai de graça: este mapa já estava sendo lido. */
+      cnpj:          ['cnpj ou cpf', 'cnpj/cpf', 'cnpj', 'cpf'],
+      fator_r:       ['fator r?', 'fator r'],
+```
+
+E no laço que monta `clientes`, o CNPJ passa a preferir a Registro:
+
+```javascript
+      id: id, nome: val(v[r], iNome), cnpj: val(v[r], iCnpj),
+```
+
+vira
+
+```javascript
+      /* Registro manda; a Geral é reserva para cliente que ainda não tem linha
+         de cadastro. Sem isto o painel da equipe mostra um CNPJ e o cadastro
+         mostra outro — e quem copia o do painel copia um número que não existe. */
+      id: id, nome: val(v[r], iNome),
+      cnpj: (reg[idn] && reg[idn].cnpj) || val(v[r], iCnpj),
+```
+
+### O que mais isso conserta
+
+O bloco de licenças do painel da equipe casa o cliente por **ID ou CNPJ**
+(`_extraLicencas_`, que recebe o CNPJ vindo daqui). Com 13 dígitos o casamento
+por CNPJ nunca batia — hoje o ID salva, mas qualquer linha do Controle de
+Licenças sem ID preenchido simplesmente não encontrava o cliente. Com o CNPJ
+inteiro, o segundo critério volta a funcionar.
+
+### Depois
+
+O ⚠ some sozinho na tela da equipe. Se continuar aparecendo, é porque a coluna
+CNPJ da **aba Registro** também está como número naquele cliente — e aí o
+conserto é o item 3 desta mesma folha: formatar como Texto e redigitar.
+
+A cópia da aba Geral continua lá, errada, para quem abrir a planilha direto. Ela
+não é mais lida pelo painel; se um dia ninguém mais depender dela, o certo é
+apagar a coluna ou trocá-la por uma fórmula que puxe da Registro.

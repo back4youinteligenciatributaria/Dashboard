@@ -189,6 +189,14 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
    registro.html — caixa alta, 800, meio pixel, tinta escura da marca. */
 .ex-tit{font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark);margin-bottom:8px}
 .ex-load,.ex-erro,.ex-vazio{color:var(--muted);font-size:13px;padding:4px 0}
+/* Rodapé da seção de contatos: o "+ Novo contato" e o link do painel dividem a
+   linha. Embaixo de 420px eles empilham — dois atalhos lado a lado numa coluna
+   de celular viram dois alvos pequenos e grudados. */
+.ct-rodape{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:8px}
+.ct-rodape .ex-lk{margin-top:0}
+/* O de criar é o gesto principal desta seção: ganha caixa, o outro fica texto. */
+.ex-lk-bt{border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:6px 13px}
+.ex-lk-bt:hover{border-color:var(--brand-teal)}
 .ex-erro{color:var(--vermelho)}
 .ex-lk{display:inline-block;margin-top:8px;font-size:13px;font-weight:700;color:var(--brand-teal-txt);text-decoration:none}
 .ex-lk:hover{text-decoration:underline}
@@ -238,6 +246,30 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .cd-edit:hover{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
 .cd-row,.lic-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0}
 .lic-grid{display:flex;flex-direction:column;gap:2px}
+/* ---- Cadastro do cliente (aba Registro) ----
+   Duas naturezas na mesma seção: o que a equipe ALTERA daqui (Resumo e número de
+   funcionários) e o que ela só CONSULTA. Elas não podem parecer a mesma coisa —
+   um campo com cara de editável que não salva é pior que um texto fixo. Por isso
+   o editável tem caixa e o de leitura não tem: a diferença é a borda, antes de
+   qualquer aviso escrito. */
+.cad-ed{display:flex;flex-direction:column;gap:3px;padding:6px 0}
+.cad-ed>label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.cad-ed input,.cad-ed textarea{font-family:inherit;font-size:13px;color:var(--ink);
+  border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:7px 9px;background:var(--surface);width:100%}
+.cad-ed textarea{resize:vertical;min-height:56px;line-height:1.4}
+.cad-ed input:focus,.cad-ed textarea:focus{outline:2px solid var(--brand-teal);outline-offset:-1px;border-color:var(--brand-teal)}
+.cad-ed .cad-st{font-size:11px;line-height:1.3;min-height:14px}
+.cad-ed .cad-st.ok{color:#1f6b45}
+.cad-ed .cad-st.err{color:var(--vermelho)}
+/* Leitura: rótulo à esquerda, valor à direita, e o valor pode ser longo
+   (Endereço, CNAEs, Descrição dos sócios). Quebra em vez de cortar — aqui o
+   texto inteiro é o ponto, e reticências obrigariam a abrir a planilha. */
+.cad-ro{display:grid;grid-template-columns:minmax(120px,34%) 1fr;gap:2px 12px;font-size:13px;padding:3px 0}
+.cad-ro dt{color:var(--muted);font-weight:600}
+.cad-ro dd{margin:0;color:var(--ink);overflow-wrap:anywhere}
+.cad-ro dd.vazio{color:var(--muted)}
+@media(max-width:520px){.cad-ro{grid-template-columns:1fr;gap:0}
+  .cad-ro dt{margin-top:6px}}
 .lic-row span,.cd-row span{color:var(--ink-2)}
 /* ---------- célula de DOCUMENTO (cópia do desenho de licencas.html) ----------
    O campo de documento não mostra mais o endereço: mostra o documento. Tem link
@@ -1219,7 +1251,19 @@ function secContatos(list,c){
   const painel=algumCom?'':linkPainelCliente(c);
   const lkPainel=painel
     ? `<a class="ex-lk" href="${esc(painel)}" target="_blank" rel="noopener">Abrir o painel do cliente ›</a>` : '';
-  return exSec(icone('chat'),'Contatos',body+lkPainel);
+  /* "+ Novo contato" abre a ficha que já existe em contatos-equipe.html, com o
+     cliente preenchido (?novo=ID). Não montamos um segundo modal aqui de
+     propósito: aquele tem áreas, perfil de sócio/médico, validação de cliente e
+     o salvamento inteiro — copiar isso para cá criaria dois formulários para o
+     mesmo cadastro, que divergem no primeiro campo novo que alguém acrescentar
+     de um lado só. O cliente vem preenchido e EDITÁVEL: se a pessoa percebeu ali
+     que era outro, troca sem recomeçar. */
+  const idc=String((c&&c.id)||'').trim();
+  const btNovo=idc
+    ? `<a class="ex-lk ex-lk-bt" href="contatos-equipe.html?chave=${encodeURIComponent(chaveAtual())}&novo=${encodeURIComponent(idc)}" target="_blank" rel="noopener">+ Novo contato</a>`
+    : '';
+  const rodape=(btNovo||lkPainel)?`<div class="ct-rodape">${btNovo}${lkPainel}</div>`:'';
+  return exSec(icone('chat'),'Contatos',body+rodape);
 }
 /* ---------- documento na ficha: botão, e não endereço escrito ----------
    O pedido do dono: "em Documentos e licenças ia ficar um botão ou de abrir, se
@@ -1261,7 +1305,9 @@ function docEhData(nome){
    contém "CRM" e viraria portal. Coluna nova entra como documento — falta um
    botão a menos, nunca a mais. */
 const DOC_ENDERECOS_PUROS=['link prefeitura','link crm','link portal','link do portal',
-                           'link e cac','link ecac','link sefaz','link gov','link site'];
+                           'link e cac','link ecac','link sefaz','link gov','link site',
+                           /* Formulário é endereço para PREENCHER, não arquivo para anexar. */
+                           'link form diagnostico','link form','link formulario'];
 function docEhLinkPuro(nome){ return DOC_ENDERECOS_PUROS.indexOf(docNorm(nome))>=0; }
 /* Valor que é data (a planilha manda aaaa-mm-dd ou dd/mm/aaaa) nunca é documento. */
 function docEhValorData(v){ return /^\d{4}-\d{2}-\d{2}/.test(String(v||'').trim())||/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(String(v||'').trim()); }
@@ -1595,8 +1641,96 @@ function secEquiparacao(arr){
    vencimentos e os três endereços já chegaram no payload da equipe. Por isso ele
    é desenhado na hora, continua na tela enquanto o resto carrega e sobrevive à
    falha do resto — era o que o bloco do cartão fazia, e não podia piorar. */
+/* ---- Cadastro do cliente (aba Registro) ----
+ * Vem no `cliente_extras`, e não no payload da equipe, de propósito: Endereço,
+ * CNAEs e Descrição dos sócios são textos longos, e o payload da equipe carrega
+ * TODOS os clientes de uma vez e vive no cache. Aqui é um cliente só, buscado no
+ * momento em que alguém abre a ficha dele.
+ *
+ * Só o Resumo e o número de funcionários são editáveis — foi o pedido, e é o que
+ * a equipe mexe no dia a dia. O resto vem do cadastro e se altera em
+ * `registro.html`, que é onde mora a ficha inteira com as travas e o histórico. */
+const CAD_LEITURA=[
+  ['cidade',            'Cidade'],
+  ['natureza_juridica', 'Natureza jurídica'],
+  ['endereco',          'Endereço'],
+  ['cnaes',             'CNAEs'],
+  ['n_socios',          'Número de sócios'],
+  ['desc_socios',       'Descrição dos sócios'],
+  ['cad_municipal',     'Cadastro Municipal (número)'],
+  ['iss',               'ISS'],
+  ['dpto_pessoal',      'Tem DPTO pessoal']
+];
+/* Guarda o que está na tela por cliente, para o salvamento saber o que mudou e
+   para o redesenho não perder o que a pessoa acabou de digitar. */
+let CAD_ATUAL=null;          // {id, nome, valores:{}, colunas:{}}
+const CAD_TIMER=new Map();
+
+function cadValor(k){ return String((CAD_ATUAL&&CAD_ATUAL.valores&&CAD_ATUAL.valores[k])||'').trim(); }
+
+function secCadastro(cad,c){
+  if(!cad||!cad.valores) return '';
+  CAD_ATUAL={id:(c&&c.id)||'', nome:(c&&c.nome)||'', valores:Object.assign({},cad.valores),
+             colunas:cad.colunas||{}};
+  /* Campo editável só aparece se a coluna EXISTE na planilha. Desenhar uma caixa
+     para uma coluna que não existe seria prometer uma gravação que o servidor vai
+     recusar — e ele recusa em silêncio, devolvendo o nome em `ignoradas`. */
+  const ed=[];
+  if(CAD_ATUAL.colunas.resumo) ed.push(`
+    <div class="cad-ed">
+      <label for="cad-resumo">Resumo</label>
+      <textarea id="cad-resumo" data-cad="resumo" rows="3" placeholder="O que este cliente faz, em uma linha">${esc(cadValor('resumo'))}</textarea>
+      <span class="cad-st" id="st-resumo"></span>
+    </div>`);
+  if(CAD_ATUAL.colunas.funcionarios) ed.push(`
+    <div class="cad-ed">
+      <label for="cad-func"># de funcionários</label>
+      <input id="cad-func" data-cad="funcionarios" inputmode="numeric" value="${esc(cadValor('funcionarios'))}" placeholder="0">
+      <span class="cad-st" id="st-funcionarios"></span>
+    </div>`);
+  const ro=CAD_LEITURA.filter(([k])=>CAD_ATUAL.colunas[k]).map(([k,rot])=>{
+    const v=cadValor(k);
+    return `<dt>${esc(rot)}</dt><dd class="${v?'':'vazio'}">${v?esc(v):'em branco'}</dd>`;
+  }).join('');
+  const corpo=ed.join('')+(ro?`<dl class="cad-ro">${ro}</dl>`:'');
+  if(!corpo) return '';
+  return exSec(icone('pessoal'),'Cadastro',corpo);
+}
+
+/* Salva no cadastro do cliente pela MESMA porta que o registro.html usa
+   (`acao=registro_salvar`), com o nome REAL da coluna que o servidor mandou —
+   não com o nome que a gente acha que ela tem. A planilha renomeia coluna
+   sozinha, e um nome chutado volta em `ignoradas` sem gravar nada. */
+async function cadSalvar(k,valor){
+  if(!CAD_ATUAL||!CAD_ATUAL.id) return;
+  const coluna=CAD_ATUAL.colunas[k]; if(!coluna) return;
+  const st=document.getElementById('st-'+k);
+  const marca=(txt,cl)=>{ if(st){ st.textContent=txt; st.className='cad-st'+(cl?' '+cl:''); } };
+  marca('Salvando…','');
+  const campos={}; campos[coluna]=valor;
+  try{
+    const d=await postAcao({acao:'registro_salvar',id:CAD_ATUAL.id,cliente:CAD_ATUAL.nome,cod:codAtual(),campos},30000);
+    const ign=(d&&d.ignoradas||[]).filter(Boolean);
+    if(ign.length){ marca('Não gravei: coluna travada ou fora do cadastro.','err'); return; }
+    CAD_ATUAL.valores[k]=valor;
+    marca('Salvo ✓','ok');
+    /* O visto some sozinho: aviso permanente em tela que fica aberta vira
+       enfeite, e meia hora depois ninguém sabe de quando ele é. */
+    setTimeout(()=>{ if(st&&st.textContent==='Salvo ✓') marca('',''); },4000);
+  }catch(e){ marca('Não foi possível salvar. Tente de novo.','err'); }
+}
+/* Digitou, espera parar de digitar. 900ms porque o Resumo é frase, não célula:
+   salvar a cada tecla encheria o log de auditoria de versões pela metade. */
+document.addEventListener('input',e=>{
+  const el=e.target; if(!el||!el.dataset||!el.dataset.cad) return;
+  const k=el.dataset.cad, v=el.value;
+  clearTimeout(CAD_TIMER.get(k));
+  CAD_TIMER.set(k,setTimeout(()=>cadSalvar(k,v),900));
+});
+
 function renderExtras(x,c){
   return secCertificados(c&&c.certificado,c)+
+         secCadastro(x.cadastro,c)+
          secContatos(x.contatos,c)+secLicencas(x.licencas)+
          (x.mestra ? secMestra(x.mestra) : '')+
          (x.equiparacao ? secEquiparacao(x.equiparacao) : '');

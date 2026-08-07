@@ -1712,8 +1712,15 @@ function pintarAreasModal(){
     (pr?'<span class="nota">Principal enxerga todas as áreas</span>':'');
 }
 /* Contato novo: a MESMA ficha, com as seções que ainda cabem. Aberta a partir de
-   um cliente, o campo Cliente já vem preenchido e travado e o foco vai direto
-   para o Nome; pelo botão geral, o foco vai para o Cliente. */
+   um cliente, o campo Cliente já vem PREENCHIDO — e editável. O foco vai direto
+   para o Nome, que é o que falta digitar; pelo botão geral, vai para o Cliente.
+
+   Ele já foi travado (`readOnly`), e a trava saiu a pedido do dono: quem abre o
+   contato de dentro de um cliente às vezes percebe ali mesmo que errou o cliente,
+   e a única saída era fechar, voltar e recomeçar a digitar tudo. Preencher é
+   ajuda; travar é decidir pela pessoa. O `resolverCliente()` continua validando
+   o que estiver escrito na hora de gravar, então trocar o cliente aqui é tão
+   seguro quanto escolher pelo botão geral. */
 function abrirModal(idCliente){
   MODAL_AREAS={};
   // ficha nova, perfil novo: nada do contato anterior pode sobrar aqui dentro
@@ -1723,7 +1730,7 @@ function abrirModal(idCliente){
   document.getElementById('m-body').innerHTML=fichaNovaHTML();
   const cli=document.getElementById('m-cli');
   cli.value=idCliente?(idCliente+(nomeCli(idCliente)?' · '+nomeCli(idCliente):'')):'';
-  cli.readOnly=!!idCliente;
+  cli.readOnly=false;      // preenchido, nunca travado — ver o comentário acima
   document.getElementById('m-titulo').textContent='Novo contato';
   const mid=document.getElementById('m-id');
   mid.textContent=idCliente||'';mid.title=(idCliente&&nomeCli(idCliente))||'';
@@ -2064,6 +2071,21 @@ async function carregar(primeira){
     }
     preencherDatalist();
     if(primeira&&TERMO)aplicarBusca();else redesenhar();
+    /* ?novo=ID abre a ficha de contato novo já com o cliente preenchido. É por
+       aqui que o botão "+ Novo contato" do painel da equipe chega: em vez de o
+       colaborador.html ganhar uma segunda cópia deste modal — com as áreas, o
+       perfil, a validação e o salvamento todos duplicados —, ele manda para cá.
+       Duas telas, um modal só.
+       Só na primeira carga, e o parâmetro sai do endereço depois de usado: F5
+       não pode reabrir a ficha por cima do que a pessoa já estava fazendo. */
+    if(primeira){
+      const idNovo=(new URLSearchParams(location.search).get('novo')||'').trim();
+      if(idNovo){
+        try{ const u=new URL(location.href); u.searchParams.delete('novo');
+             history.replaceState(null,'',u.pathname+u.search+u.hash); }catch(e){}
+        abrirModal(idNovo);
+      }
+    }
     /* A lista já está pintada: a barra corre até 100% e o overlay sai revelando a
        tela pronta. Nas recargas (primeira=false) não há overlay e isto é um
        no-op — a lista se atualiza sem piscar nada por cima. */
