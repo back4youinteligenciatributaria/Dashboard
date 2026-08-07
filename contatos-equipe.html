@@ -1318,6 +1318,12 @@ function desenharOrdem(){
     :'';
 }
 function desenharResumo(){
+  /* A guarda que faltava. Este resumo é decorativo — mora dentro de um
+     "Ver quem está em cada situação" que pode não existir nesta tela. Sem a
+     linha abaixo, o innerHTML de um elemento ausente estourava DENTRO do
+     try/catch do carregar(), e a página inteira caía na tela de "não
+     conseguimos carregar" com o dado JÁ na mão. Tela não morre por enfeite. */
+  const alvoResumo=document.getElementById('resumo'); if(!alvoResumo) return;
   const semP=GRUPOS.filter(faltaPrincipal);
   const semC=GRUPOS.filter(g=>g.contatos.length===0);
   const semE=[],semT=[];
@@ -1334,7 +1340,7 @@ function desenharResumo(){
   const card=(cls,titulo,lista,render)=>`<div class="rcard ${cls}">
     <div class="rhead"><span>${titulo}</span><span class="n">${lista.length}</span></div>
     <div class="rlista">${lista.length?lista.slice(0,80).map(render).join(''):'<div class="rvazio">Nada por aqui 🎉</div>'}</div></div>`;
-  document.getElementById('resumo').innerHTML=
+  alvoResumo.innerHTML=
     card('semp','Clientes sem contato Principal',semP,itemCli)+
     card('semmail','Contatos sem e-mail',semE,itemCtt)+
     card('semtel','Contatos sem telefone',semT,itemCtt)+

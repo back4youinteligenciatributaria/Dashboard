@@ -970,6 +970,10 @@ function render(){
         <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro e sem busca">Limpar filtros</button>
       </div>
     </div>
+    <details class="ajuda situacao" id="det-situacao">
+      <summary>Ver quem está em cada situação</summary>
+      <div class="resumo" id="resumo"></div>
+    </details>
     <div class="lista" id="lista"></div>
     <div class="mostrando" id="mostrando"></div>
     <div id="lista-mais"></div>`;
@@ -1040,8 +1044,14 @@ function listaCobrar(arr){
    vencem esta semana"), que fica visível com o bloco fechado. Aqui dentro ficam
    os exemplos — bons, mas no lugar errado. */
 function atualizarResumo(){
+  /* A guarda que faltava. Este resumo é decorativo — mora dentro de um
+     "Ver quem está em cada situação" que pode não existir nesta tela. Sem a
+     linha abaixo, o innerHTML de um elemento ausente estourava DENTRO do
+     try/catch do carregar(), e a página inteira caía na tela de "não
+     conseguimos carregar" com o dado JÁ na mão. Tela não morre por enfeite. */
+  const alvoResumo=document.getElementById('resumo'); if(!alvoResumo) return;
   const b=computeResumo();
-  document.getElementById('resumo').innerHTML=`
+  alvoResumo.innerHTML=`
     <div class="rcard atrasada"><div class="rhead">Atrasadas <span class="n">${b.atrasada.length}</span></div><div class="rlista">${listaTk(b.atrasada)}</div></div>
     <div class="rcard semana"><div class="rhead">Esta semana (até domingo) <span class="n">${b.semana.length}</span></div><div class="rlista">${listaTk(b.semana)}</div></div>
     <div class="rcard proxima"><div class="rhead">Próxima semana <span class="n">${b.proxima.length}</span></div><div class="rlista">${listaTk(b.proxima)}</div></div>

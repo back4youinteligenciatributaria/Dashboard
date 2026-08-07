@@ -489,7 +489,6 @@ let PLANILHA='';
 let F_QUEM='__eu__', F_SIT='abertas', F_CLI='', F_AREA='', TERMO='';
 let AREAS=[];
 let ABERTA=null;                      // tarefa aberta no modal (null = nova)
-
 const ABERTAS=['A fazer','Em andamento','Esperando terceiro'];
 const cls=s=>({'Em andamento':'andamento','Esperando terceiro':'esperando','Feito':'feito','Cancelado':'cancelado'}[s]||'afazer');
 const ehTodos=v=>String(v==null?'':v).trim().toUpperCase()===TODOS_ID;
@@ -825,14 +824,16 @@ async function salvarFicha(){
   if(!cli.ok){ msg.className='msg err'; msg.textContent=cli.msg||'Confira o cliente.'; return; }
   btn.disabled=true; msg.className='msg'; msg.textContent='Salvando…';
   try{
+    let d;
     if(ABERTA){
       const nota=v('f-nota');
-      await postAcao(Object.assign({acao:'daily_salvar',id:ABERTA.id,campos:dados},nota?{nota:nota}:{}));
+      d=await postAcao(Object.assign({acao:'daily_salvar',id:ABERTA.id,campos:dados},nota?{nota:nota}:{}));
     }else{
-      await postAcao(Object.assign({acao:'daily_nova'},dados));
+      d=await postAcao(Object.assign({acao:'daily_nova'},dados));
     }
     msg.className='msg ok'; msg.textContent='Salvo ✓';
-    await recarregar();
+    /* Troca só a linha mexida. Se o servidor não mandou a linha, relê tudo. */
+    if(!aplicarUma(d)) await recarregar();
     fecharFicha();
   }catch(e){
     /* O texto da exceção não vai para a tela: é vocabulário nosso e do outro lado
@@ -902,6 +903,27 @@ async function recarregar(){
   const d=await jsonp(API_URL+'?tipo=daily_equipe&chave='+encodeURIComponent(chaveAtual()));
   if(d&&d.erro) throw new Error(d.erro);
   aplicar(d); desenharLista();
+}
+/* ---------- aplicar SÓ o que mudou ----------
+   Salvar relia a planilha inteira: com a carteira grande isso é uma volta ao
+   servidor de vários segundos para trocar uma palavra numa linha. Agora a
+   escrita devolve a linha COMO FICOU e o histórico dela, e a tela troca só
+   aquilo.
+   O que chega é o que está GRAVADO, não o que a tela pediu — o servidor
+   normaliza e recusa coisas, e aplicar o próprio pedido deixaria a tela
+   discordando da planilha até o próximo F5.
+   Sem `tarefa` na resposta (backend antigo), cai na recarga completa: a tela
+   fica correta de qualquer jeito, só mais devagar. */
+function aplicarUma(d){
+  if(!d||!d.tarefa) return false;
+  const t=d.tarefa;
+  const i=TAREFAS.findIndex(x=>String(x.id)===String(t.id));
+  if(i>=0) TAREFAS[i]=t; else TAREFAS.push(t);
+  if(d.logs){
+    LOGS=LOGS.filter(l=>String(l.daily_id)!==String(t.id)).concat(d.logs);
+  }
+  desenharLista();
+  return true;
 }
 async function boot(){
   try{
