@@ -385,7 +385,7 @@
 }
 </style>
 <div class="b4u-bar">
-  <a class="b4u-logo" id="b4u-logo" href="comercial.html"><span>back</span><span class="y">4you</span></a>
+  <a class="b4u-logo" id="b4u-logo" href="comercial"><span>back</span><span class="y">4you</span></a>
   <a class="b4u-btn wa" id="b4u-wa" href="#" target="_blank" rel="noopener">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>
     <span class="b4u-lbl">WhatsApp</span></a>
@@ -396,7 +396,7 @@
   <span class="logo"><span class="b">back</span><span class="y">4you</span></span>
   <span class="tag">Comercial · Simulador</span>
   <span class="spacer"></span>
-  <a class="volta" id="volta" href="comercial.html">← Painel</a>
+  <a class="volta" id="volta" href="comercial">← Painel</a>
 </div>
 
 <div id="gate" hidden>
@@ -1928,13 +1928,13 @@ function medirBarra(){
      e não lê nada do servidor. Sem chave nenhuma, manda para a porta única (o login
      devolve a pessoa para cá pelo `destino`); com chave, abre. */
   if(!ch){
-    location.replace('index.html?destino=' + encodeURIComponent(
+    location.replace('index?destino=' + encodeURIComponent(
       location.pathname.split('/').pop() + location.search + location.hash));
     return;
   }
   document.getElementById('app').hidden=false;
-  document.getElementById('volta').href='comercial.html?chave='+encodeURIComponent(ch);
-  document.getElementById('b4u-logo').href='comercial.html?chave='+encodeURIComponent(ch);
+  document.getElementById('volta').href='comercial?chave='+encodeURIComponent(ch);
+  document.getElementById('b4u-logo').href='comercial?chave='+encodeURIComponent(ch);
   render();
   /* A faixa do rótulo do herói é medida em px. A primeira medição acontece antes
      de a Montserrat chegar do CDN; quando ela troca, o número muda de largura. */

@@ -331,8 +331,8 @@ function b4uParaPlanilha(valor,coluna){
 <div class="b4u-bar">
   <!-- Logo e "Painel" são o gesto de VOLTAR: trocam a guia atual (target="_self"),
        ao contrário do resto da página, que abre em guia nova pelo <base>. -->
-  <a class="b4u-logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador"><span>back</span><span class="y">4you</span></a>
-  <a class="b4u-btn ghost" id="volta" href="colaborador.html" target="_self">
+  <a class="b4u-logo" id="logo-home" href="colaborador" target="_self" title="Voltar para o painel do colaborador"><span>back</span><span class="y">4you</span></a>
+  <a class="b4u-btn ghost" id="volta" href="colaborador" target="_self">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
     <span class="b4u-lbl">Painel do colaborador</span></a>
 </div>
@@ -382,15 +382,15 @@ function b4uParaPlanilha(valor,coluna){
 /* Materiais do comercial — para acrescentar um novo, basta uma linha aqui.
    breve:true deixa o cartão visível, em cinza e sem link (em produção). */
 const MATERIAIS=[
-  {ic:'📈', tag:'Simulador', href:'simulador-equiparacao.html',
+  {ic:'📈', tag:'Simulador', href:'simulador-equiparacao',
    nome:'Simulador — linha do tempo e honorários',
    desc:'Duas raias em paralelo (restituição administrativa e mandado de segurança). O vendedor clica em cada desfecho e acende o caminho, com prazos em meses, honorários por modalidade e o fluxo de caixa trimestral contra o imposto de hoje.',
    pe:'Abrir simulador'},
-  {ic:'🧮', tag:'Calculadora', href:'calculadora-equiparacao.html',
+  {ic:'🧮', tag:'Calculadora', href:'calculadora-equiparacao',
    nome:'Calculadora de economia',
    desc:'Três controles — ISS do município, faturamento mensal e % em consultas simples — e a resposta ao vivo: alíquota total, redução de IRPJ e CSLL, economia mensal e anual e o potencial dos últimos 5 anos.',
    pe:'Abrir calculadora'},
-  {ic:'⚖️', tag:'Comparativo', href:'analise-tributaria.html',
+  {ic:'⚖️', tag:'Comparativo', href:'analise-tributaria',
    nome:'Análise tributária — Simples × Presumido × Equiparação',
    desc:'Qual regime sai mais barato para o cliente, com fator R, pró-labore, encargos de folha, INSS e IRRF do sócio e retenção sobre dividendos. Parâmetros de 2026 abertos, com base legal linha a linha.',
    pe:'Abrir comparativo'}
@@ -427,7 +427,7 @@ function boot(){
 
   const ch=chaveAtual();
   /* A volta leva a chave (e o código de quem está usando) junto para o painel. */
-  let href='colaborador.html?chave='+encodeURIComponent(ch);
+  let href='colaborador?chave='+encodeURIComponent(ch);
   const cod=(new URLSearchParams(location.search).get('cod')||'').trim();
   if(cod)href+='&cod='+encodeURIComponent(cod);
   ['volta','logo-home'].forEach(id=>{ const a=document.getElementById(id); if(a)a.href=href; });
@@ -440,7 +440,7 @@ function boot(){
      atalhos estáticos: sem chave nenhuma, manda para a porta única; com chave,
      abre. */
   if(!ch){
-    location.replace('index.html?destino=' + encodeURIComponent(
+    location.replace('index?destino=' + encodeURIComponent(
       location.pathname.split('/').pop() + location.search + location.hash));
     return;
   }

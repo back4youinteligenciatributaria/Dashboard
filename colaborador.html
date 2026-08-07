@@ -666,7 +666,7 @@ function b4uParaPlanilha(valor,coluna){
   <div class="combo">
     <div class="combo-row">
       <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar cliente por ID, nome ou CNPJ (com ou sem pontos)…">
-      <a class="btn btn--pri btn--pill btn-novo" id="novo-cliente" href="registro.html">+ Novo cliente</a>
+      <a class="btn btn--pri btn--pill btn-novo" id="novo-cliente" href="registro">+ Novo cliente</a>
     </div>
     <div class="opcoes" id="opcoes" hidden></div>
     <div class="dica" id="dica"><span class="spin"></span> Carregando clientes…</div>
@@ -756,7 +756,7 @@ function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave')
    A string não se repete neste arquivo de propósito — ele é servido ao
    navegador, e comentário vaza igual a código. */
 if (!chaveAtual()) {
-  location.replace('index.html?destino=' + encodeURIComponent(
+  location.replace('index?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
 }
 /* Quem está mexendo — HERANÇA, e hoje quase sempre vazio.
@@ -967,7 +967,7 @@ function pintarRestituicao(){
   const ch=encodeURIComponent(chaveAtual());
   const pleno=!!(EU&&EU.pleno);
   const rot=pleno?'Restituição (todos)':'Minha restituição';
-  const minha=`<a href="restituicao.html?chave=${ch}" target="_blank" rel="noopener"><span class="ic">${icone('calendario')}</span>${esc(rot)}</a>`;
+  const minha=`<a href="restituicao?chave=${ch}" target="_blank" rel="noopener"><span class="ic">${icone('calendario')}</span>${esc(rot)}</a>`;
   /* A planilha de Controle é a fonte inteira, sem filtro de responsável — só faz
      sentido para quem enxerga a carteira toda. */
   const controle=pleno?`<a href="${esc(urlControle())}" target="_blank" rel="noopener"><span class="ic">${icone('balanca')}</span>Controle (planilha)</a>`:'';
@@ -995,36 +995,36 @@ const AREAS_CARTEIRA=['fiscal','contabil','pessoal','societario','financeiro'];
    Card e menu apontando para o mesmo lugar com dois símbolos diferentes é o tipo
    de detalhe que faz a pessoa achar que são duas telas. */
 const FERRAMENTAS=[
-  {id:'fp-registro',      nome:'Registros de clientes',         url:'registro.html',          ic:icone('pessoal'), area:AREAS_OPERACAO,
+  {id:'fp-registro',      nome:'Registros de clientes',         url:'registro',          ic:icone('pessoal'), area:AREAS_OPERACAO,
    desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
    alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj'},
   /* Primeira da lista de propósito: é a tela que se abre de manhã, antes de
      saber qual cliente vai dar trabalho hoje. AREAS_TODAS porque não existe área
      que não tenha o que combinar na daily. */
-  {id:'fp-daily',         nome:'Tarefas Daily',                 url:'daily.html',             ic:icone('calendario'), area:AREAS_TODAS,
+  {id:'fp-daily',         nome:'Tarefas Daily',                 url:'daily',             ic:icone('calendario'), area:AREAS_TODAS,
    desc:'O que cada um tem para hoje, com histórico e notas por tarefa.',
    alias:'daily tarefa tarefas diaria pendencia pendencias prazo atrasado historico nota anotacao combinado',
    badge:seloDaily},
-  {id:'fp-certificados',  nome:'Certificados e acessos',        url:'certificados.html',      ic:icone('escudo'), area:AREAS_OPERACAO,
+  {id:'fp-certificados',  nome:'Certificados e acessos',        url:'certificados',      ic:icone('escudo'), area:AREAS_OPERACAO,
    desc:'Vencimentos de certificado, e-CAC e SPE, com o responsável legal.',
    alias:'certificado digital procuracao e-cac ecac spe vencimento responsavel legal',
    badge:seloCertificados},
-  {id:'fp-licencas',      nome:'Documentos e licenças',         url:'licencas.html',          ic:icone('doc'), area:'societario',
+  {id:'fp-licencas',      nome:'Documentos e licenças',         url:'licencas',          ic:icone('doc'), area:'societario',
    desc:'Alvará, sanitária e demais licenças, com a data de cada renovação.',
    alias:'licenca alvara sanitario crm pj cli licenciamento integrado regularidade cnes'},
-  {id:'fp-contatos',      nome:'Contatos',                      url:'contatos-equipe.html',   ic:icone('chat'), area:AREAS_TODAS,
+  {id:'fp-contatos',      nome:'Contatos',                      url:'contatos-equipe',   ic:icone('chat'), area:AREAS_TODAS,
    desc:'Quem fala pelo cliente: e-mail, telefone, papel e permissão de acesso.',
    alias:'contato email e-mail telefone acesso permissao papel principal secundario'},
-  {id:'fp-societario',    nome:'Processos Paralegal',           url:'societario-equipe.html', ic:icone('livro'), area:'societario',
+  {id:'fp-societario',    nome:'Processos Paralegal',           url:'societario-equipe', ic:icone('livro'), area:'societario',
    desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
    alias:'societario paralegal mestra alteracao contratual junta etapa processo protocolo andamento finalizado'},
   {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:icone('calendario'), area:'equiparacao',
    desc:'Relatório de cada colaborador e a planilha de controle da equiparação.',
    alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
-  {id:'fp-ativos',        nome:'Clientes ativos',               url:'clientes-ativos.html',   ic:icone('planilha'), area:AREAS_CARTEIRA,
+  {id:'fp-ativos',        nome:'Clientes ativos',               url:'clientes-ativos',   ic:icone('planilha'), area:AREAS_CARTEIRA,
    desc:'Quantos clientes ativos em cada competência, mês a mês.',
    alias:'ativos competencia mes calendario quantos clientes'},
-  {id:'fp-comercial',     nome:'Comercial',                     url:'comercial.html',         ic:icone('grafico'), area:'comercial',
+  {id:'fp-comercial',     nome:'Comercial',                     url:'comercial',         ic:icone('grafico'), area:'comercial',
    desc:'Material de proposta, simulador e calculadora para o comercial.',
    alias:'comercial material materiais proposta marketing simulador calculadora'}
 ];
@@ -1201,7 +1201,7 @@ function blocoInfo(c){
 function exSec(ic,titulo,body){ return `<div class="ex-sec"><div class="ex-tit">${ic}${esc(titulo)}</div>${body}</div>`; }
 
 /* ---- Link para o painel DO CLIENTE ----
-   O painel do cliente abre em `index.html#<id>-<codigo>`, e agora dá para montar
+   O painel do cliente abre em `index#<id>-<codigo>`, e agora dá para montar
    esse endereço aqui: `montarEquipe_` passou a mandar, junto com o resto do
    cliente, o `codigo` da coluna "Código de Acesso" da aba Links. Essa é a fonte
    confiável — vem direto da célula, no formato que o painel espera — então ela
@@ -1227,7 +1227,7 @@ function hashPainel(c,ct){
   const emp=String((c&&c.codigo)||'').trim();
   const pes=String((ct&&ct.codigo)||'').trim();
   if(!id||!emp||!pes) return '';
-  return 'index.html#'+encodeURIComponent(id)+'-'+encodeURIComponent(emp)+'-'+encodeURIComponent(pes);
+  return 'index#'+encodeURIComponent(id)+'-'+encodeURIComponent(emp)+'-'+encodeURIComponent(pes);
 }
 /* Reserva: o endereço pronto que a planilha guarda na coluna "Link de acesso".
    Só vale se já vier com as três partes — meio endereço leva à mesma recusa. */
@@ -1271,7 +1271,7 @@ function secContatos(list,c){
      que era outro, troca sem recomeçar. */
   const idc=String((c&&c.id)||'').trim();
   const btNovo=idc
-    ? `<a class="ex-lk ex-lk-bt" href="contatos-equipe.html?chave=${encodeURIComponent(chaveAtual())}&novo=${encodeURIComponent(idc)}" target="_blank" rel="noopener">+ Novo contato</a>`
+    ? `<a class="ex-lk ex-lk-bt" href="contatos-equipe?chave=${encodeURIComponent(chaveAtual())}&novo=${encodeURIComponent(idc)}" target="_blank" rel="noopener">+ Novo contato</a>`
     : '';
   const rodape=(btNovo||lkPainel)?`<div class="ct-rodape">${btNovo}${lkPainel}</div>`:'';
   return exSec(icone('chat'),'Contatos',body+rodape);
@@ -1610,7 +1610,7 @@ function secCertificados(cert,c){
     docLinha('Portal do CRM',                 docReg('cert','Link CRM','','link',cert.link_crm))
   ].join('');
   const vazio=(!datas&&!linhaResp)?'<div class="cd-row"><span>Sem vencimento preenchido</span></div>':'';
-  const lk=`<a class="ex-lk" href="${esc(comChave('certificados.html'))}&q=${encodeURIComponent(id)}" target="_blank" rel="noopener">Abrir em Certificados e acessos ›</a>`;
+  const lk=`<a class="ex-lk" href="${esc(comChave('certificados'))}&q=${encodeURIComponent(id)}" target="_blank" rel="noopener">Abrir em Certificados e acessos ›</a>`;
   return exSec(icone('escudo'),'Certificados e acessos',
     `<div class="cd">${linhaResp}${datas}${vazio}</div><div class="lic-grid">${ends}</div>${linhaObs}${lk}`);
 }
@@ -1623,7 +1623,7 @@ function secMestra(arr){
     const resp=p.responsavel?`<div class="mini">Responsável: ${esc(p.responsavel)}</div>`:'';
     return `<div class="card"><div class="card-top"><b>${esc(p.processo||'(processo)')}</b>${st}</div>${prox}${resp}</div>`;
   }).join('');
-  return exSec(icone('livro'),'Alteração Societária (Mestra)',body+`<a class="ex-lk" href="societario-equipe.html?chave=${ch}" target="_blank" rel="noopener">Abrir na Mestra ›</a>`);
+  return exSec(icone('livro'),'Alteração Societária (Mestra)',body+`<a class="ex-lk" href="societario-equipe?chave=${ch}" target="_blank" rel="noopener">Abrir na Mestra ›</a>`);
 }
 function proxPrazo(pairs){
   let best=null;
@@ -1759,8 +1759,8 @@ function secDaily(lista,c){
   lista=lista||[];
   const ch=encodeURIComponent(chaveAtual());
   const idc=String((c&&c.id)||'').trim();
-  const abrir=`daily.html?chave=${ch}${idc?'&cli='+encodeURIComponent(idc):''}`;
-  const nova=`daily.html?chave=${ch}${idc?'&cli='+encodeURIComponent(idc):''}&nova=1`;
+  const abrir=`daily?chave=${ch}${idc?'&cli='+encodeURIComponent(idc):''}`;
+  const nova=`daily?chave=${ch}${idc?'&cli='+encodeURIComponent(idc):''}&nova=1`;
   /* Alimenta o selo do card sem uma segunda chamada. Só o que é MEU e vence
      hoje ou já venceu — ver seloDaily. */
   const meu=n=>EU&&normTxt(n||'')===normTxt(EU.nome||'');
@@ -1968,7 +1968,7 @@ function abrirPainel(){
   ligarDropCentrais();
   ligarCombo();
   const nc=document.getElementById('novo-cliente');
-  if(nc) nc.href=comChave('registro.html');
+  if(nc) nc.href=comChave('registro');
   return url;
 }
 
@@ -2018,7 +2018,7 @@ function boot(){
          é mais ESCRITO na tela. */
       const msg = String((e && e.message) || e);
       if(/restrit/i.test(msg)){       // "Acesso restrito à equipe." — chave errada, de ontem, ou de ninguém
-        location.replace('index.html?destino=' + encodeURIComponent(
+        location.replace('index?destino=' + encodeURIComponent(
           location.pathname.split('/').pop() + location.search + location.hash));
         return;
       }
@@ -2099,9 +2099,9 @@ boot();
     var aplica = function () {
       var vt = document.getElementById('volta');
       var href = (vt && vt.getAttribute('href')) || '';
-      if (!href || href === 'colaborador.html') {
-        try { href = 'colaborador.html?chave=' + encodeURIComponent(chaveAtual()); }
-        catch (e) { href = 'colaborador.html'; }
+      if (!href || href === 'colaborador') {
+        try { href = 'colaborador?chave=' + encodeURIComponent(chaveAtual()); }
+        catch (e) { href = 'colaborador'; }
         try {
           var c = (typeof respAtual === 'function') ? respAtual()
                 : (typeof codAtual === 'function') ? codAtual() : '';

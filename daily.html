@@ -454,7 +454,7 @@ const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
 function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); return q?q.trim():''; }
 /* Sem chave não há painel da equipe. A porta é o index.html, igual às irmãs. */
 if(!chaveAtual()){
-  location.replace('index.html?destino='+encodeURIComponent(
+  location.replace('index?destino='+encodeURIComponent(
     location.pathname.split('/').pop()+location.search+location.hash));
 }
 
@@ -967,7 +967,7 @@ async function boot(){
           Se a mensagem fala em <b>chave "Planilha Daily"</b>, o link da planilha ainda não está
           na aba Config da <b>Links App Script</b> — cole lá e rode <code>limparCacheConfig()</code>.<br>
           Se fala em <b>acesso</b>, a chave do dia expirou: volte pelo
-          <a href="index.html">início</a>.
+          <a href="index">início</a>.
         </div>
       </div>`;
   }finally{

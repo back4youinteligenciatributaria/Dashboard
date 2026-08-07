@@ -59,14 +59,14 @@
   var MENU = {
     cliente: [
       { sec: 'Meu negócio' },
-      { id: 'home',        rot: 'Início',                pag: 'index.html',        ic: 'home' },
-      { id: 'guias',       rot: 'Agenda de pagamentos',  pag: 'guias.html',        ic: 'guias',   area: 'guias' },
-      { id: 'fiscal',      rot: 'Fiscal',                pag: 'fiscal.html',       ic: 'fiscal',  area: 'fiscal' },
-      { id: 'contabil',    rot: 'Contábil',              pag: 'contabil.html',     ic: 'livro',   area: 'contabil' },
-      { id: 'pessoal',     rot: 'Departamento Pessoal',  pag: 'dptopessoal.html',  ic: 'pessoal', area: 'pessoal' },
+      { id: 'home',        rot: 'Início',                pag: 'index',        ic: 'home' },
+      { id: 'guias',       rot: 'Agenda de pagamentos',  pag: 'guias',        ic: 'guias',   area: 'guias' },
+      { id: 'fiscal',      rot: 'Fiscal',                pag: 'fiscal',       ic: 'fiscal',  area: 'fiscal' },
+      { id: 'contabil',    rot: 'Contábil',              pag: 'contabil',     ic: 'livro',   area: 'contabil' },
+      { id: 'pessoal',     rot: 'Departamento Pessoal',  pag: 'dptopessoal',  ic: 'pessoal', area: 'pessoal' },
       { sec: 'Jurídico' },
-      { id: 'equiparacao', rot: 'Equiparação hospitalar', pag: 'equiparacao.html', ic: 'escudo',  area: 'equiparacao' },
-      { id: 'societario',  rot: 'Societário',            pag: 'societario.html',   ic: 'doc',     area: 'societario' }
+      { id: 'equiparacao', rot: 'Equiparação hospitalar', pag: 'equiparacao', ic: 'escudo',  area: 'equiparacao' },
+      { id: 'societario',  rot: 'Societário',            pag: 'societario',   ic: 'doc',     area: 'societario' }
       /* "Meus chamados" fica de fora POR ORA, a pedido: a abertura de chamado está
          segurada (o #b4u-open e o "?" da barra já saem por CSS nas oito páginas), e
          um menu que leva a uma lista que ninguém consegue alimentar só gera dúvida.
@@ -75,18 +75,18 @@
     ],
     equipe: [
       { sec: 'Carteira' },
-      { id: 'painel',      rot: 'Painel da equipe',      pag: 'colaborador.html',      ic: 'home' },
-      { id: 'registro',    rot: 'Registros de clientes', pag: 'registro.html',         ic: 'pessoal' },
-      { id: 'ativos',      rot: 'Clientes ativos',       pag: 'clientes-ativos.html',  ic: 'fiscal' },
+      { id: 'painel',      rot: 'Painel da equipe',      pag: 'colaborador',      ic: 'home' },
+      { id: 'registro',    rot: 'Registros de clientes', pag: 'registro',         ic: 'pessoal' },
+      { id: 'ativos',      rot: 'Clientes ativos',       pag: 'clientes-ativos',  ic: 'fiscal' },
       { sec: 'Operação' },
-      { id: 'daily',       rot: 'Tarefas Daily',         pag: 'daily.html',            ic: 'guias' },
-      { id: 'licencas',    rot: 'Documentos e licenças', pag: 'licencas.html',         ic: 'doc' },
-      { id: 'certificados',rot: 'Certificados e acessos',pag: 'certificados.html',     ic: 'escudo' },
-      { id: 'societario',  rot: 'Societário',            pag: 'societario-equipe.html',ic: 'livro' },
-      { id: 'restituicao', rot: 'Restituição',           pag: 'restituicao.html',      ic: 'guias' },
+      { id: 'daily',       rot: 'Tarefas Daily',         pag: 'daily',            ic: 'guias' },
+      { id: 'licencas',    rot: 'Documentos e licenças', pag: 'licencas',         ic: 'doc' },
+      { id: 'certificados',rot: 'Certificados e acessos',pag: 'certificados',     ic: 'escudo' },
+      { id: 'societario',  rot: 'Societário',            pag: 'societario-equipe',ic: 'livro' },
+      { id: 'restituicao', rot: 'Restituição',           pag: 'restituicao',      ic: 'guias' },
       { sec: 'Relacionamento' },
-      { id: 'contatos',    rot: 'Contatos',              pag: 'contatos-equipe.html',  ic: 'chat' },
-      { id: 'comercial',   rot: 'Comercial',             pag: 'comercial.html',        ic: 'grafico' }
+      { id: 'contatos',    rot: 'Contatos',              pag: 'contatos-equipe',  ic: 'chat' },
+      { id: 'comercial',   rot: 'Comercial',             pag: 'comercial',        ic: 'grafico' }
     ]
   };
 
@@ -257,10 +257,19 @@
     return { id: so ? so[1] : '', codigo: '' };
   }
 
-  /** O arquivo da página atual ("fiscal.html"), sem diretório nem query. */
+  /** A página atual ("fiscal"), sem diretório, sem query e SEM .html.
+   *
+   *  O painel passou a se ligar por endereço limpo (/fiscal em vez de
+   *  /fiscal.html), mas o .html continua valendo: o GitHub Pages serve as duas
+   *  formas, e link antigo salvo no favorito ou mandado por e-mail tem de
+   *  continuar abrindo. Por isso quem normaliza é aqui, num lugar só — o resto
+   *  do menu compara com os nomes de MENU_ITENS, que agora não têm extensão.
+   *  Sem este corte, quem entra por /fiscal.html cai num nome que não casa com
+   *  item nenhum: o menu não acende a página em que a pessoa está, e trocar de
+   *  empresa a joga para o Início em vez de manter a tela. */
   function paginaAtual() {
     var p = String(location.pathname || '').split('/').pop();
-    return p || 'index.html';
+    return p.replace(/\.html?$/i, '') || 'index';
   }
 
   /** Qual área do menu esta página é? null = página sem área (o Início). */
@@ -323,7 +332,7 @@
     /* `areas` null = o servidor não conseguiu dizer. Nesse caso não adivinhamos:
        vai para o Início, que toda empresa tem. */
     var temArea = !area || (emp.areas && emp.areas[area]);
-    var alvo = temArea ? pag : 'index.html';
+    var alvo = temArea ? pag : 'index';
     if (!temArea) {
       try {
         sessionStorage.setItem('b4s_aviso', 'A empresa ' + emp.nome + ' não tem essa área. Abri o início dela.');
@@ -435,7 +444,7 @@
          VOLTAR e trocam a guia atual. */
       var ALVO = ' target="_blank" rel="noopener"';
 
-      var html = '<a class="b4s-logo"' + ALVO + ' href="' + link(itens[1] ? itens[1].pag : 'index.html') + '">'
+      var html = '<a class="b4s-logo"' + ALVO + ' href="' + link(itens[1] ? itens[1].pag : 'index') + '">'
                + '<span>back</span><span class="y">4you</span></a>';
 
       if (ctx.nome) {

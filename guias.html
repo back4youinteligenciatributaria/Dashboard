@@ -980,8 +980,8 @@ function b4uParaPlanilha(valor,coluna){
   };
 
   var C = idc();
-  var linkHome = 'index.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
-  var linkTickets = 'meustickets.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var linkHome = 'index' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var linkTickets = 'meustickets' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
 
   // ---- links de área na própria barra --------------------------------------
@@ -991,10 +991,10 @@ function b4uParaPlanilha(valor,coluna){
      sem esta página perguntar nada. Sem esse registro, só a agenda, que quem tem
      fiscal ou pessoal sempre tem. */
   var AREAS_LINK = [
-    ['guias.html',       'Agenda',       'guias',       IC.guias],
-    ['fiscal.html',      'Fiscal',       'fiscal',      IC.fiscal],
-    ['dptopessoal.html', 'Pessoal',      'pessoal',     IC.pessoal],
-    ['equiparacao.html', 'Equiparação',  'equiparacao', IC.equiparacao]
+    ['guias',       'Agenda',       'guias',       IC.guias],
+    ['fiscal',      'Fiscal',       'fiscal',      IC.fiscal],
+    ['dptopessoal', 'Pessoal',      'pessoal',     IC.pessoal],
+    ['equiparacao', 'Equiparação',  'equiparacao', IC.equiparacao]
   ];
   function disponiveisSalvos(){
     try { var o = JSON.parse(localStorage.getItem('b4u_disp_'+C.id)||'null');
@@ -1002,7 +1002,10 @@ function b4uParaPlanilha(valor,coluna){
   }
   function linksDeArea(){
     var disp = disponiveisSalvos();
-    var aqui = (location.pathname.split('/').pop()||'').toLowerCase();
+    var aqui = (location.pathname.split('/').pop()||'').toLowerCase().replace(/\.html?$/,'');
+    /* Sem tirar o .html, quem entra por um link antigo (/fiscal.html) não casa
+       com 'fiscal' da lista e a barra oferece um atalho para a página em que a
+       pessoa já está. As duas formas de endereço continuam valendo. */
     return AREAS_LINK.filter(function(a){
       if (a[0].toLowerCase() === aqui) return false;                       // não linkar a página atual
       if (a[2] === 'guias') return !disp || !!(disp.fiscal || disp.pessoal);
@@ -1193,7 +1196,7 @@ function b4uParaPlanilha(valor,coluna){
     // Se já estou em meus chamados, trocar só o hash não recarrega — força o reload
     // para o novo chamado aparecer. Em outra página, navega normalmente.
     ov.querySelector('#b4u-ir-tickets').addEventListener('click', function(e){
-      if (/meustickets\.html/i.test(location.pathname)){
+      if (/\/meustickets(\.html)?$/i.test(location.pathname)){
         e.preventDefault();
         if (C.id) location.hash = C.id + (C.codigo ? '-'+C.codigo : '');
         location.reload();
@@ -2013,7 +2016,7 @@ function desenharEstimativas(M){
 // (assim uma falha momentânea de dados/gráfico nunca "expulsa" o cliente do painel).
 function erro(e){
   var ic=getIdCodigo(), id=ic.id, codigo=ic.codigo;
-  if(!id||!codigo){ location.replace('index.html'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
+  if(!id||!codigo){ location.replace('index'+(id?('#'+id+(codigo?'-'+codigo:'')):(location.hash||''))); return; }
   /* Uma mensagem só, igual em todo o painel. Texto de exceção, nome de aba e afins são
      vocabulário nosso: na tela do cliente viram susto e ligação para o atendimento.
      A única exceção é o acesso vencido ou inválido — não é falha do sistema e o conserto

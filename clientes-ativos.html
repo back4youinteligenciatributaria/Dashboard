@@ -438,11 +438,11 @@ function b4uParaPlanilha(valor,coluna){
      quem trabalha aqui dentro, não as do cliente. -->
 <body data-b4u-espera="equipe">
 <div class="barra">
-  <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
+  <a class="logo" id="logo-home" href="colaborador" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag">Calendário de clientes ativos</span>
   <span class="spacer"></span>
   <span class="cnt" id="cnt"></span>
-  <a class="volta" id="volta" href="colaborador.html" target="_self">← Painel</a>
+  <a class="volta" id="volta" href="colaborador" target="_self">← Painel</a>
 </div>
 <div id="app"><div class="state"><div class="spin"></div><p>Carregando registros…</p></div></div>
 
@@ -471,7 +471,7 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
    A string não se repete neste arquivo de propósito — ele é servido ao
    navegador, e comentário vaza igual a código. */
 if (!chaveAtual()) {
-  location.replace('index.html?destino=' + encodeURIComponent(
+  location.replace('index?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
 }
 function esc(s){return b4uTexto(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -918,7 +918,7 @@ document.addEventListener('keydown',e=>{
   if(b&&b.value&&(a===b||!digitando)){e.preventDefault();b.value='';desenhar('');return;}
   fecharTudo(document.getElementById('conteudo'));
 });
-document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+document.getElementById('volta').href='colaborador?chave='+encodeURIComponent(chaveAtual());
 
 /* ---------------- menu lateral ----------------
    Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
@@ -960,9 +960,9 @@ carregar();
     var aplica = function () {
       var vt = document.getElementById('volta');
       var href = (vt && vt.getAttribute('href')) || '';
-      if (!href || href === 'colaborador.html') {
-        try { href = 'colaborador.html?chave=' + encodeURIComponent(chaveAtual()); }
-        catch (e) { href = 'colaborador.html'; }
+      if (!href || href === 'colaborador') {
+        try { href = 'colaborador?chave=' + encodeURIComponent(chaveAtual()); }
+        catch (e) { href = 'colaborador'; }
         try {
           var c = (typeof respAtual === 'function') ? respAtual()
                 : (typeof codAtual === 'function') ? codAtual() : '';

@@ -66,10 +66,10 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 </head>
 <body>
 <div class="barra">
-  <a class="logo" id="logo-home" href="colaborador.html" title="Voltar para o painel da equipe">back<span class="y">4you</span></a>
+  <a class="logo" id="logo-home" href="colaborador" title="Voltar para o painel da equipe">back<span class="y">4you</span></a>
   <span class="tag">Cadastro de cliente</span>
   <span class="spacer"></span>
-  <a class="volta" id="volta" href="colaborador.html">← Painel</a>
+  <a class="volta" id="volta" href="colaborador">← Painel</a>
 </div>
 
 <div class="wrap">
@@ -80,8 +80,8 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
        <b>“+ Novo cliente”</b>. É a mesma coisa que se fazia aqui, no mesmo lugar em que a
        equipe consulta e edita os cadastros — sem duas versões do formulário para manter.</p>
     <div class="acoes">
-      <a class="btn btn--pri btn--pill" id="ir" href="registro.html">Ir para Registros de clientes</a>
-      <a class="btn btn--sec btn--pill" id="painel" href="colaborador.html">Voltar ao painel</a>
+      <a class="btn btn--pri btn--pill" id="ir" href="registro">Ir para Registros de clientes</a>
+      <a class="btn btn--sec btn--pill" id="painel" href="colaborador">Voltar ao painel</a>
     </div>
     <p class="conta" id="conta"></p>
     <!-- Antes esta frase citava os parâmetros do endereço (chave e cod) pelo nome.
@@ -124,8 +124,8 @@ function comChave(base){
   return u;
 }
 
-const destino=comChave('registro.html');
-const painel=comChave('colaborador.html');
+const destino=comChave('registro');
+const painel=comChave('colaborador');
 document.getElementById('ir').href=destino;
 document.getElementById('painel').href=painel;
 document.getElementById('volta').href=painel;

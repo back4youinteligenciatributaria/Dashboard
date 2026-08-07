@@ -666,8 +666,8 @@ function b4uParaPlanilha(valor,coluna){
   };
 
   var C = idc();
-  var linkHome = 'index.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
-  var linkTickets = 'meustickets.html' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var linkHome = 'index' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
+  var linkTickets = 'meustickets' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
 
   // ---- links de área na própria barra --------------------------------------
@@ -677,9 +677,9 @@ function b4uParaPlanilha(valor,coluna){
      sem esta página perguntar nada. Sem esse registro, só a agenda, que quem tem
      fiscal ou pessoal sempre tem. */
   var AREAS_LINK = [
-    ['fiscal.html',      'Fiscal',       'fiscal',      IC.fiscal],
-    ['dptopessoal.html', 'Pessoal',      'pessoal',     IC.pessoal],
-    ['equiparacao.html', 'Equiparação',  'equiparacao', IC.equiparacao]
+    ['fiscal',      'Fiscal',       'fiscal',      IC.fiscal],
+    ['dptopessoal', 'Pessoal',      'pessoal',     IC.pessoal],
+    ['equiparacao', 'Equiparação',  'equiparacao', IC.equiparacao]
   ];
   function disponiveisSalvos(){
     try { var o = JSON.parse(localStorage.getItem('b4u_disp_'+C.id)||'null');
@@ -687,7 +687,10 @@ function b4uParaPlanilha(valor,coluna){
   }
   function linksDeArea(){
     var disp = disponiveisSalvos();
-    var aqui = (location.pathname.split('/').pop()||'').toLowerCase();
+    var aqui = (location.pathname.split('/').pop()||'').toLowerCase().replace(/\.html?$/,'');
+    /* Sem tirar o .html, quem entra por um link antigo (/fiscal.html) não casa
+       com 'fiscal' da lista e a barra oferece um atalho para a página em que a
+       pessoa já está. As duas formas de endereço continuam valendo. */
     return AREAS_LINK.filter(function(a){
       if (a[0].toLowerCase() === aqui) return false;                       // não linkar a página atual
       return !!(disp && disp[a[2]]);
@@ -879,7 +882,7 @@ function b4uParaPlanilha(valor,coluna){
     // Se já estou em meus chamados, trocar só o hash não recarrega — força o reload
     // para o novo chamado aparecer. Em outra página, navega normalmente.
     ov.querySelector('#b4u-ir-tickets').addEventListener('click', function(e){
-      if (/meustickets\.html/i.test(location.pathname)){
+      if (/\/meustickets(\.html)?$/i.test(location.pathname)){
         e.preventDefault();
         if (C.id) location.hash = C.id + (C.codigo ? '-'+C.codigo : '');
         location.reload();
@@ -1036,13 +1039,13 @@ const ICONES = {
 };
 
 const DEFINICOES = [
-  { chave:'fiscal',      arquivo:'fiscal.html',       titulo:'Impostos e faturamento',  desc:'Quanto você faturou, quanto vai pagar de imposto e como isso se divide.' },
-  { chave:'equiparacao', arquivo:'equiparacao.html',  titulo:'Equiparação hospitalar',  desc:'Pedidos de restituição, valores atualizados e situação de cada processo.' },
-  { chave:'societario',  arquivo:'societario.html',   titulo:'Societário',  desc:'Contrato social, alterações, alvarás, processos e modelos de documentos da empresa.' },
-  { chave:'pessoal',     arquivo:'dptopessoal.html',  titulo:'Departamento Pessoal',    desc:'Folha, encargos e obrigações trabalhistas.' },
+  { chave:'fiscal',      arquivo:'fiscal',       titulo:'Impostos e faturamento',  desc:'Quanto você faturou, quanto vai pagar de imposto e como isso se divide.' },
+  { chave:'equiparacao', arquivo:'equiparacao',  titulo:'Equiparação hospitalar',  desc:'Pedidos de restituição, valores atualizados e situação de cada processo.' },
+  { chave:'societario',  arquivo:'societario',   titulo:'Societário',  desc:'Contrato social, alterações, alvarás, processos e modelos de documentos da empresa.' },
+  { chave:'pessoal',     arquivo:'dptopessoal',  titulo:'Departamento Pessoal',    desc:'Folha, encargos e obrigações trabalhistas.' },
   // A página contábil existe e está pronta. Quem decide se ela aparece é o `disponiveis`
   // que vem do backend (PAINEIS_OCULTOS) — aqui ela fica registrada para não sumir por acidente.
-  { chave:'contabil',    arquivo:'contabil.html',     titulo:'Contábil',                desc:'Balanço, resultado do exercício e a posição contábil da empresa.' },
+  { chave:'contabil',    arquivo:'contabil',     titulo:'Contábil',                desc:'Balanço, resultado do exercício e a posição contábil da empresa.' },
 ];
 
 /* ---------- o que o menu lateral precisa saber ----------
@@ -1109,7 +1112,7 @@ function render(id, codigo, disponiveis, pessoa){
     <div class="grade${totalCards===1?' grade--uma':''}" id="grade"></div>
     <div class="acoes-chamado">
       <button type="button" class="ac-btn ac-primary" id="ac-abrir">Abrir um chamado</button>
-      <a class="ac-btn" href="${destino('meustickets.html')}">Meus chamados</a>
+      <a class="ac-btn" href="${destino('meustickets')}">Meus chamados</a>
       <button type="button" class="ac-btn" id="ac-contatos">E-mails e contatos</button>
     </div>
     <div class="confiar-row" id="confiar-row"></div>`;
@@ -1182,13 +1185,13 @@ function render(id, codigo, disponiveis, pessoa){
  * divisão, e lia o silêncio como "está tudo em dia". Então ela mesma busca o
  * `tipo=fiscal` e conta as pendências. O localStorage do fiscal continua servindo
  * para pintar na hora, enquanto a resposta não chega. */
-const PAGINAS_ALERTA = { fiscal:'fiscal.html', contabil:'contabil.html',
-  equiparacao:'equiparacao.html', societario:'societario.html', dptopessoal:'dptopessoal.html', pessoal:'dptopessoal.html' };
+const PAGINAS_ALERTA = { fiscal:'fiscal', contabil:'contabil',
+  equiparacao:'equiparacao', societario:'societario', dptopessoal:'dptopessoal', pessoal:'dptopessoal' };
 
 function pintarAlertas(id, codigo, itens){
   const box = document.getElementById('alertas-home'); if(!box) return;
   box.innerHTML = (itens||[]).map(p=>{
-    const arq = PAGINAS_ALERTA[p.area] || 'fiscal.html';
+    const arq = PAGINAS_ALERTA[p.area] || 'fiscal';
     // A query vai ANTES do '#': depois dela o '?pend=1' vira parte do fragmento e
     // contamina o código de acesso, derrubando a sessão de quem clica no alerta.
     const alvo = arq + (p.pend?'?pend=1':'') + '#' + id + '-' + codigo;
@@ -1748,7 +1751,7 @@ function telaCodigoEmail(email, mascarado){
 
 /* ---------- Colaborador: mesma porta, outro destino ----------
    Quem é da equipe não tem painel de cliente para abrir. O back devolve
-   `destino` (colaborador.html?chave=CÓDIGO DO DIA) e a gente sai daqui.
+   `destino` (colaborador?chave=CÓDIGO DO DIA) e a gente sai daqui.
 
    Se a pessoa tinha clicado num link direto de outra página da equipe, a
    guarda daquela página mandou ela para cá com ?destino=. Nesse caso o alvo é

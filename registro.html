@@ -609,13 +609,13 @@ function b4uParaPlanilha(valor,coluna){
 </head>
 <body data-b4u-espera="equipe">
 <div class="barra">
-  <a class="logo" id="logo-home" href="colaborador.html" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
+  <a class="logo" id="logo-home" href="colaborador" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
   <span class="tag">📇 Registros de clientes</span>
   <span class="spacer"></span>
   <span class="save-status" id="saveStatus"></span>
   <span class="cnt" id="cnt"></span>
   <a class="plan" id="plan" href="#" target="_blank" rel="noopener" hidden>Planilha ↗</a>
-  <a class="volta" id="volta" href="colaborador.html" target="_self">← Painel</a>
+  <a class="volta" id="volta" href="colaborador" target="_self">← Painel</a>
 </div>
 
 <div id="app"><div class="state"><div class="spin"></div><p>Carregando os registros de clientes…</p></div></div>
@@ -671,7 +671,7 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
    A string não se repete neste arquivo de propósito — ele é servido ao
    navegador, e comentário vaza igual a código. */
 if (!chaveAtual()) {
-  location.replace('index.html?destino=' + encodeURIComponent(
+  location.replace('index?destino=' + encodeURIComponent(
     location.pathname.split('/').pop() + location.search + location.hash));
 }
 /* o que vem depois do # é o CÓDIGO do colaborador — vai no log, na coluna "Colaborador" */
@@ -2083,7 +2083,7 @@ async function carregar(op){
          traz a chave junto) ou falta a área (resolve com um responsável). O link
          atende o primeiro caso, que é o de longe mais comum. */
       if(window.B4UEspera)B4UEspera.cancelar();
-      document.getElementById('app').innerHTML=`<div class="state"><div style="font-size:36px">🔒</div><h1>Acesso restrito</h1><p>Esta tela é da equipe. Se o seu acesso do dia expirou, entre outra vez pelo painel do colaborador; se ele não inclui esta área, fale com um responsável principal.</p><p><a href="colaborador.html" target="_self">Ir para o painel</a></p></div>`;
+      document.getElementById('app').innerHTML=`<div class="state"><div style="font-size:36px">🔒</div><h1>Acesso restrito</h1><p>Esta tela é da equipe. Se o seu acesso do dia expirou, entre outra vez pelo painel do colaborador; se ele não inclui esta área, fale com um responsável principal.</p><p><a href="colaborador" target="_self">Ir para o painel</a></p></div>`;
     }else if(window.B4UEspera){
       B4UEspera.telaErro(document.getElementById('app'));
     }else{
@@ -2094,7 +2094,7 @@ async function carregar(op){
     }
   }
 }
-document.getElementById('volta').href='colaborador.html?chave='+encodeURIComponent(chaveAtual());
+document.getElementById('volta').href='colaborador?chave='+encodeURIComponent(chaveAtual());
 
 /* ---------------- menu lateral ----------------
    Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
@@ -2131,9 +2131,9 @@ carregar();
     var aplica = function () {
       var vt = document.getElementById('volta');
       var href = (vt && vt.getAttribute('href')) || '';
-      if (!href || href === 'colaborador.html') {
-        try { href = 'colaborador.html?chave=' + encodeURIComponent(chaveAtual()); }
-        catch (e) { href = 'colaborador.html'; }
+      if (!href || href === 'colaborador') {
+        try { href = 'colaborador?chave=' + encodeURIComponent(chaveAtual()); }
+        catch (e) { href = 'colaborador'; }
         try {
           var c = (typeof respAtual === 'function') ? respAtual()
                 : (typeof codAtual === 'function') ? codAtual() : '';
