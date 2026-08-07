@@ -191,11 +191,154 @@
        da gaveta. O empurrão passa a ser dele mesmo. */
     'body.b4s .b4u-bar .b4u-btn.wa{margin-left:auto}',
 
+    /* ── A empresa aberta, no lugar do "Início" ──────────────────────────────
+       O item dizia "Início" e levava para a home. Ele continua fazendo isso,
+       mas passa a dizer QUAL empresa está aberta — que é a informação que
+       faltava para quem tem mais de uma e nunca sabia em qual estava.
+       A seta é um segundo alvo, à direita, e só nasce quando há para onde ir.
+       Duas coisas na mesma linha porque são a mesma coisa: a empresa. */
+    '.b4s-emp-row{display:flex;align-items:stretch}',
+    '.b4s-emp-row .b4s-i{flex:1;min-width:0}',
+    '.b4s-emp-row .b4s-i span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    /* 44px de alvo para o dedo — a seta é pequena de desenho e grande de toque. */
+    '.b4s-troca{flex:none;width:44px;border:0;background:none;cursor:pointer;',
+    'color:rgba(255,255,255,.78);display:flex;align-items:center;justify-content:center}',
+    '.b4s-troca:hover{background:rgba(255,255,255,.06);color:#fff}',
+    '.b4s-troca svg{width:15px;height:15px;transition:transform .15s}',
+    '.b4s-troca[aria-expanded="true"] svg{transform:rotate(180deg)}',
+    /* A lista abre EMPURRANDO o menu para baixo, não flutuando por cima: a barra
+       já é estreita, e um balão sobreposto taparia justamente os itens de área. */
+    '.b4s-lista{list-style:none;margin:0;padding:2px 0 6px;background:rgba(0,0,0,.22)}',
+    '.b4s-lista button{display:block;width:100%;text-align:left;border:0;background:none;',
+    'cursor:pointer;font:inherit;font-size:12.5px;line-height:1.35;color:rgba(255,255,255,.8);',
+    'padding:9px 16px 9px 44px;overflow-wrap:anywhere}',
+    '.b4s-lista button:hover{background:rgba(255,255,255,.08);color:#fff}',
+    '.b4s-lista button[aria-current="true"]{color:#fff;font-weight:700}',
+    '.b4s-lista .marca{color:var(--brand-euc,#3FA680);font-weight:700;font-size:11px}',
+    /* O recado de "essa empresa não tem essa área" sobrevive à troca de página
+       (sessionStorage) e aparece uma vez só, aqui em cima, onde a pessoa está
+       olhando depois de trocar. Âmbar: não é erro, é explicação. */
+    '.b4s-aviso{margin:10px 16px 0;padding:8px 10px;border-radius:6px;font-size:12px;',
+    'line-height:1.4;background:rgba(232,137,46,.18);color:#F7DFC4}',
+
     '@media print{body.b4s{padding-left:0}.b4s-side,.b4s-veu,.b4s-menu{display:none!important}}',
     '@media(prefers-reduced-motion:reduce){.b4s-side,.b4s-veu{transition:none}}'
   ].join('');
 
   var side = null, veu = null, aberta = false;
+
+  /* ═══════════════ TROCAR DE EMPRESA ═══════════════
+   * Um contato pode estar em mais de um cadastro (mesmo e-mail, empresas
+   * diferentes). Até aqui isso só era tratado no login por e-mail: o index
+   * mostrava uma tela de escolha e, escolhida a empresa, não havia mais volta —
+   * quem entrou por link salvo ou por aparelho confiável nunca via a escolha, e
+   * ninguém tinha como trocar sem sair e entrar de novo.
+   *
+   * A LISTA NÃO FICA GUARDADA NO APARELHO. O `hash` de cada empresa é a senha
+   * dela; gravar a lista no localStorage seria deixar a senha de todas as
+   * empresas da pessoa num aparelho que pode ser compartilhado — e o painel faz
+   * questão de limpar `b4u_pl_`/`b4u_disp_` justamente para o próximo não
+   * herdar nada. Então a lista é pedida a cada carregamento e vive só em
+   * memória, o tempo desta página.
+   *
+   * SE A ROTA NÃO EXISTIR (backend antigo), nada acontece: a linha continua
+   * mostrando o nome da empresa aberta, sem seta — que é o comportamento certo
+   * para quem tem uma empresa só. Ver _PATCH-BACKEND-EMPRESAS.md. */
+
+  var MENU_ITENS = null;      // itens do perfil em uso, para achar a área da página atual
+
+  /** #ID-SENHAEMPRESA-SENHACONTATO -> {id, codigo}. Mesma leitura que as páginas fazem. */
+  function acessoAtual() {
+    var h = String(location.hash || '').replace('#', '').trim();
+    var m = h.match(/^(\d+)-(.+)$/);
+    if (m) return { id: m[1], codigo: m[2] };
+    var so = h.match(/^(\d+)$/);
+    return { id: so ? so[1] : '', codigo: '' };
+  }
+
+  /** O arquivo da página atual ("fiscal.html"), sem diretório nem query. */
+  function paginaAtual() {
+    var p = String(location.pathname || '').split('/').pop();
+    return p || 'index.html';
+  }
+
+  /** Qual área do menu esta página é? null = página sem área (o Início). */
+  function areaDaPagina(pag) {
+    for (var i = 0; MENU_ITENS && i < MENU_ITENS.length; i++) {
+      if (MENU_ITENS[i].pag === pag) return MENU_ITENS[i].area || null;
+    }
+    return null;
+  }
+
+  /* JSONP curto e próprio: o shell não pode depender do jsonp de nenhuma página,
+     porque roda em nove delas e cada uma tem o seu. Falhou, sumiu — quem chamou
+     recebe null e a barra segue sem seta. */
+  function pedirJSONP(url, pronto) {
+    var cb = 'b4s_cb_' + Math.random().toString(36).slice(2);
+    var s = d.createElement('script');
+    var t = setTimeout(function () { limpa(); pronto(null); }, 20000);
+    function limpa() { clearTimeout(t); try { delete w[cb]; } catch (e) { w[cb] = undefined; } if (s.parentNode) s.parentNode.removeChild(s); }
+    w[cb] = function (dados) { limpa(); pronto(dados); };
+    s.onerror = function () { limpa(); pronto(null); };
+    s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cb;
+    (d.body || d.documentElement).appendChild(s);
+  }
+
+  /* Quantas empresas esta pessoa tem — só o NÚMERO, por aba (sessionStorage).
+     Não é credencial, e poupa a chamada em todas as páginas seguintes de quem
+     tem uma empresa só, que é a maioria. Os hashes continuam sem ser gravados.
+     A chave leva o ID: trocou de empresa, trocou a contagem. */
+  function nEmpresasCache(id, valor) {
+    var k = 'b4s_nemp_' + id;
+    try {
+      if (valor == null) { var v = sessionStorage.getItem(k); return v ? +v : null; }
+      sessionStorage.setItem(k, String(valor));
+    } catch (e) {}
+    return null;
+  }
+
+  function buscarEmpresas(pronto) {
+    var api = (typeof w.B4U_API === 'string' && w.B4U_API) ? w.B4U_API : '';
+    var ac = acessoAtual();
+    if (!api || !ac.id || !ac.codigo) { pronto(null); return; }
+    if (nEmpresasCache(ac.id) === 1) { pronto(null); return; }   // já sabemos: é uma só
+    pedirJSONP(api + '?tipo=minhas_empresas&id=' + encodeURIComponent(ac.id) +
+                     '&codigo=' + encodeURIComponent(ac.codigo),
+      function (dados) {
+        /* Rota inexistente (backend antigo) ou falha de rede: `null`, e a barra
+           fica como sempre foi. Não guardamos contagem nesse caso — senão um
+           tropeço de rede esconderia a seta pelo resto da sessão. */
+        if (!dados || dados.erro || !dados.empresas) { pronto(null); return; }
+        nEmpresasCache(ac.id, dados.empresas.length);
+        pronto(dados.empresas.length < 2 ? null : dados.empresas);
+      });
+  }
+
+  /** Leva para a MESMA página da outra empresa. Sem a área lá, leva ao Início
+   *  dela — e diz por quê, senão a pessoa acha que o clique deu errado. */
+  function trocarPara(emp) {
+    var pag = paginaAtual();
+    var area = areaDaPagina(pag);
+    /* `areas` null = o servidor não conseguiu dizer. Nesse caso não adivinhamos:
+       vai para o Início, que toda empresa tem. */
+    var temArea = !area || (emp.areas && emp.areas[area]);
+    var alvo = temArea ? pag : 'index.html';
+    if (!temArea) {
+      try {
+        sessionStorage.setItem('b4s_aviso', 'A empresa ' + emp.nome + ' não tem essa área. Abri o início dela.');
+      } catch (e) {}
+    }
+    if (alvo === pag) { location.hash = emp.hash; location.reload(); }
+    else { location.href = alvo + '#' + emp.hash; }
+  }
+
+  function avisoPendente() {
+    try {
+      var m = sessionStorage.getItem('b4s_aviso');
+      if (m) sessionStorage.removeItem('b4s_aviso');
+      return m || '';
+    } catch (e) { return ''; }
+  }
 
   function estilo() {
     if (d.getElementById('b4s-css')) return;
@@ -269,6 +412,7 @@
 
       var perfil = op.perfil === 'equipe' ? 'equipe' : 'cliente';
       var itens = MENU[perfil] || [];
+      MENU_ITENS = itens;                 // trocarPara() descobre por aqui qual área é a página atual
       var link = typeof op.link === 'function' ? op.link : function (p) { return p; };
       var ctx = op.contexto || {};
       var disp = op.disp || null;
@@ -315,6 +459,24 @@
            têm `area` e continuam sempre à mão. */
         if (it.area && !(disp && disp[it.area])) return;
         if (pendente) { html += '<div class="b4s-sec">' + pendente + '</div>'; pendente = null; }
+
+        /* O "Início" do cliente diz o nome da empresa aberta. Ele continua sendo
+           o link para a home — só passa a responder também "em qual empresa eu
+           estou?", que é a pergunta de quem tem mais de uma. A seta ao lado nasce
+           depois, se e quando a lista chegar com outra empresa para abrir.
+           Sem o nome (payload ainda não chegou), continua escrito "Início": um
+           item de menu em branco seria pior que o rótulo genérico. */
+        if (perfil === 'cliente' && it.id === 'home') {
+          var rotEmp = (op.empresa && op.empresa.nome) || ctx.nome || it.rot;
+          html += '<div class="b4s-emp-row">'
+               +  '<a class="b4s-i' + (it.id === op.ativo ? ' on' : '') + '"' + ALVO + ' href="'
+               +  link(it.pag) + '"' + (it.id === op.ativo ? ' aria-current="page"' : '')
+               +  ' title="Início de ' + rotEmp + '">'
+               +  svg(it.ic) + '<span>' + rotEmp + '</span></a>'
+               +  '</div>';
+          return;
+        }
+
         html += '<a class="b4s-i' + (it.id === op.ativo ? ' on' : '') + '"' + ALVO + ' href="'
              + link(it.pag) + '"' + (it.id === op.ativo ? ' aria-current="page"' : '') + '>'
              + svg(it.ic) + '<span>' + it.rot + '</span></a>';
@@ -342,6 +504,85 @@
 
       d.body.classList.add('b4s');
       botao();
+
+      /* Sobrou recado da troca anterior ("essa empresa não tem essa área")?
+         Ele aparece uma vez, no alto, e some — a pessoa acabou de chegar aqui
+         sem ter pedido, e merece saber por quê. */
+      var recado = avisoPendente();
+      if (recado) {
+        var av = d.createElement('div');
+        av.className = 'b4s-aviso';
+        av.setAttribute('role', 'status');
+        av.textContent = recado;
+        var nav0 = side.querySelector('.b4s-nav');
+        if (nav0) side.insertBefore(av, nav0);
+      }
+
+      /* A seta de trocar de empresa nasce DEPOIS, e só se houver outra empresa.
+         Desenhar a barra não pode esperar por uma chamada de rede: quem tem uma
+         empresa só (a maioria) não paga nada por isso, e quem tem duas vê a seta
+         aparecer um instante depois, sem a tela ter piscado. */
+      if (perfil === 'cliente') {
+        var linha = side.querySelector('.b4s-emp-row');
+        if (linha) buscarEmpresas(function (lista) {
+          if (!lista || !side || !linha.parentNode) return;
+          var atual = acessoAtual().id;
+
+          var bt = d.createElement('button');
+          bt.type = 'button';
+          bt.className = 'b4s-troca';
+          bt.setAttribute('aria-expanded', 'false');
+          bt.setAttribute('aria-label', 'Trocar de empresa');
+          bt.title = 'Trocar de empresa';
+          bt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"'
+                       + ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                       + '<path d="m6 9 6 6 6-6"/></svg>';
+          linha.appendChild(bt);
+
+          var ul = d.createElement('ul');
+          ul.className = 'b4s-lista';
+          ul.hidden = true;
+          lista.forEach(function (emp) {
+            var li = d.createElement('li');
+            var b = d.createElement('button');
+            b.type = 'button';
+            b.textContent = emp.nome;
+            if (String(emp.id) === String(atual)) {
+              b.setAttribute('aria-current', 'true');
+              var mc = d.createElement('span');
+              mc.className = 'marca';
+              mc.textContent = ' · atual';
+              b.appendChild(mc);
+            }
+            /* Clicar na empresa que já está aberta não recarrega nada à toa:
+               só fecha a lista. O gesto de ir para o início dela é o próprio
+               nome, à esquerda, que continua sendo um link. */
+            b.addEventListener('click', function () {
+              if (String(emp.id) === String(atual)) { mostrar(false); return; }
+              trocarPara(emp);
+            });
+            li.appendChild(b);
+            ul.appendChild(li);
+          });
+          linha.parentNode.insertBefore(ul, linha.nextSibling);
+
+          function mostrar(v) {
+            ul.hidden = !v;
+            bt.setAttribute('aria-expanded', v ? 'true' : 'false');
+          }
+          bt.addEventListener('click', function (e) {
+            e.preventDefault(); e.stopPropagation();
+            mostrar(ul.hidden);
+          });
+          /* Esc fecha a lista antes de a gaveta se fechar: quem abriu a lista
+             sem querer não perde o menu inteiro por causa disso. */
+          d.addEventListener('keydown', function (e) {
+            if ((e.key === 'Escape' || e.keyCode === 27) && !ul.hidden) {
+              e.stopPropagation(); mostrar(false); bt.focus();
+            }
+          }, true);
+        });
+      }
 
       /* Esc fecha a gaveta — quem abriu sem querer no celular não fica preso. */
       d.addEventListener('keydown', function (e) {
