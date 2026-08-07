@@ -61,6 +61,15 @@ select.filtro{font-family:inherit;font-size:var(--fs-3);color:var(--ink);backgro
 select.filtro:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
 /* Filtro pegando ganha cor: sem isso a lista some pela metade e ninguém sabe por quê. */
 select.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-weight:700}
+/* Cliente é campo de DIGITAR, não de rolar: com a carteira inteira numa caixinha,
+   achar "Ajub" custava rolagem e memória do nome exato. Com datalist, "ajub"
+   basta — e o navegador casa por qualquer pedaço, inclusive pelo ID. */
+input.filtro{font-family:inherit;font-size:var(--fs-3);color:var(--ink);background:var(--surface);
+  border:1px solid var(--line-2);border-radius:var(--radius-pill);padding:9px 15px;min-width:0;max-width:100%}
+input.filtro:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
+input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-weight:700}
+.cli-hint{font-size:var(--fs-1);color:var(--muted);line-height:1.35}
+.cli-hint.err{color:var(--vermelho);font-weight:700}
 
 /* ---------- grupos ---------- */
 .grupo{margin:18px 0 8px;display:flex;align-items:baseline;gap:9px}
@@ -78,6 +87,17 @@ select.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font
   grid-template-columns:1fr auto;align-items:center;cursor:pointer}
 .t:hover{border-color:var(--line-2);box-shadow:0 1px 5px rgba(7,48,52,.07)}
 .t:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+/* Uma cor por situação, na faixa lateral e na pílula — as duas do mesmo tom, para
+   a linha inteira dizer a mesma coisa de longe e de perto.
+     A fazer .............. areia   (parado, sem alarme)
+     Em andamento ......... teal    (a cor de "acontecendo" no resto do painel)
+     Esperando terceiro ... âmbar   (não é culpa de ninguém aqui dentro)
+     Feito ................ verde
+     Cancelado ............ cinza
+   Vermelho fica reservado para ATRASO, que é estado de prazo e não de situação —
+   se ele também pintasse uma situação, a lista teria dois vermelhos querendo
+   dizer coisas diferentes. */
+.t.s-afazer{border-left-color:#C8B18C}
 .t.s-andamento{border-left-color:var(--brand-teal)}
 .t.s-esperando{border-left-color:var(--amber)}
 .t.s-feito{border-left-color:var(--verde);opacity:.72}
@@ -93,6 +113,7 @@ select.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font
 .t-prazo.hoje{color:var(--amber-txt);font-weight:700}
 .pill{display:inline-block;font-size:var(--fs-1);font-weight:700;border-radius:var(--radius-pill);
   padding:2px 9px;border:1px solid var(--line-2);background:var(--surface-warm);color:var(--ink-2);white-space:nowrap}
+.pill.p-afazer{background:#F3E7D5;color:#6B4E22;border-color:#E0CBA8}
 .pill.p-andamento{background:#DBEFEC;color:#0A5F59;border-color:#9FD3CD}
 .pill.p-esperando{background:var(--amber-soft);color:var(--amber-txt);border-color:var(--amber-line)}
 .pill.p-feito{background:#E2F2E8;color:#1F6B45;border-color:#A8D9BE}
@@ -427,13 +448,44 @@ async function postAcao(obj,ms){
 }
 
 /* ---------- estado ---------- */
-let TAREFAS=[], LOGS=[], EU=null, COLABS=[], CLIENTES=[], SITUACOES=[], ESCOPOS=[], HOJE='';
+let TAREFAS=[], LOGS=[], EU=null, COLABS=[], CLIENTES=[], SITUACOES=[], HOJE='';
+const TODOS_ID='TODOS';
 let PLANILHA='';
 let F_QUEM='__eu__', F_SIT='abertas', F_CLI='', TERMO='';
 let ABERTA=null;                      // tarefa aberta no modal (null = nova)
 
 const ABERTAS=['A fazer','Em andamento','Esperando terceiro'];
 const cls=s=>({'Em andamento':'andamento','Esperando terceiro':'esperando','Feito':'feito','Cancelado':'cancelado'}[s]||'afazer');
+const ehTodos=v=>String(v==null?'':v).trim().toUpperCase()===TODOS_ID;
+
+/* ---------- cliente digitável ----------
+   O texto da caixa é "ID · Nome"; o que vale é o ID. Resolver aceita o ID cru,
+   o texto inteiro, ou um pedaço do nome que case com UM cliente só — "ajub"
+   resolve, "clinica" não resolve se houver duas, e aí a caixa diz isso em vez de
+   escolher uma por conta própria. */
+function resolverCliente(txt){
+  const t=String(txt||'').trim();
+  if(!t) return {id:'',ok:true};
+  if(ehTodos(t)) return {id:TODOS_ID,ok:true};
+  const dig=soDigitos(t);
+  if(dig){ const porId=CLIENTES.find(c=>String(c.id)===dig); if(porId) return {id:porId.id,ok:true}; }
+  const n=normTxt(t);
+  const casam=CLIENTES.filter(c=>normTxt(c.id+' '+c.nome).includes(n));
+  if(casam.length===1) return {id:casam[0].id,ok:true};
+  if(casam.length>1)  return {id:'',ok:false,msg:casam.length+' clientes casam com isso — escreva mais um pedaço.'};
+  return {id:'',ok:false,msg:'Não achei esse cliente.'};
+}
+function rotuloCliente(id){
+  if(ehTodos(id)) return 'TODOS — vale para todos os clientes';
+  const c=CLIENTES.find(x=>String(x.id)===String(id));
+  return c?(c.id+' · '+c.nome):(id||'');
+}
+/* Uma <datalist> só, reaproveitada pelo filtro e pela ficha. TODOS em primeiro,
+   que é a praxe da casa e o caso que se escolhe sem pensar. */
+function datalistClientes(){
+  return `<datalist id="dl-cli"><option value="TODOS — vale para todos os clientes"></option>`+
+    CLIENTES.map(c=>`<option value="${esc(c.id+' · '+c.nome)}"></option>`).join('')+`</datalist>`;
+}
 
 /* ---------- datas ---------- */
 /* Comparação por STRING aaaa-mm-dd, nunca por objeto Date: Date interpreta fuso e
@@ -457,13 +509,16 @@ function souEu(nome){ return EU && normTxt(nome)===normTxt(EU.nome); }
 function visiveis(){
   const termo=normTxt(TERMO), dig=soDigitos(TERMO);
   return TAREFAS.filter(t=>{
-    if(F_QUEM==='__eu__'){ if(!souEu(t.responsavel) && !(t.acompanham&&normTxt(t.acompanham).includes(normTxt(EU?EU.nome:'')))) return false; }
+    if(F_QUEM==='__eu__'){ if(!souEu(t.responsavel)) return false; }
     else if(F_QUEM && F_QUEM!=='__todos__'){ if(normTxt(t.responsavel)!==normTxt(F_QUEM)) return false; }
     if(F_SIT==='abertas'){ if(ABERTAS.indexOf(t.situacao)<0) return false; }
     else if(F_SIT && F_SIT!=='__todas__'){ if(t.situacao!==F_SIT) return false; }
     /* Por cliente, o escopo "Todos" entra junto: é tarefa que vale para a carteira
        inteira, e escondê-la faria parecer que não há nada a fazer ali. */
-    if(F_CLI){ if(!(t.escopo==='Todos' || String(t.cliente_id)===String(F_CLI))) return false; }
+    if(F_CLI){
+      if(ehTodos(F_CLI)){ if(!ehTodos(t.cliente_id)) return false; }
+      else if(!(ehTodos(t.cliente_id) || String(t.cliente_id)===String(F_CLI))) return false;
+    }
     if(termo){
       const alvo=normTxt([t.assunto,t.detalhe,t.cliente,t.responsavel,t.id].join(' '));
       if(!alvo.includes(termo) && !(dig && soDigitos(t.cliente_id+' '+t.id).includes(dig))) return false;
@@ -536,16 +591,16 @@ function layout(){
   const optSit=['<option value="abertas">Em aberto</option>',
                 '<option value="__todas__">Todas as situações</option>']
     .concat(SITUACOES.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`)).join('');
-  const optCli=['<option value="">Todos os clientes</option>']
-    .concat(CLIENTES.map(c=>`<option value="${esc(c.id)}">${esc(c.id)} · ${esc(c.nome)}</option>`)).join('');
   return `
   <div class="topo">
     <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por assunto, cliente, pessoa…  ( / para focar)" value="${esc(TERMO)}">
     <select class="filtro" id="f-quem" aria-label="De quem">${optQuem}</select>
     <select class="filtro" id="f-sit" aria-label="Situação">${optSit}</select>
-    <select class="filtro" id="f-cli" aria-label="Cliente">${optCli}</select>
+    <input class="filtro" id="f-cli" list="dl-cli" autocomplete="off" aria-label="Cliente"
+           placeholder="Cliente — digite um pedaço do nome" value="${F_CLI?esc(rotuloCliente(F_CLI)):''}">
     <button class="btn btn--primary" id="nova" type="button">+ Nova tarefa</button>
   </div>
+  ${datalistClientes()}
   <div id="lista"></div>`;
 }
 function desenharLista(){
@@ -562,7 +617,7 @@ function desenharLista(){
   const q=document.getElementById('f-quem'), s=document.getElementById('f-sit'), c=document.getElementById('f-cli');
   if(q){q.value=F_QUEM;q.classList.toggle('on',F_QUEM!=='__eu__');}
   if(s){s.value=F_SIT;s.classList.toggle('on',F_SIT!=='abertas');}
-  if(c){c.value=F_CLI;c.classList.toggle('on',!!F_CLI);}
+  if(c){c.classList.toggle('on',!!F_CLI);}
 }
 
 /* ---------- ficha ---------- */
@@ -572,12 +627,10 @@ function campoSelect(id,rot,opts,valor,full){
 }
 function fichaHTML(t){
   const nova=!t;
-  t=t||{escopo:'Cliente',situacao:'A fazer',responsavel:(EU&&EU.nome)||'',
-        aberto_em:HOJE,prazo:'',assunto:'',detalhe:'',cliente_id:'',acompanham:'',concluido_em:''};
+  t=t||{situacao:'A fazer',responsavel:(EU&&EU.nome)||'',
+        aberto_em:HOJE,prazo:'',assunto:'',detalhe:'',cliente_id:'',concluido_em:''};
   const optColab=[{v:'',r:'— sem responsável —'}].concat(COLABS.map(c=>({v:c.nome,r:c.nome})));
   const optSit=SITUACOES.map(s=>({v:s,r:s}));
-  const optEsc=ESCOPOS.map(e=>({v:e,r:e==='Todos'?'Todos os clientes':(e==='Interno'?'Interno (sem cliente)':'Um cliente')}));
-  const optCli=[{v:'',r:'— escolha o cliente —'}].concat(CLIENTES.map(c=>({v:c.id,r:c.id+' · '+c.nome})));
   return `
   <div class="gsec">
     <h3><span class="dot"></span>A tarefa</h3>
@@ -588,18 +641,18 @@ function fichaHTML(t){
         <textarea id="f-detalhe" placeholder="O plano. O que já aconteceu vai no histórico, abaixo.">${esc(t.detalhe)}</textarea></div>
       ${campoSelect('f-resp','Responsável',optColab,t.responsavel)}
       ${campoSelect('f-sit2','Situação',optSit,t.situacao)}
-      ${campoSelect('f-esc','Escopo',optEsc,t.escopo)}
-      ${campoSelect('f-cli2','Cliente',optCli,t.cliente_id)}
+      <div class="fld"><label for="f-cli2">Cliente</label>
+        <input id="f-cli2" list="dl-cli" autocomplete="off" value="${t.cliente_id?esc(rotuloCliente(t.cliente_id)):''}"
+               placeholder="Digite um pedaço do nome, ou TODOS">
+        <span class="cli-hint" id="f-cli-hint">Em branco = tarefa interna, sem cliente.</span></div>
       <div class="fld"><label for="f-prazo">Prazo</label><input id="f-prazo" type="date" value="${esc(t.prazo)}"></div>
-      <div class="fld"><label for="f-acomp">Acompanham</label>
-        <input id="f-acomp" value="${esc(t.acompanham)}" placeholder="quem mais precisa ver">
-        <span class="dica">Vê na lista, não responde pela tarefa.</span></div>
       <div class="fld"><label for="f-aberto">Aberto em</label><input id="f-aberto" type="date" value="${esc(t.aberto_em||HOJE)}">
         <span class="dica">Vem com a data de hoje; troque se a combinação foi noutro dia.</span></div>
       <div class="fld"><label for="f-concl">Concluído em</label><input id="f-concl" type="date" value="${esc(t.concluido_em)}">
         <span class="dica">Preenche sozinho ao marcar Feito; dá para corrigir.</span></div>
     </div>
   </div>
+  ${datalistClientes()}
   ${nova?'':`
   <div class="gsec">
     <h3><span class="dot"></span>Histórico</h3>
@@ -630,7 +683,7 @@ function abrirFicha(t){
   const msg=document.getElementById('m-msg'); msg.className='msg'; msg.textContent='';
   document.getElementById('modal').hidden=false;
   document.body.style.overflow='hidden';
-  sincronizarEscopo();
+  validarCliFicha();
   setTimeout(()=>{const f=document.getElementById('f-assunto');if(f)f.focus();},40);
 }
 function fecharFicha(){
@@ -638,27 +691,31 @@ function fecharFicha(){
   document.body.style.overflow='';
   ABERTA=null;
 }
-/* Escopo manda no campo de cliente: "Todos" e "Interno" não têm cliente, e deixar
-   a caixinha ligada convidaria a escolher um que seria jogado fora na gravação. */
-function sincronizarEscopo(){
-  const e=document.getElementById('f-esc'), c=document.getElementById('f-cli2');
-  if(!e||!c) return;
-  const precisa=e.value==='Cliente';
-  c.disabled=!precisa;
-  c.closest('.fld').style.opacity=precisa?'':'.5';
-  if(!precisa) c.value='';
+/* Diz na hora o que aquele texto virou — ou por que não virou nada. Sem isto a
+   pessoa só descobre no clique de salvar, com o formulário inteiro preenchido. */
+function validarCliFicha(){
+  const el=document.getElementById('f-cli2'), h=document.getElementById('f-cli-hint');
+  if(!el||!h) return {id:'',ok:true};
+  const r=resolverCliente(el.value);
+  if(!el.value.trim()){ h.className='cli-hint'; h.textContent='Em branco = tarefa interna, sem cliente.'; }
+  else if(r.ok&&ehTodos(r.id)){ h.className='cli-hint'; h.textContent='Vale para todos os clientes — aparece na ficha de cada um.'; }
+  else if(r.ok){ h.className='cli-hint'; h.textContent=rotuloCliente(r.id); }
+  else { h.className='cli-hint err'; h.textContent=r.msg; }
+  return r;
 }
 
 async function salvarFicha(){
   const btn=document.getElementById('m-salvar'), msg=document.getElementById('m-msg');
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  const cli=validarCliFicha();
   const dados={ assunto:v('f-assunto'), detalhe:v('f-detalhe'), responsavel:v('f-resp'),
-                situacao:v('f-sit2'), escopo:v('f-esc'), cliente_id:v('f-cli2'),
-                prazo:v('f-prazo'), acompanham:v('f-acomp'),
+                situacao:v('f-sit2'), cliente_id:cli.id,
+                prazo:v('f-prazo'),
                 aberto_em:v('f-aberto'), concluido_em:v('f-concl') };
   if(!dados.assunto){ msg.className='msg err'; msg.textContent='Escreva o assunto.'; return; }
-  if(dados.escopo==='Cliente' && !dados.cliente_id){
-    msg.className='msg err'; msg.textContent='Escolha o cliente — ou troque o escopo.'; return; }
+  /* Texto escrito que não virou cliente NÃO vira tarefa interna calada: seria
+     perder a intenção de quem digitou e ainda esconder o engano. */
+  if(!cli.ok){ msg.className='msg err'; msg.textContent=cli.msg||'Confira o cliente.'; return; }
   btn.disabled=true; msg.className='msg'; msg.textContent='Salvando…';
   try{
     if(ABERTA){
@@ -698,7 +755,7 @@ document.addEventListener('change',e=>{
   if(e.target.id==='f-quem'){ F_QUEM=e.target.value; desenharLista(); }
   if(e.target.id==='f-sit'){ F_SIT=e.target.value; desenharLista(); }
   if(e.target.id==='f-cli'){ F_CLI=e.target.value; desenharLista(); }
-  if(e.target.id==='f-esc'){ sincronizarEscopo(); }
+  if(e.target.id==='f-cli2'){ validarCliFicha(); }
   /* Marcou Feito: a data de hoje entra no campo AQUI, à vista, e não escondida no
      servidor — quem concluiu ontem corrige antes de salvar, em vez de descobrir
      depois que ficou com a data errada. Saindo de Feito a data cai: a tarefa
@@ -711,6 +768,16 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('input',e=>{
   if(e.target.id==='busca'){ TERMO=e.target.value; desenharLista(); }
+  if(e.target.id==='f-cli2'){ validarCliFicha(); }
+  /* O filtro de cliente resolve enquanto se digita, e só filtra quando o texto
+     casa com um cliente só — filtrar a cada letra deixaria a lista piscando vazia
+     no meio de "Aj-u-b". Apagar o campo volta para todos. */
+  if(e.target.id==='f-cli'){
+    const el=e.target;
+    if(!el.value.trim()){ if(F_CLI){F_CLI='';desenharLista();} el.classList.remove('on'); return; }
+    const r=resolverCliente(el.value);
+    if(r.ok&&r.id&&String(r.id)!==String(F_CLI)){ F_CLI=r.id; desenharLista(); }
+  }
 });
 
 /* ---------- carga ---------- */
@@ -718,7 +785,6 @@ function aplicar(d){
   TAREFAS=d.tarefas||[]; LOGS=d.logs||[]; EU=d.eu||null;
   COLABS=d.colaboradores||[]; CLIENTES=d.clientes||[];
   SITUACOES=d.situacoes||['A fazer','Em andamento','Esperando terceiro','Feito','Cancelado'];
-  ESCOPOS=d.escopos||['Cliente','Todos','Interno'];
   HOJE=d.hoje||''; PLANILHA=d.planilha_url||'';
 }
 async function recarregar(){
