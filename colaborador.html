@@ -203,6 +203,28 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .ex-lk-bt:hover{border-color:var(--brand-teal)}
 .ex-erro{color:var(--vermelho)}
 .ex-lk{display:inline-block;margin-top:8px;font-size:13px;font-weight:700;color:var(--brand-teal-txt);text-decoration:none}
+/* ---------- logins e senhas do cliente ----------
+   A credencial vira uma LINHA por assunto (Prefeitura, CRM, certificado), com o
+   login à vista e a senha escondida atrás do olhinho. Assunto de um lado, par do
+   outro: era isso que faltava para não ter de adivinhar qual senha pertence a
+   qual login quando a planilha guarda os dois em colunas distantes. */
+.cred{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.cred-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;
+  padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface)}
+.cred-as{font-size:var(--fs-2);font-weight:800;color:var(--ink);min-width:112px}
+.cred-par{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.cred-rot{font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+/* Fonte de largura fixa: senha se confere caractere a caractere, e num tipo
+   proporcional o l, o 1 e o I ficam iguais — que é o jeito de digitar errado e
+   culpar o portal. */
+.cred-val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-2);
+  color:var(--ink);background:var(--surface-warm);border:1px solid var(--line);
+  border-radius:6px;padding:2px 7px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cred-val.vazia{color:var(--muted);font-style:italic;font-family:var(--sans)}
+.cred-bt{font-family:var(--sans);font-size:12px;line-height:1;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);
+  border-radius:6px;padding:4px 7px}
+.cred-bt:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
 .ex-lk:hover{text-decoration:underline}
 .ct-row{padding:7px 0;border-top:1px solid var(--line)}
 .ct-row:first-child{border-top:none}
@@ -1273,7 +1295,8 @@ function secContatos(list,c){
   const btNovo=idc
     ? `<a class="ex-lk ex-lk-bt" href="contatos-equipe?chave=${encodeURIComponent(chaveAtual())}&novo=${encodeURIComponent(idc)}" target="_blank" rel="noopener">+ Novo contato</a>`
     : '';
-  const rodape=(btNovo||lkPainel)?`<div class="ct-rodape">${btNovo}${lkPainel}</div>`:'';
+  const btAlt=btAlterar('contatos-equipe','Alterar contatos ›',idc);
+  const rodape=(btNovo||btAlt||lkPainel)?`<div class="ct-rodape">${btNovo}${btAlt}${lkPainel}</div>`:'';
   return exSec(icone('chat'),'Contatos',body+rodape);
 }
 /* ---------- documento na ficha: botão, e não endereço escrito ----------
@@ -1531,7 +1554,36 @@ document.addEventListener('change',e=>{
   if(!el||!el.dataset||!el.dataset.doc) return;
   salvarEnderecoDoc(el.dataset.doc, el.value);
 });
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
+  /* ---- olhinho e copiar da credencial ----
+     Vêm ANTES de tudo: são botões dentro de blocos que também são clicáveis, e
+     o primeiro closest() que casar manda. */
+  const olho=e.target.closest&&e.target.closest('[data-olho]');
+  if(olho){
+    const k=olho.dataset.olho, reg=CRED.get(k); if(!reg) return;
+    const cx=olho.closest('.cred-par'); if(!cx) return;
+    const cel=cx.querySelector('.cred-val'); if(!cel) return;
+    const aberta=cel.dataset.aberta==='1';
+    /* Esconder APAGA o valor do HTML — não basta trocar o que se vê. */
+    cel.textContent=aberta?'••••••••':reg.senha;
+    cel.dataset.aberta=aberta?'':'1';
+    olho.textContent=aberta?'👁':'🙈';
+    olho.title=aberta?'Mostrar a senha':'Esconder a senha';
+    olho.setAttribute('aria-label',olho.title);
+    return;
+  }
+  const cop=e.target.closest&&e.target.closest('[data-copiar-cred]');
+  if(cop){
+    const reg=CRED.get(cop.dataset.copiarCred); if(!reg) return;
+    const txt=cop.dataset.campo==='senha'?reg.senha:reg.login;
+    try{ await navigator.clipboard.writeText(txt); }
+    catch(err){ const t=document.createElement('textarea');t.value=txt;
+      document.body.appendChild(t);t.select();
+      try{document.execCommand('copy');}catch(e2){} t.remove(); }
+    const antes=cop.textContent; cop.textContent='✓';
+    setTimeout(()=>{cop.textContent=antes;},1200);
+    return;
+  }
   const env=e.target.closest&&e.target.closest('[data-env]');
   if(env){
     DOC_ALVO=env.dataset.env;
@@ -1549,7 +1601,7 @@ document.addEventListener('click',e=>{
   }
 });
 
-function secLicencas(lic){
+function secLicencas(lic,c,creds){
   lic=lic||{};
   if(lic.desativado) return '';
   let body;
@@ -1577,7 +1629,8 @@ function secLicencas(lic){
     body=(vencs+blocoDocs+(resto?'<div class="lic-grid">'+resto+'</div>':''))
       || '<div class="ex-vazio">Cliente encontrado, mas sem datas de vencimento reconhecidas.</div>';
   }
-  return exSec(icone('doc'),'Documentos e licenças',body);
+  const rod=`<div class="ct-rodape">${btAlterar('licencas','Alterar em Documentos e licenças ›',(c&&c.id)||'')}</div>`;
+  return exSec(icone('doc'),'Documentos e licenças',body+credBloco(creds)+rod);
 }
 /* ---- Certificados e acessos ----
    Os vencimentos que a ficha já mostrava (eram o bloco "Certificado /
@@ -1595,7 +1648,7 @@ function secLicencas(lic){
    renomeada, o servidor recusa com o nome errado à vista, em vez de gravar na
    coluna errada. */
 const COL_CERT_LINK='Certificado Digital Link';
-function secCertificados(cert,c){
+function secCertificados(cert,c,creds){
   cert=cert||{};
   const id=String((c&&c.id)||'');
   const datas=[['Certificado digital',cert.venc_certificado],['Procuração e-CAC',cert.venc_ecac],['Procuração SPE',cert.venc_spe]]
@@ -1610,9 +1663,54 @@ function secCertificados(cert,c){
     docLinha('Portal do CRM',                 docReg('cert','Link CRM','','link',cert.link_crm))
   ].join('');
   const vazio=(!datas&&!linhaResp)?'<div class="cd-row"><span>Sem vencimento preenchido</span></div>':'';
-  const lk=`<a class="ex-lk" href="${esc(comChave('certificados'))}&q=${encodeURIComponent(id)}" target="_blank" rel="noopener">Abrir em Certificados e acessos ›</a>`;
+  const lk=`<div class="ct-rodape">${btAlterar('certificados','Alterar em Certificados e acessos ›',id)}</div>`;
   return exSec(icone('escudo'),'Certificados e acessos',
-    `<div class="cd">${linhaResp}${datas}${vazio}</div><div class="lic-grid">${ends}</div>${linhaObs}${lk}`);
+    `<div class="cd">${linhaResp}${datas}${vazio}</div><div class="lic-grid">${ends}</div>`+
+    credBloco(creds)+`${linhaObs}${lk}`);
+}
+/* ---------- logins e senhas ----------
+   O valor NÃO vai para o HTML enquanto ninguém revelou: o que a página desenha é
+   uma chave, e a senha fica neste mapa, em memória. Assim ela não aparece em
+   "ver código-fonte", não é varrida por extensão que lê o DOM e não sobra na
+   página depois que o dossiê troca de cliente. Revelar escreve o valor na hora e
+   esconder o apaga de volta.
+
+   As credenciais chegam pela rota `cliente_extras`, que é de UM cliente e não
+   passa pelo cache — a rota `equipe`, que carrega a carteira inteira, continua
+   sem senha nenhuma de propósito.
+
+   Copiar existe porque o objetivo aqui é colar num portal: sem o botão, a pessoa
+   revela, seleciona à mão e erra um caractere no fim. */
+const CRED=new Map();
+let CRED_SEQ=0;
+function credLinha(it){
+  const k='cr'+(++CRED_SEQ);
+  CRED.set(k,{login:String(it.login||''),senha:String(it.senha||'')});
+  const par=(rot,valor,oculto)=>{
+    if(!valor) return '';
+    return `<span class="cred-par"><span class="cred-rot">${rot}</span>`+
+      `<code class="cred-val" data-cred="${k}" data-campo="${rot}">${oculto?'••••••••':esc(valor)}</code>`+
+      (oculto?`<button type="button" class="cred-bt" data-olho="${k}" title="Mostrar a senha" aria-label="Mostrar a senha">👁</button>`:'')+
+      `<button type="button" class="cred-bt" data-copiar-cred="${k}" data-campo="${rot}" title="Copiar">📋</button></span>`;
+  };
+  const abre=/^https?:\/\//i.test(String(it.link||'').trim())
+    ? `<a class="cred-bt" href="${esc(it.link)}" target="_blank" rel="noopener" title="Abrir o portal">↗</a>` : '';
+  return `<div class="cred-row"><span class="cred-as">${esc(it.assunto||'—')}</span>`+
+    par('login',it.login,false)+par('senha',it.senha,true)+abre+`</div>`;
+}
+function credBloco(lista){
+  lista=(lista||[]).filter(it=>it&&(it.login||it.senha));
+  if(!lista.length) return '';
+  return `<div class="cred">${lista.map(credLinha).join('')}</div>`;
+}
+/* Botão que leva para a tela onde SE ALTERA, já com a ficha do cliente aberta
+   (?abrir=ID). Guia nova: quem foi mudar uma senha volta para o dossiê que
+   estava consultando, em vez de ter de refazer a busca. */
+function btAlterar(pagina,rotulo,id){
+  const idc=String(id||'').trim();
+  if(!idc) return '';
+  return `<a class="ex-lk ex-lk-bt" href="${esc(pagina)}?chave=${encodeURIComponent(chaveAtual())}&abrir=${encodeURIComponent(idc)}"`+
+         ` target="_blank" rel="noopener">${esc(rotulo)}</a>`;
 }
 function secMestra(arr){
   arr=arr||[]; if(!arr.length) return '';
@@ -1705,7 +1803,11 @@ function secCadastro(cad,c){
   }).join('');
   const corpo=ed.join('')+(ro?`<dl class="cad-ro">${ro}</dl>`:'');
   if(!corpo) return '';
-  return exSec(icone('pessoal'),'Cadastro',corpo);
+  /* O resto do cadastro (o que não é editável aqui) se altera no registro.html,
+     que tem a ficha inteira com as travas e o histórico. O botão abre lá com a
+     ficha deste cliente já aberta, em guia nova. */
+  const rod=`<div class="ct-rodape">${btAlterar('registro','Alterar no cadastro ›',(c&&c.id)||'')}</div>`;
+  return exSec(icone('pessoal'),'Cadastro',corpo+rod);
 }
 
 /* Salva no cadastro do cliente pela MESMA porta que o registro.html usa
@@ -1783,11 +1885,15 @@ function secDaily(lista,c){
 function renderExtras(x,c){
   /* Contatos vem primeiro a pedido do dono: quem abre um cliente costuma estar
      indo falar com alguém, e o telefone tem de estar no alto. */
+  const cr=x.credenciais||{};
+  /* O mapa de senhas é por cliente: trocar de cliente no combo não pode deixar
+     para trás a credencial do anterior alcançável por um botão que sobrou. */
+  CRED.clear();
   return secContatos(x.contatos,c)+
-         secCertificados(c&&c.certificado,c)+
+         secCertificados(c&&c.certificado,c,cr.certificados)+
          secDaily(x.daily,c)+
          secCadastro(x.cadastro,c)+
-         secLicencas(x.licencas)+
+         secLicencas(x.licencas,c,cr.licencas)+
          (x.mestra ? secMestra(x.mestra) : '')+
          (x.equiparacao ? secEquiparacao(x.equiparacao) : '');
 }

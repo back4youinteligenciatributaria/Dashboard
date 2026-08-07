@@ -1539,6 +1539,31 @@ async function salvarAgoraCad(){
   CAD_AVISADO=false;avisoCad(false);
   fecharCadastro();
 }
+/* ---------- ?abrir=ID: chegar com a ficha já aberta ----------
+   O dossiê da pesquisa rápida manda para cá em guia nova quando o colaborador
+   clica em "Alterar". Sem isto ele cairia na lista e teria de procurar de novo o
+   cliente que já estava na tela — que é exatamente o passo que o botão existe
+   para poupar.
+
+   Só na PRIMEIRA carga, e o parâmetro sai do endereço assim que é usado. Se
+   ficasse, um F5 reabriria a ficha por cima do que a pessoa estivesse fazendo, e
+   o endereço que ela copiasse da barra levaria o colega para dentro de uma ficha
+   que ele não pediu.
+
+   Quem faz o trabalho é o irPara(), o MESMO dos cartões de resumo: ele limpa o
+   filtro se o cliente estiver escondido, sobe o teto da lista se ele estiver
+   além dele, rola até a linha e abre. Reaproveitar em vez de reimplementar é o
+   que garante que o link funcione mesmo quando a tela abriu filtrada. */
+let JA_ABRIU_PELO_ENDERECO=false;
+function abrirPeloEndereco(){
+  if(JA_ABRIU_PELO_ENDERECO) return;
+  JA_ABRIU_PELO_ENDERECO=true;
+  const alvo=(new URLSearchParams(location.search).get('abrir')||'').trim();
+  if(!alvo) return;
+  try{ const u=new URL(location.href); u.searchParams.delete('abrir');
+       history.replaceState(null,'',u.pathname+u.search+u.hash); }catch(e){}
+  irPara(alvo);
+}
 function irPara(id){
   const alvo=String(id);let mexeu=false;
   if(!visiveis().some(c=>String(c.id)===alvo)){
@@ -2051,6 +2076,7 @@ async function carregar(op){
        tela pronta, sem somar espera de verdade. Na recarga em segundo plano não há
        overlay nenhum, e a chamada simplesmente não faz nada. */
     if(window.B4UEspera)B4UEspera.concluir();
+    abrirPeloEndereco();          // ?abrir=ID — ver o comentário na função
     if(op.expandir){irPara(String(op.expandir));}
     else if(!op.silencioso&&window.innerWidth>760)nb.focus();
   }catch(e){
