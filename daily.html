@@ -713,7 +713,13 @@ function fichaHTML(t){
         aberto_em:HOJE,prazo:'',assunto:'',detalhe:'',cliente_id:'',concluido_em:''};
   const optColab=[{v:'',r:'— sem responsável —'}]
     .concat(COLABS.map(c=>({v:c.nome,r:c.nome+(souEu(c.nome)?' (você)':'')})));
-  const optSit=SITUACOES.map(s=>({v:s,r:s}));
+  /* Na CRIAÇÃO a lista traz só as situações abertas. Registrar uma tarefa já
+     "Feito" descreve uma tarefa que nunca existiu enquanto trabalho: ela não
+     entra em atraso de ninguém, não entra em resumo de ninguém, e serve só para
+     engordar a lista de encerradas. Quem quer registrar o que já aconteceu tem o
+     histórico. Na ficha de uma tarefa que existe, todas voltam — é lá que se
+     conclui. */
+  const optSit=(nova?SITUACOES.filter(x=>ABERTAS.indexOf(x)>=0):SITUACOES).map(s=>({v:s,r:s}));
   const optArea2=[{v:'',r:'— sem área —'}].concat(AREAS.map(a=>({v:a,r:a})));
   return `
   <div class="gsec">
@@ -733,8 +739,8 @@ function fichaHTML(t){
       <div class="fld"><label for="f-prazo">Prazo</label><input id="f-prazo" type="date" value="${esc(t.prazo)}"></div>
       <div class="fld"><label for="f-aberto">Aberto em</label><input id="f-aberto" type="date" value="${esc(t.aberto_em||HOJE)}">
         <span class="dica">Vem com a data de hoje; troque se a combinação foi noutro dia.</span></div>
-      <div class="fld"><label for="f-concl">Concluído em</label><input id="f-concl" type="date" value="${esc(t.concluido_em)}">
-        <span class="dica">Preenche sozinho ao marcar Feito; dá para corrigir.</span></div>
+      ${nova?'':`<div class="fld"><label for="f-concl">Concluído em</label><input id="f-concl" type="date" value="${esc(t.concluido_em)}">
+        <span class="dica">Preenche sozinho ao marcar Feito; dá para corrigir.</span></div>`}
     </div>
   </div>
   ${datalistClientes()}
