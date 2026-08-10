@@ -382,6 +382,11 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
      ficha não abre — e mais nada muda: a chamada é protegida por
      `window.B4UModal &&` e a lista continua inteira. -->
 <script src="b4u-modal.js" charset="utf-8"></script>
+<!-- A caixa de seleção múltipla da régua de filtros (De quem, Área, Cliente). Se
+     ele não carregar, `montarFiltros()` desenha os controles nativos de sempre —
+     um select para pessoas, um para áreas e a caixa digitável de cliente. Perde-se
+     a escolha de VÁRIOS de uma vez; a régua continua inteira e a lista também. -->
+<script src="b4u-filtro.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -654,7 +659,34 @@ async function postAcao(obj,ms){
 let TAREFAS=[], LOGS=[], EU=null, COLABS=[], CLIENTES=[], SITUACOES=[], HOJE='';
 const TODOS_ID='TODOS';
 let PLANILHA='';
-let F_QUEM='__eu__', F_SIT='abertas', F_CLI='', F_AREA='', TERMO='';
+/* ---------- o que está filtrado ----------
+   Três destes são LISTAS, porque a régua é de caixas de seleção: dá para ver duas
+   pessoas, quatro áreas e três clientes ao mesmo tempo. `F_SIT` continua sendo um
+   valor só — situação é a pergunta "o que está em aberto?", que não se responde
+   marcando duas.
+
+   O QUE A LISTA VAZIA QUER DIZER MUDA DE FILTRO PARA FILTRO, E É DE PROPÓSITO:
+
+     F_QUEM []   ninguém marcado  -> a lista fica VAZIA, com aviso e um botão que
+     F_AREA []   nenhuma marcada  -> remarca tudo. Estes dois NASCEM cheios, então
+                                     chegar a zero é um gesto deliberado: a pessoa
+                                     tirou o último item e pediu para não ver nada.
+                                     Obedecer calado seria desfazer o que ela fez.
+
+     F_CLI  []   nenhum marcado   -> TODOS os clientes. Este NASCE vazio, porque
+                                     são centenas: marcar todos, um a um, para
+                                     dizer "não quero filtrar por cliente" é
+                                     absurdo. Vazio aqui é o repouso, não um
+                                     pedido — ninguém CHEGA nele desmarcando o
+                                     último de trezentos.
+
+   A mesma assimetria está escrita no `b4u-filtro.js`, na opção `vazio`. */
+let F_QUEM=[], F_SIT='abertas', F_CLI=[], F_AREA=[], TERMO='';
+/* Tarefa sem responsável (ou sem área) não casa com nome nenhum e sumiria da tela
+   justamente quando TUDO está marcado — que é o estado que a pessoa lê como "está
+   tudo aqui". Então "sem responsável" e "sem área" são itens da lista, marcáveis
+   como qualquer outro, e nascem marcados. */
+const SEM='__sem__';
 let AREAS=[];
 let ABERTA=null;                      // tarefa aberta no modal (null = nova)
 const ABERTAS=['A fazer','Em andamento','Esperando terceiro'];
@@ -703,45 +735,68 @@ function resolverClientes(txt){
   return {ids:ids,ok:true,todos:false};
 }
 const idsTexto=ids=>(ids||[]).join('; ');
-/* ---------- filtrar por VÁRIAS pessoas ----------
-   O campo aceita "Minhas tarefas", "Todo o time" ou nomes separados por ponto e
-   vírgula ("Gian; Kariane"). Os dois primeiros continuam sendo o que se escolhe
-   sem pensar — são os estados do dia a dia —, e por isso continuam no topo da
-   lista suspensa. O resto é digitável, e cada pedaço casa por PARTE do nome:
-   "kari" acha Kariane, que é como a pessoa realmente lembra do nome do colega. */
-const QUEM_EU='__eu__', QUEM_TIME='__todos__';
-function resolverQuem(txt){
-  const t=String(txt||'').trim();
-  if(!t) return {modo:'time',nomes:[]};
-  const n=normTxt(t);
-  if(t===QUEM_EU||n==='minhas tarefas'||n==='minhas') return {modo:'eu',nomes:[]};
-  if(t===QUEM_TIME||n==='todo o time'||n==='time'||n==='todos') return {modo:'time',nomes:[]};
-  const pedacos=t.split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
-  const nomes=[],ruins=[];
-  for(const p of pedacos){
-    const pn=normTxt(p);
-    if(pn==='minhas tarefas'||pn==='minhas'){ nomes.push('__EU__'); continue; }
-    const casa=COLABS.filter(c=>normTxt(c.nome).includes(pn));
-    if(casa.length===1) nomes.push(casa[0].nome);
-    else if(casa.length>1){
-      const exato=casa.find(c=>normTxt(c.nome)===pn);
-      if(exato) nomes.push(exato.nome); else ruins.push(casa.length+' pessoas casam com "'+p+'"');
-    } else ruins.push('não achei "'+p+'"');
-  }
-  if(!nomes.length) return {modo:'ruim',nomes:[],msg:ruins[0]||''};
-  return {modo:'lista',nomes:nomes,msg:ruins[0]||''};
+
+/* ---------- o que cada caixa de seleção oferece ----------
+   O `v` é o que fica guardado no F_*; o `r` é a linha do painel; o `c` é o rótulo
+   curto do botão fechado, que precisa caber ao lado de um "+2".
+
+   Aqui morava o `resolverQuem()`: um resolvedor que lia "Gian; Kariane" e podia
+   responder "3 pessoas casam com isso". Ele existia porque o filtro era um campo
+   de digitar. Com checkbox não há o que resolver — a pessoa aponta o nome —, e o
+   resolvedor foi embora inteiro. O de CLIENTE ficou: a ficha da tarefa continua
+   sendo um campo digitável, e é ela quem usa `resolverClientes()`. */
+/* O botão fechado mostra o PRIMEIRO NOME; o painel e o `title` continuam com o nome
+   inteiro. "Gian Carlo Paradisi" no botão comia 179px da régua e empurrava a linha
+   toda — e ninguém precisa do sobrenome para saber de quem é o filtro.
+   As partículas ("de", "da", "dos"…) são puladas pela MESMA lista que o
+   `euIniciais()` do colaborador.html usa, para as duas telas concordarem sobre onde
+   um nome começa. Nome de uma palavra só devolve essa palavra; nome que só tem
+   partícula devolve o que veio, em vez de devolver nada.
+   Dois marcados com o mesmo primeiro nome NÃO são desambiguados: o "+N" já diz que
+   há mais de um e o `title` lista os dois. Inicial de sobrenome numa régua é ruído. */
+const PARTICULAS=['de','da','do','das','dos','e'];
+function primeiroNome(nome){
+  const t=String(nome||'').trim();
+  const partes=t.split(/\s+/).filter(p=>p&&PARTICULAS.indexOf(normTxt(p))<0);
+  return partes[0]||t;
 }
+function itensQuem(){
+  const out=[];
+  /* Quem está usando a tela vem da rota, não da aba Colaboradores. Nos casos em
+     que as duas listas não batem (nome grafado diferente, cadastro novo), o item
+     de EU entra assim mesmo — senão o padrão da tela apontaria para uma caixa que
+     não existe e a régua abriria dizendo "Ninguém". */
+  const eu=(EU&&EU.nome)||'';
+  if(eu && !COLABS.some(c=>normTxt(c.nome)===normTxt(eu)))
+    out.push({v:eu,r:eu+' (você)',c:primeiroNome(eu)});
+  COLABS.forEach(c=>out.push({v:c.nome,r:c.nome+(souEu(c.nome)?' (você)':''),c:primeiroNome(c.nome)}));
+  out.push({v:SEM,r:'— sem responsável —',c:'sem responsável'});
+  return out;
+}
+function itensArea(){
+  return AREAS.map(a=>({v:a,r:a})).concat([{v:SEM,r:'— sem área —',c:'sem área'}]);
+}
+function itensCli(){
+  /* "Todos" primeiro: é a tarefa que vale para a carteira inteira, e marcá-la
+     sozinha é a única forma de pedir SÓ essas. Marcada junto de um cliente ela não
+     muda nada — ver o comentário do escopo em `visiveis()`. */
+  const out=[{v:TODOS_ID,r:'Todos — vale para a carteira inteira',c:'Carteira inteira'}];
+  CLIENTES.forEach(c=>out.push({v:String(c.id),r:c.id+' · '+c.nome,c:c.id+' · '+c.nome}));
+  /* Id que veio por link (?cli=) e não está na carteira entra na lista assim
+     mesmo. Sem isto ele continuaria filtrando sem aparecer em lugar nenhum — um
+     filtro ativo e invisível é o pior dos dois mundos. */
+  F_CLI.forEach(v=>{ if(!out.some(i=>String(i.v)===String(v)))
+    out.push({v:String(v),r:v+' · (fora da carteira)',c:String(v)}); });
+  return out;
+}
+const todosOsValores=itens=>itens.map(i=>String(i.v));
+const marcadoTudo=(lista,itens)=>itens.length>0&&itens.every(i=>lista.indexOf(String(i.v))>=0);
+
 function rotuloClientes(cru){
   const ids=String(cru||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
   if(!ids.length) return '';
   if(ids.length===1) return rotuloCliente(ids[0]);
   return ids.join('; ');
-}
-/* O que aparece escrito no campo de pessoas, a partir do estado guardado. */
-function rotuloQuem(v){
-  if(!v||v===QUEM_TIME) return 'Todo o time';
-  if(v===QUEM_EU) return 'Minhas tarefas';
-  return String(v);
 }
 function rotuloCliente(id){
   if(ehTodos(id)) return 'Todos';
@@ -788,47 +843,47 @@ function comVoce(nome){
 /* ---------- filtro ---------- */
 function visiveis(){
   const termo=normTxt(TERMO), dig=soDigitos(TERMO);
+  /* Normalizado UMA vez, fora do laço. Com trezentas tarefas e trinta nomes
+     marcados, `normTxt` por linha era o custo de digitar na busca. */
+  const quem=F_QUEM.map(normTxt), area=F_AREA.map(normTxt);
+  const semQuem=F_QUEM.indexOf(SEM)>=0, semArea=F_AREA.indexOf(SEM)>=0;
+  /* Cliente "Todos" não é um id: é o escopo da tarefa. Ele sai da lista de ids
+     comparáveis e volta na regra logo abaixo. */
+  const cliEsp=F_CLI.map(String).filter(x=>!ehTodos(x));
   return TAREFAS.filter(t=>{
-    const quem=resolverQuem(F_QUEM);
-    if(quem.modo==='eu'){ if(!souEu(t.responsavel)) return false; }
-    else if(quem.modo==='lista'){
-      const bate=quem.nomes.some(nm=>nm==='__EU__'?souEu(t.responsavel):normTxt(nm)===normTxt(t.responsavel));
-      if(!bate) return false;
-    }
-    /* modo 'ruim' (a pessoa está no meio da digitação) não filtra ninguém: a
-       lista piscaria vazia a cada letra. */
-    if(F_AREA && t.area!==F_AREA) return false;
+    /* DE QUEM e ÁREA: a lista vazia quer dizer NADA (ver a nota do estado, lá em
+       cima) — e isso cai sozinho de `indexOf` em lista vazia, sem ramo especial. */
+    const r=normTxt(t.responsavel||'');
+    if(!r){ if(!semQuem) return false; }
+    else if(quem.indexOf(r)<0) return false;
+    const a=normTxt(t.area||'');
+    if(!a){ if(!semArea) return false; }
+    else if(area.indexOf(a)<0) return false;
     if(F_SIT==='abertas'){ if(ABERTAS.indexOf(t.situacao)<0) return false; }
     else if(F_SIT && F_SIT!=='__todas__'){ if(t.situacao!==F_SIT) return false; }
-    /* Por cliente, o escopo "Todos" entra junto: é tarefa que vale para a carteira
-       inteira, e escondê-la faria parecer que não há nada a fazer ali.
+    /* CLIENTE: aqui, e SÓ aqui, a lista vazia quer dizer TODOS — é o filtro que
+       nasce sem nada marcado.
 
-       O `F_CLI` é o que está ESCRITO na caixa — "250033 · Nome do cliente" quando
-       se escolhe pela lista, ou um pedaço do nome quando se digita. Comparar esse
-       texto direto com `t.cliente_id`, que é só o número, nunca casava: sobrava
-       apenas o ramo do "Todos", e a tela respondia que aquele cliente só tinha
-       tarefas gerais. Era o bug. Agora o texto passa pelo MESMO resolvedor da
-       ficha antes de virar comparação.
+       Por cliente, o escopo "Todos" entra junto: é tarefa que vale para a carteira
+       inteira, e escondê-la faria parecer que não há nada a fazer ali. Este ramo
+       já foi um bug — o filtro comparava o TEXTO da caixa ("250033 · Nome do
+       cliente") com `t.cliente_id`, que é só o número, e nunca casava: sobrava
+       apenas o ramo do "Todos" e a tela respondia que aquele cliente só tinha
+       tarefas gerais. Com checkbox o que está guardado já é o id, e a comparação
+       é direta — mas a regra do escopo continua valendo e continua aqui.
 
-       Texto que ainda não identifica ninguém (a pessoa está no meio da digitação)
-       não filtra por ID: cai na busca por pedaço do nome, senão a lista piscaria
-       vazia a cada letra. */
-    if(F_CLI){
-      const alvo=resolverClientes(F_CLI);
-      if(alvo.ok && alvo.ids.length){
-        const lista=(t.clientes&&t.clientes.length)
-          ? t.clientes.map(c=>String(c.id))
-          : String(t.cliente_id||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
-        const temTodos=lista.some(ehTodos);
-        /* Vários clientes no filtro: basta a tarefa alcançar UM deles. É "ou",
-           não "e" — pedir a tarefa que serve aos três ao mesmo tempo não é a
-           pergunta que alguém faz na daily. */
-        if(alvo.todos){ if(!temTodos) return false; }
-        else if(!(temTodos || alvo.ids.some(x=>lista.indexOf(String(x))>=0))) return false;
-      } else {
-        const p=normTxt(F_CLI);
-        if(!ehTodos(t.cliente_id) && !normTxt(String(t.cliente_id||'')+' '+String(t.cliente||'')).includes(p)) return false;
-      }
+       Vários clientes no filtro: basta a tarefa alcançar UM deles. É "ou", não
+       "e" — pedir a tarefa que serve aos três ao mesmo tempo não é a pergunta que
+       alguém faz na daily.
+
+       Marcar só "Todos" pede exatamente as da carteira inteira: `cliEsp` fica
+       vazio e sobra a exigência de `temTodos`. */
+    if(F_CLI.length){
+      const lista=(t.clientes&&t.clientes.length)
+        ? t.clientes.map(c=>String(c.id))
+        : String(t.cliente_id||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
+      const temTodos=lista.some(ehTodos);
+      if(!(temTodos || cliEsp.some(x=>lista.indexOf(x)>=0))) return false;
     }
     if(termo){
       const alvo=normTxt([t.assunto,t.detalhe,t.cliente,t.responsavel,t.id].join(' '));
@@ -931,31 +986,96 @@ function resumoHover(t){
   return partes.join('\n') || t.assunto || '';
 }
 function layout(){
-  /* Lista suspensa DIGITÁVEL: as duas opções do dia a dia continuam a um clique,
-     e quem quer duas pessoas escreve "Gian; Kariane". Um <select> não permitiria
-     isso sem virar caixa de seleção múltipla, que ninguém opera com o mouse numa
-     régua de filtros. */
-  const optQuem=['<option value="Minhas tarefas"></option>','<option value="Todo o time"></option>']
-    .concat(COLABS.map(c=>`<option value="${esc(c.nome)}"></option>`)).join('');
+  /* Situação continua <select>: é a única pergunta da régua que se responde com um
+     valor só ("o que está em aberto?"), e transformá-la em caixa de seleção seria
+     oferecer uma combinação — "Feito + Cancelado" — que ninguém pediu.
+     As outras três saem daqui vazias e são preenchidas pelo `montarFiltros()`,
+     porque quem as desenha depende de o b4u-filtro.js ter carregado ou não. */
   const optSit=['<option value="abertas">Em aberto</option>',
                 '<option value="__todas__">Todas as situações</option>']
     .concat(SITUACOES.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`)).join('');
-  const optArea=['<option value="">Todas as áreas</option>']
-    .concat(AREAS.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`)).join('');
   return `
   <div class="topo">
     <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por assunto, cliente, pessoa…  ( / para focar)" value="${esc(TERMO)}">
-    <input class="filtro" id="f-quem" list="dl-quem" autocomplete="off" aria-label="De quem"
-           placeholder="De quem — vários com ;" value="${esc(rotuloQuem(F_QUEM))}">
-    <datalist id="dl-quem">${optQuem}</datalist>
+    <span id="cx-quem"></span>
     <select class="filtro" id="f-sit" aria-label="Situação">${optSit}</select>
-    <select class="filtro" id="f-area" aria-label="Área">${optArea}</select>
-    <input class="filtro" id="f-cli" list="dl-cli" autocomplete="off" aria-label="Cliente"
-           placeholder="Cliente — vários com ;" value="${F_CLI?esc(rotuloClientes(F_CLI)):''}">
+    <span id="cx-area"></span>
+    <span id="cx-cli"></span>
     <button class="btn btn--primary" id="nova" type="button">+ Nova tarefa</button>
   </div>
   ${datalistClientes()}
   <div id="lista"></div>`;
+}
+
+/* ---------- a régua de filtros ----------
+   Três caixas de seleção múltipla (b4u-filtro.js) e, se ele não tiver carregado,
+   três controles nativos que fazem a mesma pergunta com uma escolha por vez. O
+   segundo caminho não é enfeite: é o que mantém a tela usável quando um arquivo
+   não chega — e é o mesmo desenho que a régua tinha antes das caixas. */
+const FILTROS={quem:null,area:null,cli:null};
+/* O marcador de posição é SUBSTITUÍDO, não preenchido. A régua é um flex, e um
+   <span> em volta vira um item de flex que se dimensiona pelo conteúdo: o filtro
+   por dentro dele nunca encolhe, e uma razão social inteira no rótulo botava 548px
+   de botão numa tela de 390 — a página inteira ganhava rolagem lateral por causa de
+   um nome de cliente (o mesmo estrago que o `max-width` do <select> já evitava). */
+function por(cx,no){ cx.replaceWith(no); return no; }
+function porHTML(cx,html){ const t=document.createElement('div'); t.innerHTML=html;
+  return por(cx,t.firstElementChild); }
+function montarFiltros(){
+  const cxQ=document.getElementById('cx-quem'),
+        cxA=document.getElementById('cx-area'),
+        cxC=document.getElementById('cx-cli');
+  if(!cxQ||!cxA||!cxC) return;
+  /* Os três são CONSTRUÍDOS antes de qualquer um entrar na página. Se o módulo
+     estiver lá mas quebrar no meio, o `catch` cai nos controles nativos com os
+     marcadores de posição ainda intactos — construir e plantar de um em um
+     deixaria a régua pela metade, meio caixa e meio select. */
+  if(window.B4UFiltro) try{
+    const fq=B4UFiltro.criar({
+      id:'f-quem', rot:'De quem', itens:itensQuem(), marcados:F_QUEM,
+      /* Nasce cheio; zero marcado quer dizer "não me mostre nada". */
+      vazio:'nada', rotTodos:'Todo o time', rotNada:'Ninguém', rotTodas:'Todos',
+      /* Só este ganha o verde cheio: abrir para o time inteiro muda o significado
+         da tela de "o que eu tenho" para "o que existe". */
+      todosVerde:true,
+      aoMudar:m=>{ F_QUEM=m; desenharLista(); }
+    });
+    const fa=B4UFiltro.criar({
+      id:'f-area', rot:'Área', itens:itensArea(), marcados:F_AREA,
+      vazio:'nada', rotTodos:'Todas as áreas', rotNada:'Nenhuma área', rotTodas:'Todas',
+      aoMudar:m=>{ F_AREA=m; desenharLista(); }
+    });
+    const fc=B4UFiltro.criar({
+      id:'f-cli', rot:'Cliente', itens:itensCli(), marcados:F_CLI,
+      /* Nasce vazio, e vazio aqui quer dizer TODOS — são centenas de clientes. */
+      vazio:'todos', rotTodos:'Todos os clientes', rotNada:'Nenhum cliente',
+      aoMudar:m=>{ F_CLI=m; desenharLista(); }
+    });
+    FILTROS.quem=fq; FILTROS.area=fa; FILTROS.cli=fc;
+    por(cxQ,fq.no); por(cxA,fa.no); por(cxC,fc.no);
+    return;
+  }catch(e){ FILTROS.quem=FILTROS.area=FILTROS.cli=null; }
+  /* ── sem o módulo ──────────────────────────────────────────────────────────
+     Um <select> por filtro, com a opção "todos" no topo. Escolher um nome guarda
+     `[nome]`; escolher "Todo o time" guarda a lista inteira — o mesmo estado que
+     as caixas produzem, só que sem combinações. O cliente volta a ser a caixa
+     digitável de antes, que já sabe ler "250033; 250035" e mora aqui do lado. */
+  porHTML(cxQ,`<select class="filtro" id="f-quem" aria-label="De quem">
+    <option value="__todos__">Todo o time</option>
+    ${itensQuem().map(i=>`<option value="${esc(i.v)}">${esc(i.r)}</option>`).join('')}</select>`);
+  porHTML(cxA,`<select class="filtro" id="f-area" aria-label="Área">
+    <option value="__todas__">Todas as áreas</option>
+    ${itensArea().map(i=>`<option value="${esc(i.v)}">${esc(i.r)}</option>`).join('')}</select>`);
+  porHTML(cxC,`<input class="filtro" id="f-cli" list="dl-cli" autocomplete="off" aria-label="Cliente"
+    placeholder="Cliente — vários com ;" value="${F_CLI.length?esc(rotuloClientes(idsTexto(F_CLI))):''}">`);
+}
+/* Marca tudo de novo — é o botão da tela vazia e o atalho "todo o time". Escrever
+   no componente NÃO dispara o `aoMudar` dele (senão desenharia a lista duas
+   vezes), então quem chama redesenha. */
+function marcarTudo(qual){
+  if(qual==='quem'){ F_QUEM=todosOsValores(itensQuem()); if(FILTROS.quem) FILTROS.quem.marcados(F_QUEM); }
+  if(qual==='area'){ F_AREA=todosOsValores(itensArea()); if(FILTROS.area) FILTROS.area.marcados(F_AREA); }
+  desenharLista();
 }
 function desenharLista(){
   const box=document.getElementById('lista'); if(!box) return;
@@ -964,21 +1084,38 @@ function desenharLista(){
   document.getElementById('cont').textContent=vis.length+(vis.length===1?' tarefa':' tarefas');
   const CAB=`<div class="cabgrade"><span>Cliente</span><span>Assunto</span><span>Área</span>
     <span>Responsável</span><span>Situação</span><span>Prazo</span></div>`;
-  box.innerHTML = gs.length
-    ? gs.map(o=>`<div class="grupo ${o.g.k}"><h2>${esc(o.g.rot)}</h2><span class="n">${o.itens.length}</span></div>
+  box.innerHTML = gs.length ? gs.map(o=>`<div class="grupo ${o.g.k}"><h2>${esc(o.g.rot)}</h2><span class="n">${o.itens.length}</span></div>
                  ${CAB}<div class="lista">${o.itens.map(linhaHTML).join('')}</div>`).join('')
-    : `<div class="vazio">Nada por aqui com esses filtros.${F_QUEM==='__eu__'
-        ?' Ver <button type="button" class="link-btn" id="ir-time">todo o time</button>.':''}</div>`;
-  /* Os selects refletem o estado: recarregar ou trocar de filtro não pode deixar
-     a caixinha dizendo uma coisa e a lista mostrando outra. */
-  const q=document.getElementById('f-quem'), s=document.getElementById('f-sit'), c=document.getElementById('f-cli');
-  const a=document.getElementById('f-area');
-  if(q&&document.activeElement!==q){q.value=rotuloQuem(F_QUEM);}
-  if(q){q.classList.toggle('time',resolverQuem(F_QUEM).modo==='time');
-        if(document.activeElement!==q) q.classList.remove('ruim');}
-  if(s){s.value=F_SIT;}
-  if(a){a.value=F_AREA;}
-  if(c){c.classList.toggle('on',!!F_CLI);}
+                            : telaVazia();
+  /* Os controles refletem o estado: trocar de filtro pelo teclado, pelo botão da
+     tela vazia ou por um link não pode deixar a caixinha dizendo uma coisa e a
+     lista mostrando outra. Com o b4u-filtro.js no ar quem cuida disso é o próprio
+     componente (e o `marcarTudo`); o que sobra aqui é o select de situação e, sem
+     o módulo, os controles nativos. */
+  const s=document.getElementById('f-sit'); if(s) s.value=F_SIT;
+  if(FILTROS.quem) return;
+  const q=document.getElementById('f-quem'), a=document.getElementById('f-area'),
+        c=document.getElementById('f-cli');
+  if(q){ const tudo=marcadoTudo(F_QUEM,itensQuem());
+         q.value=tudo?'__todos__':(F_QUEM.length===1?F_QUEM[0]:'__todos__');
+         q.classList.toggle('time',tudo); }
+  if(a){ const tudo=marcadoTudo(F_AREA,itensArea());
+         a.value=tudo?'__todas__':(F_AREA.length===1?F_AREA[0]:'__todas__'); }
+  if(c) c.classList.toggle('on',F_CLI.length>0);
+}
+/* A tela vazia diz POR QUE está vazia. Nada marcado em "De quem" ou em "Área" é um
+   estado que a pessoa criou de propósito, e ele não pode parecer defeito nem
+   parecer "acabaram as tarefas": a frase nomeia o que está desmarcado e o botão ao
+   lado desfaz em um clique. Filtro válido sem resultado continua com a frase de
+   sempre. */
+function telaVazia(){
+  if(!F_QUEM.length) return `<div class="vazio">Ninguém marcado.
+    <button type="button" class="link-btn" id="marcar-quem">Marcar todo o time</button>.</div>`;
+  if(!F_AREA.length) return `<div class="vazio">Nenhuma área marcada.
+    <button type="button" class="link-btn" id="marcar-area">Marcar todas as áreas</button>.</div>`;
+  const tudo=marcadoTudo(F_QUEM,itensQuem());
+  return `<div class="vazio">Nada por aqui com esses filtros.${tudo?''
+    :' Ver <button type="button" class="link-btn" id="ir-time">todo o time</button>.'}</div>`;
 }
 
 /* ---------- ficha ---------- */
@@ -1155,7 +1292,8 @@ document.addEventListener('click',e=>{
   const linha=e.target.closest&&e.target.closest('.t');
   if(linha){ const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id); if(t) abrirFicha(t); return; }
   if(e.target.id==='nova'){ abrirFicha(null); return; }
-  if(e.target.id==='ir-time'){ F_QUEM='__todos__'; desenharLista(); return; }
+  if(e.target.id==='ir-time'||e.target.id==='marcar-quem'){ marcarTudo('quem'); return; }
+  if(e.target.id==='marcar-area'){ marcarTudo('area'); return; }
   if(e.target.id==='m-salvar'){ salvarFicha(); return; }
   /* Fechar, × e clique no véu não estão aqui: quem cuida deles é a casca do
      b4u-modal.js, que precisa passar pelo aviso de "tem coisa por gravar" antes
@@ -1170,19 +1308,21 @@ document.addEventListener('keydown',e=>{
     e.preventDefault(); const b=document.getElementById('busca'); if(b)b.focus(); }
 });
 document.addEventListener('change',e=>{
+  if(e.target.id==='f-sit'){ F_SIT=e.target.value; desenharLista(); }
+  /* Os três abaixo só existem SEM o b4u-filtro.js: com ele, `f-quem`, `f-area` e
+     `f-cli` são botões, e botão não dispara `change` nem `input`. Os checkboxes de
+     dentro do painel disparam, sim — mas sem `id`, e por isso não caem aqui. */
   if(e.target.id==='f-quem'){
-    const t=e.target.value.trim();
-    const n=normTxt(t);
-    /* Os dois estados rápidos voltam para a forma canônica: guardar "Minhas
-       tarefas" como texto faria o resto do código comparar frase em vez de
-       estado, e o link ?cli= que força "todo o time" pararia de casar. */
-    F_QUEM = (!t||n==='todo o time'||n==='time') ? QUEM_TIME
-           : (n==='minhas tarefas'||n==='minhas') ? QUEM_EU : t;
+    const v=e.target.value;
+    F_QUEM = v==='__todos__' ? todosOsValores(itensQuem()) : [v];
     desenharLista();
   }
-  if(e.target.id==='f-sit'){ F_SIT=e.target.value; desenharLista(); }
-  if(e.target.id==='f-area'){ F_AREA=e.target.value; desenharLista(); }
-  if(e.target.id==='f-cli'){ F_CLI=e.target.value; desenharLista(); }
+  if(e.target.id==='f-area'){
+    const v=e.target.value;
+    F_AREA = v==='__todas__' ? todosOsValores(itensArea()) : [v];
+    desenharLista();
+  }
+  if(e.target.id==='f-cli'){ filtroCliTexto(e.target); }
   if(e.target.id==='f-cli2'){ validarCliFicha(); }
   /* Marcou Feito: a data de hoje entra no campo AQUI, à vista, e não escondida no
      servidor — quem concluiu ontem corrige antes de salvar, em vez de descobrir
@@ -1198,31 +1338,20 @@ document.addEventListener('change',e=>{
 document.addEventListener('input',e=>{
   if(e.target.id==='busca'){ TERMO=e.target.value; desenharLista(); }
   if(e.target.id==='f-cli2'){ validarCliFicha(); }
-  /* O filtro de cliente resolve enquanto se digita e só filtra quando o texto
-     identifica cliente — filtrar a cada letra deixaria a lista piscando vazia no
-     meio de "Aj-u-b". Apagar o campo volta para todos.
-     Com ponto e vírgula vale para VÁRIOS: "250033; 250035" traz os dois. */
-  if(e.target.id==='f-cli'){
-    const el=e.target;
-    if(!el.value.trim()){ if(F_CLI){F_CLI='';desenharLista();} el.classList.remove('on'); return; }
-    const r=resolverClientes(el.value);
-    const novo=r.ok?idsTexto(r.ids):'';
-    el.classList.toggle('ruim',!novo);
-    el.title=novo?'':(r.msg||'Ainda não identifiquei esse cliente — a lista continua no filtro anterior.');
-    if(novo && novo!==String(F_CLI)){ F_CLI=novo; desenharLista(); }
-  }
-  /* Pessoas: mesma ideia, só filtra quando o texto identifica alguém. */
-  if(e.target.id==='f-quem'){
-    const t=e.target.value.trim(), n=normTxt(t);
-    if(!t){ if(F_QUEM!==QUEM_TIME){F_QUEM=QUEM_TIME;desenharLista();} return; }
-    if(n==='minhas tarefas'||n==='minhas'){ if(F_QUEM!==QUEM_EU){F_QUEM=QUEM_EU;desenharLista();} return; }
-    if(n==='todo o time'||n==='time'){ if(F_QUEM!==QUEM_TIME){F_QUEM=QUEM_TIME;desenharLista();} return; }
-    const rq=resolverQuem(t);
-    e.target.classList.toggle('ruim',rq.modo==='ruim');
-    e.target.title=rq.modo==='ruim'?(rq.msg||'Ainda não identifiquei essa pessoa — a lista continua no filtro anterior.'):'';
-    if(rq.modo==='lista' && t!==String(F_QUEM)){ F_QUEM=t; desenharLista(); }
-  }
+  if(e.target.id==='f-cli'){ filtroCliTexto(e.target); }
 });
+/* A caixa digitável de cliente — só no caminho SEM o b4u-filtro.js. Resolve
+   enquanto se digita e só filtra quando o texto identifica cliente: filtrar a cada
+   letra deixaria a lista piscando vazia no meio de "Aj-u-b". Apagar o campo volta
+   para todos. Com ponto e vírgula vale para VÁRIOS: "250033; 250035" traz os dois. */
+function filtroCliTexto(el){
+  if(!el.value.trim()){ if(F_CLI.length){F_CLI=[];desenharLista();} el.classList.remove('on','ruim'); return; }
+  const r=resolverClientes(el.value);
+  const novo=r.ok?r.ids:null;
+  el.classList.toggle('ruim',!novo);
+  el.title=novo?'':(r.msg||'Ainda não identifiquei esse cliente — a lista continua no filtro anterior.');
+  if(novo && idsTexto(novo)!==idsTexto(F_CLI)){ F_CLI=novo; desenharLista(); }
+}
 
 /* ---------- carga ---------- */
 function aplicar(d){
@@ -1235,7 +1364,17 @@ function aplicar(d){
 async function recarregar(){
   const d=await jsonp(API_URL+'?tipo=daily_equipe&chave='+encodeURIComponent(chaveAtual()));
   if(d&&d.erro) throw new Error(d.erro);
-  aplicar(d); desenharLista();
+  aplicar(d);
+  /* Relemos a planilha inteira: colaborador novo, cliente novo ou área nova têm de
+     aparecer nas caixas. O que estava marcado continua marcado — o componente
+     guarda os valores, não os índices. O que é NOVO não entra marcado sozinho:
+     mexer na seleção de quem está com a tela aberta seria mudar o que ela vê sem
+     ela ter pedido. Como o rótulo do botão deixa de dizer "todas", a mudança fica
+     à vista em vez de acontecer calada. */
+  if(FILTROS.quem) FILTROS.quem.itens(itensQuem());
+  if(FILTROS.area) FILTROS.area.itens(itensArea());
+  if(FILTROS.cli)  FILTROS.cli.itens(itensCli());
+  desenharLista();
 }
 /* ---------- aplicar SÓ o que mudou ----------
    Salvar relia a planilha inteira: com a carteira grande isso é uma volta ao
@@ -1263,11 +1402,22 @@ async function boot(){
     const d=await jsonp(API_URL+'?tipo=daily_equipe&chave='+encodeURIComponent(chaveAtual()));
     if(d&&d.erro) throw new Error(d.erro);
     aplicar(d);
+    /* ---------- o estado com que a tela abre ----------
+       DE QUEM abre no NOME de quem está usando — não em "minhas tarefas", que era
+       um rótulo a mais para a mesma coisa. Quando a rota não diz quem é (chave de
+       serviço, cadastro que não bate com a aba Colaboradores), o padrão honesto é
+       TODO MUNDO marcado: lista vazia agora quer dizer "não me mostre nada", e
+       abrir a tela nesse estado seria acusar a pessoa de um filtro que ela não
+       pôs. ÁREA abre com todas marcadas. CLIENTE abre vazio, que aqui quer dizer
+       todos (ver a nota do estado, lá em cima). */
+    F_QUEM = (EU&&EU.nome) ? [EU.nome] : todosOsValores(itensQuem());
+    F_AREA = todosOsValores(itensArea());
+    F_CLI  = [];
     /* ?cli=250001 abre já filtrado naquele cliente: é assim que o painel do
        colaborador manda para cá a partir do bloco de pendências da ficha. */
     const p=new URLSearchParams(location.search);
     const cli=(p.get('cli')||'').trim();
-    if(cli){ F_CLI=cli; F_QUEM='__todos__'; }
+    if(cli){ F_CLI=[cli]; F_QUEM=todosOsValores(itensQuem()); }
     if(p.get('nova')==='1') setTimeout(()=>abrirFicha(null),60);
     /* ?t=12 abre AQUELA tarefa. É o link que vai nos e-mails: um clique e a
        ficha está aberta, sem procurar na lista. Vem com "todo o time" e "todas
@@ -1276,9 +1426,10 @@ async function boot(){
     const alvo=(p.get('t')||'').trim();
     if(alvo){
       const t=TAREFAS.find(x=>String(x.id)===alvo);
-      if(t){ F_QUEM='__todos__'; F_SIT='__todas__'; setTimeout(()=>abrirFicha(t),60); }
+      if(t){ F_QUEM=todosOsValores(itensQuem()); F_SIT='__todas__'; setTimeout(()=>abrirFicha(t),60); }
     }
     document.getElementById('app').innerHTML=layout();
+    montarFiltros();
     desenharLista();
     if(window.B4UShell) B4UShell.montar({
       perfil:'equipe', ativo:'daily',
