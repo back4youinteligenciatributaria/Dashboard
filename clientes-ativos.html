@@ -709,6 +709,16 @@ function carregar(){
                 iniIdx:pi,fimIdx:pf,saidaIdx:(pf==null?null:pf+1),inicio:c.inicio,fim:c.fim};
       });
       PRODUTOS=d.produtos||[];
+      /* Quem está usando, para o botão da barra. ESTA ROTA AINDA NÃO MANDA O NOME:
+         só `tipo=equipe` (colaborador) e `tipo=daily_equipe` trazem um `eu`, e o
+         `?cod=` da URL é código de log, não nome — batizar o botão com ele seria
+         inventar. Então o botão fica com o rótulo genérico "Minha conta" e o painel
+         diz, sem rodeio, que não identificou quem está usando; o seletor de
+         aparência, que é o motivo de o botão existir, funciona igual.
+         A leitura de `d.eu` já está escrita: no dia em que `ativos_equipe` passar a
+         devolver `eu:{nome}` — o servidor já resolve o colaborador pela chave, em
+         `exigirEquipe_` — o nome aparece aqui sem tocar nesta tela. */
+      if(window.B4UShell) B4UShell.usuario({nome:(d.eu&&d.eu.nome)||''});
       const now=new Date();ENDIDX=idxYM(now.getFullYear(),now.getMonth()+1);STARTIDX=idxYM(INICIO_ANO,INICIO_MES);
       CALSTART=calcularInicioCalendario();
       lerURL();                       // a visão vem do endereço (C.10)
@@ -1151,6 +1161,11 @@ if (window.B4UShell) {
     ativo: 'ativos',
     link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
   });
+
+  /* O botão de quem está usando (e, com ele, o seletor de aparência) nasce junto
+     do menu lateral, com rótulo genérico. O nome entra depois, quando a API
+     responder — ver a chamada de `usuario({nome})` no carregar(). */
+  B4UShell.usuario();
   /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
      tela em que estava. O menu lateral é o contrário disso: é navegação DENTRO
      do painel, e sair pela guia atual é o gesto — a mesma exceção que o logo e o

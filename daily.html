@@ -168,13 +168,27 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);
   font-size:var(--fs-3);line-height:1.5;-webkit-font-smoothing:antialiased}
-.barra{position:sticky;top:0;z-index:30;height:52px;display:flex;align-items:center;gap:10px;
-  padding:0 14px;background:var(--brand-dark);color:#fff}
+/* Gap e recuo laterais são os das telas irmãs (12px / 20px). Eram 10 e 14 — pouco
+   para alguém defender e o bastante para a etiqueta "pular" de lugar ao trocar de
+   tela pelo menu lateral. A ALTURA continua travada em 52px: é a medida que o
+   `.topo{top:52px}` de duas irmãs escreveu à mão, e o botão de três riscos do
+   b4u-shell.js foi desenhado com 28px justamente para não empurrá-la. */
+.barra{position:sticky;top:0;z-index:30;height:52px;display:flex;align-items:center;gap:12px;
+  padding:0 20px;background:var(--brand-dark);color:#fff}
 .barra .logo{font-weight:800;font-size:17px;letter-spacing:-.02em}
 .barra .logo .y{color:var(--brand-euc)}
-.barra .titulo{background:rgba(255,255,255,.12);border-radius:var(--radius-pill);
-  padding:5px 13px;font-size:var(--fs-3);font-weight:700}
+/* `.tag` e não `.titulo`: é o nome que as outras oito telas da equipe usam para o
+   MESMO elemento, e uma barra padronizada não pode ter dois nomes para a mesma
+   coisa — quem for mexer na barra de todas procuraria por `.tag` e passaria batido
+   por esta. A declaração também é a delas, letra por letra: a etiqueta desta tela
+   era um degrau maior e um tom mais clara que a das irmãs. */
+.barra .tag{font-size:var(--fs-2);font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);
+  padding:5px 11px;border-radius:var(--radius-pill);white-space:nowrap}
 .barra .spacer{flex:1}
+/* A contagem de tarefas continua sendo ESCRITA (desenharLista(), a cada
+   redesenho), só não é mais mostrada: ela é o `#cnt` desta tela, e o dono tirou a
+   contagem da barra. Quem a esconde é a folha do b4u-shell.js, para ela voltar
+   sozinha se o shell não carregar. */
 .barra .cont{font-size:var(--fs-2);color:#cfe6e2;white-space:nowrap}
 .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 80px}
 
@@ -580,7 +594,7 @@ function b4uParaPlanilha(valor,coluna){
 <body data-b4u-espera="equipe">
 <div class="barra">
   <span class="logo"><span>back</span><span class="y">4you</span></span>
-  <span class="titulo">Tarefas Daily</span>
+  <span class="tag">Tarefas Daily</span>
   <span class="spacer"></span>
   <span class="cont" id="cont"></span>
 </div>
@@ -748,15 +762,25 @@ const idsTexto=ids=>(ids||[]).join('; ');
 /* O botão fechado mostra o PRIMEIRO NOME; o painel e o `title` continuam com o nome
    inteiro. "Gian Carlo Paradisi" no botão comia 179px da régua e empurrava a linha
    toda — e ninguém precisa do sobrenome para saber de quem é o filtro.
-   As partículas ("de", "da", "dos"…) são puladas pela MESMA lista que o
-   `euIniciais()` do colaborador.html usa, para as duas telas concordarem sobre onde
-   um nome começa. Nome de uma palavra só devolve essa palavra; nome que só tem
-   partícula devolve o que veio, em vez de devolver nada.
    Dois marcados com o mesmo primeiro nome NÃO são desambiguados: o "+N" já diz que
-   há mais de um e o `title` lista os dois. Inicial de sobrenome numa régua é ruído. */
+   há mais de um e o `title` lista os dois. Inicial de sobrenome numa régua é ruído.
+
+   ONDE ESTÁ A REGRA. No b4u-shell.js (`B4UShell.primeiroNome`), junto da lista de
+   partículas ("de", "da", "dos"…) e do `B4UShell.iniciais()` que o botão de quem
+   está usando aplica no selo da barra. Ela morava em dois lugares — aqui e no
+   colaborador.html — e os dois discordavam: lá a partícula era pulada para a
+   inicial e NÃO para o primeiro nome. Uma implementação, uma resposta.
+
+   A LISTA ABAIXO É CÓPIA DE RESERVA, no mesmo espírito da URL da API que cada
+   página guarda por baixo do config.js: ela só entra em cena se o b4u-shell.js
+   não carregar — e aí não há botão nem selo com quem concordar, mas a régua desta
+   tela continua precisando de um rótulo curto. Quem manda, quando os dois estão
+   de pé, é sempre o shell. Nome de uma palavra devolve essa palavra; nome que só
+   tem partícula devolve o que veio, em vez de devolver nada. */
 const PARTICULAS=['de','da','do','das','dos','e'];
 function primeiroNome(nome){
   const t=String(nome||'').trim();
+  if(window.B4UShell && typeof B4UShell.primeiroNome==='function') return B4UShell.primeiroNome(t);
   const partes=t.split(/\s+/).filter(p=>p&&PARTICULAS.indexOf(normTxt(p))<0);
   return partes[0]||t;
 }
@@ -1360,6 +1384,11 @@ function aplicar(d){
   SITUACOES=d.situacoes||['A fazer','Em andamento','Esperando terceiro','Feito','Cancelado'];
   AREAS=d.areas||['Contábil','Pessoal','Fiscal','Jurídico','Societário','Restituição','Financeiro','Atendimento','Gestão'];
   HOJE=d.hoje||''; PLANILHA=d.planilha_url||'';
+  /* O nome de quem está usando vai para o botão da barra. Vem de `d.eu`, o mesmo
+     campo que decide o que é "meu" na régua de filtros — então a barra e o filtro
+     nunca podem discordar sobre quem é a pessoa. Fica aqui, no `aplicar()`, e não
+     na carga: a recarga em segundo plano passa por aqui também. */
+  if(window.B4UShell) B4UShell.usuario({nome:(EU&&EU.nome)||''});
 }
 async function recarregar(){
   const d=await jsonp(API_URL+'?tipo=daily_equipe&chave='+encodeURIComponent(chaveAtual()));
@@ -1398,6 +1427,12 @@ function aplicarUma(d){
   return true;
 }
 async function boot(){
+  /* O botão de quem está usando nasce ANTES da resposta, com rótulo genérico: ele
+     é a única porta para o seletor de aparência, e essa porta não pode depender de
+     a API responder. O nome entra por cima em `aplicar()`. Nesta tela o `montar()`
+     do menu lateral fica lá embaixo, depois do layout — mas o botão não espera por
+     ele: a barra já está no HTML desde o começo. */
+  if(window.B4UShell) B4UShell.usuario();
   try{
     const d=await jsonp(API_URL+'?tipo=daily_equipe&chave='+encodeURIComponent(chaveAtual()));
     if(d&&d.erro) throw new Error(d.erro);

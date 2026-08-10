@@ -201,47 +201,17 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra .tag{font-size:var(--fs-2);font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill);white-space:nowrap}
 .barra .spacer{flex:1}
 /* O contador de clientes saiu da barra e deu lugar ao botão de quem está usando
-   (.eu-menu, logo abaixo). O elemento NÃO foi apagado: o boot() continua
+   (o `.b4s-eu` do shell). O elemento NÃO foi apagado: o boot() continua
    escrevendo nele e a regra segue aqui de pé — ele nasce com `hidden` no HTML.
    O número não se perdeu: ele já era dito, por extenso, na linha de dica logo
    abaixo da busca de clientes ("…escolher entre os 112 clientes"), que é onde
    ele de fato serve para alguma coisa. Ver o comentário no <span id="cnt">. */
 .barra .cnt{font-size:var(--fs-2);color:#bcd;white-space:nowrap}
 
-/* ---------- Quem está usando (botão do nome + painelzinho) ----------
-   Fica no canto direito da barra, no lugar que era do contador. É o único
-   caminho para o seletor de tema, então ele NÃO some no celular — no telefone
-   encolhe para as iniciais e o nome inteiro fica no title/aria-label.
-   O painel não é modal: é um menu suspenso de barra. Não usa a casca do
-   b4u-modal.js de propósito — véu, trava de rolagem e armadilha de foco seriam
-   caros demais para duas linhas de conteúdo (e esta página nem carrega o
-   arquivo). O que ele precisa ter, tem: Esc, clique fora, foco de volta. */
-.eu-menu{position:relative;display:flex;align-items:center}
-.eu-btn{display:flex;align-items:center;gap:7px;font-family:inherit;font-size:var(--fs-2);
-  font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);border:1px solid transparent;
-  padding:3px 10px 3px 3px;border-radius:var(--radius-pill);cursor:pointer;max-width:46vw}
-.eu-btn:hover{background:rgba(255,255,255,.18);color:#fff}
-.eu-btn[aria-expanded="true"]{background:rgba(255,255,255,.20);border-color:rgba(255,255,255,.35);color:#fff}
-/* Selo redondo: círculo de verdade, então o 50% vem escrito aqui e não pela
-   escala de cantos — é a exceção que o bloco B4U-DESIGN já prevê. */
-.eu-ini{flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand-teal);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.3px}
-.eu-ini .b4i{width:14px;height:14px}
-.eu-rot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-.eu-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:5;min-width:232px;
-  max-width:min(320px,92vw);background:var(--surface);color:var(--ink);
-  border:1px solid var(--line-2);border-radius:var(--radius);
-  box-shadow:0 12px 30px rgba(7,48,52,.16);padding:12px;text-align:left}
-.eu-pop[hidden]{display:none}
-/* O painel recebe o foco quando não há nada focável dentro dele (shell fora do
-   ar). Sem isto o Esc não teria de onde sair. O anel de foco fica por conta do
-   :focus-visible compartilhado; o clique não precisa desenhar contorno. */
-.eu-pop:focus{outline:none}
-.eu-nome{font-size:var(--fs-3);font-weight:800;color:var(--ink);line-height:1.35;word-break:break-word}
-.eu-nome.eu-generico{font-weight:700;color:var(--muted)}
-.eu-tema{margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}
-.eu-tema[hidden]{display:none}
+/* O botão de quem está usando (e o painelzinho do seletor de aparência) tem CSS
+   e markup no b4u-shell.js, sob `.b4s-eu*` — ele é o mesmo nas nove telas da
+   equipe e não pode viver em nove folhas. As ~30 linhas que estavam aqui foram
+   para lá sem mudar um pixel. */
 .wrap{max-width:1000px;margin:0 auto;padding:20px 22px 70px}
 
 /* Títulos de seção
@@ -629,17 +599,11 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
    com `hidden`), mas a regra do celular fica: se um dia alguém reexibir o
    elemento, o telefone continua sendo o lugar onde ele não cabe. */
 .barra{flex-wrap:wrap}
+/* O botão de quem está usando NÃO some no celular — é a única porta para o
+   seletor de aparência. Quem o encolhe (some o texto, cresce o selo) é a regra
+   `@media(max-width:560px)` do próprio b4u-shell.js, junto do resto do botão. */
 @media(max-width:560px){
   .barra .cnt{display:none}
-  /* O botão de quem está usando NÃO some aqui — é a única porta para o seletor
-     de tema. Ele encolhe: fica só o selo com as iniciais, e o nome inteiro
-     continua no title e no aria-label. O selo cresce de 24 para 28 e o padding
-     de 3 para 5: sem o texto ao lado, o que sobra é o alvo do polegar, e 30px
-     era pequeno demais para o único botão da barra no telefone. */
-  .eu-rot{display:none}
-  .eu-btn{padding:5px;max-width:none}
-  .eu-ini{width:28px;height:28px;font-size:12px}
-  .eu-ini .b4i{width:16px;height:16px}
 }
 </style>
 <script src="config.js"></script>
@@ -854,25 +818,11 @@ function b4uParaPlanilha(valor,coluna){
        vista na dica embaixo da busca de clientes, que é onde ele é usado. -->
   <span class="cnt" id="cnt" hidden></span>
 
-  <!-- Quem está usando. Nasce com rótulo genérico porque o nome só chega com a
-       resposta da API (EU.nome, em boot()); marcarEu() troca o rótulo quando o
-       dado chega. Rótulo honesto agora é melhor que um espaço em branco que
-       depois se preenche sozinho. -->
-  <div class="eu-menu" id="eu-menu">
-    <button type="button" class="eu-btn" id="eu-btn" aria-haspopup="dialog"
-            aria-expanded="false" aria-controls="eu-pop"
-            aria-label="Minha conta" title="Minha conta">
-      <span class="eu-ini" id="eu-ini" aria-hidden="true"><svg class="b4i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c0-3.6 3.4-6.2 7.5-6.2s7.5 2.6 7.5 6.2"/></svg></span>
-      <span class="eu-rot" id="eu-rot">Minha conta</span>
-    </button>
-    <!-- role="dialog" e não "menu": o conteúdo são um nome e o seletor de tema
-         (que vem pronto do b4u-shell.js), não uma lista de menuitem. O nome é o
-         rótulo acessível do painel — daí o aria-labelledby. -->
-    <div class="eu-pop" id="eu-pop" role="dialog" aria-labelledby="eu-nome" tabindex="-1" hidden>
-      <div class="eu-nome eu-generico" id="eu-nome">Identificando…</div>
-      <div class="eu-tema" id="eu-tema" hidden></div>
-    </div>
-  </div>
+  <!-- Quem está usando NÃO é escrito aqui: o botão vem do b4u-shell.js
+       (`B4UShell.usuario()`), que o pendura no fim desta barra e é o mesmo nas
+       nove telas da equipe. Nasce com rótulo genérico porque o nome só chega com
+       a resposta da API (EU.nome, em boot()) — rótulo honesto agora é melhor que
+       um espaço em branco que depois se preenche sozinho. -->
 </div>
 
 <!-- PORTARIA — o que se vê enquanto a API não confirma a chave. Ver boot(). -->
@@ -1324,143 +1274,24 @@ function fecharRestituicao(){
 
 /* ---------- Quem está usando: o botão do nome na barra ----------
  *
- * DE ONDE VEM O NOME. Da resposta de `tipo=equipe`, no campo `eu` — o mesmo
- * objeto que já manda nas permissões (`podeArea`) e no que é "meu" na Daily
- * (`EU.nome`). O boot() guarda em `EU` e chama `marcarEu()`. A chave da URL é o
- * código do dia da pessoa; quem traduz código em nome é o servidor, então antes
- * da resposta a página honestamente não sabe quem está ali — e o botão diz
- * "Minha conta" em vez de fingir um nome ou ficar em branco.
+ * O BOTÃO SAIU DAQUI. Ele nasceu nesta tela, e em 10/08/2026 o dono pediu a mesma
+ * barra nas nove telas da equipe ("título seguido do usuário, e só"). Coisa que é
+ * de todas as telas mora no b4u-shell.js — que é, aliás, onde o seletor de
+ * aparência já morava. As ~120 linhas que estavam aqui (markup, CSS, foco, Esc,
+ * clique fora, iniciais) viraram `B4UShell.usuario()`, sem mudar um pixel.
  *
- * O QUE O PAINEL TEM. O nome e o seletor de tema. Mais nada: deste lado não há
- * dado de empresa para mostrar, e um painel com um campo inventado seria pior
- * que um painel curto.
+ * DE ONDE VEM O NOME, que é a parte que continua sendo DESTA tela: da resposta de
+ * `tipo=equipe`, no campo `eu` — o mesmo objeto que já manda nas permissões
+ * (`podeArea`) e no que é "meu" na Daily. O boot() guarda em `EU` e passa adiante.
+ * A chave da URL é o código do dia da pessoa; quem traduz código em nome é o
+ * servidor, então antes da resposta a tela honestamente não sabe quem está ali — e
+ * o botão diz "Minha conta" em vez de fingir um nome ou ficar em branco.
  *
- * O SELETOR DE TEMA NÃO É DESENHADO AQUI. Ele vem pronto e já ligado de
- * `B4UShell.seletorTema()`. Se o b4u-shell.js não carregou (ou é uma versão
- * antiga em cache, sem essa função), o painel abre só com o nome: a faixa do
- * tema fica `hidden` e nada vai para o console.
+ * SE O b4u-shell.js NÃO CARREGAR não há botão, nem menu lateral, nem seletor de
+ * aparência: a tela volta a ser o que era antes dele, que é a regra da casa.
  */
-const EU_ROT_GENERICO='Minha conta';
-
-/* Iniciais para o telefone, onde só cabe o selo. "de/da/do/dos/das/e" não são
-   nome de ninguém e não podem virar inicial. */
-function euIniciais(nome){
-  const partes=String(nome||'').trim().split(/\s+/)
-    .filter(p=>p && !['de','da','do','das','dos','e'].includes(normTxt(p)));
-  if(!partes.length) return '';
-  const a=partes[0].charAt(0);
-  const b=partes.length>1 ? partes[partes.length-1].charAt(0) : '';
-  return (a+b).toLocaleUpperCase('pt-BR');
-}
-function euPrimeiroNome(nome){ return String(nome||'').trim().split(/\s+/)[0]||''; }
-
-/* Chamado pelo boot() assim que `EU` existe. Também é seguro chamar sem nome
-   nenhum: aí o botão só continua genérico. */
 function marcarEu(){
-  const bt=document.getElementById('eu-btn');
-  const rot=document.getElementById('eu-rot');
-  const ini=document.getElementById('eu-ini');
-  const nm=document.getElementById('eu-nome');
-  if(!bt||!rot||!ini||!nm) return;
-  const nome=String((EU&&EU.nome)||'').trim();
-  if(!nome){
-    /* A API respondeu e mesmo assim não veio nome (backend antigo, ou payload de
-       cache anterior ao `eu`). O painel não mente: diz que não identificou. O
-       tema continua funcionando, que é o que ele tem para oferecer. */
-    nm.textContent='Não identifiquei quem está usando.';
-    nm.classList.add('eu-generico');
-    return;
-  }
-  rot.textContent=euPrimeiroNome(nome);
-  ini.textContent=euIniciais(nome);      // troca o boneco genérico pelas iniciais
-  bt.title=nome;
-  /* O nome visível ("Gian") está contido no rótulo acessível ("Gian … — minha
-     conta"), como manda o critério de rótulo no nome; e o "minha conta" é o que
-     diz, para quem não vê a barra, que este botão abre alguma coisa. */
-  bt.setAttribute('aria-label',nome+' — minha conta');
-  nm.textContent=nome;
-  nm.classList.remove('eu-generico');
-}
-
-/* Enfia o seletor de tema no painel. Tenta de novo a cada abertura enquanto não
-   conseguir — assim um b4u-shell.js que chegou atrasado ainda é aproveitado. */
-function euMontarTema(){
-  const cx=document.getElementById('eu-tema'); if(!cx) return;
-  if(cx.dataset.pronto==='1') return;
-  try{
-    if(window.B4UShell && typeof B4UShell.seletorTema==='function'){
-      const el=B4UShell.seletorTema();
-      if(el && el.nodeType===1){
-        cx.appendChild(el); cx.dataset.pronto='1'; cx.hidden=false; return;
-      }
-    }
-  }catch(e){ /* seletor quebrado não pode levar o painel junto */ }
-  cx.hidden=true;
-}
-
-function euAberto(){
-  const pop=document.getElementById('eu-pop');
-  return !!(pop && !pop.hidden);
-}
-/* `focar` separa quem abriu pelo teclado (queremos o foco lá dentro) de quem
-   abriu pelo mouse — aqui os dois levam o foco ao painel, porque sem isso o Tab
-   seguinte sairia da barra e deixaria o painel aberto e órfão. */
-function euAbrir(v){
-  const bt=document.getElementById('eu-btn'), pop=document.getElementById('eu-pop');
-  if(!bt||!pop) return;
-  if(v){
-    euMontarTema();
-    pop.hidden=false;
-    bt.setAttribute('aria-expanded','true');
-    const alvo=pop.querySelector('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
-    (alvo||pop).focus();
-  }else{
-    pop.hidden=true;
-    bt.setAttribute('aria-expanded','false');
-  }
-}
-/* Fechar DEVOLVENDO o foco: só para quem fechou de propósito (Esc, ou clicar de
-   novo no botão). Quem saiu por Tab ou clicou noutro canto da tela já escolheu
-   onde quer estar — puxar o foco de volta seria prender a pessoa. */
-function euFechar(devolveFoco){
-  if(!euAberto()) return;
-  euAbrir(false);
-  if(devolveFoco){ const bt=document.getElementById('eu-btn'); if(bt) bt.focus(); }
-}
-
-function ligarEu(){
-  const menu=document.getElementById('eu-menu');
-  const bt=document.getElementById('eu-btn');
-  const pop=document.getElementById('eu-pop');
-  if(!menu||!bt||!pop) return;
-
-  bt.addEventListener('click', e=>{ e.preventDefault(); euAberto()?euFechar(true):euAbrir(true); });
-  /* Seta para baixo abre, como em qualquer botão que tem painel pendurado. */
-  bt.addEventListener('keydown', e=>{
-    if((e.key==='ArrowDown'||e.key==='ArrowUp') && !euAberto()){ e.preventDefault(); euAbrir(true); }
-  });
-  /* Esc fecha de qualquer lugar de dentro (e do próprio botão) e devolve o foco.
-     Na fase de captura para chegar antes de quem mais escuta Esc nesta tela. */
-  menu.addEventListener('keydown', e=>{
-    if((e.key==='Escape'||e.keyCode===27) && euAberto()){ e.stopPropagation(); euFechar(true); }
-  }, true);
-  /* Saiu do painel pelo teclado (Tab no último item): fecha, sem puxar o foco. */
-  menu.addEventListener('focusout', e=>{
-    const vai=e.relatedTarget;
-    if(!euAberto()) return;
-    if(vai && menu.contains(vai)) return;
-    /* relatedTarget nulo é clique fora ou janela perdendo o foco — o handler de
-       clique lá embaixo resolve o primeiro, e o segundo não deve fechar nada. */
-    if(!vai) return;
-    euFechar(false);
-  });
-  /* Clique fora fecha. Listener próprio (e não o do ligarCombo) porque este
-     botão existe desde a portaria, antes de a API dizer sim. */
-  document.addEventListener('click', e=>{
-    if(!euAberto()) return;
-    if(e.target.closest && e.target.closest('#eu-menu')) return;
-    euFechar(false);
-  });
+  if(window.B4UShell) B4UShell.usuario({nome:(EU&&EU.nome)||''});
 }
 
 /* ---- Painel de um cliente ---- */
@@ -2563,11 +2394,11 @@ if (window.B4UShell) {
   });
 }
 
-/* O botão de quem está usando é ligado ANTES do boot(), e de fora do `if` do
-   shell: ele existe desde a portaria, com rótulo genérico, e o seletor de tema
-   tem de funcionar mesmo enquanto a API não respondeu — ou se ela nunca
-   responder. O nome entra depois, por marcarEu(). */
-ligarEu();
+/* O botão de quem está usando nasce ANTES do boot(): ele existe desde a portaria,
+   com rótulo genérico, e o seletor de aparência tem de funcionar mesmo enquanto a
+   API não respondeu — ou se ela nunca responder. O nome entra depois, por
+   marcarEu(). */
+if (window.B4UShell) B4UShell.usuario();
 
 boot();
 </script>

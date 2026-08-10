@@ -1073,6 +1073,12 @@ function carregar(){
   if(cod)u+='&cod='+encodeURIComponent(cod);
   return jsonp(u)
     .then(d=>{if(d.erro)throw new Error(d.erro);LINHAS=d.linhas||[];RESPNOME=d.responsavel||'';setSave('','');render();
+      /* Esta é a ÚNICA rota de tela (fora colaborador e daily) que já sabe o nome
+         de quem está usando: `montarRestituicaoEquipe_` resolve o colaborador a
+         partir da chave e devolve em `responsavel`. Antes ele era pendurado no
+         título da barra ("Restituição · Fulano"); agora vai para o botão de quem
+         está usando, que é onde ele está em todas as outras. */
+      if(window.B4UShell) B4UShell.usuario({nome:RESPNOME});
       /* conteúdo já pintado por baixo: a barra corre até 100% e o overlay sai */
       if(window.B4UEspera)B4UEspera.concluir();})
     /* O texto da exceção continua decidindo QUAL tela mostrar — ele só não pode
@@ -1115,7 +1121,12 @@ function lerURL(){
    depois os quadros de prazo, e só então a grade. Nada foi embora — os 24 chips
    viraram quatro listas suspensas e deixaram de ser uma parede. */
 function render(){
-  document.getElementById('tag').textContent='Restituição'+(RESPNOME?' · '+RESPNOME:'');
+  /* Só "Restituição". O "· Fulano" que vinha grudado no título saiu daqui: o dono
+     pediu a mesma barra nas nove telas — título seguido do usuário, e só — e quem
+     diz de quem é a carteira agora é o botão de quem está usando, no canto
+     direito, igual às outras oito. O RESPNOME continua sendo lido: ele ainda é o
+     responsável padrão da linha em `textoResp()`. */
+  document.getElementById('tag').textContent='Restituição';
   const termo=lerURL();   // a visão vem do endereço, não zerada
   TETO=PASSO;
   document.getElementById('app').innerHTML=`
@@ -1989,6 +2000,11 @@ if (window.B4UShell) {
     ativo: 'restituicao',
     link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
   });
+
+  /* O botão de quem está usando (e, com ele, o seletor de aparência) nasce junto
+     do menu lateral, com rótulo genérico. O nome entra depois, quando a API
+     responder — ver a chamada de `usuario({nome})` no carregar(). */
+  B4UShell.usuario();
   /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
      tela em que estava ao abrir um link do cliente. O menu lateral é o contrário
      disso: é navegação DENTRO do painel, e sair pela guia atual é o gesto — a

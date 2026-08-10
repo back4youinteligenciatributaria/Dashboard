@@ -497,7 +497,11 @@ mark{background:#FFF3B0;color:inherit;border-radius:var(--radius-sm);padding:0 2
 .cli-ro{font-size:13px;padding:8px 10px;border:1px dashed var(--line-2);border-radius:var(--radius-sm);
   background:#EFE8DE;color:var(--ink-2);word-break:break-word}
 @media(max-width:600px){.campos{grid-template-columns:1fr}}
-@media(max-width:560px){.resumo{grid-template-columns:1fr}.barra .tag{display:none}}
+/* O título NÃO some mais no telefone: o dono pediu a mesma barra em todas as
+   telas da equipe — título e quem está usando, e só. Ele cabia mal quando a
+   barra ainda carregava contador, "Planilha ↗" e "← Painel"; hoje esses três
+   saem da vista pela folha do b4u-shell.js e sobra espaço de sobra. */
+@media(max-width:560px){.resumo{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* Todo link abre em guia nova (<base target="_blank">) — o colaborador nunca
    perde a tela em que estava. Logo e "← Painel" são a exceção: são o gesto de
@@ -749,7 +753,7 @@ function b4uParaPlanilha(valor,coluna){
 <body data-b4u-espera="equipe">
 <div class="barra">
   <a class="logo" id="logo-home" href="colaborador" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
-  <span class="tag">👥 Contatos · equipe</span>
+  <span class="tag">Contatos · equipe</span>
   <span class="spacer"></span>
   <span class="save-status" id="saveStatus"></span>
   <span class="cnt" id="cnt"></span>
@@ -2195,6 +2199,16 @@ async function carregar(primeira){
        _email0:String(c.email==null?'':c.email).trim()}));
     CLIENTES=(d.clientes||[]).map(c=>({id:String(c.id),nome:String(c.nome||'')}));
     NOME={};CLIENTES.forEach(c=>NOME[c.id]=c.nome);
+    /* Quem está usando, para o botão da barra. ESTA ROTA AINDA NÃO MANDA O NOME:
+       só `tipo=equipe` (colaborador) e `tipo=daily_equipe` trazem um `eu`, e o
+       `?cod=` da URL é código de log, não nome — batizar o botão com ele seria
+       inventar. Então o botão fica com o rótulo genérico "Minha conta" e o painel
+       diz, sem rodeio, que não identificou quem está usando; o seletor de
+       aparência, que é o motivo de o botão existir, funciona igual.
+       A leitura de `d.eu` já está escrita: no dia em que `contatos_equipe` passar a
+       devolver `eu:{nome}` — o servidor já resolve o colaborador pela chave, em
+       `exigirEquipe_` — o nome aparece aqui sem tocar nesta tela. */
+    if(window.B4UShell) B4UShell.usuario({nome:(d.eu&&d.eu.nome)||''});
     agrupar();
     if(primeira){
       lerURL();document.getElementById('app').innerHTML=layout();   // a visão vem do endereço (C.10)
@@ -2255,6 +2269,11 @@ if (window.B4UShell) {
     ativo: 'contatos',
     link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
   });
+
+  /* O botão de quem está usando (e, com ele, o seletor de aparência) nasce junto
+     do menu lateral, com rótulo genérico. O nome entra depois, quando a API
+     responder — ver a chamada de `usuario({nome})` no carregar(). */
+  B4UShell.usuario();
   /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
      tela em que estava ao abrir um link do contato. O menu lateral segue a MESMA
      regra: o dono decidiu que tudo abre em guia nova, sem exceção, e o próprio

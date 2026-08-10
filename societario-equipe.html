@@ -922,6 +922,16 @@ function carregar(){
          "Etapa N" do cabeçalho e manda aqui. Eram 10 fixas escritas neste
          arquivo, e acrescentar a coluna na planilha não adiantava nada. */
       ETAPAS_MAX=Math.max(1,+d.etapas_max||10);
+      /* Quem está usando, para o botão da barra. ESTA ROTA AINDA NÃO MANDA O NOME:
+         só `tipo=equipe` (colaborador) e `tipo=daily_equipe` trazem um `eu`, e o
+         `?cod=` da URL é código de log, não nome — batizar o botão com ele seria
+         inventar. Então o botão fica com o rótulo genérico "Minha conta" e o painel
+         diz, sem rodeio, que não identificou quem está usando; o seletor de
+         aparência, que é o motivo de o botão existir, funciona igual.
+         A leitura de `d.eu` já está escrita: no dia em que `societario_equipe` passar a
+         devolver `eu:{nome}` — o servidor já resolve o colaborador pela chave, em
+         `exigirEquipe_` — o nome aparece aqui sem tocar nesta tela. */
+      if(window.B4UShell) B4UShell.usuario({nome:(d.eu&&d.eu.nome)||''});
       PROCS=(d.processos||[]).map(p=>{p._visN=p.etapas.reduce((m,e)=>e.nome?e.n:m,0);return p;});render();
       /* A lista já está pintada: a barra corre até 100% e o overlay sai revelando
          a tela pronta, sem somar espera de verdade. */
@@ -1912,6 +1922,11 @@ if (window.B4UShell) {
     ativo: 'societario',
     link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
   });
+
+  /* O botão de quem está usando (e, com ele, o seletor de aparência) nasce junto
+     do menu lateral, com rótulo genérico. O nome entra depois, quando a API
+     responder — ver a chamada de `usuario({nome})` no carregar(). */
+  B4UShell.usuario();
   /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
      tela em que estava ao abrir um documento. O menu lateral é o contrário
      disso: é navegação DENTRO do painel, e sair pela guia atual é o gesto — a

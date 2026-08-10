@@ -132,71 +132,106 @@
    * ═════════════════════════════════════════════════════════════════════════ */
 
   var TEMA_CHAVE = 'b4s_tema';
-  var TEMA_PADRAO = 'areia';
+  var TEMA_PADRAO = 'back4you';
 
-  /* A ordem é a da conversa com quem escolhe: primeiro o que ele já conhece,
-     depois as três razões de trocar — ler melhor, caber mais, cansar menos.
-     A dica não é enfeite: "Sereno" sozinho não diz nada a ninguém. */
+  /* Três peles, e a razão de serem três: o dono disse que o problema NÃO é
+     acessibilidade — é monotonia. Ninguém aqui está com dificuldade de ler ou
+     de caber; as pessoas só queriam poder trocar a cara da tela de vez em
+     quando. Isso muda o que uma pele deve ser: ela precisa ser BONITA e
+     VISIVELMENTE diferente, não um eixo de 1px.
+
+     Por isso morreram o "Papel" (era um botão de trocar a fonte com nome de
+     tema) e o "Compacto" (mexia só na letra e prometia densidade que não
+     entregava, porque padding e gap estão escritos à mão nas 22 páginas). */
   var TEMAS = [
-    { id:'areia',    rot:'Areia',    dica:'O padrão da casa: fundo bege e cantos discretos.' },
-    { id:'papel',    rot:'Papel',    dica:'Branco e letra com serifa, para leitura longa.' },
-    { id:'compacto', rot:'Compacto', dica:'Letra e cantos menores: cabe mais lista na tela.' },
-    { id:'sereno',   rot:'Sereno',   dica:'Tons frios, cantos redondos e mais respiro.' }
+    { id:'back4you', rot:'Back4you', dica:'A casa: bege, verde-escuro e cantos discretos.' },
+    { id:'sereno',   rot:'Sereno',   dica:'Escuros atenuados puxando para o azul, cantos redondos.' },
+    { id:'jardim',   rot:'Jardim',   dica:'Verdes serenos com detalhes floridos.' }
   ];
 
-  /* AREIA NÃO TEM BLOCO, e isso é escolha. Ela É o `:root` do núcleo, letra por
-     letra. Um bloco `html[data-tema=areia]` teria de repetir 19 tokens só para
-     chegar no mesmo lugar — e no dia em que alguém mudasse um hex do núcleo, a
-     areia seria o único tema que NÃO mudaria junto, porque estaria congelada na
-     cópia. Sem bloco, "areia" quer dizer literalmente "sem pele por cima".
+  /* Pele antiga guardada no aparelho não pode virar tela quebrada. "areia" é o
+     nome velho do padrão e continua valendo como apelido; "papel" e "compacto"
+     não existem mais e caem no padrão pelo `temaValido()`. Sem esta linha, quem
+     escolheu "areia" um dia veria o `temaValido()` devolver o padrão — que é o
+     MESMO desenho, então não quebraria nada, mas o rádio do seletor apareceria
+     sem nenhuma opção marcada até o primeiro clique. */
+  var TEMA_APELIDO = { areia: 'back4you' };
+
+  /* BACK4YOU NÃO TEM BLOCO DE COR, e isso é escolha. Ela É o `:root` do núcleo,
+     letra por letra. Um bloco próprio teria de repetir 19 tokens só para chegar
+     no mesmo lugar — e no dia em que alguém mudasse um hex do núcleo, ela seria
+     a única pele que NÃO mudaria junto, porque estaria congelada na cópia. Sem
+     bloco, "Back4you" quer dizer literalmente "sem pele por cima".
 
      Nenhum bloco redeclara token que ele não muda: valor repetido é valor que
-     alguém esquece de atualizar junto. Por isso o `compacto` não tem uma cor, o
-     `papel` não tem um raio, e NENHUM dos três declara `--surface` — o cartão é
-     branco nas quatro peles, e repetir #FFFFFF três vezes só criaria três
+     alguém esquece de atualizar junto. Por isso nenhum dos dois declara
+     `--surface` — o cartão é branco nas três peles, e repetir #FFFFFF só criaria
      lugares para esquecer no dia em que ele deixar de ser branco.
 
-     Os hexes destes blocos passaram todos em 4,5:1 (WCAG AA) — `ink`, `ink-2` e
-     `muted` sobre `canvas`, `surface` e `surface-warm` de cada tema. O `muted` é
-     o mais apertado dos três em todos eles, porque é a cor de quase todo rótulo
-     do sistema: quem for mexer em `canvas` ou `muted` refaz a conta antes. */
+     Os hexes passaram todos em 4,5:1 (WCAG AA) — `ink`, `ink-2` e `muted` sobre
+     `canvas`, `surface` e `surface-warm` de cada pele, mais o branco sobre a
+     barra escura. O `muted` é sempre o mais apertado, porque é a cor de quase
+     todo rótulo do sistema: quem mexer em `canvas` ou `muted` refaz a conta.
+
+     O QUE NENHUMA PELE MUDA: as quatro cores de SINAL (`--amber`, `--amber-txt`,
+     `--verde`, `--vermelho`). Se "vencido" mudasse de vermelho conforme a pele,
+     a cor deixaria de ser informação e viraria decoração — e quem passa o dia
+     aqui lê a cor antes de ler a palavra. */
   var CSS_TEMA = [
-    /* PAPEL — eixo FONTE (+ superfície). Papel branco em vez de bege, traço mais
-       frio e serifa DE SISTEMA. Nenhuma fonte nova do Google: seria mais uma
-       requisição bloqueante em 22 páginas para servir uma pele que nem todo
-       mundo escolhe. Cantos e densidade continuam os da areia — de propósito:
-       quem escolhe "papel" está resolvendo leitura, não tamanho. */
-    'html[data-tema="papel"]{',
-    '--canvas:#F4F2ED;--surface-warm:#FAF9F6;',
-    '--ink:#1B2B29;--ink-2:#43524F;--muted:#5E6A67;',
-    '--line:#E2E0DA;--line-2:#CFCCC4;',
-    '--sans:Georgia,"Iowan Old Style","Times New Roman",serif}',
+    /* A ESCALA DE LETRA É A MESMA NAS TRÊS, e é a que era só do Sereno (um degrau
+       acima do núcleo). Decisão do dono. Mora aqui, num seletor que casa com
+       QUALQUER pele, em vez de repetida em cada bloco — assim nasce em um lugar
+       só e não há como um tema ficar para trás.
 
-    /* COMPACTO — eixo DENSIDADE + CANTOS, e só. A paleta é a da areia, sem uma
-       linha de cor aqui: quem escolhe compacto está resolvendo espaço de tela,
-       não gosto de cor.
-       LIMITE HONESTO: `padding`, `gap` e altura de linha estão escritos à mão
-       nas 22 páginas e não passam por token nenhum. Este tema aperta a LETRA e
-       esquadra o CANTO; ele não fecha o respiro entre as linhas. Para isso
-       faltaria um `--esp-1..n` e uma varredura nas 22 páginas. */
-    'html[data-tema="compacto"]{',
-    '--radius-sm:2px;--radius:4px;--radius-lg:6px;--radius-pill:4px;',
-    '--fs-1:10px;--fs-2:11px;--fs-3:12px;--fs-4:14px;--fs-5:17px;--fs-6:21px}',
+       Repare que é `[data-tema]` sem valor: as 8 páginas do CLIENTE não recebem
+       o atributo (a pele é do colaborador), então elas continuam na escala do
+       núcleo, 11..24. Se um dia o painel do cliente também tiver de crescer, o
+       lugar é o `b4u-design.css`, não aqui. */
+    'html[data-tema]{',
+    '--fs-1:12px;--fs-2:13px;--fs-3:14px;--fs-4:16px;--fs-5:20px;--fs-6:25px}',
 
-    /* SERENO — os quatro eixos ao mesmo tempo, para o outro extremo: menos
-       saturação, canto redondo e escala um degrau acima. É a pele de quem passa
-       o dia na tela e não precisa de muita coisa na mesma janela. */
+    /* SERENO — os escuros ATENUADOS e puxando para o azul. O `--ink` da casa é um
+       verde-escuro (#113D39); aqui ele vira um cinza-azulado que continua sendo
+       texto de verdade, só que sem o peso. A barra do topo (`--brand-dark`) vem
+       junto: ela é a maior superfície de cor da tela, e deixá-la no verde-quase-
+       preto da casa faria o resto parecer que mudou por engano.
+       Cantos redondos são o caráter desta pele, não um eixo separado. */
     'html[data-tema="sereno"]{',
-    '--canvas:#EDEEEA;--surface-warm:#F7F8F5;',
-    '--ink:#22332F;--ink-2:#455551;--muted:#606B67;',
-    '--line:#E0E3DE;--line-2:#CBD0CA;',
-    '--radius-sm:8px;--radius:12px;--radius-lg:16px;--radius-pill:10px;',
-    '--fs-1:12px;--fs-2:13px;--fs-3:14px;--fs-4:16px;--fs-5:20px;--fs-6:25px}'
+    '--canvas:#EBEEF2;--surface-warm:#F5F7FA;',
+    '--ink:#2B3A46;--ink-2:#4C5C69;--muted:#5E6C79;',
+    '--line:#DCE2E9;--line-2:#C3CCD6;',
+    '--brand-dark:#22394A;',
+    '--radius-sm:8px;--radius:12px;--radius-lg:16px;--radius-pill:10px}',
+
+    /* JARDIM — as mesmas superfícies serenas, puxadas para o verde, MAIS as
+       flores: os acentos de alto impacto que o dono pediu.
+
+       Aqui está a única exceção deliberada à regra "pele não é rebrand". As
+       flores entram por `--brand-teal` / `--brand-teal-txt` / `--brand-euc`,
+       que são o que pinta botão primário, foco, borda acesa, item ativo do menu
+       e o "4you" do logo. Sem tocá-los, "alto impacto" não teria por onde
+       aparecer: os outros tokens são todos superfície, e superfície é justamente
+       o que esta pele deixa calma.
+
+       Violeta e rosa foram escolhidos por eliminação, não por gosto: a flor não
+       pode ser vermelha nem laranja nem verde, senão colide com `--vermelho`,
+       `--amber` e `--verde`, que significam coisa. Violeta e rosa não são sinal
+       de nada neste painel, então podem ser bonitos sem mentir. */
+    'html[data-tema="jardim"]{',
+    '--canvas:#E9F0EA;--surface-warm:#F3F8F3;',
+    '--ink:#26382E;--ink-2:#47594C;--muted:#5D6F63;',
+    '--line:#D9E4DA;--line-2:#BFCFC1;',
+    '--brand-dark:#17382A;',
+    '--brand-teal:#7B4BA8;--brand-teal-txt:#69398F;--brand-euc:#D96BA8;',
+    '--radius-sm:8px;--radius:12px;--radius-lg:16px;--radius-pill:10px}'
   ].join('');
 
-  /** Id conhecido, ou o padrão. Valor estranho no localStorage não pinta nada. */
+  /** Id conhecido, ou o padrão. Valor estranho no localStorage não pinta nada.
+   *  Passa antes pelo apelido, para quem tem "areia" gravado do tempo em que o
+   *  padrão se chamava assim cair no rádio certo em vez de em nenhum. */
   function temaValido(id) {
-    for (var i = 0; i < TEMAS.length; i++) if (TEMAS[i].id === id) return id;
+    var n = TEMA_APELIDO[id] || id;
+    for (var i = 0; i < TEMAS.length; i++) if (TEMAS[i].id === n) return n;
     return TEMA_PADRAO;
   }
 
@@ -318,6 +353,175 @@
     return fs;
   }
 
+  /* ═══════════════ QUEM ESTÁ USANDO ═══════════════
+   * O botão do nome na barra, e o painelzinho que ele abre (o nome inteiro + o
+   * seletor de aparência). Nasceu no colaborador.html; virou daqui em 10/08/2026,
+   * quando o dono pediu a MESMA barra nas nove telas da equipe: "título seguido
+   * do usuário, e só".
+   *
+   * DE ONDE VEM O NOME. Da página, não daqui: cada tela sabe do seu jeito (o
+   * `eu` do payload da equipe, o `d.eu` do daily, o `d.responsavel` da
+   * restituição). O shell não vai buscar nada — uma chamada de rede escondida
+   * dentro do menu lateral seria uma chamada que ninguém encontra depois.
+   *
+   * O BOTÃO NASCE ANTES DO NOME. A chave da URL é o código do dia da pessoa;
+   * quem traduz código em nome é o servidor. Então entre o desenho da barra e a
+   * resposta da API a página honestamente NÃO sabe quem está ali — e o botão diz
+   * "Minha conta" em vez de fingir um nome, ficar em branco ou piscar
+   * "carregando…". Chamar `usuario()` de novo quando o nome chega troca o rótulo
+   * no lugar, sem recriar nada.
+   *
+   * O PAINEL TEM O NOME E O SELETOR DE APARÊNCIA. Mais nada: aqui não há dado de
+   * empresa para mostrar, e um painel com um campo inventado seria pior que um
+   * painel curto.
+   */
+
+  /* Partículas: "de/da/do/das/dos/e" não são nome de ninguém. A lista vive AQUI,
+     uma vez só — ela estava em duas casas (o `euIniciais()` do colaborador e o
+     `primeiroNome()` do daily) e as duas discordavam: o colaborador pulava
+     partícula para a inicial mas NÃO para o primeiro nome, então "Rafael de
+     Oliveira" virava "RO" no selo e "Rafael" no rótulo, enquanto o daily
+     escrevia "Rafael" na régua por outro caminho. Uma implementação, uma
+     resposta. */
+  var PARTICULAS = ['de', 'da', 'do', 'das', 'dos', 'e'];
+
+  function semAcento(s) {
+    return String(s == null ? '' : s).normalize
+      ? String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+      : String(s == null ? '' : s).toLowerCase().trim();
+  }
+
+  /** As palavras do nome que são NOME — sem as partículas. */
+  function pedacos(nome) {
+    return String(nome == null ? '' : nome).trim().split(/\s+/).filter(function (p) {
+      return p && PARTICULAS.indexOf(semAcento(p)) < 0;
+    });
+  }
+
+  /** "Rafael de Oliveira Monteiro" -> "Rafael".
+   *  Nome que só tem partícula devolve o que veio, em vez de devolver nada. */
+  function primeiroNome(nome) {
+    var t = String(nome == null ? '' : nome).trim();
+    return pedacos(t)[0] || t;
+  }
+
+  /** "Rafael de Oliveira Monteiro" -> "RM" (primeira e ÚLTIMA, sem partícula).
+   *  Serve o selo redondo do celular, onde só cabem duas letras. */
+  function iniciais(nome) {
+    var p = pedacos(nome);
+    if (!p.length) return '';
+    var a = p[0].charAt(0);
+    var b = p.length > 1 ? p[p.length - 1].charAt(0) : '';
+    return (a + b).toLocaleUpperCase ? (a + b).toLocaleUpperCase('pt-BR') : (a + b).toUpperCase();
+  }
+
+  var EU_ROT = 'Minha conta';
+  var EU_BONECO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
+                + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                + '<circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c0-3.6 3.4-6.2 7.5-6.2s7.5 2.6 7.5 6.2"/></svg>';
+  var eu = null;              // { cx, bt, ini, rot, pop, nm } — montado uma vez só
+
+  function euAberto() { return !!(eu && !eu.pop.hidden); }
+
+  /* Abrir leva o foco para dentro nos DOIS casos (mouse e teclado): sem isso o
+     Tab seguinte sairia da barra e deixaria o painel aberto e órfão. */
+  function euAbrir(v) {
+    if (!eu) return;
+    if (v) {
+      eu.pop.hidden = false;
+      eu.bt.setAttribute('aria-expanded', 'true');
+      var alvo = eu.pop.querySelector('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
+      (alvo || eu.pop).focus();
+    } else {
+      eu.pop.hidden = true;
+      eu.bt.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  /* Fechar DEVOLVENDO o foco só para quem fechou de propósito (Esc, ou clicar de
+     novo no botão). Quem saiu por Tab ou clicou noutro canto da tela já escolheu
+     onde quer estar — puxar o foco de volta seria prender a pessoa. */
+  function euFechar(devolveFoco) {
+    if (!euAberto()) return;
+    euAbrir(false);
+    if (devolveFoco) eu.bt.focus();
+  }
+
+  function euMontar() {
+    if (eu) return eu;
+    estilo();
+    var alvo = d.querySelector('.b4u-bar') || d.querySelector('.barra') || d.querySelector('.topo');
+    if (!alvo) return null;          // página sem barra: não há onde pendurar
+
+    var cx = d.createElement('div');
+    cx.className = 'b4s-eu';
+    /* Ids fixos: são a alça para o teste e para o `aria-controls`. Um por página
+       — `euMontar()` só roda uma vez. */
+    cx.id = 'b4s-eu';
+    cx.innerHTML =
+      '<button type="button" class="b4s-eu-btn" id="b4s-eu-btn" aria-haspopup="dialog" '
+    + 'aria-expanded="false" aria-controls="b4s-eu-pop" aria-label="' + EU_ROT + '" title="' + EU_ROT + '">'
+    + '<span class="b4s-eu-ini" id="b4s-eu-ini" aria-hidden="true">' + EU_BONECO + '</span>'
+    + '<span class="b4s-eu-rot" id="b4s-eu-rot">' + EU_ROT + '</span>'
+    + '</button>'
+    /* role="dialog" e não "menu": o conteúdo são um nome e o seletor de
+       aparência, não uma lista de menuitem. O nome é o rótulo acessível do
+       painel — daí o aria-labelledby. */
+    + '<div class="b4s-eu-pop" id="b4s-eu-pop" role="dialog" aria-labelledby="b4s-eu-nome" tabindex="-1" hidden>'
+    + '<div class="b4s-eu-nome generico" id="b4s-eu-nome">Identificando…</div>'
+    + '<div class="b4s-eu-tema" id="b4s-eu-tema"></div>'
+    + '</div>';
+    alvo.appendChild(cx);            // último da barra, à direita de tudo
+
+    eu = {
+      cx: cx,
+      bt: cx.querySelector('#b4s-eu-btn'),
+      ini: cx.querySelector('#b4s-eu-ini'),
+      rot: cx.querySelector('#b4s-eu-rot'),
+      pop: cx.querySelector('#b4s-eu-pop'),
+      nm: cx.querySelector('#b4s-eu-nome'),
+      sabe: false                    // já recebeu um nome de verdade?
+    };
+
+    /* O seletor de aparência entra UMA vez, aqui — e não a cada abertura: cada
+       chamada a `seletorTema()` cria um radiogroup novo e o registra na lista
+       que o `sincronizarSeletores()` percorre. */
+    var tm = cx.querySelector('#b4s-eu-tema');
+    try {
+      var el = seletorTema();
+      if (el && el.nodeType === 1) tm.appendChild(el); else tm.hidden = true;
+    } catch (e) { tm.hidden = true; }   // seletor quebrado não leva o painel junto
+
+    eu.bt.addEventListener('click', function (e) {
+      e.preventDefault(); euAberto() ? euFechar(true) : euAbrir(true);
+    });
+    /* Seta para baixo abre, como em qualquer botão que tem painel pendurado. */
+    eu.bt.addEventListener('keydown', function (e) {
+      if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !euAberto()) { e.preventDefault(); euAbrir(true); }
+    });
+    /* Esc fecha de qualquer lugar de dentro (e do próprio botão) e devolve o
+       foco. Na captura para chegar antes de quem mais escuta Esc na tela. */
+    cx.addEventListener('keydown', function (e) {
+      if ((e.key === 'Escape' || e.keyCode === 27) && euAberto()) { e.stopPropagation(); euFechar(true); }
+    }, true);
+    /* Saiu do painel pelo teclado (Tab no último item): fecha, sem puxar o foco.
+       relatedTarget nulo é clique fora ou janela perdendo o foco — o primeiro é
+       do handler abaixo, e o segundo não deve fechar nada. */
+    cx.addEventListener('focusout', function (e) {
+      if (!euAberto()) return;
+      var vai = e.relatedTarget;
+      if (!vai || cx.contains(vai)) return;
+      euFechar(false);
+    });
+    d.addEventListener('click', function (e) {
+      if (!euAberto()) return;
+      if (e.target.closest && e.target.closest('#b4s-eu')) return;
+      euFechar(false);
+    });
+
+    return eu;
+  }
+
   var IC = {
     home:'<path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/>',
     guias:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m8.5 15 2 2 4-4"/>',
@@ -415,6 +619,30 @@
     'body.b4s .b4u-bar .b4u-logo,body.b4s .b4u-bar .b4u-nav,',
     'body.b4s .barra .logo,body.b4s .barra .volta,body.b4s .topo .logo{display:none!important}',
 
+    /* ── A barra da equipe fica com TÍTULO e QUEM ESTÁ USANDO, e só ────────────
+       Pedido do dono (10/08/2026), com o `colaborador` como referência: "título
+       seguido do usuário, e só! Sem link de planilha, sem contagem de clientes."
+
+       O que sai da vista, e por que continua no DOM:
+         .plan  ("Planilha ↗")  registro/certificados/licencas escrevem o `href`
+                                (e o registro ainda faz `pl.hidden=false`) quando
+                                a API responde. Apagar o nó quebraria o script.
+                                As planilhas continuam a um clique pelo "Acesso
+                                rápido — planilhas centrais" do colaborador.
+         .cnt / .cont           a contagem de clientes (e a de tarefas, no daily —
+                                mesmo papel, nome de classe diferente). Sete telas
+                                escrevem `textContent` nela a cada redesenho.
+         .volta ("← Painel")    já saía aqui em cima; o menu lateral cobre com o
+                                item "Painel da equipe".
+
+       POR QUE ESCONDER DAQUI E NÃO COM `hidden` NO HTML. Esta folha só entra
+       quando o shell entra. Se o b4u-shell.js não carregar, não há menu lateral —
+       e sem "← Painel" e sem "Planilha ↗" a pessoa ficaria sem saída e sem a
+       planilha. Escondendo pela folha do shell, os dois VOLTAM sozinhos no
+       caminho degradado, sem depender de nenhum JS da página rodar na ordem
+       certa. É a mesma escolha que o `.b4u-nav` acima já fazia. */
+    'body.b4s .barra .plan,body.b4s .barra .cnt,body.b4s .barra .cont{display:none!important}',
+
     /* Quem empurrava o WhatsApp para a direita era o `margin-right:auto` do logo.
        Escondido o logo, o botão escorregava para a esquerda e ficava colado no botão
        da gaveta. O empurrão passa a ser dele mesmo. */
@@ -480,7 +708,62 @@
        pequena, e num radiogroup de quatro linhas o olho procura a linha, não o
        ponto. Irmão adjacente em vez de `:has()` — mesmo efeito, sem depender de
        um seletor que é novo demais para o parque de aparelhos da equipe. */
-    '.b4s-tema-op input:checked+.b4s-tema-txt .b4s-tema-rot{color:var(--brand-teal-txt,#0C756F)}'
+    '.b4s-tema-op input:checked+.b4s-tema-txt .b4s-tema-rot{color:var(--brand-teal-txt,#0C756F)}',
+
+    /* ── Quem está usando (botão do nome + painelzinho) ──────────────────────
+       Veio do colaborador.html, onde nasceu, sem mudar um pixel: mesmas medidas,
+       mesmas cores, mesma regra de celular. O que mudou é o endereço — agora é
+       daqui que as nove telas da equipe pegam o botão, em vez de nove cópias.
+
+       Fica no canto direito da barra, no lugar que era do contador. É o único
+       caminho para o seletor de aparência, então ele NÃO some no celular: encolhe
+       para o selo das iniciais, e o nome inteiro continua no title/aria-label.
+
+       O painel não é modal, e não usa a casca do b4u-modal.js de propósito — véu,
+       trava de rolagem e armadilha de foco seriam caros demais para duas linhas de
+       conteúdo (e metade destas páginas nem carrega o arquivo). O que ele precisa
+       ter, tem: Esc, clique fora e foco de volta.
+
+       Cada `var()` vem com reserva: a barra é escura em todas as nove, mas o
+       painel usa os tokens claros da página, e uma tela que não recebeu o bloco
+       canônico não pode acabar com letra branca no branco. */
+    '.b4s-eu{position:relative;display:flex;align-items:center}',
+    '.b4s-eu-btn{display:flex;align-items:center;gap:7px;font-family:inherit;',
+    'font-size:var(--fs-2,12px);font-weight:700;color:#cfe6e2;',
+    'background:rgba(255,255,255,.10);border:1px solid transparent;',
+    'padding:3px 10px 3px 3px;border-radius:var(--radius-pill,6px);cursor:pointer;max-width:46vw}',
+    '.b4s-eu-btn:hover{background:rgba(255,255,255,.18);color:#fff}',
+    '.b4s-eu-btn[aria-expanded="true"]{background:rgba(255,255,255,.20);',
+    'border-color:rgba(255,255,255,.35);color:#fff}',
+    /* Selo redondo: círculo de verdade, então o 50% vem escrito aqui e não pela
+       escala de cantos — é a exceção que o bloco B4U-DESIGN já prevê. */
+    '.b4s-eu-ini{flex:none;width:24px;height:24px;border-radius:50%;',
+    'background:var(--brand-teal,#0F8C85);color:#fff;display:flex;align-items:center;',
+    'justify-content:center;font-size:11px;font-weight:800;letter-spacing:.3px}',
+    '.b4s-eu-ini svg{width:14px;height:14px}',
+    '.b4s-eu-rot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.b4s-eu-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:5;min-width:232px;',
+    'max-width:min(320px,92vw);background:var(--surface,#fff);color:var(--ink,#113D39);',
+    'border:1px solid var(--line-2,#D8CBB8);border-radius:var(--radius,6px);',
+    'box-shadow:0 12px 30px rgba(7,48,52,.16);padding:12px;text-align:left}',
+    '.b4s-eu-pop[hidden]{display:none}',
+    /* O painel recebe o foco quando não há nada focável dentro dele. Sem isto o
+       Esc não teria de onde sair. O anel fica por conta do :focus-visible da
+       página; o clique não precisa desenhar contorno. */
+    '.b4s-eu-pop:focus{outline:none}',
+    '.b4s-eu-nome{font-size:var(--fs-3,13px);font-weight:800;color:var(--ink,#113D39);',
+    'line-height:1.35;word-break:break-word}',
+    '.b4s-eu-nome.generico{font-weight:700;color:var(--muted,#6E6256)}',
+    '.b4s-eu-tema{margin-top:11px;padding-top:11px;border-top:1px solid var(--line,#E4D9C9)}',
+    '.b4s-eu-tema[hidden]{display:none}',
+    /* No telefone o botão perde o texto e vira alvo de polegar: o selo cresce de
+       24 para 28 e o padding de 3 para 5. 30px era pequeno demais para o único
+       botão da barra. */
+    '@media(max-width:560px){',
+    '.b4s-eu-rot{display:none}',
+    '.b4s-eu-btn{padding:5px;max-width:none}',
+    '.b4s-eu-ini{width:28px;height:28px;font-size:12px}',
+    '.b4s-eu-ini svg{width:16px;height:16px}}'
   ].join('');
 
   var side = null, veu = null, aberta = false;
@@ -893,7 +1176,64 @@
       return novo;
     },
 
-    seletorTema: seletorTema
+    seletorTema: seletorTema,
+
+    /* ── Quem está usando ───────────────────────────────────────────────────
+       usuario()               desenha o botão na barra (rótulo genérico) e devolve
+                               a API. Idempotente: chamar dez vezes não duplica
+                               nada nem repinta o que já está certo.
+       usuario({nome:'Gian…'}) o mesmo botão, agora com o primeiro nome ao lado do
+                               selo de iniciais, o nome inteiro no title/aria-label
+                               e no painel.
+       usuario({nome:''})      a página PERGUNTOU e não veio nome (payload sem o
+                               campo, backend antigo). O botão continua genérico e
+                               o painel diz que não identificou — em vez de deixar
+                               "Identificando…" para sempre, que é a cara de uma
+                               tela travada.
+       usuario({})             só garante o botão; não mexe no que já se sabe.
+
+       A ordem das chamadas não importa e nenhuma delas pisca: o botão existe
+       desde a portaria, com rótulo honesto, e o nome entra por cima quando chega.
+       Um nome que chega DEPOIS nunca é apagado por uma chamada sem nome — telas
+       que recarregam em segundo plano chamariam `usuario()` de novo e o rótulo
+       voltaria a "Minha conta" no meio do uso.
+
+       primeiroNome() / iniciais() ficam expostas porque as páginas também usam o
+       nome fora da barra (a régua de filtros do daily, por exemplo) e as três
+       leituras têm de concordar sobre onde um nome começa. */
+    usuario: function (op) {
+      var e = euMontar();
+      if (!e) return API;
+      if (!op || !('nome' in op)) return API;
+
+      var nome = String(op.nome == null ? '' : op.nome).trim();
+      if (!nome) {
+        /* Sem nome. Se já tínhamos um, ele fica: uma recarga em segundo plano não
+           pode desidentificar quem já está identificado. */
+        if (e.sabe) return API;
+        e.nm.textContent = 'Não identifiquei quem está usando.';
+        e.nm.className = 'b4s-eu-nome generico';
+        return API;
+      }
+      if (e.nomeAtual === nome) return API;      // nada mudou: não repinta
+
+      e.nomeAtual = nome;
+      e.sabe = true;
+      e.rot.textContent = primeiroNome(nome);
+      e.ini.textContent = iniciais(nome);        // troca o boneco genérico pelas iniciais
+      e.bt.title = nome;
+      /* O nome visível ("Gian") está contido no rótulo acessível ("Gian … —
+         minha conta"), como manda o critério de rótulo no nome; e o "minha
+         conta" é o que diz, para quem não vê a barra, que este botão abre
+         alguma coisa. */
+      e.bt.setAttribute('aria-label', nome + ' — minha conta');
+      e.nm.textContent = nome;
+      e.nm.className = 'b4s-eu-nome';
+      return API;
+    },
+
+    primeiroNome: primeiroNome,
+    iniciais: iniciais
   };
 
   w.B4UShell = API;
