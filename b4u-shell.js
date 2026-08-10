@@ -144,9 +144,12 @@
      tema) e o "Compacto" (mexia só na letra e prometia densidade que não
      entregava, porque padding e gap estão escritos à mão nas 22 páginas). */
   var TEMAS = [
-    { id:'back4you', rot:'Back4you', dica:'A casa: bege, verde-escuro e cantos discretos.' },
-    { id:'sereno',   rot:'Sereno',   dica:'Escuros atenuados puxando para o azul, cantos redondos.' },
-    { id:'jardim',   rot:'Jardim',   dica:'Verdes serenos com detalhes floridos.' }
+    { id:'back4you', rot:'Back4you' },
+    { id:'linho',    rot:'Linho'    },
+    { id:'cafe',     rot:'Café'     },
+    { id:'ardosia',  rot:'Ardósia'  },
+    { id:'ameixa',   rot:'Ameixa'   },
+    { id:'musgo',    rot:'Musgo'    }
   ];
 
   /* Pele antiga guardada no aparelho não pode virar tela quebrada. "areia" é o
@@ -190,40 +193,70 @@
     'html[data-tema]{',
     '--fs-1:12px;--fs-2:13px;--fs-3:14px;--fs-4:16px;--fs-5:20px;--fs-6:25px}',
 
-    /* SERENO — os escuros ATENUADOS e puxando para o azul. O `--ink` da casa é um
-       verde-escuro (#113D39); aqui ele vira um cinza-azulado que continua sendo
-       texto de verdade, só que sem o peso. A barra do topo (`--brand-dark`) vem
-       junto: ela é a maior superfície de cor da tela, e deixá-la no verde-quase-
-       preto da casa faria o resto parecer que mudou por engano.
-       Cantos redondos são o caráter desta pele, não um eixo separado. */
-    'html[data-tema="sereno"]{',
-    '--canvas:#EBEEF2;--surface-warm:#F5F7FA;',
-    '--ink:#2B3A46;--ink-2:#4C5C69;--muted:#5E6C79;',
-    '--line:#DCE2E9;--line-2:#C3CCD6;',
-    '--brand-dark:#22394A;',
+    /* AS CINCO PELES ABAIXO NÃO FORAM PINTADAS À MÃO. Para cada uma escolheu-se
+       o MATIZ e o caráter; a luminosidade de cada tom foi encontrada por busca
+       até bater o contraste mínimo contra o fundo em que ele cai. É por isso que
+       nenhuma delas tem um "quase passa": elas não teriam sido geradas assim.
+       O gerador está em `/peles/gerar.js` fora do repositório; se for criar mais
+       peles, gere do mesmo jeito em vez de escolher hex a olho.
+
+       A barra (`--brand-dark`) é o que muda a sensação da tela — é a maior
+       superfície de cor, e é por ela que estas cinco se distinguem à distância.
+       O fundo sozinho só abaixa o volume.
+
+       `--surface` (o branco do cartão) não aparece em nenhuma: é branco nas
+       seis, e repetir #FFFFFF cinco vezes só criaria cinco lugares para
+       esquecer no dia em que ele deixar de ser branco. Os raios também só
+       aparecem onde diferem do núcleo — só a Ameixa é de canto redondo. */
+
+    /* LINHO — branco frio, barra grafite. É a mais silenciosa das seis. */
+    'html[data-tema="linho"]{',
+    '--canvas:#F6F5F4;--surface-warm:#FAFAFA;',
+    '--ink:#3E444E;--ink-2:#585E67;--muted:#696E76;',
+    '--line:#E7E6E4;--line-2:#D0CDC8;',
+    '--brand-dark:#31373F;',
+    '--brand-teal:#1E7CAC;--brand-teal-txt:#1E7CAC;--brand-euc:#2E9E87}',
+
+    /* CAFÉ — marrom torrado. O acento NÃO é marrom, e isso é conserto, não
+       gosto: o acento que combinava com a pele (#B65B35) ficava a ΔE 20 do
+       `--vermelho`, ou seja, o botão "Salvar" com cara de selo "vencido" — e é
+       justamente o botão que se clica sem ler. Trocado por azul-petróleo, que
+       está a ΔE 61/100/95 dos três sinais e ainda faz par com o marrom. */
+    'html[data-tema="cafe"]{',
+    '--canvas:#F2EDE9;--surface-warm:#F7F6F5;',
+    '--ink:#513A2F;--ink-2:#6C5448;--muted:#7B6459;',
+    '--line:#E5DDD6;--line-2:#D2C3B6;',
+    '--brand-dark:#36241C;',
+    '--brand-teal:#1B7EA3;--brand-teal-txt:#1B7EA3;--brand-euc:#AD712B}',
+
+    /* ARDÓSIA — cinza-azulado neutro. */
+    'html[data-tema="ardosia"]{',
+    '--canvas:#EEF0F2;--surface-warm:#F8F9F9;',
+    '--ink:#36414E;--ink-2:#515B67;--muted:#636B75;',
+    '--line:#DDE0E4;--line-2:#C1C7CD;',
+    '--brand-dark:#2E3742;',
+    '--brand-teal:#3F7AA5;--brand-teal-txt:#3F7AA5;--brand-euc:#4598A8}',
+
+    /* AMEIXA — vinho profundo, e a única de canto redondo. */
+    'html[data-tema="ameixa"]{',
+    '--canvas:#F2EDF0;--surface-warm:#F9F8F9;',
+    '--ink:#593447;--ink-2:#754E62;--muted:#845F72;',
+    '--line:#E5DCE0;--line-2:#D0BDC7;',
+    '--brand-dark:#3B1C2B;',
+    '--brand-teal:#B948A7;--brand-teal-txt:#B948A7;--brand-euc:#D24B78;',
     '--radius-sm:8px;--radius:12px;--radius-lg:16px;--radius-pill:10px}',
 
-    /* JARDIM — as mesmas superfícies serenas, puxadas para o verde, MAIS as
-       flores: os acentos de alto impacto que o dono pediu.
-
-       Aqui está a única exceção deliberada à regra "pele não é rebrand". As
-       flores entram por `--brand-teal` / `--brand-teal-txt` / `--brand-euc`,
-       que são o que pinta botão primário, foco, borda acesa, item ativo do menu
-       e o "4you" do logo. Sem tocá-los, "alto impacto" não teria por onde
-       aparecer: os outros tokens são todos superfície, e superfície é justamente
-       o que esta pele deixa calma.
-
-       Violeta e rosa foram escolhidos por eliminação, não por gosto: a flor não
-       pode ser vermelha nem laranja nem verde, senão colide com `--vermelho`,
-       `--amber` e `--verde`, que significam coisa. Violeta e rosa não são sinal
-       de nada neste painel, então podem ser bonitos sem mentir. */
-    'html[data-tema="jardim"]{',
-    '--canvas:#E9F0EA;--surface-warm:#F3F8F3;',
-    '--ink:#26382E;--ink-2:#47594C;--muted:#5D6F63;',
-    '--line:#D9E4DA;--line-2:#BFCFC1;',
-    '--brand-dark:#17382A;',
-    '--brand-teal:#7B4BA8;--brand-teal-txt:#69398F;--brand-euc:#D96BA8;',
-    '--radius-sm:8px;--radius:12px;--radius-lg:16px;--radius-pill:10px}'
+    /* MUSGO — verde escuro de mata. Mesmo conserto do Café, e mais grave: o
+       acento verde (#218463) ficava a ΔE 19 do `--verde`, o selo "em dia" — o
+       menor de todas as vinte candidatas. Violeta resolve por eliminação (não
+       pode ser vermelho, laranja nem verde, senão colide com algo que significa
+       coisa) e ainda é a flor no meio do mato. */
+    'html[data-tema="musgo"]{',
+    '--canvas:#EAF0EC;--surface-warm:#F5F7F6;',
+    '--ink:#294536;--ink-2:#40604F;--muted:#517060;',
+    '--line:#D9E3DC;--line-2:#BACEC1;',
+    '--brand-dark:#112C1E;',
+    '--brand-teal:#985BBC;--brand-teal-txt:#985BBC;--brand-euc:#5B892E}'
   ].join('');
 
   /** Id conhecido, ou o padrão. Valor estranho no localStorage não pinta nada.
@@ -333,19 +366,17 @@
         if (inp.checked) API.tema(t.id);
       });
 
-      var txt = d.createElement('span');
-      txt.className = 'b4s-tema-txt';
+      /* SÓ O NOME. A descrição saiu a pedido do dono, e faz sentido: o seletor
+         mostra as peles para quem está OLHANDO a tela, e a pele aparece no
+         mesmo instante em que se escolhe. Descrever com palavras o que o olho
+         já está vendo é ruído — e seis linhas de prosa numa lista de seis
+         opções transformavam um gesto de um segundo em leitura. */
       var rot = d.createElement('span');
       rot.className = 'b4s-tema-rot';
       rot.textContent = t.rot;
-      var dica = d.createElement('span');
-      dica.className = 'b4s-tema-dica';
-      dica.textContent = t.dica;
-      txt.appendChild(rot);
-      txt.appendChild(dica);
 
       lb.appendChild(inp);
-      lb.appendChild(txt);
+      lb.appendChild(rot);
       fs.appendChild(lb);
     });
 
@@ -691,24 +722,26 @@
     'font-family:var(--sans,"Montserrat",system-ui,sans-serif)}',
     '.b4s-temas legend{padding:0 6px;font-size:var(--fs-1,11px);font-weight:800;',
     'text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#6E6256)}',
-    /* Rótulo inteiro é alvo de clique: o alvo do dedo é a linha, não a bolinha. */
-    '.b4s-tema-op{display:flex;align-items:flex-start;gap:10px;padding:8px 6px;',
+    /* Rótulo inteiro é alvo de clique: o alvo do dedo é a linha, não a bolinha.
+       `center` (era `flex-start`) porque a linha voltou a ter uma altura só,
+       quando a descrição saiu — com `flex-start` a bolinha ficava pendurada
+       acima do texto. */
+    '.b4s-tema-op{display:flex;align-items:center;gap:10px;padding:8px 6px;',
     'border-radius:var(--radius-sm,4px);cursor:pointer;color:var(--ink,#113D39)}',
     '.b4s-tema-op:hover{background:var(--surface-warm,#FBF6EF)}',
-    '.b4s-tema-op input{margin:2px 0 0;flex-shrink:0;',
+    '.b4s-tema-op input{margin:0;flex-shrink:0;',
     'accent-color:var(--brand-teal,#0F8C85)}',
     /* Foco visível de verdade: o grupo é uma parada de Tab só, e sem isto quem
        navega por teclado não sabe onde está dentro dele. */
     '.b4s-tema-op input:focus-visible{outline:2px solid var(--brand-teal,#0F8C85);',
     'outline-offset:2px}',
     '.b4s-tema-rot{display:block;font-size:var(--fs-3,13px);font-weight:700;line-height:1.3}',
-    '.b4s-tema-dica{display:block;font-size:var(--fs-2,12px);line-height:1.35;',
-    'margin-top:1px;color:var(--muted,#6E6256)}',
     /* O escolhido também muda de COR, não só de bolinha: bolinha marcada é
-       pequena, e num radiogroup de quatro linhas o olho procura a linha, não o
-       ponto. Irmão adjacente em vez de `:has()` — mesmo efeito, sem depender de
-       um seletor que é novo demais para o parque de aparelhos da equipe. */
-    '.b4s-tema-op input:checked+.b4s-tema-txt .b4s-tema-rot{color:var(--brand-teal-txt,#0C756F)}',
+       pequena, e numa lista de seis linhas o olho procura a linha, não o ponto.
+       Irmão adjacente em vez de `:has()` — mesmo efeito, sem depender de um
+       seletor que é novo demais para o parque de aparelhos da equipe. Agora o
+       irmão é o próprio rótulo: o `<span>` intermediário saiu junto da descrição. */
+    '.b4s-tema-op input:checked+.b4s-tema-rot{color:var(--brand-teal-txt,#0C756F)}',
 
     /* ── Quem está usando (botão do nome + painelzinho) ──────────────────────
        Veio do colaborador.html, onde nasceu, sem mudar um pixel: mesmas medidas,
