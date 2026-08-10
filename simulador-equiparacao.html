@@ -24,7 +24,15 @@
     /* Escala tipográfica — 6 passos, sem meio pixel. */
     --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
     /* Raios — 12 padrão, 16 para caixas grandes, 999 só para pílulas. */
-    --radius-sm:8px; --radius:12px; --radius-lg:16px; --radius-pill:999px;
+  /* Cantos: uma escala só, no site inteiro, e mais QUADRADA que redonda.
+     4px  campo, selo, célula
+     6px  cartão, linha da lista, botão
+     8px  bloco grande e modal
+   `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é
+   citado em mais de cem regras, mas o valor agora acompanha o resto —
+   pílula virou etiqueta. Círculo de verdade (avatar, contador, spinner)
+   continua com border-radius:50% escrito na regra, e não passa por aqui. */
+  --radius-sm:4px;--radius:6px;--radius-lg:8px;--radius-pill:6px;
     --sans:'Montserrat',system-ui,-apple-system,sans-serif;
     --receita-soft:#DBEFEC;
 
@@ -273,7 +281,7 @@
   .vlegend{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 10px;align-items:center}
   .vlegend span{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-3);color:var(--ink-2)}
   /* Amostra de cor da legenda — token compartilhado, um tamanho só em todas as páginas. */
-  .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;display:inline-block}
+  .sw{width:10px;height:10px;border-radius:var(--radius-sm);flex-shrink:0;display:inline-block}
   .sw.dash{width:18px;height:0;border-radius:0;border-top:2px dashed var(--muted)}
   /* ---------- adiantamento do êxito ---------- */
   /* Uma barra só, dois pedaços do MESMO valor: o que as restituições já abateram e
@@ -309,7 +317,7 @@
   .tip table{border-collapse:collapse;width:100%}
   .tip td{padding:2px 0;vertical-align:top}
   .tip td.n{text-align:right;font-variant-numeric:tabular-nums;padding-left:12px;font-weight:700}
-  .tip .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+  .tip .dot{display:inline-block;width:10px;height:10px;border-radius:var(--radius-sm);margin-right:6px}
   /* display:flex apaga o marcador nativo do <summary>. Sem uma seta explícita
      ninguém descobre que o bloco abre — e o conteúdo recolhido some de vez. */
   summary{list-style:none}

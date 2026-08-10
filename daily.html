@@ -22,7 +22,15 @@
   --brand-teal-txt:#0C756F;
   --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--amber-2:#B05F12;
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
-  --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+/* Cantos: uma escala só, no site inteiro, e mais QUADRADA que redonda.
+     4px  campo, selo, célula
+     6px  cartão, linha da lista, botão
+     8px  bloco grande e modal
+   `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é
+   citado em mais de cem regras, mas o valor agora acompanha o resto —
+   pílula virou etiqueta. Círculo de verdade (avatar, contador, spinner)
+   continua com border-radius:50% escrito na regra, e não passa por aqui. */
+  --radius-sm:4px;--radius:6px;--radius-lg:8px;--radius-pill:6px;
   --fs-1:11px;--fs-2:12px;--fs-3:13px;--fs-4:15px;--fs-5:19px;--fs-6:24px;
   --sans:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -91,8 +99,13 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 /* Cabeçalho das colunas: existe para a grade ser lida como grade. Sem ele, seis
    informações alinhadas viram seis colunas sem nome e a pessoa adivinha qual é
    qual pela primeira linha. Some junto com a grade abaixo de 900px. */
+/* O `padding-left` soma os 4px da faixa lateral colorida da linha (border-left)
+   aos 13px de recuo dela. Sem essa soma o cabeçalho ficava 4px à esquerda do
+   conteúdo — pouco para alguém apontar o dedo, o bastante para a coluna parecer
+   torta e o olho não confiar no alinhamento, que é a única coisa que esta grade
+   tem para oferecer. */
 .cabgrade{display:grid;grid-template-columns:var(--cols);gap:0 12px;
-  padding:2px 13px 6px;font-size:var(--fs-1);font-weight:800;letter-spacing:.05em;
+  padding:2px 13px 6px 17px;font-size:var(--fs-1);font-weight:800;letter-spacing:.05em;
   text-transform:uppercase;color:var(--muted)}
 .cabgrade span:last-child{text-align:right}
 /* Grade, não <table>: abaixo de 900px cada linha vira duas dentro da mesma faixa,
@@ -100,15 +113,30 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
    As colunas são FIXAS de propósito — ID sempre no mesmo x, área sempre no
    mesmo x. Correr o olho por uma coluna só é o que faz uma lista de trinta
    linhas ser lida em segundos. */
-:root{--cols:78px minmax(0,1fr) 108px 124px 128px 108px}
+/* RESPONSÁVEL ganhou 28px: com 124px, "Gian Paradisi (você)" era cortado
+   exatamente no "(você)" — o marcador que existe para a pessoa achar as tarefas
+   dela de relance virava "(voc…". Quem cede o espaço é o ASSUNTO, que é 1fr e
+   quebra em mais linhas sem perder nada. */
+:root{--cols:78px minmax(0,1fr) 108px 152px 128px 108px}
 .t{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   border-left:4px solid var(--line-2);padding:10px 13px;display:grid;gap:2px 12px;
-  grid-template-columns:var(--cols);align-items:center;cursor:pointer}
+  grid-template-columns:var(--cols);align-items:start;cursor:pointer}
+/* Assunto de três linhas fazia a linha crescer e, com align-items:center, ÁREA,
+   RESPONSÁVEL, SITUAÇÃO e PRAZO desciam para o meio dela — longe do cabeçalho,
+   e parecendo pertencer à linha de baixo. Com `start` toda coluna começa na
+   mesma altura; o `padding-top` de 1px só acerta a base do texto pequeno com a
+   do assunto, que é maior. */
+.t-id,.t-area,.t-quem,.t-cel{padding-top:1px}
 .t-id{font-size:var(--fs-2);font-weight:800;color:var(--brand-teal-txt);
   font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t-area,.t-quem{font-size:var(--fs-2);color:var(--ink-2);min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .t-quem .vc{color:var(--brand-teal-txt);font-weight:700}
+/* Se ainda assim faltar espaço, quem encolhe é o NOME, não o marcador: o nome
+   cortado ainda identifica a pessoa, "(você)" cortado não identifica nada. */
+.t-quem{display:flex;gap:4px;align-items:baseline}
+.t-quem .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-quem .vc{flex:none}
 .t-cel{min-width:0;display:flex;justify-content:flex-end}
 .t:hover{border-color:var(--line-2);box-shadow:0 1px 5px rgba(7,48,52,.07)}
 .t:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
@@ -552,7 +580,7 @@ function souEu(nome){ return !!(EU && nome && normTxt(nome)===normTxt(EU.nome));
    e não pode custar leitura. */
 function comVoce(nome){
   if(!nome) return '';
-  return esc(nome)+(souEu(nome)?' <span class="vc">(você)</span>':'');
+  return '<span class="nm">'+esc(nome)+'</span>'+(souEu(nome)?'<span class="vc">(você)</span>':'');
 }
 
 /* ---------- filtro ---------- */
@@ -565,10 +593,27 @@ function visiveis(){
     if(F_SIT==='abertas'){ if(ABERTAS.indexOf(t.situacao)<0) return false; }
     else if(F_SIT && F_SIT!=='__todas__'){ if(t.situacao!==F_SIT) return false; }
     /* Por cliente, o escopo "Todos" entra junto: é tarefa que vale para a carteira
-       inteira, e escondê-la faria parecer que não há nada a fazer ali. */
+       inteira, e escondê-la faria parecer que não há nada a fazer ali.
+
+       O `F_CLI` é o que está ESCRITO na caixa — "250033 · Nome do cliente" quando
+       se escolhe pela lista, ou um pedaço do nome quando se digita. Comparar esse
+       texto direto com `t.cliente_id`, que é só o número, nunca casava: sobrava
+       apenas o ramo do "Todos", e a tela respondia que aquele cliente só tinha
+       tarefas gerais. Era o bug. Agora o texto passa pelo MESMO resolvedor da
+       ficha antes de virar comparação.
+
+       Texto que ainda não identifica ninguém (a pessoa está no meio da digitação)
+       não filtra por ID: cai na busca por pedaço do nome, senão a lista piscaria
+       vazia a cada letra. */
     if(F_CLI){
-      if(ehTodos(F_CLI)){ if(!ehTodos(t.cliente_id)) return false; }
-      else if(!(ehTodos(t.cliente_id) || String(t.cliente_id)===String(F_CLI))) return false;
+      const alvo=resolverCliente(F_CLI);
+      if(alvo.ok && alvo.id){
+        if(ehTodos(alvo.id)){ if(!ehTodos(t.cliente_id)) return false; }
+        else if(!(ehTodos(t.cliente_id) || String(t.cliente_id)===String(alvo.id))) return false;
+      } else {
+        const p=normTxt(F_CLI);
+        if(!ehTodos(t.cliente_id) && !normTxt(String(t.cliente_id||'')+' '+String(t.cliente||'')).includes(p)) return false;
+      }
     }
     if(termo){
       const alvo=normTxt([t.assunto,t.detalhe,t.cliente,t.responsavel,t.id].join(' '));

@@ -47,25 +47,35 @@
                   + 'alguns minutos. Se o problema continuar, entre em contato com '
                   + 'o atendimento.';
 
-  /* Frases que passam a sensação de trabalho acontecendo. Nenhuma delas fala em
-     lentidão, em tentar de novo ou em problema — quem lê "está demorando" entende
-     "vai dar errado" e recarrega. */
+  /* Frases que passam a sensação de trabalho acontecendo. Duas regras:
+     
+     1. Nenhuma fala em lentidão, em tentar de novo ou em problema — quem lê
+        "está demorando" entende "vai dar errado" e recarrega bem quando a
+        resposta já estava chegando.
+     
+     2. Nenhuma conta COMO o sistema funciona. As antigas diziam "Abrindo as
+        suas planilhas", "Cruzando as competências", "Puxando as planilhas" —
+        e isso é o desenho por dentro escrito na tela de espera: descreve a
+        engrenagem para quem só quer o resultado, e ainda entrega ao cliente
+        (e a quem estiver olhando por cima do ombro) que por baixo do painel
+        existem planilhas. O que a espera tem de dizer é o que a casa É:
+        uma equipe de inteligência tributária cuidando do trabalho dele. */
   var FRASES = {
     cliente: [
-      'Abrindo as suas planilhas…',
-      'Conferindo o que fechou no mês…',
-      'Somando as notas com calma…',
-      'Separando tudo por área…',
-      'Arrumando a mesa antes de te mostrar…',
-      'Dando o último pente-fino…'
+      'Inteligência tributária a serviço do seu negócio…',
+      'Preparando as suas informações…',
+      'Reunindo o que importa para você…',
+      'Cuidando dos detalhes…',
+      'Organizando tudo com calma…',
+      'Quase pronto…'
     ],
     equipe: [
-      'Puxando as planilhas…',
-      'Cruzando as competências…',
-      'Conferindo as pendências…',
-      'Somando o que ainda falta…',
-      'Organizando a lista…',
-      'Dando o último pente-fino…'
+      'Inteligência tributária a serviço do seu negócio…',
+      'Preparando as informações…',
+      'Reunindo o que importa…',
+      'Cuidando dos detalhes…',
+      'Organizando tudo…',
+      'Quase pronto…'
     ]
   };
 
@@ -107,22 +117,14 @@
     'box-shadow:0 0 0 3px var(--canvas,#F1E7DC);animation:b4e-pop .42s ease}',
     '@keyframes b4e-pop{0%{transform:translate(-50%,-50%) scale(.4)}',
     '55%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}',
-    '.b4e-doc{position:absolute;top:-19px;left:0;width:22px;margin-left:-11px;',
-    'transition:left .28s cubic-bezier(.33,1,.68,1);animation:b4e-pula 1s ease-in-out infinite}',
-    '@keyframes b4e-pula{0%,100%{transform:translateY(0) rotate(-4deg)}',
-    '50%{transform:translateY(-6px) rotate(5deg)}}',
-    '.b4e-doc svg{display:block;width:22px;height:26px;filter:drop-shadow(0 3px 5px rgba(17,61,57,.22))}',
     '.b4e-pct{margin-top:20px;font-size:26px;font-weight:800;letter-spacing:-.02em;',
     'color:var(--brand-dark,#073034);font-variant-numeric:tabular-nums}',
     '.b4e-msg{margin-top:8px;font-size:13px;line-height:1.5;color:var(--muted,#6E6256);',
     'min-height:38px;transition:opacity .3s ease}',
     '.b4e-msg.b4e-troca{opacity:0}',
-    '.b4e-ov.b4e-fim .b4e-doc{animation:b4e-festa .5s ease}',
-    '@keyframes b4e-festa{0%{transform:translateY(0) scale(1)}',
-    '40%{transform:translateY(-16px) scale(1.2) rotate(10deg)}100%{transform:translateY(0) scale(1)}}',
     '.b4e-ov.b4e-fim .b4e-fill::after{display:none}',
     '@media(prefers-reduced-motion:reduce){',
-    '.b4e-doc,.b4e-fill::after,.b4e-ov.b4e-fim .b4e-doc{animation:none!important}',
+    '.b4e-fill::after{animation:none!important}',
     '.b4e-ov{transition:opacity .2s linear}}',
     /* Tela de erro — mesma silhueta em todas as páginas, do cliente e da equipe. */
     '.b4e-erro{max-width:420px;margin:56px auto;padding:34px 26px;text-align:center;',
@@ -140,18 +142,12 @@
     '.b4e-erro button:hover{background:var(--brand-dark,#073034)}'
   ].join('');
 
-  var DOC_SVG = '<svg viewBox="0 0 22 26" fill="none" aria-hidden="true">'
-    + '<path d="M2 3.2A2.2 2.2 0 0 1 4.2 1h9.3L20 7.4v15.4a2.2 2.2 0 0 1-2.2 2.2H4.2A2.2 2.2 0 0 1 2 22.8V3.2Z" fill="#fff" stroke="var(--brand-dark,#073034)" stroke-width="1.6"/>'
-    + '<path d="M13.4 1v6.4H20" stroke="var(--brand-dark,#073034)" stroke-width="1.6" stroke-linejoin="round"/>'
-    + '<path d="M6 13h10M6 17h7" stroke="var(--brand-teal,#0F8C85)" stroke-width="1.7" stroke-linecap="round"/>'
-    + '</svg>';
-
   var MARCOS = [22, 48, 72, 92];
 
   /* ------------------------------------------------------------------ *
    * Estado
    * ------------------------------------------------------------------ */
-  var ov = null, fill = null, doc = null, pct = null, msg = null, marcos = [];
+  var ov = null, fill = null, pct = null, msg = null, marcos = [];
   var t0 = 0, raf = 0, tFrase = 0, tTroca = 0, tSeg = 0, iFrase = 0, frases = [], p = 0;
   var encerrando = false;
 
@@ -175,7 +171,6 @@
     p = v;
     var q = Math.round(v * 100);
     if (fill) fill.style.width = q + '%';
-    if (doc) doc.style.left = q + '%';
     if (pct) pct.textContent = q + '%';
     for (var i = 0; i < marcos.length; i++) {
       if (q >= MARCOS[i]) marcos[i].classList.add('on');
@@ -217,7 +212,7 @@
   function remover() {
     limparTimers();
     if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
-    ov = fill = doc = pct = msg = null;
+    ov = fill = pct = msg = null;
     marcos = [];
     encerrando = false;
   }
@@ -250,7 +245,6 @@
         + '<div class="b4e-pista">'
         + '<div class="b4e-trilho"><div class="b4e-fill"></div></div>'
         + MARCOS.map(function (x) { return '<span class="b4e-marco" style="left:' + x + '%"></span>'; }).join('')
-        + '<div class="b4e-doc">' + DOC_SVG + '</div>'
         + '</div>'
         + '<div class="b4e-pct">0%</div>'
         + '<div class="b4e-msg"></div>'
@@ -258,7 +252,6 @@
       (d.body || d.documentElement).appendChild(ov);
 
       fill = ov.querySelector('.b4e-fill');
-      doc = ov.querySelector('.b4e-doc');
       pct = ov.querySelector('.b4e-pct');
       msg = ov.querySelector('.b4e-msg');
       marcos = [].slice.call(ov.querySelectorAll('.b4e-marco'));
@@ -300,7 +293,6 @@
         var v = de + (1 - de) * e;
         var q = Math.round(v * 100);
         if (fill) fill.style.width = q + '%';
-        if (doc) doc.style.left = q + '%';
         if (pct) pct.textContent = q + '%';
         for (var i = 0; i < marcos.length; i++) if (q >= MARCOS[i]) marcos[i].classList.add('on');
         if (k < 1) { (w.requestAnimationFrame || setTimeout)(anda, 16); return; }
@@ -328,7 +320,7 @@
       setTimeout(function () {
         if (velho && velho.parentNode) velho.parentNode.removeChild(velho);
       }, CFG.saida);
-      ov = fill = doc = pct = msg = null; marcos = []; encerrando = false;
+      ov = fill = pct = msg = null; marcos = []; encerrando = false;
       return API;
     },
 

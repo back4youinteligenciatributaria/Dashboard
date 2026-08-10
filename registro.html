@@ -33,7 +33,15 @@
   --amber-2:#B05F12;
   --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
   /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
-  --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+/* Cantos: uma escala só, no site inteiro, e mais QUADRADA que redonda.
+     4px  campo, selo, célula
+     6px  cartão, linha da lista, botão
+     8px  bloco grande e modal
+   `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é
+   citado em mais de cem regras, mas o valor agora acompanha o resto —
+   pílula virou etiqueta. Círculo de verdade (avatar, contador, spinner)
+   continua com border-radius:50% escrito na regra, e não passa por aqui. */
+  --radius-sm:4px;--radius:6px;--radius-lg:8px;--radius-pill:6px;
   /* Escala de texto e o teal claro: as outras telas ja tinham, esta nao. Sem eles
      o CSS compartilhado da regua de acoes cai no valor herdado e desalinha. */
   --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
@@ -404,7 +412,7 @@ details.sec>summary h2{margin:0;flex:1}
 details.sec>summary .arw{color:var(--muted,#8A7D70);transition:transform .15s;font-size:12px}
 details.sec[open]>summary .arw{transform:rotate(90deg)}
 details.sec>summary .cnt-sec{font-size:11px;color:var(--muted,#8A7D70);font-weight:600;
-  background:#F1ECE4;border-radius:999px;padding:2px 8px}
+  background:#F1ECE4;border-radius:var(--radius-pill);padding:2px 8px}
 details.sec>summary .cnt-sec.falta{color:#A4303F;background:#FBEDEE}
 details.sec .grid{margin-top:10px}
 /* ---- contatos do cliente novo ---- */

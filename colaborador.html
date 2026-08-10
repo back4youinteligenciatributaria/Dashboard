@@ -34,7 +34,15 @@
      como tinta de letra vermelha (--g-enc-txt). */
   --vermelho-2:#96271B;
   /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
-  --radius-sm:10px;--radius:12px;--radius-lg:16px;--radius-pill:999px;
+/* Cantos: uma escala só, no site inteiro, e mais QUADRADA que redonda.
+     4px  campo, selo, célula
+     6px  cartão, linha da lista, botão
+     8px  bloco grande e modal
+   `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é
+   citado em mais de cem regras, mas o valor agora acompanha o resto —
+   pílula virou etiqueta. Círculo de verdade (avatar, contador, spinner)
+   continua com border-radius:50% escrito na regra, e não passa por aqui. */
+  --radius-sm:4px;--radius:6px;--radius-lg:8px;--radius-pill:6px;
   /* Escala de texto e o teal claro: as outras telas ja tinham, esta nao. Sem eles
      o CSS compartilhado do teto de lista cai no valor herdado e desalinha. */
   --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
@@ -219,11 +227,11 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
    culpar o portal. */
 .cred-val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-2);
   color:var(--ink);background:var(--surface-warm);border:1px solid var(--line);
-  border-radius:6px;padding:2px 7px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  border-radius:var(--radius);padding:2px 7px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cred-val.vazia{color:var(--muted);font-style:italic;font-family:var(--sans)}
 .cred-bt{font-family:var(--sans);font-size:12px;line-height:1;cursor:pointer;
   border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);
-  border-radius:6px;padding:4px 7px}
+  border-radius:var(--radius);padding:4px 7px}
 .cred-bt:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
 .ex-lk:hover{text-decoration:underline}
 .ct-row{padding:7px 0;border-top:1px solid var(--line)}
@@ -304,14 +312,14 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
    CRM" — nunca ganha envio: ninguém faz upload de uma prefeitura. */
 .doc{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;min-width:0;flex:1 1 auto}
 .doc-bt{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;font-weight:700;
-  padding:5px 9px;border-radius:7px;border:1px solid transparent;text-decoration:none;cursor:pointer;background:none;
+  padding:5px 9px;border-radius:var(--radius);border:1px solid transparent;text-decoration:none;cursor:pointer;background:none;
   font-family:var(--sans)}
 .doc-ir{color:#0F8C85;border-color:#cfe6e2;background:#F2F9F8}
 .doc-ir:hover{background:#EAF4F1}
 .doc-env{color:#8A7D70;border:1px dashed #D8CFC3;background:none}
 .doc-env:hover{color:#0F8C85;border-color:#0F8C85}
 .doc-obs{font-style:italic;color:#8A7D70;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.doc-mais{border:none;background:none;color:#B8AFA6;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;border-radius:6px;
+.doc-mais{border:none;background:none;color:#B8AFA6;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;border-radius:var(--radius);
   font-family:var(--sans)}
 .doc-mais:hover{color:#113D39;background:#F1ECE4}
 @media (hover:hover){ .doc .doc-mais{opacity:.32} .doc:hover .doc-mais,.doc:focus-within .doc-mais{opacity:1} }
@@ -389,7 +397,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
   .fer-card[data-dica]:hover::after{
     content:attr(data-dica);position:absolute;left:12px;right:12px;top:calc(100% + 6px);z-index:30;
     background:var(--ink);color:#fff;font-size:12px;font-weight:400;line-height:1.35;
-    padding:8px 10px;border-radius:8px;box-shadow:var(--lift);pointer-events:none;white-space:normal}
+    padding:8px 10px;border-radius:var(--radius-lg);box-shadow:var(--lift);pointer-events:none;white-space:normal}
 }
 .fer-arw{flex:none;font-size:13px;font-weight:900;color:var(--muted);transition:color .14s,transform .15s}
 .fer-card:hover .fer-arw{color:var(--brand-teal-txt)}
@@ -766,6 +774,13 @@ function icone(n){
 // ícone por nome (normalizado) e quais vão pro dropdown "Outros"
 const ICONE_CENTRAL={'site links':'arquivo','registro clientes':'arquivo','societaria mestra':'livro','tickets':'ticket','contatos':'chat','feriados':'calendario','modelos':'doc','config tributario':'engrenagem','certificados e procuracoes':'escudo','certificados digitais':'escudo','equiparacao controle':'balanca','controle de licencas':'doc','extratos pendentes':'dinheiro'};
 const CENTRAIS_NO_OUTROS=['site links','registro clientes','tickets','feriados','modelos','config tributario'];
+/* Planilha que NÃO aparece no painel do colaborador, por decisão do dono: a
+   Equiparação Controle é a fonte crua e inteira da equiparação, e o caminho do
+   dia a dia é a tela de Restituição, que já mostra a mesma informação com filtro
+   de responsável. Some daqui, do menu de Restituição e do dossiê — os três
+   lugares que levavam a ela. O nome é comparado normalizado (sem acento, sem
+   caixa) porque quem escreve o rótulo é a Config, não este arquivo. */
+const CENTRAIS_FORA=['equiparacao controle'];
 
 function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); const h=(location.hash||'').replace('#','').trim(); return q || h || CHAVE_PADRAO; }
 
@@ -924,7 +939,8 @@ function botaoCentral(l){
 function pintarCentrais(pares){
   if(pares && pares.length) CENTRAIS_VIVOS=pares;
   const offline=!(pares && pares.length);
-  const validos=(pares||[]).filter(p=>p.url && /^https?:/.test(p.url));
+  const validos=(pares||[]).filter(p=>p.url && /^https?:/.test(p.url))
+    .filter(p=>CENTRAIS_FORA.indexOf(normTxt(p.nome))<0);
   // mesmo ícone do card de Registros e do item do menu lateral: é a mesma planilha
   const registros={nome:'Registros de clientes', url:urlRegistros(validos), ic:icone('pessoal')};
   const diretos=[registros].filter(l=>l.url).concat(validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))<0)
@@ -978,26 +994,21 @@ function fecharOutros(){
    um menu para escolher a de quem quiser.
    Agora o link é um só e não leva código nenhum: o servidor já sabe quem entrou
    pela chave do dia e devolve a carteira dessa pessoa (Principal vê todas). */
-// O link do Controle sai da Config (chave "Equiparacao Controle"), igual aos outros.
-// Sem cópia de emergência aqui — mesmo motivo do CENTRAIS_VIVOS lá em cima.
-function urlControle(){
-  const p=(CENTRAIS_VIVOS||[]).find(x=>normTxt(x.nome).indexOf('equiparacao controle')>=0);
-  return (p && p.url) || '';
-}
 function pintarRestituicao(){
   const menu=document.getElementById('menu-restituicao'); if(!menu) return;
   const ch=encodeURIComponent(chaveAtual());
   const pleno=!!(EU&&EU.pleno);
   const rot=pleno?'Restituição (todos)':'Minha restituição';
   const minha=`<a href="restituicao?chave=${ch}" target="_blank" rel="noopener"><span class="ic">${icone('calendario')}</span>${esc(rot)}</a>`;
-  /* A planilha de Controle é a fonte inteira, sem filtro de responsável — só faz
-     sentido para quem enxerga a carteira toda. */
-  const controle=pleno?`<a href="${esc(urlControle())}" target="_blank" rel="noopener"><span class="ic">${icone('balanca')}</span>Controle (planilha)</a>`:'';
+  /* O atalho para a planilha de Controle saiu daqui a pedido do dono. Quem
+     precisa da carteira inteira usa a tela de Restituição, que mostra o mesmo
+     dado com filtro e histórico; a planilha crua deixou de ser caminho oferecido
+     pelo painel. */
   const fer=FERRAMENTAS.filter(f=>f.id==='menu-restituicao')[0]||{};
   menu.innerHTML=`<button type="button" class="fer-card" id="btn-restituicao" aria-expanded="false" data-dica="${esc(fer.desc||'')}">
       <span class="fer-cab"><span class="fer-ic">${fer.ic||icone('calendario')}</span><span class="fer-arw">▾</span></span>
       <span class="fer-nome">Restituição</span>
-    </button><div class="menu-pop" id="pop-restituicao" hidden>${minha}${controle}</div>`;
+    </button><div class="menu-pop" id="pop-restituicao" hidden>${minha}</div>`;
   const btn=document.getElementById('btn-restituicao'), pop=document.getElementById('pop-restituicao');
   btn.addEventListener('click', e=>{ e.stopPropagation(); const abrir=pop.hidden; pop.hidden=!abrir;
     btn.setAttribute('aria-expanded',abrir?'true':'false'); menu.classList.toggle('aberto',abrir); });
@@ -1041,7 +1052,7 @@ const FERRAMENTAS=[
    desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
    alias:'societario paralegal mestra alteracao contratual junta etapa processo protocolo andamento finalizado'},
   {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:icone('calendario'), area:'equiparacao',
-   desc:'Relatório de cada colaborador e a planilha de controle da equiparação.',
+   desc:'Relatório de restituição de cada colaborador — prazos, etapas e responsável.',
    alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
   {id:'fp-ativos',        nome:'Clientes ativos',               url:'clientes-ativos',   ic:icone('planilha'), area:AREAS_CARTEIRA,
    desc:'Quantos clientes ativos em cada competência, mês a mês.',
@@ -1738,7 +1749,9 @@ function secEquiparacao(arr){
     const lkrow=e.link_drive&&/^https?:/.test(e.link_drive)?`<a class="ex-lk" href="${esc(e.link_drive)}" target="_blank" rel="noopener">Drive ›</a> `:'';
     return `<div class="card"><div class="card-top"><b>${esc(e.nome||'Equiparação')}</b>${st}</div>${proxHtml}${tar}${lkrow}</div>`;
   }).join('');
-  return exSec(icone('balanca'),'Equiparação (Controle)',body+`<a class="ex-lk" href="${esc(urlControle())}" target="_blank" rel="noopener">Abrir Equiparação Controle ›</a>`);
+  /* Sem o link para a planilha de Controle: o dossiê mostra o andamento, e quem
+     vai mexer usa a tela de Restituição. */
+  return exSec(icone('balanca'),'Equiparação',body);
 }
 /* `mestra` e `equiparacao` chegam como null quando quem pediu não tem a área —
    quem decide é o montarClienteExtras_, no servidor. Aqui só não se desenha o
