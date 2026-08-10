@@ -90,6 +90,234 @@
     ]
   };
 
+  /* ═════════════════════════════════════════════════════════════════════════
+   * TEMAS — quatro peles do painel do colaborador
+   *
+   * O QUE VARIA, O QUE NUNCA VARIA E POR QUÊ está escrito por extenso no
+   * `b4u-design.css`, seção OS QUATRO TEMAS. Em uma linha: tema mexe em
+   * superfície, letra, cantos, densidade e fonte; NÃO mexe em SINAL
+   * (--amber/--amber-txt/--verde/--vermelho, que são informação: quem passa o
+   * dia nesta tela lê a cor antes de ler a palavra) nem em IDENTIDADE
+   * (--brand-*, porque tema é pele e não rebrand).
+   *
+   * POR QUE O CSS ESTÁ AQUI E NÃO NO `b4u-design.css`
+   * Porque de lá ele não sairia. O `_aplica-design.js` não copia aquele arquivo:
+   * copia um PEDAÇO dele — a `corpoCanonico()` fatia do `:root` até a primeira
+   * chave de fechamento em começo de linha. Regra escrita depois disso é
+   * decoração de arquivo, nunca entra em página nenhuma.
+   *
+   * E vir por aqui não é remendo: resolve três coisas de uma vez.
+   *   a) O tema é SÓ do colaborador, e este arquivo já sabe quais são as
+   *      páginas dele (MENU.equipe). Se o CSS viajasse no bloco copiado, as 12
+   *      páginas do cliente carregariam quatro blocos que nunca casam com nada.
+   *   b) ANTES DA PRIMEIRA PINTURA. As 18 páginas trazem
+   *      `<script src="b4u-shell.js" charset="utf-8">` no <head>, sem defer e
+   *      sem async: o parser PARA ali. O atributo e a folha entram antes de
+   *      existir <body>, então a tela nunca aparece na pele errada para depois
+   *      se corrigir. É por isso que isto roda no topo do IIFE e NÃO dentro do
+   *      `montar()` — o `montar()` só acontece com o DOM pronto, e a pele
+   *      chegando lá piscaria a cada navegação.
+   *   c) UM MODO DE FALHAR SÓ. Sem este arquivo não vem nem folha nem atributo,
+   *      e a página fica exatamente como é hoje. Não existe o estado meio-torto
+   *      de ter a folha sem o atributo.
+   *
+   * POR QUE NÃO PRECISA DE !important
+   * `html[data-tema=papel]` tem especificidade (0,1,1) — um tipo mais um
+   * atributo. `:root` tem (0,1,0) — uma pseudo-classe só. O tema ganha do
+   * `:root` do bloco copiado E do `:root` escrito à mão na página, venha ele
+   * antes ou depois desta folha. Ordem de fonte não decide nada aqui; decide o
+   * um-a-mais do seletor de atributo. (Conferido de verdade, não só no papel:
+   * um documento com o tema declarado ANTES de um `:root` que redeclara o mesmo
+   * token resolve para o valor do tema.)
+   * ═════════════════════════════════════════════════════════════════════════ */
+
+  var TEMA_CHAVE = 'b4s_tema';
+  var TEMA_PADRAO = 'areia';
+
+  /* A ordem é a da conversa com quem escolhe: primeiro o que ele já conhece,
+     depois as três razões de trocar — ler melhor, caber mais, cansar menos.
+     A dica não é enfeite: "Sereno" sozinho não diz nada a ninguém. */
+  var TEMAS = [
+    { id:'areia',    rot:'Areia',    dica:'O padrão da casa: fundo bege e cantos discretos.' },
+    { id:'papel',    rot:'Papel',    dica:'Branco e letra com serifa, para leitura longa.' },
+    { id:'compacto', rot:'Compacto', dica:'Letra e cantos menores: cabe mais lista na tela.' },
+    { id:'sereno',   rot:'Sereno',   dica:'Tons frios, cantos redondos e mais respiro.' }
+  ];
+
+  /* AREIA NÃO TEM BLOCO, e isso é escolha. Ela É o `:root` do núcleo, letra por
+     letra. Um bloco `html[data-tema=areia]` teria de repetir 19 tokens só para
+     chegar no mesmo lugar — e no dia em que alguém mudasse um hex do núcleo, a
+     areia seria o único tema que NÃO mudaria junto, porque estaria congelada na
+     cópia. Sem bloco, "areia" quer dizer literalmente "sem pele por cima".
+
+     Nenhum bloco redeclara token que ele não muda: valor repetido é valor que
+     alguém esquece de atualizar junto. Por isso o `compacto` não tem uma cor, o
+     `papel` não tem um raio, e NENHUM dos três declara `--surface` — o cartão é
+     branco nas quatro peles, e repetir #FFFFFF três vezes só criaria três
+     lugares para esquecer no dia em que ele deixar de ser branco.
+
+     Os hexes destes blocos passaram todos em 4,5:1 (WCAG AA) — `ink`, `ink-2` e
+     `muted` sobre `canvas`, `surface` e `surface-warm` de cada tema. O `muted` é
+     o mais apertado dos três em todos eles, porque é a cor de quase todo rótulo
+     do sistema: quem for mexer em `canvas` ou `muted` refaz a conta antes. */
+  var CSS_TEMA = [
+    /* PAPEL — eixo FONTE (+ superfície). Papel branco em vez de bege, traço mais
+       frio e serifa DE SISTEMA. Nenhuma fonte nova do Google: seria mais uma
+       requisição bloqueante em 22 páginas para servir uma pele que nem todo
+       mundo escolhe. Cantos e densidade continuam os da areia — de propósito:
+       quem escolhe "papel" está resolvendo leitura, não tamanho. */
+    'html[data-tema="papel"]{',
+    '--canvas:#F4F2ED;--surface-warm:#FAF9F6;',
+    '--ink:#1B2B29;--ink-2:#43524F;--muted:#5E6A67;',
+    '--line:#E2E0DA;--line-2:#CFCCC4;',
+    '--sans:Georgia,"Iowan Old Style","Times New Roman",serif}',
+
+    /* COMPACTO — eixo DENSIDADE + CANTOS, e só. A paleta é a da areia, sem uma
+       linha de cor aqui: quem escolhe compacto está resolvendo espaço de tela,
+       não gosto de cor.
+       LIMITE HONESTO: `padding`, `gap` e altura de linha estão escritos à mão
+       nas 22 páginas e não passam por token nenhum. Este tema aperta a LETRA e
+       esquadra o CANTO; ele não fecha o respiro entre as linhas. Para isso
+       faltaria um `--esp-1..n` e uma varredura nas 22 páginas. */
+    'html[data-tema="compacto"]{',
+    '--radius-sm:2px;--radius:4px;--radius-lg:6px;--radius-pill:4px;',
+    '--fs-1:10px;--fs-2:11px;--fs-3:12px;--fs-4:14px;--fs-5:17px;--fs-6:21px}',
+
+    /* SERENO — os quatro eixos ao mesmo tempo, para o outro extremo: menos
+       saturação, canto redondo e escala um degrau acima. É a pele de quem passa
+       o dia na tela e não precisa de muita coisa na mesma janela. */
+    'html[data-tema="sereno"]{',
+    '--canvas:#EDEEEA;--surface-warm:#F7F8F5;',
+    '--ink:#22332F;--ink-2:#455551;--muted:#606B67;',
+    '--line:#E0E3DE;--line-2:#CBD0CA;',
+    '--radius-sm:8px;--radius:12px;--radius-lg:16px;--radius-pill:10px;',
+    '--fs-1:12px;--fs-2:13px;--fs-3:14px;--fs-4:16px;--fs-5:20px;--fs-6:25px}'
+  ].join('');
+
+  /** Id conhecido, ou o padrão. Valor estranho no localStorage não pinta nada. */
+  function temaValido(id) {
+    for (var i = 0; i < TEMAS.length; i++) if (TEMAS[i].id === id) return id;
+    return TEMA_PADRAO;
+  }
+
+  /* Navegação privada e localStorage desligado por política dão exceção só de
+     ENCOSTAR em `w.localStorage` — por isso o try engloba o acesso, não só a
+     chamada. Falhou: cai no padrão e o painel funciona igual, sem lembrar da
+     escolha. É a mesma postura do `nEmpresasCache()` aqui embaixo. */
+  function temaGravado() {
+    try { return temaValido(w.localStorage.getItem(TEMA_CHAVE)); }
+    catch (e) { return TEMA_PADRAO; }
+  }
+
+  /* O tema é do COLABORADOR e não pode vazar para o cliente. A lista de páginas
+     dele já existe (MENU.equipe), é síncrona e não depende do `montar({perfil})`
+     — dá para decidir aqui no <head>, antes de qualquer pintura, sem esperar a
+     página dizer quem ela é. Esperar o `montar()` seria justamente o que faz
+     piscar.
+     Comparar por `pag` é seguro: nenhum nome de página está nos dois menus. O
+     Societário do cliente é `societario`; o da equipe é `societario-equipe`. */
+  function paginaDoColaborador() {
+    var p = paginaAtual();
+    for (var i = 0; i < MENU.equipe.length; i++) if (MENU.equipe[i].pag === p) return true;
+    return false;
+  }
+
+  var TEMA_LIGADO = paginaDoColaborador();
+  var temaAtual = TEMA_PADRAO;
+  var seletores = [];        // radiogroups já entregues, para não ficarem mentindo
+  var seqSeletor = 0;
+
+  function folhaTema() {
+    if (d.getElementById('b4s-tema-css')) return;
+    var s = d.createElement('style');
+    s.id = 'b4s-tema-css';
+    s.textContent = CSS_TEMA;
+    (d.head || d.documentElement).appendChild(s);
+  }
+
+  function sincronizarSeletores() {
+    for (var i = 0; i < seletores.length; i++) {
+      var r = seletores[i].querySelectorAll('input[type=radio]');
+      for (var j = 0; j < r.length; j++) r[j].checked = (r[j].value === temaAtual);
+    }
+  }
+
+  function aplicarTema(id) {
+    temaAtual = temaValido(id);
+    if (TEMA_LIGADO) {
+      folhaTema();
+      /* `areia` também marca o atributo, mesmo sem bloco de CSS: serve para o
+         seletor e para o devtools dizerem em qual pele a pessoa está. Como não
+         existe regra `html[data-tema=areia]`, marcar não muda um pixel. */
+      d.documentElement.setAttribute('data-tema', temaAtual);
+    }
+    sincronizarSeletores();
+    return temaAtual;
+  }
+
+  /* ── A APLICAÇÃO, SÍNCRONA, AQUI ─────────────────────────────────────────
+     Não dentro do `montar()`. Ver a alínea (b) lá em cima: é isto que garante
+     que a tela não pisca no tema errado a cada navegação. Numa página do
+     cliente, `TEMA_LIGADO` é falso e nada acontece com o <html>. */
+  aplicarTema(temaGravado());
+
+  /** Radiogroup de verdade, pronto para inserir. Devolve o <fieldset>.
+   *
+   *  ESCOLHA: <fieldset> com <input type=radio> nativo, e não uma lista com
+   *  `role="radiogroup"` + `aria-checked` na mão. Os dois passam num checklist;
+   *  o nativo passa no uso. Ele já traz navegação por seta dentro do grupo,
+   *  tabindex móvel (o grupo inteiro é UMA parada de Tab), estado lido pelo
+   *  leitor de tela e o nome do grupo pelo <legend> — tudo isso escrito à mão
+   *  dá umas quarenta linhas de teclado que ninguém revisa depois.
+   *
+   *  Cada instância ganha um `name` próprio: dois seletores na mesma página (um
+   *  no modal, um na tela) formariam um grupo só e a seta pularia de um para o
+   *  outro. */
+  function seletorTema() {
+    estilo();                       // a folha do seletor mora na CSS do shell
+    var fs = d.createElement('fieldset');
+    fs.className = 'b4s-temas';
+    var nome = 'b4s-tema-' + (++seqSeletor);
+
+    var lg = d.createElement('legend');
+    lg.textContent = 'Aparência do painel';
+    fs.appendChild(lg);
+
+    TEMAS.forEach(function (t) {
+      var lb = d.createElement('label');
+      lb.className = 'b4s-tema-op';
+
+      var inp = d.createElement('input');
+      inp.type = 'radio';
+      inp.name = nome;
+      inp.value = t.id;
+      if (t.id === temaAtual) inp.checked = true;
+      /* `change`, não `click`: com radio nativo a seta do teclado move a
+         seleção sem clique nenhum, e só `change` dispara nos dois casos. */
+      inp.addEventListener('change', function () {
+        if (inp.checked) API.tema(t.id);
+      });
+
+      var txt = d.createElement('span');
+      txt.className = 'b4s-tema-txt';
+      var rot = d.createElement('span');
+      rot.className = 'b4s-tema-rot';
+      rot.textContent = t.rot;
+      var dica = d.createElement('span');
+      dica.className = 'b4s-tema-dica';
+      dica.textContent = t.dica;
+      txt.appendChild(rot);
+      txt.appendChild(dica);
+
+      lb.appendChild(inp);
+      lb.appendChild(txt);
+      fs.appendChild(lb);
+    });
+
+    seletores.push(fs);
+    return fs;
+  }
+
   var IC = {
     home:'<path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/>',
     guias:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m8.5 15 2 2 4-4"/>',
@@ -223,7 +451,36 @@
     'line-height:1.4;background:rgba(232,137,46,.18);color:#F7DFC4}',
 
     '@media print{body.b4s{padding-left:0}.b4s-side,.b4s-veu,.b4s-menu{display:none!important}}',
-    '@media(prefers-reduced-motion:reduce){.b4s-side,.b4s-veu{transition:none}}'
+    '@media(prefers-reduced-motion:reduce){.b4s-side,.b4s-veu{transition:none}}',
+
+    /* ── Seletor de tema ────────────────────────────────────────────────────
+       Desenhado com os PRÓPRIOS tokens, e isso é de propósito: trocar a pele
+       repinta o seletor junto, então a escolha é uma amostra do resultado em
+       vez de uma promessa. Cada `var()` vem com fallback porque este controle
+       pode acabar num modal de página que não recebeu o bloco canônico. */
+    '.b4s-temas{border:1px solid var(--line,#E4D9C9);border-radius:var(--radius,6px);',
+    'background:var(--surface,#fff);padding:6px 12px 10px;margin:0;',
+    'font-family:var(--sans,"Montserrat",system-ui,sans-serif)}',
+    '.b4s-temas legend{padding:0 6px;font-size:var(--fs-1,11px);font-weight:800;',
+    'text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#6E6256)}',
+    /* Rótulo inteiro é alvo de clique: o alvo do dedo é a linha, não a bolinha. */
+    '.b4s-tema-op{display:flex;align-items:flex-start;gap:10px;padding:8px 6px;',
+    'border-radius:var(--radius-sm,4px);cursor:pointer;color:var(--ink,#113D39)}',
+    '.b4s-tema-op:hover{background:var(--surface-warm,#FBF6EF)}',
+    '.b4s-tema-op input{margin:2px 0 0;flex-shrink:0;',
+    'accent-color:var(--brand-teal,#0F8C85)}',
+    /* Foco visível de verdade: o grupo é uma parada de Tab só, e sem isto quem
+       navega por teclado não sabe onde está dentro dele. */
+    '.b4s-tema-op input:focus-visible{outline:2px solid var(--brand-teal,#0F8C85);',
+    'outline-offset:2px}',
+    '.b4s-tema-rot{display:block;font-size:var(--fs-3,13px);font-weight:700;line-height:1.3}',
+    '.b4s-tema-dica{display:block;font-size:var(--fs-2,12px);line-height:1.35;',
+    'margin-top:1px;color:var(--muted,#6E6256)}',
+    /* O escolhido também muda de COR, não só de bolinha: bolinha marcada é
+       pequena, e num radiogroup de quatro linhas o olho procura a linha, não o
+       ponto. Irmão adjacente em vez de `:has()` — mesmo efeito, sem depender de
+       um seletor que é novo demais para o parque de aparelhos da equipe. */
+    '.b4s-tema-op input:checked+.b4s-tema-txt .b4s-tema-rot{color:var(--brand-teal-txt,#0C756F)}'
   ].join('');
 
   var side = null, veu = null, aberta = false;
@@ -610,7 +867,33 @@
 
     abrir: function () { abrir(true); return API; },
     fechar: function () { abrir(false); return API; },
-    montado: function () { return !!side; }
+    montado: function () { return !!side; },
+
+    /* ── Temas ──────────────────────────────────────────────────────────────
+       TEMAS         [{id,rot,dica}, ...] na ordem em que devem ser oferecidos
+       tema()        -> id do tema atual ('areia' quando nada foi escolhido)
+       tema('papel') aplica no <html>, grava, devolve o novo id
+       seletorTema() -> HTMLElement pronto para inserir, já ligado
+
+       A pele já foi aplicada lá em cima, no topo do arquivo, antes da primeira
+       pintura. O que está aqui é só a porta para quem quiser TROCAR. */
+    TEMAS: TEMAS,
+
+    /** Sem argumento, lê. Com argumento, aplica e grava.
+     *
+     *  Numa página do CLIENTE isto grava a preferência mas NÃO toca no <html>:
+     *  o `aplicarTema()` só mexe no atributo quando a página é do colaborador.
+     *  Assim nem uma chamada de propósito faz o tema vazar para a tela de quem
+     *  não escolheu nada. Id desconhecido cai no padrão — e é o padrão que fica
+     *  gravado, para o lixo não voltar no próximo carregamento. */
+    tema: function (id) {
+      if (id === undefined) return temaAtual;
+      var novo = aplicarTema(id);
+      try { w.localStorage.setItem(TEMA_CHAVE, novo); } catch (e) {}
+      return novo;
+    },
+
+    seletorTema: seletorTema
   };
 
   w.B4UShell = API;

@@ -1,0 +1,343 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   b4u-design.css — os tokens que TODAS as 22 páginas do painel compartilham.
+
+   ESTE ARQUIVO NÃO É CARREGADO PELAS PÁGINAS. Ele é a FONTE CANÔNICA: o
+   `_aplica-design.js` lê o bloco daqui e COPIA para dentro de cada HTML, do
+   mesmo jeito que o `_aplica-texto.js` faz com o `_b4u-texto.js`.
+
+   Por que copiar em vez de <link rel="stylesheet">: se o arquivo faltasse — rede
+   ruim, cache velho, publicação pela metade —, as 22 páginas apareceriam SEM
+   COR NENHUMA. Não é a mesma classe de risco do menu lateral, que pode faltar e
+   a página só perde o menu. Cor de fundo, cor de letra e raio de canto são a
+   página. Então viajam dentro dela.
+
+   Depois de qualquer alteração aqui:
+       node _aplica-design.js
+
+   ---------------------------------------------------------------------------
+   POR QUE 27 TOKENS (eram 21)
+
+   Os 22 arquivos declaram 101 tokens diferentes ao todo. Destes, 21 existiam em
+   TODOS os 22 — e 20 deles eram byte-idênticos nos 22 (o único que divergia era
+   o `--sans` do daily.html, que trazia um "Segoe UI" a mais; como `system-ui` já
+   resolve para Segoe UI no Windows, o extra era redundante e foi normalizado).
+
+   Entraram agora os seis da ESCALA TIPOGRÁFICA (`--fs-1` a `--fs-6`). Eles não
+   estavam nos 22 — e é justamente por isso que precisavam entrar:
+
+       --fs-1 a --fs-4   declarados em 20 arquivos, idênticos nos 20
+       --fs-5 e --fs-6   declarados em 19 (o certificados.html só usa até o -4)
+       não declaravam    onboarding.html e societario-equipe.html
+
+   O `societario-equipe.html` é o caso que obriga. Ele NÃO declara `--fs-2` e
+   mesmo assim escreve, na linha 1693, o aviso de erro da etapa:
+
+       av.style.cssText = 'margin-top:6px;font-size:var(--fs-2);color:var(--vermelho);…'
+
+   `var(--fs-2)` sem valor e sem fallback é inválido no momento do cálculo: a
+   propriedade não cai para o valor inicial, ela cai para HERDADO. O aviso —
+   que é vermelho, negrito, e a única coisa que explica por que o botão não
+   funcionou — sai no tamanho do pai, calado, sem erro no console e sem nada
+   vermelho no CSS para alguém desconfiar. Com a escala no núcleo, ele passa a
+   sair nos 12px que sempre pediu. (Na mesma página, o `.fld-aviso` da linha 444
+   escreve `var(--fs-1,11px)` COM fallback e por isso nunca quebrou — a
+   diferença entre os dois é o tamanho do estrago de esquecer o segundo
+   argumento.)
+
+   Efeito colateral aceito: o `certificados.html` passa a receber `--fs-5` e
+   `--fs-6`, que ele não usa. Token não usado não custa pixel nem requisição.
+
+   Os outros 74 NÃO entram aqui por ora, e o motivo é concreto: as mesmas cores
+   têm três esquemas de nome convivendo no projeto —
+
+       --brand-eucalipto / --brand-eucalipto2 / --brand-euc
+       --good            / --verde            / --g-ok
+       --warning         / --amber            / --alerta
+
+   Centralizar apelido junto com valor exigiria decidir, token a token, qual
+   nome vence e reescrever todo uso nas 22 páginas. É trabalho de outra ordem, e
+   arrastá-lo para cá agora seguraria o núcleo — que é o que dá ganho imediato.
+   A reconciliação dos apelidos fica para o mesmo passo do MODO ESCURO, que de
+   qualquer jeito vai precisar varrer as cores escritas à mão nos 22 arquivos.
+
+   REGRA DE CONVIVÊNCIA: o bloco copiado entra ANTES do <style> da página. Ou
+   seja, ele é a CAMADA BASE. Se alguma página um dia precisar mesmo de um valor
+   diferente, basta redeclarar o token no `:root` dela — a página vence, porque
+   vem depois. Não é preciso pedir licença a este arquivo.
+
+   E é exatamente essa regra que os TEMAS têm de furar. Como, e por que não é
+   gambiarra, está na seção OS QUATRO TEMAS, no fim do arquivo.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* ── Superfícies ─────────────────────────────────────────────────────────
+     `--canvas` é o bege do fundo da página; `--surface` é o branco do cartão
+     que se apoia nele; `--surface-warm` é o branco quebrado das faixas e
+     cabeçalhos de tabela, que separam sem precisar de borda. */
+  --canvas:#F1E7DC;
+  --surface:#FFFFFF;
+  --surface-warm:#FBF6EF;
+
+  /* ── Letra ───────────────────────────────────────────────────────────────
+     `--ink` é o texto normal, `--ink-2` o secundário, `--muted` o rótulo.
+     `--muted` já foi #8A7D70 e reprovava em contraste (3,28:1); #6E6256 dá
+     4,85:1 no bege e 5,92:1 no branco, e é a cor de quase todo rótulo do
+     sistema — por isso ela precisa passar, e não só quase. */
+  --ink:#113D39;
+  --ink-2:#3F5854;
+  --muted:#6E6256;
+
+  /* ── Traços ──────────────────────────────────────────────────────────────
+     `--line` divide o que é do mesmo grupo; `--line-2` fecha o que é caixa. */
+  --line:#E4D9C9;
+  --line-2:#D6C3AC;
+
+  /* ── Marca ───────────────────────────────────────────────────────────────
+     `--brand-teal` é canônico em logo, foco, borda e série de gráfico. Como
+     TEXTO ele reprova (4,11:1 no branco, 3,44:1 no receita-soft), e para isso
+     existe o `--brand-teal-txt`: o mesmo teal escurecido, 5,54:1 no branco e
+     4,54:1 no bege, usado só onde é letra ou fundo de letra. Os dois são a
+     mesma cor com dois trabalhos. O 4,54:1 passa, mas passa RASPANDO: quem for
+     escurecer o `--canvas` um dia tem de conferir este par antes. */
+  --brand-dark:#073034;
+  --brand-teal:#0F8C85;
+  --brand-euc:#3FA680;
+  --brand-teal-txt:#0C756F;
+
+  /* ── SINAL: as quatro cores que querem dizer alguma coisa ────────────────
+     Estas quatro NÃO seguem o tema (ver OS QUATRO TEMAS, no fim do arquivo). Se
+     "vencido" mudasse de vermelho conforme a pele escolhida, a cor deixaria de
+     ser informação e viraria decoração — e quem trabalha nesta tela o dia
+     inteiro lê a cor antes de ler a palavra.
+
+     `--amber` tem 2,61:1 no branco: serve de PREENCHIMENTO e de borda, nunca de
+     letra. Para letra âmbar existe o `--amber-txt` (5,91:1 no branco).
+
+     ┌── PENDÊNCIA CONHECIDA: `--verde` E `--vermelho` REPROVAM COMO LETRA ────┐
+     │                                                                        │
+     │ Os dois NÃO têm o par `-txt` que o âmbar tem, e são usados nas duas     │
+     │ funções ao mesmo tempo:                                                │
+     │                                                                        │
+     │     --verde     12 usos como `color`, 11 como `background`, 7 em borda │
+     │     --vermelho  41 usos como `color`, 31 como `background`, 41 em borda │
+     │                                                                        │
+     │ E o lado TEXTO reprova. Medido nos valores atuais:                     │
+     │                                                                        │
+     │     --verde     #2E9D5F   2,82:1 no bege · 3,44:1 no branco   REPROVA  │
+     │     --vermelho  #C0392B   4,46:1 no bege · 5,43:1 no branco   raspando │
+     │                                                                        │
+     │ O mínimo para texto é 4,5:1. É a mesma falha do `--muted` antigo (que   │
+     │ dava 3,28:1), e atinge `.hint.ok` e `.lk.ok`, que são letra e nada      │
+     │ mais. Há prova de que alguém já tinha esbarrado nisso sem nomear: o     │
+     │ `.det-fbtn.ativo` escreve `color:#0E5B37` à mão — um verde bem mais     │
+     │ escuro — em vez de usar o token.                                       │
+     │                                                                        │
+     │ CONSERTO MEDIDO E NÃO APLICADO (decisão de 10/08/2026):                 │
+     │                                                                        │
+     │     --verde     #2E9D5F -> #1F7546   (2,82:1 -> 4,66:1 no bege)        │
+     │     --vermelho  #C0392B -> #BB3728   (4,46:1 -> 4,66:1 no bege)        │
+     │                                                                        │
+     │ Matiz e saturação ficam onde estão; só a luminosidade desce, o mínimo   │
+     │ para passar com folga. Escurecer é seguro pelo lado do FUNDO: TODAS as  │
+     │ regras `background:var(--verde)` / `background:var(--vermelho)` já vêm  │
+     │ com `color:#fff` (ou são faixa/pontinho sem texto), e fundo mais escuro │
+     │ com letra branca só melhora.                                           │
+     │                                                                        │
+     │ POR QUE NÃO FOI APLICADO AGORA: mexer nestes dois repinta as 22         │
+     │ páginas, inclusive as 8 do cliente. A rodada que centralizou os tokens  │
+     │ era de ESTRUTURA — nenhum pixel de cor mudou nela de propósito, para    │
+     │ que qualquer diferença que aparecesse em produção tivesse uma causa só. │
+     │ Trocar cor é decisão de produto e vai junto da varredura do MODO        │
+     │ ESCURO, que já vai ter de abrir os 22 arquivos.                         │
+     │                                                                        │
+     │ QUANDO FOR FAZER, olhe também o `--verde-2`: várias páginas o declaram  │
+     │ valendo #25804C, com a nota "o verde um degrau mais escuro, para virar  │
+     │ FUNDO de texto branco". Com o conserto acima, o `--verde` do núcleo     │
+     │ fica MAIS ESCURO que o `--verde-2`, e a convenção do sufixo -2 se       │
+     │ inverte nesse par. Não dá para resolver daqui: o `--verde-2` mora no    │
+     │ `:root` de cada página.                                                │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     (Escrito assim, sem dois-pontos colado no nome, de propósito: a
+     `tokensCanonicos()` do `_aplica-design.js` varre este bloco com um regex de
+     declaração e NÃO pula comentário. Nome de token seguido de dois-pontos aqui
+     dentro vira token canônico de mentira, e o `--verde-2` de mentira faria as
+     22 páginas aparecerem como "exceção mantida" no terminal. Vale para todo
+     comentário deste arquivo: cite o token, nunca o escreva como declaração.) */
+  --amber:#E8892E;
+  --amber-txt:#8A5A10;
+  --vermelho:#C0392B;
+  --verde:#2E9D5F;
+
+  /* ── Cantos ──────────────────────────────────────────────────────────────
+     Uma escala só, no site inteiro, e mais QUADRADA que redonda.
+       4px  campo, selo, célula
+       6px  cartão, linha da lista, botão
+       8px  bloco grande e modal
+     `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é citado
+     em mais de cem regras, mas o valor acompanha o resto — pílula virou
+     etiqueta. Círculo de verdade (avatar, contador, spinner) continua com
+     `border-radius:50%` escrito na regra e não passa por aqui. */
+  --radius-sm:4px;
+  --radius:6px;
+  --radius-lg:8px;
+  --radius-pill:6px;
+
+  /* ── Escala tipográfica ──────────────────────────────────────────────────
+     Seis degraus, e o pulo entre eles é de propósito irregular: 11-12-13 é a
+     faixa de rótulo, selo e nota de rodapé, onde 1px já muda a hierarquia; 15 é
+     o corpo; 19 e 24 são título de bloco e de tela. Um degrau constante (1,2×,
+     por exemplo) daria 11-13-16-19-23-28 e gastaria três tamanhos na faixa em
+     que o olho não distingue nada.
+     ATENÇÃO: o `body{font-size:15px}` das páginas está escrito à mão e NÃO sai
+     daqui. Quem mexer na escala não muda o corpo do texto; muda só quem usa
+     `var(--fs-N)` — que é rótulo, selo, cabeçalho de tabela e título. */
+  --fs-1:11px;
+  --fs-2:12px;
+  --fs-3:13px;
+  --fs-4:15px;
+  --fs-5:19px;
+  --fs-6:24px;
+
+  /* ── Fonte ───────────────────────────────────────────────────────────────
+     Montserrat vem do Google Fonts, declarado no <head> de cada página. O
+     `system-ui` é o que aparece enquanto ela não chega — e é o que fica se ela
+     não chegar nunca. */
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OS QUATRO TEMAS
+
+   Quatro peles, escolhidas pelo colaborador, gravadas no localStorage,
+   aplicadas por `data-tema` no <html>. A lista, os hexes e o seletor moram no
+   `b4u-shell.js` (procure por `CSS_TEMA` e `TEMAS`). Esta seção diz POR QUE eles
+   moram lá e o que eles podem e não podem tocar — que é a parte que sobrevive a
+   qualquer troca de paleta.
+
+   ---------------------------------------------------------------------------
+   1. POR QUE O CSS DOS TEMAS NÃO ESTÁ NESTE ARQUIVO
+
+   Porque ele não chegaria. O `_aplica-design.js` não copia este arquivo: ele
+   copia UM PEDAÇO dele. Olhe a `corpoCanonico()` —
+
+       const i = txt.indexOf(':root{');
+       const j = txt.indexOf('\n}', i);
+       return txt.slice(i, j + 2);
+
+   — do `:root` até a primeira `}` em começo de linha. Qualquer regra escrita
+   depois disso é decoração de arquivo: fica bonita aqui e nunca entra em página
+   nenhuma. E não adianta enfiar os temas PARA DENTRO do recorte, indentando as
+   chaves de fechamento até o `slice` engolir tudo: a `tokensCanonicos()` varre o
+   recorte inteiro com um regex de `--nome:valor;` e monta um mapa em que o
+   ÚLTIMO valor vence. Com quatro blocos de tema lá dentro, o `--canvas`
+   "canônico" viraria o do último tema, e aí a `limparRoot()` compararia o
+   `--canvas` de cada página com o valor errado, decidiria que é exceção, e
+   deixaria os 22 arquivos declarando tudo de novo — desligando a centralização
+   inteira e imprimindo umas 170 falsas "exceções mantidas" no terminal.
+
+   Quem leva os temas às páginas é o `b4u-shell.js`, e isso resolve três coisas
+   de uma vez em vez de ser um remendo:
+
+     a) TEMA É SÓ DO COLABORADOR. Ele vale nas 10 páginas de `MENU.equipe` e em
+        nenhuma outra. Se o CSS viajasse no bloco copiado, as 12 páginas do
+        cliente — e as 4 que nem têm menu lateral — carregariam quatro blocos de
+        regra que nunca casam com nada.
+     b) ANTES DA PRIMEIRA PINTURA. As 18 páginas trazem
+        `<script src="b4u-shell.js" charset="utf-8">` no <head>, sem `defer` e
+        sem `async`: o parser PARA ali. O atributo e a folha entram antes de
+        existir <body>, então a tela nunca aparece na pele errada para depois
+        corrigir.
+     c) UM MODO DE FALHAR SÓ. Se o `b4u-shell.js` não carregar, não vem nem o
+        atributo nem a folha — e a página fica exatamente como é hoje. Não existe
+        o estado meio-torto de ter a folha sem o atributo.
+
+   ---------------------------------------------------------------------------
+   2. POR QUE `html[data-tema=x]` VENCE O `:root` DA PRÓPRIA PÁGINA
+
+   O bloco copiado entra ANTES do <style> da página; a folha dos temas é
+   acrescentada pelo script, que nessas 18 páginas vem DEPOIS. Se fosse ordem de
+   fonte, cada uma venceria em um lugar. Não é ordem: é especificidade.
+
+       :root                  ->  (0,1,0)   uma pseudo-classe
+       html[data-tema=papel]  ->  (0,1,1)   um tipo + um atributo
+
+   (0,1,1) > (0,1,0), então o tema ganha do `:root` do bloco copiado E do `:root`
+   escrito à mão na página, venha ele antes ou depois. Confirmado na prática, não
+   só no papel: um documento com `<style>:root{--canvas:#F1E7DC}
+   html[data-tema=papel]{--canvas:#FFFFFF}</style>` seguido de outro
+   `<style>:root{--canvas:#F1E7DC}</style>` resolve `--canvas` para #FFFFFF.
+   Se fosse ordem de fonte, teria dado #F1E7DC.
+
+   Consequência prática: os temas NÃO precisam de `!important` e não precisam
+   ganhar corrida de carregamento. E a regra de convivência lá de cima continua
+   valendo para quem não é tema — uma página que redeclare `--canvas` no `:root`
+   dela continua vencendo o núcleo.
+
+   ---------------------------------------------------------------------------
+   3. O QUE UM TEMA PODE VARIAR — QUATRO EIXOS
+
+     superfície e letra  --canvas --surface --surface-warm --ink --ink-2 --muted
+                         --line --line-2
+     cantos              --radius-sm --radius --radius-lg --radius-pill
+     densidade           --fs-1 … --fs-6
+     fonte               --sans
+
+   E cada tema mexe SÓ no eixo que é a razão dele existir. Um bloco de tema não
+   redeclara token que ele não muda: além de ser ruído, um valor repetido é um
+   valor que alguém vai esquecer de atualizar junto quando o núcleo mudar.
+
+   ---------------------------------------------------------------------------
+   4. O QUE UM TEMA NUNCA VARIA
+
+   SINAL — `--amber` `--amber-txt` `--verde` `--vermelho`.
+   Estas quatro são INFORMAÇÃO, não decoração. "Vencido" é vermelho, "no prazo" é
+   verde, "vence hoje" é âmbar — e quem passa o dia nesta tela lê a cor antes de
+   ler a palavra. Um vermelho que muda de tom conforme a pele obriga a pessoa a
+   reaprender a tela a cada troca, e o custo cai justamente em cima da leitura
+   mais rápida que o painel oferece. Elas também são o único conteúdo que precisa
+   sobreviver a um print colado num grupo de WhatsApp, onde não existe tema.
+
+   IDENTIDADE — `--brand-dark` `--brand-teal` `--brand-euc` `--brand-teal-txt`.
+   Tema é pele, não rebrand. O teal da barra e o eucalipto do item ativo são a
+   assinatura da casa; se cada colaborador puder trocá-los, a captura de tela que
+   ele manda para o cliente deixa de parecer da back4you.
+
+   Consequência de as oito serem fixas: elas têm de passar em contraste em TODOS
+   os fundos de TODOS os temas, porque não existe ajuste local para salvá-las.
+   Foi essa conta que forçou o degrau de escuro do `--verde` e do `--vermelho`
+   lá em cima, e é ela que limita o quanto um tema pode escurecer o `--canvas`.
+   Regra prática para quem inventar o quinto tema: `--canvas` mais escuro que o
+   bege da areia (#F1E7DC) derruba o `--brand-teal-txt`, que já está em 4,54:1.
+
+   ---------------------------------------------------------------------------
+   5. OS QUATRO, E O EIXO DE CADA UM
+
+     areia     paleta de origem, cantos de origem, densidade de origem, Montserrat
+     papel     eixo FONTE + superfície: branco e serifa, para leitura longa
+     compacto  eixo DENSIDADE + cantos: paleta da areia, tudo mais junto e quadrado
+     sereno    eixo TODOS: dessaturado, arredondado, com respiro
+
+   AREIA NÃO TEM BLOCO, e isso é escolha, não esquecimento. Ela é o `:root` aqui
+   de cima, letra por letra. Um bloco `html[data-tema=areia]` teria de repetir os
+   19 tokens dos quatro eixos só para chegar no mesmo lugar — e no dia em que
+   alguém mudasse um hex do núcleo, a areia seria o único tema que não mudaria
+   junto, porque estaria congelada na cópia. Sem bloco, "areia" quer dizer
+   literalmente "sem pele por cima", que é a definição certa de padrão. O
+   `<html>` continua recebendo `data-tema="areia"` — o atributo existe para o
+   seletor e para o devtools mostrarem em qual pele a pessoa está; ele
+   simplesmente não casa com nenhuma regra.
+
+   PAPEL usa serifa DE SISTEMA (Georgia / 'Iowan Old Style' / 'Times New Roman' /
+   serif). Nenhuma fonte nova do Google: seria mais uma requisição bloqueante em
+   22 páginas para servir uma pele que nem todo mundo escolhe, e a primeira coisa
+   que este projeto decidiu foi não pagar requisição por enfeite.
+
+   COMPACTO só mexe em cantos e escala, e de propósito não toca na paleta: quem
+   escolhe compacto está resolvendo espaço de tela, não gosto de cor. Vale saber
+   o limite: `padding`, `gap` e altura de linha estão escritos à mão nas 22
+   páginas e não passam por token nenhum. Então "compacto" aperta a letra e
+   esquadra o canto, mas não fecha o respiro entre as linhas — para isso seria
+   preciso um `--esp-1..n` e uma varredura nas 22, que é o mesmo trabalho adiado
+   dos apelidos.
+   ═══════════════════════════════════════════════════════════════════════════ */

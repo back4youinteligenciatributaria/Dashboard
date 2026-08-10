@@ -15,30 +15,160 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
 <style>
+/* B4U-DESIGN:INICIO — paleta, cantos e fonte que as 22 páginas dividem.
+   Bloco copiado de b4u-design.css (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-design.js`.
+
+   Entra ANTES do <style> da página de propósito — é a camada base. Se esta
+   página precisar mesmo de um valor diferente, redeclare o token no `:root`
+   dela, que vem depois e vence. */
 :root{
-  /* Paleta canonica da equipe — a mesma em todas as telas. */
-  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
-  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
-  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  /* ── Superfícies ─────────────────────────────────────────────────────────
+     `--canvas` é o bege do fundo da página; `--surface` é o branco do cartão
+     que se apoia nele; `--surface-warm` é o branco quebrado das faixas e
+     cabeçalhos de tabela, que separam sem precisar de borda. */
+  --canvas:#F1E7DC;
+  --surface:#FFFFFF;
+  --surface-warm:#FBF6EF;
+
+  /* ── Letra ───────────────────────────────────────────────────────────────
+     `--ink` é o texto normal, `--ink-2` o secundário, `--muted` o rótulo.
+     `--muted` já foi #8A7D70 e reprovava em contraste (3,28:1); #6E6256 dá
+     4,85:1 no bege e 5,92:1 no branco, e é a cor de quase todo rótulo do
+     sistema — por isso ela precisa passar, e não só quase. */
+  --ink:#113D39;
+  --ink-2:#3F5854;
+  --muted:#6E6256;
+
+  /* ── Traços ──────────────────────────────────────────────────────────────
+     `--line` divide o que é do mesmo grupo; `--line-2` fecha o que é caixa. */
+  --line:#E4D9C9;
+  --line-2:#D6C3AC;
+
+  /* ── Marca ───────────────────────────────────────────────────────────────
+     `--brand-teal` é canônico em logo, foco, borda e série de gráfico. Como
+     TEXTO ele reprova (4,11:1 no branco, 3,44:1 no receita-soft), e para isso
+     existe o `--brand-teal-txt`: o mesmo teal escurecido, 5,54:1 no branco e
+     4,54:1 no bege, usado só onde é letra ou fundo de letra. Os dois são a
+     mesma cor com dois trabalhos. O 4,54:1 passa, mas passa RASPANDO: quem for
+     escurecer o `--canvas` um dia tem de conferir este par antes. */
+  --brand-dark:#073034;
+  --brand-teal:#0F8C85;
+  --brand-euc:#3FA680;
+  --brand-teal-txt:#0C756F;
+
+  /* ── SINAL: as quatro cores que querem dizer alguma coisa ────────────────
+     Estas quatro NÃO seguem o tema (ver OS QUATRO TEMAS, no fim do arquivo). Se
+     "vencido" mudasse de vermelho conforme a pele escolhida, a cor deixaria de
+     ser informação e viraria decoração — e quem trabalha nesta tela o dia
+     inteiro lê a cor antes de ler a palavra.
+
+     `--amber` tem 2,61:1 no branco: serve de PREENCHIMENTO e de borda, nunca de
+     letra. Para letra âmbar existe o `--amber-txt` (5,91:1 no branco).
+
+     ┌── PENDÊNCIA CONHECIDA: `--verde` E `--vermelho` REPROVAM COMO LETRA ────┐
+     │                                                                        │
+     │ Os dois NÃO têm o par `-txt` que o âmbar tem, e são usados nas duas     │
+     │ funções ao mesmo tempo:                                                │
+     │                                                                        │
+     │     --verde     12 usos como `color`, 11 como `background`, 7 em borda │
+     │     --vermelho  41 usos como `color`, 31 como `background`, 41 em borda │
+     │                                                                        │
+     │ E o lado TEXTO reprova. Medido nos valores atuais:                     │
+     │                                                                        │
+     │     --verde     #2E9D5F   2,82:1 no bege · 3,44:1 no branco   REPROVA  │
+     │     --vermelho  #C0392B   4,46:1 no bege · 5,43:1 no branco   raspando │
+     │                                                                        │
+     │ O mínimo para texto é 4,5:1. É a mesma falha do `--muted` antigo (que   │
+     │ dava 3,28:1), e atinge `.hint.ok` e `.lk.ok`, que são letra e nada      │
+     │ mais. Há prova de que alguém já tinha esbarrado nisso sem nomear: o     │
+     │ `.det-fbtn.ativo` escreve `color:#0E5B37` à mão — um verde bem mais     │
+     │ escuro — em vez de usar o token.                                       │
+     │                                                                        │
+     │ CONSERTO MEDIDO E NÃO APLICADO (decisão de 10/08/2026):                 │
+     │                                                                        │
+     │     --verde     #2E9D5F -> #1F7546   (2,82:1 -> 4,66:1 no bege)        │
+     │     --vermelho  #C0392B -> #BB3728   (4,46:1 -> 4,66:1 no bege)        │
+     │                                                                        │
+     │ Matiz e saturação ficam onde estão; só a luminosidade desce, o mínimo   │
+     │ para passar com folga. Escurecer é seguro pelo lado do FUNDO: TODAS as  │
+     │ regras `background:var(--verde)` / `background:var(--vermelho)` já vêm  │
+     │ com `color:#fff` (ou são faixa/pontinho sem texto), e fundo mais escuro │
+     │ com letra branca só melhora.                                           │
+     │                                                                        │
+     │ POR QUE NÃO FOI APLICADO AGORA: mexer nestes dois repinta as 22         │
+     │ páginas, inclusive as 8 do cliente. A rodada que centralizou os tokens  │
+     │ era de ESTRUTURA — nenhum pixel de cor mudou nela de propósito, para    │
+     │ que qualquer diferença que aparecesse em produção tivesse uma causa só. │
+     │ Trocar cor é decisão de produto e vai junto da varredura do MODO        │
+     │ ESCURO, que já vai ter de abrir os 22 arquivos.                         │
+     │                                                                        │
+     │ QUANDO FOR FAZER, olhe também o `--verde-2`: várias páginas o declaram  │
+     │ valendo #25804C, com a nota "o verde um degrau mais escuro, para virar  │
+     │ FUNDO de texto branco". Com o conserto acima, o `--verde` do núcleo     │
+     │ fica MAIS ESCURO que o `--verde-2`, e a convenção do sufixo -2 se       │
+     │ inverte nesse par. Não dá para resolver daqui: o `--verde-2` mora no    │
+     │ `:root` de cada página.                                                │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     (Escrito assim, sem dois-pontos colado no nome, de propósito: a
+     `tokensCanonicos()` do `_aplica-design.js` varre este bloco com um regex de
+     declaração e NÃO pula comentário. Nome de token seguido de dois-pontos aqui
+     dentro vira token canônico de mentira, e o `--verde-2` de mentira faria as
+     22 páginas aparecerem como "exceção mantida" no terminal. Vale para todo
+     comentário deste arquivo: cite o token, nunca o escreva como declaração.) */
+  --amber:#E8892E;
+  --amber-txt:#8A5A10;
+  --vermelho:#C0392B;
+  --verde:#2E9D5F;
+
+  /* ── Cantos ──────────────────────────────────────────────────────────────
+     Uma escala só, no site inteiro, e mais QUADRADA que redonda.
+       4px  campo, selo, célula
+       6px  cartão, linha da lista, botão
+       8px  bloco grande e modal
+     `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é citado
+     em mais de cem regras, mas o valor acompanha o resto — pílula virou
+     etiqueta. Círculo de verdade (avatar, contador, spinner) continua com
+     `border-radius:50%` escrito na regra e não passa por aqui. */
+  --radius-sm:4px;
+  --radius:6px;
+  --radius-lg:8px;
+  --radius-pill:6px;
+
+  /* ── Escala tipográfica ──────────────────────────────────────────────────
+     Seis degraus, e o pulo entre eles é de propósito irregular: 11-12-13 é a
+     faixa de rótulo, selo e nota de rodapé, onde 1px já muda a hierarquia; 15 é
+     o corpo; 19 e 24 são título de bloco e de tela. Um degrau constante (1,2×,
+     por exemplo) daria 11-13-16-19-23-28 e gastaria três tamanhos na faixa em
+     que o olho não distingue nada.
+     ATENÇÃO: o `body{font-size:15px}` das páginas está escrito à mão e NÃO sai
+     daqui. Quem mexer na escala não muda o corpo do texto; muda só quem usa
+     `var(--fs-N)` — que é rótulo, selo, cabeçalho de tabela e título. */
+  --fs-1:11px;
+  --fs-2:12px;
+  --fs-3:13px;
+  --fs-4:15px;
+  --fs-5:19px;
+  --fs-6:24px;
+
+  /* ── Fonte ───────────────────────────────────────────────────────────────
+     Montserrat vem do Google Fonts, declarado no <head> de cada página. O
+     `system-ui` é o que aparece enquanto ela não chega — e é o que fica se ela
+     não chegar nunca. */
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+/* B4U-DESIGN:FIM */
+</style>
+<style>
+:root{
   /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,37:1 no canvas).
      Este e o mesmo teal escurecido so para letra e fundo de letra; o --brand-teal
      segue canonico em logo, foco, bordas e preenchimentos. */
-  --brand-teal-txt:#0C756F;
-  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
-  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
-  /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
-/* Cantos: uma escala só, no site inteiro, e mais QUADRADA que redonda.
-     4px  campo, selo, célula
-     6px  cartão, linha da lista, botão
-     8px  bloco grande e modal
-   `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é
-   citado em mais de cem regras, mas o valor agora acompanha o resto —
-   pílula virou etiqueta. Círculo de verdade (avatar, contador, spinner)
-   continua com border-radius:50% escrito na regra, e não passa por aqui. */
-  --radius-sm:4px;--radius:6px;--radius-lg:8px;--radius-pill:6px;
+  --amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --verde-2:#25804C;
   /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
   --lift:0 8px 20px rgba(17,61,57,.10);
-  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}

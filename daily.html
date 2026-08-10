@@ -14,25 +14,156 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
 <style>
+/* B4U-DESIGN:INICIO — paleta, cantos e fonte que as 22 páginas dividem.
+   Bloco copiado de b4u-design.css (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-design.js`.
+
+   Entra ANTES do <style> da página de propósito — é a camada base. Se esta
+   página precisar mesmo de um valor diferente, redeclare o token no `:root`
+   dela, que vem depois e vence. */
+:root{
+  /* ── Superfícies ─────────────────────────────────────────────────────────
+     `--canvas` é o bege do fundo da página; `--surface` é o branco do cartão
+     que se apoia nele; `--surface-warm` é o branco quebrado das faixas e
+     cabeçalhos de tabela, que separam sem precisar de borda. */
+  --canvas:#F1E7DC;
+  --surface:#FFFFFF;
+  --surface-warm:#FBF6EF;
+
+  /* ── Letra ───────────────────────────────────────────────────────────────
+     `--ink` é o texto normal, `--ink-2` o secundário, `--muted` o rótulo.
+     `--muted` já foi #8A7D70 e reprovava em contraste (3,28:1); #6E6256 dá
+     4,85:1 no bege e 5,92:1 no branco, e é a cor de quase todo rótulo do
+     sistema — por isso ela precisa passar, e não só quase. */
+  --ink:#113D39;
+  --ink-2:#3F5854;
+  --muted:#6E6256;
+
+  /* ── Traços ──────────────────────────────────────────────────────────────
+     `--line` divide o que é do mesmo grupo; `--line-2` fecha o que é caixa. */
+  --line:#E4D9C9;
+  --line-2:#D6C3AC;
+
+  /* ── Marca ───────────────────────────────────────────────────────────────
+     `--brand-teal` é canônico em logo, foco, borda e série de gráfico. Como
+     TEXTO ele reprova (4,11:1 no branco, 3,44:1 no receita-soft), e para isso
+     existe o `--brand-teal-txt`: o mesmo teal escurecido, 5,54:1 no branco e
+     4,54:1 no bege, usado só onde é letra ou fundo de letra. Os dois são a
+     mesma cor com dois trabalhos. O 4,54:1 passa, mas passa RASPANDO: quem for
+     escurecer o `--canvas` um dia tem de conferir este par antes. */
+  --brand-dark:#073034;
+  --brand-teal:#0F8C85;
+  --brand-euc:#3FA680;
+  --brand-teal-txt:#0C756F;
+
+  /* ── SINAL: as quatro cores que querem dizer alguma coisa ────────────────
+     Estas quatro NÃO seguem o tema (ver OS QUATRO TEMAS, no fim do arquivo). Se
+     "vencido" mudasse de vermelho conforme a pele escolhida, a cor deixaria de
+     ser informação e viraria decoração — e quem trabalha nesta tela o dia
+     inteiro lê a cor antes de ler a palavra.
+
+     `--amber` tem 2,61:1 no branco: serve de PREENCHIMENTO e de borda, nunca de
+     letra. Para letra âmbar existe o `--amber-txt` (5,91:1 no branco).
+
+     ┌── PENDÊNCIA CONHECIDA: `--verde` E `--vermelho` REPROVAM COMO LETRA ────┐
+     │                                                                        │
+     │ Os dois NÃO têm o par `-txt` que o âmbar tem, e são usados nas duas     │
+     │ funções ao mesmo tempo:                                                │
+     │                                                                        │
+     │     --verde     12 usos como `color`, 11 como `background`, 7 em borda │
+     │     --vermelho  41 usos como `color`, 31 como `background`, 41 em borda │
+     │                                                                        │
+     │ E o lado TEXTO reprova. Medido nos valores atuais:                     │
+     │                                                                        │
+     │     --verde     #2E9D5F   2,82:1 no bege · 3,44:1 no branco   REPROVA  │
+     │     --vermelho  #C0392B   4,46:1 no bege · 5,43:1 no branco   raspando │
+     │                                                                        │
+     │ O mínimo para texto é 4,5:1. É a mesma falha do `--muted` antigo (que   │
+     │ dava 3,28:1), e atinge `.hint.ok` e `.lk.ok`, que são letra e nada      │
+     │ mais. Há prova de que alguém já tinha esbarrado nisso sem nomear: o     │
+     │ `.det-fbtn.ativo` escreve `color:#0E5B37` à mão — um verde bem mais     │
+     │ escuro — em vez de usar o token.                                       │
+     │                                                                        │
+     │ CONSERTO MEDIDO E NÃO APLICADO (decisão de 10/08/2026):                 │
+     │                                                                        │
+     │     --verde     #2E9D5F -> #1F7546   (2,82:1 -> 4,66:1 no bege)        │
+     │     --vermelho  #C0392B -> #BB3728   (4,46:1 -> 4,66:1 no bege)        │
+     │                                                                        │
+     │ Matiz e saturação ficam onde estão; só a luminosidade desce, o mínimo   │
+     │ para passar com folga. Escurecer é seguro pelo lado do FUNDO: TODAS as  │
+     │ regras `background:var(--verde)` / `background:var(--vermelho)` já vêm  │
+     │ com `color:#fff` (ou são faixa/pontinho sem texto), e fundo mais escuro │
+     │ com letra branca só melhora.                                           │
+     │                                                                        │
+     │ POR QUE NÃO FOI APLICADO AGORA: mexer nestes dois repinta as 22         │
+     │ páginas, inclusive as 8 do cliente. A rodada que centralizou os tokens  │
+     │ era de ESTRUTURA — nenhum pixel de cor mudou nela de propósito, para    │
+     │ que qualquer diferença que aparecesse em produção tivesse uma causa só. │
+     │ Trocar cor é decisão de produto e vai junto da varredura do MODO        │
+     │ ESCURO, que já vai ter de abrir os 22 arquivos.                         │
+     │                                                                        │
+     │ QUANDO FOR FAZER, olhe também o `--verde-2`: várias páginas o declaram  │
+     │ valendo #25804C, com a nota "o verde um degrau mais escuro, para virar  │
+     │ FUNDO de texto branco". Com o conserto acima, o `--verde` do núcleo     │
+     │ fica MAIS ESCURO que o `--verde-2`, e a convenção do sufixo -2 se       │
+     │ inverte nesse par. Não dá para resolver daqui: o `--verde-2` mora no    │
+     │ `:root` de cada página.                                                │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     (Escrito assim, sem dois-pontos colado no nome, de propósito: a
+     `tokensCanonicos()` do `_aplica-design.js` varre este bloco com um regex de
+     declaração e NÃO pula comentário. Nome de token seguido de dois-pontos aqui
+     dentro vira token canônico de mentira, e o `--verde-2` de mentira faria as
+     22 páginas aparecerem como "exceção mantida" no terminal. Vale para todo
+     comentário deste arquivo: cite o token, nunca o escreva como declaração.) */
+  --amber:#E8892E;
+  --amber-txt:#8A5A10;
+  --vermelho:#C0392B;
+  --verde:#2E9D5F;
+
+  /* ── Cantos ──────────────────────────────────────────────────────────────
+     Uma escala só, no site inteiro, e mais QUADRADA que redonda.
+       4px  campo, selo, célula
+       6px  cartão, linha da lista, botão
+       8px  bloco grande e modal
+     `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é citado
+     em mais de cem regras, mas o valor acompanha o resto — pílula virou
+     etiqueta. Círculo de verdade (avatar, contador, spinner) continua com
+     `border-radius:50%` escrito na regra e não passa por aqui. */
+  --radius-sm:4px;
+  --radius:6px;
+  --radius-lg:8px;
+  --radius-pill:6px;
+
+  /* ── Escala tipográfica ──────────────────────────────────────────────────
+     Seis degraus, e o pulo entre eles é de propósito irregular: 11-12-13 é a
+     faixa de rótulo, selo e nota de rodapé, onde 1px já muda a hierarquia; 15 é
+     o corpo; 19 e 24 são título de bloco e de tela. Um degrau constante (1,2×,
+     por exemplo) daria 11-13-16-19-23-28 e gastaria três tamanhos na faixa em
+     que o olho não distingue nada.
+     ATENÇÃO: o `body{font-size:15px}` das páginas está escrito à mão e NÃO sai
+     daqui. Quem mexer na escala não muda o corpo do texto; muda só quem usa
+     `var(--fs-N)` — que é rótulo, selo, cabeçalho de tabela e título. */
+  --fs-1:11px;
+  --fs-2:12px;
+  --fs-3:13px;
+  --fs-4:15px;
+  --fs-5:19px;
+  --fs-6:24px;
+
+  /* ── Fonte ───────────────────────────────────────────────────────────────
+     Montserrat vem do Google Fonts, declarado no <head> de cada página. O
+     `system-ui` é o que aparece enquanto ela não chega — e é o que fica se ela
+     não chegar nunca. */
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+/* B4U-DESIGN:FIM */
+</style>
+<style>
 :root{
   /* Paleta canônica da equipe — a mesma em todas as telas. */
-  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
-  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
-  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
-  --brand-teal-txt:#0C756F;
-  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--amber-2:#B05F12;
-  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
-/* Cantos: uma escala só, no site inteiro, e mais QUADRADA que redonda.
-     4px  campo, selo, célula
-     6px  cartão, linha da lista, botão
-     8px  bloco grande e modal
-   `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é
-   citado em mais de cem regras, mas o valor agora acompanha o resto —
-   pílula virou etiqueta. Círculo de verdade (avatar, contador, spinner)
-   continua com border-radius:50% escrito na regra, e não passa por aqui. */
-  --radius-sm:4px;--radius:6px;--radius-lg:8px;--radius-pill:6px;
-  --fs-1:11px;--fs-2:12px;--fs-3:13px;--fs-4:15px;--fs-5:19px;--fs-6:24px;
-  --sans:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --amber-soft:#FCEFE0;--amber-line:#F0D6B4;--amber-2:#B05F12;
+  --verde-2:#25804C;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);
@@ -73,7 +204,13 @@ select.filtro:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
 select.filtro{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-weight:700}
 /* "Todo o time" é o estado que muda o significado da tela inteira — de "o que eu
    tenho" para "o que existe". Ele se anuncia: verde cheio, letra branca. */
-select.filtro.time{background:var(--verde-2);border-color:var(--verde-2);color:#fff}
+select.filtro.time,input.filtro.time{background:var(--verde-2);border-color:var(--verde-2);color:#fff}
+/* Texto que ainda não identifica ninguém. O filtro anterior CONTINUA valendo de
+   propósito — trocar para "nada encontrado" a cada letra faria a lista piscar
+   vazia no meio de "Aj-u-b". Mas isso não pode ser mudo: sem a marca, quem
+   digitou errado acha que está vendo o resultado do que escreveu, quando está
+   vendo o resultado do que escreveu antes. */
+input.filtro.ruim{border-color:var(--amber);color:var(--amber-txt);background:var(--amber-soft)}
 select.filtro.time option{background:var(--surface);color:var(--ink)}
 /* Cliente é campo de DIGITAR, não de rolar: com a carteira inteira numa caixinha,
    achar "Ajub" custava rolagem e memória do nome exato. Com datalist, "ajub"
@@ -117,7 +254,9 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
    exatamente no "(você)" — o marcador que existe para a pessoa achar as tarefas
    dela de relance virava "(voc…". Quem cede o espaço é o ASSUNTO, que é 1fr e
    quebra em mais linhas sem perder nada. */
-:root{--cols:78px minmax(0,1fr) 108px 152px 128px 108px}
+:root{
+--cols:78px minmax(0,1fr) 108px 152px 128px 108px
+}
 .t{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   border-left:4px solid var(--line-2);padding:10px 13px;display:grid;gap:2px 12px;
   grid-template-columns:var(--cols);align-items:start;cursor:pointer}
@@ -160,6 +299,9 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 .t.s-feito .t-assunto,.t.s-cancelado .t-assunto{text-decoration:line-through;text-decoration-thickness:1px}
 .t-meta{grid-column:2;display:flex;flex-wrap:wrap;gap:3px 10px;font-size:var(--fs-2);color:var(--muted)}
 .t-cli{color:var(--brand-teal-txt);font-weight:700}
+/* "+2" ao lado do primeiro ID: diz que a tarefa alcança mais gente sem esticar
+   a coluna. A lista inteira está no title da linha e dentro da ficha. */
+.t-mais{margin-left:4px;font-size:var(--fs-1);font-weight:800;color:var(--muted)}
 .t-prazo{font-variant-numeric:tabular-nums;white-space:nowrap}
 .t-prazo.venceu{color:var(--vermelho);font-weight:700}
 .t-prazo.hoje{color:var(--amber-txt);font-weight:700}
@@ -180,25 +322,12 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
   padding:0 2px;cursor:pointer;text-decoration:underline}
 .link-btn:hover{color:var(--brand-teal-txt)}
 
-/* ---------- modal ---------- */
-/* z-index acima de 940: senão o menu lateral continua clicável por cima do véu
-   e um clique distraído troca de página com a ficha aberta. */
-.modal{position:fixed;inset:0;z-index:960;background:rgba(7,48,52,.45);overflow:auto;padding:24px 12px}
-.modal[hidden]{display:none}
-.modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;max-width:760px;
-  margin:0 auto;display:flex;flex-direction:column;max-height:calc(100vh - 48px);
-  box-shadow:0 20px 60px rgba(7,48,52,.35);overflow:hidden}
-.modal-top{flex:none;display:flex;align-items:center;gap:10px;padding:12px 16px;
-  background:var(--brand-dark);color:#fff}
-.modal-top b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-4)}
-.modal-top .cad-id{font-size:var(--fs-2);font-weight:700;color:#cfe6e2}
-.x{border:0;background:rgba(255,255,255,.15);color:#fff;width:30px;height:30px;border-radius:50%;
-  cursor:pointer;font-size:15px;line-height:1;flex:none}
-.x:hover{background:rgba(255,255,255,.28)}
-.modal-body{flex:1;min-height:0;overflow:auto;padding:16px}
-.modal-foot{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:11px 16px;
-  background:var(--surface);border-top:1px solid var(--line)}
-.modal-foot .spacer{flex:1}
+/* ---------- modal ----------
+   A MOLDURA — véu, caixa, cabeçalho escuro, rodapé, aviso de "tem coisa por
+   gravar" — saiu daqui e mora no b4u-modal.js, que a monta em `b4m-` para os
+   sete modais do painel de uma vez. Esta tela era a que mais destoava: véu mais
+   claro, caixa mais estreita, × redondo em vez de pílula — três diferenças que
+   ninguém decidiu, só aconteceram. O que fica abaixo é o que é DESTA ficha. */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .fld{display:flex;flex-direction:column;gap:4px;min-width:0}
 .fld.full{grid-column:1/-1}
@@ -248,6 +377,11 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 <script src="config.js"></script>
 <script src="b4u-espera.js" charset="utf-8"></script>
 <script src="b4u-shell.js" charset="utf-8"></script>
+<!-- A casca dos modais mora num arquivo só (b4u-modal.js): véu, Esc, foco preso
+     dentro da caixa e o aviso de "tem coisa por gravar". Se ele não carregar, a
+     ficha não abre — e mais nada muda: a chamada é protegida por
+     `window.B4UModal &&` e a lista continua inteira. -->
+<script src="b4u-modal.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -452,11 +586,17 @@ function b4uParaPlanilha(valor,coluna){
     <div class="modal-top">
       <b id="m-tit">Tarefa</b>
       <span class="cad-id" id="m-id"></span>
+      <span class="spacer"></span>
       <button class="x" id="m-x" type="button" aria-label="Fechar">✕</button>
     </div>
     <div class="modal-body" id="m-body"></div>
     <div class="modal-foot">
       <span class="msg" id="m-msg"></span>
+      <!-- Esta ficha não tem autosave: o que está escrito só existe na tela até o
+           botão Salvar. Até aqui, fechar com o formulário preenchido levava tudo
+           embora em silêncio — era o único modal editável da equipe sem este
+           aviso. Ele é o mesmo texto das outras seis telas. -->
+      <span class="cad-aviso" id="cadAviso" hidden>Ainda não gravei o que você escreveu. Use <b>Salvar</b> — ou clique de novo em Fechar para sair assim mesmo.</span>
       <span class="spacer"></span>
       <button class="btn" id="m-fechar" type="button">Fechar</button>
       <button class="btn btn--primary" id="m-salvar" type="button">Salvar</button>
@@ -541,6 +681,68 @@ function resolverCliente(txt){
   if(casam.length>1)  return {id:'',ok:false,msg:casam.length+' clientes casam com isso — escreva mais um pedaço.'};
   return {id:'',ok:false,msg:'Não achei esse cliente.'};
 }
+/* Uma tarefa pode valer para VÁRIOS clientes: a caixa aceita "250033; 250035",
+   e cada pedaço passa pelo resolvedor de sempre. O separador de escrita é o
+   ponto e vírgula (a vírgula é separador de CSV e estraga qualquer exportação),
+   mas a leitura aceita os dois — quem digita não tem de decorar isso.
+
+   "Todos" é exclusivo: junto de um cliente específico ele ganha e o resto some,
+   porque uma tarefa que já alcança a carteira inteira não fica mais específica
+   por citar alguém. O aviso abaixo do campo diz isso quando acontece. */
+function resolverClientes(txt){
+  const bruto=String(txt||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
+  if(!bruto.length) return {ids:[],ok:true,todos:false};
+  const ids=[],ruins=[];
+  for(const p of bruto){
+    const r=resolverCliente(p);
+    if(!r.ok){ ruins.push(r.msg||('"'+p+'" não achei.')); continue; }
+    if(ehTodos(r.id)) return {ids:[TODOS_ID],ok:true,todos:true,sobrou:bruto.length>1};
+    if(r.id&&ids.indexOf(r.id)<0) ids.push(r.id);
+  }
+  if(ruins.length) return {ids:ids,ok:false,msg:ruins[0]};
+  return {ids:ids,ok:true,todos:false};
+}
+const idsTexto=ids=>(ids||[]).join('; ');
+/* ---------- filtrar por VÁRIAS pessoas ----------
+   O campo aceita "Minhas tarefas", "Todo o time" ou nomes separados por ponto e
+   vírgula ("Gian; Kariane"). Os dois primeiros continuam sendo o que se escolhe
+   sem pensar — são os estados do dia a dia —, e por isso continuam no topo da
+   lista suspensa. O resto é digitável, e cada pedaço casa por PARTE do nome:
+   "kari" acha Kariane, que é como a pessoa realmente lembra do nome do colega. */
+const QUEM_EU='__eu__', QUEM_TIME='__todos__';
+function resolverQuem(txt){
+  const t=String(txt||'').trim();
+  if(!t) return {modo:'time',nomes:[]};
+  const n=normTxt(t);
+  if(t===QUEM_EU||n==='minhas tarefas'||n==='minhas') return {modo:'eu',nomes:[]};
+  if(t===QUEM_TIME||n==='todo o time'||n==='time'||n==='todos') return {modo:'time',nomes:[]};
+  const pedacos=t.split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
+  const nomes=[],ruins=[];
+  for(const p of pedacos){
+    const pn=normTxt(p);
+    if(pn==='minhas tarefas'||pn==='minhas'){ nomes.push('__EU__'); continue; }
+    const casa=COLABS.filter(c=>normTxt(c.nome).includes(pn));
+    if(casa.length===1) nomes.push(casa[0].nome);
+    else if(casa.length>1){
+      const exato=casa.find(c=>normTxt(c.nome)===pn);
+      if(exato) nomes.push(exato.nome); else ruins.push(casa.length+' pessoas casam com "'+p+'"');
+    } else ruins.push('não achei "'+p+'"');
+  }
+  if(!nomes.length) return {modo:'ruim',nomes:[],msg:ruins[0]||''};
+  return {modo:'lista',nomes:nomes,msg:ruins[0]||''};
+}
+function rotuloClientes(cru){
+  const ids=String(cru||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
+  if(!ids.length) return '';
+  if(ids.length===1) return rotuloCliente(ids[0]);
+  return ids.join('; ');
+}
+/* O que aparece escrito no campo de pessoas, a partir do estado guardado. */
+function rotuloQuem(v){
+  if(!v||v===QUEM_TIME) return 'Todo o time';
+  if(v===QUEM_EU) return 'Minhas tarefas';
+  return String(v);
+}
 function rotuloCliente(id){
   if(ehTodos(id)) return 'Todos';
   const c=CLIENTES.find(x=>String(x.id)===String(id));
@@ -587,8 +789,14 @@ function comVoce(nome){
 function visiveis(){
   const termo=normTxt(TERMO), dig=soDigitos(TERMO);
   return TAREFAS.filter(t=>{
-    if(F_QUEM==='__eu__'){ if(!souEu(t.responsavel)) return false; }
-    else if(F_QUEM && F_QUEM!=='__todos__'){ if(normTxt(t.responsavel)!==normTxt(F_QUEM)) return false; }
+    const quem=resolverQuem(F_QUEM);
+    if(quem.modo==='eu'){ if(!souEu(t.responsavel)) return false; }
+    else if(quem.modo==='lista'){
+      const bate=quem.nomes.some(nm=>nm==='__EU__'?souEu(t.responsavel):normTxt(nm)===normTxt(t.responsavel));
+      if(!bate) return false;
+    }
+    /* modo 'ruim' (a pessoa está no meio da digitação) não filtra ninguém: a
+       lista piscaria vazia a cada letra. */
     if(F_AREA && t.area!==F_AREA) return false;
     if(F_SIT==='abertas'){ if(ABERTAS.indexOf(t.situacao)<0) return false; }
     else if(F_SIT && F_SIT!=='__todas__'){ if(t.situacao!==F_SIT) return false; }
@@ -606,10 +814,17 @@ function visiveis(){
        não filtra por ID: cai na busca por pedaço do nome, senão a lista piscaria
        vazia a cada letra. */
     if(F_CLI){
-      const alvo=resolverCliente(F_CLI);
-      if(alvo.ok && alvo.id){
-        if(ehTodos(alvo.id)){ if(!ehTodos(t.cliente_id)) return false; }
-        else if(!(ehTodos(t.cliente_id) || String(t.cliente_id)===String(alvo.id))) return false;
+      const alvo=resolverClientes(F_CLI);
+      if(alvo.ok && alvo.ids.length){
+        const lista=(t.clientes&&t.clientes.length)
+          ? t.clientes.map(c=>String(c.id))
+          : String(t.cliente_id||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
+        const temTodos=lista.some(ehTodos);
+        /* Vários clientes no filtro: basta a tarefa alcançar UM deles. É "ou",
+           não "e" — pedir a tarefa que serve aos três ao mesmo tempo não é a
+           pergunta que alguém faz na daily. */
+        if(alvo.todos){ if(!temTodos) return false; }
+        else if(!(temTodos || alvo.ids.some(x=>lista.indexOf(String(x))>=0))) return false;
       } else {
         const p=normTxt(F_CLI);
         if(!ehTodos(t.cliente_id) && !normTxt(String(t.cliente_id||'')+' '+String(t.cliente||'')).includes(p)) return false;
@@ -670,7 +885,15 @@ function linhaHTML(t){
   const quem=t.responsavel?comVoce(t.responsavel):'<span style="color:var(--muted)">sem responsável</span>';
   /* Coluna 1 é sempre a MESMA informação: o identificador do alvo. ID do cliente,
      "Todos" ou "interno" — nunca o nome, que é longo e desalinha a coluna. */
-  const idAlvo=t.escopo==='Todos'?'Todos':(t.escopo==='Interno'?'interno':esc(t.cliente_id||'—'));
+  /* Com vários clientes, a coluna mostra o primeiro e conta o resto ("+2"): ela
+     tem 78px e existe para o olho correr reto por ela. A lista inteira vai no
+     title da linha, junto do resto do resumo. */
+  const lstCli=(t.clientes&&t.clientes.length)?t.clientes.map(c=>String(c.id))
+    :String(t.cliente_id||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
+  const idAlvo=t.escopo==='Todos'?'Todos'
+    :(t.escopo==='Interno'?'interno'
+      :(lstCli.length>1?esc(lstCli[0])+'<span class="t-mais">+'+(lstCli.length-1)+'</span>'
+                       :esc(t.cliente_id||'—')));
   const nomeCli=t.escopo==='Cliente'
     ? `<span class="t-cli">${esc(t.cliente||nomeCliente(t.cliente_id)||'')}</span>` : '';
   const nLog=LOGS.filter(l=>String(l.daily_id)===String(t.id)&&l.tipo==='nota').length;
@@ -692,6 +915,11 @@ function linhaHTML(t){
    completo. Aqui é espiada, não leitura. */
 function resumoHover(t){
   const partes=[];
+  /* Com vários clientes a coluna só mostra o primeiro e um "+N". A lista por
+     extenso tem de estar em algum lugar alcançável sem abrir a ficha, e este é
+     o lugar: o mesmo gesto que já revela o detalhe. */
+  const lc=(t.clientes&&t.clientes.length)?t.clientes:[];
+  if(lc.length>1) partes.push('Clientes: '+lc.map(c=>c.id+(c.nome?' · '+c.nome:'')).join('\n          '));
   if(t.detalhe) partes.push(t.detalhe);
   const log=LOGS.filter(l=>String(l.daily_id)===String(t.id))
     .slice().sort((a,b)=>String(b.quando).localeCompare(String(a.quando))).slice(0,4);
@@ -703,9 +931,12 @@ function resumoHover(t){
   return partes.join('\n') || t.assunto || '';
 }
 function layout(){
-  const optQuem=['<option value="__eu__">Minhas tarefas</option>',
-                 '<option value="__todos__">Todo o time</option>']
-    .concat(COLABS.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`)).join('');
+  /* Lista suspensa DIGITÁVEL: as duas opções do dia a dia continuam a um clique,
+     e quem quer duas pessoas escreve "Gian; Kariane". Um <select> não permitiria
+     isso sem virar caixa de seleção múltipla, que ninguém opera com o mouse numa
+     régua de filtros. */
+  const optQuem=['<option value="Minhas tarefas"></option>','<option value="Todo o time"></option>']
+    .concat(COLABS.map(c=>`<option value="${esc(c.nome)}"></option>`)).join('');
   const optSit=['<option value="abertas">Em aberto</option>',
                 '<option value="__todas__">Todas as situações</option>']
     .concat(SITUACOES.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`)).join('');
@@ -714,11 +945,13 @@ function layout(){
   return `
   <div class="topo">
     <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por assunto, cliente, pessoa…  ( / para focar)" value="${esc(TERMO)}">
-    <select class="filtro" id="f-quem" aria-label="De quem">${optQuem}</select>
+    <input class="filtro" id="f-quem" list="dl-quem" autocomplete="off" aria-label="De quem"
+           placeholder="De quem — vários com ;" value="${esc(rotuloQuem(F_QUEM))}">
+    <datalist id="dl-quem">${optQuem}</datalist>
     <select class="filtro" id="f-sit" aria-label="Situação">${optSit}</select>
     <select class="filtro" id="f-area" aria-label="Área">${optArea}</select>
     <input class="filtro" id="f-cli" list="dl-cli" autocomplete="off" aria-label="Cliente"
-           placeholder="Cliente — digite um pedaço do nome" value="${F_CLI?esc(rotuloCliente(F_CLI)):''}">
+           placeholder="Cliente — vários com ;" value="${F_CLI?esc(rotuloClientes(F_CLI)):''}">
     <button class="btn btn--primary" id="nova" type="button">+ Nova tarefa</button>
   </div>
   ${datalistClientes()}
@@ -740,7 +973,9 @@ function desenharLista(){
      a caixinha dizendo uma coisa e a lista mostrando outra. */
   const q=document.getElementById('f-quem'), s=document.getElementById('f-sit'), c=document.getElementById('f-cli');
   const a=document.getElementById('f-area');
-  if(q){q.value=F_QUEM;q.classList.toggle('time',F_QUEM==='__todos__');}
+  if(q&&document.activeElement!==q){q.value=rotuloQuem(F_QUEM);}
+  if(q){q.classList.toggle('time',resolverQuem(F_QUEM).modo==='time');
+        if(document.activeElement!==q) q.classList.remove('ruim');}
   if(s){s.value=F_SIT;}
   if(a){a.value=F_AREA;}
   if(c){c.classList.toggle('on',!!F_CLI);}
@@ -777,7 +1012,7 @@ function fichaHTML(t){
       ${campoSelect('f-sit2','Situação',optSit,t.situacao)}
       ${campoSelect('f-area2','Área',optArea2,t.area||'')}
       <div class="fld"><label for="f-cli2">Cliente</label>
-        <input id="f-cli2" list="dl-cli" autocomplete="off" value="${t.cliente_id?esc(rotuloCliente(t.cliente_id)):''}"
+        <input id="f-cli2" list="dl-cli" autocomplete="off" value="${t.cliente_id?esc(rotuloClientes(t.cliente_id)):''}"
                placeholder="Digite um pedaço do nome, ou TODOS">
         <span class="cli-hint" id="f-cli-hint">Em branco = tarefa interna, sem cliente.</span></div>
       <div class="fld"><label for="f-prazo">Prazo</label><input id="f-prazo" type="date" value="${esc(t.prazo)}"></div>
@@ -823,36 +1058,63 @@ function pintarSituacao(){
   const c=COR_SIT[el.value]||['','',];
   el.style.background=c[0]||''; el.style.color=c[1]||''; el.style.fontWeight=c[0]?'700':'';
 }
+/* O que está escrito na ficha, num texto só. Esta tela NÃO tem autosave: o que
+   foi digitado e não passou pelo botão Salvar só existe aqui. Comparar com o
+   instantâneo tirado na abertura é o jeito de saber se fechar agora perde alguma
+   coisa — que é a pergunta que a casca faz antes de deixar sair. */
+const CAMPOS_FICHA=['f-assunto','f-detalhe','f-resp','f-sit2','f-area2','f-cli2',
+                    'f-prazo','f-aberto','f-concl','f-nota'];
+function instantaneoFicha(){
+  return CAMPOS_FICHA.map(id=>{const el=document.getElementById(id);return el?el.value:'';}).join('\u0001');
+}
+let FICHA_LIMPA='';
+/* A MOLDURA da ficha mora no b4u-modal.js: véu e clique fora, Esc, trava da
+   rolagem do fundo, foco preso dentro da caixa e o fechar em dois tempos. Esta
+   tela é a que mais ganha com isso: era o único modal editável da equipe SEM
+   aviso de "tem coisa por gravar", sem confirmação ao sair da página e sem
+   fechar em dois tempos — fechar com o formulário preenchido perdia tudo calado. */
+const MODAL = window.B4UModal && window.B4UModal.adotar('modal', {
+  ids:{titulo:'m-tit',selo:'m-id',corpo:'m-body',msg:'m-msg',
+       aviso:'cadAviso',fechar:'m-fechar',x:'m-x'},
+  base:{msg:'msg'},
+  largura:760,
+  /* Só conta como pendência com a ficha ABERTA: fechada, os campos continuam
+     pintados no #m-body e um instantâneo velho acusaria pendência para sempre. */
+  sujo:()=>{const m=document.getElementById('modal');
+            return !!m&&!m.hidden&&instantaneoFicha()!==FICHA_LIMPA;},
+  aoFechar:()=>{ABERTA=null;}
+});
 function abrirFicha(t){
+  if(!MODAL)return;
   ABERTA=t||null;
-  document.getElementById('m-tit').textContent=t?(t.assunto||'Tarefa'):'Nova tarefa';
-  document.getElementById('m-id').textContent=t?('#'+t.id):'';
+  MODAL.titulo(t?(t.assunto||'Tarefa'):'Nova tarefa').selo(t?('#'+t.id):'').msg('','');
   document.getElementById('m-body').innerHTML=fichaHTML(t);
   if(t){ const l=document.getElementById('log'); if(l) l.innerHTML=logHTML(t.id); }
   document.getElementById('m-salvar').textContent=t?'Salvar':'Criar tarefa';
-  const msg=document.getElementById('m-msg'); msg.className='msg'; msg.textContent='';
-  document.getElementById('modal').hidden=false;
-  document.body.style.overflow='hidden';
+  FICHA_LIMPA=instantaneoFicha();     // o ponto de partida: daqui para a frente é edição
+  MODAL.abrir();
   validarCliFicha();
   pintarSituacao();
   setTimeout(()=>{const f=document.getElementById('f-assunto');if(f)f.focus();},40);
 }
-function fecharFicha(){
-  document.getElementById('modal').hidden=true;
-  document.body.style.overflow='';
-  ABERTA=null;
-}
+function fecharFicha(forcado){ if(MODAL) MODAL.fechar(forcado); }
 /* Diz na hora o que aquele texto virou — ou por que não virou nada. Sem isto a
    pessoa só descobre no clique de salvar, com o formulário inteiro preenchido. */
 function validarCliFicha(){
   const el=document.getElementById('f-cli2'), h=document.getElementById('f-cli-hint');
   if(!el||!h) return {id:'',ok:true};
-  const r=resolverCliente(el.value);
-  if(!el.value.trim()){ h.className='cli-hint'; h.textContent='Em branco = tarefa interna, sem cliente.'; }
-  else if(r.ok&&ehTodos(r.id)){ h.className='cli-hint'; h.textContent='Vale para todos os clientes — aparece na ficha de cada um.'; }
-  else if(r.ok){ h.className='cli-hint'; h.textContent=rotuloCliente(r.id); }
+  const r=resolverClientes(el.value);
+  if(!el.value.trim()){ h.className='cli-hint'; h.textContent='Em branco = tarefa interna, sem cliente. Vários clientes: separe por ponto e vírgula.'; }
+  else if(r.ok&&r.todos){ h.className='cli-hint';
+    h.textContent=r.sobrou?'Vale para TODOS os clientes — o que veio junto foi ignorado, porque "Todos" já alcança a carteira inteira.'
+                          :'Vale para todos os clientes — aparece na ficha de cada um.'; }
+  else if(r.ok&&r.ids.length>1){ h.className='cli-hint';
+    h.textContent=r.ids.length+' clientes: '+r.ids.map(rotuloCliente).join('  ·  '); }
+  else if(r.ok){ h.className='cli-hint'; h.textContent=r.ids.length?rotuloCliente(r.ids[0]):''; }
   else { h.className='cli-hint err'; h.textContent=r.msg; }
-  return r;
+  /* `id` continua existindo para quem chama esperando um valor só — agora ele é
+     a lista já formatada, que é o que a planilha guarda. */
+  return {id:idsTexto(r.ids),ok:r.ok,msg:r.msg};
 }
 
 async function salvarFicha(){
@@ -879,7 +1141,7 @@ async function salvarFicha(){
     msg.className='msg ok'; msg.textContent='Salvo ✓';
     /* Troca só a linha mexida. Se o servidor não mandou a linha, relê tudo. */
     if(!aplicarUma(d)) await recarregar();
-    fecharFicha();
+    fecharFicha(true);          // gravou: sair não perde nada, e o aviso não faz sentido
   }catch(e){
     /* O texto da exceção não vai para a tela: é vocabulário nosso e do outro lado
        só assusta. A ficha CONTINUA ABERTA — fechar por cima de um salvamento que
@@ -894,19 +1156,30 @@ document.addEventListener('click',e=>{
   if(linha){ const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id); if(t) abrirFicha(t); return; }
   if(e.target.id==='nova'){ abrirFicha(null); return; }
   if(e.target.id==='ir-time'){ F_QUEM='__todos__'; desenharLista(); return; }
-  if(e.target.id==='m-x'||e.target.id==='m-fechar'){ fecharFicha(); return; }
   if(e.target.id==='m-salvar'){ salvarFicha(); return; }
-  if(e.target===document.getElementById('modal')) fecharFicha();
+  /* Fechar, × e clique no véu não estão aqui: quem cuida deles é a casca do
+     b4u-modal.js, que precisa passar pelo aviso de "tem coisa por gravar" antes
+     de deixar sair. */
 });
+/* Esc com a ficha aberta NÃO chega aqui: a casca do b4u-modal.js escuta na
+   captura, fecha o modal de cima da pilha e corta a propagação. */
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&!document.getElementById('modal').hidden){ fecharFicha(); return; }
   const linha=e.target&&e.target.closest&&e.target.closest('.t');
   if(linha&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); linha.click(); return; }
   if(e.key==='/'&&!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName||''))){
     e.preventDefault(); const b=document.getElementById('busca'); if(b)b.focus(); }
 });
 document.addEventListener('change',e=>{
-  if(e.target.id==='f-quem'){ F_QUEM=e.target.value; desenharLista(); }
+  if(e.target.id==='f-quem'){
+    const t=e.target.value.trim();
+    const n=normTxt(t);
+    /* Os dois estados rápidos voltam para a forma canônica: guardar "Minhas
+       tarefas" como texto faria o resto do código comparar frase em vez de
+       estado, e o link ?cli= que força "todo o time" pararia de casar. */
+    F_QUEM = (!t||n==='todo o time'||n==='time') ? QUEM_TIME
+           : (n==='minhas tarefas'||n==='minhas') ? QUEM_EU : t;
+    desenharLista();
+  }
   if(e.target.id==='f-sit'){ F_SIT=e.target.value; desenharLista(); }
   if(e.target.id==='f-area'){ F_AREA=e.target.value; desenharLista(); }
   if(e.target.id==='f-cli'){ F_CLI=e.target.value; desenharLista(); }
@@ -925,14 +1198,29 @@ document.addEventListener('change',e=>{
 document.addEventListener('input',e=>{
   if(e.target.id==='busca'){ TERMO=e.target.value; desenharLista(); }
   if(e.target.id==='f-cli2'){ validarCliFicha(); }
-  /* O filtro de cliente resolve enquanto se digita, e só filtra quando o texto
-     casa com um cliente só — filtrar a cada letra deixaria a lista piscando vazia
-     no meio de "Aj-u-b". Apagar o campo volta para todos. */
+  /* O filtro de cliente resolve enquanto se digita e só filtra quando o texto
+     identifica cliente — filtrar a cada letra deixaria a lista piscando vazia no
+     meio de "Aj-u-b". Apagar o campo volta para todos.
+     Com ponto e vírgula vale para VÁRIOS: "250033; 250035" traz os dois. */
   if(e.target.id==='f-cli'){
     const el=e.target;
     if(!el.value.trim()){ if(F_CLI){F_CLI='';desenharLista();} el.classList.remove('on'); return; }
-    const r=resolverCliente(el.value);
-    if(r.ok&&r.id&&String(r.id)!==String(F_CLI)){ F_CLI=r.id; desenharLista(); }
+    const r=resolverClientes(el.value);
+    const novo=r.ok?idsTexto(r.ids):'';
+    el.classList.toggle('ruim',!novo);
+    el.title=novo?'':(r.msg||'Ainda não identifiquei esse cliente — a lista continua no filtro anterior.');
+    if(novo && novo!==String(F_CLI)){ F_CLI=novo; desenharLista(); }
+  }
+  /* Pessoas: mesma ideia, só filtra quando o texto identifica alguém. */
+  if(e.target.id==='f-quem'){
+    const t=e.target.value.trim(), n=normTxt(t);
+    if(!t){ if(F_QUEM!==QUEM_TIME){F_QUEM=QUEM_TIME;desenharLista();} return; }
+    if(n==='minhas tarefas'||n==='minhas'){ if(F_QUEM!==QUEM_EU){F_QUEM=QUEM_EU;desenharLista();} return; }
+    if(n==='todo o time'||n==='time'){ if(F_QUEM!==QUEM_TIME){F_QUEM=QUEM_TIME;desenharLista();} return; }
+    const rq=resolverQuem(t);
+    e.target.classList.toggle('ruim',rq.modo==='ruim');
+    e.target.title=rq.modo==='ruim'?(rq.msg||'Ainda não identifiquei essa pessoa — a lista continua no filtro anterior.'):'';
+    if(rq.modo==='lista' && t!==String(F_QUEM)){ F_QUEM=t; desenharLista(); }
   }
 });
 

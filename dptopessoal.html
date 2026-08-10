@@ -15,19 +15,153 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" onload="this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"></noscript>
 <style>
+/* B4U-DESIGN:INICIO — paleta, cantos e fonte que as 22 páginas dividem.
+   Bloco copiado de b4u-design.css (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-design.js`.
+
+   Entra ANTES do <style> da página de propósito — é a camada base. Se esta
+   página precisar mesmo de um valor diferente, redeclare o token no `:root`
+   dela, que vem depois e vence. */
 :root{
-  /* PALETA CANÔNICA — igual nas 7 páginas do cliente. Não redeclare tons aqui. */
-  --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
-  --ink:#113D39; --ink-2:#3F5854; --muted:#6E6256; --line:#E4D9C9; --line-2:#D6C3AC;
-  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-euc:#3FA680;
-  /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,44:1 no receita-soft).
-     Este é o mesmo teal escurecido só para texto e fundo de texto; o --brand-teal
-     continua canônico em logo, foco, bordas e preenchimentos. */
+  /* ── Superfícies ─────────────────────────────────────────────────────────
+     `--canvas` é o bege do fundo da página; `--surface` é o branco do cartão
+     que se apoia nele; `--surface-warm` é o branco quebrado das faixas e
+     cabeçalhos de tabela, que separam sem precisar de borda. */
+  --canvas:#F1E7DC;
+  --surface:#FFFFFF;
+  --surface-warm:#FBF6EF;
+
+  /* ── Letra ───────────────────────────────────────────────────────────────
+     `--ink` é o texto normal, `--ink-2` o secundário, `--muted` o rótulo.
+     `--muted` já foi #8A7D70 e reprovava em contraste (3,28:1); #6E6256 dá
+     4,85:1 no bege e 5,92:1 no branco, e é a cor de quase todo rótulo do
+     sistema — por isso ela precisa passar, e não só quase. */
+  --ink:#113D39;
+  --ink-2:#3F5854;
+  --muted:#6E6256;
+
+  /* ── Traços ──────────────────────────────────────────────────────────────
+     `--line` divide o que é do mesmo grupo; `--line-2` fecha o que é caixa. */
+  --line:#E4D9C9;
+  --line-2:#D6C3AC;
+
+  /* ── Marca ───────────────────────────────────────────────────────────────
+     `--brand-teal` é canônico em logo, foco, borda e série de gráfico. Como
+     TEXTO ele reprova (4,11:1 no branco, 3,44:1 no receita-soft), e para isso
+     existe o `--brand-teal-txt`: o mesmo teal escurecido, 5,54:1 no branco e
+     4,54:1 no bege, usado só onde é letra ou fundo de letra. Os dois são a
+     mesma cor com dois trabalhos. O 4,54:1 passa, mas passa RASPANDO: quem for
+     escurecer o `--canvas` um dia tem de conferir este par antes. */
+  --brand-dark:#073034;
+  --brand-teal:#0F8C85;
+  --brand-euc:#3FA680;
   --brand-teal-txt:#0C756F;
-  --amber:#E8892E; --amber-txt:#8A5A10; --vermelho:#C0392B; --verde:#2E9D5F;
-  /* Escala tipográfica — 6 passos, sem meio pixel. */
-  --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
-  /* Raios — 12 padrão, 16 para caixas grandes, 999 só para pílulas. */
+
+  /* ── SINAL: as quatro cores que querem dizer alguma coisa ────────────────
+     Estas quatro NÃO seguem o tema (ver OS QUATRO TEMAS, no fim do arquivo). Se
+     "vencido" mudasse de vermelho conforme a pele escolhida, a cor deixaria de
+     ser informação e viraria decoração — e quem trabalha nesta tela o dia
+     inteiro lê a cor antes de ler a palavra.
+
+     `--amber` tem 2,61:1 no branco: serve de PREENCHIMENTO e de borda, nunca de
+     letra. Para letra âmbar existe o `--amber-txt` (5,91:1 no branco).
+
+     ┌── PENDÊNCIA CONHECIDA: `--verde` E `--vermelho` REPROVAM COMO LETRA ────┐
+     │                                                                        │
+     │ Os dois NÃO têm o par `-txt` que o âmbar tem, e são usados nas duas     │
+     │ funções ao mesmo tempo:                                                │
+     │                                                                        │
+     │     --verde     12 usos como `color`, 11 como `background`, 7 em borda │
+     │     --vermelho  41 usos como `color`, 31 como `background`, 41 em borda │
+     │                                                                        │
+     │ E o lado TEXTO reprova. Medido nos valores atuais:                     │
+     │                                                                        │
+     │     --verde     #2E9D5F   2,82:1 no bege · 3,44:1 no branco   REPROVA  │
+     │     --vermelho  #C0392B   4,46:1 no bege · 5,43:1 no branco   raspando │
+     │                                                                        │
+     │ O mínimo para texto é 4,5:1. É a mesma falha do `--muted` antigo (que   │
+     │ dava 3,28:1), e atinge `.hint.ok` e `.lk.ok`, que são letra e nada      │
+     │ mais. Há prova de que alguém já tinha esbarrado nisso sem nomear: o     │
+     │ `.det-fbtn.ativo` escreve `color:#0E5B37` à mão — um verde bem mais     │
+     │ escuro — em vez de usar o token.                                       │
+     │                                                                        │
+     │ CONSERTO MEDIDO E NÃO APLICADO (decisão de 10/08/2026):                 │
+     │                                                                        │
+     │     --verde     #2E9D5F -> #1F7546   (2,82:1 -> 4,66:1 no bege)        │
+     │     --vermelho  #C0392B -> #BB3728   (4,46:1 -> 4,66:1 no bege)        │
+     │                                                                        │
+     │ Matiz e saturação ficam onde estão; só a luminosidade desce, o mínimo   │
+     │ para passar com folga. Escurecer é seguro pelo lado do FUNDO: TODAS as  │
+     │ regras `background:var(--verde)` / `background:var(--vermelho)` já vêm  │
+     │ com `color:#fff` (ou são faixa/pontinho sem texto), e fundo mais escuro │
+     │ com letra branca só melhora.                                           │
+     │                                                                        │
+     │ POR QUE NÃO FOI APLICADO AGORA: mexer nestes dois repinta as 22         │
+     │ páginas, inclusive as 8 do cliente. A rodada que centralizou os tokens  │
+     │ era de ESTRUTURA — nenhum pixel de cor mudou nela de propósito, para    │
+     │ que qualquer diferença que aparecesse em produção tivesse uma causa só. │
+     │ Trocar cor é decisão de produto e vai junto da varredura do MODO        │
+     │ ESCURO, que já vai ter de abrir os 22 arquivos.                         │
+     │                                                                        │
+     │ QUANDO FOR FAZER, olhe também o `--verde-2`: várias páginas o declaram  │
+     │ valendo #25804C, com a nota "o verde um degrau mais escuro, para virar  │
+     │ FUNDO de texto branco". Com o conserto acima, o `--verde` do núcleo     │
+     │ fica MAIS ESCURO que o `--verde-2`, e a convenção do sufixo -2 se       │
+     │ inverte nesse par. Não dá para resolver daqui: o `--verde-2` mora no    │
+     │ `:root` de cada página.                                                │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     (Escrito assim, sem dois-pontos colado no nome, de propósito: a
+     `tokensCanonicos()` do `_aplica-design.js` varre este bloco com um regex de
+     declaração e NÃO pula comentário. Nome de token seguido de dois-pontos aqui
+     dentro vira token canônico de mentira, e o `--verde-2` de mentira faria as
+     22 páginas aparecerem como "exceção mantida" no terminal. Vale para todo
+     comentário deste arquivo: cite o token, nunca o escreva como declaração.) */
+  --amber:#E8892E;
+  --amber-txt:#8A5A10;
+  --vermelho:#C0392B;
+  --verde:#2E9D5F;
+
+  /* ── Cantos ──────────────────────────────────────────────────────────────
+     Uma escala só, no site inteiro, e mais QUADRADA que redonda.
+       4px  campo, selo, célula
+       6px  cartão, linha da lista, botão
+       8px  bloco grande e modal
+     `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é citado
+     em mais de cem regras, mas o valor acompanha o resto — pílula virou
+     etiqueta. Círculo de verdade (avatar, contador, spinner) continua com
+     `border-radius:50%` escrito na regra e não passa por aqui. */
+  --radius-sm:4px;
+  --radius:6px;
+  --radius-lg:8px;
+  --radius-pill:6px;
+
+  /* ── Escala tipográfica ──────────────────────────────────────────────────
+     Seis degraus, e o pulo entre eles é de propósito irregular: 11-12-13 é a
+     faixa de rótulo, selo e nota de rodapé, onde 1px já muda a hierarquia; 15 é
+     o corpo; 19 e 24 são título de bloco e de tela. Um degrau constante (1,2×,
+     por exemplo) daria 11-13-16-19-23-28 e gastaria três tamanhos na faixa em
+     que o olho não distingue nada.
+     ATENÇÃO: o `body{font-size:15px}` das páginas está escrito à mão e NÃO sai
+     daqui. Quem mexer na escala não muda o corpo do texto; muda só quem usa
+     `var(--fs-N)` — que é rótulo, selo, cabeçalho de tabela e título. */
+  --fs-1:11px;
+  --fs-2:12px;
+  --fs-3:13px;
+  --fs-4:15px;
+  --fs-5:19px;
+  --fs-6:24px;
+
+  /* ── Fonte ───────────────────────────────────────────────────────────────
+     Montserrat vem do Google Fonts, declarado no <head> de cada página. O
+     `system-ui` é o que aparece enquanto ela não chega — e é o que fica se ela
+     não chegar nunca. */
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+/* B4U-DESIGN:FIM */
+</style>
+<style>
+:root{
 /* Cantos: uma escala só, no site inteiro, e mais QUADRADA que redonda.
      4px  campo, selo, célula
      6px  cartão, linha da lista, botão
@@ -36,8 +170,6 @@
    citado em mais de cem regras, mas o valor agora acompanha o resto —
    pílula virou etiqueta. Círculo de verdade (avatar, contador, spinner)
    continua com border-radius:50% escrito na regra, e não passa por aqui. */
-  --radius-sm:4px;--radius:6px;--radius-lg:8px;--radius-pill:6px;
-  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
   --receita:var(--brand-teal); --receita-soft:#DBEFEC;
   /* #A7715D pinta ponto e preenchimento; como TEXTO sobre o creme ele dá 3,20:1.
      O --andamento-txt é o mesmo tom escurecido só para letra: 5,26:1. Mesmo par e
@@ -206,7 +338,9 @@ table.func tbody tr:last-child td{border-bottom:none}
 @media(max-width:640px){
   /* No celular a escala inteira encolhe de uma vez, pelos tokens — antes cada
      seletor repetia o seu próprio padding aqui embaixo. */
-  :root{--pad-sm:12px 13px;--pad:15px 16px;--pad-lg:18px 18px}
+  :root{
+--pad-sm:12px 13px;--pad:15px 16px;--pad-lg:18px 18px
+}
   .wrap{padding:0 14px 60px}
   .bar{padding:12px 14px;gap:10px}
   /* razão social + CNPJ do cliente não podem virar 11px: ficam menores que o texto ao lado */
@@ -294,6 +428,11 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-si
      arquivo não carregar, a página fica como era: a chamada é protegida por
      `window.B4UShell &&`. -->
 <script src="b4u-shell.js" charset="utf-8"></script>
+<!-- O painel "meus dados" (o botão com o nome de quem entrou, na barra do topo) mora
+     no mesmo lugar para as oito páginas. Se não carregar, a barra volta a mostrar o
+     botão verde do WhatsApp e nenhuma chamada quebra: todas estão protegidas por
+     `window.B4UCliente &&`. -->
+<script src="b4u-cliente.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -723,6 +862,9 @@ function b4uParaPlanilha(valor,coluna){
   var IC = {
     home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
     wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.9.3.1.4.2.5.3.1.2.1.7-.1 1.3Z"/></svg>',
+    // Uma pessoa só, não duas: o botão é sobre QUEM ESTÁ LOGADO, e o ícone de duas
+    // pessoas já quer dizer "Departamento Pessoal" nesta mesma barra.
+    eu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.6-3.7 3.7-6 7.5-6s6.9 2.3 7.5 6"/></svg>',
     chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/></svg>',
     help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>',
     chk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>',
@@ -736,6 +878,14 @@ function b4uParaPlanilha(valor,coluna){
   var linkHome = 'index' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var linkTickets = 'meustickets' + (C.id ? '#'+C.id+(C.codigo?'-'+C.codigo:'') : '');
   var waHref = 'https://wa.me/'+WA+'?text='+encodeURIComponent('Olá, sou cliente back4you'+(C.id?' (ID '+C.id+')':'')+'.');
+  /* O href do WhatsApp passa a ter um PUBLICADOR, não só um lugar na tela.
+     O botão verde saiu da barra (o lugar dele agora é dentro do painel "meus dados"),
+     e quem lia esse href pelo DOM ficaria de mãos vazias: o rodapé "Falar com a gente"
+     do menu lateral, nas oito páginas, é montado com ele — sem href, o rodapé
+     simplesmente não nasce, e o WhatsApp some do painel inteiro. Publicado aqui, o
+     número continua tendo UM dono só (este bloco) e continua alcançável mesmo com a
+     barra redesenhada. Quem lê deve preferir esta variável e deixar o DOM de reserva. */
+  window.B4U_WA = waHref;
 
   // ---- links de área na própria barra --------------------------------------
   /* Do fiscal para a agenda não havia caminho: era voltar para a home e pagar outra
@@ -760,17 +910,34 @@ function b4uParaPlanilha(valor,coluna){
        pessoa já está. As duas formas de endereço continuam valendo. */
     return AREAS_LINK.filter(function(a){
       if (a[0].toLowerCase() === aqui) return false;                       // não linkar a página atual
-      if (a[2] === 'guias') return !disp || !!(disp.fiscal || disp.pessoal);
       return !!(disp && disp[a[2]]);
     }).slice(0, 2)                                                          // 2 links: a barra ainda tem 3 botões fixos
      .map(function(a){
-       /* b4u-nav marca o que virou item do menu lateral: com o menu montado, a folha
-          do b4u-shell.js esconde estes atalhos (não os remove — o href continua
-          sendo escrito aqui). Sem o menu, nada muda e eles seguem na barra. */
+       /* b4u-nav: é esta classe que a folha do b4u-shell.js esconde quando o menu
+          lateral está montado — o menu já diz isto, e melhor (sem o corte em 2).
+          Não pode ser `.b4u-btn.ghost` sozinha: ela também veste botões que ficam. */
        return '<a class="b4u-btn ghost b4u-nav" href="'+esc(a[0]+(C.id?('#'+C.id+(C.codigo?'-'+C.codigo:'')):''))+'" '+
               'title="'+esc(a[1])+'">'+a[3]+'<span class="b4u-lbl">'+esc(a[1])+'</span></a>';
      }).join('');
   }
+
+  // ---- quem está logado, para o botão do nome -------------------------------
+  /* O nome de quem entrou vem no payload `tipo=links`, que só a HOME pede — e ela o
+     guarda no cache compartilhado. As outras sete páginas leem daqui, do mesmo jeito
+     que já leem o `b4u_disp_` para saber quais áreas oferecer. Sem registro (primeira
+     visita num aparelho novo), devolve null: o botão nasce com o rótulo genérico e
+     vira o nome quando a página souber dele. A empresa vem do payload fiscal, que é
+     onde mora a razão social — a mesma fonte que o menu lateral já usa. */
+  function pessoaGuardada(){
+    try{ var r = cacheLer('links', C.id); return (r && r.pessoa) || null; }catch(e){ return null; }
+  }
+  function empresaGuardada(){
+    try{ var r = cacheLer('fiscal', C.id); return (r && r.config) || null; }catch(e){ return null; }
+  }
+  /* O botão do nome só entra se o painel estiver de pé: sem o b4u-cliente.js ele seria
+     um enfeite que não abre nada. Nesse caso a barra continua com o botão verde do
+     WhatsApp, exatamente como era antes — ninguém fica sem o caminho do socorro. */
+  var temEu = !!(window.B4UCliente && window.B4UCliente.ligar);
 
   // ---- barra fixa ----------------------------------------------------------
   var bar = document.createElement('div');
@@ -778,9 +945,20 @@ function b4uParaPlanilha(valor,coluna){
   bar.innerHTML =
     '<a class="b4u-logo" href="'+esc(linkHome)+'"><span>back</span><span class="y">4you</span></a>' +
     (CFG.home ? '' :
+      // b4u-nav: mesma marca dos links de área — o menu lateral esconde este atalho
+      // porque ele virou o item "Início" de lá. Escondido, nunca removido.
       '<a class="b4u-btn ghost b4u-nav" href="'+esc(linkHome)+'">'+IC.home+'<span class="b4u-lbl">Início</span></a>') +
     (CFG.home ? '' : linksDeArea()) +
-    '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>' +
+    /* O nome de quem está logado, no lugar do WhatsApp. Enquanto o payload não chega,
+       o rótulo é "Meus dados": é verdade em qualquer estado, não pisca duas vezes como
+       um "carregando…" que aparece e sai, e não deixa um botão em branco na barra —
+       o mesmo princípio que o menu lateral já segue no item "Início". O nome completo
+       vai no title (e no aria-label), porque o rótulo corta com reticências e no
+       celular ele nem aparece. As classes são as de sempre: min-height 44px, rótulo
+       escondido abaixo de 640px, altura da barra idêntica à de antes. */
+    (temEu
+      ? '<button type="button" class="b4u-btn ghost b4uc-eu" id="b4u-eu" aria-haspopup="dialog" aria-expanded="false" title="Meus dados, contatos e acessos">'+IC.eu+'<span class="b4u-lbl" id="b4u-eu-nome">Meus dados</span></button>'
+      : '<a class="b4u-btn wa" href="'+esc(waHref)+'" target="_blank" rel="noopener">'+IC.wa+'<span class="b4u-lbl">WhatsApp</span></a>') +
     '<button type="button" class="b4u-btn call" id="b4u-open">'+IC.chat+'<span class="b4u-lbl">Abrir chamado</span></button>' +
     '<button type="button" class="b4u-icobtn" id="b4u-help" title="Reportar um erro ou pedir ajuda" aria-label="Reportar um erro ou pedir ajuda">'+IC.help+'</button>';
   document.body.insertBefore(bar, document.body.firstChild);
@@ -789,6 +967,22 @@ function b4uParaPlanilha(valor,coluna){
   medirBarra();
   window.addEventListener('resize', medirBarra);
   window.addEventListener('load', medirBarra);
+
+  /* O painel "meus dados" recebe o que este bloco já sabe: identidade, WhatsApp, a
+     forma de falar com a API (o jsonp daqui, com repetição e teto de 45s) e o que
+     estiver guardado do último payload. Cada página completa o resto com
+     `B4UCliente.atualizar()` quando a resposta dela chega. */
+  if (temEu) window.B4UCliente.ligar({
+    botao:   bar.querySelector('#b4u-eu'),
+    rotulo:  bar.querySelector('#b4u-eu-nome'),
+    id:      C.id,
+    codigo:  C.codigo,
+    wa:      waHref,
+    api:     api(),
+    jsonp:   jsonp,
+    pessoa:  pessoaGuardada(),
+    empresa: empresaGuardada()
+  });
 
   // ---- modal ---------------------------------------------------------------
   var ov = document.createElement('div');
@@ -969,8 +1163,16 @@ function b4uParaPlanilha(valor,coluna){
     document.body.appendChild(ind);
     var y0=null, dist=0, LIM=70, ativo=false;
     function topo(){ return (window.scrollY||document.documentElement.scrollTop||0)<=0; }
+    /* Com uma folha aberta o gesto não é "atualizar", é rolar o que está dentro dela.
+       O modal de chamado já era contado aqui; o painel "meus dados" entrou junto
+       porque ele tem FORMULÁRIO (os contatos): puxar para baixo com a folha aberta
+       recarregava a página e levava embora o e-mail que a pessoa estava digitando. */
+    function folhaAberta(){
+      return (ov && ov.classList.contains('on')) ||
+             !!(window.B4UCliente && window.B4UCliente.aberto && window.B4UCliente.aberto());
+    }
     window.addEventListener('touchstart',function(e){
-      if(e.touches.length!==1 || !topo() || (ov&&ov.classList.contains('on'))){ y0=null; return; }
+      if(e.touches.length!==1 || !topo() || folhaAberta()){ y0=null; return; }
       y0=e.touches[0].clientY; ativo=true;
     },{passive:true});
     window.addEventListener('touchmove',function(e){
@@ -1230,13 +1432,24 @@ function areasContratadas(id){
    O caminho do cache chama render() duas vezes: o módulo ignora a segunda montagem de
    propósito, e a guarda abaixo evita repetir o resto do trabalho. */
 function montarMenu(M){
+  /* O painel "meus dados" (o botão com o nome, na barra) mostra a empresa aberta.
+     A razão social e o CNPJ só existem depois do payload desta página — o bloco
+     compartilhado já semeou o painel com o que estava guardado no aparelho, e aqui
+     entregamos a versão fresca. Fica ANTES da guarda do menu de propósito: o painel
+     não depende do b4u-shell.js ter carregado. */
+  if (window.B4UCliente) B4UCliente.atualizar({ empresa: (M && M.config) || null });
   if(!window.B4UShell || B4UShell.montado()) return;
   const cfg = (M && M.config) || {};
   const nome = cfg.razao_social || '';
   const cnpj = cfg.cnpj ? 'CNPJ ' + b4uIdentHTML(cfg.cnpj,'CNPJ') : ((M && M.id) ? 'cliente ' + esc(b4uTexto(M.id)) : '');
-  // O mesmo href que a barra já montou (com o ID no texto): o número do WhatsApp
-  // continua tendo um dono só, e é o bloco compartilhado.
-  const wa = document.querySelector('.b4u-bar .b4u-btn.wa');
+  // O href do WhatsApp vem do bloco compartilhado, que o publica em `window.B4U_WA`
+  // — o número continua tendo um dono só. Antes líamos o `href` do botão verde da
+  // barra, e o botão verde saiu de lá (virou item do painel "meus dados"): sem esta
+  // troca o `wa` chega vazio e o rodapé "Falar com a gente" do menu lateral não é
+  // desenhado — o WhatsApp sumiria do painel inteiro. O DOM fica de reserva, para
+  // quando o b4u-cliente.js não carregar e o botão verde voltar para a barra.
+  const waEl = document.querySelector('.b4u-bar .b4u-btn.wa');
+  const wa = (typeof window.B4U_WA === 'string' && window.B4U_WA) || (waEl ? waEl.getAttribute('href') : '');
   B4UShell.montar({
     perfil:'cliente',
     ativo:'pessoal',
@@ -1248,7 +1461,7 @@ function montarMenu(M){
       return pag + (IDENTIDADE.id ? '#'+IDENTIDADE.id+(IDENTIDADE.codigo?'-'+IDENTIDADE.codigo:'') : '');
     },
     disp: areasContratadas(IDENTIDADE.id),
-    wa: wa ? wa.getAttribute('href') : null
+    wa: wa || null
   });
   /* A barra do topo perde o logo e os atalhos (agora quem os diz é o menu) e ganha o
      botão da gaveta — em tela estreita ela deixa de quebrar em duas linhas. Quem

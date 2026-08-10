@@ -17,38 +17,167 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
 <style>
+/* B4U-DESIGN:INICIO — paleta, cantos e fonte que as 22 páginas dividem.
+   Bloco copiado de b4u-design.css (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-design.js`.
+
+   Entra ANTES do <style> da página de propósito — é a camada base. Se esta
+   página precisar mesmo de um valor diferente, redeclare o token no `:root`
+   dela, que vem depois e vence. */
 :root{
-  /* Paleta canonica da equipe — a mesma em todas as telas. */
-  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
-  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
-  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  /* ── Superfícies ─────────────────────────────────────────────────────────
+     `--canvas` é o bege do fundo da página; `--surface` é o branco do cartão
+     que se apoia nele; `--surface-warm` é o branco quebrado das faixas e
+     cabeçalhos de tabela, que separam sem precisar de borda. */
+  --canvas:#F1E7DC;
+  --surface:#FFFFFF;
+  --surface-warm:#FBF6EF;
+
+  /* ── Letra ───────────────────────────────────────────────────────────────
+     `--ink` é o texto normal, `--ink-2` o secundário, `--muted` o rótulo.
+     `--muted` já foi #8A7D70 e reprovava em contraste (3,28:1); #6E6256 dá
+     4,85:1 no bege e 5,92:1 no branco, e é a cor de quase todo rótulo do
+     sistema — por isso ela precisa passar, e não só quase. */
+  --ink:#113D39;
+  --ink-2:#3F5854;
+  --muted:#6E6256;
+
+  /* ── Traços ──────────────────────────────────────────────────────────────
+     `--line` divide o que é do mesmo grupo; `--line-2` fecha o que é caixa. */
+  --line:#E4D9C9;
+  --line-2:#D6C3AC;
+
+  /* ── Marca ───────────────────────────────────────────────────────────────
+     `--brand-teal` é canônico em logo, foco, borda e série de gráfico. Como
+     TEXTO ele reprova (4,11:1 no branco, 3,44:1 no receita-soft), e para isso
+     existe o `--brand-teal-txt`: o mesmo teal escurecido, 5,54:1 no branco e
+     4,54:1 no bege, usado só onde é letra ou fundo de letra. Os dois são a
+     mesma cor com dois trabalhos. O 4,54:1 passa, mas passa RASPANDO: quem for
+     escurecer o `--canvas` um dia tem de conferir este par antes. */
+  --brand-dark:#073034;
+  --brand-teal:#0F8C85;
+  --brand-euc:#3FA680;
+  --brand-teal-txt:#0C756F;
+
+  /* ── SINAL: as quatro cores que querem dizer alguma coisa ────────────────
+     Estas quatro NÃO seguem o tema (ver OS QUATRO TEMAS, no fim do arquivo). Se
+     "vencido" mudasse de vermelho conforme a pele escolhida, a cor deixaria de
+     ser informação e viraria decoração — e quem trabalha nesta tela o dia
+     inteiro lê a cor antes de ler a palavra.
+
+     `--amber` tem 2,61:1 no branco: serve de PREENCHIMENTO e de borda, nunca de
+     letra. Para letra âmbar existe o `--amber-txt` (5,91:1 no branco).
+
+     ┌── PENDÊNCIA CONHECIDA: `--verde` E `--vermelho` REPROVAM COMO LETRA ────┐
+     │                                                                        │
+     │ Os dois NÃO têm o par `-txt` que o âmbar tem, e são usados nas duas     │
+     │ funções ao mesmo tempo:                                                │
+     │                                                                        │
+     │     --verde     12 usos como `color`, 11 como `background`, 7 em borda │
+     │     --vermelho  41 usos como `color`, 31 como `background`, 41 em borda │
+     │                                                                        │
+     │ E o lado TEXTO reprova. Medido nos valores atuais:                     │
+     │                                                                        │
+     │     --verde     #2E9D5F   2,82:1 no bege · 3,44:1 no branco   REPROVA  │
+     │     --vermelho  #C0392B   4,46:1 no bege · 5,43:1 no branco   raspando │
+     │                                                                        │
+     │ O mínimo para texto é 4,5:1. É a mesma falha do `--muted` antigo (que   │
+     │ dava 3,28:1), e atinge `.hint.ok` e `.lk.ok`, que são letra e nada      │
+     │ mais. Há prova de que alguém já tinha esbarrado nisso sem nomear: o     │
+     │ `.det-fbtn.ativo` escreve `color:#0E5B37` à mão — um verde bem mais     │
+     │ escuro — em vez de usar o token.                                       │
+     │                                                                        │
+     │ CONSERTO MEDIDO E NÃO APLICADO (decisão de 10/08/2026):                 │
+     │                                                                        │
+     │     --verde     #2E9D5F -> #1F7546   (2,82:1 -> 4,66:1 no bege)        │
+     │     --vermelho  #C0392B -> #BB3728   (4,46:1 -> 4,66:1 no bege)        │
+     │                                                                        │
+     │ Matiz e saturação ficam onde estão; só a luminosidade desce, o mínimo   │
+     │ para passar com folga. Escurecer é seguro pelo lado do FUNDO: TODAS as  │
+     │ regras `background:var(--verde)` / `background:var(--vermelho)` já vêm  │
+     │ com `color:#fff` (ou são faixa/pontinho sem texto), e fundo mais escuro │
+     │ com letra branca só melhora.                                           │
+     │                                                                        │
+     │ POR QUE NÃO FOI APLICADO AGORA: mexer nestes dois repinta as 22         │
+     │ páginas, inclusive as 8 do cliente. A rodada que centralizou os tokens  │
+     │ era de ESTRUTURA — nenhum pixel de cor mudou nela de propósito, para    │
+     │ que qualquer diferença que aparecesse em produção tivesse uma causa só. │
+     │ Trocar cor é decisão de produto e vai junto da varredura do MODO        │
+     │ ESCURO, que já vai ter de abrir os 22 arquivos.                         │
+     │                                                                        │
+     │ QUANDO FOR FAZER, olhe também o `--verde-2`: várias páginas o declaram  │
+     │ valendo #25804C, com a nota "o verde um degrau mais escuro, para virar  │
+     │ FUNDO de texto branco". Com o conserto acima, o `--verde` do núcleo     │
+     │ fica MAIS ESCURO que o `--verde-2`, e a convenção do sufixo -2 se       │
+     │ inverte nesse par. Não dá para resolver daqui: o `--verde-2` mora no    │
+     │ `:root` de cada página.                                                │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     (Escrito assim, sem dois-pontos colado no nome, de propósito: a
+     `tokensCanonicos()` do `_aplica-design.js` varre este bloco com um regex de
+     declaração e NÃO pula comentário. Nome de token seguido de dois-pontos aqui
+     dentro vira token canônico de mentira, e o `--verde-2` de mentira faria as
+     22 páginas aparecerem como "exceção mantida" no terminal. Vale para todo
+     comentário deste arquivo: cite o token, nunca o escreva como declaração.) */
+  --amber:#E8892E;
+  --amber-txt:#8A5A10;
+  --vermelho:#C0392B;
+  --verde:#2E9D5F;
+
+  /* ── Cantos ──────────────────────────────────────────────────────────────
+     Uma escala só, no site inteiro, e mais QUADRADA que redonda.
+       4px  campo, selo, célula
+       6px  cartão, linha da lista, botão
+       8px  bloco grande e modal
+     `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é citado
+     em mais de cem regras, mas o valor acompanha o resto — pílula virou
+     etiqueta. Círculo de verdade (avatar, contador, spinner) continua com
+     `border-radius:50%` escrito na regra e não passa por aqui. */
+  --radius-sm:4px;
+  --radius:6px;
+  --radius-lg:8px;
+  --radius-pill:6px;
+
+  /* ── Escala tipográfica ──────────────────────────────────────────────────
+     Seis degraus, e o pulo entre eles é de propósito irregular: 11-12-13 é a
+     faixa de rótulo, selo e nota de rodapé, onde 1px já muda a hierarquia; 15 é
+     o corpo; 19 e 24 são título de bloco e de tela. Um degrau constante (1,2×,
+     por exemplo) daria 11-13-16-19-23-28 e gastaria três tamanhos na faixa em
+     que o olho não distingue nada.
+     ATENÇÃO: o `body{font-size:15px}` das páginas está escrito à mão e NÃO sai
+     daqui. Quem mexer na escala não muda o corpo do texto; muda só quem usa
+     `var(--fs-N)` — que é rótulo, selo, cabeçalho de tabela e título. */
+  --fs-1:11px;
+  --fs-2:12px;
+  --fs-3:13px;
+  --fs-4:15px;
+  --fs-5:19px;
+  --fs-6:24px;
+
+  /* ── Fonte ───────────────────────────────────────────────────────────────
+     Montserrat vem do Google Fonts, declarado no <head> de cada página. O
+     `system-ui` é o que aparece enquanto ela não chega — e é o que fica se ela
+     não chegar nunca. */
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+/* B4U-DESIGN:FIM */
+</style>
+<style>
+:root{
   /* O teal da marca reprova como TEXTO (4,11:1 no branco, 3,37:1 no canvas).
      Este e o mesmo teal escurecido so para letra e fundo de letra; o --brand-teal
      segue canonico em logo, foco, bordas e preenchimentos. */
-  --brand-teal-txt:#0C756F;
-  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --amber-soft:#FCEFE0;--amber-line:#F0D6B4;
   /* Sufixo -2 = a mesma tinta um degrau mais escura, para quando ela vira FUNDO de
      texto branco: o --amber da 2,61:1 com #fff, o --amber-2 da 4,68:1. Como
      preenchimento de barra, icone ou borda, o --amber original continua valendo. */
   --amber-2:#B05F12;
-  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
-  /* Raios: so pelos tokens — 10 em campo, 12 padrao, 16 nos blocos grandes, pilula. */
-/* Cantos: uma escala só, no site inteiro, e mais QUADRADA que redonda.
-     4px  campo, selo, célula
-     6px  cartão, linha da lista, botão
-     8px  bloco grande e modal
-   `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é
-   citado em mais de cem regras, mas o valor agora acompanha o resto —
-   pílula virou etiqueta. Círculo de verdade (avatar, contador, spinner)
-   continua com border-radius:50% escrito na regra, e não passa por aqui. */
-  --radius-sm:4px;--radius:6px;--radius-lg:8px;--radius-pill:6px;
+  --verde-2:#25804C;
   /* Escala de texto e o teal claro: as outras telas ja tinham, esta nao. Sem eles
      o CSS compartilhado da regua de acoes cai no valor herdado e desalinha. */
-  --fs-1:11px; --fs-2:12px; --fs-3:13px; --fs-4:15px; --fs-5:19px; --fs-6:24px;
   --receita-soft:#DBEFEC;
   /* Levantar de cartao clicavel: uma sombra so, igual em todas as telas. */
   --lift:0 8px 20px rgba(17,61,57,.10);
-  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -232,46 +361,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .ign{background:var(--amber-soft);border:1px solid var(--amber-line);color:#8a5117;border-radius:var(--radius-sm);padding:8px 11px;font-size:12px;font-weight:700;margin-bottom:10px}
 .ign:empty{display:none}
 
-/* ---------- modais (cliente novo e cadastro) ---------- */
-.modal[hidden]{display:none}
-.modal{position:fixed;inset:0;z-index:90;background:rgba(7,48,52,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto}
-/* O modal cobre a janela inteira (position:fixed;inset:0), inclusive a faixa dos
-   264px onde mora o menu lateral — e o menu é z-index:940. Com os 90 daqui, o
-   menu ficava POR CIMA do véu: clicável durante o "Criando… não feche a página",
-   que é exatamente o momento em que sair da tela custa um cliente duplicado.
-   A regra é escopada em `body.b4s` de propósito: sem o b4u-shell.js a página
-   continua com os 90 originais e nada muda. */
-body.b4s .modal{z-index:960}
-/* O mesmo motivo vale para o cadastro, que é onde se DIGITA: se o menu lateral
-   ficar por cima do véu, a faixa da esquerda continua clicável e um clique
-   distraído troca de página com o formulário aberto. Esta regra garante o 960
-   também quando o b4u-shell.js não carregou (aí o `body.b4s` não existe). */
-.modal.modal-cad{z-index:960}
-.modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;max-width:860px;overflow:hidden;box-shadow:0 20px 60px rgba(7,48,52,.35)}
-/* O cadastro tem rodapé fixo: a caixa é uma coluna com altura de tela, o miolo
-   rola e o rodapé (status + salvar + fechar) fica sempre à vista. */
-.modal-cad .modal-box{max-width:920px;display:flex;flex-direction:column;
-  max-height:calc(100vh - 72px);margin:36px auto}
-.modal-cad .modal-body{flex:1;min-height:0;overflow:auto}
-.modal-cad .modal-foot{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px;
-  padding:11px 16px;background:var(--surface);border-top:1px solid var(--line)}
-.modal-cad .modal-foot .spacer{flex:1}
-.modal-top .cad-id{font-size:12px;font-weight:700;color:#cfe6e2;white-space:nowrap}
-.modal-top b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* Aviso de "tem coisa por gravar": aparece no primeiro pedido de fechar e o
-   segundo fecha mesmo assim — confirmação em dois tempos, sem caixa do navegador. */
-.cad-aviso{font-size:12px;font-weight:700;color:#8a5117;background:var(--amber-soft);
-  border:1px solid var(--amber-line);border-radius:var(--radius-sm);padding:6px 10px}
-.cad-aviso[hidden]{display:none}
-@media(max-width:640px){
-  .modal-cad{padding:8px}
-  .modal-cad .modal-box{max-height:calc(100vh - 16px)}
-}
-.modal-top{position:sticky;top:0;z-index:2;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:10px;padding:13px 16px}
-.modal-top b{font-size:15px;font-weight:800}
-.modal-top .spacer{flex:1}
-.modal-top button{font-family:var(--sans);font-size:19px;font-weight:800;line-height:1;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:var(--radius-pill);width:32px;height:32px;cursor:pointer}
-.modal-body{padding:16px}
+/* ---------- modais (cliente novo e cadastro) ----------
+   A MOLDURA — véu, caixa, cabeçalho escuro, rodapé, aviso de "tem coisa por
+   gravar" — saiu daqui e mora no b4u-modal.js, que a monta em `b4m-` para os
+   sete modais do painel de uma vez. O que fica abaixo é só o que é DESTE
+   cadastro: como o formulário se arruma dentro da caixa. */
 .modal .grid{grid-template-columns:repeat(2,1fr)}
 .sec{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
 .sec>h2{font-size:13px;font-weight:800;margin:0 0 11px;color:var(--brand-dark);display:flex;align-items:center;gap:8px}
@@ -358,6 +452,15 @@ body.b4s .modal{z-index:960}
    um "0" permanente ao lado de Filtros. */
 .cont-filtros[hidden]{display:none}
 .resumo-lista{font-size:var(--fs-3);color:var(--ink-2);white-space:nowrap}
+/* ---------- régua de filtros ----------
+   Mesma da tela de Tarefas Daily, que virou o padrão da casa. A contagem que o
+   chip dava foi para o rótulo da opção ("Sem CNPJ · 12"). */
+.topo{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+select.filtro{font-family:var(--sans);font-size:var(--fs-3);color:var(--brand-teal-txt);
+  background:var(--surface);border:1px solid var(--brand-teal);border-radius:var(--radius-pill);
+  padding:9px 13px;cursor:pointer;font-weight:700;max-width:100%;min-width:0;text-overflow:ellipsis}
+select.filtro:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
+select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color:var(--amber-txt)}
 .painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
   padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
   border-radius:var(--radius);background:var(--surface-warm)}
@@ -425,6 +528,11 @@ details.sec .grid{margin-top:10px}
 <!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
      chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
 <script src="b4u-shell.js" charset="utf-8"></script>
+<!-- A casca dos modais mora num arquivo só (b4u-modal.js): véu, Esc, foco preso
+     dentro da caixa e o aviso de "tem coisa por gravar". Se ele não carregar, as
+     fichas não abrem — e mais nada muda: as chamadas são protegidas por
+     `window.B4UModal &&` e a lista continua inteira. -->
+<script src="b4u-modal.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -1057,14 +1165,15 @@ function ordenar(arr){
   });
 }
 function desenharOrdem(){
-  const box=document.getElementById('ordChips');if(!box)return;
+  const el=document.getElementById('f-ord');if(!el)return;
   const vivas=ordensVivas();
   if(!vivas.some(o=>o.k===ORDEM)){ORDEM='id';DIR='asc';}
-  box.innerHTML='<span class="rot">Ordenar por</span>'+vivas.map(o=>
-    `<button type="button" class="chip ${ORDEM===o.k?'on':''}" data-s="${o.k}">${esc(o.rot)}${ORDEM===o.k?`<span class="ord">${DIR==='asc'?'▲':'▼'}</span>`:''}</button>`).join('');
-  const at=vivas.find(o=>o.k===ORDEM)||vivas[0];
-  const info=document.getElementById('ordInfo');
-  if(info&&at)info.innerHTML='Ordenado por <b>'+esc(at.rot)+'</b> — '+esc(DIR==='asc'?at.asc:at.desc)+'. Clicar de novo no mesmo critério inverte.';
+  /* Cada critério nas DUAS direções, ditas por extenso — o segundo-clique-inverte
+     dos chips era gesto que ninguém descobria sozinho. */
+  const cur=ORDEM+'|'+DIR;
+  el.innerHTML=vivas.map(o=>
+    `<option value="${esc(o.k)}|asc"${cur===o.k+'|asc'?' selected':''}>`+esc(o.rot+' — '+o.asc)+`</option>`+
+    `<option value="${esc(o.k)}|desc"${cur===o.k+'|desc'?' selected':''}>`+esc(o.rot+' — '+o.desc)+`</option>`).join('');
 }
 
 /* ---------------- cards de resumo ---------------- */
@@ -1368,12 +1477,14 @@ function limparFiltros(){
   redesenhar();
 }
 function desenharChips(){
-  document.getElementById('chips').innerHTML='<span class="rot">Situação</span>'+filtrosVivos().map(f=>{
+  const sel=document.getElementById('f-sit'); if(!sel) return;
+  const vivos=filtrosVivos();
+  if(!vivos.some(f=>f.k===FILTRO)) FILTRO=vivos.length?vivos[0].k:'todos';
+  sel.innerHTML=vivos.map(f=>{
     const n=CLIENTES.filter(f.fn).length;
-    return `<button type="button" class="chip ${f.cls||''} ${FILTRO===f.k?'on':''}" data-f="${f.k}">${esc(f.rot)}<span class="n">${n}</span></button>`;
+    return `<option value="${esc(f.k)}"${f.k===FILTRO?' selected':''}>`+esc(f.rot)+' · '+n+`</option>`;
   }).join('');
-  /* O "Limpar filtros" agora é fixo no rodapé do painel (#btn-limpar) — não é
-     mais um chip que aparece e some no meio dos outros treze. */
+  sel.classList.toggle('corta',FILTRO!=='todos');
 }
 function desenharLista(){
   const arr=visiveis();
@@ -1412,7 +1523,6 @@ function desenharResumoLista(){
 }
 function redesenhar(){
   desenharChips();desenharOrdem();desenharResumo();desenharLista();
-  if(FILTROS_UI)FILTROS_UI.atualizarContador();
 }
 /* ---------- busca, filtro e ordenação no endereço (C.10) ----------
    F5 volta para a mesma visão; chave, cod e #hash ficam intactos. */
@@ -1446,24 +1556,36 @@ function clientePorId(id){return CLIENTES.find(c=>String(c.id)===String(id));}
    só mudou onde ele é pintado, então campos, travas, destaque de campo
    vazio e faixa de "não gravei" continuam idênticos.
    =================================================================== */
-let CAD_ID='';           // de quem é o cadastro aberto
-let CAD_AVISADO=false;   // já avisamos que tem coisa por gravar? (fechar em 2 tempos)
-function elCad(){return document.getElementById('modalCad');}
-function cadAberto(){const m=elCad();return !!m&&!m.hidden;}
-/** Aviso de "tem alteração por gravar" no rodapé; o botão passa a dizer que sai assim mesmo. */
-function avisoCad(mostrar){
-  const a=document.getElementById('cadAviso');if(a)a.hidden=!mostrar;
-  const b=document.getElementById('cadFechar');if(b)b.textContent=mostrar?'Fechar assim mesmo':'Fechar';
-}
+let CAD_ID='';           // de quem é o cadastro aberto — ou o último que esteve
+/* A MOLDURA do cadastro mora no b4u-modal.js: véu e clique fora, Esc, trava da
+   rolagem do fundo, foco preso dentro da caixa, o aviso de "tem coisa por
+   gravar" e o fechar em dois tempos. O que fica nesta página é o que é DESTE
+   cadastro — o que se pinta dentro da caixa e o que se grava. Sem o arquivo, CAD
+   é nulo: as fichas não abrem e a lista continua inteira. */
+const CAD = window.B4UModal && window.B4UModal.adotar('modalCad', {
+  ids:{titulo:'cadTitulo',selo:'cadId',pill:'cadSit',corpo:'cadBody',
+       status:'saveStatusCad',aviso:'cadAviso',fechar:'cadFechar',x:'fechaCad'},
+  base:{pill:'pill',status:'save-status claro'},
+  sujo:()=>temPendencia(),
+  /* Ao sair, a gravação que ainda esperava o debounce é DESCARREGADA na hora:
+     deixá-lo correndo com o formulário fora da tela é exatamente o jeito de
+     perder o que foi digitado. */
+  aoFechar:()=>{
+    if(SUJOS.size)descarregarPendentes();
+    ABERTOS.delete(String(CAD_ID));marcarLinhaAberta();
+    document.getElementById('cadBody').innerHTML='';
+  },
+  /* O foco volta para a linha de onde saiu: quem navega por teclado não é jogado
+     de volta para o topo da página. */
+  focoVolta:()=>document.querySelector(`.cli[data-id="${CSS.escape(String(CAD_ID))}"] .cli-head`)
+});
+function cadAberto(){return !!CAD&&CAD.aberto();}
 /** Nome, ID e situação no topo do modal — acompanham a edição sem redesenhar nada. */
 function atualizarTopoCad(id){
   if(!cadAberto()||String(CAD_ID)!==String(id))return;
   const cli=clientePorId(id);if(!cli)return;
   const s=situacaoDe(cli),info=SITUACOES[s];
-  const t=document.getElementById('cadTitulo');if(t)t.textContent=cli.nome||'(sem nome)';
-  const i=document.getElementById('cadId');if(i)i.textContent=cli.id;
-  const p=document.getElementById('cadSit');
-  if(p){p.className='pill sit-'+s;p.title=info.dica;p.textContent=info.rot;}
+  CAD.titulo(cli.nome||'(sem nome)').selo(cli.id).pill({texto:info.rot,classe:'sit-'+s,dica:info.dica});
 }
 /** Acende na lista a linha do cadastro que está aberto. */
 function marcarLinhaAberta(){
@@ -1471,15 +1593,11 @@ function marcarLinhaAberta(){
 }
 function abrirCadastro(id){
   const cli=clientePorId(id);if(!cli)return;
-  const m=elCad();if(!m)return;
-  CAD_ID=String(cli.id);CAD_AVISADO=false;
+  if(!CAD)return;
+  CAD_ID=String(cli.id);
   document.getElementById('cadBody').innerHTML=corpoHTML(cli);
-  m.hidden=false;
-  /* Enquanto o cadastro está aberto a página atrás não rola — o mesmo gesto do
-     modal de cliente novo. */
-  document.body.style.overflow='hidden';
+  CAD.abrir();
   atualizarTopoCad(CAD_ID);
-  avisoCad(false);
   /* ABERTOS deixou de expandir a linha, mas continua dizendo QUAL cadastro está
      aberto: é ele que acende a linha e é nele que carregar({expandir}) marca o
      cliente recém-criado antes de a lista existir. */
@@ -1488,33 +1606,13 @@ function abrirCadastro(id){
   /* Reabrir não pode apagar o que não gravou: a faixa e o "tentar de novo"
      nascem de novo junto com os campos. */
   if(FALHAS.has(CAD_ID))marcarFalha(CAD_ID,true);
-  const cx=m.querySelector('.modal-box');if(cx)cx.focus();
 }
 /* Grava agora o que estava esperando o debounce. É o salvar() de sempre, só sem
    os 700 ms de espera. */
 function descarregarPendentes(){
   Array.from(SUJOS.keys()).forEach(id=>{const s=SUJOS.get(id);if(s)clearTimeout(s.timer);salvar(id);});
 }
-/* Fechar com alteração por gravar avisa antes, em dois tempos como o resto da
-   casa (nunca uma caixa do navegador): o primeiro Fechar/Esc/clique no véu
-   explica, o segundo sai. Ao sair assim mesmo a gravação pendente é DESCARREGADA
-   na hora — deixar o debounce correndo com o formulário fora da tela é
-   exatamente o jeito de perder o que foi digitado. */
-function fecharCadastro(){
-  const m=elCad();if(!m||m.hidden)return;
-  if(temPendencia()&&!CAD_AVISADO){CAD_AVISADO=true;avisoCad(true);return;}
-  if(SUJOS.size)descarregarPendentes();
-  m.hidden=true;
-  document.body.style.overflow='';
-  const id=CAD_ID;CAD_ID='';CAD_AVISADO=false;
-  avisoCad(false);
-  ABERTOS.delete(String(id));marcarLinhaAberta();
-  document.getElementById('cadBody').innerHTML='';
-  /* O foco volta para a linha de onde saiu: quem navega por teclado não é jogado
-     de volta para o topo da página. */
-  const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"] .cli-head`);
-  if(no)no.focus();
-}
+function fecharCadastro(forcado){if(CAD)CAD.fechar(forcado);}
 /* O botão "Salvar alterações" NÃO substitui o autosave: cada edição continua
    chamando agendarSalvar(), e é ele que impede perder texto digitado — foi para
    isso que ele existe nesta tela. O botão ANTECIPA a gravação pendente (mata o
@@ -1544,8 +1642,7 @@ async function salvarAgoraCad(){
     if(btn){btn.disabled=false;btn.textContent=btn.dataset.rot||'Salvar alterações';}
   }
   if(temPendencia())return;            // não gravou: a ficha continua aberta
-  CAD_AVISADO=false;avisoCad(false);
-  fecharCadastro();
+  fecharCadastro(true);
 }
 /* ---------- ?abrir=ID: chegar com a ficha já aberta ----------
    O dossiê da pesquisa rápida manda para cá em guia nova quando o colaborador
@@ -1623,8 +1720,10 @@ function marcarFalha(id,falhou){
     el.classList.toggle('falhou',!!(falhou&&f&&f.colunas.has(el.dataset.ecol)));
   });
 }
-/* Sair com alteração pendente (ou com uma gravação que falhou) pede confirmação. */
-window.addEventListener('beforeunload',e=>{if(temPendencia()){e.preventDefault();e.returnValue='';}});
+/* Sair com alteração pendente (ou com uma gravação que falhou) pede confirmação.
+   Quem faz o pedido é a casca do b4u-modal.js, pelo `sujo:()=>temPendencia()` da
+   adoção lá em cima — a mesma pergunta valia em sete telas e estava escrita sete
+   vezes. */
 function agendarSalvar(id,coluna,ms){
   let s=SUJOS.get(id);
   if(!s){s={timer:null,colunas:new Set()};SUJOS.set(id,s);}
@@ -1653,7 +1752,7 @@ async function salvar(id){
     FALHAS.delete(String(id));marcarFalha(id,false);
     /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé do modal sai, e o
        Fechar volta a ser Fechar. */
-    if(!temPendencia()){CAD_AVISADO=false;avisoCad(false);}
+    if(!temPendencia()&&CAD)CAD.aviso(false);
     atualizarCabeca(id);
     desenharChips();desenharResumo();
   }catch(e){
@@ -1702,6 +1801,17 @@ function atualizarCabeca(id){
    Cliente novo — o formulário do onboarding, dentro desta página
    =================================================================== */
 let NOVO_CAMPOS=[],NOVO_ROLE={},PROX_ID='',criando=false;
+/* O "cliente novo" usa a MESMA casca do cadastro (b4u-modal.js). A diferença é a
+   TRAVA: enquanto o servidor cria as pastas no Drive e as planilhas, nem Esc, nem
+   o clique no véu, nem o × fecham. Não é zelo — cada tentativa nova gera OUTRO
+   cliente, com o próximo ID e pastas novas, e é assim que aparece cliente
+   duplicado. A caixa fica em 860px, que é a largura que este formulário sempre
+   teve; a do cadastro é mais larga. */
+const NOVO = window.B4UModal && window.B4UModal.adotar('modal', {
+  ids:{corpo:'modalBody',x:'fechaModal'},
+  largura:860,
+  travado:()=>criando
+});
 const novoVal={};
 const prodSel=new Set();
 
@@ -1768,24 +1878,20 @@ function atualizarNomePrev(){
   el.innerHTML='Nome: <b>'+esc((PROX_ID?PROX_ID+' ':'')+(razao||'—'))+'</b>';
 }
 function abrirModal(){
+  if(!NOVO)return;
   NOVO_CAMPOS=montarCampos(COLUNAS.length?COLUNAS:CAMPOS_FALLBACK,'novo');
   NOVO_ROLE=NOVO_CAMPOS.roles||{};
   Object.keys(novoVal).forEach(k=>delete novoVal[k]);
   prodSel.clear();
-  document.getElementById('modal').hidden=false;
-  document.body.style.overflow='hidden';
   renderNovo();
+  if(NOVO)NOVO.abrir();
   if(!PROX_ID){
     jsonp(API_URL+'?tipo=proximo_id&chave='+encodeURIComponent(chaveAtual()))
       .then(d=>{if(d&&!d.erro&&d.id){PROX_ID=d.id;const i=document.getElementById('idprev');if(i)i.textContent=PROX_ID;atualizarNomePrev();}})
       .catch(()=>{});
   }
 }
-function fecharModal(){
-  if(criando)return;
-  document.getElementById('modal').hidden=true;
-  document.body.style.overflow='';
-}
+function fecharModal(){if(NOVO)NOVO.fechar();}
 /* Quantos campos de cada seção já têm resposta — é o que deixa fechar sem
    esconder. Falta obrigatório vira vermelho, e aí a seção pede para ser aberta
    antes de a pessoa apertar Criar. */
@@ -1952,11 +2058,10 @@ document.addEventListener('click',e=>{
   /* "mais 20" para quem está lendo, "todos" para quem vai usar Ctrl+F. */
   if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
   if(e.target.closest('.btn-todos')){TETO=CLIENTES.length;desenharLista();return;}
-  /* Rodapé do cadastro: salvar agora, fechar, e o × do topo. Vêm antes do teste
-     do véu, senão o clique no botão contaria como clique fora. */
+  /* Salvar agora. Fechar, × e clique no véu não estão aqui: quem cuida deles é
+     a casca do b4u-modal.js, que precisa passar pelo aviso de "tem coisa por
+     gravar" antes de deixar sair. */
   if(e.target.closest('#cadSalvar')){salvarAgoraCad();return;}
-  if(e.target.closest('#cadFechar')||e.target.closest('#fechaCad')){fecharCadastro();return;}
-  if(e.target.id==='modalCad'){fecharCadastro();return;}
   const head=e.target.closest('.cli-head');
   if(head){const no=head.closest('.cli');if(no)abrirCadastro(no.dataset.id);return;}
   /* Ordenar pelo cabeçalho da lista: mesma coluna inverte, coluna nova começa em
@@ -1968,22 +2073,11 @@ document.addEventListener('click',e=>{
     if(ORDEM===k)DIR=(DIR==='asc'?'desc':'asc');else{ORDEM=k;DIR='asc';}
     TETO=PASSO;                                // outra ordem, outro começo de lista
     desenharOrdem();desenharLista();
-    if(FILTROS_UI)FILTROS_UI.atualizarContador();
-    return;}   // desenharLista() sincroniza a URL
-  const chip=e.target.closest('.chip[data-f]');
-  if(chip){FILTRO=chip.dataset.f;TETO=PASSO;redesenhar();return;}
-  const ord=e.target.closest('.chip[data-s]');
-  if(ord){const k=ord.dataset.s;
-    if(ORDEM===k)DIR=(DIR==='asc'?'desc':'asc');else{ORDEM=k;DIR='asc';}
-    TETO=PASSO;                                // outra ordem, outro começo de lista
-    desenharOrdem();desenharLista();
-    if(FILTROS_UI)FILTROS_UI.atualizarContador();
-    return;}   // desenharLista() sincroniza a URL
+      return;}   // desenharLista() sincroniza a URL
+
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto);return;}
   if(e.target.closest('#btnNovo')){abrirModal();return;}
-  if(e.target.closest('#fechaModal')){fecharModal();return;}
-  if(e.target.id==='modal'){fecharModal();return;}
 });
 function anotar(el){
   const corpo=el.closest('.corpo');if(!corpo)return;
@@ -2002,13 +2096,16 @@ function anotar(el){
   agendarSalvar(cli.id,col,el.tagName==='SELECT'||el.type==='date'?250:700);
 }
 document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
-document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
+document.addEventListener('change',e=>{
+  if(e.target.id==='f-sit'){ FILTRO=e.target.value; TETO=PASSO; redesenhar(); return; }
+  if(e.target.id==='f-ord'){ const p=String(e.target.value).split('|');
+    ORDEM=p[0]; DIR=p[1]==='desc'?'desc':'asc'; TETO=PASSO; desenharOrdem(); desenharLista(); return; }if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
 /* Atalhos de busca (C.4): "/" foca, Esc limpa. Com um modal aberto, Esc fecha o
    modal — e o atalho não atrapalha quem já está digitando noutro campo. */
+/* Esc com modal aberto NÃO chega aqui: a casca do b4u-modal.js escuta na captura,
+   fecha o modal de cima da pilha e corta a propagação — senão o mesmo Esc que
+   fecha o cadastro limparia também a busca da lista por baixo. */
 document.addEventListener('keydown',e=>{
-  /* O cadastro é o modal de cima: com ele aberto, Esc é dele antes de tudo. */
-  if(e.key==='Escape'&&cadAberto()){e.preventDefault();fecharCadastro();return;}
-  if(e.key==='Escape'&&!document.getElementById('modal').hidden){fecharModal();return;}
   /* A linha da lista é um role="button": sem isto, Enter e Espaço não abririam o
      cadastro para quem navega por teclado — e a tela ficaria só para o mouse. */
   const linha=e.target&&e.target.closest&&e.target.closest('.cli-head');
@@ -2033,21 +2130,12 @@ document.addEventListener('keydown',e=>{
    ser pedágio. */
 function layout(){
   return `<div class="topo">
-    <div class="barra-acoes">
-      <input class="busca campo-busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por ID, nome, CNPJ (com ou sem pontos), cidade…  ( / para focar)">
-      <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
-        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.2 2h13.6a.6.6 0 0 1 .46.99L10.4 9.02V13.4a.6.6 0 0 1-.87.54l-2.6-1.3a.6.6 0 0 1-.33-.54V9.02L.74 2.99A.6.6 0 0 1 1.2 2Z"/></svg>
-        Filtros <span class="cont-filtros" hidden>0</span>
-      </button>
-      <button class="btn btn--pri btn--pill btn-novo" id="btnNovo" type="button">+ Novo cliente</button>
-      <span class="resumo-lista" id="resumo-lista"></span>
-    </div>
-    <div id="painel-filtros" class="painel-filtros" hidden>
-      <div class="grupo chips" id="chips"></div>
-      <div class="grupo chips ord-row" id="ordChips"></div>
-      <div class="grupo ord-info" id="ordInfo"></div>
-      <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro, sem busca e na ordem de ID">Limpar filtros</button>
-    </div>
+    <input class="busca campo-busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por ID, nome, CNPJ, cidade…  ( / para focar)">
+    <select class="filtro" id="f-sit" aria-label="Situação"></select>
+    <select class="filtro" id="f-ord" aria-label="Ordenar por"></select>
+    <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro, sem busca e na ordem de ID">Limpar</button>
+    <button class="btn btn--pri btn--pill btn-novo" id="btnNovo" type="button">+ Novo cliente</button>
+    <span class="resumo-lista" id="resumo-lista"></span>
   </div>
   <div class="dica" id="dica"></div>
   <div class="lista" id="lista"></div>`;
@@ -2071,7 +2159,6 @@ async function carregar(op){
        plano vale o que já está na tela. */
     const termoAtual=busca?busca.value:lerURL();
     document.getElementById('app').innerHTML=layout();
-    FILTROS_UI=ligarFiltros('registro',filtrosPainel);   // depois do layout: o painel já existe
     const nb=document.getElementById('busca');
     nb.value=op.expandir?'':(termoAtual||'');
     TERMO=nb.value;
