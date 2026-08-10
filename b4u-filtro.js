@@ -21,6 +21,7 @@
  *     itens:[{v:'Gian', r:'Gian (você)', c:'Gian'}],
  *     marcados:['Gian'],
  *     vazio:'nada', rotTodos:'Todo o time', rotNada:'Ninguém', rotTodas:'Todos',
+ *     rotEspecial:[{quando:['Gian','Kariane'], rot:'Plantão'}],
  *     todosVerde:true,
  *     aoMudar:function(m){ F_QUEM=m; desenharLista(); }
  *   });
@@ -35,10 +36,10 @@
  * LIMIAR_BUSCA itens. Ver a regra 3.
  *
  * ---------------------------------------------------------------------------------
- * CINCO REGRAS QUE ESTE ARQUIVO SEGUE, E O MOTIVO DE CADA UMA
+ * SEIS REGRAS QUE ESTE ARQUIVO SEGUE, E O MOTIVO DE CADA UMA
  *
- * 1. `vazio` É OPÇÃO EXPLÍCITA, PORQUE OS DOIS SIGNIFICADOS SÃO LEGÍTIMOS.
- *    Zero marcado quer dizer coisas opostas conforme o filtro, e isso NÃO é
+ * 1. `vazio` É OPÇÃO EXPLÍCITA, PORQUE OS TRÊS SIGNIFICADOS SÃO LEGÍTIMOS.
+ *    Zero marcado quer dizer coisas opostas conforme o campo, e isso NÃO é
  *    acidente de implementação — é o desenho pedido:
  *
  *      vazio:'nada'   Área e De quem. A caixa NASCE com tudo marcado, então
@@ -49,12 +50,24 @@
  *                     calado seria desfazer o que a pessoa acabou de fazer; e
  *                     travar o último checkbox seria não deixar ela fazer.
  *
- *      vazio:'todos'  Cliente. A caixa NASCE vazia, porque são centenas de
- *                     clientes e marcar todos, um a um, para dizer "não quero
+ *      vazio:'todos'  Cliente, na RÉGUA. A caixa NASCE vazia, porque são centenas
+ *                     de clientes e marcar todos, um a um, para dizer "não quero
  *                     filtrar" é absurdo. Aqui vazio é o estado de repouso, o
  *                     mesmo com que a tela abriu — ninguém CHEGA nele desmarcando
  *                     o último de trezentos, então a regra de cima não se aplica
  *                     e não haveria o que avisar.
+ *
+ *      vazio:'livre'  Cliente, na FICHA da tarefa. Aqui a caixa não filtra nada:
+ *                     ela RESPONDE uma pergunta, e "nenhum" é uma das respostas
+ *                     certas — a tarefa interna, que é o padrão de uma tarefa
+ *                     nova. Vazio não quer dizer "tudo" (a tarefa não passa a
+ *                     valer para a carteira inteira por estar em branco) nem
+ *                     "nada" (não há lista para esvaziar, e âmbar de alarme
+ *                     estaria acusando o caminho mais comum). Então: rótulo
+ *                     próprio (`rotNada`), sem cor de alarme, e SEM a linha
+ *                     "Todas / Nenhuma" no topo do painel — marcar os 121
+ *                     clientes de uma vez não é resposta que alguém queira dar,
+ *                     e um botão que faz isso num clique é só um jeito de errar.
  *
  *    A diferença é de SIGNIFICADO, não de tamanho da lista. Por isso ela é um
  *    parâmetro escrito na chamada, e não uma heurística do tipo "mais de 50 itens
@@ -90,13 +103,38 @@
  *    poupar recálculo — e aqui o recálculo é filtrar um vetor que já está na
  *    memória. Ele só custaria um passo a mais e a dúvida de "já valeu?".
  *
- * 5. O PAINEL NÃO PODE ESTOURAR A TELA.
+ * 5. O PAINEL NÃO PODE ESTOURAR A CAIXA EM QUE ELE ESTÁ.
  *    Ele é `position:absolute` e um absoluto que passa da borda direita gera
  *    rolagem lateral na PÁGINA inteira — numa régua de filtros que já é apertada
  *    a 390px, isso é o padrão e não a exceção. Então o CSS limita
  *    (`max-width:min(320px, 100vw - 24px)`) e, ao abrir, o `posicionar()` mede de
  *    verdade e puxa o painel para a esquerda quando falta espaço. A altura segue a
  *    mesma lógica: o que couber abaixo do botão, com rolagem por dentro.
+ *
+ *    "A tela" nem sempre é a janela. Dentro da ficha de tarefa do Daily o filtro
+ *    mora no corpo de um modal, que é um `overflow:auto` — e overflow RECORTA
+ *    absoluto de descendente. Medir só a janela ali dava um painel de 340px num
+ *    corpo de 250px: metade dele existia, ninguém via, e a lista de clientes
+ *    parecia terminar no meio. Por isso o `posicionar()` procura o primeiro
+ *    ancestral que rola e mede contra ele quando existe — o `<body>` não conta,
+ *    porque o próprio modal escreve `overflow:hidden` nele enquanto está aberto.
+ *
+ *    E medir uma vez não basta: o rótulo do botão MUDA de tamanho quando a
+ *    seleção muda ("Gian" -> "Todo o time"), e numa régua que quebra linha isso
+ *    move o botão para outra linha com o painel já aberto e já posicionado. O
+ *    deslocamento em pixels que estava certo passa a apontar para fora da tela.
+ *    Então `pintarBotao()` reposiciona enquanto o painel está aberto.
+ *
+ * 6. UM CONJUNTO NOTÁVEL PODE TER NOME PRÓPRIO (`rotEspecial`).
+ *    "Em aberto" não é um valor da lista de situações: é o CONJUNTO {A fazer, Em
+ *    andamento, Esperando terceiro}, e é assim que a equipe fala. Sem isto o
+ *    botão diria "A fazer +2" justamente no estado padrão da tela — trocando o
+ *    vocabulário da casa por uma contagem. `rotEspecial` é uma lista de
+ *    `{quando:[...valores], rot:'Nome'}` comparada POR CONJUNTO (ordem não
+ *    importa, repetição não conta), e mora aqui em vez de na página porque a
+ *    página não tem onde pendurar isso: o rótulo é do botão, e o botão é deste
+ *    arquivo. `rotTodos` continua vencendo — quando TUDO está marcado, "todas" é
+ *    a resposta mais simples e verdadeira.
  * ---------------------------------------------------------------------------------
  *
  * O PREFIXO É `b4f-`
@@ -140,7 +178,17 @@
     'text-align:left;line-height:1.25}',
     '.b4f-bt:hover{border-color:var(--brand-teal-txt,#0C756F)}',
     '.b4f-bt:focus-visible{outline:2px solid var(--brand-teal,#0F8C85);outline-offset:1px}',
-    '.b4f-rot{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    /* QUEM ENCOLHE É O NOME, NUNCA O "+N". Os dois moram em spans separados
+       porque a reticência não sabe escolher: com um texto só, "250004 · AJUB -
+       CIRURGIA DE CABEÇA E PESCOÇO… +1" perde justamente o "+1" — e o botão passa
+       a dizer que a tarefa tem UM cliente quando ela tem dois. O nome cortado
+       ainda identifica; o contador cortado não informa nada. É a mesma regra que
+       o `.t-quem .vc` do daily.html já aplica ao "(você)".
+       O espaço antes do "+N" vai DENTRO do texto do span (com `white-space:pre`),
+       e não num `gap`: assim o span vazio do caso comum não ocupa nada. */
+    '.b4f-rot{display:flex;align-items:baseline;min-width:0}',
+    '.b4f-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.b4f-mais{flex:none;white-space:pre}',
     '.b4f-seta{flex:none;font-size:9px;opacity:.75}',
     '.b4f-bt[aria-expanded="true"] .b4f-seta{opacity:1}',
 
@@ -244,18 +292,57 @@
      custa um toque. */
   w.addEventListener('resize', function () { fecharTodos(null); });
 
+  /* ESC NA CAPTURA, NO DOCUMENTO — e não no nó do filtro, que era onde ele
+     morava. O motivo é o filtro que mora DENTRO de um modal (a caixa de cliente
+     da ficha do Daily): o b4u-modal.js escuta Esc na captura do documento e
+     fecha o modal do topo da pilha, então um Esc com o painel aberto levava a
+     ficha inteira embora em vez de fechar a lista que está na cara da pessoa.
+     Quem está por cima responde primeiro; aqui o painel é o que está por cima.
+
+     Duas condições mantêm isso honesto: só age se houver painel aberto, e só se
+     o foco estiver DENTRO do filtro. Esc apertado em qualquer outro lugar da
+     página continua sendo da página (e do modal).
+
+     Duas coisas fazem isso funcionar, e as duas são fáceis de desfazer sem
+     perceber:
+
+       · `stopImmediatePropagation`, e não só `stopPropagation`. Os dois ouvintes
+         estão no MESMO nó (o documento), e `stopPropagation` só impede que o
+         evento SUBA — os outros ouvintes do mesmo nó continuam sendo chamados.
+         Com ele sozinho, o painel fechava e o modal fechava junto, que é
+         exatamente o que se queria evitar.
+
+       · o b4u-filtro.js carregado ANTES do b4u-modal.js: ouvintes de captura no
+         mesmo nó disparam na ordem em que foram registrados, e o de trás não tem
+         como calar o da frente. A ordem está escrita no <head> do daily.html,
+         com esta nota ao lado. */
+  d.addEventListener('keydown', function (e) {
+    if (!ABERTOS.length) return;
+    if (e.key !== 'Escape' && e.keyCode !== 27) return;
+    var f = ABERTOS[ABERTOS.length - 1];
+    if (!f.no.contains(e.target)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    f._fechar(true);
+  }, true);
+
   function criar(op) {
     op = op || {};
     estilo();
 
     var id      = op.id || ('b4f-' + (++SEQ));
     var rot     = op.rot || 'Filtro';
-    var vazio   = op.vazio === 'todos' ? 'todos' : 'nada';   // ver regra 1 no topo
+    /* ver regra 1 no topo. Qualquer coisa fora dos três nomes cai em 'nada', que
+       é o modo que AVISA — errar para o lado de avisar demais é reparável, errar
+       para o lado de esconder a lista calado não. */
+    var vazio   = (op.vazio === 'todos' || op.vazio === 'livre') ? op.vazio : 'nada';
     var rotTodos = op.rotTodos || 'Todos';
     var rotNada  = op.rotNada || 'Nada marcado';
     var rotTodas = op.rotTodas || 'Todas';
     var itens   = [];
     var marc    = [];            // valores marcados, como strings
+    var espec   = [];            // conjuntos com nome próprio — ver regra 6
     var aberto  = false;
     var busca   = '';
 
@@ -270,7 +357,9 @@
     bt.setAttribute('aria-haspopup', 'true');
     bt.setAttribute('aria-expanded', 'false');
     bt.setAttribute('aria-controls', pid);
-    bt.innerHTML = '<span class="b4f-rot"></span><span class="b4f-seta" aria-hidden="true">▼</span>';
+    bt.innerHTML = '<span class="b4f-rot"><span class="b4f-nm"></span>' +
+                   '<span class="b4f-mais"></span></span>' +
+                   '<span class="b4f-seta" aria-hidden="true">▼</span>';
 
     var p = d.createElement('div');
     p.className = 'b4f-p';
@@ -282,7 +371,8 @@
     no.appendChild(bt);
     no.appendChild(p);
 
-    var elRot = bt.querySelector('.b4f-rot');
+    var elNome = bt.querySelector('.b4f-nm');
+    var elMais = bt.querySelector('.b4f-mais');
     var elBusca = null, elTodas = null, elLista = null, elVazio = null;
 
     /* ── seleção ──────────────────────────────────────────────────────────── */
@@ -303,6 +393,36 @@
     function todosMarcados() {
       return itens.length > 0 && itens.every(function (i) { return temMarc(i.v); });
     }
+
+    /* ── conjuntos com nome próprio (regra 6) ────────────────────────────────
+       `quando` chega da página já reduzido ao que EXISTE na lista — é a página
+       que sabe que "Em aberto" são as situações abertas QUE A PLANILHA TEM. Aqui
+       só se guarda sem repetição (repetido estragaria a comparação por tamanho)
+       e se descarta entrada vazia: um conjunto vazio casaria com "nada marcado"
+       e roubaria o `rotNada`, que é o rótulo que avisa. */
+    function normEspecial(arr) {
+      return (arr || []).map(function (e) {
+        if (!e || !e.rot || !e.quando || !e.quando.length) return null;
+        var vis = {}, q = [];
+        e.quando.forEach(function (v) { v = String(v); if (!vis[v]) { vis[v] = 1; q.push(v); } });
+        return { rot: String(e.rot), quando: q };
+      }).filter(Boolean);
+    }
+    /* Comparação por CONJUNTO: a mesma seleção alcançada em outra ordem de
+       cliques é a mesma seleção, e o rótulo não pode depender de por onde a
+       pessoa começou. */
+    function mesmoConjunto(a, b) {
+      if (a.length !== b.length) return false;
+      var s = {};
+      a.forEach(function (v) { s[String(v)] = 1; });
+      return b.every(function (v) { return s[String(v)] === 1; });
+    }
+    function rotuloEspecial(m) {
+      for (var i = 0; i < espec.length; i++) {
+        if (mesmoConjunto(m, espec[i].quando)) return espec[i].rot;
+      }
+      return null;
+    }
     function curto(v) {
       for (var i = 0; i < itens.length; i++) {
         if (String(itens[i].v) === String(v)) return itens[i].c || itens[i].r || String(v);
@@ -320,21 +440,33 @@
        Um marcado: o nome. Dois ou mais: `Gian +2`. Tudo (ou, no modo 'todos', o
        vazio que quer dizer tudo): o rótulo de todos. A lista por extenso vai no
        `title`, que é onde cabe sem esticar a régua. */
-    function textoRotulo() {
+    /* O rótulo em DUAS partes: o nome (que pode ser cortado) e o "+N" (que não
+       pode). Ver a nota do `.b4f-rot` na folha. */
+    function partesRotulo() {
       var m = marcadosOrdenados();
-      if (todosMarcados()) return rotTodos;
-      if (!m.length) return vazio === 'todos' ? rotTodos : rotNada;
-      if (m.length === 1) return curto(m[0]);
-      return curto(m[0]) + ' +' + (m.length - 1);
+      /* `todosMarcados` primeiro, e de propósito: se um conjunto notável vier a
+         ser a lista inteira, "todas" é a resposta mais simples e igualmente
+         verdadeira — e é a que já existia antes do `rotEspecial`. */
+      if (todosMarcados()) return { nome: rotTodos, mais: '' };
+      var esp = rotuloEspecial(m);
+      if (esp) return { nome: esp, mais: '' };
+      if (!m.length) return { nome: vazio === 'todos' ? rotTodos : rotNada, mais: '' };
+      if (m.length === 1) return { nome: curto(m[0]), mais: '' };
+      return { nome: curto(m[0]), mais: ' +' + (m.length - 1) };
     }
+    function textoRotulo() { var p = partesRotulo(); return p.nome + p.mais; }
     function textoTitle() {
       var m = marcadosOrdenados();
       if (todosMarcados()) return rot + ': ' + rotTodos;
       if (!m.length) {
-        return vazio === 'todos'
-          ? rot + ': ' + rotTodos
-          : rot + ': ' + rotNada + ' — com nada marcado a lista fica vazia.';
+        /* 'livre' não avisa: vazio aqui é uma das respostas certas, não uma
+           lista esvaziada por engano. */
+        return vazio === 'nada'
+          ? rot + ': ' + rotNada + ' — com nada marcado a lista fica vazia.'
+          : rot + ': ' + (vazio === 'todos' ? rotTodos : rotNada);
       }
+      var espT = rotuloEspecial(m);
+      if (espT) return rot + ': ' + espT + ' (' + m.length + '): ' + m.map(longo).join(', ');
       /* Teto de 25 nomes: com "Todas" numa carteira de trezentos clientes, o
          `title` nativo viraria uma parede de texto que ninguém lê. */
       var nomes = m.slice(0, 25).map(longo);
@@ -343,8 +475,10 @@
     }
 
     function pintarBotao() {
-      var txt = textoRotulo();
-      elRot.textContent = txt;
+      var pr = partesRotulo();
+      var txt = pr.nome + pr.mais;
+      elNome.textContent = pr.nome;
+      elMais.textContent = pr.mais;
       bt.title = textoTitle();
       /* O nome acessível repete o texto visível e ainda diz DE QUAL filtro se
          trata — sem o prefixo, o leitor de tela anunciaria só "Gian +2, botão". */
@@ -353,6 +487,11 @@
       var tudo = todosMarcados() || (vazio === 'todos' && !marcadosOrdenados().length);
       bt.classList.toggle('b4f-nada', nada);
       bt.classList.toggle('b4f-tudo', !!op.todosVerde && tudo && !nada);
+      /* O rótulo acabou de mudar de largura, e numa régua que quebra linha isso
+         MOVE o botão. Com o painel aberto, o deslocamento calculado na abertura
+         passaria a apontar para o lugar antigo — na prática, para fora da tela.
+         Ver regra 5. */
+      if (aberto) posicionar();
     }
 
     /* ── painel ───────────────────────────────────────────────────────────── */
@@ -363,13 +502,18 @@
          invisível escondendo linhas sem jeito de limpar. */
       var temBusca = itens.length > LIMIAR_BUSCA;
       if (!temBusca) busca = '';
+      /* 'livre' não tem linha de cima: ver regra 1. "Marcar todos" ali seria um
+         botão para dar uma resposta que ninguém quer dar. */
+      var temTodas = vazio !== 'livre';
       p.innerHTML =
         (temBusca ? '<input type="search" class="b4f-in" autocomplete="off" ' +
                     'placeholder="Buscar…" aria-label="Buscar em ' + esc(rot) + '">' : '') +
-        '<label class="b4f-li b4f-todas"><input type="checkbox" class="b4f-all">' +
-          '<span class="b4f-tx">' + esc(vazio === 'todos' ? rotTodos : rotTodas) + '</span>' +
-          (vazio === 'todos' ? '' : '<span class="b4f-dica">/ Nenhuma</span>') +
-        '</label>' +
+        (temTodas
+          ? '<label class="b4f-li b4f-todas"><input type="checkbox" class="b4f-all">' +
+              '<span class="b4f-tx">' + esc(vazio === 'todos' ? rotTodos : rotTodas) + '</span>' +
+              (vazio === 'todos' ? '' : '<span class="b4f-dica">/ Nenhuma</span>') +
+            '</label>'
+          : '') +
         '<div class="b4f-lista">' +
           itens.map(function (i) {
             return '<label class="b4f-li" data-v="' + esc(i.v) + '">' +
@@ -432,31 +576,89 @@
     }
 
     /* ── abrir / fechar ───────────────────────────────────────────────────── */
+    /* O primeiro ancestral que ROLA, se houver — ver regra 5. `overflow:hidden`
+       conta: ele recorta igual, e um painel recortado é pior que um apertado.
+       O `<body>` fica de fora porque o b4u-modal.js escreve `overflow:hidden`
+       nele enquanto um modal está aberto; obedecer a isso limitaria o painel à
+       altura do documento inteiro, que não é limite nenhum. */
+    function caixaQueRecorta() {
+      var el = no.parentNode;
+      while (el && el.nodeType === 1 && el !== d.body && el !== d.documentElement) {
+        var st = w.getComputedStyle ? w.getComputedStyle(el) : null;
+        if (st && /(auto|scroll|hidden)/.test(st.overflowY + ' ' + st.overflowX)) return el;
+        el = el.parentNode;
+      }
+      return null;
+    }
     function posicionar() {
       /* Medir de verdade, com o painel já visível: `getBoundingClientRect` de nó
-         escondido devolve zeros e a conta sairia sempre "cabe". */
+         escondido devolve zeros e a conta sairia sempre "cabe". Tudo o que uma
+         chamada anterior escreveu volta ao zero antes de medir — senão a segunda
+         medição estaria lendo o resultado da primeira. */
       p.style.left = '0px';
       p.style.right = 'auto';
+      p.style.top = '';
+      p.style.bottom = '';
       p.style.maxHeight = '';
+      p.style.maxWidth = '';
       var marg = 10;
-      var r = p.getBoundingClientRect();
+      var caixa = caixaQueRecorta();
+      var rc = caixa ? caixa.getBoundingClientRect() : null;
       var larg = w.innerWidth || d.documentElement.clientWidth || 0;
-      if (larg) {
-        var passou = r.right - (larg - marg);
+      /* A borda que vale é a mais apertada das duas: a da janela e a de quem
+         recorta. Sem a segunda, dentro de um modal o painel "cabia na tela" e
+         sumia na borda da caixa. */
+      var dir = rc ? Math.min(larg || rc.right, rc.right) : larg;
+      var lim = rc ? Math.max(0, rc.left) : 0;
+      var r = p.getBoundingClientRect();
+      /* Dentro de uma caixa que recorta, o teto de largura do CSS (que fala em
+         `100vw`) pode ser grande demais: um painel de 370px numa caixa de 374px
+         não tem para onde ser puxado, e sobra sempre para fora. Aqui ele é
+         reapertado para o que a caixa oferece de verdade — e SÓ quando ele já
+         está maior que isso. Escrever a medida sempre faria o contrário do que se
+         quer numa caixa larga: o inline venceria o `max-width:min(320px,…)` da
+         folha e o painel ficaria com a largura do modal. */
+      if (rc) {
+        var cabe = (dir - marg) - (lim + marg);
+        if (r.width > cabe) {
+          p.style.maxWidth = Math.max(160, cabe) + 'px';
+          r = p.getBoundingClientRect();
+        }
+      }
+      if (dir) {
+        var passou = r.right - (dir - marg);
         if (passou > 0) {
           var novo = -passou;
           /* Puxar para a esquerda não pode empurrar para fora do outro lado: numa
              tela de 390px o painel é quase a largura toda, e um filtro que fica no
              fim da régua sairia pela borda esquerda. */
-          if (r.left - passou < marg) novo += (marg - (r.left - passou));
+          if (r.left - passou < lim + marg) novo += (lim + marg - (r.left - passou));
           p.style.left = Math.round(novo) + 'px';
         }
       }
       var alt = w.innerHeight || d.documentElement.clientHeight || 0;
-      if (alt) {
+      var baixo = rc ? Math.min(alt || rc.bottom, rc.bottom) : alt;
+      var cima  = rc ? Math.max(0, rc.top) : 0;
+      if (baixo) {
         var rb = bt.getBoundingClientRect();
-        var espaco = alt - rb.bottom - 16;
-        p.style.maxHeight = Math.max(150, Math.min(340, espaco)) + 'px';
+        var abaixo = baixo - rb.bottom - 16;
+        var acima  = rb.top - cima - 16;
+        /* ABRIR PARA CIMA quando embaixo não cabe e em cima cabe mais. É o caso
+           do campo Cliente no fim da ficha: o corpo do modal termina logo abaixo
+           dele, e um painel de 150px ali fica metade fora — enquanto sobram 400px
+           acima. Sem isto o piso de 150px, que existe para o painel não virar
+           fresta, viraria a causa do recorte. */
+        if (abaixo < 150 && acima > abaixo) {
+          p.style.top = 'auto';
+          p.style.bottom = 'calc(100% + 5px)';
+          p.style.maxHeight = Math.max(120, Math.min(340, acima)) + 'px';
+        } else {
+          /* O piso de 150px é deliberado: abaixo disso o painel deixa de ser
+             lista e vira fresta. Se nem isso couber dos dois lados, quem rola é a
+             caixa de fora — o que o navegador faz sozinho ao focar um item com o
+             teclado. */
+          p.style.maxHeight = Math.max(150, Math.min(340, abaixo)) + 'px';
+        }
       }
     }
 
@@ -517,14 +719,9 @@
       aplicarBusca();
     });
 
+    /* Esc NÃO está aqui: subiu para um ouvinte de captura no documento, para
+       chegar antes do Esc do b4u-modal.js. Ver a nota lá em cima. */
     no.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' || e.keyCode === 27) {
-        if (!aberto) return;
-        e.preventDefault();
-        e.stopPropagation();            // Esc aqui não é o Esc da página
-        fechar(true);
-        return;
-      }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         if (!aberto) {
           if (e.key === 'ArrowDown' && e.target === bt) { e.preventDefault(); abrir(); focar(0); }
@@ -581,6 +778,17 @@
         pintarBotao();
         return inst;
       },
+      /** Troca (ou lê) os conjuntos com nome próprio — ver regra 6. Existe como
+       *  método, e não só como opção da criação, porque a lista de onde eles saem
+       *  pode mudar: as situações vêm da planilha e são relidas na recarga em
+       *  segundo plano. Um `quando` congelado na criação viraria um nome que
+       *  nunca mais aparece, ou pior, que aparece na hora errada. */
+      rotEspecial: function (arr) {
+        if (arr === undefined) return espec.slice();
+        espec = normEspecial(arr);
+        pintarBotao();
+        return inst;
+      },
       /** Troca a lista. Marcado que não existe mais continua guardado (ver
        *  `marcadosOrdenados`) — recarregar a tela não pode apagar filtro. */
       itens: function (arr) {
@@ -604,6 +812,10 @@
     };
     inst._fechar = fechar;
 
+    /* Os conjuntos notáveis entram ANTES da lista e da seleção: as duas chamadas
+       abaixo repintam o botão, e repintar sem eles mostraria "A fazer +2" por um
+       quadro antes de virar "Em aberto". */
+    espec = normEspecial(op.rotEspecial);
     inst.itens(op.itens || []);
     inst.marcados(op.marcados || []);
     return inst;
