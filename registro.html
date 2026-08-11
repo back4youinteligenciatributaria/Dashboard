@@ -269,13 +269,34 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
   gap:12px;align-items:center}
 .lista-cab{padding:2px 14px 0;font-size:var(--fs-1);font-weight:800;letter-spacing:.5px;
   text-transform:uppercase;color:var(--muted)}
-/* O cabeçalho também ordena: cada rótulo é um botão de verdade (Tab chega nele,
-   Enter e Espaço ordenam). É o que restou do "clique em qualquer cabeçalho" da
-   grade antiga — e abaixo de 900px, onde a régua some, os mesmos critérios
-   continuam nos chips "Ordenar por" do painel de filtros. */
-.lista-cab button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
-  text-transform:inherit;letter-spacing:inherit;text-align:inherit}
+/* O cabeçalho é O CONTROLE de ordenação da tela: cada rótulo é um botão de
+   verdade (Tab chega nele, Enter e Espaço ordenam), o primeiro clique ordena
+   A→Z e o segundo inverte. Era isto e mais um <select> "Ordenar por" na régua
+   de cima; o dono tirou o select — "deixa se ele clicar em qualquer um dos
+   títulos da tabela ele ordena de A a Z ou oposto" —, então este cabeçalho
+   passou a ser o único caminho e precisa aguentar o peso: alvo de toque de
+   44px (o rótulo tem 11px, o dedo não tem) e presença TAMBÉM abaixo de 900px,
+   onde ele sumia junto com a grade e levaria a ordenação embora.
+   O 44px é altura de verdade, e não uma sobreposição invisível: um ::after
+   esticado avançaria por cima da primeira linha da lista e roubaria o clique
+   que abre o cadastro. */
+.lista-cab button{font:inherit;color:inherit;background:none;border:0;padding:0 2px;cursor:pointer;
+  text-transform:inherit;letter-spacing:inherit;text-align:inherit;
+  display:inline-flex;align-items:center;min-height:44px;min-width:44px}
 .lista-cab button:hover{color:var(--brand-teal-txt)}
+.lista-cab button:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px;border-radius:var(--radius-sm)}
+/* A coluna ativa fica em teal escuro e 900: sem isto a única marca da ordem em
+   vigor seria a setinha, que tem 9px. */
+.lista-cab button[aria-current]{color:var(--brand-teal-txt);font-weight:900}
+/* Rótulo "Ordenar" da tira do celular. No desktop ele não existe: `display:none`
+   o tira da GRADE, e é por isso que as sete colunas continuam sete. */
+.lista-cab .cab-rot{display:none}
+/* A última célula guarda DUAS ordens porque a coluna mostra duas coisas: o selo
+   de situação e o selo de completude ("3 campos vazios"). "Campos vazios" era a
+   única entrada do antigo "Ordenar por" sem coluna própria — e ela é justamente
+   a que acha o cadastro mais atrasado. Em vez de sumir, ela virou o segundo
+   botão da célula em que o selo já mora. */
+.lista-cab .dois{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .cli-head{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
   cursor:pointer;font-family:var(--sans);color:inherit}
 .cli-head:hover{background:var(--surface-warm)}
@@ -308,7 +329,31 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
    primeira linha da MESMA faixa e o resto desce para uma segunda, menor. Continua
    sendo uma linha clicável só — não vira dois cartões. */
 @media(max-width:900px){
-  .lista-cab{display:none}
+  /* O cabeçalho NÃO some mais. Ele sumia porque era só rótulo de coluna, e sem
+     colunas não havia o que rotular; hoje ele é o ÚNICO jeito de ordenar a lista
+     — o <select id="f-ord"> que morava na régua de cima foi embora —, e
+     escondê-lo no celular apagaria a capacidade inteira justamente onde a tela é
+     usada de pé, entre uma ligação e outra.
+
+     Ele deixa de ser régua de colunas e vira uma TIRA QUE ROLA DE LADO, o mesmo
+     gesto (e as mesmas medidas) do societario-equipe.html. A alternativa —
+     deixar os sete títulos QUEBRAREM em várias linhas — foi medida a 390px e
+     custava 148px de altura, três fileiras de pílulas empurrando a lista para
+     baixo da dobra; a tira custa 46px e não empurra nada.
+     O rótulo "Ordenar" na frente existe para a tira não ser lida como mais uma
+     fileira de filtros: sem ele, "ID · Nome · CNPJ" logo abaixo de duas caixas
+     de filtro é exatamente o que ela parece. */
+  .lista-cab{display:flex;flex-wrap:nowrap;gap:6px;align-items:center;
+    padding:0 14px 4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .lista-cab::-webkit-scrollbar{display:none}
+  .lista-cab .cab-rot{display:block;flex:none;white-space:nowrap;padding-right:2px}
+  .lista-cab>[role="columnheader"]{flex:none;display:inline-flex;text-align:left!important}
+  .lista-cab button{padding:0 13px;border:1px solid var(--line-2);border-radius:var(--radius-pill);
+    background:var(--surface);white-space:nowrap}
+  .lista-cab button[aria-current]{border-color:var(--brand-teal);background:var(--receita-soft)}
+  /* A célula de duas ordens não quebra dentro da tira: ela é só mais um par de
+     pílulas na fila. */
+  .lista-cab .dois{flex-wrap:nowrap;gap:6px}
   .cli-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
   /* Quebra forçada: sem ela o "resto" subiria para a primeira linha sempre que sobrasse espaço. */
   .cli-head::after{content:"";order:3;flex:0 0 100%;height:0}
@@ -465,6 +510,42 @@ select.filtro{font-family:var(--sans);font-size:var(--fs-3);color:var(--brand-te
   padding:9px 13px;cursor:pointer;font-weight:700;max-width:100%;min-width:0;text-overflow:ellipsis}
 select.filtro:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
 select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color:var(--amber-txt)}
+/* "Com pendências" é BOTÃO, não caixa de seleção: a pergunta tem duas respostas
+   (com e sem), e uma lista de um item só para marcar seria um clique a mais para
+   dizer sim. Ele fala a MESMA língua visual do resto da régua: teal de filtro em
+   repouso (igual ao select.filtro e ao .b4f-bt do b4u-filtro.js) e âmbar quando
+   está cortando a lista — o mesmo par do `select.filtro.corta` que já estava
+   aqui e do `.b4f-nada` do componente. Sem cor nova, sem vocabulário novo.
+   A altura acompanha os vizinhos (~37px) de propósito: o botão de 44px ficaria
+   um degrau acima das duas caixas ao lado e a régua pareceria desalinhada. */
+button.filtro{font-family:var(--sans);font-size:var(--fs-3);font-weight:700;cursor:pointer;
+  color:var(--brand-teal-txt);background:var(--surface);border:1px solid var(--brand-teal);
+  border-radius:var(--radius-pill);padding:9px 13px;line-height:1.25;max-width:100%;
+  min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.filtro:hover{border-color:var(--brand-teal-txt)}
+button.filtro:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+button.filtro[aria-pressed="true"]{background:var(--amber-soft);border-color:var(--amber);color:var(--amber-txt)}
+button.filtro[hidden]{display:none}
+/* ┌── NÃO ponha as duas caixas na MESMA linha do celular ──────────────────┐
+   │ Tentado e desfeito em 11/08/2026. `\.topo>.b4f{flex:1 1 40%}` faz as   │
+   │ duas repartirem uma linha e economiza uma linha inteira da régua a     │
+   │ 390px — e cria um defeito pior: a segunda caixa passa a nascer a ~200px│
+   │ da borda esquerda, e o PAINEL dela (que é `position:absolute` e tem a  │
+   │ largura do item mais comprido) precisa de uns 90px de correção para a  │
+   │ esquerda para caber. O `posicionar()` do b4u-filtro.js faz essa        │
+   │ correção lendo `window.innerWidth` — e, no Chromium com emulação de    │
+   │ celular, o innerWidth JÁ VEM INFLADO pelo estouro que o próprio painel │
+   │ acabou de causar (390 vira 465). A correção sai de 94px para 10px e o  │
+   │ painel fica meio fora da tela, que é justamente onde a pessoa lê e     │
+   │ marca as opções.                                                       │
+   │ Sem a emulação a conta fecha (left:-94px, painel inteiro dentro), e o  │
+   │ mesmo acontece no daily.html e no societario-equipe.html com a segunda │
+   │ caixa da linha deles — é comportamento da casa, não desta tela. Mas    │
+   │ enquanto for assim, uma linha a mais de régua é troca barata por um    │
+   │ painel que pode nascer pela metade num celular de verdade.             │
+   │ Se um dia o `posicionar()` medir por `documentElement.clientWidth`     │
+   │ (que não infla), esta regra volta a valer.                             │
+   └────────────────────────────────────────────────────────────────────────┘ */
 .painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
   padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
   border-radius:var(--radius);background:var(--surface-warm)}
@@ -532,6 +613,17 @@ details.sec .grid{margin-top:10px}
 <!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
      chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
 <script src="b4u-shell.js" charset="utf-8"></script>
+<!-- A caixa de seleção múltipla da régua (Ativos e Produtos). Se ele não
+     carregar, `montarFiltros()` desenha os controles nativos de sempre — um
+     <select> por filtro, com uma escolha por vez. Perde-se a combinação ("ativos
+     E em inativação", "Contabilidade OU INSS"); a régua continua inteira e a
+     lista também.
+
+     ELE VEM ANTES DO b4u-modal.js DE PROPÓSITO. Os dois escutam Esc na CAPTURA do
+     documento, e ouvintes de captura no mesmo nó disparam na ordem em que foram
+     registrados. Com o modal primeiro, um Esc com o painel de um filtro aberto
+     fecharia o cadastro em vez da lista que está na cara da pessoa. -->
+<script src="b4u-filtro.js" charset="utf-8"></script>
 <!-- A casca dos modais mora num arquivo só (b4u-modal.js): véu, Esc, foco preso
      dentro da caixa e o aviso de "tem coisa por gravar". Se ele não carregar, as
      fichas não abrem — e mais nada muda: as chamadas são protegidas por
@@ -1091,11 +1183,15 @@ function seloHTML(cli){
   return `<span class="selo ${cl}" title="${esc(tituloSelo(cli))}">${txt}</span>`;
 }
 
-/* ---------------- ordenação ---------------- */
-/* Os critérios são os MESMOS do cabeçalho da lista, mais o "campos vazios", que
-   não tem coluna própria. Abaixo de 900px o cabeçalho some — sem estes chips a
-   ordenação sumiria junto, e no celular ela é justamente o jeito de achar o
-   cadastro mais atrasado. */
+/* ---------------- ordenação ----------------
+   Os critérios são os MESMOS do cabeçalho da lista — cada um É uma coluna
+   clicável. Esta lista deixou de desenhar um <select> "Ordenar por" na régua
+   (o dono: "tirar daqui nessa parte superior a ordenação, deixar se ele clicar
+   em qualquer um dos títulos da tabela ele ordena de A a Z ou oposto") e passou
+   a ser o dicionário do cabeçalho: o `rot` é o nome por extenso e o `asc`/`desc`
+   viram o title do botão, dizendo o que o PRÓXIMO clique vai fazer. As oito
+   entradas continuam todas alcançáveis; "campos vazios", a única sem coluna
+   própria, virou o segundo botão da célula onde o selo dela já aparece. */
 const ORDENS=[
   {k:'id',rot:'ID',asc:'do menor para o maior',desc:'do maior para o menor'},
   {k:'nome',rot:'Nome',asc:'A → Z',desc:'Z → A'},
@@ -1168,17 +1264,13 @@ function ordenar(arr){
     return porId(a,b)*d;
   });
 }
-function desenharOrdem(){
-  const el=document.getElementById('f-ord');if(!el)return;
-  const vivas=ordensVivas();
-  if(!vivas.some(o=>o.k===ORDEM)){ORDEM='id';DIR='asc';}
-  /* Cada critério nas DUAS direções, ditas por extenso — o segundo-clique-inverte
-     dos chips era gesto que ninguém descobria sozinho. */
-  const cur=ORDEM+'|'+DIR;
-  el.innerHTML=vivas.map(o=>
-    `<option value="${esc(o.k)}|asc"${cur===o.k+'|asc'?' selected':''}>`+esc(o.rot+' — '+o.asc)+`</option>`+
-    `<option value="${esc(o.k)}|desc"${cur===o.k+'|desc'?' selected':''}>`+esc(o.rot+' — '+o.desc)+`</option>`).join('');
+/* Ordem que aponta para coluna que a planilha não tem mais volta para o ID. Não
+   desenha nada — o cabeçalho é quem desenha —, mas continua sendo chamada antes
+   de cada pintura, porque as colunas vivas mudam a cada carga. */
+function normalizarOrdem(){
+  if(!ordensVivas().some(o=>o.k===ORDEM)){ORDEM='id';DIR='asc';}
 }
+function ordemDe(k){return ORDENS.find(o=>o.k===k)||null;}
 
 /* ---------------- cards de resumo ---------------- */
 function itemResumo(cli,tp){
@@ -1306,6 +1398,264 @@ const FILTROS=[
 ];
 function filtrosVivos(){return FILTROS.filter(f=>!f.dep||COL[f.dep]);}
 function fnFiltro(k){const f=FILTROS.find(x=>x.k===k);return f?f.fn:(()=>true);}
+
+/* ================= a régua de três controles =================
+   O dono pediu, com estas palavras: "Ativos (status), um filtro checkbox ·
+   Produtos, outro filtro checkbox · Com pendências um botão". Os três estados
+   abaixo são o que a régua guarda, e os três compõem com E: quem marca "Ativo"
+   e "Contabilidade" e liga "Com pendências" está perguntando pelos clientes
+   ativos de contabilidade que têm alguma coisa faltando.
+
+   `FILTRO` (o <select> de uma escolha só) NÃO morreu: ele continua sendo o
+   caminho de quando o b4u-filtro.js não carrega, e é lá que as nove opções de
+   antes continuam inteiras, uma de cada vez. Com o módulo, ele fica em 'todos'
+   e quem manda são os três daqui. */
+/* null = ainda não decidido. Vira a lista inteira de situações assim que os
+   clientes chegam — é o estado com que a tela SEMPRE abriu (nenhum filtro de
+   situação), e o padrão não pode mudar por causa de uma troca de controle. */
+let F_SIT=null;
+/* Vazio quer dizer TODOS (`vazio:'todos'` no componente): são poucos produtos,
+   mas marcar todos para dizer "não quero filtrar" continua sendo absurdo. */
+let F_PROD=[];
+let F_PEND=false;
+/* Valor sentinela do item "(sem produtos)" da caixa de Produtos. Ele existe para
+   que a opção "Sem produtos" do antigo <select> não se perca: ela era um filtro
+   de pendência e continua alcançável, agora dentro da pergunta em que ela cabe. */
+const PROD_SEM='__sem__';
+
+/* ---- de onde saem as contagens do rótulo (`Ativo · 12`) ----
+   Da carteira depois da BUSCA, e só dela. A contagem responde "quantos sobram se
+   eu marcar isto agora", e quem digitou "campinas" está perguntando dentro de
+   Campinas — um número que continuasse contando a carteira inteira estaria
+   respondendo outra pergunta, bem no momento em que a pessoa mais precisa dele.
+
+   E é SÓ a busca: não é facetada pelas outras caixas nem pelo botão de
+   pendência. Facetar mudaria o número embaixo da mão de quem está escolhendo
+   (marcar um produto faria as situações encolherem a cada clique), e a régua
+   passaria a exigir leitura em vez de responder. É a mesma conta do
+   societario-equipe.html.
+
+   Ela usa `chaveBusca`/`digitosBusca`, que moram lá embaixo, junto do resto da
+   busca: são declarações de função e por isso já existem quando esta roda. */
+function baseBusca(){
+  const termo=normTxt(TERMO);
+  if(!termo)return CLIENTES;
+  return CLIENTES.filter(c=>casaBusca(chaveBusca(c),digitosBusca(c),termo));
+}
+
+/* ---- situações ----
+   Só as que EXISTEM nos dados, na ordem em que a equipe fala delas. Listar uma
+   situação com zero cliente é oferecer um filtro que só sabe esvaziar a tela. */
+const SIT_ORDEM=['ativo','inativando','inativo','sem'];
+function contarSit(base){
+  const n={};(base||CLIENTES).forEach(c=>{const s=situacaoDe(c);n[s]=(n[s]||0)+1;});return n;
+}
+/* A tela só pergunta pela situação se ela existir: ou como coluna ("Ativo"), ou
+   como campo que a rota manda junto de cada cliente. É a mesma regra do `dep`
+   dos filtros de antes — sem a coluna, todo mundo cai em "sem situação" e o
+   filtro vira uma pergunta sem resposta. */
+function temSituacao(){return !!COL.ativo||CLIENTES.some(c=>c.ativo);}
+/* Quais situações a lista OFERECE sai da carteira inteira; quantos clientes cada
+   uma tem sai do que a busca deixou. As duas contas são de propósito diferentes:
+   opção que sumisse no meio da digitação continuaria filtrando sem estar na tela
+   — e, pior, sumiria da lista que define o "todas marcadas" do repouso. Zero
+   embaixo da busca é resposta legítima ("nenhum Inativo casa com isso"). */
+function itensSit(){
+  if(!temSituacao())return [];
+  const tem=contarSit(CLIENTES),n=contarSit(baseBusca());
+  return SIT_ORDEM.filter(k=>tem[k]>0).map(k=>({v:k,r:SITUACOES[k].rot+' · '+(n[k]||0),c:SITUACOES[k].rot}));
+}
+/* O conjunto {Ativo} tem nome próprio na casa — é como o dono chamou o controle
+   inteiro, e era o rótulo do chip de antes. Sem isto o botão diria "Ativo", no
+   singular de UM item de lista, em vez do nome do recorte. Ver a regra 6 do
+   b4u-filtro.js. */
+/* Sobre a carteira INTEIRA, como a lista de opções: o nome do recorte não pode
+   ir e vir conforme o que está digitado na busca. */
+function sitEspeciais(){
+  const n=contarSit(CLIENTES),esp=[];
+  if(n.ativo)esp.push({quando:['ativo'],rot:'Ativos'});
+  /* "Ainda na casa" = ativo + em inativação: é a pergunta de quem vai cobrar
+     documento de quem ainda não saiu. Só entra quando as duas existem, senão
+     seria o mesmo conjunto de {Ativo} com outro nome. */
+  if(n.ativo&&n.inativando)esp.push({quando:['ativo','inativando'],rot:'Ainda na casa'});
+  return esp;
+}
+/* Sem NENHUMA situação na lista (planilha sem a coluna "Ativo") não há controle
+   na régua, e um filtro sem controle não pode cortar nada — senão a tela abriria
+   vazia por causa de uma pergunta que ela nem chegou a fazer. Com a lista cheia,
+   `F_SIT` vazio é escolha da pessoa e continua querendo dizer "nada". */
+function passaSit(c){return !F_SIT||!SIT_VALS.length||F_SIT.indexOf(situacaoDe(c))>=0;}
+
+/* ---- produtos ----
+   A lista sai dos DADOS, nunca da constante PRODUTOS lá de cima: aquela lista é
+   o que o formulário de cliente novo oferece, e a carteira tem produto que ela
+   não conhece (e deixa de ter produto que ela conhece). Um filtro escrito à mão
+   mostraria opção que não casa com ninguém e esconderia a que casa.
+   A coluna guarda VÁRIOS produtos por cliente, separados por vírgula ou ponto e
+   vírgula — o mesmo corte que a pilula da linha (`produtosHTML`) já faz. */
+function produtosDe(cli){
+  if(cli._pl==null)cli._pl=valorDe(cli,COLS_LINHA.produtos).split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+  return cli._pl;
+}
+/* Comparação sem acento e sem caixa: a planilha tem "Equiparação" e "equiparacao"
+   digitados por pessoas diferentes, e dois itens para o mesmo produto seria a
+   lista mentindo. O rótulo que aparece é a PRIMEIRA grafia encontrada. */
+function produtosNorm(cli){
+  if(cli._pn==null)cli._pn=produtosDe(cli).map(normTxt);
+  return cli._pn;
+}
+/* Dois passos, e são duas perguntas diferentes: QUAIS produtos a caixa oferece
+   (a carteira inteira, senão a opção marcada sumiria de baixo do dedo assim que
+   a busca não achasse mais nenhum cliente dela) e QUANTOS clientes cada um tem
+   agora (o que a busca deixou). */
+function itensProd(){
+  const mapa=new Map();let temSem=false;
+  CLIENTES.forEach(c=>{
+    const ps=produtosDe(c);
+    if(!ps.length){temSem=true;return;}
+    const vistos={};
+    ps.forEach(p=>{
+      const k=normTxt(p);if(!k||vistos[k])return;vistos[k]=1;   // repetido na mesma célula conta uma vez
+      if(!mapa.has(k))mapa.set(k,{rot:p,n:0});
+    });
+  });
+  /* Nenhum produto em lugar nenhum (a planilha perdeu a coluna, ou a carteira
+     ainda não tem produto declarado): não há pergunta a fazer, e uma caixa com
+     um "(sem produtos) · 66" sozinho seria um controle que só sabe repetir a
+     lista inteira. Sem itens, o `montarFiltros()` nem planta o controle. */
+  if(!mapa.size)return [];
+  let semN=0;
+  baseBusca().forEach(c=>{
+    const ps=produtosNorm(c);
+    if(!ps.length){semN++;return;}
+    const vistos={};
+    ps.forEach(k=>{
+      if(!k||vistos[k])return;vistos[k]=1;
+      const e=mapa.get(k);if(e)e.n++;
+    });
+  });
+  const out=[...mapa.values()].sort((a,b)=>cmpTxt(a.rot,b.rot))
+    .map(e=>({v:e.rot,r:e.rot+' · '+e.n,c:e.rot}));
+  /* "(sem produtos)" é o que restou da opção "Sem produtos" do <select> antigo.
+     Vai no fim, como o "— sem área —" do Daily: é a linha de exceção da lista. */
+  if(temSem)out.push({v:PROD_SEM,r:'(sem produtos) · '+semN,c:'sem produtos'});
+  return out;
+}
+/* Marcar vários = OU. "Contabilidade + INSS" é "quem tem qualquer um dos dois",
+   que é a pergunta que alguém faz; "quem tem os dois ao mesmo tempo" ninguém
+   pediu e não caberia na mesma caixa sem um botão de E/OU para decorar. */
+function passaProd(c){
+  if(!F_PROD.length)return true;
+  const ps=produtosNorm(c);
+  if(!ps.length)return F_PROD.indexOf(PROD_SEM)>=0;
+  return F_PROD.some(v=>v!==PROD_SEM&&ps.indexOf(normTxt(v))>=0);
+}
+
+/* ---- pendência ----
+   O QUE É PENDÊNCIA NESTA TELA já estava escrito: são os filtros marcados
+   `cls:'falta'` na lista FILTROS aí em cima — sem CNPJ, sem regime, sem data de
+   início da contabilidade (quando ela é exigível), sem produtos e sem pasta no
+   Drive. Eram cinco opções do <select> de Situação, e o botão é a união delas:
+   "tem pelo menos uma dessas". A definição continua morando num lugar só, então
+   quem acrescentar um filtro `cls:'falta'` amanhã já entra aqui.
+
+   NÃO é "cadastro incompleto" (o selo de campos vazios): esse conta ~40 colunas
+   e daria pendência para quase toda a carteira, que é o mesmo que não filtrar.
+   O nome `temPendencia` já está tomado nesta página por outra coisa — alteração
+   por gravar —, e por isso este se chama `comPendencia`. */
+function filtrosFalta(){return filtrosVivos().filter(f=>f.cls==='falta');}
+function comPendencia(c){return filtrosFalta().some(f=>f.fn(c));}
+function passaPend(c){return !F_PEND||comPendencia(c);}
+
+/* ---- montagem da régua ----
+   As duas caixas são CONSTRUÍDAS antes de qualquer uma entrar na página: se o
+   módulo estiver lá mas quebrar no meio, o `catch` cai nos controles nativos com
+   os marcadores de posição ainda intactos. Construir e plantar de uma em uma
+   deixaria a régua pela metade, meio caixa e meio select. É o mesmo desenho do
+   `montarFiltros()` do daily.html. */
+const CX={sit:null,prod:null};
+let SIT_VALS=[];      // as situações da última montagem, na ordem da lista
+/* O marcador de posição é SUBSTITUÍDO, não preenchido: a régua é um flex, e um
+   <span> em volta viraria um item de flex dimensionado pelo conteúdo — o botão
+   por dentro dele nunca encolheria, e um nome de produto comprido botaria
+   rolagem lateral na página inteira a 390px. */
+function por(cx,no){cx.replaceWith(no);return no;}
+function porHTML(cx,html){const t=document.createElement('div');t.innerHTML=html;
+  return por(cx,t.firstElementChild);}
+/* Situação nova que apareceu na recarga entra marcada SE tudo estava marcado —
+   senão o cliente que acabou de virar "Em inativação" sumiria da lista sem
+   ninguém ter mexido em filtro nenhum. Seleção parcial é escolha da pessoa e
+   fica como está. */
+function sincronizarSit(vals){
+  const tudo=F_SIT===null||(SIT_VALS.length>0&&SIT_VALS.every(v=>F_SIT.indexOf(v)>=0));
+  SIT_VALS=vals.slice();
+  if(F_SIT===null||tudo)F_SIT=vals.slice();
+}
+function montarFiltros(){
+  const cxS=document.getElementById('cx-sit'),cxP=document.getElementById('cx-prod');
+  if(!cxS||!cxP)return;
+  CX.sit=CX.prod=null;
+  const iSit=itensSit(),iProd=itensProd();
+  sincronizarSit(iSit.map(i=>String(i.v)));
+  /* Endereço antigo (?f=ativos, ?f=sem_cnpj) traduzido para os controles novos.
+     Só neste caminho: sem o módulo, o `?f=` continua sendo exatamente o que
+     sempre foi, e o <select> o mostra inteiro. */
+  if(window.B4UFiltro)traduzirFiltroLegado();
+  if(window.B4UFiltro)try{
+    const fs=iSit.length?B4UFiltro.criar({
+      id:'f-sit-cx',rot:'Situação',itens:iSit,marcados:F_SIT,
+      /* Nasce cheio, como a tela sempre abriu; zero marcado quer dizer "não me
+         mostre nada" e o componente pinta âmbar para avisar. */
+      vazio:'nada',rotTodos:'Todas as situações',rotNada:'Nenhuma situação',rotTodas:'Todas',
+      rotEspecial:sitEspeciais(),
+      aoMudar:m=>{F_SIT=m;TETO=PASSO;redesenhar();}
+    }):null;
+    const fp=iProd.length?B4UFiltro.criar({
+      id:'f-prod-cx',rot:'Produtos',itens:iProd,marcados:F_PROD,
+      /* Nasce vazio, e vazio aqui quer dizer TODOS: marcar os produtos todos para
+         dizer "não quero filtrar" seria trabalho para dizer nada. */
+      vazio:'todos',rotTodos:'Todos os produtos',rotNada:'Nenhum produto',
+      aoMudar:m=>{F_PROD=m;TETO=PASSO;redesenhar();}
+    }):null;
+    CX.sit=fs;CX.prod=fp;
+    /* As caixas acabaram de nascer com estas listas: a assinatura sai daqui já
+       em dia, senão a primeira pintura remontaria os dois painéis à toa. */
+    SIG_CAIXAS=JSON.stringify([iSit,iProd]);
+    if(fs)por(cxS,fs.no);else cxS.remove();
+    if(fp)por(cxP,fp.no);else cxP.remove();
+    return;
+  }catch(e){CX.sit=CX.prod=null;}
+  /* ── sem o módulo ───────────────────────────────────────────────────────────
+     Os controles de hoje, um por filtro, com uma escolha por vez. O <select> de
+     Situação volta com a lista INTEIRA de antes — inclusive "Sem CNPJ", "Sem
+     regime" e as outras —, então aqui não falta nenhuma pergunta que a tela já
+     sabia responder; falta só combinar duas. Quem manda neste caminho é o
+     `FILTRO` de sempre. */
+  porHTML(cxS,`<select class="filtro" id="f-sit" aria-label="Situação"></select>`);
+  porHTML(cxP,`<select class="filtro" id="f-prod-sel" aria-label="Produtos"></select>`);
+}
+/* As listas mudam (cliente novo, produto novo, situação trocada na recarga em
+   segundo plano) e as contagens do rótulo mudam a cada letra digitada na busca.
+   Trocar a lista de um filtro REMONTA o painel dele por dentro — com o painel
+   ABERTO isso destrói o checkbox que está sob o dedo, o foco cai no <body>, o
+   `focusout` do componente vê que o foco saiu e fecha o painel. Daí a
+   assinatura: só remonta quando os rótulos MUDARAM de verdade, e eles só mudam
+   quando a busca muda ou quando a planilha traz coisa nova. Marcar um checkbox
+   não mexe em nenhuma das duas, então o painel fica aberto — que é o ponto de
+   ele ser uma caixa de seleção múltipla. É a mesma trava do
+   societario-equipe.html, e ela ficou obrigatória no dia em que a contagem
+   passou a ser ciente da busca. */
+let SIG_CAIXAS='';
+function atualizarCaixas(){
+  if(!CX.sit&&!CX.prod)return;
+  const iSit=itensSit(),iProd=itensProd();
+  const sig=JSON.stringify([iSit,iProd]);
+  if(sig===SIG_CAIXAS)return;
+  SIG_CAIXAS=sig;
+  sincronizarSit(iSit.map(i=>String(i.v)));
+  if(CX.sit){CX.sit.itens(iSit);CX.sit.rotEspecial(sitEspeciais());CX.sit.marcados(F_SIT);}
+  if(CX.prod)CX.prod.itens(iProd);
+}
 function chaveBusca(cli){
   if(cli._b==null)cli._b=normTxt([cli.id,cli.nome,valorDe(cli,COL.cnpj),valorDe(cli,COL.razao),valorDe(cli,COL.fantasia),valorDe(cli,COL.cidade)].join(' '));
   return cli._b;
@@ -1316,9 +1666,13 @@ function digitosBusca(cli){
   if(cli._bd==null)cli._bd=soDigitos(cli.id+' '+valorDe(cli,COL.cnpj));
   return cli._bd;
 }
+/* Os quatro recortes compõem com E, e a ordenação vem por último — é o que faz a
+   ordem escolhida no cabeçalho SOBREVIVER a filtrar e a buscar: ela não é uma
+   propriedade da lista desenhada, é o último passo de quem a monta. */
 function visiveis(){
   const fn=fnFiltro(FILTRO),termo=normTxt(TERMO);
-  return ordenar(CLIENTES.filter(c=>fn(c)&&(!termo||casaBusca(chaveBusca(c),digitosBusca(c),termo))));
+  return ordenar(CLIENTES.filter(c=>fn(c)&&passaSit(c)&&passaProd(c)&&passaPend(c)&&
+    (!termo||casaBusca(chaveBusca(c),digitosBusca(c),termo))));
 }
 
 /* ---------------- lista ---------------- */
@@ -1397,21 +1751,43 @@ function cabecaHTML(cli){
  *  comum, o rótulo que quase preenche a coluna empurrava a seta sozinha para uma
  *  segunda linha, e o cabeçalho ficava com o dobro da altura por causa dela. */
 function seta(key){return ORDEM===key?(DIR==='asc'?'\u00A0▲':'\u00A0▼'):'';}
-/* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS) e some
-   abaixo de 900px, onde a linha deixa de ser sete colunas. Cada rótulo é um
-   botão que ordena — por isso ele NÃO é mais aria-hidden: aqui não é enfeite, e
-   a coluna ativa se anuncia com aria-sort. */
+/* O que o PRÓXIMO clique vai fazer, dito por extenso — são as mesmas frases que
+   o <select> "Ordenar por" mostrava ("Nome — A → Z", "Situação — inativos
+   primeiro"). Elas não se perderam junto com o select: viraram o title e o nome
+   acessível do botão da coluna. Sem isso, "clica de novo que inverte" volta a
+   ser gesto que ninguém descobre sozinho. */
+function tituloOrd(k,rot){
+  const o=ordemDe(k);
+  if(!o)return 'Ordenar por '+rot;
+  const prox=(ORDEM===k&&DIR==='asc')?'desc':'asc';
+  return 'Ordenar por '+o.rot+' — '+(prox==='asc'?o.asc:o.desc);
+}
+/* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS) e, abaixo
+   de 900px, vira uma tira que rola de lado com os mesmos títulos — a linha deixa
+   de ter sete colunas, mas os títulos continuam sendo o único controle de
+   ordenação da tela desde que o "Ordenar por" saiu da régua de cima. Cada rótulo
+   é um botão de verdade — por isso ele NÃO é aria-hidden —, a coluna ativa se
+   anuncia com aria-sort e a direção aparece na setinha e no destaque do rótulo.
+   A ÚLTIMA célula tem dois botões porque a coluna mostra duas coisas: o selo de
+   situação e o de completude. Ver a nota do `.lista-cab .dois` na folha.
+   O "Ordenar" da frente só existe no celular (a folha o esconde acima de 900px,
+   onde a fileira de títulos em cima de sete colunas já se explica sozinha); ele é
+   aria-hidden porque o `aria-label` da faixa e o de cada botão já dizem, por
+   extenso, que ali se ordena. */
 function cabecalhoLista(){
-  const bt=(k,rot,estilo)=>{
-    const at=ORDEM===k;
-    return `<span role="columnheader"${estilo?' style="'+estilo+'"':''}`+
-      `${at?` aria-sort="${DIR==='asc'?'ascending':'descending'}"`:''}>`+
-      `<button type="button" data-sort="${esc(k)}" title="Ordenar por ${esc(rot)}">${esc(rot)}${seta(k)}</button></span>`;
-  };
-  return `<div class="lista-cab" role="row">`+
-    bt('id','ID')+bt('nome','Nome')+bt('cnpj','CNPJ / CPF')+bt('cidade','Cidade')+
-    bt('produtos','Produtos')+bt('inicio','Início','text-align:center')+
-    bt('ativo','Situação','text-align:right')+`</div>`;
+  const bt=(k,rot)=>`<button type="button" data-sort="${esc(k)}"${ORDEM===k?' aria-current="true"':''}`+
+    ` title="${esc(tituloOrd(k,rot))}" aria-label="${esc(tituloOrd(k,rot))}">${esc(rot)}${seta(k)}</button>`;
+  const cel=(k,rot,estilo)=>
+    `<span role="columnheader"${estilo?' style="'+estilo+'"':''}`+
+    `${ORDEM===k?` aria-sort="${DIR==='asc'?'ascending':'descending'}"`:''}>`+bt(k,rot)+`</span>`;
+  const fim=(ORDEM==='ativo'||ORDEM==='vazios')
+    ? ` aria-sort="${DIR==='asc'?'ascending':'descending'}"` : '';
+  return `<div class="lista-cab" role="row" aria-label="Títulos das colunas — clique para ordenar">`+
+    `<span class="cab-rot" aria-hidden="true">Ordenar</span>`+
+    cel('id','ID')+cel('nome','Nome')+cel('cnpj','CNPJ / CPF')+cel('cidade','Cidade')+
+    cel('produtos','Produtos')+cel('inicio','Início','text-align:center')+
+    `<span role="columnheader" class="dois"${fim}>`+bt('ativo','Situação')+bt('vazios','Vazios')+`</span>`+
+    `</div>`;
 }
 function campoEditHTML(cli,f){
   const col=f.col,v=valorDe(cli,col);
@@ -1470,25 +1846,73 @@ function corpoHTML(cli){
     </div>
   </div>`;
 }
-/* Quantos controles do PAINEL estão pegando agora — vira o selo ao lado do botão
-   Filtros (C.5). Só conta o que está escondido lá dentro: a busca fica à vista na
-   régua, e um selo por causa dela faria a pessoa procurar o que não sumiu. A
-   ordenação entra porque também está no painel e também muda o que aparece. */
-function filtrosPainel(){return (FILTRO!=='todos'?1:0)+(ORDEM!=='id'||DIR!=='asc'?1:0);}
-function limparFiltros(){
-  FILTRO='todos';TERMO='';ORDEM='id';DIR='asc';TETO=PASSO;
+/* Quantos filtros estão ESTREITANDO a lista agora (C.5). Só conta o que TIRA
+   cliente da vista: a busca fica à mostra na régua, e a ordenação não esconde
+   ninguém — foi por isso que ela saiu daqui junto com o <select> "Ordenar por".
+   Situação só conta quando não está com tudo marcado, que é o repouso. */
+function filtrosPainel(){
+  return (FILTRO!=='todos'?1:0)+(sitEhPadrao()?0:1)+(F_PROD.length?1:0)+(F_PEND?1:0);
+}
+/* Volta ao estado de repouso: todas as situações, todos os produtos, sem o corte
+   de pendência, sem busca e na ordem de ID. É o mesmo estado com que a tela
+   abre, e por isso ele mora numa função só — o "Limpar" e o `irPara()` (que
+   desfaz o filtro para alcançar um cliente escondido) precisam do MESMO gesto. */
+function zerarFiltros(){
+  FILTRO='todos';TERMO='';F_SIT=SIT_VALS.slice();F_PROD=[];F_PEND=false;TETO=PASSO;
+  /* Escrever no componente NÃO dispara o `aoMudar` dele (senão a lista seria
+     desenhada uma vez por caixa); quem chama redesenha. */
+  if(CX.sit)CX.sit.marcados(F_SIT);
+  if(CX.prod)CX.prod.marcados(F_PROD);
   const b=document.getElementById('busca');if(b)b.value='';
+}
+function limparFiltros(){
+  zerarFiltros();ORDEM='id';DIR='asc';
   redesenhar();
 }
+/* Redesenha a RÉGUA inteira: as duas caixas de seleção (quando o módulo está no
+   ar), os controles nativos de reserva e o botão de pendência, que é da página
+   nos dois caminhos. As contagens saem todas do `baseBusca()` — ver a nota lá em
+   cima —, e é por isso que `atualizarCaixas()` é chamado DAQUI e não só do
+   `redesenhar()`: digitar na busca chama `desenharLista()` direto, e sem esta
+   linha os números do painel congelariam na primeira letra. */
 function desenharChips(){
-  const sel=document.getElementById('f-sit'); if(!sel) return;
-  const vivos=filtrosVivos();
-  if(!vivos.some(f=>f.k===FILTRO)) FILTRO=vivos.length?vivos[0].k:'todos';
-  sel.innerHTML=vivos.map(f=>{
-    const n=CLIENTES.filter(f.fn).length;
-    return `<option value="${esc(f.k)}"${f.k===FILTRO?' selected':''}>`+esc(f.rot)+' · '+n+`</option>`;
-  }).join('');
-  sel.classList.toggle('corta',FILTRO!=='todos');
+  atualizarCaixas();
+  const base=baseBusca();
+  const sel=document.getElementById('f-sit');
+  if(sel&&sel.tagName==='SELECT'){
+    const vivos=filtrosVivos();
+    if(!vivos.some(f=>f.k===FILTRO)) FILTRO=vivos.length?vivos[0].k:'todos';
+    sel.innerHTML=vivos.map(f=>{
+      const n=base.filter(f.fn).length;
+      return `<option value="${esc(f.k)}"${f.k===FILTRO?' selected':''}>`+esc(f.rot)+' · '+n+`</option>`;
+    }).join('');
+    sel.classList.toggle('corta',FILTRO!=='todos');
+  }
+  const psel=document.getElementById('f-prod-sel');
+  if(psel){
+    const itens=itensProd();
+    psel.hidden=!itens.length;
+    const um=F_PROD.length===1?String(F_PROD[0]):'';
+    psel.innerHTML=`<option value="">Todos os produtos</option>`+
+      itens.map(i=>`<option value="${esc(i.v)}"${String(i.v)===um?' selected':''}>${esc(i.r)}</option>`).join('');
+    psel.classList.toggle('corta',!!F_PROD.length);
+  }
+  desenharPend(base);
+}
+/* O botão liga/desliga. Some quando nenhuma das colunas de pendência existe —
+   um botão que não pode achar nada é pior que botão nenhum.
+   A contagem no rótulo é a mesma conta das caixas: sobre o que a busca deixou. */
+function desenharPend(base){
+  const bt=document.getElementById('f-pend');if(!bt)return;
+  const quais=filtrosFalta();
+  bt.hidden=!quais.length;
+  if(!quais.length)return;
+  const n=(base||baseBusca()).filter(comPendencia).length;
+  bt.textContent='Com pendências · '+n;
+  bt.setAttribute('aria-pressed',String(F_PEND));
+  bt.title=(F_PEND?'Mostrando só quem tem pendência. Clique para ver todos.'
+                  :'Só os clientes com alguma pendência.')+
+    ' Conta como pendência: '+quais.map(f=>f.rot).join(', ')+'.';
 }
 function desenharLista(){
   const arr=visiveis();
@@ -1525,17 +1949,30 @@ function desenharResumoLista(){
   if(COL.regime){const s=quantos(c=>!valorDe(c,COL.regime));if(s)p.push(s+' sem regime');}
   el.textContent=p.join(' · ');
 }
+/* `atualizarCaixas()` não está mais aqui: ele mora dentro do `desenharChips()`,
+   que é chamado por este e também pelo `desenharLista()` da busca. */
 function redesenhar(){
-  desenharChips();desenharOrdem();desenharResumo();desenharLista();
+  normalizarOrdem();desenharChips();desenharResumo();desenharLista();
 }
 /* ---------- busca, filtro e ordenação no endereço (C.10) ----------
    F5 volta para a mesma visão; chave, cod e #hash ficam intactos. */
+/* Nada marcado em Situação é um estado LEGÍTIMO ("não me mostre nada") e é
+   diferente do padrão. Sem esta marca os dois virariam uma `sit=` vazia no
+   endereço, e o F5 desfaria o que a pessoa acabou de fazer. */
+const SIT_NADA='__nada__';
+function sitEhPadrao(){
+  if(!F_SIT||!SIT_VALS.length)return true;      // sem lista não há recorte a guardar
+  return F_SIT.length===SIT_VALS.length&&SIT_VALS.every(v=>F_SIT.indexOf(v)>=0);
+}
 function sincronizarURL(){
   try{
     const u=new URL(location.href);
     const set=(k,v)=>{if(v)u.searchParams.set(k,v);else u.searchParams.delete(k);};
     set('q',TERMO);
     set('f',FILTRO==='todos'?'':FILTRO);
+    set('sit',sitEhPadrao()?'':(F_SIT.length?F_SIT.join(','):SIT_NADA));
+    set('prod',F_PROD.join(','));
+    set('pend',F_PEND?'1':'');
     set('ord',ORDEM==='id'?'':ORDEM);
     set('dir',DIR==='asc'?'':DIR);
     history.replaceState(null,'',u.pathname+u.search+u.hash);
@@ -1544,9 +1981,33 @@ function sincronizarURL(){
 function lerURL(){
   const p=new URLSearchParams(location.search);
   FILTRO=p.get('f')||'todos';
+  const lista=k=>(p.get(k)||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const sit=lista('sit');
+  /* null = padrão; vira a lista inteira quando as situações forem conhecidas. */
+  F_SIT=sit.length?(sit[0]===SIT_NADA?[]:sit):null;
+  F_PROD=lista('prod');
+  F_PEND=p.get('pend')==='1';
   ORDEM=p.get('ord')||'id';
   DIR=p.get('dir')==='desc'?'desc':'asc';
   return p.get('q')||'';
+}
+/* O `?f=` de antes continua chegando de links guardados e de F5 em aba antiga.
+   Cada valor dele tem tradução nos controles novos, e nenhum é jogado fora
+   calado — um filtro que some sem aviso é uma tela que "perdeu" clientes.
+     ativos/inativando/inativos -> a caixa Situação, com um item marcado
+     sem_produtos               -> a caixa Produtos, no item "(sem produtos)"
+     as outras quatro `falta`   -> o botão Com pendências ligado
+   A última linha é a única que ALARGA o pedido: "sem CNPJ" vira "com alguma
+   pendência", porque o botão tem dois estados e não sabe dizer qual delas. */
+const LEGADO_SIT={ativos:'ativo',inativando:'inativando',inativos:'inativo'};
+function traduzirFiltroLegado(){
+  if(!FILTRO||FILTRO==='todos')return;
+  const s=LEGADO_SIT[FILTRO];
+  if(s&&SIT_VALS.indexOf(s)>=0)F_SIT=[s];
+  else if(FILTRO==='sem_produtos'&&itensProd().some(i=>String(i.v)===PROD_SEM))F_PROD=[PROD_SEM];
+  else if(FILTROS.some(f=>f.k===FILTRO&&f.cls==='falta'))F_PEND=true;
+  else return;                       // chave que não existe mais: não mexe em nada
+  FILTRO='todos';
 }
 
 function clientePorId(id){return CLIENTES.find(c=>String(c.id)===String(id));}
@@ -1675,9 +2136,10 @@ function abrirPeloEndereco(){
 }
 function irPara(id){
   const alvo=String(id);let mexeu=false;
-  if(!visiveis().some(c=>String(c.id)===alvo)){
-    FILTRO='todos';TERMO='';const b=document.getElementById('busca');if(b)b.value='';mexeu=true;
-  }
+  /* Nenhum dos QUATRO recortes pode esconder o cliente para onde estamos indo —
+     é o que faz o `?abrir=ID` do painel do colaborador chegar sempre na ficha
+     certa, mesmo que a tela tenha aberto filtrada por um endereço guardado. */
+  if(!visiveis().some(c=>String(c.id)===alvo)){zerarFiltros();mexeu=true;}
   /* O teto não pode esconder justamente a ficha para onde estamos indo. */
   const pos=visiveis().findIndex(c=>String(c.id)===alvo);
   if(pos>=TETO){TETO=Math.ceil((pos+1)/PASSO)*PASSO;mexeu=true;}
@@ -1752,12 +2214,17 @@ async function salvar(id){
     /* o nome pode ter mudado: reflete no cabeçalho e na busca */
     cli.nome=valorDe(cli,COL.nome)||cli.nome;
     if(COL.ativo)cli.ativo=valorDe(cli,COL.ativo);
-    cli._b=null;cli._bd=null;cli._v=null;
+    /* Os produtos do cliente podem ter mudado: as duas caches da caixa de
+       Produtos (a lista e a versão normalizada) caem junto com as outras, senão
+       a régua continuaria contando o produto antigo. */
+    cli._b=null;cli._bd=null;cli._v=null;cli._pl=null;cli._pn=null;
     FALHAS.delete(String(id));marcarFalha(id,false);
     /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé do modal sai, e o
        Fechar volta a ser Fechar. */
     if(!temPendencia()&&CAD)CAD.aviso(false);
     atualizarCabeca(id);
+    /* O `desenharChips()` já atualiza as caixas por dentro — a lista de produtos
+       e as contagens mudam quando alguém grava. */
     desenharChips();desenharResumo();
   }catch(e){
     /* o que não gravou volta para a fila: a próxima tentativa manda tudo de novo */
@@ -2059,6 +2526,10 @@ document.addEventListener('click',e=>{
   const rt=e.target.closest('[data-retry]');
   if(rt){e.stopPropagation();rt.textContent='enviando…';rt.disabled=true;tentarDeNovo(rt.dataset.retry);return;}
   if(e.target.closest('#btn-limpar')){limparFiltros();return;}
+  /* Liga/desliga o corte de pendência. É botão e não caixa de seleção: a
+     pergunta tem duas respostas, e o estado ligado se anuncia no aria-pressed e
+     no âmbar — a mesma língua do resto da régua. */
+  if(e.target.closest('#f-pend')){F_PEND=!F_PEND;TETO=PASSO;redesenhar();return;}
   /* "mais 20" para quem está lendo, "todos" para quem vai usar Ctrl+F. */
   if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
   if(e.target.closest('.btn-todos')){TETO=CLIENTES.length;desenharLista();return;}
@@ -2068,15 +2539,19 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#cadSalvar')){salvarAgoraCad();return;}
   const head=e.target.closest('.cli-head');
   if(head){const no=head.closest('.cli');if(no)abrirCadastro(no.dataset.id);return;}
-  /* Ordenar pelo cabeçalho da lista: mesma coluna inverte, coluna nova começa em
-     A→Z. Cai no MESMO estado dos chips "Ordenar por" (e no mesmo ?ord=/?dir=),
-     para o F5 voltar igual e o celular, onde o cabeçalho some, continuar
-     ordenando pelo painel de filtros. */
+  /* ORDENAR TÍTULOS AZ ZA — o gesto todo mora aqui. Coluna nova sempre começa em
+     A→Z; a mesma coluna de novo inverte. É o ÚNICO caminho de ordenação da tela
+     desde que o <select> "Ordenar por" saiu da régua, e ele vale igual no
+     celular, onde o cabeçalho vira a tira que rola de lado.
+     Escreve no MESMO estado de sempre (ORDEM/DIR, e daí o ?ord=/?dir=), então o
+     F5 volta na mesma ordem. O `desenharLista()` do fim é quem sincroniza o
+     endereço — e ele ordena o resultado dos filtros e da busca, nunca a lista
+     desenhada, que é o que faz a ordem sobreviver aos dois. */
   const th=e.target.closest('[data-sort]');
   if(th){const k=th.dataset.sort;
     if(ORDEM===k)DIR=(DIR==='asc'?'desc':'asc');else{ORDEM=k;DIR='asc';}
     TETO=PASSO;                                // outra ordem, outro começo de lista
-    desenharOrdem();desenharLista();
+    normalizarOrdem();desenharLista();
       return;}   // desenharLista() sincroniza a URL
 
   const tk=e.target.closest('.tk[data-goto]');
@@ -2094,16 +2569,22 @@ function anotar(el){
   /* 'input' e 'change' disparam os dois no mesmo campo — não salva duas vezes à toa */
   if(cli.valores[col]===el.value&&!SUJOS.has(cli.id))return;
   cli.valores[col]=el.value;cli._bd=null;
+  /* A coluna de produtos é travada e não deveria chegar aqui — mas a trava vem
+     da planilha, e o dia em que ela sair a caixa de Produtos não pode continuar
+     lendo a lista antiga desta cache. */
+  if(COLS_LINHA.produtos&&col===COLS_LINHA.produtos){cli._pl=null;cli._pn=null;}
   if(COL.nome&&col===COL.nome){cli.nome=el.value;atualizarCabeca(cli.id);}
   /* mudou a situação: selo e faixa lateral acompanham na hora */
   if(COL.ativo&&col===COL.ativo){cli.ativo=el.value;atualizarCabeca(cli.id);}
   agendarSalvar(cli.id,col,el.tagName==='SELECT'||el.type==='date'?250:700);
 }
 document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
+/* Os dois <select> abaixo só existem quando o b4u-filtro.js não carregou — com
+   ele, quem responde é o `aoMudar` de cada caixa. */
 document.addEventListener('change',e=>{
   if(e.target.id==='f-sit'){ FILTRO=e.target.value; TETO=PASSO; redesenhar(); return; }
-  if(e.target.id==='f-ord'){ const p=String(e.target.value).split('|');
-    ORDEM=p[0]; DIR=p[1]==='desc'?'desc':'asc'; TETO=PASSO; desenharOrdem(); desenharLista(); return; }if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
+  if(e.target.id==='f-prod-sel'){ F_PROD=e.target.value?[e.target.value]:[]; TETO=PASSO; redesenhar(); return; }
+  if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
 /* Atalhos de busca (C.4): "/" foca, Esc limpa. Com um modal aberto, Esc fecha o
    modal — e o atalho não atrapalha quem já está digitando noutro campo. */
 /* Esc com modal aberto NÃO chega aqui: a casca do b4u-modal.js escuta na captura,
@@ -2133,10 +2614,17 @@ document.addEventListener('keydown',e=>{
    então as fichas. Os 13 chips e os 3 cartões continuam existindo — deixaram de
    ser pedágio. */
 function layout(){
+  /* A régua tem TRÊS controles, e o dono disse quais: "Ativos (status), um filtro
+     checkbox · Produtos, outro filtro checkbox · Com pendências um botão". Os
+     dois primeiros saem daqui como marcador de posição e são trocados pelo
+     `montarFiltros()`, porque quem os desenha depende de o b4u-filtro.js ter
+     carregado. O "Ordenar por" que ficava aqui saiu: ordenar agora é clicar no
+     título da coluna. */
   return `<div class="topo">
     <input class="busca campo-busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por ID, nome, CNPJ, cidade…  ( / para focar)">
-    <select class="filtro" id="f-sit" aria-label="Situação"></select>
-    <select class="filtro" id="f-ord" aria-label="Ordenar por"></select>
+    <span id="cx-sit"></span>
+    <span id="cx-prod"></span>
+    <button type="button" class="filtro" id="f-pend" aria-pressed="false">Com pendências</button>
     <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro, sem busca e na ordem de ID">Limpar</button>
     <button class="btn btn--pri btn--pill btn-novo" id="btnNovo" type="button">+ Novo cliente</button>
     <span class="resumo-lista" id="resumo-lista"></span>
@@ -2177,6 +2665,10 @@ async function carregar(op){
     nb.value=op.expandir?'':(termoAtual||'');
     TERMO=nb.value;
     nb.addEventListener('input',e=>{TERMO=e.target.value;TETO=PASSO;desenharLista();});
+    /* A régua é montada DEPOIS de o #app ser repintado (os marcadores de posição
+       acabaram de nascer) e ANTES do primeiro desenho da lista, que já lê o
+       estado dos três controles. */
+    montarFiltros();
     const pl=document.getElementById('plan');
     if(d.planilha_url){pl.href=d.planilha_url;pl.hidden=false;}
     redesenhar();

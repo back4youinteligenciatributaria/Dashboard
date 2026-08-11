@@ -247,21 +247,33 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra-acoes .campo-busca{flex:1;min-width:200px;font-size:16px;padding:12px 16px;
   border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink)}
 .barra-acoes .campo-busca:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
-/* ---------- régua de filtros (o mesmo desenho do certificados.html) ----------
-   As três fileiras de chips (status, atalhos e ordenação) viraram DUAS listas
-   suspensas sempre à vista, ao lado da busca. Dois cliques viraram um, e sumiu o
-   estado "o painel está aberto ou fechado?".
+/* ---------- régua de filtros: DUAS caixas de seleção múltipla ----------
+   As três fileiras de chips viraram um <select> só (status + atalhos + ordenação
+   misturados), e agora esse <select> virou duas CAIXAS DE SELEÇÃO (b4u-filtro.js)
+   mais a ordenação por cabeçalho de coluna. O pedido do dono foi literal:
+   "Ativos (status), um filtro checkbox · Situação do processo checkbox · aplicar
+   'ordenar títulos AZ ZA' sem ter a ordenação no filtro lá em cima".
 
-   Status e Atalhos moram na MESMA lista, em dois <optgroup>, porque gravam na
-   mesma variável (FILTRO): só um deles pega por vez. Dois <select> separados
-   mentiriam — escolher em um teria de apagar a escolha do outro sem avisar.
+   Por que DUAS e não uma: no <select> único, Status Geral e Atalhos gravavam na
+   MESMA variável e só um pegava por vez — escolher "Parados há +30 dias" apagava
+   calado a escolha de status. São perguntas diferentes ("em que status está?" e
+   "o que está faltando aqui?") e agora cada uma tem sua caixa, com as duas
+   valendo ao mesmo tempo.
 
-   A CONTAGEM não se perdeu na troca: ela saiu do chip e entrou no RÓTULO da opção
-   ("!! Parados há +30 dias · 7"), e continua sendo a contagem sobre o que a BUSCA
-   deixou. A URGÊNCIA também não: o vermelho, o âmbar e o verde dos chips viraram
-   marcador de texto no começo do rótulo, que funciona onde a cor nunca funcionou
-   — no daltônico, no leitor de tela e no papel. A regra está escrita junto do
-   MARCA, no script. */
+   Por que os ATALHOS viraram a segunda caixa e não botões liga/desliga soltos na
+   régua: são cinco perguntas, e cinco botões a mais numa régua que a 390px já
+   quebra em três linhas transformariam a primeira coisa da tela numa parede —
+   exatamente o que a revelação progressiva tinha acabado de desfazer. Numa caixa
+   eles ocupam um botão só, ganham a mesma linha "Todas / Nenhuma" das outras e
+   passam a ser COMBINÁVEIS ("parados OU sem responsável" = o que precisa de mim
+   hoje), coisa que nem os chips nem o <select> sabiam fazer.
+
+   A CONTAGEM continua no rótulo de cada linha do painel ("!! Parados há +30 dias
+   · 7") e continua sendo a contagem sobre o que a BUSCA deixou — não sobre a
+   planilha inteira. A URGÊNCIA também continua: os marcadores de texto !! / ! / ✓
+   acompanharam o rótulo para dentro do painel, e ali eles funcionam pelo mesmo
+   motivo que funcionavam no <option> — não dependem de cor. A regra está escrita
+   junto do MARCA, no script. */
 select.filtro{font-family:var(--sans);font-size:var(--fs-3);color:var(--brand-teal-txt);
   background:var(--surface);border:1px solid var(--brand-teal);border-radius:var(--radius-pill);
   padding:9px 13px;cursor:pointer;font-weight:700;max-width:100%;min-width:0;text-overflow:ellipsis}
@@ -269,6 +281,18 @@ select.filtro:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
 /* Filtro que ESCONDE processo se anuncia: âmbar, para "estou vendo tudo?" ter
    resposta sem abrir nada. O estado neutro fica no teal de sempre. */
 select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color:var(--amber-txt)}
+/* O MESMO âmbar na caixa de seleção. Estas duas regras alcançam por fora as
+   classes do b4u-filtro.js, e é a única coisa desta página que faz isso — está
+   aqui porque "filtro que esconde processo se anuncia" é uma decisão DESTA tela
+   (a linha logo acima), e o componente, que serve várias, não tem como saber
+   disso. A classe `.corta` quem põe é esta página, no nó raiz que o componente
+   devolve (`f.no`); nada aqui depende do que ele faz por dentro, só do prefixo
+   público `b4f-`. Se um dia o prefixo mudar, o filtro perde o âmbar e continua
+   funcionando — que é a falha certa para uma regra de aparência.
+   A especificidade precisa de DOIS nomes: a folha do componente entra num
+   <style> criado por JS, no fim do <head>, e vence o empate. */
+.b4f.corta>.b4f-bt{background:var(--amber-soft);border-color:var(--amber);color:var(--amber-txt)}
+.b4f.corta>.b4f-bt:hover{border-color:var(--amber-txt)}
 .btn-filtros{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;
   border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);
   color:var(--ink);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
@@ -301,13 +325,20 @@ select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color
 .lista-mais button:hover{border-color:var(--brand-teal);background:#EAF4F1}
 .lista-mais .btn-todos{background:transparent;color:var(--ink-2);font-weight:600}
 /* ---------- a lista de processos: só leitura ----------
-   Seis colunas por linha (ID · Cliente · Processo · Etapa atual · Última
+   SETE colunas por linha (ID · Cliente · Processo · Etapa atual · Tempo · Última
    movimentação · Situação) e TODA a edição dentro do modal. Nenhum input,
    select ou textarea na linha: "a lista fica limpa e ninguém altera sem
    querer". NÃO é <table> de propósito — a grade do CSS convive com os chips,
    o rodapé de teto e o cartão que a tela já tinha.
    O cabeçalho (.lista-cab) repete a MESMA régua de colunas: as duas larguras
-   moram na mesma regra justamente para não desalinharem quando alguém mexer. */
+   moram na mesma regra justamente para não desalinharem quando alguém mexer.
+
+   A coluna TEMPO nasceu junto da ordenação por cabeçalho. Ela é a ordem PADRÃO
+   da tela (mais tempo em aberto primeiro) e era a única das cinco ordens do
+   antigo #f-ord que não tinha coluna nenhuma — a lista abria ordenada por um
+   número que não estava escrito em lugar algum, e depois de clicar em qualquer
+   outro cabeçalho não havia como voltar. O dado já existia: é o mesmo ⏱ que a
+   ficha mostra e que o title da linha sempre disse. */
 .lista{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .proc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
 .proc.aberto{border-color:var(--brand-teal);box-shadow:0 5px 20px rgba(7,48,52,.10)}
@@ -318,12 +349,35 @@ select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color
 .lista-cab,.proc-h{display:grid;
   /* O cliente é o que a pessoa procura na lista e leva o maior peso — nome
      cortado ("AJUB - Cirurgia de Cab…") não identifica ninguém. Processo e
-     etapa vêm logo atrás; movimentação e situação têm largura fixa para não
-     dançarem de linha para linha. */
-  grid-template-columns:62px minmax(0,2.2fr) minmax(0,1.9fr) minmax(0,1.6fr) 122px minmax(0,132px);
+     etapa vêm logo atrás; tempo, movimentação e situação têm largura fixa para
+     não dançarem de linha para linha.
+     Os pesos mudaram quando a coluna Tempo entrou: 2.2/1.9/1.6 com uma coluna
+     fixa a mais tirava 56px do NOME, que é justamente quem não pode encolher.
+     Com 2.4/1.7/1.4 o nome perde 26px em vez de 56 e quem cede é a descrição do
+     processo, que já vive de reticências honestas. */
+  grid-template-columns:62px minmax(0,2.4fr) minmax(0,1.7fr) minmax(0,1.4fr) 88px 118px minmax(0,128px);
   gap:12px;align-items:center}
-.lista-cab{padding:2px 14px 0;font-size:11px;font-weight:800;letter-spacing:.5px;
+.lista-cab{padding:0 14px;font-size:11px;font-weight:800;letter-spacing:.5px;
   text-transform:uppercase;color:var(--muted)}
+/* O cabeçalho ORDENA: cada rótulo é um <button> de verdade (Tab chega nele,
+   Enter e Espaço ordenam), como no certificados.html. Foi para cá a ordenação
+   que morava no <select id="f-ord"> da régua — o dono pediu "ordenar títulos AZ
+   ZA sem ter a ordenação no filtro lá em cima".
+   min-height:44px é o alvo de toque: o rótulo tem 11px e sem isto a área
+   clicável teria 14px de altura, o que num celular é um erro de mira garantido.
+   Ele estica a faixa do cabeçalho para 44px, e é o preço combinado. */
+.lista-cab button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
+  text-transform:inherit;letter-spacing:inherit;text-align:inherit;
+  min-height:44px;display:inline-flex;align-items:center;gap:0}
+.lista-cab button:hover{color:var(--brand-teal-txt)}
+.lista-cab button:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:var(--radius-sm)}
+/* A coluna ativa se anuncia por escrito (aria-sort) e por desenho (▲/▼), e a
+   seta é a única marca — cabeçalho com seis setas diria que a lista está
+   ordenada por seis critérios ao mesmo tempo. */
+.lista-cab [aria-sort] button{color:var(--brand-teal-txt)}
+/* Rótulo "Ordenar" da tira do celular. No desktop ele não existe: display:none
+   tira o elemento da grade, e é por isso que as sete colunas continuam sete. */
+.lista-cab .cab-rot{display:none}
 .proc-h{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
   cursor:pointer;font-family:var(--sans);color:inherit}
 .proc-h:hover{background:var(--surface-warm)}
@@ -344,6 +398,12 @@ select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color
    justamente o que se lê errado ao conferir um processo atrás do outro. */
 .c-mov{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;
   color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+/* Tempo: só a MAIOR unidade ("2 anos", "5 meses", "18 dias"). A duração por
+   extenso ("1 ano e 2 meses") não cabe em 88px e, cortada, vira mentira — e ela
+   continua inteira no title da linha e no ⏱ da ficha, que é onde se confere.
+   O "~" na frente é o mesmo de sempre: início estimado no dia 1 do mês. */
+.c-dur{display:flex;justify-content:center;font-size:13px;color:var(--ink-2);
+  white-space:nowrap;font-variant-numeric:tabular-nums}
 /* "há N dias" só nasce em quem está parado — é o sinal que pede ação hoje. */
 .c-mov .parado{font-size:11px;font-weight:800;color:var(--amber-txt)}
 .c-fim{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:0}
@@ -360,18 +420,35 @@ select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color
 .pill.sit-agu{background:#EEF3F1;color:#4a6360;border-color:#D9E5E2}
 .pill.sit-na{background:#F2ECE4;color:var(--muted);border-color:var(--line)}
 .pill.sit-sem{background:#EEE9E2;color:var(--muted);border-color:var(--line)}
-/* Abaixo de 900px as seis colunas não cabem lado a lado: cliente e situação
+/* Abaixo de 900px as sete colunas não cabem lado a lado: cliente e situação
    ficam na primeira linha da MESMA faixa e o resto desce para uma segunda,
    menor. Continua sendo uma linha clicável só — não vira dois cartões. */
 @media(max-width:900px){
-  .lista-cab{display:none}
+  /* O cabeçalho NÃO some mais. Ele sumia porque era só rótulo de coluna, e sem
+     colunas não havia o que rotular; agora ele é o único jeito de ordenar a
+     lista — o <select id="f-ord"> que existia na régua foi embora —, e escondê-lo
+     no celular apagaria a capacidade inteira justamente onde a tela é usada de pé,
+     no corredor do cartório. Então ele deixa de ser régua e vira uma TIRA que
+     rola de lado, o mesmo gesto que os chips desta página já tinham a 620px.
+     O rótulo "Ordenar" na frente existe para a tira não ser lida como mais uma
+     fileira de filtros: sem ele, "ID · Cliente · Processo" ao lado de duas caixas
+     de filtro é exatamente o que parece. */
+  .lista-cab{display:flex;flex-wrap:nowrap;gap:6px;align-items:center;
+    padding:0 0 2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .lista-cab::-webkit-scrollbar{display:none}
+  .lista-cab .cab-rot{display:block;flex:none;white-space:nowrap;padding-right:2px}
+  .lista-cab>[role="columnheader"]{flex:none;text-align:left!important}
+  .lista-cab button{border:1px solid var(--line-2);border-radius:var(--radius-pill);
+    background:var(--surface);padding:0 13px;white-space:nowrap;min-height:44px}
+  .lista-cab [aria-sort] button{border-color:var(--brand-teal);background:#EAF4F1}
   .proc-h{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
   /* Quebra forçada: sem ela o "resto" subiria para a primeira linha sempre que sobrasse espaço. */
   .proc-h::after{content:"";order:3;flex:0 0 100%;height:0}
   .c-nome{order:1;flex:1 1 auto}
   .c-fim{order:2;flex:none;flex-direction:row;align-items:center;gap:6px}
-  .c-id,.c-proc,.c-etapa,.c-mov{order:4;flex:0 1 auto;font-size:12px;color:var(--muted);text-align:left}
+  .c-id,.c-proc,.c-etapa,.c-dur,.c-mov{order:4;flex:0 1 auto;font-size:12px;color:var(--muted);text-align:left}
   .c-mov{flex-direction:row;align-items:baseline;gap:6px}
+  .c-dur{justify-content:flex-start}
 }
 .bdg{font-size:11px;font-weight:700;border-radius:var(--radius-sm);padding:3px 8px}
 .bdg.and{background:var(--amber-soft);color:#9A5B12;border:1px solid var(--amber-line)}
@@ -500,6 +577,21 @@ tr.falhou>td{background:#FBEAE7!important}
 <!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
      chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
 <script src="b4u-shell.js" charset="utf-8"></script>
+<!-- A caixa de seleção múltipla da régua (Situação do processo e Atalhos). É o
+     MESMO componente do daily.html, e a razão de ele estar aqui é a mesma: a
+     pergunta desta régua sempre foi "quais status?", no plural, e um <select> de
+     escolha única só sabia responder uma por vez.
+
+     Se este arquivo não carregar, `montarFiltros()` desenha o <select> único de
+     antes, com os mesmos <optgroup> (Status geral / Atalhos) e o mesmo
+     comportamento de uma escolha por vez. A régua continua inteira, a lista
+     também, e a ordenação por cabeçalho — que não depende dele — também.
+
+     Esta página NÃO carrega o b4u-modal.js (a ficha é um modal próprio), então a
+     ordem de registro do Esc na captura, que importa no daily.html, aqui não tem
+     com quem competir: o Esc da página está num ouvinte de BORBULHA e o do
+     componente só age com o painel aberto e o foco dentro dele. -->
+<script src="b4u-filtro.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -998,17 +1090,54 @@ function rodapeLista(mostrados,total){
 }
 
 let BUSCA='';
-let FILTRO='todos';
+/* ---------- o estado dos filtros ----------
+   Eram uma variável só (`FILTRO`, uma string) porque o controle era um <select>
+   de escolha única. Agora são DUAS listas, uma por caixa, e o que mudou não é só
+   o tipo: escolher um status deixou de apagar o atalho escolhido antes.
+
+   Dentro de uma caixa, marcar dois é OU ("parado OU sem responsável"); entre as
+   duas caixas é E ("em andamento E parado"). É a mesma leitura do daily.html —
+   cada caixa estreita, e dentro dela os marcados se somam. Lista vazia quer
+   dizer "não estou filtrando por aqui" (`vazio:'todos'` no componente): as duas
+   nascem vazias, e ninguém chega ao vazio desmarcando o último de uma lista que
+   nasceu cheia, então não há o que avisar. */
+let F_STATUS=[];   // chaves de status geral (chaveStatus); K_SEM = "sem status"
+let F_ATALHO=[];   // atalhos: aberto · concluido · parado · semdata · semresp
+/* "Sem status" é um valor de filtro como os outros, e precisa de um valor que
+   caiba na URL e nunca colida com um status de verdade. `chaveStatus` devolve
+   texto sem acento e em minúsculo, então uma planilha teria de trazer
+   literalmente "--sem--" na coluna Status Geral para haver conflito. */
+const K_SEM='--sem--';
+const stkDe=r=>r.stk||K_SEM;
+
 let SORT={k:'dur',dir:'desc'};   // padrão: mais tempo em aberto no topo
-const ORDENS=[
-  {k:'dur',rot:'Tempo',dica:'Duração do processo — o mesmo número do badge ⏱. Sem data de início vai para o fim da lista.'},
-  {k:'mov',rot:'Última movimentação',dica:'Data mais recente entre as etapas (início ou fim).'},
-  {k:'id',rot:'ID',dica:'ID do cliente.'},
-  {k:'nome',rot:'Cliente',dica:'Nome / razão social.'},
-  {k:'status',rot:'Status geral',dica:'Em andamento primeiro, concluídos por último.'}
+/* ---------- ordenar pelo cabeçalho da coluna ----------
+   Uma entrada por COLUNA da lista, na ordem em que elas aparecem. O <select
+   id="f-ord"> que ficava na régua acabou — "aplicar ordenar títulos AZ ZA sem
+   ter a ordenação no filtro lá em cima" —, e as cinco ordens que ele oferecia
+   estão todas aqui: Tempo, Última movimentação, ID, Cliente e Status geral.
+   Duas colunas que ele NÃO sabia ordenar (Processo e Etapa atual) ganharam a
+   ordem de brinde, porque agora o critério é a coluna e não uma lista à parte.
+
+   `rot` é o que está escrito no cabeçalho — o rótulo da ordem e o rótulo da
+   coluna passaram a ser a mesma palavra, que é o ponto do gesto. */
+const ORD_COLS=[
+  {k:'id',    rot:'ID'},
+  {k:'nome',  rot:'Cliente'},
+  {k:'proc',  rot:'Processo'},
+  {k:'etapa', rot:'Etapa atual'},
+  {k:'dur',   rot:'Tempo',        est:'text-align:center'},
+  {k:'mov',   rot:'Movimentação', est:'text-align:center'},
+  {k:'status',rot:'Situação',     est:'text-align:right'}
 ];
-const DIR_ROT={dur:['menor duração','maior duração'],mov:['movimentação mais antiga','movimentação mais recente'],id:['ID crescente','ID decrescente'],nome:['A → Z','Z → A'],status:['em andamento primeiro','concluídos por último']};
+/* O que cada direção QUER DIZER, para o title do botão dizer o que o próximo
+   clique faz. São as mesmas frases que ficavam nas opções do #f-ord. */
+const DIR_ROT={dur:['menor duração','maior duração'],mov:['movimentação mais antiga','movimentação mais recente'],id:['ID crescente','ID decrescente'],nome:['A → Z','Z → A'],proc:['A → Z','Z → A'],etapa:['A → Z','Z → A'],status:['em andamento primeiro','concluídos por último']};
+/* Usado só para decidir se a direção precisa ir para a URL: `?dir=` some quando
+   é a de repouso daquele critério. O CLIQUE no cabeçalho não usa isto — ver o
+   comentário no ouvinte, lá embaixo: primeiro clique sempre sobe (A→Z). */
 function dirPadrao(k){return (k==='dur'||k==='mov')?'desc':'asc';}
+function rotOrd(k){const o=ORD_COLS.find(x=>x.k===k);return o?o.rot:k;}
 /* chave única do status: sem acento, sem caixa e sem espaço sobrando —
    assim "Concluído" e "concluido " viram a mesma opção. */
 function chaveStatus(s){return normTxt(s).replace(/\s+/g,' ');}
@@ -1054,6 +1183,11 @@ function statusDisponiveis(){
 function passaBusca(p,alvo){
   return !alvo||normTxt(p.id+' '+p.nome+' '+p.codigo_processo+' '+p.processo+' '+p.status_geral).includes(alvo);
 }
+/* UM atalho, sozinho. Continua existindo como função de um valor só porque é ela
+   que responde "quantos processos casam com esta linha do painel?" — a contagem
+   de cada rótulo — e porque o resumo em texto lá de cima conta os parados por
+   ela. Os valores de status saíram daqui (têm caixa própria agora); o que sobrou
+   são as cinco perguntas. */
 function passaFiltro(p,r,f){
   switch(f){
     case 'todos':return true;
@@ -1064,15 +1198,33 @@ function passaFiltro(p,r,f){
     case 'parado':return !r.conc&&r.paradoDias!=null&&r.paradoDias>PARADO_DIAS;
     case 'semdata':return r.mov==null;
     case 'semresp':return r.semResp;
-    case 'semstatus':return !r.stk;
-    default:return f.slice(0,3)==='st:'?r.stk===f.slice(3):true;
+    default:return true;
   }
 }
+/* Cada caixa estreita por si; lista vazia não estreita nada. Dentro da caixa os
+   marcados se SOMAM (é "ou"): marcar "Parados" e "Sem responsável" pede as duas
+   pilhas de uma vez, que é a pergunta de quem senta para trabalhar — e era
+   justamente o que o <select> de escolha única não sabia responder. */
+function passaStatus(r){
+  return !F_STATUS.length||F_STATUS.indexOf(stkDe(r))>=0;
+}
+function passaAtalho(p,r){
+  return !F_ATALHO.length||F_ATALHO.some(f=>passaFiltro(p,r,f));
+}
+function passaTudo(p,r){return passaStatus(r)&&passaAtalho(p,r);}
 function valorOrd(p,r,k){
   if(k==='dur')return r.dias;
   if(k==='mov')return r.mov;
   if(k==='id')return String(p.id==null?'':p.id).trim()||null;
   if(k==='nome')return String(p.nome||'').trim()||null;
+  /* Processo ordena pelo que está ESCRITO na coluna: o código primeiro (é ele
+     que o olho corre, "B4Y - 040") e a descrição em seguida, para os sem código
+     não se embaralharem entre os com código. */
+  if(k==='proc')return (String(p.codigo_processo||'').trim()+' '+String(p.processo||'').trim()).trim()||null;
+  /* Etapa atual ordena pelo NOME da etapa — é o título que está na célula. A
+     contagem "3/7" ao lado dele é de outra pergunta (quanto falta), e ordenar
+     por ela faria a coluna dizer uma coisa e a ordem outra. */
+  if(k==='etapa'){const e=etapaAtual(p);return e?String(e.nome||'').trim()||null:null;}
   if(k==='status')return r.stk?pesoStatus(r.stk)+'|'+r.stk:null;
   return null;
 }
@@ -1102,8 +1254,19 @@ function sincronizarURL(){
   try{
     const u=new URL(location.href);
     const set=(k,v)=>{if(v)u.searchParams.set(k,v);else u.searchParams.delete(k);};
+    /* Uma ocorrência do parâmetro por valor marcado (`st=a&st=b`), e não uma
+       lista separada por vírgula: um status escrito na planilha pode ter vírgula
+       ("Aguardando análise, com exigência") e o separador comeria o valor no
+       caminho de volta. `append` deixa a codificação com o navegador. */
+    const lista=(k,arr)=>{u.searchParams.delete(k);arr.forEach(v=>u.searchParams.append(k,v));};
     set('q',BUSCA);
-    set('f',FILTRO==='todos'?'':FILTRO);
+    lista('st',F_STATUS);
+    lista('at',F_ATALHO);
+    /* O `?f=` de uma escolha só morreu com o <select>. Ele continua sendo LIDO
+       (links guardados no navegador de alguém, ou colados num ticket, continuam
+       abrindo a tela filtrada) — mas some do endereço na primeira sincronização,
+       para não ficar um parâmetro morto contradizendo os novos. */
+    set('f','');
     set('ord',SORT.k==='dur'?'':SORT.k);
     set('dir',SORT.dir===dirPadrao(SORT.k)?'':SORT.dir);
     history.replaceState(null,'',u.pathname+u.search+u.hash);
@@ -1112,7 +1275,21 @@ function sincronizarURL(){
 function lerURL(){
   const p=new URLSearchParams(location.search);
   BUSCA=p.get('q')||'';
-  FILTRO=p.get('f')||'todos';
+  F_STATUS=p.getAll('st');
+  F_ATALHO=p.getAll('at');
+  /* Compatibilidade com o endereço antigo, de quando havia um filtro só:
+     `f=st:<chave>` era um status, `f=semstatus` era o status em branco e o resto
+     eram atalhos. Só vale quando não veio nenhum parâmetro novo — quem escreveu
+     `st=`/`at=` disse o que queria, e um `f=` esquecido na mesma URL não pode
+     falar por cima. */
+  if(!p.has('st')&&!p.has('at')){
+    const leg=p.get('f')||'';
+    if(leg&&leg!=='todos'){
+      if(leg.slice(0,3)==='st:')F_STATUS=[leg.slice(3)];
+      else if(leg==='semstatus')F_STATUS=[K_SEM];
+      else F_ATALHO=[leg];
+    }
+  }
   SORT.k=p.get('ord')||'dur';
   SORT.dir=p.get('dir')||dirPadrao(SORT.k);
 }
@@ -1166,57 +1343,170 @@ function pintarSelect(el,itens,sel){
    o que o marcador resume. */
 const MARCA={acao:'!!',olho:'!',feito:'✓'};
 function marca(nivel,rot){return (MARCA[nivel]||'')+' '+rot;}
-/* A contagem de cada opção é feita sobre o que a BUSCA deixou (base), não sobre a
-   planilha inteira: ela responde "quantos sobram se eu escolher isto agora". Como
-   Status e Atalhos dividem a mesma variável, não há o que facetar entre eles —
-   cada número já é o resultado exato de escolher aquela opção. */
+/* ---------- as duas listas de opções ----------
+   A contagem de cada linha é feita sobre o que a BUSCA deixou (`base`), NUNCA
+   sobre a planilha inteira: ela responde "quantos sobram se eu marcar isto
+   agora". E é só a busca — não é facetada pela outra caixa. Facetar mudaria o
+   número embaixo da mão de quem está escolhendo (marcar um status faria a
+   contagem dos atalhos encolher a cada clique), e a régua passaria a exigir
+   leitura em vez de responder. É a mesma conta que o <select> fazia. */
+function itensStatus(base){
+  const conta=k=>base.filter(x=>stkDe(x.r)===k).length;
+  /* Os valores de Status Geral saem da planilha e nunca tiveram cor no chip:
+     nenhum marcador aqui, senão estaríamos inventando urgência que a tela nunca
+     disse. "Sem status" tem — era âmbar, como todo campo em branco. */
+  const out=statusDisponiveis().map(s=>({v:s.k,r:s.rot+' · '+conta(s.k),c:s.rot}));
+  const n=conta(K_SEM);
+  /* "Sem status" só entra quando existe (ou quando está marcado, senão sumiria
+     de baixo do dedo). É a mesma regra que o <optgroup> seguia — uma linha
+     permanente marcando "· 0" seria ruído no topo de toda abertura da tela. */
+  if(n||F_STATUS.indexOf(K_SEM)>=0)
+    out.push({v:K_SEM,r:marca('olho','Sem status')+' · '+n,c:marca('olho','Sem status')});
+  return out;
+}
+function itensAtalho(base){
+  const conta=f=>base.filter(x=>passaFiltro(x.p,x.r,f)).length;
+  /* O rótulo do painel leva a contagem; o rótulo CURTO (o do botão fechado) não,
+     porque ali ele disputa 240px com o "+N" — e o número já está por extenso no
+     resumo da régua ("12 de 50 processos"). O MARCADOR vai nos dois: ele é o que
+     diz a urgência sem depender de cor, e um botão fechado dizendo só "Parados
+     +30 dias" teria perdido justamente o que o !! carrega. */
+  const li=(v,rot,n)=>({v,r:rot+' · '+n,c:rot});
+  return [
+    li('aberto',   'Em aberto',                                     conta('aberto')),
+    li('concluido',marca('feito','Concluídos'),                     conta('concluido')),
+    li('parado',   marca('acao','Parados há +'+PARADO_DIAS+' dias'),conta('parado')),
+    li('semdata',  marca('olho','Sem datas'),                       conta('semdata')),
+    li('semresp',  marca('olho','Sem responsável'),                 conta('semresp'))
+  ];
+}
+/* Trocar a lista de um filtro REMONTA o painel dele por dentro. Com o painel
+   ABERTO isso destrói o checkbox que está sob o dedo, o foco cai no <body>, o
+   `focusout` do componente vê que o foco saiu e fecha o painel — ou seja, cada
+   clique fecharia a lista que a pessoa acabou de abrir para marcar três coisas.
+   Daí a assinatura: só remonta quando os rótulos MUDARAM de verdade, e eles só
+   mudam quando a busca muda (é dela que saem as contagens) ou quando a planilha
+   traz um status novo. Marcar um checkbox não mexe em nenhuma das duas, então o
+   painel fica aberto — que é o ponto de ele ser uma caixa de seleção múltipla. */
+function aplicarItens(f,itens){
+  if(!f)return;
+  const sig=itens.map(i=>i.v+'\u0001'+i.r+'\u0001'+(i.c||'')).join('\u0002');
+  if(f._sig===sig)return;
+  f._sig=sig;
+  f.itens(itens);
+}
 function desenharChips(base){
-  const el=document.getElementById('f-filtro');
-  if(el){
-    const conta=f=>base.filter(x=>passaFiltro(x.p,x.r,f)).length;
-    const semStatus=conta('semstatus');
-    const itens=[{v:'todos',rot:'Todos os processos',n:base.length}];
-    /* Os valores de Status Geral saem da planilha e nunca tiveram cor no chip:
-       nenhum marcador aqui, senão estaríamos inventando urgência que a tela nunca
-       disse. "Sem status" tem — era âmbar, como todo campo em branco. */
-    statusDisponiveis().forEach(s=>itens.push({g:'Status geral',v:'st:'+s.k,rot:s.rot,n:conta('st:'+s.k)}));
-    if(semStatus||FILTRO==='semstatus')itens.push({g:'Status geral',v:'semstatus',rot:marca('olho','Sem status'),n:semStatus});
-    itens.push({g:'Atalhos',v:'aberto',rot:'Em aberto',n:conta('aberto')});
-    itens.push({g:'Atalhos',v:'concluido',rot:marca('feito','Concluídos'),n:conta('concluido')});
-    itens.push({g:'Atalhos',v:'parado',rot:marca('acao','Parados há +'+PARADO_DIAS+' dias'),n:conta('parado')});
-    itens.push({g:'Atalhos',v:'semdata',rot:marca('olho','Sem datas'),n:conta('semdata')});
-    itens.push({g:'Atalhos',v:'semresp',rot:marca('olho','Sem responsável'),n:conta('semresp')});
-    pintarSelect(el,itens,FILTRO);
-    el.classList.toggle('corta',FILTRO!=='todos');
+  if(CX_STATUS||CX_ATALHO){
+    if(CX_STATUS){aplicarItens(CX_STATUS,itensStatus(base));
+      CX_STATUS.no.classList.toggle('corta',F_STATUS.length>0);}
+    if(CX_ATALHO){aplicarItens(CX_ATALHO,itensAtalho(base));
+      CX_ATALHO.no.classList.toggle('corta',F_ATALHO.length>0);}
+    return;
   }
-  const ord=document.getElementById('f-ord');
-  if(ord){
-    /* Cada critério aparece nas DUAS direções, cada uma dizendo o que significa —
-       são as mesmas frases que ficavam soltas ao lado dos chips (DIR_ROT). Antes
-       inverter era clicar de novo no mesmo chip: gesto que ninguém descobre
-       sozinho e que sumia da tela junto com o painel fechado. */
-    const itens=[];
-    ORDENS.forEach(o=>{
-      const par=DIR_ROT[o.k]||['crescente','decrescente'];
-      itens.push({v:o.k+'|asc', rot:o.rot+' — '+par[0]});
-      itens.push({v:o.k+'|desc',rot:o.rot+' — '+par[1]});
+  desenharSelectLegado(base);
+}
+/* ---------- sem o b4u-filtro.js ----------
+   O <select> único de antes, com os mesmos dois <optgroup> e a mesma escolha de
+   uma por vez. Ele lê e escreve as MESMAS duas listas — só que sempre com no
+   máximo um valor —, então tudo o que vem depois (a lista, o resumo, a URL) não
+   precisa saber por qual caminho a régua foi desenhada. */
+function selLegado(){
+  if(F_STATUS.length===1)return F_STATUS[0]===K_SEM?'semstatus':'st:'+F_STATUS[0];
+  if(F_ATALHO.length===1)return F_ATALHO[0];
+  return 'todos';
+}
+function desenharSelectLegado(base){
+  const el=document.getElementById('f-filtro');if(!el)return;
+  const conta=f=>base.filter(x=>passaFiltro(x.p,x.r,f)).length;
+  const semStatus=base.filter(x=>stkDe(x.r)===K_SEM).length;
+  const itens=[{v:'todos',rot:'Todos os processos',n:base.length}];
+  statusDisponiveis().forEach(s=>itens.push({g:'Status geral',v:'st:'+s.k,rot:s.rot,
+    n:base.filter(x=>stkDe(x.r)===s.k).length}));
+  if(semStatus||F_STATUS.indexOf(K_SEM)>=0)itens.push({g:'Status geral',v:'semstatus',rot:marca('olho','Sem status'),n:semStatus});
+  itens.push({g:'Atalhos',v:'aberto',rot:'Em aberto',n:conta('aberto')});
+  itens.push({g:'Atalhos',v:'concluido',rot:marca('feito','Concluídos'),n:conta('concluido')});
+  itens.push({g:'Atalhos',v:'parado',rot:marca('acao','Parados há +'+PARADO_DIAS+' dias'),n:conta('parado')});
+  itens.push({g:'Atalhos',v:'semdata',rot:marca('olho','Sem datas'),n:conta('semdata')});
+  itens.push({g:'Atalhos',v:'semresp',rot:marca('olho','Sem responsável'),n:conta('semresp')});
+  const sel=selLegado();
+  pintarSelect(el,itens,sel);
+  el.classList.toggle('corta',sel!=='todos');
+}
+/** O que o <select> de reserva escolheu, traduzido para as duas listas. */
+function aplicarLegado(v){
+  if(v==='todos'){F_STATUS=[];F_ATALHO=[];}
+  else if(v==='semstatus'){F_STATUS=[K_SEM];F_ATALHO=[];}
+  else if(v.slice(0,3)==='st:'){F_STATUS=[v.slice(3)];F_ATALHO=[];}
+  else {F_STATUS=[];F_ATALHO=[v];}
+}
+/* ---------- a régua ----------
+   O marcador de posição é SUBSTITUÍDO, não preenchido — a régua é um flex, e um
+   <span> em volta vira um item de flex dimensionado pelo conteúdo: o filtro por
+   dentro dele nunca encolhe, e uma razão social inteira no rótulo estica o botão
+   até estourar a tela do celular. É a mesma armadilha (e a mesma solução) do
+   daily.html. */
+function por(cx,no){cx.replaceWith(no);return no;}
+function porHTML(cx,html){const t=document.createElement('div');t.innerHTML=html;
+  return por(cx,t.firstElementChild);}
+let CX_STATUS=null,CX_ATALHO=null;
+function montarFiltros(){
+  const cxS=document.getElementById('cx-status'),cxA=document.getElementById('cx-atalho');
+  if(!cxS||!cxA)return;
+  CX_STATUS=CX_ATALHO=null;
+  /* As duas são CONSTRUÍDAS antes de qualquer uma entrar na página: se o módulo
+     estiver lá mas quebrar no meio, o catch cai no <select> com os dois
+     marcadores de posição ainda intactos. Plantar de uma em uma deixaria a régua
+     pela metade, meia caixa e meio select. */
+  if(window.B4UFiltro) try{
+    const base=baseBusca();
+    const fs=B4UFiltro.criar({
+      id:'f-status', rot:'Situação do processo',
+      itens:itensStatus(base), marcados:F_STATUS,
+      /* Nasce vazia, e vazia quer dizer TODAS. A tela sempre abriu mostrando o
+         que existe, e marcar uma a uma as situações da planilha só para dizer
+         "não quero filtrar" seria o contrário do que a régua faz. */
+      vazio:'todos', rotTodos:'Todas as situações', rotNada:'Nenhuma situação',
+      aoMudar:m=>{F_STATUS=m;TETO=PASSO;desenhar();}
     });
-    /* Ordenar não esconde ninguém: nada de âmbar aqui, que é a marca de "estou
-       vendo menos do que existe". */
-    pintarSelect(ord,itens,SORT.k+'|'+SORT.dir);
-  }
+    const fa=B4UFiltro.criar({
+      id:'f-atalho', rot:'Atalhos',
+      itens:itensAtalho(base), marcados:F_ATALHO,
+      /* "Sem atalho" e não "Todos": com tudo marcado o resultado é a lista
+         inteira (em aberto ∪ concluídos já é tudo), então as duas pontas dizem a
+         mesma verdade — nenhuma pergunta está estreitando a lista. */
+      vazio:'todos', rotTodos:'Sem atalho', rotNada:'Sem atalho',
+      aoMudar:m=>{F_ATALHO=m;TETO=PASSO;desenhar();}
+    });
+    CX_STATUS=fs;CX_ATALHO=fa;
+    por(cxS,fs.no);por(cxA,fa.no);
+    return;
+  }catch(e){CX_STATUS=CX_ATALHO=null;}
+  porHTML(cxS,`<select class="filtro" id="f-filtro" aria-label="Filtrar por status ou atalho"></select>`);
+  cxA.remove();
 }
 // contagens da régua depois de um salvamento, sem tocar na lista (o editor aberto continua aberto)
-function atualizarChips(){if(document.getElementById('f-filtro')){desenharChips(baseBusca());desenharResumoLista();}}
+/* A guarda é o #lista, e não mais o #f-filtro: com o b4u-filtro.js no ar não
+   existe elemento com aquele id, e a função viraria um no-op calado — as
+   contagens da régua congelariam depois do primeiro salvamento. É a MESMA falha
+   que esta função já teve uma vez, quando guardava no #chipsStatus que tinha
+   deixado de existir. O #lista é pintado pelo render() e não some depois. */
+function atualizarChips(){
+  if(!document.getElementById('lista'))return;
+  desenharChips(baseBusca());desenharResumoLista();
+}
 /* ---------- limpar filtros (C.5) ----------
-   Quantos filtros estão pegando agora. Era o selo ao lado do botão "Filtros"; com
-   a régua à vista o selo não é mais preciso — o próprio <select> âmbar diz que
-   está cortando — mas a conta continua de pé e o contrato é o mesmo das telas
-   irmãs. Só conta o que TIRA processo da lista: a busca está à mostra, e a
-   ordenação não esconde ninguém. */
-function filtrosPainel(){return FILTRO==='todos'?0:1;}
+   Quantos filtros estão pegando agora — uma caixa que estreita conta um. Era o
+   selo ao lado do botão "Filtros"; com a régua à vista o selo não é mais preciso
+   (o próprio botão âmbar diz que está cortando), mas a conta continua de pé e o
+   contrato é o mesmo das telas irmãs. Só conta o que TIRA processo da lista: a
+   busca está à mostra, e a ordenação não esconde ninguém. */
+function filtrosPainel(){return (F_STATUS.length?1:0)+(F_ATALHO.length?1:0);}
 function limparFiltros(){
-  FILTRO='todos';BUSCA='';TETO=PASSO;
+  F_STATUS=[];F_ATALHO=[];BUSCA='';TETO=PASSO;
+  /* Escrever no componente NÃO dispara o `aoMudar` dele (é o contrato), senão a
+     lista seria desenhada três vezes; quem redesenha é a linha de baixo. */
+  if(CX_STATUS)CX_STATUS.marcados([]);
+  if(CX_ATALHO)CX_ATALHO.marcados([]);
   const b=document.getElementById('busca');if(b)b.value='';
   desenhar();
 }
@@ -1227,7 +1517,7 @@ function desenharResumoLista(){
   const el=document.getElementById('resumo-lista');if(!el)return;
   const todos=PROCS.map(p=>({p,r:resumoProc(p)}));
   const alvo=normTxt(BUSCA);
-  const vis=todos.filter(x=>passaBusca(x.p,alvo)&&passaFiltro(x.p,x.r,FILTRO)).length;
+  const vis=todos.filter(x=>passaBusca(x.p,alvo)&&passaTudo(x.p,x.r)).length;
   const abertos=todos.filter(x=>!x.r.conc).length;
   const parados=todos.filter(x=>passaFiltro(x.p,x.r,'parado')).length;
   const semResp=todos.filter(x=>x.r.semResp).length;
@@ -1238,7 +1528,7 @@ function desenharResumoLista(){
   el.textContent=p.join(' · ');
 }
 function vazioHTML(){
-  const filtrando=FILTRO!=='todos'||!!BUSCA.trim();
+  const filtrando=F_STATUS.length>0||F_ATALHO.length>0||!!BUSCA.trim();
   return `<div class="vazio-filtro"><div>${filtrando?'Nenhum processo com esse filtro.':'Nenhum processo cadastrado ainda.'}</div>`+
     (filtrando?`<button type="button" class="btn btn--mini" id="limparF">Limpar filtro e busca</button>`:'')+
     `</div>`;
@@ -1252,8 +1542,8 @@ function render(){
     <div class="topo">
       <div class="barra-acoes">
         <input class="busca campo-busca" id="busca" type="search" value="${esc(BUSCA)}" placeholder="Buscar por ID, nome, código, processo ou status…  ( / para focar)">
-        <select class="filtro" id="f-filtro" aria-label="Filtrar por status ou atalho"></select>
-        <select class="filtro" id="f-ord" aria-label="Ordenar por"></select>
+        <span id="cx-status"></span>
+        <span id="cx-atalho"></span>
         <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro e sem busca">Limpar</button>
         <button class="btn btn--pri btn--pill" id="novo">+ Novo processo</button>
         <span class="resumo-lista" id="resumo-lista"></span>
@@ -1265,14 +1555,24 @@ function render(){
      sem #btn-filtros nem #painel-filtros no HTML, ligarFiltros devolve undefined
      e nada mais acontece. */
   FILTROS_UI=ligarFiltros('societario-equipe',filtrosPainel);
+  /* ANTES do desenhar(): é ele quem troca os marcadores de posição pelas caixas
+     (ou pelo <select> de reserva), e o desenhar() já conta com uma coisa ou
+     outra existindo para pintar os rótulos e as contagens. */
+  montarFiltros();
   desenhar();
   document.getElementById('busca').addEventListener('input',e=>{BUSCA=e.target.value;TETO=PASSO;desenhar();});
   document.getElementById('novo').addEventListener('click',abrirNovo);
 }
 function desenhar(){
   const base=baseBusca();
-  const arr=ordenar(base.filter(x=>passaFiltro(x.p,x.r,FILTRO)));
+  const arr=ordenar(base.filter(x=>passaTudo(x.p,x.r)));
   desenharChips(base);
+  /* Quem estava com o dedo num cabeçalho continua nele. O #lista inteiro é
+     repintado a cada desenho, então o <button> clicado deixa de existir e o foco
+     cairia no <body> — a pessoa que ordena pelo teclado perderia o lugar a cada
+     Enter, justamente no controle que se usa duas vezes seguidas (A→Z, Z→A). */
+  const focoOrd=(document.activeElement&&document.activeElement.dataset)
+    ?document.activeElement.dataset.sort:null;
   const lista=document.getElementById('lista');
   /* O teto corta o DESENHO, nunca a contagem: os totais de cima seguem falando da
      lista inteira (arr.length), com ou sem rodapé. */
@@ -1285,10 +1585,29 @@ function desenhar(){
   desenharResumoLista();
   if(FILTROS_UI)FILTROS_UI.atualizarContador();
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
-  /* O foco não precisa mais ser guardado e devolvido: os chips eram refeitos a
-     cada desenho e o botão sob o dedo virava outro elemento. As listas suspensas
-     da régua sobrevivem ao redesenho — só as <option> são repintadas. */
+  /* As caixas da régua sobrevivem ao redesenho (moram fora do #lista e só são
+     remontadas quando os rótulos mudam). O cabeçalho não: ele é repintado junto
+     com a lista, e por isso o foco volta à mão. */
+  if(focoOrd){
+    const bt=document.querySelector('.lista-cab [data-sort="'+focoOrd+'"]');
+    if(bt)bt.focus();
+  }
+  revelarColunaAtiva();
   sincronizarURL();
+}
+/* No celular o cabeçalho é uma tira que rola de lado, e a coluna ativa pode
+   nascer FORA do pedaço visível: a ordem padrão é "Tempo", que é a quinta, e a
+   tira abriria mostrando "Ordenar · ID · Cliente · Processo" sem marca nenhuma —
+   isto é, parecendo que a lista não está ordenada por nada.
+   Mexe só no scroll da TIRA. `scrollIntoView` levaria a página junto e jogaria a
+   primeira linha da lista para fora da tela a cada redesenho. */
+function revelarColunaAtiva(){
+  const cab=document.querySelector('.lista-cab');
+  if(!cab||cab.scrollWidth<=cab.clientWidth+1)return;
+  const at=cab.querySelector('[aria-sort]');if(!at)return;
+  const r=at.getBoundingClientRect(),c=cab.getBoundingClientRect();
+  if(r.left<c.left)cab.scrollLeft+=r.left-c.left-10;
+  else if(r.right>c.right)cab.scrollLeft+=r.right-c.right+10;
 }
 /* Estender o teto não fecha mais a ficha que a pessoa está preenchendo: ela vive
    no modal, fora do #lista, e redesenhar a lista não a toca. O que o redesenho
@@ -1298,17 +1617,18 @@ function crescerTeto(novo){TETO=novo;desenhar();}
 /* O processo recém-criado não pode nascer atrás do teto — ele entra sem datas e a
    ordem padrão (mais tempo em aberto primeiro) joga quem não tem data para o fim. */
 function garantirVisivel(row){
-  const arr=ordenar(baseBusca().filter(x=>passaFiltro(x.p,x.r,FILTRO)));
+  const arr=ordenar(baseBusca().filter(x=>passaTudo(x.p,x.r)));
   const pos=arr.findIndex(x=>String(x.p.row)===String(row));
   if(pos>=TETO){TETO=Math.ceil((pos+1)/PASSO)*PASSO;desenhar();}
 }
 /* ===================================================================
    A linha da lista — só leitura
    -------------------------------------------------------------------
-   Seis colunas que respondem "preciso agir neste processo?": de quem é,
-   que processo é, em que etapa está, quando andou pela última vez e
-   como está a situação. Nenhum campo aqui dentro: tudo o que se edita
-   (inclusive as observações datadas) abre no modal, ao clicar.
+   Sete colunas que respondem "preciso agir neste processo?": de quem é,
+   que processo é, em que etapa está, há quanto tempo ele corre, quando
+   andou pela última vez e como está a situação. Nenhum campo aqui dentro:
+   tudo o que se edita (inclusive as observações datadas) abre no modal,
+   ao clicar. Cada rótulo do cabeçalho ordena a lista por aquela coluna.
    =================================================================== */
 /* Situação do processo: uma família só por linha, na mesma ordem de urgência dos
    chips. "Parado" tem família própria — e ganha de "em andamento" — porque é o
@@ -1369,8 +1689,30 @@ function celulaMov(p,r){
   const parado=!r.conc&&r.paradoDias!=null&&r.paradoDias>PARADO_DIAS;
   return `<span>${esc(mov.rot)}</span>`+(parado?`<span class="parado">há ${r.paradoDias} dias</span>`:'');
 }
-/* O que não coube nas seis colunas vai para o title da linha — dá para conferir
-   sem abrir nada, inclusive a duração ⏱, que é a ordenação padrão da tela. */
+/* A duração reduzida à MAIOR unidade. `fmtDuracao` devolve "1 ano e 2 meses",
+   que é a frase certa dentro da ficha e não cabe numa coluna de 88px — cortada
+   com reticências ela viraria "1 ano e…", que não é duração nenhuma. Aqui vale a
+   ordem de grandeza, que é o que se compara correndo o olho pela coluna; o texto
+   inteiro continua no title da linha e no ⏱ da ficha. */
+function fmtDuracaoCurta(dias){
+  const d=Math.max(0,Math.round(dias));
+  if(d===0)return 'hoje';
+  if(d<30)return d===1?'1 dia':d+' dias';
+  const anos=Math.floor(d/365);
+  if(anos)return anos===1?'1 ano':anos+' anos';
+  const meses=Math.max(1,Math.floor(d/30));
+  return meses===1?'1 mês':meses+' meses';
+}
+function celulaDur(p){
+  const c=calcDuracao(p);
+  if(!c)return '<span class="c-falta">sem início</span>';
+  /* Sem title próprio de propósito: o title da LINHA já diz "Duração: ~1 ano e 2
+     meses (em andamento)", e um title na célula esconderia o da linha justo em
+     cima da coluna que mais convida o mouse. */
+  return `<span>${esc((c.estimado?'~':'')+fmtDuracaoCurta(c.dias))}</span>`;
+}
+/* O que não coube nas sete colunas vai para o title da linha — dá para conferir
+   sem abrir nada, inclusive a duração ⏱ por extenso. */
 function tituloLinha(p,r){
   const t=[];
   if(String(p.codigo_processo||'').trim())t.push('Código: '+p.codigo_processo);
@@ -1396,6 +1738,7 @@ function cabecaHTML(p,r){
       <span class="c-nome">${esc(p.nome||'(sem nome)')}</span>
       <span class="c-proc">${celulaProcesso(p)}</span>
       <span class="c-etapa">${celulaEtapa(p)}</span>
+      <span class="c-dur">${celulaDur(p)}</span>
       <span class="c-mov">${celulaMov(p,r)}</span>
       <span class="c-fim"><span class="pill sit-${s}" title="${esc(info.dica)}">${esc(rotuloSituacao(p,s))}</span></span>
     </div>`;
@@ -1404,15 +1747,35 @@ const SIT_CLASSES=['sit-parado','sit-and','sit-agu','sit-na','sit-conc','sit-sem
 function linhaHTML(p,r){
   return `<div class="proc sit-${situacaoDe(p,r)}${String(FICHA_ROW)===String(p.row)?' aberto':''}" data-row="${esc(String(p.row))}">${cabecaHTML(p,r)}</div>`;
 }
-/* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS) e some
-   abaixo de 900px, onde a linha deixa de ser seis colunas. aria-hidden porque é
-   rótulo de desenho: quem usa leitor de tela ouve o title da própria linha. */
+/* Seta da coluna ativa — só ela ganha marca, senão a lista pareceria ordenada
+   por sete critérios ao mesmo tempo. O espaço antes da seta é NÃO SEPARÁVEL
+   (\u00A0) de propósito: com espaço comum, "Etapa atual" quase preenchendo a
+   coluna empurrava a seta sozinha para uma segunda linha, e o cabeçalho ficava
+   com o dobro da altura por causa dela. */
+function seta(k){return SORT.k===k?(SORT.dir==='asc'?'\u00A0▲':'\u00A0▼'):'';}
+/* O cabeçalho das colunas repete a régua da linha (mesma regra de CSS). Cada
+   rótulo é um BOTÃO que ordena — por isso ele deixou de ser aria-hidden: aqui
+   não é enfeite, é o único controle de ordenação da tela desde que o <select
+   id="f-ord"> saiu da régua. A coluna ativa se anuncia com aria-sort, e o title
+   de cada botão diz o que o PRÓXIMO clique faz, com as mesmas palavras que as
+   opções do #f-ord traziam ("maior duração", "A → Z"…).
+
+   Abaixo de 900px ele não some: vira uma tira que rola de lado (ver o CSS). */
 function cabecalhoLista(){
-  return `<div class="lista-cab" aria-hidden="true">
-      <span>ID</span><span>Cliente</span><span>Processo</span><span>Etapa atual</span>
-      <span style="text-align:center">Movimentação</span>
-      <span style="text-align:right">Situação</span>
-    </div>`;
+  const bt=o=>{
+    const at=SORT.k===o.k;
+    /* Clicar numa coluna nova sobe (A→Z); clicar na ativa inverte. Então o title
+       promete o contrário do que está valendo quando ela já é a ativa. */
+    const par=DIR_ROT[o.k]||['crescente','decrescente'];
+    const prox=at?(SORT.dir==='asc'?1:0):0;
+    return `<span role="columnheader"${o.est?' style="'+o.est+'"':''}`+
+      `${at?` aria-sort="${SORT.dir==='asc'?'ascending':'descending'}"`:''}>`+
+      `<button type="button" data-sort="${esc(o.k)}" `+
+      `title="Ordenar por ${esc(o.rot)} — ${esc(par[prox])}">${esc(o.rot)}${seta(o.k)}</button></span>`;
+  };
+  return `<div class="lista-cab" role="row">`+
+    `<span class="cab-rot" aria-hidden="true">Ordenar</span>`+
+    ORD_COLS.map(bt).join('')+`</div>`;
 }
 function rotuloData(v){
   const bruto=String(v==null?'':v).trim();
@@ -1813,7 +2176,12 @@ async function criarNovo(btn){
   btn.disabled=true;msg.className='msg';msg.textContent='Criando…';
   try{
     const d=await postAcao({acao:'soc_novo',id,nome:document.getElementById('n-nome').value.trim(),codigo_processo:document.getElementById('n-cod').value.trim(),processo:proc,status_geral:document.getElementById('n-stg').value});
-    fecharNovo();FILTRO='todos';BUSCA='';SORT={k:'dur',dir:dirPadrao('dur')};TETO=PASSO;
+    fecharNovo();F_STATUS=[];F_ATALHO=[];BUSCA='';SORT={k:'dur',dir:dirPadrao('dur')};TETO=PASSO;
+    /* As caixas acompanham o estado limpo. O `carregar()` logo abaixo repinta a
+       tela inteira e monta caixas novas, mas escrever aqui mantém a régua
+       coerente também no caminho em que ele falha. */
+    if(CX_STATUS)CX_STATUS.marcados([]);
+    if(CX_ATALHO)CX_ATALHO.marcados([]);
     sincronizarURL();                                        // limpa o endereço ANTES de recarregar
     await carregar();   // o processo novo não pode nascer escondido por um filtro
     garantirVisivel(d.row);   // nem atrás do teto
@@ -1841,6 +2209,24 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#limparF')||e.target.closest('#btn-limpar')){limparFiltros();return;}
   if(e.target.closest('.btn-mais')){crescerTeto(TETO+PASSO);return;}
   if(e.target.closest('.btn-todos')){crescerTeto(PROCS.length);return;}
+  /* ---------- ordenar pelo cabeçalho ----------
+     Primeiro clique numa coluna: A→Z (crescente), sempre — foi o que o dono
+     pediu com todas as letras ("ordenar títulos AZ ZA"), e é a única regra que
+     não obriga a decorar qual coluna começa por cima e qual começa por baixo.
+     Clicar de novo na MESMA coluna inverte. A ordem com que a tela ABRE continua
+     sendo a de sempre (maior duração primeiro): ela vem do estado inicial e do
+     endereço, não de um clique.
+     Vem antes do [data-toggle] da linha porque o cabeçalho mora dentro do
+     #lista, ao lado das linhas — e depois do rodapé de teto, que é irmão dele. */
+  const ord=e.target.closest('[data-sort]');
+  if(ord){
+    const k=ord.dataset.sort;
+    if(SORT.k===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';
+    else {SORT.k=k;SORT.dir='asc';}
+    TETO=PASSO;                       // outra ordem, outro começo de lista
+    desenhar();
+    return;
+  }
   const et=e.target.closest('[data-etapa-toggle]');if(et){alternarEtapa(et);return;}
   const tg=e.target.closest('[data-toggle]');if(tg){abrirEditor(tg.dataset.toggle);return;}
   /* De qual processo é este botão: o editor deixou de morar dentro da linha
@@ -1857,13 +2243,12 @@ document.addEventListener('click',e=>{
 /* De qual processo é este campo. O editor é o #ed-<row> que a ficha pinta, e é
    ele que carrega o data-row — a linha da lista não o contém mais. */
 function rowDoEditor(el){const ed=el&&el.closest&&el.closest('.editor');return ed?ed.dataset.row:'';}
-/* A régua inteira num handler só, antes dos campos da ficha. `TETO=PASSO` nos
-   dois: outro resultado (ou outra ordem), outro começo de lista. */
+/* O <select> de reserva, antes dos campos da ficha. Com o b4u-filtro.js no ar
+   este elemento não existe e quem avisa são os `aoMudar` das caixas; o
+   `#f-ord` acabou junto com a ordenação na régua — ela mora nos cabeçalhos.
+   `TETO=PASSO`: outro resultado, outro começo de lista. */
 document.addEventListener('change',e=>{
-  const id=e.target.id;
-  if(id==='f-filtro'){FILTRO=e.target.value;TETO=PASSO;desenhar();return;}
-  if(id==='f-ord'){const p=String(e.target.value).split('|');
-    SORT={k:p[0],dir:p[1]==='desc'?'desc':'asc'};TETO=PASSO;desenhar();return;}
+  if(e.target.id==='f-filtro'){aplicarLegado(e.target.value);TETO=PASSO;desenhar();return;}
 });
 // SALVAMENTO AUTOMÁTICO: qualquer alteração num campo do editor salva sozinha.
 document.addEventListener('change',e=>{

@@ -213,11 +213,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .chip.on .n{background:rgba(255,255,255,.25)}
 .chip.alerta.on{background:var(--vermelho);border-color:var(--vermelho)}
 .chip.falta.on{background:var(--amber);border-color:var(--amber)}
-/* ---------- ordenacao ----------
-   A grade era ordenada clicando no cabecalho da coluna; a lista de leitura nao
-   tem cabecalho clicavel, entao os criterios viraram chips no painel de filtros.
-   A frase abaixo deles diz o que a ordem quer dizer — "ID crescente" nao explica
-   nada a quem chegou agora. */
+/* ---------- ordenacao (regras ORFAS) ----------
+   ORDENAR VOLTOU A SER O CABECALHO DA LISTA — ver `.lista-cab button` la embaixo.
+   Estas quatro regras sobraram da epoca dos chips "Ordenar por" no painel de
+   filtros; nada na pagina usa `.chip .ord` nem `.ord-info` desde entao. Ficam
+   escritas so para quem procurar por elas nao pensar que estao valendo. */
 .chip .ord{margin-left:5px;font-size:11px;opacity:.9}
 .ord-info{font-size:12px;color:var(--muted);font-weight:700}
 .ord-info b{color:var(--ink-2)}
@@ -265,6 +265,38 @@ select.filtro:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
 /* Filtro que ESCONDE linha se anuncia: âmbar, para "estou vendo tudo?" ter
    resposta sem abrir nada. O estado neutro fica no teal de sempre. */
 select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color:var(--amber-txt)}
+/* ── os dois botões de dois estados da régua ──────────────────────────────────
+   "Com pendências" e "Dados do cadastro" respondem SIM ou NÃO. Um <select> de
+   duas opções para uma pergunta de sim ou não custa dois toques, esconde metade
+   da resposta dentro dele e ainda deixa a dúvida de qual das duas é a ligada; o
+   botão diz o estado na cara e muda com um toque.
+   38px é a altura da régua (a mesma do .btn-limpar, do select.filtro do modo de
+   queda e do botão do b4u-filtro.js) — botão mais alto que os vizinhos quebraria
+   a linha da régua sozinho. */
+.f-tog{font-family:inherit;font-size:var(--fs-3);font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;min-height:38px;min-width:0;max-width:100%;
+  border:1px solid var(--brand-teal);color:var(--brand-teal-txt);background:var(--surface);
+  border-radius:var(--radius-pill);padding:0 13px;line-height:1.2;text-align:left}
+.f-tog:hover{border-color:var(--brand-teal-txt)}
+.f-tog:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.f-tog[hidden]{display:none}
+.f-tog .n{flex:none;font-weight:800;font-variant-numeric:tabular-nums}
+/* Ligado e ESCONDENDO linha: âmbar, a mesma cor com que o select.filtro.corta
+   avisava "não é tudo o que existe". */
+.f-tog[aria-pressed="true"]{background:var(--amber-soft);border-color:var(--amber);color:var(--amber-txt)}
+/* Ligado e MOSTRANDO mais coluna: não esconde nada de ninguém, então não é
+   alarme — é o teal cheio de "está ligado". */
+.f-tog.mostra[aria-pressed="true"]{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+/* A contagem no rótulo da opção do b4u-filtro.js ("Vencidos · 12"). Era a única
+   informação que os chips davam e a lista não dá de graça. Ela é escrita no DOM
+   do painel DEPOIS que o componente o montou, e não dentro do texto do item, de
+   propósito: mudar o texto do item obriga a remontar o painel a cada clique, e
+   remontar com ele aberto apaga o foco de quem está marcando várias coisas
+   seguidas — justo no controle que existe para isso. Se a marcação do componente
+   mudar um dia, some a contagem e mais nada. */
+.b4f-li .f-n{flex:none;margin-left:auto;padding-left:10px;font-size:var(--fs-1);font-weight:700;
+  color:var(--muted);font-variant-numeric:tabular-nums}
+.b4f-li .f-n.zero{opacity:.45}
 .painel-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
   padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);
   border-radius:var(--radius);background:var(--surface-warm)}
@@ -340,13 +372,28 @@ select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color
   gap:12px;align-items:center}
 .lista-cab{padding:2px 14px 0;font-size:var(--fs-1);font-weight:800;letter-spacing:.5px;
   text-transform:uppercase;color:var(--muted)}
-/* O cabeçalho também ordena: cada rótulo é um botão de verdade (Tab chega nele,
-   Enter e Espaço ordenam). É o que restou do "clique em qualquer cabeçalho" da
-   grade antiga — e abaixo de 900px, onde a régua some, os mesmos critérios
-   continuam nos chips "Ordenar por" do painel de filtros. */
+/* O cabeçalho ORDENA, e desde que o <select id="f-ord"> saiu da régua ele é o
+   ÚNICO jeito de ordenar: cada rótulo é um botão de verdade (Tab chega nele,
+   Enter e Espaço ordenam). Abaixo de 900px ele não some — vira a barra de
+   ordenação (ver a regra lá embaixo). */
 .lista-cab button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
-  text-transform:inherit;letter-spacing:inherit;text-align:inherit}
+  text-transform:inherit;letter-spacing:inherit;text-align:inherit;
+  /* Alvo de 44px. Era aceitável ter 13px de altura enquanto o cabeçalho era o
+     atalho de quem já sabia e a lista "Ordenar por" da régua respondia por
+     todo mundo; agora ele é o ÚNICO jeito de ordenar. */
+  display:inline-flex;align-items:center;min-height:44px}
 .lista-cab button:hover{color:var(--brand-teal-txt)}
+.lista-cab button:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:var(--radius-sm)}
+/* A seta (▲/▼) é o indicador de direção; a coluna ativa também muda de cor para
+   não depender só dela — e o aria-sort no <span role="columnheader"> diz o mesmo
+   para quem não vê a tela. */
+.lista-cab [aria-sort] button{color:var(--brand-teal-txt)}
+/* Dois rótulos por título: o longo, que a grade comporta, e o CURTO, que faz a
+   barra de ordenação do celular caber em duas fileiras em vez de três. Só um
+   deles está na tela por vez, e `display:none` também tira do nome acessível —
+   é por isso que são dois <span> e não um `content:attr()` de CSS, que deixaria
+   o leitor de tela lendo os dois. O title do botão traz sempre o nome longo. */
+.lista-cab .cab-sm{display:none}
 .cli-head{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
   cursor:pointer;font-family:var(--sans);color:inherit}
 .cli-head:hover{background:var(--surface-warm)}
@@ -388,7 +435,40 @@ select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color
    monitor de 1100px já cai nessa faixa. Abaixo de 900px, como manda o contrato,
    continua sendo duas linhas. */
 @media(max-width:1180px){
-  .lista-cab{display:none}
+  /* O cabeçalho para de ser régua de colunas e vira a BARRA DE ORDENAÇÃO. Ele
+     sumia aqui (display:none) porque a linha deixa de ser uma grade — e podia
+     sumir, porque os mesmos critérios estavam na lista "Ordenar por" da régua.
+     Essa lista saiu, a pedido do dono; se o cabeçalho sumisse junto, ordenar
+     teria acabado no celular, que é onde esta tela é usada de pé. Mesma
+     marcação, outro arranjo.
+     Uma TIRA QUE ROLA DE LADO, e não uma fileira que quebra: em pé, com sete
+     critérios, o embrulho comia 150px de altura antes da primeira linha da
+     lista — a tela abria mostrando o cabeçalho em vez do primeiro cliente. É o
+     mesmo gesto (e o mesmo desenho) que o societario-equipe.html usa.
+     O rótulo "Ordenar" na frente existe para a tira não ser lida como mais uma
+     fileira de filtros: sem ele, "ID · Cliente · CNPJ" logo abaixo de três
+     caixas de filtro é exatamente o que parece. */
+  .lista-cab{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;padding:0 14px 8px;
+    overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .lista-cab::-webkit-scrollbar{display:none}
+  /* O rótulo ROLA junto, e não fica grudado na borda: preso, ele fica por CIMA do
+     botão que passa por baixo e a tira exibe "Ordenar" ao lado de meia palavra
+     ("…ções"), que lê como defeito. Solto, ele sai de cena quando a pessoa rola —
+     e volta no primeiro gesto para a direita. É o mesmo desenho do
+     societario-equipe.html. */
+  .lista-cab::before{content:"Ordenar";flex:none;padding-right:4px;
+    color:var(--muted);white-space:nowrap;text-transform:none}
+  /* O text-align:right que a coluna Situação carrega só faz sentido dentro da
+     grade; aqui ele deixaria um botão solto na ponta da tira. */
+  .lista-cab>span{flex:none;min-width:0;text-align:left!important}
+  .lista-cab button{min-height:44px;padding:0 12px;border:1px solid var(--line);
+    border-radius:var(--radius-pill);background:var(--surface);color:var(--ink-2);
+    font-size:var(--fs-2);font-weight:700;text-transform:none;letter-spacing:0;
+    white-space:nowrap}
+  .lista-cab .cab-lg{display:none}
+  .lista-cab .cab-sm{display:inline}
+  .lista-cab [aria-sort] button{border-color:var(--brand-teal);background:var(--surface-warm);
+    color:var(--brand-teal-txt)}
   .cli-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
   /* Quebra forçada: sem ela o "resto" subiria para a primeira linha sempre que sobrasse espaço. */
   .cli-head::after{content:"";order:3;flex:0 0 100%;height:0}
@@ -397,13 +477,17 @@ select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color
   .c-id,.c-doc,.c-data{order:4;flex:0 1 auto;font-size:var(--fs-2);color:var(--muted);text-align:left}
 }
 /* Selo de situação da linha: Vencido (vermelho) · Vence em 30 dias (âmbar) ·
-   Vence em 60 dias (teal) · Em dia (verde) · Sem data (cinza) · Inativo. É a
-   última coluna da linha, e responde "preciso agir neste cliente?". */
+   Vence em 60 dias (teal) · Vence em 90 dias e Em dia (verde) · Sem data (cinza)
+   · Inativo. É a última coluna da linha, e responde "preciso agir neste
+   cliente?".
+   O degrau de 90 dias veste o MESMO verde do "Em dia" — como na tela irmã: aos
+   90 dias ninguém precisa agir hoje, e uma quarta cor no meio da régua faria a
+   lista parecer mais alarmada do que é. Quem muda é o texto, que é o que se lê. */
 .pill{font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap;letter-spacing:.2px;border:1px solid transparent}
 .pill.sit-venc{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
 .pill.sit-d30{background:var(--amber-soft);color:#8A4B12;border-color:var(--amber)}
 .pill.sit-d60{background:#E1F0EE;color:#0b6c66;border-color:#BBDCD8}
-.pill.sit-ok{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
+.pill.sit-d90,.pill.sit-ok{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
 .pill.sit-sem{background:#EEE9E2;color:var(--muted);border-color:var(--line)}
 .pill.sit-inativo{background:#EEE9E2;color:var(--muted);border-color:var(--line-2)}
 .vazio{padding:30px 16px;text-align:center;color:var(--muted);font-size:15px}
@@ -565,6 +649,13 @@ details.situacao>.resumo{padding:0 12px 12px}
 <!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
      chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
 <script src="b4u-shell.js" charset="utf-8"></script>
+<!-- A caixa de seleção múltipla da régua (b4u-filtro.js). Entra ANTES do
+     b4u-modal.js de propósito: os dois escutam Esc na captura do documento, e
+     ouvinte de captura no mesmo nó dispara na ordem em que foi registrado — com
+     o modal na frente, um Esc de painel aberto levaria a ficha inteira embora em
+     vez de fechar a lista que está na cara da pessoa. Se ele não carregar, a
+     régua cai nos <select> de sempre: tudo passa por `window.B4UFiltro &&`. -->
+<script src="b4u-filtro.js" charset="utf-8"></script>
 <!-- A casca dos modais mora num arquivo só (b4u-modal.js): véu, Esc, foco preso
      dentro da caixa e o aviso de "tem coisa por gravar". Se ele não carregar, a
      ficha não abre — e mais nada muda: a chamada é protegida por
@@ -895,15 +986,67 @@ async function postAcao(obj,ms){
 
 /* ---------------- estado ---------------- */
 let LINHAS=[], COLUNAS=[], ESPELHADAS=[], EDITAVEIS=[], SIGILOSAS=[], DATAS=[], LINKS=[], META={}, GRUPOS=[];
-/* Valores que o filtro de situação realmente conhece — qualquer outra coisa
-   cai em 'todos'. É o mesmo ?f= que o painel do colaborador manda no link. */
-const FILTROS_OK=['todos','falta','vencidos','d30','d60','d90'];
-let FILTRO='todos';      // todos | falta | vencidos | d30 | d60 | d90
-let DOC='todos';         // 'todos' ou o nome de uma coluna de vencimento
+/* ---------------- os filtros, em listas ----------------
+   Três caixas de seleção múltipla e dois botões de dois estados, e por isso três
+   LISTAS e dois booleanos onde antes havia palavras soltas. A escolha única
+   respondia "vencidos OU faltando dados"; a régua nova responde "vencidos E
+   vencendo em 30, dos ativos e dos inativos, e só quem tem pendência" — que é a
+   pergunta que alguém faz de verdade antes de sentar para trabalhar a lista. */
+/* Os três estados que a coluna "Ativo?" produz. O `?` é a linha que não diz nem
+   sim nem não, e ela SEMPRE passou: o "só clientes ativos" de antes escondia
+   apenas quem estava marcado como inativo. Por isso ela nasce marcada junto do
+   `sim` — e por isso ela é um item de verdade na caixa, e não uma exceção
+   escondida no código: sem item, o "Todos / Nenhuma" a apagaria calado. */
+const ATIVO_ITENS=[{v:'sim',r:'Ativos'},{v:'nao',r:'Inativos'},{v:'?',r:'Não informado'}];
+const ATIVO_PADRAO=['sim','?'];
+/* Os baldes de vencimento. É a MESMA régua do selo da linha (situacaoDe), para o
+   filtro nunca contradizer o que a linha diz de si mesma — e é por isso que ela
+   é uma tabela, lida pelo filtro, pelo selo e pela contagem, em vez de três
+   escadas de `if` escritas em três lugares. `dias` é o TETO do balde; quem não
+   tem `dias` é ponta da régua (vencido, em dia, sem data).
+   O DEGRAU DE 90 DIAS ESTAVA FALTANDO AQUI, e a falta era acidental: o filtro
+   desta tela já oferecia "Vence em até 90 dias" (o ?f=d90 que o painel do
+   colaborador manda), e a etiqueta de cada célula de data já pintava `d90` — só
+   o selo da LINHA parava em 60 e chamava de "Em dia" quem vence em 75 dias.
+   Sem o degrau, virar a lista em caixas de seleção teria encolhido o ?f=d90
+   para "até 60" calado. Agora a tabela é a mesma da tela irmã. */
+const VENC_ITENS=[
+  {v:'venc',r:'Vencido'},
+  {v:'d30', r:'Vence em 30 dias', dias:30},
+  {v:'d60', r:'Vence em 60 dias', dias:60},
+  {v:'d90', r:'Vence em 90 dias', dias:90},
+  {v:'ok',  r:'Em dia'},
+  {v:'sem', r:'Sem data'}
+];
+/* O vocabulário do ?f= antigo — o que o painel do colaborador manda no link e o
+   que está colado em conversa de meses atrás. Cada atalho é o CONJUNTO de baldes
+   que ele sempre quis dizer, RECORTADO contra os baldes que esta tela tem: um
+   atalho que citasse um balde inexistente viraria um conjunto com valor fantasma
+   dentro — valor que a caixa não teria como mostrar nem desmarcar. Hoje as duas
+   telas têm os cinco baldes e nada é recortado; o recorte fica de pé porque a
+   régua de baldes é dado, e dado muda.
+   'todos' e 'falta' ficam de fora: o primeiro é a lista inteira e o segundo
+   virou o botão "Com pendências". */
+const SIT_ATALHO=(function(){
+  const tem=VENC_ITENS.map(i=>i.v), so=a=>a.filter(v=>tem.indexOf(v)>=0);
+  return {vencidos:so(['venc']),d30:so(['venc','d30']),
+          d60:so(['venc','d30','d60']),d90:so(['venc','d30','d60','d90'])};
+})();
+const SIT_ATALHO_ROT={vencidos:'Vencidos',d30:'Vence em até 30 dias',
+                      d60:'Vence em até 60 dias',d90:'Vence em até 90 dias'};
+let F_SIT=SIT_TODOS();   // baldes de vencimento marcados
+let F_DOC=[];            // colunas de vencimento marcadas; vazia = todas
+let F_ATIVO=ATIVO_PADRAO.slice();
+let SO_PEND=false;       // só quem tem vencimento em branco
 let TERMO='';
-let SO_ATIVOS=true;
 let VER_CADASTRO=false;  // mostrar as colunas espelhadas do Registro (só leitura)
-let SORT={key:'urgencia',dir:'asc'};
+/* A tela abre pelo vencimento mais próximo, como sempre — só que pela COLUNA
+   Situação, que é a que entrega essa ordem no clique (ver ORD_COLS.situacao). A
+   chave importa porque é ela que o cabeçalho marca com `aria-sort` e com a
+   seta: com `urgencia`, que não tem coluna aqui, a tela abria sem nenhuma coluna
+   marcada — isto é, parecendo não estar ordenada por nada. O ?ord=urgencia dos
+   links antigos continua valendo e continua ordenando igual. */
+let SORT={key:'situacao',dir:'asc'};
 const REVELADAS=new Set();
 const hoje=new Date(); hoje.setHours(0,0,0,0);
 
@@ -1143,22 +1286,27 @@ const SITUACOES={
   venc:{rot:'Vencido',dica:'Tem vencimento com data já passada.'},
   d30:{rot:'Vence em 30 dias',dica:'O vencimento mais próximo cai nos próximos 30 dias.'},
   d60:{rot:'Vence em 60 dias',dica:'O vencimento mais próximo cai entre 31 e 60 dias.'},
-  ok:{rot:'Em dia',dica:'Nenhum vencimento nos próximos 60 dias.'},
+  d90:{rot:'Vence em 90 dias',dica:'O vencimento mais próximo cai entre 61 e 90 dias.'},
+  ok:{rot:'Em dia',dica:'Nenhum vencimento nos próximos 90 dias.'},
   sem:{rot:'Sem data',dica:'Nenhum vencimento preenchido — não dá para saber o prazo deste cliente.'},
   inativo:{rot:'Inativo',dica:'Cliente marcado como inativo no cadastro.'}
 };
-function situacaoDe(l){
-  if(ativoDe(l)===false) return 'inativo';
+/* O BALDE de vencimento da linha, sem olhar o cadastro. Ele existe separado do
+   selo porque um cliente inativo continua tendo vencimento: se a contagem de
+   "Vencido · 12" pulasse os inativos, os números da caixa deixariam de somar no
+   dia em que alguém marcasse "Inativos" na caixa de Ativos — e a pessoa ficaria
+   procurando as linhas que faltam. A régua sai da tabela VENC_ITENS. */
+function vencDe(l){
   const u=urgencia(l,colsData());
   if(u===null) return 'sem';
   if(u<0) return 'venc';
-  if(u<=30) return 'd30';
-  if(u<=60) return 'd60';
+  for(const i of VENC_ITENS){ if(i.dias!=null&&u<=i.dias) return i.v; }
   return 'ok';
 }
+function situacaoDe(l){return ativoDe(l)===false?'inativo':vencDe(l);}
 function classeSituacao(l){return 'sit-'+situacaoDe(l);}
 
-function colsData(){return DOC==='todos'?DATAS:[DOC];}
+function colsData(){return F_DOC.length?F_DOC:DATAS;}
 function urgencia(l,keys){
   let min=null;
   (keys||DATAS).forEach(k=>{const st=estado(l.valores[k]);if(st.dias!=null&&(min===null||st.dias<min))min=st.dias;});
@@ -1169,16 +1317,21 @@ function faltando(l){
 }
 
 /* ---------------- filtros ---------------- */
-function passaFiltro(l){
-  if(SO_ATIVOS&&ativoDe(l)===false) return false;
-  if(FILTRO==='todos') return true;
-  if(FILTRO==='falta') return faltando(l).length>0;
-  const u=urgencia(l,colsData());
-  if(u===null) return false;
-  if(FILTRO==='vencidos') return u<0;
-  if(FILTRO==='d30') return u<=30;
-  if(FILTRO==='d60') return u<=60;
-  if(FILTRO==='d90') return u<=90;
+function SIT_TODOS(){return VENC_ITENS.map(i=>i.v);}
+function mesmoConj(a,b){return a.length===b.length&&a.every(v=>b.indexOf(v)>=0);}
+function chaveAtivo(l){const a=ativoDe(l);return a===true?'sim':a===false?'nao':'?';}
+function passaAtivo(l){return F_ATIVO.indexOf(chaveAtivo(l))>=0;}
+function passaVenc(l){return F_SIT.indexOf(vencDe(l))>=0;}
+/* `pular` deixa UM dos filtros de fora. É o que faz a contagem no rótulo da
+   opção dizer a verdade: sem ele, a opção DESMARCADA mostraria sempre zero (ela
+   está sendo filtrada por si mesma) e a marcada mostraria o total — dois números
+   que não ajudam ninguém a decidir se vale a pena clicar.
+   Os três filtros são E entre si e OU dentro de cada um: "vencidos ou vencendo
+   em 30, entre os ativos, com pendência". */
+function passaFiltro(l,pular){
+  if(pular!=='ativo'&&!passaAtivo(l)) return false;
+  if(pular!=='venc' &&!passaVenc(l))  return false;
+  if(pular!=='pend' &&SO_PEND&&faltando(l).length===0) return false;
   return true;
 }
 /* Texto e dígitos da linha, guardados até alguém editar a linha.
@@ -1198,8 +1351,8 @@ function passaBusca(l,termo){
   return casaBusca(l._bt,l._bd,termo);
 }
 /* ---------- as chaves de ordenação da lista ----------
-   Uma entrada por COLUNA da lista, para o cabeçalho e os chips "Ordenar por"
-   ordenarem exatamente pelo que está escrito na linha. `v` devolve o valor cru
+   Uma entrada por COLUNA da lista, para o cabeçalho ordenar exatamente pelo que
+   está escrito nela. `v` devolve o valor cru
    (as datas ordenam pelo aaaa-mm-dd que veio da planilha, nunca pelo dd/mm/aaaa
    que a célula mostra) e `t` diz como comparar. Coluna sem valor devolve '' — e
    vazio vai sempre para o fim, nas duas direções. */
@@ -1211,11 +1364,26 @@ const ORD_COLS={
      ordem segue a mesma data que a célula mostra — a mais urgente do assunto. */
   cert:          {t:'data',v:l=>{const c=maisUrgente(l,COLS_LINHA.cert);return c?valDe(l,c):'';}},
   proc:          {t:'data',v:l=>{const c=maisUrgente(l,COLS_LINHA.proc);return c?valDe(l,c):'';}},
+  /* Sem cabeçalho próprio nesta tela — a linha mostra as datas de verdade (o
+     certificado e as procurações), e uma sétima coluna com o mínimo das duas
+     seria a mesma informação uma terceira vez. Quem entrega esta ordem no clique
+     é a coluna Situação, logo abaixo; a chave continua existindo porque o
+     ?ord=urgencia é a ordem com que a tela ABRE e é o que os links antigos
+     trazem. */
   urgencia:      {t:'num', v:l=>{const u=urgencia(l,colsData());return u===null?'':u;}},
   /* Situação vai pela GRAVIDADE, não pelo alfabeto: "Vencido" antes de "Em dia"
-     é a única ordem que responde "em quem eu preciso mexer hoje". */
-  situacao:      {t:'num', v:l=>{const p={venc:0,d30:1,d60:2,ok:3,inativo:4,sem:''};
-                                 const r=p[situacaoDe(l)];return r==null?'':r;}}
+     é a única ordem que responde "em quem eu preciso mexer hoje". E DENTRO da
+     mesma pílula ela vai pelos DIAS que faltam — que é o "Vencimento mais
+     próximo" que o <select id="f-ord"> oferecia e que, sem isto, teria acabado
+     junto com ele: os baldes são faixas contíguas de dias, então ordenar por dia
+     mantém as pílulas agrupadas e ainda põe quem vence amanhã antes de quem
+     vence em 29 dias. "Sem data" vai para o fim nas duas direções (é o ''), e o
+     inativo vai depois de todo mundo — ele não tem prazo cobrando hoje. */
+  situacao:      {t:'num', v:l=>{const s=situacaoDe(l);
+                                 if(s==='sem') return '';
+                                 if(s==='inativo') return 1e9;
+                                 const u=urgencia(l,colsData());
+                                 return u===null?'':u;}}
 };
 /* Texto sem acento e sem caixa: "Água" e "agua" ficam juntas. */
 function cmpTxt(a,b){return normTxt(a).localeCompare(normTxt(b),'pt',{numeric:true});}
@@ -1539,16 +1707,22 @@ function seta(key){return SORT.key===key?(SORT.dir==='asc'?'\u00A0▲':'\u00A0�
    botão que ordena — por isso ele NÃO é mais aria-hidden: aqui não é enfeite, e
    a coluna ativa se anuncia com aria-sort. */
 function cabecalhoLista(){
-  const bt=(k,rot,estilo)=>{
+  /* `curto` é o rótulo da BARRA DE ORDENAÇÃO do celular — ver a nota do
+     `.cab-sm` na folha. Sem ele, "Venc. do certificado digital" sozinho ocupa
+     uma fileira inteira a 390px, e a barra passa de duas para três. */
+  const bt=(k,rot,curto,estilo)=>{
     const at=SORT.key===k;
     return `<span role="columnheader"${estilo?' style="'+estilo+'"':''}`+
       `${at?` aria-sort="${SORT.dir==='asc'?'ascending':'descending'}"`:''}>`+
-      `<button type="button" data-sort="${esc(k)}" title="Ordenar por ${esc(rot)}">${esc(rot)}${seta(k)}</button></span>`;
+      `<button type="button" data-sort="${esc(k)}" title="Ordenar por ${esc(rot)}">`+
+      `<span class="cab-lg">${esc(rot)}</span><span class="cab-sm">${esc(curto||rot)}</span>`+
+      `${seta(k)}</button></span>`;
   };
   return `<div class="lista-cab" role="row">`+
     bt('id','ID')+bt('nome_cliente','Cliente')+bt('cnpj','CNPJ')+
-    bt('cert','Venc. do certificado digital')+bt('proc','Venc. das procurações')+
-    bt('situacao','Situação','text-align:right')+`</div>`;
+    bt('cert','Venc. do certificado digital','Certificado')+
+    bt('proc','Venc. das procurações','Procurações')+
+    bt('situacao','Situação','Situação','text-align:right')+`</div>`;
 }
 
 /* ---------------- a ficha (o miolo do modal) ----------------
@@ -1632,7 +1806,22 @@ function desenharLista(){
     arr.slice(0,n).map(l=>`<div class="cli ${classeSituacao(l)}${ABERTOS.has(String(l.id))?' aberto':''}" data-id="${esc(l.id)}">${cabecaHTML(l)}</div>`).join('')+
     rodapeLista(n,total);
   if(dica)dica.textContent=total>n?('Mostrando '+n+' de '+total+'.'):'';
+  revelarColunaAtiva();
   FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
+}
+/* No celular o cabeçalho é uma tira que rola de lado, e a coluna ativa pode
+   nascer FORA do pedaço visível: a tela abre ordenada por Situação, que é a
+   ÚLTIMA da tira, e ela abriria mostrando "Ordenar · ID · Cliente · CNPJ" sem
+   marca nenhuma — isto é, parecendo que a lista não está ordenada por nada.
+   Mexe só no scroll da TIRA. `scrollIntoView` levaria a página junto e jogaria a
+   primeira linha da lista para fora da tela a cada redesenho. */
+function revelarColunaAtiva(){
+  const cab=document.querySelector('.lista-cab');
+  if(!cab||cab.scrollWidth<=cab.clientWidth+1) return;
+  const at=cab.querySelector('[aria-sort]'); if(!at) return;
+  const r=at.getBoundingClientRect(),c=cab.getBoundingClientRect();
+  if(r.left<c.left) cab.scrollLeft+=r.left-c.left-10;
+  else if(r.right>c.right) cab.scrollLeft+=r.right-c.right+10;
 }
 function itemResumo(l,c){
   const st=estado(l.valores[c]);
@@ -1649,7 +1838,7 @@ function desenharResumo(){
      conseguimos carregar" com o dado JÁ na mão. Tela não morre por enfeite. */
   const alvoResumo=document.getElementById('resumo'); if(!alvoResumo) return;
   const keys=colsData();
-  const base=LINHAS.filter(l=>!SO_ATIVOS||ativoDe(l)!==false);
+  const base=LINHAS.filter(passaAtivo);
   const itens=(min,max)=>{
     const out=[];
     base.forEach(l=>keys.forEach(k=>{const st=estado(l.valores[k]);
@@ -1674,94 +1863,226 @@ function desenharResumo(){
    selo dizendo "1 filtro" por causa dela faria a pessoa procurar o que não sumiu.
    A ordenação entra porque também mora no painel e também muda o que aparece. */
 function filtrosPainel(){
-  return (FILTRO!=='todos'?1:0)+(DOC!=='todos'?1:0)+(SO_ATIVOS?0:1)+
-         (SORT.key!=='urgencia'||SORT.dir!=='asc'?1:0);
+  return (mesmoConj(F_SIT,SIT_TODOS())?0:1)+(F_DOC.length?1:0)+
+         (mesmoConj(F_ATIVO,ATIVO_PADRAO)?0:1)+(SO_PEND?1:0)+
+         (SORT.key!=='situacao'||SORT.dir!=='asc'?1:0);
 }
+/* Volta para a visão com que a tela abre — inclusive a ORDEM. Depois que a lista
+   "Ordenar por" saiu da régua, este botão é o atalho de uma tecla para o
+   "vencimento mais próximo" — que continua a um clique no cabeçalho também. Por
+   isso o title dele fala em ordem. */
 function limparFiltros(){
-  FILTRO='todos';DOC='todos';TERMO='';SO_ATIVOS=true;TETO=PASSO;
-  SORT={key:'urgencia',dir:'asc'};
+  F_SIT=SIT_TODOS();F_DOC=[];F_ATIVO=ATIVO_PADRAO.slice();SO_PEND=false;TERMO='';TETO=PASSO;
+  SORT={key:'situacao',dir:'asc'};
   const b=document.getElementById('busca');if(b)b.value='';
+  sincronizarCaixas();
   redesenhar();
 }
-/* ---------- ordenação ----------
-   A grade era ordenada clicando no cabeçalho da coluna. A lista de leitura não
-   tem 17 cabeçalhos para clicar, então os critérios viraram chips no painel de
-   filtros — os mesmos três que respondem por esta tela. Clicar de novo no mesmo
-   critério inverte, como a seta do cabeçalho fazia. Um ?ord= antigo apontando
-   para uma coluna continua ordenando (validarURL cuida disso); ele só não tem
-   chip aceso. */
-const ORDENS=[
-  {k:'urgencia',rot:'Vencimento mais próximo',asc:'do mais urgente para o menos',desc:'do menos urgente para o mais'},
-  {k:'id',rot:'ID',asc:'do menor para o maior',desc:'do maior para o menor'},
-  {k:'nome_cliente',rot:'Cliente',asc:'de A a Z',desc:'de Z a A'},
-  {k:'cnpj',rot:'CNPJ',asc:'do menor para o maior',desc:'do maior para o menor'},
-  {k:'cert',rot:'Venc. do certificado digital',asc:'do mais urgente para o menos',desc:'do menos urgente para o mais'},
-  {k:'proc',rot:'Venc. das procurações',asc:'do mais urgente para o menos',desc:'do menos urgente para o mais'},
-  {k:'situacao',rot:'Situação',asc:'vencidos primeiro',desc:'em dia primeiro'}
-];
-function desenharOrdem(){
-  const el=document.getElementById('f-ord');if(!el)return;
-  /* Cada critério aparece nas DUAS direções, cada uma com o que ela significa
-     por extenso. Na versão de chips a direção era um segundo clique no mesmo
-     chip — gesto que ninguém descobre sozinho e que o cabeçalho da lista já
-     oferece para quem está no computador. */
-  el.innerHTML=ORDENS.map(o=>
-    opt(o.k+'|asc',o.rot+' — '+o.asc,SORT.key+'|'+SORT.dir)+
-    opt(o.k+'|desc',o.rot+' — '+o.desc,SORT.key+'|'+SORT.dir)).join('');
-}
-/** Uma opção da lista, com a contagem no rótulo quando ela existe. */
+/* ---------- ordenação: só o cabeçalho ----------
+   A lista "Ordenar por" saiu da régua a pedido do dono: ordenar é clicar no
+   TÍTULO da coluna, uma vez para A→Z e outra para Z→A. O estado (SORT) e o
+   ?ord=/?dir= continuam os MESMOS, então link antigo e F5 continuam valendo —
+   inclusive um ?ord= que aponte para uma coluna da planilha sem título clicável
+   (o validarURL descarta só o que não existe).
+   Abaixo da largura em que a linha deixa de ser grade o cabeçalho não some mais:
+   ele vira uma fileira de botões "Ordenar" (ver a folha lá em cima). Sem isso,
+   ordenar teria acabado no celular junto com a lista que saiu daqui. */
+
+/** Uma opção de <select>, com a contagem no rótulo quando ela existe. Continua
+ *  existindo por causa do modo de queda: sem o b4u-filtro.js a régua volta a ser
+ *  <select> de escolha única. */
 function opt(v,rot,sel,n){
   return `<option value="${esc(v)}"${String(v)===String(sel)?' selected':''}>`+
          esc(rot)+(n!=null?' · '+n:'')+`</option>`;
 }
-function desenharChips(){
-  const keys=colsData();
-  const base=l=>(!SO_ATIVOS||ativoDe(l)!==false);
-  const nUrg=(min,max)=>LINHAS.filter(l=>{if(!base(l))return false;const u=urgencia(l,keys);return u!==null&&u>=min&&u<=max;}).length;
-  const nFalta=LINHAS.filter(l=>base(l)&&faltando(l).length>0).length;
 
-  const sit=document.getElementById('f-sit');
-  if(sit){
-    sit.innerHTML=
-      opt('todos','Todas as situações',FILTRO,LINHAS.filter(base).length)+
-      opt('falta','Faltando dados',FILTRO,nFalta)+
-      opt('vencidos','Vencidos',FILTRO,nUrg(-99999,-1))+
-      opt('d30','Vence em até 30 dias',FILTRO,nUrg(-99999,30))+
-      opt('d60','Vence em até 60 dias',FILTRO,nUrg(-99999,60))+
-      opt('d90','Vence em até 90 dias',FILTRO,nUrg(-99999,90));
-    sit.classList.toggle('corta',FILTRO!=='todos');
+/* ---------- a régua ----------
+   Três caixas de seleção múltipla (b4u-filtro.js) e dois botões de dois estados.
+   As caixas são CONSTRUÍDAS antes de qualquer uma entrar na página: se o módulo
+   estiver lá mas quebrar no meio, o catch cai nos <select> de sempre com os
+   marcadores de posição ainda intactos — plantar de uma em uma deixaria a régua
+   pela metade, meio caixa e meio select. */
+const FILTROS={ativo:null,venc:null,doc:null};
+/* Valor de <select> que quer dizer "o estado atual não cabe numa escolha única".
+   Ver a nota do desenharFiltros(). */
+const MANTEM='__mantem__';
+function por(cx,no){ cx.replaceWith(no); return no; }
+function porHTML(cx,html){ const t=document.createElement('div'); t.innerHTML=html;
+  return por(cx,t.firstElementChild); }
+function itensAtivo(){ return ATIVO_ITENS.map(i=>({v:i.v,r:i.r,c:i.r})); }
+function itensVenc(){ return VENC_ITENS.map(i=>({v:i.v,r:i.r,c:i.r})); }
+/* A lista de documentos sai das COLUNAS DE DATA da planilha, que trocam de nome
+   sozinhas — por isso ela é montada depois que os dados chegam, e não escrita
+   aqui. */
+function itensDoc(){ return DATAS.map(c=>({v:c,r:curto(c),c:curto(c)})); }
+/* Conjuntos com nome próprio (regra 6 do b4u-filtro.js): são os mesmos atalhos
+   que o ?f= nomeava, e é assim que a equipe fala — "os vencidos", "o que vence
+   em 30 dias". Sem eles o botão diria "Vencido +1" no atalho mais usado da tela.
+   Atalho que cai em cima de outro sai da lista: dois nomes para o mesmo conjunto
+   fariam o rótulo depender da ordem em que a tabela foi escrita. */
+function atalhosVenc(){
+  const out=[],vistos=[];
+  Object.keys(SIT_ATALHO).forEach(k=>{
+    const q=SIT_ATALHO[k];
+    if(!q.length||vistos.some(v=>mesmoConj(v,q))) return;
+    vistos.push(q); out.push({quando:q,rot:SIT_ATALHO_ROT[k]});
+  });
+  return out;
+}
+function montarFiltros(){
+  const cxA=document.getElementById('cx-ativos'),
+        cxV=document.getElementById('cx-venc'),
+        cxD=document.getElementById('cx-doc');
+  if(!cxA||!cxV||!cxD) return;
+  if(window.B4UFiltro) try{
+    const fa=B4UFiltro.criar({
+      id:'f-ativos', rot:'Ativos', itens:itensAtivo(), marcados:F_ATIVO,
+      /* Nasce com os ativos (e os que não dizem) marcados, como a tela sempre
+         abriu. Zero marcado quer dizer "não me mostre nada", e o componente
+         avisa em âmbar — desmarcar os três é gesto deliberado numa lista de
+         três. */
+      vazio:'nada', rotTodos:'Ativos e inativos', rotNada:'Nenhum', rotTodas:'Todos',
+      rotEspecial:[{quando:ATIVO_PADRAO,rot:'Só os ativos'}],
+      aoMudar:m=>{ F_ATIVO=m; TETO=PASSO; redesenhar(); }
+    });
+    const fv=B4UFiltro.criar({
+      id:'f-sit', rot:'Vencimento', itens:itensVenc(), marcados:F_SIT,
+      vazio:'nada', rotTodos:'Todos os vencimentos', rotNada:'Nenhuma situação', rotTodas:'Todas',
+      rotEspecial:atalhosVenc(),
+      aoMudar:m=>{ F_SIT=m; TETO=PASSO; redesenhar(); }
+    });
+    const fd=B4UFiltro.criar({
+      id:'f-doc', rot:'Documento', itens:itensDoc(), marcados:F_DOC,
+      /* Nasce vazia, e vazia aqui quer dizer TODOS os documentos: esta caixa
+         escolhe QUAL vencimento a tela está olhando, e "nenhum" não é resposta
+         que alguém queira dar — seria a tela sem coluna de data nenhuma. */
+      vazio:'todos', rotTodos:'Todos os documentos', rotNada:'Nenhum documento',
+      aoMudar:m=>{ F_DOC=m; TETO=PASSO; redesenhar(); }
+    });
+    FILTROS.ativo=fa; FILTROS.venc=fv; FILTROS.doc=fd;
+    por(cxA,fa.no); por(cxV,fv.no); por(cxD,fd.no);
+    return;
+  }catch(e){ FILTROS.ativo=FILTROS.venc=FILTROS.doc=null; }
+  /* ── sem o módulo ──────────────────────────────────────────────────────────
+     Os <select> de escolha única de antes. Perde-se a COMBINAÇÃO (ver vencidos e
+     vencendo em 30 ao mesmo tempo, ativos e inativos juntos), não a capacidade
+     de filtrar: cada opção guarda o mesmo estado em lista que as caixas guardam,
+     com um item só dentro. Quem preenche as opções — e devolve a contagem ao
+     rótulo — é o desenharFiltros(), logo abaixo. */
+  porHTML(cxA,'<select class="filtro" id="f-ativos" aria-label="Ativos"></select>');
+  porHTML(cxV,'<select class="filtro" id="f-sit" aria-label="Vencimento"></select>');
+  porHTML(cxD,'<select class="filtro" id="f-doc" aria-label="Documento"></select>');
+}
+/** Escreve o estado nas caixas SEM disparar o aoMudar delas (quem escreveu já
+ *  sabe o que escreveu, e avisar de volta faria o laço). É o que faz o "Limpar"
+ *  e o ?abrir= aparecerem na régua, e não só na lista. */
+function sincronizarCaixas(){
+  if(FILTROS.ativo) FILTROS.ativo.marcados(F_ATIVO);
+  if(FILTROS.venc)  FILTROS.venc.marcados(F_SIT);
+  if(FILTROS.doc)   FILTROS.doc.marcados(F_DOC);
+}
+/* A contagem no rótulo da opção, escrita no painel que o componente montou.
+   Ver a nota do `.b4f-li .f-n` na folha: ela não entra no texto do item de
+   propósito. Tudo aqui é guarda — se a marcação do componente mudar, a contagem
+   some e a régua continua inteira. */
+function pintarContagens(f,mapa){
+  if(!f||!f.painel) return;
+  [].slice.call(f.painel.querySelectorAll('.b4f-li[data-v]')).forEach(li=>{
+    const v=li.getAttribute('data-v');
+    if(mapa[v]==null) return;
+    let n=li.querySelector('.f-n');
+    if(!n){ n=document.createElement('span'); n.className='f-n'; li.appendChild(n); }
+    n.textContent='· '+mapa[v];
+    n.classList.toggle('zero',mapa[v]===0);
+  });
+}
+/* A régua inteira, redesenhada: a contagem de cada opção, o estado dos dois
+   botões e — no modo de queda — as opções dos <select>.
+   Cada caixa conta IGNORANDO a si mesma (o `pular` do passaFiltro). */
+function desenharFiltros(){
+  /* A contagem conta SOBRE O QUE A BUSCA DEIXOU. Com "padaria" escrito no campo,
+     "Vencido · 40" seria a conta da carteira inteira ao lado de uma lista de
+     três — e o número que não fala da tela que está na frente da pessoa é pior
+     que número nenhum: ela clica na opção esperando 40 linhas e recebe uma. É a
+     mesma regra das telas irmãs, onde as listas do filtro saem do `baseBusca()`. */
+  const termo=String(TERMO||'').trim();
+  const n=(pular,pred)=>LINHAS.filter(l=>passaBusca(l,termo)&&passaFiltro(l,pular)&&pred(l)).length;
+  const cAtivo={}, cVenc={}, cDoc={};
+  ATIVO_ITENS.forEach(i=>{ cAtivo[i.v]=n('ativo',l=>chaveAtivo(l)===i.v); });
+  VENC_ITENS.forEach(i=>{ cVenc[i.v]=n('venc',l=>vencDe(l)===i.v); });
+  /* Documento conta quantos clientes TÊM aquele vencimento preenchido — é a
+     pergunta que se faz antes de escolher a coluna ("essa aqui tem dado?"). */
+  DATAS.forEach(c=>{ cDoc[c]=n(null,l=>!!String(l.valores[c]||'').trim()); });
+  const nPend=n('pend',l=>faltando(l).length>0);
+
+  pintarContagens(FILTROS.ativo,cAtivo);
+  pintarContagens(FILTROS.venc,cVenc);
+  pintarContagens(FILTROS.doc,cDoc);
+
+  /* "Com pendências" é o "Faltando dados" que era uma OPÇÃO do filtro de
+     situação — e que, por ser opção, valia no lugar do prazo. Como botão ele
+     anda JUNTO: dá para pedir "os vencidos que ainda estão com campo em branco".
+     O número é a mesma contagem que a opção dava.
+     O que ele filtra, e nada além disso: cliente com pelo menos UMA coluna de
+     vencimento em branco entre as que a caixa Documento deixou de pé. Não olha
+     CNPJ, não olha telefone, não olha o cadastro. */
+  const bp=document.getElementById('f-pend');
+  if(bp){
+    bp.setAttribute('aria-pressed',String(SO_PEND));
+    bp.innerHTML='Com pendências <span class="n">'+nPend+'</span>';
+    bp.title=(SO_PEND?'Mostrando só quem tem':'Mostra só quem tem')+
+      ' vencimento em branco — nas colunas que a caixa Documento deixou de pé.'+
+      (SO_PEND?' Clique para ver todos.':'');
   }
-  const doc=document.getElementById('f-doc');
-  if(doc){
-    doc.innerHTML=opt('todos','Todos os vencimentos',DOC)+
-      DATAS.map(x=>opt(x,curto(x),DOC)).join('');
-    doc.classList.toggle('corta',DOC!=='todos');
+  /* Sem coluna espelhada não há o que mostrar nem esconder: o botão some em vez
+     de virar um interruptor que não acende nada. */
+  const bc=document.getElementById('f-cad');
+  if(bc){
+    bc.hidden=!ESPELHADAS.length;
+    bc.setAttribute('aria-pressed',String(VER_CADASTRO));
+    bc.title=VER_CADASTRO?'As colunas que vêm do cadastro estão à vista na ficha. Clique para escondê-las.'
+                         :'Mostra na ficha as colunas que vêm do cadastro (só leitura).';
   }
-  const at=document.getElementById('f-ativos');
-  if(at){
-    at.innerHTML=opt('1','Só clientes ativos',SO_ATIVOS?'1':'0')+
-                 opt('0','Ativos e inativos',SO_ATIVOS?'1':'0');
-    /* "Só ativos" é o padrão E esconde linha. Marcar de âmbar aqui deixaria a
-       tela permanentemente alarmada; quem se marca é o estado que NÃO é o
-       padrão. */
-    at.classList.toggle('corta',false);
+  /* ── modo de queda: os <select> ──────────────────────────────────────────────
+     Escolha única não sabe dizer "vencido E vencendo em 30". Quando o estado veio
+     do endereço com uma combinação que o <select> não representa, ele ganha uma
+     primeira opção que DIZ isso, em vez de acender a opção errada: um filtro que
+     mente sobre si mesmo é pior que um filtro sem atalho. */
+  const sv=document.getElementById('f-sit');
+  if(sv&&sv.tagName==='SELECT'){
+    const todas=mesmoConj(F_SIT,SIT_TODOS());
+    const um=F_SIT.length===1?F_SIT[0]:'';
+    const sel=todas?'__todas__':(um||MANTEM);
+    sv.innerHTML=(sel===MANTEM?opt(MANTEM,F_SIT.length+' vencimentos marcados',sel):'')+
+      opt('__todas__','Todos os vencimentos',sel,LINHAS.filter(l=>passaBusca(l,termo)&&passaFiltro(l,'venc')).length)+
+      VENC_ITENS.map(i=>opt(i.v,i.r,sel,cVenc[i.v])).join('');
+    sv.classList.toggle('corta',!todas);
   }
-  const cad=document.getElementById('f-cad');
-  if(cad){
-    /* Sem coluna espelhada não há o que mostrar nem esconder: a lista some em
-       vez de virar uma caixinha com uma opção só. */
-    cad.hidden=!ESPELHADAS.length;
-    cad.innerHTML=opt('0','Sem dados do cadastro',VER_CADASTRO?'1':'0')+
-                  opt('1','Com dados do cadastro',VER_CADASTRO?'1':'0');
+  const sd=document.getElementById('f-doc');
+  if(sd&&sd.tagName==='SELECT'){
+    const sel=!F_DOC.length?'__todos__':(F_DOC.length===1?F_DOC[0]:MANTEM);
+    sd.innerHTML=(sel===MANTEM?opt(MANTEM,F_DOC.length+' documentos marcados',sel):'')+
+      opt('__todos__','Todos os documentos',sel)+
+      DATAS.map(c=>opt(c,curto(c),sel,cDoc[c])).join('');
+    sd.classList.toggle('corta',!!F_DOC.length);
   }
-  desenharOrdem();
+  const sa=document.getElementById('f-ativos');
+  if(sa&&sa.tagName==='SELECT'){
+    const padrao=mesmoConj(F_ATIVO,ATIVO_PADRAO);
+    const tudo=mesmoConj(F_ATIVO,ATIVO_ITENS.map(i=>i.v));
+    const sel=padrao?'1':tudo?'0':MANTEM;
+    sa.innerHTML=(sel===MANTEM?opt(MANTEM,F_ATIVO.map(v=>(ATIVO_ITENS.filter(i=>i.v===v)[0]||{r:v}).r).join(' e '),sel):'')+
+      opt('1','Só clientes ativos',sel,cAtivo.sim+cAtivo['?'])+
+      opt('0','Ativos e inativos',sel,cAtivo.sim+cAtivo['?']+cAtivo.nao);
+    sa.classList.toggle('corta',!padrao&&!tudo);
+  }
 }
 /* A contagem em texto é o que permite recolher os chips e os cartões sem esconder
    pendência: os números continuam na primeira linha da tela, filtrada ou não. */
 function desenharResumoLista(){
   const el=document.getElementById('resumo-lista');if(!el)return;
   const keys=colsData();
-  const base=LINHAS.filter(l=>!SO_ATIVOS||ativoDe(l)!==false);
+  const base=LINHAS.filter(passaAtivo);
   const vis=visiveis().length;
   const nUrg=(min,max)=>base.filter(l=>{const u=urgencia(l,keys);return u!==null&&u>=min&&u<=max;}).length;
   const nFalta=base.filter(l=>faltando(l).length>0).length;
@@ -1771,10 +2092,10 @@ function desenharResumoLista(){
   const n30=nUrg(-99999,30);   if(n30)p.push(n30+' vencem em 30 dias');
   el.textContent=p.join(' · ');
 }
-function redesenhar(){desenharChips();desenharResumo();desenharLista();desenharResumoLista();
+function redesenhar(){desenharFiltros();desenharResumo();desenharLista();desenharResumoLista();
   sincronizarURL();}
 function aplicarBusca(){TETO=PASSO;   // resultado novo, teto novo
-  desenharChips();desenharLista();desenharResumoLista();sincronizarURL();}
+  desenharFiltros();desenharLista();desenharResumoLista();sincronizarURL();}
 
 /* ---------- busca e filtros no endereço (C.10) ----------
    F5 volta para a mesma visão; chave, cod e #hash ficam intactos.
@@ -1784,37 +2105,72 @@ function sincronizarURL(){
     const u=new URL(location.href);
     const set=(k,v)=>{if(v)u.searchParams.set(k,v);else u.searchParams.delete(k);};
     set('q',TERMO);
-    set('f',FILTRO==='todos'?'':FILTRO);
-    set('doc',DOC==='todos'?'':DOC);
-    set('ativos',SO_ATIVOS?'':'0');
+    /* O ?f= continua saindo no vocabulário de sempre quando a seleção é
+       exatamente um dos conjuntos que ele nomeava — é o link que o painel do
+       colaborador manda e o que está colado em conversa de meses atrás. Fora
+       deles vai a lista de baldes, que o lerURL também sabe ler. */
+    set('f',textoF());
+    set('doc',F_DOC.join(','));
+    set('ativos',textoAtivos());
+    set('pend',SO_PEND?'1':'');
     set('cad',VER_CADASTRO?'1':'');
-    set('ord',SORT.key==='urgencia'?'':SORT.key);
+    set('ord',SORT.key==='situacao'?'':SORT.key);
     set('dir',SORT.dir==='asc'?'':SORT.dir);
     history.replaceState(null,'',u.pathname+u.search+u.hash);
   }catch(e){}
 }
+function textoF(){
+  if(mesmoConj(F_SIT,SIT_TODOS())) return '';
+  const k=Object.keys(SIT_ATALHO).filter(x=>SIT_ATALHO[x].length&&mesmoConj(F_SIT,SIT_ATALHO[x]))[0];
+  return k||F_SIT.join(',');
+}
+function textoAtivos(){
+  if(mesmoConj(F_ATIVO,ATIVO_PADRAO)) return '';
+  if(mesmoConj(F_ATIVO,ATIVO_ITENS.map(i=>i.v))) return '0';   // o ?ativos=0 de sempre
+  return F_ATIVO.join(',');
+}
+/** Lista separada por vírgula, reduzida ao que existe. Sobrando nada, devolve o
+ *  padrão: endereço com lixo dentro não pode abrir a tela vazia. */
+function listaURL(s,ok,padrao){
+  const out=String(s||'').split(',').map(x=>x.trim().toLowerCase())
+    .filter((x,i,a)=>ok.indexOf(x)>=0&&a.indexOf(x)===i);
+  return out.length?out:padrao.slice();
+}
 function lerURL(){
   const p=new URLSearchParams(location.search);
   const f=(p.get('f')||'').trim().toLowerCase();
-  FILTRO=FILTROS_OK.indexOf(f)>=0?f:'todos';   // o ?f= que o painel manda continua valendo
-  DOC=(p.get('doc')||'todos').trim()||'todos';
-  SO_ATIVOS=p.get('ativos')!=='0';
+  /* Três gerações de ?f= atendidas de uma vez: o vazio (tudo), o vocabulário
+     antigo ('falta', 'vencidos', 'd30'…) e a lista de baldes que esta tela
+     passou a escrever. 'falta' era a única opção que não falava de prazo — ela
+     virou o botão "Com pendências", e por isso acende o BOTÃO em vez de
+     estreitar o vencimento. Valor que não é nenhum dos três cai em "tudo":
+     filtro que ninguém pediu é pior que filtro nenhum. */
+  SO_PEND=(f==='falta')||p.get('pend')==='1';
+  F_SIT=(SIT_ATALHO[f]&&SIT_ATALHO[f].length)?SIT_ATALHO[f].slice()
+      :(!f||f==='todos'||f==='falta')?SIT_TODOS()
+      :listaURL(f,SIT_TODOS(),SIT_TODOS());
+  F_DOC=String(p.get('doc')||'').split(',').map(s=>s.trim())
+    .filter((c,i,a)=>c&&a.indexOf(c)===i);
+  const at=(p.get('ativos')||'').trim().toLowerCase();
+  F_ATIVO=!at?ATIVO_PADRAO.slice()
+        :at==='0'?ATIVO_ITENS.map(i=>i.v)
+        :listaURL(at,ATIVO_ITENS.map(i=>i.v),ATIVO_PADRAO);
   VER_CADASTRO=p.get('cad')==='1';
-  SORT={key:(p.get('ord')||'urgencia'),dir:p.get('dir')==='desc'?'desc':'asc'};
+  SORT={key:(p.get('ord')||'situacao'),dir:p.get('dir')==='desc'?'desc':'asc'};
   TERMO=p.get('q')||'';
 }
 /* Depois que as colunas chegam, o que veio do endereço tem de existir de verdade. */
 function validarURL(){
-  if(DOC!=='todos'){
-    const m=DATAS.filter(x=>normTxt(x)===normTxt(DOC))[0];
-    DOC=m||'todos';
-  }
+  /* Coluna de vencimento vinda do endereço tem de EXISTIR: a planilha troca de
+     nome de coluna sozinha, e um ?doc= velho apontando para o nada deixaria a
+     tela olhando um conjunto vazio de datas — todo mundo "sem data". */
+  F_DOC=F_DOC.map(d=>DATAS.filter(x=>normTxt(x)===normTxt(d))[0]).filter(Boolean);
   const k=SORT.key;
   /* As chaves da lista (ORD_COLS) valem sempre; um ?ord= antigo apontando para
      uma COLUNA da planilha continua ordenando, desde que ela exista e não seja
      sigilosa — senha nunca entra no endereço. */
   const ok=!!ORD_COLS[k]||(COLUNAS.indexOf(k)>=0&&!ehSigilosa(k));
-  if(!ok)SORT.key='urgencia';
+  if(!ok)SORT.key='situacao';
   if(!ESPELHADAS.length)VER_CADASTRO=false;
 }
 
@@ -1907,7 +2263,7 @@ async function salvar(id){
     if(!temPendencia()&&CAD)CAD.aviso(false);
     // a contagem da régua também é pendência: gravar um vencimento muda o número
     atualizarLinha(k);
-    desenharResumo();desenharChips();desenharResumoLista();
+    desenharResumo();desenharFiltros();desenharResumoLista();
   }catch(e){
     FALHAS.set(k,{campos:s.campos});
     marcarFalha(k,true);
@@ -1942,7 +2298,7 @@ function atualizarLinha(id){
     no.innerHTML=cabecaHTML(l);
     if(tinhaFoco){const nova=no.querySelector('.cli-head');if(nova)nova.focus();}
     /* a faixa lateral acompanha a mudança de situação sem redesenhar a lista */
-    no.classList.remove('sit-venc','sit-d30','sit-d60','sit-ok','sit-sem','sit-inativo');
+    no.classList.remove('sit-venc','sit-d30','sit-d60','sit-d90','sit-ok','sit-sem','sit-inativo');
     no.classList.add(classeSituacao(l));
   }
   atualizarTopoCad(id);   // e o topo da ficha mostra o nome e a situação novos
@@ -2075,12 +2431,14 @@ function aplicarCampo(el){
    isso não zera o teto. */
 document.addEventListener('change',e=>{
   const id=e.target.id;
-  if(id==='f-sit'){ FILTRO=e.target.value; TETO=PASSO; redesenhar(); return; }
-  if(id==='f-doc'){ DOC=e.target.value; TETO=PASSO; redesenhar(); return; }
-  if(id==='f-ativos'){ SO_ATIVOS=e.target.value==='1'; TETO=PASSO; redesenhar(); return; }
-  if(id==='f-cad'){ VER_CADASTRO=e.target.value==='1'; redesenhar(); return; }
-  if(id==='f-ord'){ const p=String(e.target.value).split('|');
-    SORT={key:p[0],dir:p[1]==='desc'?'desc':'asc'}; TETO=PASSO; redesenhar(); return; }
+  /* Só o modo de queda chega aqui: com o b4u-filtro.js quem avisa é o aoMudar de
+     cada caixa, e os dois botões respondem ao clique, não ao change. */
+  if(id==='f-sit'){ const v=e.target.value;
+    if(v!==MANTEM){ F_SIT=v==='__todas__'?SIT_TODOS():[v]; TETO=PASSO; redesenhar(); } return; }
+  if(id==='f-doc'){ const v=e.target.value;
+    if(v!==MANTEM){ F_DOC=v==='__todos__'?[]:[v]; TETO=PASSO; redesenhar(); } return; }
+  if(id==='f-ativos'){ const v=e.target.value;
+    if(v!==MANTEM){ F_ATIVO=v==='1'?ATIVO_PADRAO.slice():ATIVO_ITENS.map(i=>i.v); TETO=PASSO; redesenhar(); } return; }
   const r=aplicarCampo(e.target); if(!r) return;
   // sair do campo depois do Enter dispara change com o mesmo valor: não grava duas vezes
   if(e.target._jaGravado===e.target.value){e.target._jaGravado=null;return;}
@@ -2140,17 +2498,29 @@ document.addEventListener('click',async e=>{
      gravar" antes de deixar sair. */
   if(e.target.closest('#cadSalvar')){salvarAgoraCad();return;}
   if(e.target.closest('#btn-limpar')){limparFiltros();return;}
+  /* Os dois botões de dois estados da régua. Vêm antes da linha da lista: ela
+     é o último `closest` do handler e engoliria qualquer clique que sobrasse. */
+  if(e.target.closest('#f-pend')){SO_PEND=!SO_PEND;TETO=PASSO;redesenhar();return;}
+  if(e.target.closest('#f-cad')){VER_CADASTRO=!VER_CADASTRO;redesenhar();return;}
   if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
   if(e.target.closest('.btn-todos')){TETO=LINHAS.length;desenharLista();return;}
-  /* Ordenar: os dois caminhos — o cabeçalho da lista e os chips "Ordenar por" do
-     painel — mexem no MESMO estado e no mesmo ?ord=/?dir=, para o F5 voltar
-     igual. Abaixo de 900px o cabeçalho some e sobram os chips. */
+  /* Ordenar: um clique no título ordena A→Z, o mesmo título de novo inverte para
+     Z→A. Não volta o teto ao início — a lista é a mesma, só noutra ordem, e
+     recolher o que a pessoa já mandou mostrar seria castigo por ordenar.
+     Filtro e busca continuam de pé: quem ordena é o visiveis(), sempre sobre o
+     que sobrou dos dois, nunca sobre a lista crua. */
   const ord=e.target.closest('[data-sort]');
   if(ord){const k=ord.dataset.sort;
+    /* O redesenho apaga o botão que acabou de ser apertado, e com ele o foco.
+       Devolver o foco ao botão equivalente é o que deixa ordenar A→Z e depois
+       Z→A pelo TECLADO: sem isto o segundo Enter caía no vazio, e o cabeçalho —
+       que agora é o único caminho para ordenar — só servia para o mouse. */
+    const tinhaFoco=document.activeElement===ord;
     if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='asc';}
-    TETO=PASSO;                                // outra ordem, outro começo de lista
-    desenharOrdem();desenharLista();sincronizarURL();
-      return;}
+    desenharLista();sincronizarURL();
+    if(tinhaFoco){const n=document.querySelector('.lista-cab button[data-sort=\"'+CSS.escape(k)+'\"]');
+      if(n)n.focus();}
+    return;}
   const tk=e.target.closest('.tk[data-goto]');
   if(tk){irPara(tk.dataset.goto);return;}
   /* A linha da lista é o gesto de abrir a ficha. Vem por último: qualquer botão
@@ -2237,7 +2607,12 @@ function irPara(id){
   const achar=()=>document.querySelector('.cli[data-id="'+CSS.escape(alvo)+'"]');
   if(!achar()){
     if(!visiveis().some(l=>String(l.id)===alvo)){
-      FILTRO='todos';TERMO=alvo;TETO=PASSO;
+      /* Nenhum filtro pode esconder a linha para onde estamos indo: o vencimento
+         volta a ser todos, a pendência desliga e os inativos entram — cliente
+         inativo era o caso que o "só ativos" segurava calado, e o link do painel
+         chegava numa lista que não tinha ninguém. */
+      F_SIT=SIT_TODOS();SO_PEND=false;F_ATIVO=ATIVO_ITENS.map(i=>i.v);sincronizarCaixas();
+      TERMO=alvo;TETO=PASSO;
       const b=document.getElementById('busca');if(b)b.value=TERMO;
     }
     /* O teto não pode esconder justamente a linha para onde estamos indo. */
@@ -2258,11 +2633,11 @@ function irPara(id){
 function layout(){
   return `<div class="topo">
     <input class="busca campo-busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por ID, cliente, CNPJ, responsável, login…  ( / para focar)">
-    <select class="filtro" id="f-sit" aria-label="Situação"></select>
-    <select class="filtro" id="f-doc" aria-label="Vencimento"></select>
-    <select class="filtro" id="f-ativos" aria-label="Ativos"></select>
-    <select class="filtro" id="f-cad" aria-label="Dados do cadastro"></select>
-    <select class="filtro" id="f-ord" aria-label="Ordenar por"></select>
+    <span id="cx-ativos"></span>
+    <span id="cx-venc"></span>
+    <span id="cx-doc"></span>
+    <button type="button" class="f-tog" id="f-pend" aria-pressed="false">Com pendências</button>
+    <button type="button" class="f-tog mostra" id="f-cad" aria-pressed="false" hidden>Dados do cadastro</button>
     <button type="button" class="btn-limpar" id="btn-limpar" title="Volta para a visão sem filtro, sem busca e na ordem de vencimento">Limpar</button>
     <span class="resumo-lista" id="resumo-lista"></span>
   </div>
@@ -2295,6 +2670,7 @@ async function carregar(){
     validarURL();                                  // a visão vem do endereço (C.10)
     mapearColunasLinha();                          // quais colunas a lista mostra
     document.getElementById('app').innerHTML=layout();
+    montarFiltros();            // as três caixas de seleção entram na régua
     if(d.planilha_url) document.getElementById('plan').href=d.planilha_url;
     const b=document.getElementById('busca');
     b.value=TERMO;
