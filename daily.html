@@ -1311,6 +1311,44 @@ function telaVazia(){
     :' Ver <button type="button" class="link-btn" id="ir-time">todo o time</button>.'}</div>`;
 }
 
+/* ---------- prazo padrão: 48 horas ÚTEIS ----------
+   Tarefa nova nasce com prazo para daqui a dois dias úteis, e o campo continua
+   editável — é palpite, não regra.
+
+   A conta parte de `HOJE`, que vem do SERVIDOR, e não do relógio do aparelho:
+   celular com data errada ou em outro fuso daria prazo errado para uma pessoa
+   só, calado, e ninguém descobriria olhando a tela. Sem `HOJE` (payload ainda
+   não chegou), aí sim cai no relógio local — melhor um palpite do que um campo
+   vazio.
+
+   O 'T12:00:00' não é enfeite: `new Date('2026-08-10')` é lido como MEIA-NOITE
+   UTC, que no horário de Brasília é 21h do dia 9 — a data volta um dia. Ao meio-
+   dia local, nenhum fuso do Brasil cruza a virada, e a data sai inteira.
+
+   FERIADO NÃO ENTRA NA CONTA — segunda a sexta, e ponto. Foi decisão do dono,
+   tomada depois de eu levantar o assunto: a empresa tem planilha de Feriados nos
+   links centrais, mas trazê-la até aqui exigiria mexer no backend, e o ganho não
+   paga. Numa semana com feriado o sugerido cai um dia mais cedo do que o ideal —
+   e como o campo é editável, quem abre a tarefa corrige em um clique.
+
+   Está escrito aqui para o próximo leitor não "consertar" o que não está
+   quebrado: a ausência de feriado é escolha, não esquecimento. */
+function maisDiasUteis(iso, n){
+  const base = /^\d{4}-\d{2}-\d{2}/.test(String(iso||'')) ? String(iso).slice(0,10) : null;
+  const d = base ? new Date(base+'T12:00:00') : new Date();
+  if(isNaN(d.getTime())) return '';
+  d.setHours(12,0,0,0);
+  let faltam = n;
+  while(faltam > 0){
+    d.setDate(d.getDate()+1);
+    const s = d.getDay();
+    if(s !== 0 && s !== 6) faltam--;   // 0 domingo, 6 sábado
+  }
+  const p = x => String(x).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function prazoPadrao(){ return maisDiasUteis(HOJE, 2); }
+
 /* ---------- ficha ---------- */
 function campoSelect(id,rot,opts,valor,full){
   return `<div class="fld${full?' full':''}"><label for="${id}">${esc(rot)}</label>
@@ -1352,7 +1390,9 @@ function fichaHTML(t){
       <div class="fld"><span class="lbl">Cliente</span>
         <span id="cx-cli2"></span>
         <span class="cli-hint" id="f-cli-hint">Em branco = tarefa interna, sem cliente.</span></div>
-      <div class="fld"><label for="f-prazo">Prazo</label><input id="f-prazo" type="date" value="${esc(t.prazo)}"></div>
+      <div class="fld"><label for="f-prazo">Prazo</label>
+        <input id="f-prazo" type="date" value="${esc(nova?(t.prazo||prazoPadrao()):t.prazo)}">
+        ${nova?'<span class="dica">Sugerido: 48h úteis. Pode trocar.</span>':''}</div>
       <!-- "Aberto em" saiu das opções editáveis a pedido do dono: é automático,
            sempre o dia em que a tarefa foi aberta. O DADO não saiu — numa tarefa
            que já existe ele aparece aqui como texto, porque a informação continua

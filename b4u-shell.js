@@ -1244,7 +1244,16 @@
         /* Sem nome. Se já tínhamos um, ele fica: uma recarga em segundo plano não
            pode desidentificar quem já está identificado. */
         if (e.sabe) return API;
-        e.nm.textContent = 'Não identifiquei quem está usando.';
+        /* NÃO dizer "não identifiquei quem está usando". A frase soava como
+           falha de acesso — e não é: a chave está certa, a pessoa entrou, o
+           painel abriu. O que falta é a ROTA desta tela mandar o nome no
+           payload (só `tipo=equipe` e `tipo=daily_equipe` mandam hoje). Quem lê
+           "não identifiquei" vai conferir a chave, que está boa, e perder tempo.
+
+           Então o painel não afirma nada sobre identidade: mostra o que sabe
+           (as preferências, que são deste aparelho) e cala sobre o que não sabe.
+           Quando a rota passar a mandar `eu`, o nome aparece sozinho. */
+        e.nm.textContent = 'Minha conta';
         e.nm.className = 'b4s-eu-nome generico';
         return API;
       }

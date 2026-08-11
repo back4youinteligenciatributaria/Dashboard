@@ -604,7 +604,21 @@
       var marg = 10;
       var caixa = caixaQueRecorta();
       var rc = caixa ? caixa.getBoundingClientRect() : null;
-      var larg = w.innerWidth || d.documentElement.clientWidth || 0;
+      /* `clientWidth` do <html> ANTES de `innerWidth`, e a ordem aqui é a
+         diferença entre o painel caber e o painel sair da tela.
+
+         `window.innerWidth` inclui o que TRANSBORDOU: se algo na página já está
+         estourando a largura — e o próprio painel, no instante em que é medido,
+         pode ser esse algo —, num aparelho de 390px ele responde 465. A conta de
+         "quanto passou da borda" então dá um número pequeno demais, o painel é
+         puxado de menos e fica com metade para fora, sem rolagem que o alcance.
+         `document.documentElement.clientWidth` é a área visível de verdade, sem
+         o transbordo, que é exatamente a borda contra a qual queremos medir.
+
+         `innerWidth` fica de reserva para o caso de o documento não ter elemento
+         raiz medível — e nesse caso a barra de rolagem lateral (uns 15px que o
+         `clientWidth` desconta e o `innerWidth` não) é o erro menor. */
+      var larg = d.documentElement.clientWidth || w.innerWidth || 0;
       /* A borda que vale é a mais apertada das duas: a da janela e a de quem
          recorta. Sem a segunda, dentro de um modal o painel "cabia na tela" e
          sumia na borda da caixa. */
@@ -636,7 +650,10 @@
           p.style.left = Math.round(novo) + 'px';
         }
       }
-      var alt = w.innerHeight || d.documentElement.clientHeight || 0;
+      /* Mesma troca da largura, pelo mesmo motivo — aqui o transbordo é vertical
+         e a página rola, então o erro era menos visível. Vale a simetria: as
+         duas medidas passam a vir da mesma fonte. */
+      var alt = d.documentElement.clientHeight || w.innerHeight || 0;
       var baixo = rc ? Math.min(alt || rc.bottom, rc.bottom) : alt;
       var cima  = rc ? Math.max(0, rc.top) : 0;
       if (baixo) {
