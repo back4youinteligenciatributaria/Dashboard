@@ -690,8 +690,26 @@ async function postAcao(obj,ms){
   const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),ms||45000);
   try{
     const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,signal:ctl.signal});
-    const d=await r.json(); if(d&&d.erro)throw new Error(d.erro); return d;
-  }catch(e){ if(e&&e.name==='AbortError') throw new Error('A resposta demorou demais.'); throw e; }
+    const d=await r.json();
+    /* Erro que o SERVIDOR mandou: ele processou, decidiu e recusou. É o único
+       caso em que dá para garantir que não gravou. */
+    if(d&&d.erro){ const err=new Error(d.erro); err.doServidor=true; throw err; }
+    return d;
+  }catch(e){
+    /* ---------- "não salvou" é uma AFIRMAÇÃO, e o front não tem como fazê-la ----------
+       O servidor GRAVA e só depois responde. Quando a resposta se perde, a
+       gravação já aconteceu — e havia quatro jeitos de isso ocorrer: o prazo
+       estourar, o `r.json()` topar com uma página HTML (cota, tela de
+       autorização), o 302 do /exec para o googleusercontent falhar, ou a aba ser
+       suspensa com a requisição em voo.
+       Em todos, a planilha está certa e a tela dizia "Não foi possível salvar".
+       A equipe aprendeu a desconfiar do painel por causa disso.
+       Agora a exceção carrega `.incerto`: só o erro VINDO DO SERVIDOR é falha de
+       verdade; o resto é silêncio, e silêncio não é resposta. */
+    if(e&&e.name==='AbortError'){ const x=new Error('A resposta demorou.'); x.incerto=true; throw x; }
+    if(e&&e.doServidor) throw e;
+    const x=new Error(String((e&&e.message)||e)); x.incerto=true; throw x;
+  }
   finally{ clearTimeout(t); }
 }
 
@@ -1687,10 +1705,19 @@ async function salvarFicha(){
     if(!aplicarUma(d)) await recarregar();
     fecharFicha(true);          // gravou: sair não perde nada, e o aviso não faz sentido
   }catch(e){
-    /* O texto da exceção não vai para a tela: é vocabulário nosso e do outro lado
-       só assusta. A ficha CONTINUA ABERTA — fechar por cima de um salvamento que
-       não foi levaria embora a única pista de que deu errado. */
-    msg.className='msg err'; msg.textContent='Não foi possível salvar. Tente de novo.';
+    /* A ficha CONTINUA ABERTA — fechar por cima de um salvamento que não foi
+       levaria embora a única pista de que deu errado.
+       Duas mensagens, porque são duas situações: o servidor recusar (aí sim não
+       gravou, e "tente de novo" é o conselho certo) e a resposta se perder (a
+       gravação PODE ter acontecido, e mandar de novo criaria tarefa em dobro —
+       por isso o conselho vira "recarregue antes"). */
+    if(e&&e.incerto){
+      msg.className='msg err';
+      msg.textContent='Não consegui confirmar se salvou. Recarregue a página antes de mandar de novo — a tarefa pode já estar gravada.';
+    }else{
+      msg.className='msg err';
+      msg.textContent='O servidor recusou: '+String((e&&e.message)||e);
+    }
   }finally{ btn.disabled=false; }
 }
 
