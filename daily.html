@@ -14,181 +14,36 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
 <style>
-/* B4U-DESIGN:INICIO — paleta, cantos e fonte que as 22 páginas dividem.
-   Bloco copiado de b4u-design.css (fonte canônica, com a explicação completa).
-   Não edite aqui: edite lá e rode `node _aplica-design.js`.
-
-   Entra ANTES do <style> da página de propósito — é a camada base. Se esta
-   página precisar mesmo de um valor diferente, redeclare o token no `:root`
-   dela, que vem depois e vence. */
-:root{
-  /* ── Superfícies ─────────────────────────────────────────────────────────
-     `--canvas` é o bege do fundo da página; `--surface` é o branco do cartão
-     que se apoia nele; `--surface-warm` é o branco quebrado das faixas e
-     cabeçalhos de tabela, que separam sem precisar de borda. */
-  --canvas:#F1E7DC;
-  --surface:#FFFFFF;
-  --surface-warm:#FBF6EF;
-
-  /* ── Letra ───────────────────────────────────────────────────────────────
-     `--ink` é o texto normal, `--ink-2` o secundário, `--muted` o rótulo.
-     `--muted` já foi #8A7D70 e reprovava em contraste (3,28:1); #6E6256 dá
-     4,85:1 no bege e 5,92:1 no branco, e é a cor de quase todo rótulo do
-     sistema — por isso ela precisa passar, e não só quase. */
-  --ink:#113D39;
-  --ink-2:#3F5854;
-  --muted:#6E6256;
-
-  /* ── Traços ──────────────────────────────────────────────────────────────
-     `--line` divide o que é do mesmo grupo; `--line-2` fecha o que é caixa. */
-  --line:#E4D9C9;
-  --line-2:#D6C3AC;
-
-  /* ── Marca ───────────────────────────────────────────────────────────────
-     `--brand-teal` é canônico em logo, foco, borda e série de gráfico. Como
-     TEXTO ele reprova (4,11:1 no branco, 3,44:1 no receita-soft), e para isso
-     existe o `--brand-teal-txt`: o mesmo teal escurecido, 5,54:1 no branco e
-     4,54:1 no bege, usado só onde é letra ou fundo de letra. Os dois são a
-     mesma cor com dois trabalhos. O 4,54:1 passa, mas passa RASPANDO: quem for
-     escurecer o `--canvas` um dia tem de conferir este par antes. */
-  --brand-dark:#073034;
-  --brand-teal:#0F8C85;
-  --brand-euc:#3FA680;
-  --brand-teal-txt:#0C756F;
-
-  /* ── SINAL: as quatro cores que querem dizer alguma coisa ────────────────
-     Estas quatro NÃO seguem o tema (ver OS QUATRO TEMAS, no fim do arquivo). Se
-     "vencido" mudasse de vermelho conforme a pele escolhida, a cor deixaria de
-     ser informação e viraria decoração — e quem trabalha nesta tela o dia
-     inteiro lê a cor antes de ler a palavra.
-
-     `--amber` tem 2,61:1 no branco: serve de PREENCHIMENTO e de borda, nunca de
-     letra. Para letra âmbar existe o `--amber-txt` (5,91:1 no branco).
-
-     ┌── PENDÊNCIA CONHECIDA: `--verde` E `--vermelho` REPROVAM COMO LETRA ────┐
-     │                                                                        │
-     │ Os dois NÃO têm o par `-txt` que o âmbar tem, e são usados nas duas     │
-     │ funções ao mesmo tempo:                                                │
-     │                                                                        │
-     │     --verde     12 usos como `color`, 11 como `background`, 7 em borda │
-     │     --vermelho  41 usos como `color`, 31 como `background`, 41 em borda │
-     │                                                                        │
-     │ E o lado TEXTO reprova. Medido nos valores atuais:                     │
-     │                                                                        │
-     │     --verde     #2E9D5F   2,82:1 no bege · 3,44:1 no branco   REPROVA  │
-     │     --vermelho  #C0392B   4,46:1 no bege · 5,43:1 no branco   raspando │
-     │                                                                        │
-     │ O mínimo para texto é 4,5:1. É a mesma falha do `--muted` antigo (que   │
-     │ dava 3,28:1), e atinge `.hint.ok` e `.lk.ok`, que são letra e nada      │
-     │ mais. Há prova de que alguém já tinha esbarrado nisso sem nomear: o     │
-     │ `.det-fbtn.ativo` escreve `color:#0E5B37` à mão — um verde bem mais     │
-     │ escuro — em vez de usar o token.                                       │
-     │                                                                        │
-     │ CONSERTO MEDIDO E NÃO APLICADO (decisão de 10/08/2026):                 │
-     │                                                                        │
-     │     --verde     #2E9D5F -> #1F7546   (2,82:1 -> 4,66:1 no bege)        │
-     │     --vermelho  #C0392B -> #BB3728   (4,46:1 -> 4,66:1 no bege)        │
-     │                                                                        │
-     │ Matiz e saturação ficam onde estão; só a luminosidade desce, o mínimo   │
-     │ para passar com folga. Escurecer é seguro pelo lado do FUNDO: TODAS as  │
-     │ regras `background:var(--verde)` / `background:var(--vermelho)` já vêm  │
-     │ com `color:#fff` (ou são faixa/pontinho sem texto), e fundo mais escuro │
-     │ com letra branca só melhora.                                           │
-     │                                                                        │
-     │ POR QUE NÃO FOI APLICADO AGORA: mexer nestes dois repinta as 22         │
-     │ páginas, inclusive as 8 do cliente. A rodada que centralizou os tokens  │
-     │ era de ESTRUTURA — nenhum pixel de cor mudou nela de propósito, para    │
-     │ que qualquer diferença que aparecesse em produção tivesse uma causa só. │
-     │ Trocar cor é decisão de produto e vai junto da varredura do MODO        │
-     │ ESCURO, que já vai ter de abrir os 22 arquivos.                         │
-     │                                                                        │
-     │ QUANDO FOR FAZER, olhe também o `--verde-2`: várias páginas o declaram  │
-     │ valendo #25804C, com a nota "o verde um degrau mais escuro, para virar  │
-     │ FUNDO de texto branco". Com o conserto acima, o `--verde` do núcleo     │
-     │ fica MAIS ESCURO que o `--verde-2`, e a convenção do sufixo -2 se       │
-     │ inverte nesse par. Não dá para resolver daqui: o `--verde-2` mora no    │
-     │ `:root` de cada página.                                                │
-     └────────────────────────────────────────────────────────────────────────┘
-
-     (Escrito assim, sem dois-pontos colado no nome, de propósito: a
-     `tokensCanonicos()` do `_aplica-design.js` varre este bloco com um regex de
-     declaração e NÃO pula comentário. Nome de token seguido de dois-pontos aqui
-     dentro vira token canônico de mentira, e o `--verde-2` de mentira faria as
-     22 páginas aparecerem como "exceção mantida" no terminal. Vale para todo
-     comentário deste arquivo: cite o token, nunca o escreva como declaração.) */
-  --amber:#E8892E;
-  --amber-txt:#8A5A10;
-  --vermelho:#C0392B;
-  --verde:#2E9D5F;
-
-  /* ── Cantos ──────────────────────────────────────────────────────────────
-     Uma escala só, no site inteiro, e mais QUADRADA que redonda.
-       4px  campo, selo, célula
-       6px  cartão, linha da lista, botão
-       8px  bloco grande e modal
-     `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é citado
-     em mais de cem regras, mas o valor acompanha o resto — pílula virou
-     etiqueta. Círculo de verdade (avatar, contador, spinner) continua com
-     `border-radius:50%` escrito na regra e não passa por aqui. */
-  --radius-sm:4px;
-  --radius:6px;
-  --radius-lg:8px;
-  --radius-pill:6px;
-
-  /* ── Escala tipográfica ──────────────────────────────────────────────────
-     Seis degraus, e o pulo entre eles é de propósito irregular: 11-12-13 é a
-     faixa de rótulo, selo e nota de rodapé, onde 1px já muda a hierarquia; 15 é
-     o corpo; 19 e 24 são título de bloco e de tela. Um degrau constante (1,2×,
-     por exemplo) daria 11-13-16-19-23-28 e gastaria três tamanhos na faixa em
-     que o olho não distingue nada.
-     ATENÇÃO: o `body{font-size:15px}` das páginas está escrito à mão e NÃO sai
-     daqui. Quem mexer na escala não muda o corpo do texto; muda só quem usa
-     `var(--fs-N)` — que é rótulo, selo, cabeçalho de tabela e título. */
-  --fs-1:11px;
-  --fs-2:12px;
-  --fs-3:13px;
-  --fs-4:15px;
-  --fs-5:19px;
-  --fs-6:24px;
-
-  /* ── Fonte ───────────────────────────────────────────────────────────────
-     Montserrat vem do Google Fonts, declarado no <head> de cada página. O
-     `system-ui` é o que aparece enquanto ela não chega — e é o que fica se ela
-     não chegar nunca. */
-  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
-}
-/* B4U-DESIGN:FIM */
-</style>
-<style>
 :root{
   /* Paleta canônica da equipe — a mesma em todas as telas. */
-  --amber-soft:#FCEFE0;--amber-line:#F0D6B4;--amber-2:#B05F12;
-  --verde-2:#25804C;
+  --canvas:#F1E7DC;--surface:#FFFFFF;--surface-warm:#FBF6EF;
+  --ink:#113D39;--ink-2:#3F5854;--muted:#6E6256;--line:#E4D9C9;--line-2:#D6C3AC;
+  --brand-dark:#073034;--brand-teal:#0F8C85;--brand-euc:#3FA680;
+  --brand-teal-txt:#0C756F;
+  --amber:#E8892E;--amber-txt:#8A5A10;--amber-soft:#FCEFE0;--amber-line:#F0D6B4;--amber-2:#B05F12;
+  --vermelho:#C0392B;--verde:#2E9D5F;--verde-2:#25804C;
+/* Cantos: uma escala só, no site inteiro, e mais QUADRADA que redonda.
+     4px  campo, selo, célula
+     6px  cartão, linha da lista, botão
+     8px  bloco grande e modal
+   `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é
+   citado em mais de cem regras, mas o valor agora acompanha o resto —
+   pílula virou etiqueta. Círculo de verdade (avatar, contador, spinner)
+   continua com border-radius:50% escrito na regra, e não passa por aqui. */
+  --radius-sm:4px;--radius:6px;--radius-lg:8px;--radius-pill:6px;
+  --fs-1:11px;--fs-2:12px;--fs-3:13px;--fs-4:15px;--fs-5:19px;--fs-6:24px;
+  --sans:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);
   font-size:var(--fs-3);line-height:1.5;-webkit-font-smoothing:antialiased}
-/* Gap e recuo laterais são os das telas irmãs (12px / 20px). Eram 10 e 14 — pouco
-   para alguém defender e o bastante para a etiqueta "pular" de lugar ao trocar de
-   tela pelo menu lateral. A ALTURA continua travada em 52px: é a medida que o
-   `.topo{top:52px}` de duas irmãs escreveu à mão, e o botão de três riscos do
-   b4u-shell.js foi desenhado com 28px justamente para não empurrá-la. */
-.barra{position:sticky;top:0;z-index:30;height:52px;display:flex;align-items:center;gap:12px;
-  padding:0 20px;background:var(--brand-dark);color:#fff}
+.barra{position:sticky;top:0;z-index:30;height:52px;display:flex;align-items:center;gap:10px;
+  padding:0 14px;background:var(--brand-dark);color:#fff}
 .barra .logo{font-weight:800;font-size:17px;letter-spacing:-.02em}
 .barra .logo .y{color:var(--brand-euc)}
-/* `.tag` e não `.titulo`: é o nome que as outras oito telas da equipe usam para o
-   MESMO elemento, e uma barra padronizada não pode ter dois nomes para a mesma
-   coisa — quem for mexer na barra de todas procuraria por `.tag` e passaria batido
-   por esta. A declaração também é a delas, letra por letra: a etiqueta desta tela
-   era um degrau maior e um tom mais clara que a das irmãs. */
-.barra .tag{font-size:var(--fs-2);font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);
-  padding:5px 11px;border-radius:var(--radius-pill);white-space:nowrap}
+.barra .titulo{background:rgba(255,255,255,.12);border-radius:var(--radius-pill);
+  padding:5px 13px;font-size:var(--fs-3);font-weight:700}
 .barra .spacer{flex:1}
-/* A contagem de tarefas continua sendo ESCRITA (desenharLista(), a cada
-   redesenho), só não é mais mostrada: ela é o `#cnt` desta tela, e o dono tirou a
-   contagem da barra. Quem a esconde é a folha do b4u-shell.js, para ela voltar
-   sozinha se o shell não carregar. */
 .barra .cont{font-size:var(--fs-2);color:#cfe6e2;white-space:nowrap}
 .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 80px}
 
@@ -268,9 +123,7 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
    exatamente no "(você)" — o marcador que existe para a pessoa achar as tarefas
    dela de relance virava "(voc…". Quem cede o espaço é o ASSUNTO, que é 1fr e
    quebra em mais linhas sem perder nada. */
-:root{
---cols:78px minmax(0,1fr) 108px 152px 128px 108px
-}
+:root{--cols:78px minmax(0,1fr) 108px 152px 128px 108px}
 .t{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   border-left:4px solid var(--line-2);padding:10px 13px;display:grid;gap:2px 12px;
   grid-template-columns:var(--cols);align-items:start;cursor:pointer}
@@ -336,41 +189,35 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
   padding:0 2px;cursor:pointer;text-decoration:underline}
 .link-btn:hover{color:var(--brand-teal-txt)}
 
-/* ---------- modal ----------
-   A MOLDURA — véu, caixa, cabeçalho escuro, rodapé, aviso de "tem coisa por
-   gravar" — saiu daqui e mora no b4u-modal.js, que a monta em `b4m-` para os
-   sete modais do painel de uma vez. Esta tela era a que mais destoava: véu mais
-   claro, caixa mais estreita, × redondo em vez de pílula — três diferenças que
-   ninguém decidiu, só aconteceram. O que fica abaixo é o que é DESTA ficha. */
+/* ---------- modal ---------- */
+/* z-index acima de 940: senão o menu lateral continua clicável por cima do véu
+   e um clique distraído troca de página com a ficha aberta. */
+.modal{position:fixed;inset:0;z-index:960;background:rgba(7,48,52,.45);overflow:auto;padding:24px 12px}
+.modal[hidden]{display:none}
+.modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;max-width:760px;
+  margin:0 auto;display:flex;flex-direction:column;max-height:calc(100vh - 48px);
+  box-shadow:0 20px 60px rgba(7,48,52,.35);overflow:hidden}
+.modal-top{flex:none;display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:var(--brand-dark);color:#fff}
+.modal-top b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-4)}
+.modal-top .cad-id{font-size:var(--fs-2);font-weight:700;color:#cfe6e2}
+.x{border:0;background:rgba(255,255,255,.15);color:#fff;width:30px;height:30px;border-radius:50%;
+  cursor:pointer;font-size:15px;line-height:1;flex:none}
+.x:hover{background:rgba(255,255,255,.28)}
+.modal-body{flex:1;min-height:0;overflow:auto;padding:16px}
+.modal-foot{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:11px 16px;
+  background:var(--surface);border-top:1px solid var(--line)}
+.modal-foot .spacer{flex:1}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .fld{display:flex;flex-direction:column;gap:4px;min-width:0}
 .fld.full{grid-column:1/-1}
 .fld>label,.fld>.lbl{font-size:var(--fs-1);font-weight:700;color:var(--muted);
   text-transform:uppercase;letter-spacing:.04em}
-/* FILHO DIRETO, e isso importa. O campo Cliente da ficha deixou de ser um
-   <input> e virou a caixa de seleção do b4u-filtro.js, que traz DENTRO dela um
-   campo de busca e um checkbox por linha. Escrito como `.fld input`, o vestido
-   de campo desta tela (borda, 8px de recuo, largura cheia) alcançava aqueles
-   controles e os deformava — checkbox de 15px com 10px de padding e borda de
-   campo. Com `>`, cada arquivo veste o que é dele. */
-.fld>input,.fld>select,.fld>textarea{font-family:inherit;font-size:var(--fs-3);color:var(--ink);
+.fld input,.fld select,.fld textarea{font-family:inherit;font-size:var(--fs-3);color:var(--ink);
   border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:8px 10px;background:var(--surface);width:100%}
 .fld textarea{resize:vertical;min-height:70px;line-height:1.45}
-.fld>input:focus,.fld>select:focus,.fld>textarea:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
 .fld .dica{font-size:var(--fs-1);color:var(--muted);line-height:1.35}
-/* O que era campo e virou informação: "Aberto em" de uma tarefa que já existe. A
-   tipografia é a do campo (mesmo tamanho, mesma altura de linha), sem a borda —
-   o alinhamento com o campo ao lado é o que faz a grade continuar lendo como
-   grade, mas nada aqui convida a clicar. */
-.fld .valor{font-size:var(--fs-3);color:var(--ink);font-weight:700;padding:8px 0;
-  font-variant-numeric:tabular-nums}
-/* A caixa de seleção de cliente dentro da ficha. Na régua o botão tem teto de
-   240px (uma razão social não pode esticar a barra); aqui ele é o campo, e campo
-   ocupa a coluna inteira — do contrário ficaria um retângulo de 240px ao lado de
-   um <select> de 350px, e a ficha pareceria torta. */
-.fld-cli{min-width:0;display:flex}
-.fld-cli .b4f-bt{max-width:100%;width:100%}
-.fld-cli .b4f-rot{flex:1}
 .gsec{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   padding:13px;margin-bottom:12px}
 .gsec h3{margin:0 0 10px;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.05em;
@@ -410,23 +257,6 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 <script src="config.js"></script>
 <script src="b4u-espera.js" charset="utf-8"></script>
 <script src="b4u-shell.js" charset="utf-8"></script>
-<!-- A caixa de seleção múltipla da régua (De quem, Situação, Área, Cliente) e do
-     campo Cliente da ficha. Se ele não carregar, `montarFiltros()` e
-     `montarCliFicha()` desenham os controles nativos de sempre — um select por
-     filtro e a caixa digitável de cliente. Perde-se a escolha de VÁRIOS de uma
-     vez; a régua continua inteira, a ficha também, e a lista também.
-
-     ELE VEM ANTES DO b4u-modal.js DE PROPÓSITO. Os dois escutam Esc na CAPTURA do
-     documento, e ouvintes de captura no mesmo nó disparam na ordem em que foram
-     registrados. Com o modal primeiro, um Esc com o painel de clientes aberto
-     DENTRO da ficha fechava a ficha inteira em vez de fechar a lista que está na
-     cara da pessoa. Quem está por cima responde primeiro. -->
-<script src="b4u-filtro.js" charset="utf-8"></script>
-<!-- A casca dos modais mora num arquivo só (b4u-modal.js): véu, Esc, foco preso
-     dentro da caixa e o aviso de "tem coisa por gravar". Se ele não carregar, a
-     ficha não abre — e mais nada muda: a chamada é protegida por
-     `window.B4UModal &&` e a lista continua inteira. -->
-<script src="b4u-modal.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -620,7 +450,7 @@ function b4uParaPlanilha(valor,coluna){
 <body data-b4u-espera="equipe">
 <div class="barra">
   <span class="logo"><span>back</span><span class="y">4you</span></span>
-  <span class="tag">Tarefas Daily</span>
+  <span class="titulo">Tarefas Daily</span>
   <span class="spacer"></span>
   <span class="cont" id="cont"></span>
 </div>
@@ -631,17 +461,11 @@ function b4uParaPlanilha(valor,coluna){
     <div class="modal-top">
       <b id="m-tit">Tarefa</b>
       <span class="cad-id" id="m-id"></span>
-      <span class="spacer"></span>
       <button class="x" id="m-x" type="button" aria-label="Fechar">✕</button>
     </div>
     <div class="modal-body" id="m-body"></div>
     <div class="modal-foot">
       <span class="msg" id="m-msg"></span>
-      <!-- Esta ficha não tem autosave: o que está escrito só existe na tela até o
-           botão Salvar. Até aqui, fechar com o formulário preenchido levava tudo
-           embora em silêncio — era o único modal editável da equipe sem este
-           aviso. Ele é o mesmo texto das outras seis telas. -->
-      <span class="cad-aviso" id="cadAviso" hidden>Ainda não gravei o que você escreveu. Use <b>Salvar</b> — ou clique de novo em Fechar para sair assim mesmo.</span>
       <span class="spacer"></span>
       <button class="btn" id="m-fechar" type="button">Fechar</button>
       <button class="btn btn--primary" id="m-salvar" type="button">Salvar</button>
@@ -690,8 +514,26 @@ async function postAcao(obj,ms){
   const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),ms||45000);
   try{
     const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,signal:ctl.signal});
-    const d=await r.json(); if(d&&d.erro)throw new Error(d.erro); return d;
-  }catch(e){ if(e&&e.name==='AbortError') throw new Error('A resposta demorou demais.'); throw e; }
+    const d=await r.json();
+    /* Erro que o SERVIDOR mandou: ele processou, decidiu e recusou. É o único
+       caso em que dá para garantir que não gravou. */
+    if(d&&d.erro){ const err=new Error(d.erro); err.doServidor=true; throw err; }
+    return d;
+  }catch(e){
+    /* ---------- "não salvou" é uma AFIRMAÇÃO, e o front não tem como fazê-la ----------
+       O servidor GRAVA e só depois responde. Quando a resposta se perde, a
+       gravação já aconteceu — e havia quatro jeitos de isso ocorrer: o prazo
+       estourar, o `r.json()` topar com uma página HTML (cota, tela de
+       autorização), o 302 do /exec para o googleusercontent falhar, ou a aba ser
+       suspensa com a requisição em voo.
+       Em todos, a planilha está certa e a tela dizia "Não foi possível salvar".
+       A equipe aprendeu a desconfiar do painel por causa disso.
+       Agora a exceção carrega `.incerto`: só o erro VINDO DO SERVIDOR é falha de
+       verdade; o resto é silêncio, e silêncio não é resposta. */
+    if(e&&e.name==='AbortError'){ const x=new Error('A resposta demorou.'); x.incerto=true; throw x; }
+    if(e&&e.doServidor) throw e;
+    const x=new Error(String((e&&e.message)||e)); x.incerto=true; throw x;
+  }
   finally{ clearTimeout(t); }
 }
 
@@ -699,48 +541,9 @@ async function postAcao(obj,ms){
 let TAREFAS=[], LOGS=[], EU=null, COLABS=[], CLIENTES=[], SITUACOES=[], HOJE='';
 const TODOS_ID='TODOS';
 let PLANILHA='';
-/* ---------- o que está filtrado ----------
-   Os QUATRO são LISTAS, porque a régua é de caixas de seleção: dá para ver duas
-   pessoas, duas situações, quatro áreas e três clientes ao mesmo tempo.
-
-   `F_SIT` era um valor só ('abertas' | '__todas__' | uma situação) e virou lista
-   a pedido do dono. O que se perdeu na conversão não foi a informação e sim o
-   NOME: "Em aberto" nunca foi um valor, é o conjunto {A fazer, Em andamento,
-   Esperando terceiro} — e é como a equipe fala. Ele voltou como `rotEspecial` no
-   b4u-filtro.js, que dá nome a um conjunto notável sem que ele precise ser um
-   item da lista.
-
-   O QUE A LISTA VAZIA QUER DIZER MUDA DE FILTRO PARA FILTRO, E É DE PROPÓSITO:
-
-     F_QUEM []   ninguém marcado  -> a lista fica VAZIA, com aviso e um botão que
-     F_AREA []   nenhuma marcada  -> remarca tudo. Estes três NASCEM cheios (o de
-     F_SIT  []   nenhuma marcada  -> situação nasce no conjunto "Em aberto"), então
-                                     chegar a zero é um gesto deliberado: a pessoa
-                                     tirou o último item e pediu para não ver nada.
-                                     Obedecer calado seria desfazer o que ela fez.
-
-     F_CLI  []   nenhum marcado   -> TODOS os clientes. Este NASCE vazio, porque
-                                     são centenas: marcar todos, um a um, para
-                                     dizer "não quero filtrar por cliente" é
-                                     absurdo. Vazio aqui é o repouso, não um
-                                     pedido — ninguém CHEGA nele desmarcando o
-                                     último de trezentos.
-
-   A mesma assimetria está escrita no `b4u-filtro.js`, na opção `vazio`. */
-let F_QUEM=[], F_SIT=[], F_CLI=[], F_AREA=[], TERMO='';
-/* Tarefa sem responsável (ou sem área) não casa com nome nenhum e sumiria da tela
-   justamente quando TUDO está marcado — que é o estado que a pessoa lê como "está
-   tudo aqui". Então "sem responsável" e "sem área" são itens da lista, marcáveis
-   como qualquer outro, e nascem marcados. */
-const SEM='__sem__';
+let F_QUEM='__eu__', F_SIT='abertas', F_CLI='', F_AREA='', TERMO='';
 let AREAS=[];
 let ABERTA=null;                      // tarefa aberta no modal (null = nova)
-/* O `?cli=` com que a tela foi aberta. Guardado à parte de `F_CLI` porque as duas
-   coisas se separam no primeiro clique: F_CLI é o filtro da RÉGUA, que a pessoa
-   mexe à vontade; isto é de onde ela VEIO — o painel do colaborador manda para cá
-   com "daily?chave=…&cli=250033&nova=1", e a tarefa nova tem de nascer com aquele
-   cliente marcado mesmo que a régua já esteja mostrando outra coisa. */
-let CLI_LINK='';
 const ABERTAS=['A fazer','Em andamento','Esperando terceiro'];
 const cls=s=>({'Em andamento':'andamento','Esperando terceiro':'esperando','Feito':'feito','Cancelado':'cancelado'}[s]||'afazer');
 const ehTodos=v=>String(v==null?'':v).trim().toUpperCase()===TODOS_ID;
@@ -757,36 +560,12 @@ function resolverCliente(txt){
      antiga: a primeira palavra manda. Recusar por causa do que vem depois do
      travessão seria implicância com quem colou. */
   if(ehTodos(t)||ehTodos(t.split(/[\s—-]/)[0])) return {id:TODOS_ID,ok:true};
-
-  /* FORMA CANÔNICA "ID · Nome" — é o que a lista suspensa escreve, então é o
-     caminho mais percorrido do campo e merece ser tratado primeiro, não por
-     acidente. Antes ele só funcionava de carona no `soDigitos()` abaixo, e isso
-     tinha dois furos: nome com número no meio ("Clinica 24 Horas") jogava
-     dígitos a mais na conta e o ID exato deixava de bater; e a busca por pedaço
-     também falhava, porque o "·" existe no texto digitado e NÃO existe em
-     `id + nome`. Resultado: escolher da lista podia não achar o cliente que a
-     própria lista ofereceu. */
-  const antes=t.split('·')[0];
-  if(t.indexOf('·')>0){
-    const idc=soDigitos(antes);
-    if(idc){ const c=CLIENTES.find(x=>String(x.id)===idc); if(c) return {id:c.id,ok:true}; }
-  }
-
   const dig=soDigitos(t);
   if(dig){ const porId=CLIENTES.find(c=>String(c.id)===dig); if(porId) return {id:porId.id,ok:true}; }
-  /* O "·" sai da comparação por pedaço pelo mesmo motivo: quem colou "250033 ·
-     Nome" está descrevendo um cliente, não procurando um caractere que não
-     existe no cadastro. Espaços repetidos colapsam nos dois lados. */
-  const esp=s=>normTxt(String(s).replace(/·/g,' ')).replace(/\s+/g,' ');
-  const n=esp(t);
-  const casam=CLIENTES.filter(c=>esp(c.id+' '+c.nome).includes(n));
+  const n=normTxt(t);
+  const casam=CLIENTES.filter(c=>normTxt(c.id+' '+c.nome).includes(n));
   if(casam.length===1) return {id:casam[0].id,ok:true};
-  /* `casam` volta junto para quem for MOSTRAR a ambiguidade. Dizer "89 clientes
-     casam com isso" e parar por aí não ajuda ninguém a escolher: a pessoa fica
-     sabendo que errou e continua sem saber o que escrever. Com a lista em mão,
-     o aviso vira sugestão. */
-  if(casam.length>1)  return {id:'',ok:false,ambiguo:true,casam:casam,
-                              msg:casam.length+' clientes casam com isso — escreva mais um pedaço.'};
+  if(casam.length>1)  return {id:'',ok:false,msg:casam.length+' clientes casam com isso — escreva mais um pedaço.'};
   return {id:'',ok:false,msg:'Não achei esse cliente.'};
 }
 /* Uma tarefa pode valer para VÁRIOS clientes: a caixa aceita "250033; 250035",
@@ -798,167 +577,66 @@ function resolverCliente(txt){
    porque uma tarefa que já alcança a carteira inteira não fica mais específica
    por citar alguém. O aviso abaixo do campo diz isso quando acontece. */
 function resolverClientes(txt){
-  /* SEPARADOR DE VÁRIOS CLIENTES É O PONTO E VÍRGULA, E SÓ ELE.
-     Vírgula e barra estavam nesta lista e foram tiradas. O motivo é um bug real:
-     razão social brasileira termina em vírgula o tempo todo — "…Clinica de
-     Urologia, ME", "…Centro Diagnostico da Mulher, ME" — e o texto do campo é
-     "ID · Razão Social". Partindo na vírgula, o primeiro pedaço resolvia certo
-     pelo ID e o SEGUNDO virava "ME", que casa com 89 dos clientes. Resultado:
-     escolher um cliente na lista suspensa, sem digitar nada, dava
-     "89 clientes casam com isso — escreva mais um pedaço". A barra tem o mesmo
-     problema em "S/A" e "COM/IND".
-     O ponto e vírgula é o que o campo promete ("vários com ;"), o que o texto de
-     ajuda manda usar e o que `idsTexto()` grava na planilha (`join('; ')`).
-
-     Vírgula e barra continuam funcionando como separador — mas só quando o
-     resultado PROVA que era separador: se cada sub-pedaço vira um cliente, era
-     lista ("250033, 250035"); se não, era nome, e fica inteiro. Assim quem
-     digita com vírgula continua sendo atendido sem que a razão social apanhe. */
-  const bruto=String(txt||'').split(';').map(x=>x.trim()).filter(Boolean);
+  const bruto=String(txt||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
   if(!bruto.length) return {ids:[],ok:true,todos:false};
   const ids=[],ruins=[];
-  let ambiguo=null, todos=false;
-  const juntar=r=>{ if(ehTodos(r.id)){ todos=true; return; }
-                    if(r.id&&ids.indexOf(r.id)<0) ids.push(r.id); };
   for(const p of bruto){
     const r=resolverCliente(p);
-    if(r.ok){ juntar(r); if(todos) return {ids:[TODOS_ID],ok:true,todos:true,sobrou:bruto.length>1}; continue; }
-
-    /* Não resolveu inteiro e tem vírgula ou barra: talvez fosse lista mesmo. */
-    if(/[,\/]/.test(p)){
-      const sub=p.split(/[,\/]+/).map(x=>x.trim()).filter(Boolean);
-      const rs=sub.map(resolverCliente);
-      if(sub.length>1 && rs.every(x=>x.ok&&x.id)){
-        rs.forEach(juntar);
-        if(todos) return {ids:[TODOS_ID],ok:true,todos:true,sobrou:true};
-        continue;
-      }
-    }
-    ruins.push(r.msg||('"'+p+'" não achei.')); if(r.ambiguo&&!ambiguo) ambiguo=r;
+    if(!r.ok){ ruins.push(r.msg||('"'+p+'" não achei.')); continue; }
+    if(ehTodos(r.id)) return {ids:[TODOS_ID],ok:true,todos:true,sobrou:bruto.length>1};
+    if(r.id&&ids.indexOf(r.id)<0) ids.push(r.id);
   }
-  if(ruins.length) return {ids:ids,ok:false,msg:ruins[0],ambiguo:ambiguo};
+  if(ruins.length) return {ids:ids,ok:false,msg:ruins[0]};
   return {ids:ids,ok:true,todos:false};
 }
 const idsTexto=ids=>(ids||[]).join('; ');
-
-/* ---------- o que cada caixa de seleção oferece ----------
-   O `v` é o que fica guardado no F_*; o `r` é a linha do painel; o `c` é o rótulo
-   curto do botão fechado, que precisa caber ao lado de um "+2".
-
-   Aqui morava o `resolverQuem()`: um resolvedor que lia "Gian; Kariane" e podia
-   responder "3 pessoas casam com isso". Ele existia porque o filtro era um campo
-   de digitar. Com checkbox não há o que resolver — a pessoa aponta o nome —, e o
-   resolvedor foi embora inteiro.
-
-   O de CLIENTE ficou, e agora só serve ao caminho SEM o b4u-filtro.js: a caixa
-   digitável da régua (`filtroCliTexto`) e a da ficha (`validarCliFicha`, no ramo
-   de baixo) continuam existindo para quando o módulo não chega, e as duas leem
-   "250033; 250035" pelo `resolverClientes()`. Ele NÃO foi embora junto do
-   `resolverQuem()` por isso — e porque foi consertado duas vezes por bug de
-   razão social com vírgula, que é conhecimento que não se joga fora enquanto
-   houver um caminho que precise dele. */
-/* O botão fechado mostra o PRIMEIRO NOME; o painel e o `title` continuam com o nome
-   inteiro. "Gian Carlo Paradisi" no botão comia 179px da régua e empurrava a linha
-   toda — e ninguém precisa do sobrenome para saber de quem é o filtro.
-   Dois marcados com o mesmo primeiro nome NÃO são desambiguados: o "+N" já diz que
-   há mais de um e o `title` lista os dois. Inicial de sobrenome numa régua é ruído.
-
-   ONDE ESTÁ A REGRA. No b4u-shell.js (`B4UShell.primeiroNome`), junto da lista de
-   partículas ("de", "da", "dos"…) e do `B4UShell.iniciais()` que o botão de quem
-   está usando aplica no selo da barra. Ela morava em dois lugares — aqui e no
-   colaborador.html — e os dois discordavam: lá a partícula era pulada para a
-   inicial e NÃO para o primeiro nome. Uma implementação, uma resposta.
-
-   A LISTA ABAIXO É CÓPIA DE RESERVA, no mesmo espírito da URL da API que cada
-   página guarda por baixo do config.js: ela só entra em cena se o b4u-shell.js
-   não carregar — e aí não há botão nem selo com quem concordar, mas a régua desta
-   tela continua precisando de um rótulo curto. Quem manda, quando os dois estão
-   de pé, é sempre o shell. Nome de uma palavra devolve essa palavra; nome que só
-   tem partícula devolve o que veio, em vez de devolver nada. */
-const PARTICULAS=['de','da','do','das','dos','e'];
-function primeiroNome(nome){
-  const t=String(nome||'').trim();
-  if(window.B4UShell && typeof B4UShell.primeiroNome==='function') return B4UShell.primeiroNome(t);
-  const partes=t.split(/\s+/).filter(p=>p&&PARTICULAS.indexOf(normTxt(p))<0);
-  return partes[0]||t;
+/* ---------- filtrar por VÁRIAS pessoas ----------
+   O campo aceita "Minhas tarefas", "Todo o time" ou nomes separados por ponto e
+   vírgula ("Gian; Kariane"). Os dois primeiros continuam sendo o que se escolhe
+   sem pensar — são os estados do dia a dia —, e por isso continuam no topo da
+   lista suspensa. O resto é digitável, e cada pedaço casa por PARTE do nome:
+   "kari" acha Kariane, que é como a pessoa realmente lembra do nome do colega. */
+const QUEM_EU='__eu__', QUEM_TIME='__todos__';
+function resolverQuem(txt){
+  const t=String(txt||'').trim();
+  if(!t) return {modo:'time',nomes:[]};
+  const n=normTxt(t);
+  if(t===QUEM_EU||n==='minhas tarefas'||n==='minhas') return {modo:'eu',nomes:[]};
+  if(t===QUEM_TIME||n==='todo o time'||n==='time'||n==='todos') return {modo:'time',nomes:[]};
+  const pedacos=t.split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
+  const nomes=[],ruins=[];
+  for(const p of pedacos){
+    const pn=normTxt(p);
+    if(pn==='minhas tarefas'||pn==='minhas'){ nomes.push('__EU__'); continue; }
+    const casa=COLABS.filter(c=>normTxt(c.nome).includes(pn));
+    if(casa.length===1) nomes.push(casa[0].nome);
+    else if(casa.length>1){
+      const exato=casa.find(c=>normTxt(c.nome)===pn);
+      if(exato) nomes.push(exato.nome); else ruins.push(casa.length+' pessoas casam com "'+p+'"');
+    } else ruins.push('não achei "'+p+'"');
+  }
+  if(!nomes.length) return {modo:'ruim',nomes:[],msg:ruins[0]||''};
+  return {modo:'lista',nomes:nomes,msg:ruins[0]||''};
 }
-function itensQuem(){
-  const out=[];
-  /* Quem está usando a tela vem da rota, não da aba Colaboradores. Nos casos em
-     que as duas listas não batem (nome grafado diferente, cadastro novo), o item
-     de EU entra assim mesmo — senão o padrão da tela apontaria para uma caixa que
-     não existe e a régua abriria dizendo "Ninguém". */
-  const eu=(EU&&EU.nome)||'';
-  if(eu && !COLABS.some(c=>normTxt(c.nome)===normTxt(eu)))
-    out.push({v:eu,r:eu+' (você)',c:primeiroNome(eu)});
-  COLABS.forEach(c=>out.push({v:c.nome,r:c.nome+(souEu(c.nome)?' (você)':''),c:primeiroNome(c.nome)}));
-  out.push({v:SEM,r:'— sem responsável —',c:'sem responsável'});
-  return out;
-}
-function itensArea(){
-  return AREAS.map(a=>({v:a,r:a})).concat([{v:SEM,r:'— sem área —',c:'sem área'}]);
-}
-/* "— sem situação —" existe pelo mesmo motivo que "sem responsável" e "sem área":
-   linha da planilha criada fora do painel pode ter a coluna Situação em branco, e
-   ela sumiria da tela justamente quando TUDO está marcado — o estado que a pessoa
-   lê como "está tudo aqui". Ele NÃO entra no conjunto "Em aberto": tarefa sem
-   situação não é tarefa em andamento, é tarefa com cadastro pela metade, e é
-   assim que a régua se comportava antes (o antigo 'abertas' também a escondia). */
-function itensSit(){
-  return SITUACOES.map(s=>({v:s,r:s})).concat([{v:SEM,r:'— sem situação —',c:'sem situação'}]);
-}
-/* O conjunto "Em aberto", reduzido ao que a planilha REALMENTE tem. `ABERTAS` é
-   uma lista escrita à mão nesta página e `SITUACOES` vem do servidor: as duas
-   podem discordar (situação renomeada, situação nova). Comparar o rótulo contra a
-   lista escrita à mão faria "Em aberto" nunca aparecer no dia em que alguém
-   trocasse "A fazer" por "A Fazer" na planilha. */
-function sitAbertas(){ return ABERTAS.filter(s=>SITUACOES.indexOf(s)>=0); }
-/* O estado com que a régua abre. Quando a interseção é vazia — planilha com outro
-   vocabulário inteiro —, o padrão honesto é TUDO marcado: abrir a tela sem nada
-   marcado seria acusar a pessoa de um filtro que ela não pôs. */
-function sitPadrao(){ const a=sitAbertas(); return a.length?a:todosOsValores(itensSit()); }
-
-/* A lista de clientes das DUAS caixas — a da régua e a da ficha. É a mesma
-   pergunta ("quais clientes?") e por isso a mesma lista; o que muda é o que a
-   seleção significa depois, e isso está em quem chama. */
-function itensCliCom(marcados){
-  /* "Todos" primeiro: na régua é a tarefa que vale para a carteira inteira, e
-     marcá-la sozinha é a única forma de pedir SÓ essas; na ficha é o escopo da
-     tarefa que está sendo escrita. Nos dois casos é o item que se escolhe sem
-     pensar, e por isso é o primeiro. */
-  const out=[{v:TODOS_ID,r:'Todos — vale para a carteira inteira',c:'Carteira inteira'}];
-  CLIENTES.forEach(c=>out.push({v:String(c.id),r:c.id+' · '+c.nome,c:c.id+' · '+c.nome}));
-  /* Id que veio por link (?cli=) ou que está gravado numa tarefa antiga e não
-     está mais na carteira entra na lista assim mesmo. Sem isto ele continuaria
-     valendo sem aparecer em lugar nenhum — filtro ativo e invisível, ou pior, um
-     cliente que some da ficha ao abrir e volta apagado ao salvar. */
-  (marcados||[]).forEach(v=>{ if(!ehTodos(v)&&!out.some(i=>String(i.v)===String(v)))
-    out.push({v:String(v),r:v+' · (fora da carteira)',c:String(v)}); });
-  return out;
-}
-function itensCli(){ return itensCliCom(F_CLI); }
-const todosOsValores=itens=>itens.map(i=>String(i.v));
-const marcadoTudo=(lista,itens)=>itens.length>0&&itens.every(i=>lista.indexOf(String(i.v))>=0);
-
 function rotuloClientes(cru){
   const ids=String(cru||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
   if(!ids.length) return '';
   if(ids.length===1) return rotuloCliente(ids[0]);
   return ids.join('; ');
 }
+/* O que aparece escrito no campo de pessoas, a partir do estado guardado. */
+function rotuloQuem(v){
+  if(!v||v===QUEM_TIME) return 'Todo o time';
+  if(v===QUEM_EU) return 'Minhas tarefas';
+  return String(v);
+}
 function rotuloCliente(id){
   if(ehTodos(id)) return 'Todos';
   const c=CLIENTES.find(x=>String(x.id)===String(id));
   return c?(c.id+' · '+c.nome):(id||'');
 }
-/* Uma <datalist> só, no `layout()`, e SÓ para o caminho sem o b4u-filtro.js —
-   é a caixa digitável da régua e a da ficha que a usam. Com o módulo no ar
-   ninguém digita cliente em lugar nenhum, e ela fica sem consumidor; continua
-   sendo escrita porque o caminho sem módulo tem de achá-la já pronta, e porque
-   custa uma lista de <option> que o navegador só monta se alguém pedir.
-   A ficha chegou a montar uma SEGUNDA com o mesmo id, o que só servia para o
-   navegador ter de escolher uma; hoje há uma só.
-   TODOS em primeiro, que é a praxe da casa e o caso que se escolhe sem pensar. */
+/* Uma <datalist> só, reaproveitada pelo filtro e pela ficha. TODOS em primeiro,
+   que é a praxe da casa e o caso que se escolhe sem pensar. */
 /* A opção é só "Todos". O rótulo explicativo virou o texto de ajuda embaixo do
    campo: quando ele vinha DENTRO do <option>, escolher a opção escrevia a frase
    inteira na caixa, e o resolvedor — que compara o texto todo — não reconhecia
@@ -997,56 +675,47 @@ function comVoce(nome){
 /* ---------- filtro ---------- */
 function visiveis(){
   const termo=normTxt(TERMO), dig=soDigitos(TERMO);
-  /* Normalizado UMA vez, fora do laço. Com trezentas tarefas e trinta nomes
-     marcados, `normTxt` por linha era o custo de digitar na busca. */
-  const quem=F_QUEM.map(normTxt), area=F_AREA.map(normTxt);
-  const semQuem=F_QUEM.indexOf(SEM)>=0, semArea=F_AREA.indexOf(SEM)>=0;
-  /* Situação NÃO passa por `normTxt`: aqui os valores marcados vieram da própria
-     lista `SITUACOES`, que é a mesma coluna que a tarefa guarda — comparar texto
-     cru é comparar a planilha com ela mesma. Normalizar faria "Feito" casar com
-     "feito", que é uma situação diferente se alguém um dia criar as duas. */
-  const sit=F_SIT.map(String);
-  const semSit=sit.indexOf(SEM)>=0;
-  /* Cliente "Todos" não é um id: é o escopo da tarefa. Ele sai da lista de ids
-     comparáveis e volta na regra logo abaixo. */
-  const cliEsp=F_CLI.map(String).filter(x=>!ehTodos(x));
   return TAREFAS.filter(t=>{
-    /* DE QUEM e ÁREA: a lista vazia quer dizer NADA (ver a nota do estado, lá em
-       cima) — e isso cai sozinho de `indexOf` em lista vazia, sem ramo especial. */
-    const r=normTxt(t.responsavel||'');
-    if(!r){ if(!semQuem) return false; }
-    else if(quem.indexOf(r)<0) return false;
-    const a=normTxt(t.area||'');
-    if(!a){ if(!semArea) return false; }
-    else if(area.indexOf(a)<0) return false;
-    /* SITUAÇÃO: mesma regra de De quem e Área — lista vazia quer dizer nada, e
-       isso cai sozinho de `indexOf` em lista vazia. */
-    const s=t.situacao==null?'':String(t.situacao);
-    if(!s.trim()){ if(!semSit) return false; }
-    else if(sit.indexOf(s)<0) return false;
-    /* CLIENTE: aqui, e SÓ aqui, a lista vazia quer dizer TODOS — é o filtro que
-       nasce sem nada marcado.
+    const quem=resolverQuem(F_QUEM);
+    if(quem.modo==='eu'){ if(!souEu(t.responsavel)) return false; }
+    else if(quem.modo==='lista'){
+      const bate=quem.nomes.some(nm=>nm==='__EU__'?souEu(t.responsavel):normTxt(nm)===normTxt(t.responsavel));
+      if(!bate) return false;
+    }
+    /* modo 'ruim' (a pessoa está no meio da digitação) não filtra ninguém: a
+       lista piscaria vazia a cada letra. */
+    if(F_AREA && t.area!==F_AREA) return false;
+    if(F_SIT==='abertas'){ if(ABERTAS.indexOf(t.situacao)<0) return false; }
+    else if(F_SIT && F_SIT!=='__todas__'){ if(t.situacao!==F_SIT) return false; }
+    /* Por cliente, o escopo "Todos" entra junto: é tarefa que vale para a carteira
+       inteira, e escondê-la faria parecer que não há nada a fazer ali.
 
-       Por cliente, o escopo "Todos" entra junto: é tarefa que vale para a carteira
-       inteira, e escondê-la faria parecer que não há nada a fazer ali. Este ramo
-       já foi um bug — o filtro comparava o TEXTO da caixa ("250033 · Nome do
-       cliente") com `t.cliente_id`, que é só o número, e nunca casava: sobrava
-       apenas o ramo do "Todos" e a tela respondia que aquele cliente só tinha
-       tarefas gerais. Com checkbox o que está guardado já é o id, e a comparação
-       é direta — mas a regra do escopo continua valendo e continua aqui.
+       O `F_CLI` é o que está ESCRITO na caixa — "250033 · Nome do cliente" quando
+       se escolhe pela lista, ou um pedaço do nome quando se digita. Comparar esse
+       texto direto com `t.cliente_id`, que é só o número, nunca casava: sobrava
+       apenas o ramo do "Todos", e a tela respondia que aquele cliente só tinha
+       tarefas gerais. Era o bug. Agora o texto passa pelo MESMO resolvedor da
+       ficha antes de virar comparação.
 
-       Vários clientes no filtro: basta a tarefa alcançar UM deles. É "ou", não
-       "e" — pedir a tarefa que serve aos três ao mesmo tempo não é a pergunta que
-       alguém faz na daily.
-
-       Marcar só "Todos" pede exatamente as da carteira inteira: `cliEsp` fica
-       vazio e sobra a exigência de `temTodos`. */
-    if(F_CLI.length){
-      const lista=(t.clientes&&t.clientes.length)
-        ? t.clientes.map(c=>String(c.id))
-        : String(t.cliente_id||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
-      const temTodos=lista.some(ehTodos);
-      if(!(temTodos || cliEsp.some(x=>lista.indexOf(x)>=0))) return false;
+       Texto que ainda não identifica ninguém (a pessoa está no meio da digitação)
+       não filtra por ID: cai na busca por pedaço do nome, senão a lista piscaria
+       vazia a cada letra. */
+    if(F_CLI){
+      const alvo=resolverClientes(F_CLI);
+      if(alvo.ok && alvo.ids.length){
+        const lista=(t.clientes&&t.clientes.length)
+          ? t.clientes.map(c=>String(c.id))
+          : String(t.cliente_id||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
+        const temTodos=lista.some(ehTodos);
+        /* Vários clientes no filtro: basta a tarefa alcançar UM deles. É "ou",
+           não "e" — pedir a tarefa que serve aos três ao mesmo tempo não é a
+           pergunta que alguém faz na daily. */
+        if(alvo.todos){ if(!temTodos) return false; }
+        else if(!(temTodos || alvo.ids.some(x=>lista.indexOf(String(x))>=0))) return false;
+      } else {
+        const p=normTxt(F_CLI);
+        if(!ehTodos(t.cliente_id) && !normTxt(String(t.cliente_id||'')+' '+String(t.cliente||'')).includes(p)) return false;
+      }
     }
     if(termo){
       const alvo=normTxt([t.assunto,t.detalhe,t.cliente,t.responsavel,t.id].join(' '));
@@ -1149,117 +818,31 @@ function resumoHover(t){
   return partes.join('\n') || t.assunto || '';
 }
 function layout(){
-  /* Os QUATRO filtros saem daqui vazios e são preenchidos pelo `montarFiltros()`,
-     porque quem os desenha depende de o b4u-filtro.js ter carregado ou não.
-     Situação era a exceção — um <select> de valor único — e deixou de ser: o dono
-     pediu a mesma caixa das outras três, e a razão de ela ser diferente ("a
-     pergunta é o que está em aberto, que não se responde marcando duas") não
-     sobreviveu ao uso, porque "A fazer + Em andamento, sem os que esperam
-     terceiro" é exatamente a pergunta de quem vai sentar e trabalhar. */
+  /* Lista suspensa DIGITÁVEL: as duas opções do dia a dia continuam a um clique,
+     e quem quer duas pessoas escreve "Gian; Kariane". Um <select> não permitiria
+     isso sem virar caixa de seleção múltipla, que ninguém opera com o mouse numa
+     régua de filtros. */
+  const optQuem=['<option value="Minhas tarefas"></option>','<option value="Todo o time"></option>']
+    .concat(COLABS.map(c=>`<option value="${esc(c.nome)}"></option>`)).join('');
+  const optSit=['<option value="abertas">Em aberto</option>',
+                '<option value="__todas__">Todas as situações</option>']
+    .concat(SITUACOES.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`)).join('');
+  const optArea=['<option value="">Todas as áreas</option>']
+    .concat(AREAS.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`)).join('');
   return `
   <div class="topo">
     <input class="busca" id="busca" type="search" autocomplete="off" placeholder="Buscar por assunto, cliente, pessoa…  ( / para focar)" value="${esc(TERMO)}">
-    <span id="cx-quem"></span>
-    <span id="cx-sit"></span>
-    <span id="cx-area"></span>
-    <span id="cx-cli"></span>
+    <input class="filtro" id="f-quem" list="dl-quem" autocomplete="off" aria-label="De quem"
+           placeholder="De quem — vários com ;" value="${esc(rotuloQuem(F_QUEM))}">
+    <datalist id="dl-quem">${optQuem}</datalist>
+    <select class="filtro" id="f-sit" aria-label="Situação">${optSit}</select>
+    <select class="filtro" id="f-area" aria-label="Área">${optArea}</select>
+    <input class="filtro" id="f-cli" list="dl-cli" autocomplete="off" aria-label="Cliente"
+           placeholder="Cliente — vários com ;" value="${F_CLI?esc(rotuloClientes(F_CLI)):''}">
     <button class="btn btn--primary" id="nova" type="button">+ Nova tarefa</button>
   </div>
   ${datalistClientes()}
   <div id="lista"></div>`;
-}
-
-/* ---------- a régua de filtros ----------
-   Quatro caixas de seleção múltipla (b4u-filtro.js) e, se ele não tiver carregado,
-   quatro controles nativos que fazem a mesma pergunta com uma escolha por vez. O
-   segundo caminho não é enfeite: é o que mantém a tela usável quando um arquivo
-   não chega — e é o mesmo desenho que a régua tinha antes das caixas. */
-const FILTROS={quem:null,sit:null,area:null,cli:null};
-/* O marcador de posição é SUBSTITUÍDO, não preenchido. A régua é um flex, e um
-   <span> em volta vira um item de flex que se dimensiona pelo conteúdo: o filtro
-   por dentro dele nunca encolhe, e uma razão social inteira no rótulo botava 548px
-   de botão numa tela de 390 — a página inteira ganhava rolagem lateral por causa de
-   um nome de cliente (o mesmo estrago que o `max-width` do <select> já evitava). */
-function por(cx,no){ cx.replaceWith(no); return no; }
-function porHTML(cx,html){ const t=document.createElement('div'); t.innerHTML=html;
-  return por(cx,t.firstElementChild); }
-function montarFiltros(){
-  const cxQ=document.getElementById('cx-quem'),
-        cxS=document.getElementById('cx-sit'),
-        cxA=document.getElementById('cx-area'),
-        cxC=document.getElementById('cx-cli');
-  if(!cxQ||!cxS||!cxA||!cxC) return;
-  /* Os quatro são CONSTRUÍDOS antes de qualquer um entrar na página. Se o módulo
-     estiver lá mas quebrar no meio, o `catch` cai nos controles nativos com os
-     marcadores de posição ainda intactos — construir e plantar de um em um
-     deixaria a régua pela metade, meio caixa e meio select. */
-  if(window.B4UFiltro) try{
-    const fq=B4UFiltro.criar({
-      id:'f-quem', rot:'De quem', itens:itensQuem(), marcados:F_QUEM,
-      /* Nasce cheio; zero marcado quer dizer "não me mostre nada". */
-      vazio:'nada', rotTodos:'Todo o time', rotNada:'Ninguém', rotTodas:'Todos',
-      /* Só este ganha o verde cheio: abrir para o time inteiro muda o significado
-         da tela de "o que eu tenho" para "o que existe". */
-      todosVerde:true,
-      aoMudar:m=>{ F_QUEM=m; desenharLista(); }
-    });
-    const fs=B4UFiltro.criar({
-      id:'f-sit', rot:'Situação', itens:itensSit(), marcados:F_SIT,
-      vazio:'nada', rotTodos:'Todas as situações', rotNada:'Nenhuma situação', rotTodas:'Todas',
-      /* O NOME do conjunto com que a tela abre. Sem ele o botão diria "A fazer +2"
-         no estado padrão — trocando a palavra que a equipe usa por uma contagem
-         que ninguém pediu. Ver a regra 6 do b4u-filtro.js. */
-      rotEspecial:[{quando:sitAbertas(), rot:'Em aberto'}],
-      aoMudar:m=>{ F_SIT=m; desenharLista(); }
-    });
-    const fa=B4UFiltro.criar({
-      id:'f-area', rot:'Área', itens:itensArea(), marcados:F_AREA,
-      vazio:'nada', rotTodos:'Todas as áreas', rotNada:'Nenhuma área', rotTodas:'Todas',
-      aoMudar:m=>{ F_AREA=m; desenharLista(); }
-    });
-    const fc=B4UFiltro.criar({
-      id:'f-cli', rot:'Cliente', itens:itensCli(), marcados:F_CLI,
-      /* Nasce vazio, e vazio aqui quer dizer TODOS — são centenas de clientes. */
-      vazio:'todos', rotTodos:'Todos os clientes', rotNada:'Nenhum cliente',
-      aoMudar:m=>{ F_CLI=m; desenharLista(); }
-    });
-    FILTROS.quem=fq; FILTROS.sit=fs; FILTROS.area=fa; FILTROS.cli=fc;
-    por(cxQ,fq.no); por(cxS,fs.no); por(cxA,fa.no); por(cxC,fc.no);
-    return;
-  }catch(e){ FILTROS.quem=FILTROS.sit=FILTROS.area=FILTROS.cli=null; }
-  /* ── sem o módulo ──────────────────────────────────────────────────────────
-     Um <select> por filtro, com a opção "todos" no topo. Escolher um nome guarda
-     `[nome]`; escolher "Todo o time" guarda a lista inteira — o mesmo estado que
-     as caixas produzem, só que sem combinações. Situação recupera aqui os dois
-     atalhos que ela sempre teve ("Em aberto" e "Todas as situações"), que na
-     caixa viraram um conjunto com nome e a linha "Todas / Nenhuma". O cliente
-     volta a ser a caixa digitável de antes, que já sabe ler "250033; 250035" e
-     mora aqui do lado. */
-  porHTML(cxQ,`<select class="filtro" id="f-quem" aria-label="De quem">
-    <option value="__todos__">Todo o time</option>
-    ${itensQuem().map(i=>`<option value="${esc(i.v)}">${esc(i.r)}</option>`).join('')}</select>`);
-  porHTML(cxS,`<select class="filtro" id="f-sit" aria-label="Situação">
-    <option value="abertas">Em aberto</option>
-    <option value="__todas__">Todas as situações</option>
-    ${SITUACOES.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('')}</select>`);
-  porHTML(cxA,`<select class="filtro" id="f-area" aria-label="Área">
-    <option value="__todas__">Todas as áreas</option>
-    ${itensArea().map(i=>`<option value="${esc(i.v)}">${esc(i.r)}</option>`).join('')}</select>`);
-  porHTML(cxC,`<input class="filtro" id="f-cli" list="dl-cli" autocomplete="off" aria-label="Cliente"
-    placeholder="Cliente — vários com ;" value="${F_CLI.length?esc(rotuloClientes(idsTexto(F_CLI))):''}">`);
-}
-/* Marca tudo de novo — é o botão da tela vazia e o atalho "todo o time". Escrever
-   no componente NÃO dispara o `aoMudar` dele (senão desenharia a lista duas
-   vezes), então quem chama redesenha. */
-function marcarTudo(qual){
-  if(qual==='quem'){ F_QUEM=todosOsValores(itensQuem()); if(FILTROS.quem) FILTROS.quem.marcados(F_QUEM); }
-  if(qual==='area'){ F_AREA=todosOsValores(itensArea()); if(FILTROS.area) FILTROS.area.marcados(F_AREA); }
-  /* Situação volta para "Em aberto", e não para TODAS. O desfazer útil é o estado
-     com que a tela abre — quem esvaziou a situação queria ver tarefas, não a lista
-     de encerradas de dois anos. Marcar todas está a um clique dali, na própria
-     caixa. */
-  if(qual==='sit'){ F_SIT=sitPadrao(); if(FILTROS.sit) FILTROS.sit.marcados(F_SIT); }
-  desenharLista();
 }
 function desenharLista(){
   const box=document.getElementById('lista'); if(!box) return;
@@ -1268,86 +851,22 @@ function desenharLista(){
   document.getElementById('cont').textContent=vis.length+(vis.length===1?' tarefa':' tarefas');
   const CAB=`<div class="cabgrade"><span>Cliente</span><span>Assunto</span><span>Área</span>
     <span>Responsável</span><span>Situação</span><span>Prazo</span></div>`;
-  box.innerHTML = gs.length ? gs.map(o=>`<div class="grupo ${o.g.k}"><h2>${esc(o.g.rot)}</h2><span class="n">${o.itens.length}</span></div>
+  box.innerHTML = gs.length
+    ? gs.map(o=>`<div class="grupo ${o.g.k}"><h2>${esc(o.g.rot)}</h2><span class="n">${o.itens.length}</span></div>
                  ${CAB}<div class="lista">${o.itens.map(linhaHTML).join('')}</div>`).join('')
-                            : telaVazia();
-  /* Os controles refletem o estado: trocar de filtro pelo teclado, pelo botão da
-     tela vazia ou por um link não pode deixar a caixinha dizendo uma coisa e a
-     lista mostrando outra. Com o b4u-filtro.js no ar quem cuida disso é o próprio
-     componente (e o `marcarTudo`); o que sobra aqui é o select de situação e, sem
-     o módulo, os controles nativos. */
-  if(FILTROS.quem) return;
-  const q=document.getElementById('f-quem'), a=document.getElementById('f-area'),
-        c=document.getElementById('f-cli'), s=document.getElementById('f-sit');
-  if(q){ const tudo=marcadoTudo(F_QUEM,itensQuem());
-         q.value=tudo?'__todos__':(F_QUEM.length===1?F_QUEM[0]:'__todos__');
-         q.classList.toggle('time',tudo); }
-  if(a){ const tudo=marcadoTudo(F_AREA,itensArea());
-         a.value=tudo?'__todas__':(F_AREA.length===1?F_AREA[0]:'__todas__'); }
-  /* O <select> nativo só sabe dizer três coisas; a lista pode estar num quarto
-     estado que ele não representa (duas situações marcadas). Nesse caso ele fica
-     em "Todas as situações", que é a opção mais próxima de "não estou estreitando
-     por aqui" — e a lista, que é o que a pessoa lê, continua certa. */
-  if(s){ const abertas=sitAbertas();
-         s.value=marcadoTudo(F_SIT,itensSit())?'__todas__'
-           :(abertas.length&&F_SIT.length===abertas.length&&abertas.every(x=>F_SIT.indexOf(x)>=0)?'abertas'
-             :(F_SIT.length===1?F_SIT[0]:'__todas__')); }
-  if(c) c.classList.toggle('on',F_CLI.length>0);
+    : `<div class="vazio">Nada por aqui com esses filtros.${F_QUEM==='__eu__'
+        ?' Ver <button type="button" class="link-btn" id="ir-time">todo o time</button>.':''}</div>`;
+  /* Os selects refletem o estado: recarregar ou trocar de filtro não pode deixar
+     a caixinha dizendo uma coisa e a lista mostrando outra. */
+  const q=document.getElementById('f-quem'), s=document.getElementById('f-sit'), c=document.getElementById('f-cli');
+  const a=document.getElementById('f-area');
+  if(q&&document.activeElement!==q){q.value=rotuloQuem(F_QUEM);}
+  if(q){q.classList.toggle('time',resolverQuem(F_QUEM).modo==='time');
+        if(document.activeElement!==q) q.classList.remove('ruim');}
+  if(s){s.value=F_SIT;}
+  if(a){a.value=F_AREA;}
+  if(c){c.classList.toggle('on',!!F_CLI);}
 }
-/* A tela vazia diz POR QUE está vazia. Nada marcado em "De quem" ou em "Área" é um
-   estado que a pessoa criou de propósito, e ele não pode parecer defeito nem
-   parecer "acabaram as tarefas": a frase nomeia o que está desmarcado e o botão ao
-   lado desfaz em um clique. Filtro válido sem resultado continua com a frase de
-   sempre. */
-function telaVazia(){
-  if(!F_QUEM.length) return `<div class="vazio">Ninguém marcado.
-    <button type="button" class="link-btn" id="marcar-quem">Marcar todo o time</button>.</div>`;
-  if(!F_AREA.length) return `<div class="vazio">Nenhuma área marcada.
-    <button type="button" class="link-btn" id="marcar-area">Marcar todas as áreas</button>.</div>`;
-  if(!F_SIT.length) return `<div class="vazio">Nenhuma situação marcada.
-    <button type="button" class="link-btn" id="marcar-sit">Voltar para as em aberto</button>.</div>`;
-  const tudo=marcadoTudo(F_QUEM,itensQuem());
-  return `<div class="vazio">Nada por aqui com esses filtros.${tudo?''
-    :' Ver <button type="button" class="link-btn" id="ir-time">todo o time</button>.'}</div>`;
-}
-
-/* ---------- prazo padrão: 48 horas ÚTEIS ----------
-   Tarefa nova nasce com prazo para daqui a dois dias úteis, e o campo continua
-   editável — é palpite, não regra.
-
-   A conta parte de `HOJE`, que vem do SERVIDOR, e não do relógio do aparelho:
-   celular com data errada ou em outro fuso daria prazo errado para uma pessoa
-   só, calado, e ninguém descobriria olhando a tela. Sem `HOJE` (payload ainda
-   não chegou), aí sim cai no relógio local — melhor um palpite do que um campo
-   vazio.
-
-   O 'T12:00:00' não é enfeite: `new Date('2026-08-10')` é lido como MEIA-NOITE
-   UTC, que no horário de Brasília é 21h do dia 9 — a data volta um dia. Ao meio-
-   dia local, nenhum fuso do Brasil cruza a virada, e a data sai inteira.
-
-   FERIADO NÃO ENTRA NA CONTA — segunda a sexta, e ponto. Foi decisão do dono,
-   tomada depois de eu levantar o assunto: a empresa tem planilha de Feriados nos
-   links centrais, mas trazê-la até aqui exigiria mexer no backend, e o ganho não
-   paga. Numa semana com feriado o sugerido cai um dia mais cedo do que o ideal —
-   e como o campo é editável, quem abre a tarefa corrige em um clique.
-
-   Está escrito aqui para o próximo leitor não "consertar" o que não está
-   quebrado: a ausência de feriado é escolha, não esquecimento. */
-function maisDiasUteis(iso, n){
-  const base = /^\d{4}-\d{2}-\d{2}/.test(String(iso||'')) ? String(iso).slice(0,10) : null;
-  const d = base ? new Date(base+'T12:00:00') : new Date();
-  if(isNaN(d.getTime())) return '';
-  d.setHours(12,0,0,0);
-  let faltam = n;
-  while(faltam > 0){
-    d.setDate(d.getDate()+1);
-    const s = d.getDay();
-    if(s !== 0 && s !== 6) faltam--;   // 0 domingo, 6 sábado
-  }
-  const p = x => String(x).padStart(2,'0');
-  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
-}
-function prazoPadrao(){ return maisDiasUteis(HOJE, 2); }
 
 /* ---------- ficha ---------- */
 function campoSelect(id,rot,opts,valor,full){
@@ -1379,32 +898,18 @@ function fichaHTML(t){
       ${campoSelect('f-resp','Responsável',optColab,t.responsavel)}
       ${campoSelect('f-sit2','Situação',optSit,t.situacao)}
       ${campoSelect('f-area2','Área',optArea2,t.area||'')}
-      <!-- O campo Cliente é montado pelo montarCliFicha(), logo depois de este
-           HTML entrar na página: com o b4u-filtro.js ele é a mesma caixa de
-           seleção da régua (mais um input type=hidden com o que vai para a
-           planilha); sem ele, volta a ser a caixa digitável de sempre. O rótulo
-           é um span.lbl e não um label[for], porque no caminho da caixa não há
-           campo de digitar para ele apontar.
-           (Sem crase nesta nota: ela mora dentro de um template literal, e uma
-           crase aqui fecharia a string no meio do HTML.) -->
-      <div class="fld"><span class="lbl">Cliente</span>
-        <span id="cx-cli2"></span>
+      <div class="fld"><label for="f-cli2">Cliente</label>
+        <input id="f-cli2" list="dl-cli" autocomplete="off" value="${t.cliente_id?esc(rotuloClientes(t.cliente_id)):''}"
+               placeholder="Digite um pedaço do nome, ou TODOS">
         <span class="cli-hint" id="f-cli-hint">Em branco = tarefa interna, sem cliente.</span></div>
-      <div class="fld"><label for="f-prazo">Prazo</label>
-        <input id="f-prazo" type="date" value="${esc(nova?(t.prazo||prazoPadrao()):t.prazo)}">
-        ${nova?'<span class="dica">Sugerido: 48h úteis. Pode trocar.</span>':''}</div>
-      <!-- "Aberto em" saiu das opções editáveis a pedido do dono: é automático,
-           sempre o dia em que a tarefa foi aberta. O DADO não saiu — numa tarefa
-           que já existe ele aparece aqui como texto, porque a informação continua
-           servindo, e o salvarFicha() continua mandando o que estava gravado.
-           Numa tarefa nova não há o que mostrar: é hoje, e dizer isso seria
-           gastar uma linha da ficha para repetir o calendário. -->
-      ${nova?'':`<div class="fld"><span class="lbl">Aberto em</span>
-        <span class="valor">${esc(fmtData(t.aberto_em)||'—')}</span></div>`}
+      <div class="fld"><label for="f-prazo">Prazo</label><input id="f-prazo" type="date" value="${esc(t.prazo)}"></div>
+      <div class="fld"><label for="f-aberto">Aberto em</label><input id="f-aberto" type="date" value="${esc(t.aberto_em||HOJE)}">
+        <span class="dica">Vem com a data de hoje; troque se a combinação foi noutro dia.</span></div>
       ${nova?'':`<div class="fld"><label for="f-concl">Concluído em</label><input id="f-concl" type="date" value="${esc(t.concluido_em)}">
         <span class="dica">Preenche sozinho ao marcar Feito; dá para corrigir.</span></div>`}
     </div>
   </div>
+  ${datalistClientes()}
   ${nova?'':`
   <div class="gsec">
     <h3><span class="dot"></span>Histórico</h3>
@@ -1414,105 +919,6 @@ function fichaHTML(t){
     </div>
     <div class="log" id="log"></div>
   </div>`}`;
-}
-
-/* ---------- o campo Cliente da ficha ----------
-   Ele deixou de ser texto e virou a mesma caixa de seleção da régua, a pedido do
-   dono ("a mesma coisa também em cliente na hora de criar, já que dá pra criar
-   mais de um"). Três coisas precisam continuar verdadeiras depois da troca, e as
-   três estão implementadas logo abaixo:
-
-   1. `#f-cli2` CONTINUA EXISTINDO E CONTINUA TENDO `.value`. Ele está em
-      CAMPOS_FICHA, que é o instantâneo com que a casca do b4u-modal.js decide se
-      "Fechar" avisa antes de perder o que foi digitado; e o `salvarFicha()` lê o
-      valor dele. Com a caixa no ar ele vira um <input type="hidden"> que a caixa
-      escreve, no MESMO formato que a planilha guarda ("250033; 250035", que é o
-      que o `idsTexto()` produz). Trocar o tipo do campo não pode mudar o que sai
-      dele.
-
-   2. "TODOS" É EXCLUSIVO, E AGORA DÁ PARA IMPEDIR. Ele não é um atalho de
-      interface: é um valor de verdade, que quer dizer "vale para a carteira
-      inteira, aparece na ficha de cada cliente". Junto de um cliente específico
-      ele é contraditório — a tarefa não fica mais específica por citar alguém
-      que ela já alcança. No campo de texto isso só podia ser AVISADO depois do
-      fato ("o que veio junto foi ignorado"); a caixa consegue impedir antes, e
-      por isso o aviso morreu.
-
-   3. VAZIO É RESPOSTA, NÃO FILTRO VAZIO. Tarefa sem cliente é tarefa interna, e é
-      o estado normal de uma tarefa nova. Nem `vazio:'todos'` (que diria que a
-      tarefa vale para a carteira inteira) nem `vazio:'nada'` (que pintaria de
-      âmbar o caminho mais comum da tela) descrevem isso — daí o terceiro modo
-      `vazio:'livre'` no b4u-filtro.js. O texto de ajuda embaixo continua onde
-      estava. */
-let FICHA_CLI=null;      // a instância da caixa, ou null no caminho sem o módulo
-let CLI_FICHA=[];        // os ids marcados nela
-
-/* Os clientes de uma tarefa, do jeito que ela vier. `t.clientes` é a forma nova
-   (objetos); `t.cliente_id` é a coluna crua, que pode trazer vários separados por
-   ";" — e a leitura continua aceitando vírgula e barra porque é assim que os
-   outros leitores desta tela (a linha da lista, o filtro) já leem o que está
-   gravado. Sem tarefa, o que vale é de onde a pessoa veio: o `?cli=`. */
-function idsDaTarefa(t){
-  if(!t) return CLI_LINK?[CLI_LINK]:[];
-  const l=(t.clientes&&t.clientes.length)?t.clientes.map(c=>String(c.id))
-    :String(t.cliente_id||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
-  return l.some(ehTodos)?[TODOS_ID]:l;
-}
-/* A exclusão mútua do TODOS, decidida pelo que ACABOU de ser marcado — e não pelo
-   que sobrou. Sem olhar o que entrou não dá para saber a intenção: a mesma lista
-   {TODOS, 250033} chega tanto de quem marcou TODOS por cima de um cliente quanto
-   de quem marcou um cliente por cima do TODOS, e as duas querem coisas opostas.
-   Desmarcar não desmarca nada de tabela: `entrou` vazio devolve a lista como veio. */
-function exclusivoTodos(novo,velho){
-  const entrou=novo.filter(v=>velho.indexOf(v)<0);
-  if(entrou.some(ehTodos)) return [TODOS_ID];
-  if(entrou.length&&novo.some(ehTodos)) return novo.filter(v=>!ehTodos(v));
-  return novo;
-}
-/* O que vai para a planilha, escrito no campo escondido. Chamado a cada mudança
-   da caixa — é ele que faz o instantâneo de "sujo" enxergar o cliente. */
-function escreverCliOculto(){
-  const el=document.getElementById('f-cli2');
-  if(el) el.value=idsTexto(CLI_FICHA);
-}
-function montarCliFicha(ids){
-  const cx=document.getElementById('cx-cli2');
-  FICHA_CLI=null; CLI_FICHA=(ids||[]).map(String);
-  if(!cx) return;
-  if(window.B4UFiltro) try{
-    const f=B4UFiltro.criar({
-      /* Id próprio: `f-cli` já é o botão da régua e `f-cli2` é o campo escondido
-         que este aqui escreve. Dois nós com o mesmo id fariam o
-         `getElementById` responder pelo primeiro que o navegador achasse. */
-      id:'f-cli-ficha', rot:'Cliente', itens:itensCliCom(CLI_FICHA), marcados:CLI_FICHA,
-      vazio:'livre', rotNada:'Sem cliente — tarefa interna',
-      aoMudar:m=>{
-        CLI_FICHA=exclusivoTodos(m,CLI_FICHA);
-        /* Escrever de volta NÃO chama `aoMudar` (é o contrato do componente), e
-           é o que desmarca na tela o que a exclusão mútua tirou. */
-        if(FICHA_CLI) FICHA_CLI.marcados(CLI_FICHA);
-        escreverCliOculto();
-        validarCliFicha();
-      }
-    });
-    const cofre=document.createElement('div');
-    cofre.className='fld-cli';
-    const oculto=document.createElement('input');
-    oculto.type='hidden'; oculto.id='f-cli2';
-    cofre.appendChild(f.no); cofre.appendChild(oculto);
-    FICHA_CLI=f;
-    por(cx,cofre);
-    escreverCliOculto();
-    return;
-  }catch(e){ FICHA_CLI=null; }
-  /* ── sem o módulo ──────────────────────────────────────────────────────────
-     A caixa digitável de sempre, com o `resolverClientes()` por trás. O
-     `<datalist id="dl-cli">` que ela usa é o do `layout()`, que já está na página
-     desde o boot — a ficha chegou a montar um segundo com o mesmo id, o que só
-     servia para o navegador ter de escolher um. */
-  porHTML(cx,`<input id="f-cli2" list="dl-cli" autocomplete="off"
-    value="${esc(CLI_FICHA.length?rotuloClientes(idsTexto(CLI_FICHA)):'')}"
-    placeholder="Digite um pedaço do nome, ou TODOS">`);
 }
 function logHTML(id){
   const itens=LOGS.filter(l=>String(l.daily_id)===String(id))
@@ -1539,90 +945,30 @@ function pintarSituacao(){
   const c=COR_SIT[el.value]||['','',];
   el.style.background=c[0]||''; el.style.color=c[1]||''; el.style.fontWeight=c[0]?'700':'';
 }
-/* O que está escrito na ficha, num texto só. Esta tela NÃO tem autosave: o que
-   foi digitado e não passou pelo botão Salvar só existe aqui. Comparar com o
-   instantâneo tirado na abertura é o jeito de saber se fechar agora perde alguma
-   coisa — que é a pergunta que a casca faz antes de deixar sair. */
-/* `f-aberto` saiu daqui junto com o campo: ele deixou de ser editável, e um id
-   que não existe mais só contribuiria com uma string vazia constante para o
-   instantâneo. `f-cli2` FICOU — ele continua existindo, agora como campo
-   escondido que a caixa de seleção escreve, e é por ele que "escolhi um cliente
-   e fechei sem salvar" continua sendo pendência. */
-const CAMPOS_FICHA=['f-assunto','f-detalhe','f-resp','f-sit2','f-area2','f-cli2',
-                    'f-prazo','f-concl','f-nota'];
-function instantaneoFicha(){
-  return CAMPOS_FICHA.map(id=>{const el=document.getElementById(id);return el?el.value:'';}).join('\u0001');
-}
-let FICHA_LIMPA='';
-/* A MOLDURA da ficha mora no b4u-modal.js: véu e clique fora, Esc, trava da
-   rolagem do fundo, foco preso dentro da caixa e o fechar em dois tempos. Esta
-   tela é a que mais ganha com isso: era o único modal editável da equipe SEM
-   aviso de "tem coisa por gravar", sem confirmação ao sair da página e sem
-   fechar em dois tempos — fechar com o formulário preenchido perdia tudo calado. */
-const MODAL = window.B4UModal && window.B4UModal.adotar('modal', {
-  ids:{titulo:'m-tit',selo:'m-id',corpo:'m-body',msg:'m-msg',
-       aviso:'cadAviso',fechar:'m-fechar',x:'m-x'},
-  base:{msg:'msg'},
-  largura:760,
-  /* Só conta como pendência com a ficha ABERTA: fechada, os campos continuam
-     pintados no #m-body e um instantâneo velho acusaria pendência para sempre. */
-  sujo:()=>{const m=document.getElementById('modal');
-            return !!m&&!m.hidden&&instantaneoFicha()!==FICHA_LIMPA;},
-  /* A caixa de cliente é desmontada junto: ela registra o próprio nó na lista de
-     painéis abertos do b4u-filtro.js, e uma instância pendurada ali depois de o
-     `#m-body` ter sido reescrito é um fantasma que ainda responde a clique fora. */
-  aoFechar:()=>{ABERTA=null; if(FICHA_CLI) FICHA_CLI.destruir(); FICHA_CLI=null;}
-});
 function abrirFicha(t){
-  if(!MODAL)return;
   ABERTA=t||null;
-  MODAL.titulo(t?(t.assunto||'Tarefa'):'Nova tarefa').selo(t?('#'+t.id):'').msg('','');
+  document.getElementById('m-tit').textContent=t?(t.assunto||'Tarefa'):'Nova tarefa';
+  document.getElementById('m-id').textContent=t?('#'+t.id):'';
   document.getElementById('m-body').innerHTML=fichaHTML(t);
-  /* ANTES do instantâneo: o campo escondido de cliente nasce aqui, e um
-     instantâneo tirado sem ele acharia que a ficha ficou suja sozinha. */
-  montarCliFicha(idsDaTarefa(t));
   if(t){ const l=document.getElementById('log'); if(l) l.innerHTML=logHTML(t.id); }
   document.getElementById('m-salvar').textContent=t?'Salvar':'Criar tarefa';
-  FICHA_LIMPA=instantaneoFicha();     // o ponto de partida: daqui para a frente é edição
-  MODAL.abrir();
+  const msg=document.getElementById('m-msg'); msg.className='msg'; msg.textContent='';
+  document.getElementById('modal').hidden=false;
+  document.body.style.overflow='hidden';
   validarCliFicha();
   pintarSituacao();
   setTimeout(()=>{const f=document.getElementById('f-assunto');if(f)f.focus();},40);
 }
-function fecharFicha(forcado){ if(MODAL) MODAL.fechar(forcado); }
+function fecharFicha(){
+  document.getElementById('modal').hidden=true;
+  document.body.style.overflow='';
+  ABERTA=null;
+}
 /* Diz na hora o que aquele texto virou — ou por que não virou nada. Sem isto a
    pessoa só descobre no clique de salvar, com o formulário inteiro preenchido. */
-/* `aoVivo` = a pessoa está DIGITANDO agora (evento `input`), e não terminou.
-   Enquanto ela digita, texto que ainda não identifica ninguém NÃO é erro: é uma
-   frase pela metade. Pintar de vermelho a cada letra transforma o caminho normal
-   ("clico em Nova tarefa e começo a escrever o cliente") numa sequência de
-   avisos de erro que só somem quando, por sorte, o texto fecha em um cliente só.
-   Foi exatamente essa a queixa: "Cliente / 89 clientes casam com isso" aparecia
-   no meio da digitação, dizia que estava errado, e não dizia o que escrever.
-
-   Vermelho fica para os dois momentos em que a frase ACABOU: quando o campo
-   perde o foco e quando se tenta salvar. Aí, sim, o texto não virou cliente e
-   isso precisa doer — a regra de nunca gravar tarefa interna calada continua
-   valendo, e é o `salvarFicha()` que a aplica. */
-function validarCliFicha(aoVivo){
+function validarCliFicha(){
   const el=document.getElementById('f-cli2'), h=document.getElementById('f-cli-hint');
   if(!el||!h) return {id:'',ok:true};
-  /* ── com a caixa de seleção ────────────────────────────────────────────────
-     Não há o que validar: o que está marcado veio da lista, então é sempre um
-     cliente que existe. Sobra a linha de baixo, que deixou de ser aviso e virou
-     confirmação — ela diz por extenso o que a caixa está dizendo abreviado.
-     `ok` é sempre true, e é por isso que o `salvarFicha()` não tem mais como
-     barrar aqui: a única forma de barrar era texto que não virou cliente, e não
-     existe mais texto. */
-  if(FICHA_CLI){
-    const ids=CLI_FICHA;
-    h.className='cli-hint';
-    h.textContent = !ids.length ? 'Em branco = tarefa interna, sem cliente.'
-      : (ids.some(ehTodos) ? 'Vale para todos os clientes — aparece na ficha de cada um.'
-      : (ids.length>1 ? ids.length+' clientes: '+ids.map(rotuloCliente).join('  ·  ')
-                      : rotuloCliente(ids[0])));
-    return {id:idsTexto(ids),ok:true};
-  }
   const r=resolverClientes(el.value);
   if(!el.value.trim()){ h.className='cli-hint'; h.textContent='Em branco = tarefa interna, sem cliente. Vários clientes: separe por ponto e vírgula.'; }
   else if(r.ok&&r.todos){ h.className='cli-hint';
@@ -1631,20 +977,6 @@ function validarCliFicha(aoVivo){
   else if(r.ok&&r.ids.length>1){ h.className='cli-hint';
     h.textContent=r.ids.length+' clientes: '+r.ids.map(rotuloCliente).join('  ·  '); }
   else if(r.ok){ h.className='cli-hint'; h.textContent=r.ids.length?rotuloCliente(r.ids[0]):''; }
-  else if(r.ambiguo){
-    /* AMBÍGUO: mostra QUEM casa, em vez de só contar. Três exemplos bastam para
-       a pessoa perceber o que tem em comum e escrever o pedaço que separa; a
-       lista inteira de 89 seria outra parede de texto. */
-    const ex=r.ambiguo.casam.slice(0,3).map(c=>c.id+' · '+c.nome).join('   ·   ');
-    const n=r.ambiguo.casam.length;
-    /* Os exemplos aparecem nos dois casos; o que muda é a COR. Digitando, é
-       sugestão. Depois de sair do campo, continua sem identificar cliente e o
-       salvar vai barrar — então precisa parecer um problema, mas um problema
-       com a saída à vista. */
-    h.className=aoVivo?'cli-hint':'cli-hint err';
-    h.textContent=n+' clientes casam — '+ex+(n>3?'  e mais '+(n-3)+'. Escreva mais um pedaço.':'');
-  }
-  else if(aoVivo){ h.className='cli-hint'; h.textContent='Continue escrevendo…'; }
   else { h.className='cli-hint err'; h.textContent=r.msg; }
   /* `id` continua existindo para quem chama esperando um valor só — agora ele é
      a lista já formatada, que é o que a planilha guarda. */
@@ -1655,20 +987,10 @@ async function salvarFicha(){
   const btn=document.getElementById('m-salvar'), msg=document.getElementById('m-msg');
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
   const cli=validarCliFicha();
-  /* ABERTO EM NÃO É MAIS CAMPO — mas continua sendo DADO, e ele não pode se
-     perder por ter saído da tela. São dois casos, e os dois têm de ser escritos
-     aqui porque o que sumiu foi justamente o <input> que os respondia sozinho:
-       tarefa nova      -> hoje, que é o que o campo já trazia por padrão;
-       tarefa existente -> o que está gravado nela, devolvido intacto.
-     Mandar vazio na edição apagaria a data de abertura de toda tarefa antiga na
-     primeira vez que alguém trocasse uma vírgula do assunto. Quando a tarefa
-     antiga já vier sem data, vai vazio mesmo — não há o que preservar, e inventar
-     "hoje" seria dizer que ela nasceu na hora em que foi editada. */
-  const abertoEm=ABERTA ? b4uTexto(ABERTA.aberto_em||'').trim() : (HOJE||'').slice(0,10);
   const dados={ assunto:v('f-assunto'), detalhe:v('f-detalhe'), responsavel:v('f-resp'),
                 situacao:v('f-sit2'), area:v('f-area2'), cliente_id:cli.id,
                 prazo:v('f-prazo'),
-                aberto_em:abertoEm, concluido_em:v('f-concl') };
+                aberto_em:v('f-aberto'), concluido_em:v('f-concl') };
   if(!dados.assunto){ msg.className='msg err'; msg.textContent='Escreva o assunto.'; return; }
   /* Texto escrito que não virou cliente NÃO vira tarefa interna calada: seria
      perder a intenção de quem digitou e ainda esconder o engano. */
@@ -1685,12 +1007,21 @@ async function salvarFicha(){
     msg.className='msg ok'; msg.textContent='Salvo ✓';
     /* Troca só a linha mexida. Se o servidor não mandou a linha, relê tudo. */
     if(!aplicarUma(d)) await recarregar();
-    fecharFicha(true);          // gravou: sair não perde nada, e o aviso não faz sentido
+    fecharFicha();
   }catch(e){
-    /* O texto da exceção não vai para a tela: é vocabulário nosso e do outro lado
-       só assusta. A ficha CONTINUA ABERTA — fechar por cima de um salvamento que
-       não foi levaria embora a única pista de que deu errado. */
-    msg.className='msg err'; msg.textContent='Não foi possível salvar. Tente de novo.';
+    /* A ficha CONTINUA ABERTA — fechar por cima de um salvamento que não foi
+       levaria embora a única pista de que deu errado.
+       Duas mensagens, porque são duas situações: o servidor recusar (aí sim não
+       gravou, e "tente de novo" é o conselho certo) e a resposta se perder (a
+       gravação PODE ter acontecido, e mandar de novo criaria tarefa em dobro —
+       por isso o conselho vira "recarregue antes"). */
+    if(e&&e.incerto){
+      msg.className='msg err';
+      msg.textContent='Não consegui confirmar se salvou. Recarregue a página antes de mandar de novo — a tarefa pode já estar gravada.';
+    }else{
+      msg.className='msg err';
+      msg.textContent='O servidor recusou: '+String((e&&e.message)||e);
+    }
   }finally{ btn.disabled=false; }
 }
 
@@ -1699,44 +1030,32 @@ document.addEventListener('click',e=>{
   const linha=e.target.closest&&e.target.closest('.t');
   if(linha){ const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id); if(t) abrirFicha(t); return; }
   if(e.target.id==='nova'){ abrirFicha(null); return; }
-  if(e.target.id==='ir-time'||e.target.id==='marcar-quem'){ marcarTudo('quem'); return; }
-  if(e.target.id==='marcar-area'){ marcarTudo('area'); return; }
-  if(e.target.id==='marcar-sit'){ marcarTudo('sit'); return; }
+  if(e.target.id==='ir-time'){ F_QUEM='__todos__'; desenharLista(); return; }
+  if(e.target.id==='m-x'||e.target.id==='m-fechar'){ fecharFicha(); return; }
   if(e.target.id==='m-salvar'){ salvarFicha(); return; }
-  /* Fechar, × e clique no véu não estão aqui: quem cuida deles é a casca do
-     b4u-modal.js, que precisa passar pelo aviso de "tem coisa por gravar" antes
-     de deixar sair. */
+  if(e.target===document.getElementById('modal')) fecharFicha();
 });
-/* Esc com a ficha aberta NÃO chega aqui: a casca do b4u-modal.js escuta na
-   captura, fecha o modal de cima da pilha e corta a propagação. */
 document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!document.getElementById('modal').hidden){ fecharFicha(); return; }
   const linha=e.target&&e.target.closest&&e.target.closest('.t');
   if(linha&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); linha.click(); return; }
   if(e.key==='/'&&!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName||''))){
     e.preventDefault(); const b=document.getElementById('busca'); if(b)b.focus(); }
 });
 document.addEventListener('change',e=>{
-  /* Os QUATRO abaixo só existem SEM o b4u-filtro.js: com ele, `f-quem`, `f-sit`,
-     `f-area` e `f-cli` são botões, e botão não dispara `change` nem `input`. Os
-     checkboxes de dentro do painel disparam, sim — mas sem `id`, e por isso não
-     caem aqui. */
-  if(e.target.id==='f-sit'){
-    const v=e.target.value;
-    F_SIT = v==='abertas' ? sitPadrao()
-          : (v==='__todas__' ? todosOsValores(itensSit()) : [v]);
-    desenharLista();
-  }
   if(e.target.id==='f-quem'){
-    const v=e.target.value;
-    F_QUEM = v==='__todos__' ? todosOsValores(itensQuem()) : [v];
+    const t=e.target.value.trim();
+    const n=normTxt(t);
+    /* Os dois estados rápidos voltam para a forma canônica: guardar "Minhas
+       tarefas" como texto faria o resto do código comparar frase em vez de
+       estado, e o link ?cli= que força "todo o time" pararia de casar. */
+    F_QUEM = (!t||n==='todo o time'||n==='time') ? QUEM_TIME
+           : (n==='minhas tarefas'||n==='minhas') ? QUEM_EU : t;
     desenharLista();
   }
-  if(e.target.id==='f-area'){
-    const v=e.target.value;
-    F_AREA = v==='__todas__' ? todosOsValores(itensArea()) : [v];
-    desenharLista();
-  }
-  if(e.target.id==='f-cli'){ filtroCliTexto(e.target); }
+  if(e.target.id==='f-sit'){ F_SIT=e.target.value; desenharLista(); }
+  if(e.target.id==='f-area'){ F_AREA=e.target.value; desenharLista(); }
+  if(e.target.id==='f-cli'){ F_CLI=e.target.value; desenharLista(); }
   if(e.target.id==='f-cli2'){ validarCliFicha(); }
   /* Marcou Feito: a data de hoje entra no campo AQUI, à vista, e não escondida no
      servidor — quem concluiu ontem corrige antes de salvar, em vez de descobrir
@@ -1751,28 +1070,32 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('input',e=>{
   if(e.target.id==='busca'){ TERMO=e.target.value; desenharLista(); }
-  if(e.target.id==='f-cli2'){ validarCliFicha(true); }   // digitando: nada de vermelho
-  if(e.target.id==='f-cli'){ filtroCliTexto(e.target); }
+  if(e.target.id==='f-cli2'){ validarCliFicha(); }
+  /* O filtro de cliente resolve enquanto se digita e só filtra quando o texto
+     identifica cliente — filtrar a cada letra deixaria a lista piscando vazia no
+     meio de "Aj-u-b". Apagar o campo volta para todos.
+     Com ponto e vírgula vale para VÁRIOS: "250033; 250035" traz os dois. */
+  if(e.target.id==='f-cli'){
+    const el=e.target;
+    if(!el.value.trim()){ if(F_CLI){F_CLI='';desenharLista();} el.classList.remove('on'); return; }
+    const r=resolverClientes(el.value);
+    const novo=r.ok?idsTexto(r.ids):'';
+    el.classList.toggle('ruim',!novo);
+    el.title=novo?'':(r.msg||'Ainda não identifiquei esse cliente — a lista continua no filtro anterior.');
+    if(novo && novo!==String(F_CLI)){ F_CLI=novo; desenharLista(); }
+  }
+  /* Pessoas: mesma ideia, só filtra quando o texto identifica alguém. */
+  if(e.target.id==='f-quem'){
+    const t=e.target.value.trim(), n=normTxt(t);
+    if(!t){ if(F_QUEM!==QUEM_TIME){F_QUEM=QUEM_TIME;desenharLista();} return; }
+    if(n==='minhas tarefas'||n==='minhas'){ if(F_QUEM!==QUEM_EU){F_QUEM=QUEM_EU;desenharLista();} return; }
+    if(n==='todo o time'||n==='time'){ if(F_QUEM!==QUEM_TIME){F_QUEM=QUEM_TIME;desenharLista();} return; }
+    const rq=resolverQuem(t);
+    e.target.classList.toggle('ruim',rq.modo==='ruim');
+    e.target.title=rq.modo==='ruim'?(rq.msg||'Ainda não identifiquei essa pessoa — a lista continua no filtro anterior.'):'';
+    if(rq.modo==='lista' && t!==String(F_QUEM)){ F_QUEM=t; desenharLista(); }
+  }
 });
-/* Saiu do campo: a frase acabou. Agora texto que não virou cliente é erro, e
-   aparece antes de a pessoa ir preencher o resto da ficha — em vez de só na hora
-   de salvar, com o dedo já no botão. `focusout` e não `blur` porque `blur` não
-   sobe pela árvore e este ouvinte é delegado no documento. */
-document.addEventListener('focusout',e=>{
-  if(e.target&&e.target.id==='f-cli2') validarCliFicha(false);
-});
-/* A caixa digitável de cliente — só no caminho SEM o b4u-filtro.js. Resolve
-   enquanto se digita e só filtra quando o texto identifica cliente: filtrar a cada
-   letra deixaria a lista piscando vazia no meio de "Aj-u-b". Apagar o campo volta
-   para todos. Com ponto e vírgula vale para VÁRIOS: "250033; 250035" traz os dois. */
-function filtroCliTexto(el){
-  if(!el.value.trim()){ if(F_CLI.length){F_CLI=[];desenharLista();} el.classList.remove('on','ruim'); return; }
-  const r=resolverClientes(el.value);
-  const novo=r.ok?r.ids:null;
-  el.classList.toggle('ruim',!novo);
-  el.title=novo?'':(r.msg||'Ainda não identifiquei esse cliente — a lista continua no filtro anterior.');
-  if(novo && idsTexto(novo)!==idsTexto(F_CLI)){ F_CLI=novo; desenharLista(); }
-}
 
 /* ---------- carga ---------- */
 function aplicar(d){
@@ -1781,31 +1104,11 @@ function aplicar(d){
   SITUACOES=d.situacoes||['A fazer','Em andamento','Esperando terceiro','Feito','Cancelado'];
   AREAS=d.areas||['Contábil','Pessoal','Fiscal','Jurídico','Societário','Restituição','Financeiro','Atendimento','Gestão'];
   HOJE=d.hoje||''; PLANILHA=d.planilha_url||'';
-  /* O nome de quem está usando vai para o botão da barra. Vem de `d.eu`, o mesmo
-     campo que decide o que é "meu" na régua de filtros — então a barra e o filtro
-     nunca podem discordar sobre quem é a pessoa. Fica aqui, no `aplicar()`, e não
-     na carga: a recarga em segundo plano passa por aqui também. */
-  if(window.B4UShell) B4UShell.usuario({nome:(EU&&EU.nome)||''});
 }
 async function recarregar(){
   const d=await jsonp(API_URL+'?tipo=daily_equipe&chave='+encodeURIComponent(chaveAtual()));
   if(d&&d.erro) throw new Error(d.erro);
-  aplicar(d);
-  /* Relemos a planilha inteira: colaborador novo, cliente novo ou área nova têm de
-     aparecer nas caixas. O que estava marcado continua marcado — o componente
-     guarda os valores, não os índices. O que é NOVO não entra marcado sozinho:
-     mexer na seleção de quem está com a tela aberta seria mudar o que ela vê sem
-     ela ter pedido. Como o rótulo do botão deixa de dizer "todas", a mudança fica
-     à vista em vez de acontecer calada. */
-  if(FILTROS.quem) FILTROS.quem.itens(itensQuem());
-  if(FILTROS.area) FILTROS.area.itens(itensArea());
-  if(FILTROS.cli)  FILTROS.cli.itens(itensCli());
-  /* Situação releva também o CONJUNTO com nome: se a planilha ganhou (ou perdeu)
-     uma situação aberta, "Em aberto" passa a querer dizer outra coisa, e um
-     `quando` congelado na criação nomearia o conjunto errado. */
-  if(FILTROS.sit){ FILTROS.sit.itens(itensSit());
-                   FILTROS.sit.rotEspecial([{quando:sitAbertas(), rot:'Em aberto'}]); }
-  desenharLista();
+  aplicar(d); desenharLista();
 }
 /* ---------- aplicar SÓ o que mudou ----------
    Salvar relia a planilha inteira: com a carteira grande isso é uma volta ao
@@ -1829,39 +1132,15 @@ function aplicarUma(d){
   return true;
 }
 async function boot(){
-  /* O botão de quem está usando nasce ANTES da resposta, com rótulo genérico: ele
-     é a única porta para o seletor de aparência, e essa porta não pode depender de
-     a API responder. O nome entra por cima em `aplicar()`. Nesta tela o `montar()`
-     do menu lateral fica lá embaixo, depois do layout — mas o botão não espera por
-     ele: a barra já está no HTML desde o começo. */
-  if(window.B4UShell) B4UShell.usuario();
   try{
     const d=await jsonp(API_URL+'?tipo=daily_equipe&chave='+encodeURIComponent(chaveAtual()));
     if(d&&d.erro) throw new Error(d.erro);
     aplicar(d);
-    /* ---------- o estado com que a tela abre ----------
-       DE QUEM abre no NOME de quem está usando — não em "minhas tarefas", que era
-       um rótulo a mais para a mesma coisa. Quando a rota não diz quem é (chave de
-       serviço, cadastro que não bate com a aba Colaboradores), o padrão honesto é
-       TODO MUNDO marcado: lista vazia agora quer dizer "não me mostre nada", e
-       abrir a tela nesse estado seria acusar a pessoa de um filtro que ela não
-       pôs. ÁREA abre com todas marcadas. CLIENTE abre vazio, que aqui quer dizer
-       todos (ver a nota do estado, lá em cima). */
-    F_QUEM = (EU&&EU.nome) ? [EU.nome] : todosOsValores(itensQuem());
-    F_AREA = todosOsValores(itensArea());
-    /* SITUAÇÃO abre no conjunto "Em aberto" — as mesmas três de sempre, agora
-       como três caixas marcadas em vez de uma opção chamada "Em aberto". O nome
-       continua no botão (ver `rotEspecial`), então o que a pessoa lê ao abrir a
-       tela é exatamente o que ela lia antes. */
-    F_SIT  = sitPadrao();
-    F_CLI  = [];
     /* ?cli=250001 abre já filtrado naquele cliente: é assim que o painel do
-       colaborador manda para cá a partir do bloco de pendências da ficha. O mesmo
-       id fica guardado no CLI_LINK, porque com "&nova=1" ele também é o cliente
-       com que a ficha nova nasce marcada. */
+       colaborador manda para cá a partir do bloco de pendências da ficha. */
     const p=new URLSearchParams(location.search);
     const cli=(p.get('cli')||'').trim();
-    if(cli){ F_CLI=[cli]; CLI_LINK=cli; F_QUEM=todosOsValores(itensQuem()); }
+    if(cli){ F_CLI=cli; F_QUEM='__todos__'; }
     if(p.get('nova')==='1') setTimeout(()=>abrirFicha(null),60);
     /* ?t=12 abre AQUELA tarefa. É o link que vai nos e-mails: um clique e a
        ficha está aberta, sem procurar na lista. Vem com "todo o time" e "todas
@@ -1870,11 +1149,9 @@ async function boot(){
     const alvo=(p.get('t')||'').trim();
     if(alvo){
       const t=TAREFAS.find(x=>String(x.id)===alvo);
-      if(t){ F_QUEM=todosOsValores(itensQuem()); F_SIT=todosOsValores(itensSit());
-             setTimeout(()=>abrirFicha(t),60); }
+      if(t){ F_QUEM='__todos__'; F_SIT='__todas__'; setTimeout(()=>abrirFicha(t),60); }
     }
     document.getElementById('app').innerHTML=layout();
-    montarFiltros();
     desenharLista();
     if(window.B4UShell) B4UShell.montar({
       perfil:'equipe', ativo:'daily',
