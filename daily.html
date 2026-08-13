@@ -535,6 +535,22 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
   text-align:center}
 .btn--feito:hover{background:#1C6B3D;border-color:#1C6B3D}
 .btn--feito:disabled{opacity:.55;cursor:default}
+/* O botão de REABRIR. Ele desfaz o que o verde fez, e por isso não é verde (não
+   é conquista) nem vermelho (não é estrago): é contorno, do tamanho do campo,
+   ao lado da data de conclusão. Concluir é a ação que a tela oferece; reabrir é
+   a que ela permite — e a diferença entre oferecer e permitir se diz com peso
+   de cor, não com tamanho de letra. */
+.btn--reabrir{background:var(--surface);border-color:var(--line-2);color:var(--ink-2);width:100%;
+  text-align:center}
+.btn--reabrir:hover{background:var(--surface-warm);border-color:var(--muted)}
+.btn--reabrir:disabled{opacity:.55;cursor:default}
+/* Os dois botões enquanto perguntam "tem certeza?". ÂMBAR nos dois casos, e não
+   a cor de cada um: âmbar é a cor que este sistema já usa para "pare e leia" (é
+   a do aviso de "tem coisa por gravar" da casca do modal). Um botão que só
+   trocasse de texto, mantendo o verde cheio, mudava pouco demais para a mão que
+   já está descendo para o segundo clique. */
+.btn--perg,.btn--perg:hover{background:var(--amber-soft,#FBF0DF);border-color:var(--amber-line,#EBD9BC);
+  color:var(--amber-txt,#8A5A10)}
 .msg{min-height:17px;font-size:var(--fs-2)}
 .msg.err{color:var(--vermelho);font-weight:700}
 .msg.ok{color:var(--verde-2);font-weight:700}
@@ -596,6 +612,13 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
      Se ele não carregar, o `salvarFicha()` volta a esperar o servidor de ficha
      aberta — o jeito antigo, mais lento e correto. -->
 <script src="b4u-gravar.js" charset="utf-8"></script>
+<!-- A comemoração de concluir: um estouro no ponto do botão que vira confete e
+     some em menos de dois segundos. É ENFEITE e nada mais — não grava, não lê
+     dado nenhum, não recebe clique. Se ele não carregar, a tarefa conclui igual,
+     só sem festa: a chamada está atrás de `window.B4UDelights &&`. Ele respeita
+     `prefers-reduced-motion` por conta própria, porque folha de estilo não
+     alcança o que é desenhado dentro de um <canvas>. -->
+<script src="b4u-delights.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -1967,12 +1990,20 @@ function fichaHTML(t){
            campo f-concl SEMPRE, e um campo que só existe às vezes viraria um
            "if" a mais em todo lugar que toca a ficha. Quem alterna entre os dois
            é a mostrarConclusao().
+           E ao lado da data, na tarefa concluída, o caminho de volta: REABRIR.
+           Ele existe porque concluir agora é um clique só — e o que fica fácil de
+           fazer fica fácil de fazer sem querer. Antes o desfazer estava lá, meio
+           escondido (trocar a Situação no seletor e salvar); a pessoa que clicou
+           errado ia procurar por um botão, não por um seletor.
            (Sem crase nesta nota, pelo mesmo motivo da nota do campo Cliente logo
            acima: ela mora dentro de um template literal, e uma crase aqui
            fecharia a string no meio do HTML.) -->
       ${nova?'':`<div class="fld" id="fld-concl"><label for="f-concl">Concluído em</label>
         <input id="f-concl" type="date" value="${esc(t.concluido_em)}">
         <span class="dica">Preenche sozinho ao marcar Feito; dá para corrigir.</span></div>
+      <div class="fld" id="fld-reabrir"><span class="lbl">Reabrir</span>
+        <button type="button" class="btn btn--reabrir" id="f-reabrir">↩ Reabrir tarefa</button>
+        <span class="dica">Volta para <b>Em andamento</b>, limpa a data, grava e fecha.</span></div>
       <div class="fld" id="fld-concluir"><span class="lbl">Conclusão</span>
         <button type="button" class="btn btn--feito" id="f-concluir">✓ Concluir tarefa</button>
         <span class="dica">Marca <b>Feito</b> com a data de hoje, grava e fecha.</span></div>`}
@@ -2118,12 +2149,84 @@ function pintarSituacao(){
    para "Em andamento" traz o botão de volta. A ficha acompanha a decisão em vez
    de esperar o salvar para se atualizar. */
 function mostrarConclusao(){
+  /* Primeira linha, antes de qualquer saída: trocar de situação (ou abrir outra
+     ficha) com um botão no meio da pergunta mata a pergunta. Ela era sobre um
+     estado que não é mais o da ficha, e um "Confirmar conclusão?" pendurado num
+     botão que acabou de sumir voltaria armado depois. */
+  limparCerteza();
   const sel=document.getElementById('f-sit2');
   const campo=document.getElementById('fld-concl'), botao=document.getElementById('fld-concluir');
+  const reab=document.getElementById('fld-reabrir');
   if(!sel||!campo||!botao) return;                  // ficha nova: nenhum dos dois existe
   const emAberto=ABERTAS.indexOf(sel.value)>=0;
   campo.hidden=emAberto;
   botao.hidden=!emAberto;
+  /* Reabrir anda junto com a DATA, não com o botão de concluir: os dois só fazem
+     sentido na tarefa que já está concluída. */
+  if(reab) reab.hidden=emAberto;
+}
+/* ---------- "tem certeza?" no próprio botão ----------
+   Concluir e reabrir gravam e FECHAM a ficha, e nenhum dos dois tem desfazer de
+   um clique: por isso os dois perguntam antes. A pergunta é no próprio botão, em
+   dois tempos, e não numa caixinha — é o mesmo jeito que a casca do modal já usa
+   para "tem coisa por gravar", e uma caixa de confirmação POR CIMA da ficha
+   traria dois modais empilhados, com Esc e foco brigando entre si por causa de
+   uma pergunta de uma linha.
+
+   O que está guardado é o ELEMENTO, não o id. A ficha é remontada inteira a cada
+   abertura: guardando o id, abrir outra tarefa logo depois deixaria a pergunta
+   "armada" e o PRIMEIRO clique no botão novo concluiria de cara — exatamente o
+   acidente que este código existe para evitar. Nó remontado é outro objeto, e
+   comparação por identidade nunca confunde os dois.
+
+   Os 4 segundos são o tempo de a mão voltar. Passou disso, quem clicou foi
+   fazer outra coisa, e um botão que continuasse perguntando viraria armadilha
+   para o clique seguinte. */
+let CERT_BT=null, CERT_ROT='', CERT_T=0;
+function limparCerteza(){
+  if(CERT_BT){
+    CERT_BT.textContent=CERT_ROT;
+    CERT_BT.classList.remove('btn--perg');
+    CERT_BT.removeAttribute('aria-live');
+  }
+  clearTimeout(CERT_T); CERT_BT=null; CERT_ROT='';
+}
+/* Devolve true quando este clique é o SEGUNDO — ou seja, quando pode fazer. */
+function certeza(btn,pergunta){
+  if(!btn) return true;                              // sem botão não há como perguntar
+  if(CERT_BT===btn){ limparCerteza(); return true; }
+  limparCerteza();
+  CERT_BT=btn; CERT_ROT=btn.textContent;
+  /* `aria-live` só enquanto a pergunta está no ar: quem clicou pelo teclado
+     continua com o foco no botão, e sem isto a troca de rótulo não seria
+     anunciada — a pessoa clicaria de novo achando que o primeiro clique falhou,
+     e o segundo clique é justamente o que conclui. */
+  btn.setAttribute('aria-live','polite');
+  btn.textContent=pergunta;
+  btn.classList.add('btn--perg');
+  CERT_T=setTimeout(limparCerteza,4000);
+  return false;
+}
+/* O ponto de onde a comemoração sai, medido ENQUANTO o botão ainda está na tela.
+   Ele some duas linhas depois (a célula troca de cara assim que a Situação vira
+   "Feito") e um nó escondido mede 0×0 — a festa nasceria no canto de cima à
+   esquerda, longe da mão que a provocou. */
+function pontoDoBotao(btn){
+  if(!btn||!btn.getBoundingClientRect) return null;
+  const r=btn.getBoundingClientRect();
+  if(!r.width&&!r.height) return null;
+  return {x:r.left+r.width/2, y:r.top+r.height/2};
+}
+/* A festa. Ela sai DEPOIS de o `salvarFicha()` aceitar o que foi escrito, e não
+   antes: confete em cima de um "Escreva o assunto" seria a tela comemorando um
+   erro. Não sai depois da RESPOSTA do servidor porque, com o `b4u-gravar.js`, a
+   ficha fecha na hora e a resposta chega segundos depois — o confete apareceria
+   descolado do gesto, quando a pessoa já está em outra tarefa; e se a gravação
+   falhar, é o recado do `B4UGravar` que conta, com o desfazer junto.
+   `window.B4UDelights &&`: sem o arquivo, conclui igual e ninguém percebe. */
+function comemorarConclusao(p){
+  if(!window.B4UDelights||!p) return;
+  try{ B4UDelights.comemorar({x:p.x,y:p.y}); }catch(e){ /* enfeite não derruba gravação */ }
 }
 /* O gesto inteiro num clique: marca Feito, põe a data de hoje, grava e fecha.
    Escreve nos CAMPOS e chama o `salvarFicha()` de sempre em vez de mandar um
@@ -2133,14 +2236,67 @@ function mostrarConclusao(){
    seria um segundo lugar para consertar bug.
    E como o `salvarFicha()` só fecha quando o servidor confirma, se der errado a
    ficha fica aberta com "Feito" já escolhido e a data preenchida: a pessoa vê o
-   que ia ser gravado e tenta de novo pelo Salvar. */
-function concluirAgora(){
+   que ia ser gravado e tenta de novo pelo Salvar.
+   O PRIMEIRO CLIQUE NÃO CONCLUI: ele pergunta (ver `certeza()`). Um clique só,
+   num botão verde grande e do tamanho do campo, gravava e fechava a ficha —
+   rápido demais para um gesto que não tem desfazer de um clique. */
+function concluirAgora(btn){
   const sel=document.getElementById('f-sit2'), dt=document.getElementById('f-concl');
   if(!sel||!dt) return;
+  if(!certeza(btn,'Confirmar conclusão?')) return;
+  const p=pontoDoBotao(btn);
   sel.value='Feito';
   /* Data já gravada é respeitada: quem corrigiu a data à mão e clicou em
      concluir não quer que o botão desfaça a correção. */
   if(!dt.value) dt.value=(HOJE||'').slice(0,10);
+  pintarSituacao(); mostrarConclusao();
+  Promise.resolve(salvarFicha()).then(ok=>{ if(ok!==false) comemorarConclusao(p); })
+    .catch(()=>{});
+}
+/* O OUTRO jeito de concluir: trocar a Situação para "Feito" no seletor e clicar
+   em Salvar. É a mesma conquista, e por isso ganha a mesma festa — se o confete
+   só saísse do botão verde, quem concluiu pelo seletor veria a comemoração dos
+   colegas e acharia que a tarefa dele valeu menos.
+   Só quando a tarefa NÃO ESTAVA concluída antes: salvar uma correção de vírgula
+   numa tarefa já encerrada não é conclusão nenhuma, e confete toda vez que
+   alguém abre uma tarefa velha para corrigir a data vira barulho.
+   Não pergunta "tem certeza?" porque aqui o gesto já é longo e deliberado — a
+   pessoa desceu até o seletor, escolheu Feito, viu a data aparecer e clicou em
+   Salvar. A pergunta existe para proteger o clique ÚNICO. */
+function salvarPeloBotao(btn){
+  const sel=document.getElementById('f-sit2');
+  const virou = !!sel && sel.value==='Feito' && !(ABERTA && b4uTexto(ABERTA.situacao)==='Feito');
+  const p = virou ? pontoDoBotao(btn) : null;
+  Promise.resolve(salvarFicha()).then(ok=>{ if(ok!==false&&p) comemorarConclusao(p); })
+    .catch(()=>{});
+}
+/* O caminho de volta. Mesmo desenho do concluir, ao contrário: escreve nos
+   campos e deixa o `salvarFicha()` de sempre gravar — e por isso a reabertura
+   entra no histórico sozinha, pelo `oQueMudou()`, sem uma linha de código nova.
+
+   VOLTA PARA "EM ANDAMENTO", e não para "A fazer": quem reabre uma tarefa está
+   retomando um trabalho que já foi mexido, não devolvendo um trabalho que nunca
+   começou. A DATA DE CONCLUSÃO É LIMPA no mesmo gesto — uma tarefa em aberto com
+   data de conclusão preenchida é uma linha que mente para todo relatório que
+   olhar essa coluna. (O ouvinte de `f-sit2` faz a mesma limpeza quando a troca é
+   feita à mão no seletor; aqui é explícito porque este caminho não passa por ele.)
+
+   A situação vem da lista do SERVIDOR (`SITUACOES`), com o "Em andamento" como
+   primeira escolha. Escrever no seletor um valor que não está entre as opções
+   dele deixaria o campo VAZIO, e a tarefa seria gravada sem situação nenhuma —
+   silenciosamente, que é o pior jeito. */
+function reabrirAgora(btn){
+  const sel=document.getElementById('f-sit2'), dt=document.getElementById('f-concl');
+  const msg=document.getElementById('m-msg');
+  if(!sel||!dt) return;
+  const volta = SITUACOES.indexOf('Em andamento')>=0 ? 'Em andamento' : (sitAbertas()[0]||'');
+  if(!volta){
+    if(msg){ msg.className='msg err'; msg.textContent='Não há situação em aberto na planilha para onde reabrir.'; }
+    return;
+  }
+  if(!certeza(btn,'Reabrir mesmo?')) return;
+  sel.value=volta;
+  dt.value='';
   pintarSituacao(); mostrarConclusao();
   salvarFicha();
 }
@@ -2259,10 +2415,11 @@ function validarCliFicha(aoVivo){
 
 async function salvarFicha(){
   const btn=document.getElementById('m-salvar'), msg=document.getElementById('m-msg');
-  /* O botão de concluir também trava enquanto grava — ele chama esta mesma
-     função, e deixá-lo clicável mandaria uma segunda gravação da mesma tarefa
-     enquanto a primeira está em voo. */
-  const btc=document.getElementById('f-concluir');
+  /* Os botões de concluir e de reabrir também travam enquanto grava — os dois
+     chamam esta mesma função, e deixá-los clicáveis mandaria uma segunda
+     gravação da mesma tarefa enquanto a primeira está em voo. */
+  const btc=[document.getElementById('f-concluir'),document.getElementById('f-reabrir')]
+              .filter(Boolean);
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
   const cli=validarCliFicha();
   /* ABERTO EM NÃO É MAIS CAMPO — mas continua sendo DADO, e ele não pode se
@@ -2279,10 +2436,13 @@ async function salvarFicha(){
                 situacao:v('f-sit2'), area:v('f-area2'), cliente_id:cli.id,
                 prazo:v('f-prazo'),
                 aberto_em:abertoEm, concluido_em:v('f-concl') };
-  if(!dados.assunto){ msg.className='msg err'; msg.textContent='Escreva o assunto.'; return; }
+  /* O `false` dos dois erros abaixo não é enfeite: é por ele que o botão de
+     concluir sabe que NÃO houve conclusão e segura a comemoração. Quem chama
+     pelo Salvar continua ignorando o retorno, como sempre ignorou. */
+  if(!dados.assunto){ msg.className='msg err'; msg.textContent='Escreva o assunto.'; return false; }
   /* Texto escrito que não virou cliente NÃO vira tarefa interna calada: seria
      perder a intenção de quem digitou e ainda esconder o engano. */
-  if(!cli.ok){ msg.className='msg err'; msg.textContent=cli.msg||'Confira o cliente.'; return; }
+  if(!cli.ok){ msg.className='msg err'; msg.textContent=cli.msg||'Confira o cliente.'; return false; }
   /* ══════════════════════════════════════════════════════════════════
      DAQUI PARA A FRENTE A FICHA NÃO ESPERA MAIS
      ------------------------------------------------------------------
@@ -2307,6 +2467,7 @@ async function salvarFicha(){
 
   gravarTarefa(dados,nota,alvo);
   fecharFicha(true);
+  return true;
 }
 
 /* ---------- a linha como ela FICARÁ, montada aqui ----------
@@ -2414,7 +2575,7 @@ function gravarTarefa(dados,nota,alvo){
    Ele fica porque a alternativa, sem o módulo, seria fechar a ficha sem ter
    quem avise que a gravação falhou — e aí a pessoa acha que salvou. */
 async function salvarEsperando(dados,nota,alvo,btn,btc,msg){
-  btn.disabled=true; if(btc) btc.disabled=true;
+  btn.disabled=true; btc.forEach(b=>{b.disabled=true;});
   msg.className='msg'; msg.textContent='Salvando…';
   try{
     const d=alvo
@@ -2423,6 +2584,10 @@ async function salvarEsperando(dados,nota,alvo,btn,btc,msg){
     msg.className='msg ok'; msg.textContent='Salvo ✓';
     if(!aplicarUma(d)) await recarregar();
     fecharFicha(true);
+    /* Por este caminho o `true` chega DEPOIS da confirmação do servidor, e é aí
+       que a comemoração sai — mais tarde que no caminho normal, e certa do mesmo
+       jeito: o que ela celebra é a gravação, não o clique. */
+    return true;
   }catch(e){
     if(e&&e.incerto){
       msg.className='msg err';
@@ -2431,7 +2596,8 @@ async function salvarEsperando(dados,nota,alvo,btn,btc,msg){
       msg.className='msg err';
       msg.textContent='O servidor recusou: '+String((e&&e.message)||e);
     }
-  }finally{ btn.disabled=false; if(btc) btc.disabled=false; }
+    return false;
+  }finally{ btn.disabled=false; btc.forEach(b=>{b.disabled=false;}); }
 }
 
 /* ---------- eventos ---------- */
@@ -2448,7 +2614,10 @@ document.addEventListener('click',e=>{
     if(t) abrirFicha(t);
     return;
   }
-  if(e.target.id==='f-concluir'){ concluirAgora(); return; }
+  /* Os dois passam o PRÓPRIO botão adiante: é nele que a pergunta "tem certeza?"
+     acontece, e é dele que a comemoração sai. */
+  if(e.target.id==='f-concluir'){ concluirAgora(e.target); return; }
+  if(e.target.id==='f-reabrir'){ reabrirAgora(e.target); return; }
   /* `closest` e não `e.target.dataset`: os alvos do painel têm filhos (o pontinho,
      o número em negrito, o nome da área), e clicar em cima do número devolveria o
      <b>, que não tem data-pn nenhum. */
@@ -2459,7 +2628,7 @@ document.addEventListener('click',e=>{
   if(e.target.id==='ir-time'||e.target.id==='marcar-quem'){ marcarTudo('quem'); return; }
   if(e.target.id==='marcar-area'){ marcarTudo('area'); return; }
   if(e.target.id==='marcar-sit'){ marcarTudo('sit'); return; }
-  if(e.target.id==='m-salvar'){ salvarFicha(); return; }
+  if(e.target.id==='m-salvar'){ salvarPeloBotao(e.target); return; }
   /* Fechar, × e clique no véu não estão aqui: quem cuida deles é a casca do
      b4u-modal.js, que precisa passar pelo aviso de "tem coisa por gravar" antes
      de deixar sair. */
