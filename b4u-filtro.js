@@ -212,6 +212,19 @@
     'overflow:auto;overscroll-behavior:contain}',
     '.b4f-p[hidden]{display:none}',
 
+    /* `user-select:none` AQUI NÃO É COSMÉTICO — é o que faz o clique no TEXTO
+       marcar a caixa. A linha é um <label> com o checkbox dentro, então clicar no
+       nome deveria marcar sozinho. E marcava: num clique perfeitamente parado.
+       Só que em cima de texto selecionável, mouse que anda 3 ou 4px entre apertar
+       e soltar — o que um trackpad faz o tempo todo — deixa de ser clique e vira
+       ARRASTO DE SELEÇÃO, e o navegador cancela a ativação do <label>. Em cima do
+       checkbox não há texto para selecionar, e é por isso que ali "sempre
+       funcionava": a diferença nunca foi de área clicável, era de gesto.
+       Sem texto selecionável não há arrasto para começar, e o gesto volta a ser o
+       que a pessoa quis. Vale para a linha inteira e para o rótulo do botão, que
+       tinha o mesmo problema na hora de abrir o painel. O campo de BUSCA fica
+       de fora, e tem de ficar: lá texto é para selecionar mesmo. */
+    '.b4f-li,.b4f-bt{-webkit-user-select:none;-moz-user-select:none;user-select:none}',
     '.b4f-li{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--radius-sm,4px);',
     'cursor:pointer;font-size:var(--fs-3,13px);color:var(--ink,#113D39);font-weight:600}',
     '.b4f-li[hidden]{display:none}',
@@ -220,6 +233,15 @@
     'accent-color:var(--brand-teal,#0F8C85)}',
     '.b4f-li input:focus-visible{outline:2px solid var(--brand-teal,#0F8C85);outline-offset:1px}',
     '.b4f-tx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    /* O texto ESTICA até a borda da linha. Sem isto o <span> media o tamanho da
+       palavra — "Ana" ocupava 30px de uma linha de 211 — e o vazio à direita,
+       apesar de ser área do <label> e de já funcionar, não PARECIA clicável: o
+       hover pintava a linha inteira e o alvo aparente era a palavra. Agora o que
+       se vê é o que se pode clicar.
+       Só nas linhas da LISTA. Na de cima o "Todas" tem o "/ Nenhuma" colado, e
+       esticar o primeiro jogaria o segundo para a outra ponta — a frase é uma só
+       e tem de continuar sendo lida como uma. */
+    '.b4f-lista .b4f-tx{flex:1}',
 
     '.b4f-todas{font-weight:800;border-bottom:1px solid var(--line,#E4D9C9);',
     'border-radius:0;margin-bottom:4px;padding-bottom:8px}',
@@ -273,6 +295,44 @@
       if (ABERTOS[i] !== excecao) ABERTOS[i]._fechar(false);
     }
   }
+
+  /* ── O DEDO ESTÁ APERTADO? ────────────────────────────────────────────────
+     Existe para uma coisa só, e essa coisa era um bug feio: clicar no NOME da
+     opção não marcava nada; só clicar em cima do quadradinho marcava.
+
+     A linha é um <label> com o checkbox dentro, então clicar no nome devia
+     marcar — e a culpa não era do <label>, era do guarda de "saiu com Tab" que
+     mora no `focusout` de cada instância. A sequência, medida no navegador:
+
+       1. o dedo APERTA em cima do texto;
+       2. o botão do filtro perde o foco -> `focusout` -> `setTimeout(…, 0)`;
+       3. o timer roda ~imediatamente, com o dedo AINDA APERTADO. Como o foco
+          ainda não foi para lugar nenhum, `no.contains(activeElement)` é falso
+          e o painel FECHA;
+       4. o dedo SOLTA — e não há mais <label> embaixo dele. Sem clique, sem
+          marcação.
+
+     Em cima do quadradinho isso nunca acontecia porque campo de formulário toma
+     o foco já no APERTAR, no passo 1, e o guarda vê o foco dentro de casa. A
+     diferença nunca foi de área clicável: era de quem pega foco quando.
+
+     E não era questão de "clicar rápido": apertar e soltar num trackpad leva de
+     40 a 120ms, e o timer é de 0. Na prática, no texto, quase nunca funcionava.
+
+     Enquanto o dedo está apertado, "o foco saiu" não quer dizer "a pessoa foi
+     embora" — quer dizer "a pessoa está no meio de um gesto". O guarda espera.
+     Quem cuida de clique FORA do filtro continua sendo o ouvinte de clique logo
+     abaixo, que não mudou; este flag não afrouxa nada, só impede o painel de
+     fugir de um gesto que ainda está acontecendo.
+
+     Um flag só para todos os filtros porque dedo é um só. Na CAPTURA para chegar
+     antes de qualquer `stopPropagation` da página hospedeira, e com
+     `pointercancel` junto porque no celular o gesto pode virar rolagem e o
+     `pointerup` nunca vem. */
+  var APERTADO = false;
+  d.addEventListener('pointerdown',   function () { APERTADO = true;  }, true);
+  d.addEventListener('pointerup',     function () { APERTADO = false; }, true);
+  d.addEventListener('pointercancel', function () { APERTADO = false; }, true);
 
   /* Clique em qualquer lugar que não seja o próprio filtro fecha o painel. Na
      BORBULHA e não na captura: na captura este ouvinte rodaria antes do clique
@@ -756,10 +816,13 @@
 
     /* Tab para fora fecha. O `setTimeout` existe porque no `focusout` o foco ainda
        não chegou ao próximo elemento em todos os navegadores — perguntar antes da
-       hora fecharia o painel ao andar de um checkbox para o outro. */
+       hora fecharia o painel ao andar de um checkbox para o outro.
+       `APERTADO` é a segunda espera, e a que faltava: este guarda é sobre foco de
+       TECLADO indo embora, e com o dedo apertado não há Tab nenhum acontecendo —
+       há um clique pela metade. Ver a nota lá em cima, no flag. */
     no.addEventListener('focusout', function () {
       w.setTimeout(function () {
-        if (aberto && !no.contains(d.activeElement)) fechar(false);
+        if (aberto && !APERTADO && !no.contains(d.activeElement)) fechar(false);
       }, 0);
     });
 
