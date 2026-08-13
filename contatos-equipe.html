@@ -526,6 +526,15 @@ tr.falhou>td{background:#FBEAE7!important}
 .btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
   border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap}
 .btn-retry:disabled{opacity:.6;cursor:default}
+/* O painel passou a ter TRES estados de gravacao, nao dois: gravou, nao gravou e
+   NAO SEI. O terceiro nao pode usar o mesmo selo do segundo — o .btn-retry diz
+   "nao salvou" e convida a repetir, e nesta hora ninguem sabe se a gravacao
+   aconteceu. Repetir uma gravacao que talvez tenha ido e o estrago que este
+   caminho todo existe para evitar. Por isso a duvida tem selo proprio: cor de
+   aviso, nao de erro, e sem botao nenhum para clicar. */
+.ign-duvida{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;
+  color:var(--amber-2);background:var(--amber-soft);border:1px solid var(--amber-line);
+  border-radius:var(--radius-pill);padding:2px 9px}
 /* ---------- padroes compartilhados (B.10 e B.12) ---------- */
 /* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
 :focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
@@ -868,7 +877,126 @@ function jsonp(url){
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
-async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
+/* O JSONP sempre teve teto; este POST não tinha nenhum. Uma resposta perdida
+   deixava a promise pendurada para sempre: "Salvando…" eterno na faixa e o aviso
+   de "sair sem salvar" pedindo confirmação até o F5. Agora há prazo — e, mais
+   importante, quem estoura o prazo sabe QUE TIPO de silêncio foi. */
+async function postAcao(obj,ms){
+  const ctl=new AbortController();
+  const t=setTimeout(()=>ctl.abort(),ms||45000);
+  try{
+    /* O `JSON.stringify` mora DENTRO do try: fora dele, um valor circular ou um
+       getter que estoura sairia sem marca nenhuma — nem `doServidor` nem
+       `incerto` — e quem lê a exceção lá na frente não teria como saber que ela
+       nunca chegou a virar requisição. */
+    const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,signal:ctl.signal});
+    const d=await r.json();
+    /* Erro que o SERVIDOR mandou: ele processou, decidiu e recusou. É o único
+       caso em que dá para garantir que não gravou. */
+    if(d&&d.erro){ const err=new Error(d.erro); err.doServidor=true; throw err; }
+    return d;
+  }catch(e){
+    /* ---------- "não salvou" é uma AFIRMAÇÃO, e o front não tem como fazê-la ----------
+       O servidor GRAVA e só depois responde. Quando a resposta se perde, a
+       gravação já aconteceu — e há quatro jeitos de isso ocorrer: o prazo
+       estourar, o `r.json()` topar com uma página HTML (cota, tela de
+       autorização), o 302 do /exec para o googleusercontent falhar, ou a aba ser
+       suspensa com a requisição em voo.
+       Em todos, a planilha está certa e a tela dizia "Não foi possível salvar".
+       A equipe aprendeu a desconfiar do painel por causa disso.
+       Agora a exceção carrega `.incerto`: só o erro VINDO DO SERVIDOR é falha de
+       verdade; o resto é silêncio, e silêncio não é resposta. */
+    if(e&&e.name==='AbortError'){ const x=new Error('A resposta demorou.'); x.incerto=true; throw x; }
+    if(e&&e.doServidor) throw e;
+    const x=new Error(String((e&&e.message)||e)); x.incerto=true; throw x;
+  }finally{ clearTimeout(t); }
+}
+
+/* ---------------- releitura de confirmação ----------------
+   `incerto` quer dizer "não sei", e "não sei" é o pior recado que um painel pode
+   dar a quem acabou de digitar. Só existe um jeito de saber: PERGUNTAR DE NOVO.
+   E perguntar é uma LEITURA — não repete a gravação e não cria contato nenhum.
+   Por isso ela pode rodar sozinha, sem pedir licença.
+
+   Vale só para o contato QUE JÁ EXISTE, achado pela `row`. Contato novo não tem
+   row para reler, e remoção não tem valor para comparar: os dois continuam com o
+   aviso de recarregar, que é o conselho certo para rota que cria e para rota que
+   apaga.
+
+   O que se compara: nome, e-mail, telefone, papel e as áreas. Telefone entra por
+   DÍGITOS — a planilha guarda o que quiser de parênteses e traço, e cobrar a
+   pontuação faria uma gravação inteira e correta ser anunciada como perdida.
+   Perfil fica de fora: é objeto aninhado (médico, sócio, CRM, endereço), e o que
+   o servidor devolve ali não tem forma garantida. Um campo a menos na conferência
+   custa uma dúvida; um campo comparado errado custa um "não gravou" mentiroso.
+
+   Nada do que volta é pintado. A ficha continua exatamente como está: quem está
+   digitando não pode ver o próprio texto ser trocado por causa de uma conferência
+   que ele não pediu e não vê acontecer.
+
+   Não existe rota de leitura por linha — esta página tem uma leitura só, a de
+   bloco. `relerContato` é o ponto único onde isso está escrito: no dia em que o
+   backend ganhar um `tipo=contato_linha&row=`, muda esta função e mais nada. */
+const CONF_ESPERA=3000;   // o servidor grava DENTRO do lock: perguntar antes de ele soltar devolve o valor velho
+/* Teto da conferência. O `jsonp()` desta página tem prazo de 45 s e AINDA repete
+   uma vez depois de 4 s de pausa: no pior caso a pergunta levaria mais de um
+   minuto e meio, com a faixa dizendo "conferindo se gravou…" o tempo todo. Passou
+   de 25 s, a conferência desiste e vira dúvida — que é a resposta honesta, e é o
+   mesmo que ela diria depois de esperar mais um minuto. */
+const CONF_TETO=25000;
+function comTeto(p,ms){return Promise.race([p,new Promise((_,f)=>setTimeout(()=>f(new Error('a conferência demorou')),ms))]);}
+let CONF_N=0;                 // numera as gravações
+const CONF_SEQ=new Map();     // row → número da última gravação disparada neste contato
+function esperaMs(ms){return new Promise(r=>setTimeout(r,ms));}
+async function relerContato(row){
+  const d=await jsonp(API_URL+'?tipo=contatos_equipe&chave='+encodeURIComponent(chaveAtual()));
+  if(!d||d.erro) throw new Error(String((d&&d.erro)||'releitura vazia'));
+  const c=(d.contatos||[]).find(x=>String(x.row)===String(row));
+  if(!c) throw new Error('contato não encontrado na releitura');
+  return c;
+}
+/* A `row` NÃO é identidade estável. Quando alguém remove um contato noutra aba,
+   todas as linhas abaixo sobem — é por isso que a própria gravação manda
+   `email_atual`, para o backend conferir que a linha ainda é este contato.
+   A releitura precisa da mesma desconfiança: sem ela, a conferência leria OUTRA
+   pessoa naquela row, veria tudo diferente e anunciaria "não gravou — pode mandar
+   de novo" com base em uma linha que não é a nossa. Identidade duvidosa vira
+   dúvida, não veredicto. */
+function mesmaLinha(c,ref,mandado){
+  if(String(c.cliente_id||'')!==String(ref.cliente_id||'')) return false;
+  const e=String(c.email||'').trim().toLowerCase();
+  const antes=String(ref._email0||'').trim().toLowerCase();
+  const agora=String(mandado.email||'').trim().toLowerCase();
+  /* Depois da gravação o e-mail da linha é o novo; antes dela, o antigo. Qualquer
+     um dos dois confirma que é a mesma pessoa. */
+  if(e&&(e===agora||e===antes)) return true;
+  /* Linha SEM e-mail. Dois jeitos de chegar aqui, e os dois são a mesma pessoa:
+     o contato nunca teve e-mail, ou esta gravação acabou de APAGAR o que ele
+     tinha — e foi este segundo caso que, sem esta linha, condenava toda gravação
+     que limpa o e-mail a virar dúvida eterna, com selo, pendência presa e aviso de
+     "sair sem gravar" grudado até o F5, numa gravação que deu certo. */
+  if(!e&&(!agora||!antes)) return String(c.nome||'').trim()===String(mandado.nome||'').trim();
+  return false;
+}
+/* 'bateu' | 'nao-bateu' | 'nao-sei'.
+   NUNCA devolve 'bateu' por falta de informação: releitura que falhou é dúvida,
+   não é confirmação. Um "Salvo ✓" errado custa mais caro que a dúvida. */
+async function conferirGravacao(ref,mandado){
+  try{
+    await esperaMs(CONF_ESPERA);
+    const c=await comTeto(relerContato(ref.row),CONF_TETO);
+    if(!mesmaLinha(c,ref,mandado)) return 'nao-sei';   // a row já é de outra pessoa: nada aqui prova nada
+    const txt=v=>String(v==null?'':v).trim();
+    if(txt(c.nome)!==txt(mandado.nome)) return 'nao-bateu';
+    if(txt(c.email).toLowerCase()!==txt(mandado.email).toLowerCase()) return 'nao-bateu';
+    if(b4uDigitos(txt(c.telefone))!==b4uDigitos(txt(mandado.telefone))) return 'nao-bateu';
+    if(txt(c.papel)!==txt(mandado.papel)) return 'nao-bateu';
+    const la=AREAS.filter(a=>(c.areas||{})[a[0]]).map(a=>a[0]).join(',');
+    if(la!==(mandado.areas||[]).join(',')) return 'nao-bateu';
+    return 'bateu';
+  }catch(_){ return 'nao-sei'; }
+}
 
 /* ---------------- estado ---------------- */
 let CONTATOS=[],CLIENTES=[],NOME={},GRUPOS=[];
@@ -1572,6 +1700,24 @@ const SUJOS=new Map();   // row -> timer
    com um "tentar de novo" no rodapé dele, e fechar a aba pede confirmação. */
 const FALHAS=new Set();
 function temPendencia(){return SUJOS.size>0||FALHAS.size>0;}
+/* ---------- o terceiro estado ----------
+   Uma gravação que não deu para confirmar NÃO é uma gravação que falhou. As duas
+   pedem que o texto digitado não se perca (e por isso as duas entram em FALHAS,
+   que é o que segura o aviso de "sair sem gravar"), mas só uma delas autoriza
+   repetir. Este conjunto é a diferença: quem está aqui recebe selo de dúvida, sem
+   botão, e a instrução de recarregar. */
+const INCERTOS=new Set();
+
+/* O selo que a linha ganha quando algo não gravou. Duas formas, porque são dois
+   fatos diferentes — e a diferença aparece no que ele OFERECE: o de falha tem
+   botão (repetir é seguro, o servidor disse que não gravou); o de dúvida não tem
+   botão nenhum, porque a única ação segura ali é recarregar e olhar. */
+function seloFalha(id){
+  return INCERTOS.has(String(id))
+    ? '<span class="ign-duvida">sem confirmação — recarregue a página para ver se gravou</span>'
+    : '<button type="button" class="btn-retry" data-retry="'+esc(String(id))+'">não salvou — tentar de novo</button>';
+}
+
 function marcarFalha(row,falhou){
   const chave=CSS.escape(String(row));
   /* A LINHA continua marcada na lista mesmo com a ficha fechada — é o que mostra,
@@ -1584,11 +1730,18 @@ function marcarFalha(row,falhou){
   const cx=document.querySelector('.ctt[data-row="'+chave+'"]');
   if(!cx)return;
   const ign=cx.querySelector('.ign');if(!ign)return;
-  const antigo=ign.querySelector('.btn-retry');
-  if(falhou&&!antigo)ign.insertAdjacentHTML('beforeend',
-    'Não consegui gravar este contato. O que você digitou continua aqui.'+
-    '<button type="button" class="btn-retry" data-retry="'+esc(String(row))+'">não salvou — tentar de novo</button>');
-  if(!falhou&&antigo)ign.innerHTML='';
+  /* Trocar, não só inserir. O guarda antigo era `se falhou e ainda não há selo,
+     insere` — o que bastava quando havia UM selo só. Com dois, ele congelava o
+     primeiro: uma linha que falhou (botão vermelho) e depois ficou em dúvida
+     continuaria oferecendo "tentar de novo" embaixo de um texto que pede para NÃO
+     repetir; e o contrário — dúvida antes, recusa do servidor depois — esconderia o
+     botão justamente quando repetir passou a ser o certo. O selo é redesenhado a
+     cada chamada, e some quando não há mais o que marcar. */
+  if(falhou)ign.innerHTML=
+    (INCERTOS.has(String(row))
+      ? 'A resposta do servidor não chegou. O que você digitou continua aqui.'
+      : 'Não consegui gravar este contato. O que você digitou continua aqui.')+seloFalha(row);
+  else ign.innerHTML='';
 }
 /* Sair com alteração pendente (ou com uma gravação que falhou) pede confirmação. */
 /* O pedido de confirmação ao sair da página é da casca (b4u-modal.js), pelo
@@ -1643,22 +1796,40 @@ function perfilDe(c){
            crm:p.crm||'', endereco:p.endereco||'', qualificacao:p.qualificacao||'' };
 }
 
-async function salvarContato(row){
+/* `semConferir` só é usado pelo flushPendentes: ver o comentário lá embaixo, no
+   ramo incerto. Quem chama de fora (autosave, Enter, botão) não passa nada e
+   ganha a conferência. */
+async function salvarContato(row,semConferir){
   const k=String(row);
   clearTimeout(SUJOS.get(k));SUJOS.delete(k);
   const c=contatoDe(row);if(!c)return;
   const nome=String(c.nome||'').trim(),email=String(c.email||'').trim();
   if(!nome&&!email){setSave('err','Não salvou: informe ao menos nome ou e-mail.');return;}
+  /* O que foi mandado fica guardado: é contra ISTO que a conferência do caso
+     incerto compara, e não contra o objeto do contato — que continua vivo na tela
+     e pode mudar debaixo dela enquanto a releitura está no ar. */
+  const mandado={nome:nome,email:email,telefone:b4uTexto(c.telefone).trim(),
+                 papel:c.papel,areas:areasSel(c)};
+  /* Cada gravação recebe um número. A conferência demora alguns segundos, e nesse
+     meio-tempo a pessoa pode ter digitado de novo: sem este carimbo, a resposta de
+     uma conferência VELHA pintaria "Salvo ✓ (confirmado)" por cima de uma gravação
+     nova que ainda está viajando. */
+  /* O post voltou? É o que separa "a tela quebrou depois de gravar" de "a exceção
+     nem chegou a virar requisição". Sem esta marca, um erro lançado ANTES do post
+     — dentro do mesmo try — seria anunciado como gravação bem-sucedida. */
+  let respondeu=false;
+  const seq=++CONF_N; CONF_SEQ.set(k,seq);
   try{
     setSave('saving','Salvando…');
     await postAcao({
       acao:'contato_salvar',row:c.row,cliente_id:c.cliente_id,
-      nome:nome,email:email,telefone:b4uTexto(c.telefone).trim(),
-      papel:c.papel,areas:areasSel(c),perfil:perfilDe(c),email_atual:c._email0||'',
+      nome:nome,email:email,telefone:mandado.telefone,
+      papel:c.papel,areas:mandado.areas,perfil:perfilDe(c),email_atual:c._email0||'',
       cliente:nomeCli(c.cliente_id),cod:respAtual()
     });
+    respondeu=true;
     c._email0=email;                       // a linha agora é este e-mail
-    FALHAS.delete(k);marcarFalha(k,false);
+    FALHAS.delete(k);INCERTOS.delete(k);marcarFalha(k,false);
     setSave('ok','Salvo ✓ '+horaAgora());
     /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé da ficha sai, e o
        Fechar volta a ser Fechar. */
@@ -1666,15 +1837,91 @@ async function salvarContato(row){
     atualizarLinha(k);atualizarTopoCad(k);
     atualizarCabecalho(c.cliente_id);desenharChips();desenharResumo();desenharContagem();desenharResumoLista();
   }catch(e){
-    /* Aviso curto e sem detalhe técnico: o contato fica marcado como falha e o
-       "tentar de novo" reenvia os mesmos campos — é isso que importa saber. */
-    FALHAS.add(k);marcarFalha(k,true);
-    setSave('err','Não foi possível salvar. Tente de novo.');
+    /* Uma resposta que chega depois de outra gravação já ter assumido este contato
+       não tem mais nada a dizer sobre ele: o que está na tela é o texto da
+       gravação nova, e o veredicto desta aqui — sucesso ou fracasso — falaria de
+       algo que já não está mais lá. Sai calada, sem tocar na faixa. */
+    if(CONF_SEQ.get(k)!==seq) return;
+    /* TRÊS desfechos, não dois — e a diferença é toda ela sobre o que dá para
+       AFIRMAR. */
+
+    /* (1) O servidor leu, decidiu e recusou. Não gravou. O texto é escrito por nós
+       ("a linha mudou de lugar", "e-mail já cadastrado") e vai para a tela: aqui
+       quem lê é da equipe, e esconder o motivo já custou caro neste painel. */
+    if(e&&e.doServidor){
+      FALHAS.add(k); INCERTOS.delete(k); marcarFalha(k,true);
+      setSave('err','O servidor recusou: '+String((e&&e.message)||e));
+      return;
+    }
+    /* (2) A exceção NÃO veio do postAcao — ele só devolve `doServidor` ou
+       `incerto`. Restam dois casos, e o `respondeu` os separa:
+       • o post JÁ tinha voltado e quem estourou foi o código de tela que roda
+         depois dele — então GRAVOU, e dizer "o servidor recusou" seria inverter o
+         fato e ainda oferecer um "tentar de novo" que regravaria o que já está lá;
+       • o post NEM chegou a sair (algo estourou antes dele, dentro do mesmo try) —
+         aí nada foi gravado e repetir é seguro. */
+    if(!e||!e.incerto){
+      if(respondeu){
+        c._email0=mandado.email;
+        FALHAS.delete(k); INCERTOS.delete(k); marcarFalha(k,false);
+        setSave('ok','Salvo ✓ '+horaAgora()+' · a tela não acompanhou — recarregue para vê-la certa');
+      }else{
+        FALHAS.add(k); INCERTOS.delete(k); marcarFalha(k,true);
+        setSave('err','Não foi possível salvar. Tente de novo.');
+      }
+      return;
+    }
+    /* (3) A resposta se perdeu. A gravação acontece ANTES da resposta, e o front
+       não tem como saber se ela aconteceu — então, em vez de decretar, ele vai
+       PERGUNTAR.
+       A pendência é registrada AGORA, antes de perguntar: a conferência leva até
+       28 s, e nesse intervalo `SUJOS` já foi esvaziado. Sem isto, `temPendencia()`
+       diria "não há nada por gravar" e o F5 que a mensagem seguinte vai pedir
+       sairia sem aviso nenhum, levando o texto junto. Só o SELO na linha espera —
+       porque o selo é uma afirmação, e ainda não há nada a afirmar. */
+    FALHAS.add(k);
+    if(semConferir){
+      /* Chamado de dentro do flushPendentes: quem chamou vai recarregar a lista
+         inteira logo em seguida, e essa recarga responde melhor do que a
+         conferência — e sem segurar o botão por meia dúzia de contatos em fila. */
+      INCERTOS.add(k); marcarFalha(k,true);
+      setSave('err','Não consegui confirmar se salvou. Recarregue antes de mandar de novo.');
+      return;
+    }
+    setSave('saving','A resposta não chegou — conferindo se gravou…');
+    const r=await conferirGravacao(c,mandado);
+    if(CONF_SEQ.get(k)!==seq) return;   // enquanto conferíamos, outra gravação assumiu o contato
+    if(r==='bateu'){
+      c._email0=mandado.email;          // a linha agora é este e-mail
+      FALHAS.delete(k); INCERTOS.delete(k); marcarFalha(k,false);
+      setSave('ok','Salvo ✓ (confirmado) '+horaAgora());
+      if(!temPendencia()&&CAD)CAD.aviso(false);
+      atualizarLinha(k);atualizarTopoCad(k);
+      atualizarCabecalho(c.cliente_id);desenharChips();desenharResumo();desenharContagem();desenharResumoLista();
+      return;
+    }
+    if(r==='nao-bateu'){
+      /* Única hora em que "mande de novo" é conselho honesto: o contato foi lido e
+         o valor não está lá. */
+      INCERTOS.delete(k); marcarFalha(k,true);
+      setSave('err','Não gravou tudo: reli o contato e algum campo não está com o que você mandou. Pode mandar de novo.');
+      return;
+    }
+    /* 'nao-sei': a dúvida continua de pé. Selo de dúvida, sem botão — e o pedido é
+       recarregar, nunca repetir. */
+    INCERTOS.add(k); marcarFalha(k,true);
+    setSave('err','Não consegui confirmar se salvou. Recarregue antes de mandar de novo.');
   }
 }
+/* Descarrega a fila ANTES de criar ou remover um contato. É sequencial e é
+   esperado — e por isso passa `semConferir`: com a conferência ligada, três
+   contatos com a rede ruim segurariam o botão por até 84 s (28 s cada, um atrás
+   do outro) sem nada na tela explicando a espera. Quem chama isto recarrega a
+   lista inteira logo depois, e essa recarga já responde o que a conferência
+   responderia — de uma vez, para todos. */
 async function flushPendentes(){
   const rows=Array.from(SUJOS.keys());
-  for(const r of rows){await salvarContato(r);}
+  for(const r of rows){await salvarContato(r,true);}
 }
 /* Grava agora o que estava esperando o debounce. É o salvarContato() de sempre,
    só sem os 700 ms de espera. */
@@ -1796,13 +2043,26 @@ async function salvarAgoraCad(){
       /* O que falhou antes volta para a fila junto com o que está pendente: aqui
          a gravação é sempre do contato inteiro, então reenviar é chamar
          salvarContato() de novo com os mesmos campos. */
+      /* Linha em DÚVIDA não volta para a fila. Tirar o botão "tentar de novo" da
+         linha e deixar o botão primário da ficha reenviando a mesma coisa seria
+         fechar a porta e deixar a janela aberta: a gravação pode ter entrado, e
+         mandar de novo é o que este caminho todo existe para não fazer. Ela fica
+         pendente — a ficha não fecha, e o recado diz o que fazer. */
       const rows=new Set();
       SUJOS.forEach((t,r)=>{clearTimeout(t);rows.add(r);});
-      FALHAS.forEach(r=>rows.add(r));
-      for(const r of rows){await salvarContato(r);}
+      FALHAS.forEach(r=>{if(!INCERTOS.has(String(r)))rows.add(r);});
+      /* Em paralelo, como nas outras quatro telas. Cada contato é uma linha
+         independente e a espera do caso incerto chega a 28 s: em fila, três
+         contatos deixariam o botão desabilitado por mais de um minuto sem nada
+         explicando a demora. */
+      await Promise.all(Array.from(rows).map(r=>salvarContato(r)));
     }catch(e){ /* salvarContato() já registra a falha em FALHAS e avisa na tela */ }
     if(btn){btn.disabled=false;btn.textContent=btn.dataset.rot||'Salvar alterações';}
   }
+    /* Sobrou dúvida: a ficha NÃO fecha (o `temPendencia()` abaixo cuida disso) e
+       agora ela diz por quê. Sem este recado, o botão pareceria não ter feito
+       nada. */
+    if(INCERTOS.size) setSave('err','Uma gravação ficou sem confirmação. Recarregue a página para ver se ela entrou — não mande de novo.');
   if(temPendencia())return;            // não gravou: a ficha continua aberta
   fecharFicha(true);
 }
@@ -1893,6 +2153,10 @@ async function adicionarContato(btn){
   const papel=document.getElementById('m-papel').value;
   const areas=papel==='Principal'?AREAS.map(a=>a[0]):AREAS.filter(a=>MODAL_AREAS[a[0]]).map(a=>a[0]);
   btn.disabled=true;msg.className='msg';msg.textContent='Salvando…';
+  /* O post voltou? Dentro deste try roda coisa ANTES dele (montar o payload,
+     descarregar a fila), e uma exceção lá não pode ser anunciada como "já criado".
+     Ver o uso lá embaixo, no último ramo do catch. */
+  let respondeu=false;
   try{
     await flushPendentes();
     await postAcao({
@@ -1902,6 +2166,7 @@ async function adicionarContato(btn){
       perfil:perfilModal(),
       cliente:nomeCli(id),cod:respAtual()
     });
+    respondeu=true;
     fecharModal();
     ABERTOS.add(String(id));
     setSave('ok','Contato adicionado ✓ '+horaAgora());
@@ -1909,9 +2174,30 @@ async function adicionarContato(btn){
     irPara(id);
   /* As checagens que a pessoa resolve ("Escolha o cliente", "Informe ao menos nome
      ou e-mail") ficam lá em cima e continuam falando por si. O que sobra aqui é
-     falha nossa: aviso curto, sem o texto da exceção — que antes vinha inteiro
-     para dentro do modal. */
-  }catch(e){msg.className='msg err';msg.textContent='Não foi possível salvar. Tente de novo.';}
+     silêncio ou recusa — e são coisas diferentes.
+     Esta rota CRIA uma linha. Mandar de novo às cegas depois de um silêncio deixa
+     o mesmo contato duas vezes na planilha, com dois acessos para o mesmo e-mail,
+     e por isso ela nunca diz "tente de novo": diz para recarregar e conferir.
+     Sem conferência automática — contato novo ainda não tem `row`, e é a `row` que
+     a releitura usa para saber qual linha é qual. */
+  }catch(e){
+    /* Vermelho só quando é erro: o terceiro caminho abaixo é um contato que ESTÁ
+       cadastrado, e pintar isso de vermelho faria alguém cadastrar de novo. */
+    msg.className=(respondeu&&!(e&&(e.incerto||e.doServidor)))?'msg':'msg err';
+    /* Três desfechos, como em toda gravação desta página: recusa (não criou),
+       silêncio (talvez tenha criado) e — o terceiro — exceção que NÃO veio do
+       postAcao. Esta última estourou depois do post, no fechar/recarregar/irPara:
+       o contato ESTÁ cadastrado, e mandar de novo o deixaria em dobro. */
+    msg.textContent = (e&&e.incerto)
+      ? 'A resposta não chegou. O contato pode já ter sido cadastrado — feche, atualize a lista e confira antes de mandar de novo.'
+      : (e&&e.doServidor)
+      ? 'O servidor recusou: '+String((e&&e.message)||e)
+      : respondeu
+      ? 'O contato foi cadastrado, mas a tela não acompanhou. Atualize a lista para vê-lo — não mande de novo.'
+      /* Nem chegou ao servidor: estourou no descarregar da fila, antes do post.
+         Nada foi cadastrado — o que ficou para trás é a fila, e ela avisa sozinha. */
+      : 'Não foi possível enviar. Nada foi cadastrado — tente de novo.';
+  }
   finally{btn.disabled=false;}
 }
 function pedirConfirmacao(row){
@@ -1933,9 +2219,17 @@ async function removerContato(row){
   const box=document.querySelector('.ctt[data-row="'+CSS.escape(String(row))+'"] [data-rm]');
   if(box)box.innerHTML='<span class="conf">Removendo…</span>';
   const id=c.cliente_id;
+  /* O post voltou? Dentro deste try roda coisa ANTES dele (montar o payload,
+     descarregar a fila), e uma exceção lá não pode ser anunciada como "já criado".
+     Ver o uso lá embaixo, no último ramo do catch. */
+  let respondeu=false;
   try{
     await flushPendentes();
-    await postAcao({acao:'contato_remover',row:c.row,email:c.email,cliente:nomeCli(id),cod:respAtual()});
+    /* Prazo próprio: remover apaga a linha e SOBE todas as de baixo, o que na aba
+       cheia é a operação mais lenta desta página. Com os 45 s de todo mundo, uma
+       remoção normal cairia no aviso de dúvida — e o conselho de lá é não repetir. */
+    await postAcao({acao:'contato_remover',row:c.row,email:c.email,cliente:nomeCli(id),cod:respAtual()},90000);
+    respondeu=true;
     setSave('ok','Contato removido ✓ '+horaAgora());
     /* O contato deixou de existir: a ficha aberta é a dele e não pode continuar
        na tela por cima de uma lista que já não o tem. */
@@ -1943,9 +2237,19 @@ async function removerContato(row){
     if(String(CAD_ROW)===String(row))fecharFicha(true);
     await carregar(false);   // as linhas de todo mundo mudam: recarrega tudo
   }catch(e){
-    /* Aviso curto e sem detalhe técnico; o botão de remover volta ao lugar para
-       quem quiser tentar de novo. */
-    setSave('err','Não foi possível remover. Tente de novo.');
+    /* Remoção apaga a linha e SOBE todas as que estavam abaixo dela. Repetir uma
+       remoção que talvez tenha acontecido é o jeito de apagar o contato seguinte:
+       a `row` que se manda de novo já não é a mesma linha. Por isso o silêncio
+       aqui manda recarregar, nunca repetir. */
+    setSave('err', (e&&e.incerto)
+      ? 'Não consegui confirmar se removeu. Recarregue antes de mandar de novo — o contato pode já ter saído.'
+      : (e&&e.doServidor)
+      ? 'O servidor recusou: '+String((e&&e.message)||e)
+      /* Estourou depois do post, na recarga da lista: o contato SAIU. Repetir aqui
+         removeria a linha que subiu para o lugar dele. */
+      : respondeu
+      ? 'O contato foi removido, mas a lista não acompanhou. Recarregue a página — não mande remover de novo.'
+      : 'Não foi possível remover. Nada foi apagado — tente de novo.');
     if(box)box.innerHTML=btnRemover(c);
   }
 }
@@ -2053,7 +2357,7 @@ function trocarPapel(c,novo){
 }
 document.addEventListener('click',e=>{
   const rt=e.target.closest('[data-retry]');
-  if(rt){rt.textContent='enviando…';rt.disabled=true;salvarContato(rt.dataset.retry);return;}
+  if(rt){rt.textContent='enviando…';rt.disabled=true;INCERTOS.delete(String(rt.dataset.retry));salvarContato(rt.dataset.retry);return;}
   const cp=e.target.closest('[data-copy]');
   if(cp){copiar(cp.dataset.copy,cp);return;}
   const ac=e.target.closest('.achip[data-a]');

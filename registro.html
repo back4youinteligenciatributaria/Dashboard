@@ -579,6 +579,15 @@ tr.falhou>td{background:#FBEAE7!important}
 .btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
   border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap}
 .btn-retry:disabled{opacity:.6;cursor:default}
+/* O painel passou a ter TRES estados de gravacao, nao dois: gravou, nao gravou e
+   NAO SEI. O terceiro nao pode usar o mesmo selo do segundo — o .btn-retry diz
+   "nao salvou" e convida a repetir, e nesta hora ninguem sabe se a gravacao
+   aconteceu. Repetir uma gravacao que talvez tenha ido e o estrago que este
+   caminho todo existe para evitar. Por isso a duvida tem selo proprio: cor de
+   aviso, nao de erro, e sem botao nenhum para clicar. */
+.ign-duvida{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;
+  color:var(--amber-2);background:var(--amber-soft);border:1px solid var(--amber-line);
+  border-radius:var(--radius-pill);padding:2px 9px}
 /* ---------- padroes compartilhados (B.10 e B.12) ---------- */
 /* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
 :focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
@@ -980,7 +989,103 @@ function jsonp(url){
     return new Promise(r=>setTimeout(r, JSONP_PAUSA)).then(()=>jsonpTentativa(url));
   });
 }
-async function postAcao(obj){const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});const d=await r.json();if(d&&d.erro)throw new Error(d.erro);return d;}
+/* O JSONP sempre teve teto; este POST não tinha nenhum. Uma resposta perdida
+   deixava a promise pendurada para sempre: "Salvando…" eterno na faixa e o aviso
+   de "sair sem salvar" pedindo confirmação até o F5. Agora há prazo — e, mais
+   importante, quem estoura o prazo sabe QUE TIPO de silêncio foi. */
+async function postAcao(obj,ms){
+  const ctl=new AbortController();
+  const t=setTimeout(()=>ctl.abort(),ms||45000);
+  try{
+    /* O `JSON.stringify` mora DENTRO do try: fora dele, um valor circular ou um
+       getter que estoura sairia sem marca nenhuma — nem `doServidor` nem
+       `incerto` — e quem lê a exceção lá na frente não teria como saber que ela
+       nunca chegou a virar requisição. */
+    const body=JSON.stringify(Object.assign({chave:chaveAtual()},obj));
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,signal:ctl.signal});
+    const d=await r.json();
+    /* Erro que o SERVIDOR mandou: ele processou, decidiu e recusou. É o único
+       caso em que dá para garantir que não gravou. */
+    if(d&&d.erro){ const err=new Error(d.erro); err.doServidor=true; throw err; }
+    return d;
+  }catch(e){
+    /* ---------- "não salvou" é uma AFIRMAÇÃO, e o front não tem como fazê-la ----------
+       O servidor GRAVA e só depois responde. Quando a resposta se perde, a
+       gravação já aconteceu — e há quatro jeitos de isso ocorrer: o prazo
+       estourar, o `r.json()` topar com uma página HTML (cota, tela de
+       autorização), o 302 do /exec para o googleusercontent falhar, ou a aba ser
+       suspensa com a requisição em voo.
+       Em todos, a planilha está certa e a tela dizia "Não foi possível salvar".
+       A equipe aprendeu a desconfiar do painel por causa disso.
+       Agora a exceção carrega `.incerto`: só o erro VINDO DO SERVIDOR é falha de
+       verdade; o resto é silêncio, e silêncio não é resposta. */
+    if(e&&e.name==='AbortError'){ const x=new Error('A resposta demorou.'); x.incerto=true; throw x; }
+    if(e&&e.doServidor) throw e;
+    const x=new Error(String((e&&e.message)||e)); x.incerto=true; throw x;
+  }finally{ clearTimeout(t); }
+}
+
+/* ---------------- releitura de confirmação ----------------
+   `incerto` quer dizer "não sei", e "não sei" é o pior recado que um painel pode
+   dar a quem acabou de digitar. Só existe um jeito de saber: PERGUNTAR DE NOVO.
+   E perguntar é uma LEITURA — não repete a gravação e não cria cliente nenhum.
+   Por isso ela pode rodar sozinha, sem pedir licença.
+
+   Duas escolhas que sustentam a conferência:
+
+   • Compara pelo MESMO funil que converteu o valor na ida (`b4uParaPlanilha`).
+     Comparar o que a planilha devolve com o que a tela mostra acusaria diferença
+     de MÁSCARA — "00.623.904/0001-73" contra "00623904000173" — como se fosse
+     falta de gravação, e a conferência viraria mentira ao contrário.
+
+   • Nada do que volta é pintado. O cadastro aberto continua como está: quem está
+     digitando não pode ver o próprio texto ser trocado por causa de uma
+     conferência que ele não pediu e não vê acontecer.
+
+   Vale só para a gravação de CAMPO. A criação de cliente (`onboard`) não passa
+   por aqui: lá não há linha para reler — o ID nasce no servidor, e procurar
+   "algum cliente parecido" é adivinhação numa hora em que errar significa deixar
+   dois cadastros e duas pastas no Drive.
+
+   Não existe rota de leitura por linha — esta página tem uma leitura só, a de
+   bloco. `relerCliente` é o ponto único onde isso está escrito: no dia em que o
+   backend ganhar um `tipo=registro_linha&id=`, muda esta função e mais nada. */
+const CONF_ESPERA=3000;   // o servidor grava DENTRO do lock: perguntar antes de ele soltar devolve o valor velho
+/* Teto da conferência. O `jsonp()` desta página tem prazo de 45 s e AINDA repete
+   uma vez depois de 4 s de pausa: no pior caso a pergunta levaria mais de um
+   minuto e meio, com a faixa dizendo "conferindo se gravou…" o tempo todo. Passou
+   de 25 s, a conferência desiste e vira dúvida — que é a resposta honesta, e é o
+   mesmo que ela diria depois de esperar mais um minuto. */
+const CONF_TETO=25000;
+function comTeto(p,ms){return Promise.race([p,new Promise((_,f)=>setTimeout(()=>f(new Error('a conferência demorou')),ms))]);}
+let CONF_N=0;                 // numera as gravações
+const CONF_SEQ=new Map();     // id → número da última gravação disparada neste cadastro
+function esperaMs(ms){return new Promise(r=>setTimeout(r,ms));}
+async function relerCliente(id){
+  const d=await jsonp(API_URL+'?tipo=registro_equipe&chave='+encodeURIComponent(chaveAtual()));
+  if(!d||d.erro) throw new Error(String((d&&d.erro)||'releitura vazia'));
+  const c=(d.clientes||[]).find(x=>String(x.id)===String(id));
+  if(!c) throw new Error('cadastro não encontrado na releitura');
+  return c.valores||{};
+}
+/* 'bateu' | 'nao-bateu' | 'nao-sei'.
+   NUNCA devolve 'bateu' por falta de informação: releitura que falhou é dúvida,
+   não é confirmação. Um "Salvo ✓" errado custa mais caro que a dúvida. */
+async function conferirGravacao(id,campos){
+  try{
+    await esperaMs(CONF_ESPERA);
+    const v=await comTeto(relerCliente(id),CONF_TETO);
+    /* Coluna travada NUNCA grava — é a mesma lista que alimenta o "Não gravei:"
+       da ficha. Cobrá-la na conferência faria uma gravação inteira e correta ser
+       anunciada como perdida por causa de um campo que o servidor recusa de
+       propósito, todo dia, desde sempre. */
+    const cols=Object.keys(campos).filter(c=>!ehTravada(c)&&Object.prototype.hasOwnProperty.call(v,c));
+    if(!cols.length) return 'nao-sei';   // só travadas (ou colunas que sumiram): vazio não é prova
+    const igual=c=>String(b4uParaPlanilha(v[c]==null?'':v[c],c)).trim()
+                  ===String(campos[c]==null?'':campos[c]).trim();
+    return cols.every(igual)?'bateu':'nao-bateu';
+  }catch(_){ return 'nao-sei'; }
+}
 /* normaliza rótulo de coluna igual ao backend (sem acento, minúsculo, sem ?:. no fim) */
 function norm(s){return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim().replace(/[?:.]+$/,'');}
 /* Um texto de gravação, dois lugares: a faixa da barra (#saveStatus, que continua
@@ -2093,8 +2198,13 @@ async function salvarAgoraCad(){
   if(temPendencia()){
     if(btn){btn.disabled=true;btn.dataset.rot=btn.textContent;btn.textContent='Salvando…';}
     try{
+      /* Linha em DÚVIDA não volta para a fila. Tirar o botão "tentar de novo" da
+         linha e deixar o botão primário da ficha reenviando a mesma coisa seria
+         fechar a porta e deixar a janela aberta: a gravação pode ter entrado, e
+         mandar de novo é o que este caminho todo existe para não fazer. Ela fica
+         pendente — a ficha não fecha, e o recado diz o que fazer. */
       /* o que falhou antes volta para a fila de sujos antes do disparo */
-      if(id&&FALHAS.has(String(id))){
+      if(id&&FALHAS.has(String(id))&&!INCERTOS.has(String(id))){
         const f=FALHAS.get(String(id));
         const su=SUJOS.get(id)||{timer:null,colunas:new Set()};
         f.colunas.forEach(c=>su.colunas.add(c));
@@ -2106,6 +2216,10 @@ async function salvarAgoraCad(){
     }catch(e){ /* salvar() já registra a falha em FALHAS e avisa na tela */ }
     if(btn){btn.disabled=false;btn.textContent=btn.dataset.rot||'Salvar alterações';}
   }
+    /* Sobrou dúvida: a ficha NÃO fecha (o `temPendencia()` abaixo cuida disso) e
+       agora ela diz por quê. Sem este recado, o botão pareceria não ter feito
+       nada. */
+    if(INCERTOS.size) setSave('err','Uma gravação ficou sem confirmação. Recarregue a página para ver se ela entrou — não mande de novo.');
   if(temPendencia())return;            // não gravou: a ficha continua aberta
   fecharCadastro(true);
 }
@@ -2162,6 +2276,24 @@ const SUJOS=new Map();   // id -> {timer, colunas:Set}
    marcado com um "tentar de novo" no topo dele, e fechar a aba pede confirmação. */
 const FALHAS=new Map();   // id -> {colunas:Set}
 function temPendencia(){return SUJOS.size>0||FALHAS.size>0;}
+/* ---------- o terceiro estado ----------
+   Uma gravação que não deu para confirmar NÃO é uma gravação que falhou. As duas
+   pedem que o texto digitado não se perca (e por isso as duas entram em FALHAS,
+   que é o que segura o aviso de "sair sem gravar"), mas só uma delas autoriza
+   repetir. Este conjunto é a diferença: quem está aqui recebe selo de dúvida, sem
+   botão, e a instrução de recarregar. */
+const INCERTOS=new Set();
+
+/* O selo que a linha ganha quando algo não gravou. Duas formas, porque são dois
+   fatos diferentes — e a diferença aparece no que ele OFERECE: o de falha tem
+   botão (repetir é seguro, o servidor disse que não gravou); o de dúvida não tem
+   botão nenhum, porque a única ação segura ali é recarregar e olhar. */
+function seloFalha(id){
+  return INCERTOS.has(String(id))
+    ? '<span class="ign-duvida">sem confirmação — recarregue a página para ver se gravou</span>'
+    : '<button type="button" class="btn-retry" data-retry="'+esc(String(id))+'">não salvou — tentar de novo</button>';
+}
+
 function marcarFalha(id,falhou){
   const chave=CSS.escape(String(id));
   /* A LINHA continua marcada na lista mesmo com o cadastro fechado — é o que
@@ -2175,10 +2307,17 @@ function marcarFalha(id,falhou){
   if(!corpo)return;
   const cx=corpo.querySelector('.ign');
   if(cx){
-    const antigo=cx.querySelector('.btn-retry');
-    if(falhou&&!antigo)cx.insertAdjacentHTML('beforeend',
-      '<button type="button" class="btn-retry" data-retry="'+esc(String(id))+'">não salvou — tentar de novo</button>');
-    if(!falhou&&antigo)antigo.remove();
+    /* Trocar, não só inserir. O guarda antigo era `se falhou e ainda não há selo,
+       insere` — o que bastava quando havia UM selo só. Com dois, ele congelava o
+       primeiro: uma linha que falhou (botão vermelho) e depois ficou em dúvida
+       continuaria oferecendo "tentar de novo" embaixo de um texto que pede para NÃO
+       repetir; e o contrário — dúvida antes, recusa do servidor depois — esconderia o
+       botão justamente quando repetir passou a ser o certo. O selo é redesenhado a
+       cada chamada, e some quando não há mais o que marcar. */
+    const antigo=cx.querySelector('.btn-retry,.ign-duvida');
+    if(falhou&&antigo)antigo.outerHTML=seloFalha(id);
+    else if(falhou)cx.insertAdjacentHTML('beforeend',seloFalha(id));
+    else if(antigo)antigo.remove();
   }
   /* o campo que não gravou também fica marcado, para não sobrar dúvida de onde foi */
   const f=FALHAS.get(String(id));
@@ -2204,9 +2343,19 @@ async function salvar(id){
   const cli=clientePorId(id);if(!cli)return;
   const campos={};s.colunas.forEach(c=>campos[c]=b4uParaPlanilha(cli.valores[c],c));
   const ign=document.getElementById('ign_'+id);
+  /* Cada gravação recebe um número. A conferência do caso incerto demora alguns
+     segundos, e nesse meio-tempo a pessoa pode ter digitado de novo: sem este
+     carimbo, a resposta de uma conferência VELHA pintaria "Salvo ✓ (confirmado)"
+     por cima de uma gravação nova que ainda está viajando. */
+  /* O post voltou? É o que separa "a tela quebrou depois de gravar" de "a exceção
+     nem chegou a virar requisição". Sem esta marca, um erro lançado ANTES do post
+     — dentro do mesmo try — seria anunciado como gravação bem-sucedida. */
+  let respondeu=false;
+  const seq=++CONF_N; CONF_SEQ.set(String(id),seq);
   try{
     setSave('saving','Salvando…');
     const r=await postAcao({acao:'registro_salvar',id:cli.id,cliente:cli.nome||'',cod:codAtual(),campos});
+    respondeu=true;
     const ignoradas=(r&&r.ignoradas||[]).filter(Boolean);
     setSave('ok','Salvo ✓ '+horaAgora()+(ignoradas.length?' · '+ignoradas.length+' ignorada'+(ignoradas.length>1?'s':''):''),
       ignoradas.length?('Não gravadas: '+ignoradas.join(', ')):'');
@@ -2218,7 +2367,7 @@ async function salvar(id){
        Produtos (a lista e a versão normalizada) caem junto com as outras, senão
        a régua continuaria contando o produto antigo. */
     cli._b=null;cli._bd=null;cli._v=null;cli._pl=null;cli._pn=null;
-    FALHAS.delete(String(id));marcarFalha(id,false);
+    FALHAS.delete(String(id));INCERTOS.delete(String(id));marcarFalha(id,false);
     /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé do modal sai, e o
        Fechar volta a ser Fechar. */
     if(!temPendencia()&&CAD)CAD.aviso(false);
@@ -2228,13 +2377,83 @@ async function salvar(id){
     desenharChips();desenharResumo();
   }catch(e){
     /* o que não gravou volta para a fila: a próxima tentativa manda tudo de novo */
-    const f=FALHAS.get(String(id))||{colunas:new Set()};
-    s.colunas.forEach(c=>f.colunas.add(c));
-    FALHAS.set(String(id),f);
-    marcarFalha(id,true);
-    /* A faixa avisa que não salvou e o "tentar de novo" continua ali; o texto da
-       exceção fica fora da tela (inclusive do title), é vocabulário nosso. */
-    setSave('err','Não foi possível salvar. Tente de novo.');
+    const guardarFalha=()=>{
+      const f=FALHAS.get(String(id))||{colunas:new Set()};
+      s.colunas.forEach(c=>f.colunas.add(c));
+      FALHAS.set(String(id),f);
+      marcarFalha(id,true);
+    };
+    /* Uma resposta que chega depois de outra gravação já ter assumido este
+       cadastro não tem mais nada a dizer sobre ele: o que está na tela é o texto
+       da gravação nova, e o veredicto desta aqui — sucesso ou fracasso — falaria
+       de algo que já não está mais lá. Sai calada, sem tocar na faixa. */
+    if(CONF_SEQ.get(String(id))!==seq) return;
+    /* TRÊS desfechos, não dois — e a diferença é toda ela sobre o que dá para
+       AFIRMAR. */
+
+    /* (1) O servidor leu, decidiu e recusou. Não gravou. O texto é escrito por nós
+       ("coluna travada", "cadastro mudou de lugar") e vai para a tela: aqui quem
+       lê é da equipe, e esconder o motivo já custou caro neste painel. */
+    if(e&&e.doServidor){
+      guardarFalha(); INCERTOS.delete(String(id)); marcarFalha(id,true);
+      setSave('err','O servidor recusou: '+String((e&&e.message)||e));
+      return;
+    }
+    /* (2) A exceção NÃO veio do postAcao — ele só devolve `doServidor` ou
+       `incerto`. Restam dois casos, e o `respondeu` os separa:
+       • o post JÁ tinha voltado e quem estourou foi o código de tela que roda
+         depois dele — então GRAVOU, e dizer "o servidor recusou" seria inverter o
+         fato e ainda oferecer um "tentar de novo" que regravaria o que já está lá;
+       • o post NEM chegou a sair (algo estourou antes dele, dentro do mesmo try) —
+         aí nada foi gravado e repetir é seguro. */
+    if(!e||!e.incerto){
+      if(respondeu){
+        FALHAS.delete(String(id)); INCERTOS.delete(String(id)); marcarFalha(id,false);
+        setSave('ok','Salvo ✓ '+horaAgora()+' · a tela não acompanhou — recarregue para vê-la certa');
+      }else{
+        guardarFalha(); INCERTOS.delete(String(id)); marcarFalha(id,true);
+        setSave('err','Não foi possível salvar. Tente de novo.');
+      }
+      return;
+    }
+    /* (3) A resposta se perdeu. A gravação acontece ANTES da resposta, e o front
+       não tem como saber se ela aconteceu — então, em vez de decretar, ele vai
+       PERGUNTAR.
+       A pendência é registrada AGORA, antes de perguntar: a conferência leva até
+       28 s, e nesse intervalo `SUJOS` já foi esvaziado. Sem isto, `temPendencia()`
+       diria "não há nada por gravar" e o F5 que a mensagem seguinte vai pedir
+       sairia sem aviso nenhum, levando o texto junto. Só o SELO no cadastro espera
+       — porque o selo é uma afirmação, e ainda não há nada a afirmar. */
+    guardarFalha(); marcarFalha(id,false);
+    setSave('saving','A resposta não chegou — conferindo se gravou…');
+    const r=await conferirGravacao(cli.id,campos);
+    if(CONF_SEQ.get(String(id))!==seq) return;   // enquanto conferíamos, outra gravação assumiu o cadastro
+    if(r==='bateu'){
+      FALHAS.delete(String(id)); INCERTOS.delete(String(id)); marcarFalha(id,false);
+      setSave('ok','Salvo ✓ (confirmado) '+horaAgora());
+      /* A faixa de "Não gravei: <coluna>" é da gravação ANTERIOR. Deixá-la de pé
+         embaixo de um "confirmado" faria esta gravação parecer ter perdido uma
+         coluna que ela nem mandou. */
+      if(ign)ign.innerHTML='';
+      cli.nome=valorDe(cli,COL.nome)||cli.nome;
+      if(COL.ativo)cli.ativo=valorDe(cli,COL.ativo);
+      cli._b=null;cli._bd=null;cli._v=null;cli._pl=null;cli._pn=null;
+      if(!temPendencia()&&CAD)CAD.aviso(false);
+      atualizarCabeca(id);
+      desenharChips();desenharResumo();
+      return;
+    }
+    if(r==='nao-bateu'){
+      /* Única hora em que "mande de novo" é conselho honesto: o cadastro foi lido
+         e o valor não está lá. */
+      INCERTOS.delete(String(id)); marcarFalha(id,true);
+      setSave('err','Não gravou tudo: reli o cadastro e algum campo não está com o que você mandou. Pode mandar de novo.');
+      return;
+    }
+    /* 'nao-sei': a dúvida continua de pé. Selo de dúvida, sem botão — e o pedido é
+       recarregar, nunca repetir. */
+    INCERTOS.add(String(id)); marcarFalha(id,true);
+    setSave('err','Não consegui confirmar se salvou. Recarregue antes de mandar de novo.');
   }
 }
 /** Manda de novo o que ficou para trás naquele cadastro. */
@@ -2243,7 +2462,7 @@ function tentarDeNovo(id){
   const s=SUJOS.get(id)||{timer:null,colunas:new Set()};
   f.colunas.forEach(c=>s.colunas.add(c));
   SUJOS.set(id,s);
-  FALHAS.delete(String(id));
+  FALHAS.delete(String(id)); INCERTOS.delete(String(id));
   salvar(id);
 }
 function atualizarCabeca(id){
@@ -2461,26 +2680,66 @@ async function criarCliente(){
 
   const btn=document.getElementById('criar');btn.disabled=true;btn.textContent='Criando… (até ~1 min)';
   criando=true;
+  /* O post voltou? Dentro deste try roda coisa ANTES dele (montar o payload,
+     descarregar a fila), e uma exceção lá não pode ser anunciada como "já criado".
+     Ver o uso lá embaixo, no último ramo do catch. */
+  let respondeu=false;
   msg.className='msg';msg.textContent='Criando pastas no Drive e planilhas… não feche a página.';
   setSave('saving','Criando cliente…');
   try{
     const regTexto={};Object.keys(novoVal).forEach(c=>regTexto[c]=b4uParaPlanilha(novoVal[c],c));
+    /* Prazo próprio: este é o único POST da página que cria pastas no Drive e
+       copia planilhas, e o botão já avisa "até ~1 min". Com os 45 s de todo mundo,
+       um onboarding normal estouraria o prazo e cairia no aviso de dúvida — que é
+       o pior lugar para mandar alguém, porque o conselho de lá é não repetir. */
     const d=await postAcao({acao:'onboard',produtos:[...prodSel],registro:regTexto,
-                            contatos:contatosNovoPayload(),cod:codAtual()});
+                            contatos:contatosNovoPayload(),cod:codAtual()},180000);
+    respondeu=true;
     criando=false;
     setSave('ok','Cliente '+(d.id||'')+' criado ✓ '+horaAgora());
     sucessoNovo(d);
   }catch(e){
     criando=false;
     btn.disabled=false;btn.textContent='Criar cliente';msg.className='msg err';
-    setSave('err','Não criou o cliente');
-    /* "Failed to fetch": o servidor pode ter concluído mesmo assim (operação longa). */
-    const rede=/failed to fetch|networkerror|load failed|não respondeu|alcançar|timeout|rede/i.test(String((e&&e.message)||e));
-    msg.innerHTML=rede
-      ? 'A resposta não chegou (conexão/tempo). <b>O cliente pode já ter sido criado no servidor</b> — feche, atualize a lista e confira <b>antes</b> de tentar de novo. ⚠️ Não clique em "Criar" de novo às cegas: cada tentativa gera um cliente NOVO (com o próximo ID) e novas pastas.'
-      /* O aviso genérico ficou no lugar do texto da exceção: o cadastro pode ter
-         ficado pela metade, então o pedido é conferir a lista antes de repetir. */
-      : 'Não foi possível criar o cliente. Atualize a lista e confira antes de tentar de novo.';
+    /* Quem separa os dois casos NÃO é mais uma lista de palavras farejada no texto
+       da exceção. Aquele regex tinha de adivinhar "failed to fetch", "load failed",
+       "NetworkError" — cada navegador escreve o seu, e o que ele não reconhecia
+       caía no aviso errado: "tente de novo" na rota que, a cada clique às cegas,
+       cria OUTRO cliente, com outro ID e outras pastas no Drive.
+       Agora quem responde é o `.incerto`, marcado lá no postAcao, onde a diferença
+       de fato existe: resposta do servidor × silêncio. */
+    if(e&&e.incerto){
+      setSave('err','Não sei se o cliente foi criado');
+      /* Aqui NÃO há releitura de confirmação, e é de propósito. Conferir uma
+         gravação de campo é comparar o valor mandado com o valor lido. Aqui não há
+         valor nem linha: o ID nasce no servidor, e procurar "um cliente parecido"
+         na lista é adivinhação — se a busca errar para menos, o painel manda criar
+         de novo e o estrago é justamente o que este aviso existe para evitar. */
+      msg.innerHTML='A resposta não chegou. <b>O cliente pode já ter sido criado no servidor</b> — feche, atualize a lista e confira <b>antes</b> de mandar de novo. ⚠️ Não clique em "Criar" às cegas: cada tentativa gera um cliente NOVO (com o próximo ID) e novas pastas.';
+    }else if(e&&e.doServidor){
+      /* Recusa do servidor: ele leu, decidiu e parou. O motivo vai junto, porque
+         quem lê é da equipe e costuma ser algo que ela mesma resolve (ID em uso,
+         produto sem modelo).
+         Mas nem a recusa autoriza repetir às cegas AQUI: o onboarding cria pastas
+         no Drive e copia planilhas ANTES de chegar ao fim, e um erro no meio do
+         caminho deixa o cadastro pela metade — não em branco. */
+      setSave('err','Não criou o cliente');
+      msg.innerHTML='O servidor recusou: <b>'+esc(String((e&&e.message)||e))+'</b><br>O cadastro pode ter ficado pela metade — atualize a lista e confira antes de criar de novo.';
+    }else if(respondeu){
+      /* Sobrou o que NÃO veio do postAcao — ele só devolve `doServidor` ou
+         `incerto`. Com o post JÁ respondido, isto estourou no `sucessoNovo(d)`, que
+         monta a tela de sucesso e recarrega a lista: o cliente ESTÁ criado, com
+         pastas e planilhas. Deixar a mensagem de recusa aqui mandaria alguém criar
+         o mesmo cliente uma segunda vez por causa de um erro de pintura. */
+      setSave('ok','Cliente criado ✓ '+horaAgora());
+      msg.className='msg';   // não é erro: o cadastro existe
+      msg.innerHTML='<b>O cliente foi criado.</b> A tela de confirmação é que não conseguiu ser montada — atualize a lista para ver o cadastro novo. Não clique em "Criar" de novo.';
+    }else{
+      /* O post nem chegou a sair: estourou ao montar o cadastro ou os contatos,
+         aqui no navegador. Nada foi criado, e corrigir e repetir é seguro. */
+      setSave('err','Não criou o cliente');
+      msg.innerHTML='Não consegui montar o cadastro para enviar. Nada foi criado — confira os campos e tente de novo.';
+    }
   }
 }
 function sucessoNovo(d){
