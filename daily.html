@@ -236,6 +236,86 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 .cli-hint{font-size:var(--fs-1);color:var(--muted);line-height:1.35}
 .cli-hint.err{color:var(--vermelho);font-weight:700}
 
+/* ---------- mini-painel ----------
+   Três blocos numa faixa só, entre a régua e a lista: o que está EM ABERTO
+   repartido por prazo, o que foi CONCLUÍDO num período, e o aberto POR ÁREA.
+   Cada número é um botão que aplica na régua o filtro que o produziu — o painel
+   não é enfeite de leitura, é a régua dita em números.
+
+   FICA ABAIXO DA RÉGUA, e não acima. A busca e as quatro caixas são o controle
+   que a equipe usa dezenas de vezes por dia, com a mão já sabendo onde ficam;
+   empurrá-las 90px para baixo cobraria essa memória de todo mundo em troca de um
+   painel que se lê uma vez por abertura. A ordem lida é: eu escolho o recorte
+   (régua) → o painel resume esse recorte → a lista mostra. */
+.painel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;margin-bottom:14px;display:grid;gap:12px 16px;
+  grid-template-columns:minmax(0,1.6fr) minmax(0,auto) minmax(0,1.4fr)}
+.pn-bl{min-width:0;display:flex;flex-direction:column;gap:7px;justify-content:flex-start}
+.pn-bl+.pn-bl{border-left:1px solid var(--line);padding-left:16px}
+.pn-cab{font-size:var(--fs-1);font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* O número grande é BOTÃO — ele desfaz o recorte e volta para "tudo em aberto".
+   Sem chrome de botão de propósito: aqui o clique é um bônus de quem descobre, e
+   um retângulo em volta de um número de 24px roubaria a leitura do painel. */
+.pn-num{font:inherit;font-size:var(--fs-6);font-weight:800;line-height:1.1;color:var(--ink);
+  background:none;border:0;padding:0;cursor:pointer;text-align:left;font-variant-numeric:tabular-nums}
+.pn-num:hover{color:var(--brand-teal-txt)}
+.pn-num:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:var(--radius-sm)}
+.pn-num .un{font-size:var(--fs-2);font-weight:700;color:var(--muted);margin-left:6px}
+.pn-num.verde{color:var(--verde-2)}
+/* Ligado: sublinhado grosso, e não uma caixa em volta. O número já é o maior
+   elemento do painel — cercá-lo mudaria a hierarquia da faixa inteira só para
+   dizer um estado. */
+.pn-num.ativo{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.pn-sub{font-size:var(--fs-1);color:var(--muted);font-variant-numeric:tabular-nums}
+/* A BARRA — o gráfico. Uma linha de 8px, cada faixa proporcional à contagem e
+   clicável como o selo de baixo. Empilhada e não em pizza porque a pergunta é
+   "quanto de urgente sobre o total", e comprimento se compara de relance;
+   ângulo, não. */
+.pn-barra{display:flex;height:8px;border-radius:3px;overflow:hidden;background:var(--surface-warm);
+  border:1px solid var(--line)}
+.pn-seg{border:0;padding:0;cursor:pointer;background:var(--c);min-width:4px}
+.pn-seg:hover{filter:brightness(1.12)}
+.pn-selos{display:flex;flex-wrap:wrap;gap:5px}
+.pn-selo{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:var(--fs-2);
+  font-weight:700;cursor:pointer;border:1px solid var(--line);background:var(--surface-warm);
+  color:var(--ink-2);border-radius:var(--radius-sm);padding:3px 8px;white-space:nowrap}
+.pn-selo i{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none}
+.pn-selo b{font-variant-numeric:tabular-nums;color:var(--ink)}
+.pn-selo:hover{border-color:var(--c)}
+/* Recorte ligado: contorno na cor do próprio recorte, e não um azul genérico de
+   "selecionado" — a cor já é a informação em toda esta tela (ver a nota das
+   cores de situação), e o estado ligado não pode falar outra língua. */
+.pn-selo.ativo{background:var(--surface);border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}
+/* Zero continua À VISTA e deixa de ser clicável. "0 atrasadas" é a melhor
+   notícia do painel e sumir com ela seria esconder a resposta; mas clicar para
+   abrir uma lista vazia é um beco, e beco não se oferece. */
+/* Exceção: o selo LIGADO nunca é desativado, mesmo zerado. Um recorte que a
+   pessoa acabou de aplicar e que não achou nada precisa continuar clicável, ou
+   o gesto que o ligou deixa de ser o gesto que o desliga. */
+.pn-selo[disabled]{opacity:.5;cursor:default;box-shadow:none}
+.pn-per{font:inherit;font-size:var(--fs-1);font-weight:700;text-transform:none;letter-spacing:0;
+  color:var(--brand-teal-txt);background:var(--surface);border:1px solid var(--line-2);
+  border-radius:var(--radius-sm);padding:2px 4px;cursor:pointer;max-width:100%}
+.pn-per:focus{outline:2px solid var(--brand-teal);outline-offset:-1px}
+.pn-areas{display:flex;flex-wrap:wrap;gap:5px}
+/* A barra de cada área vive DENTRO do selo, como preenchimento proporcional ao
+   maior — nove áreas em nove linhas com barra própria dariam um bloco mais alto
+   que a régua, e o painel deixaria de ser mini. Aqui a mesma tinta faz as duas
+   coisas: dizer o tamanho e ser o alvo do clique. */
+.pn-area{position:relative;overflow:hidden;font:inherit;font-size:var(--fs-2);font-weight:700;
+  cursor:pointer;border:1px solid var(--line);background:var(--surface-warm);color:var(--ink-2);
+  border-radius:var(--radius-sm);padding:3px 8px;display:inline-flex;gap:7px;align-items:center;
+  max-width:100%;min-width:0}
+.pn-area::before{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--p);
+  background:#DBEFEC}
+.pn-area>span{position:relative;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pn-area>b{position:relative;font-variant-numeric:tabular-nums;color:var(--ink);flex:none}
+.pn-area:hover{border-color:var(--brand-teal)}
+.pn-area.ativo{border-color:var(--brand-teal);box-shadow:inset 0 0 0 1px var(--brand-teal);
+  color:var(--brand-teal-txt)}
+.pn-vazio{font-size:var(--fs-2);color:var(--muted)}
+
 /* ---------- grupos ---------- */
 .grupo{margin:18px 0 8px;display:flex;align-items:baseline;gap:9px}
 .grupo h2{margin:0;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.06em;
@@ -398,6 +478,11 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
    porque 78px de ID ao lado de 108px de área num celular deixariam o assunto —
    que é o que se lê — com uns 60px. */
 @media(max-width:900px){
+  /* O painel desempilha pelo mesmo motivo que a grade: três colunas num celular
+     dariam ~110px cada, e "Esta semana 12" não cabe em 110px sem quebrar no meio
+     da palavra. Empilhado, o traço que separava vira o traço de cima. */
+  .painel{grid-template-columns:1fr;gap:12px}
+  .pn-bl+.pn-bl{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:12px}
   .cabgrade{display:none}
   .t{grid-template-columns:1fr auto;gap:3px 10px}
   .t-assunto,.t-meta,.t-linha2{grid-column:1/-1}
@@ -759,6 +844,21 @@ let ABERTA=null;                      // tarefa aberta no modal (null = nova)
    com "daily?chave=…&cli=250033&nova=1", e a tarefa nova tem de nascer com aquele
    cliente marcado mesmo que a régua já esteja mostrando outra coisa. */
 let CLI_LINK='';
+/* ---------- o RECORTE do mini-painel ----------
+   `FOCO` é a quinta dimensão do filtro, e a única que não tem caixa na régua:
+   um grupo de prazo ('atrasado', 'hoje', …) ou a janela de concluídas. Ele mora
+   à parte dos quatro F_* de propósito — os quatro respondem "sobre QUEM/O QUÊ",
+   e este responde "sobre QUANDO", que é a pergunta que a régua nunca soube fazer.
+
+   Ele é APAGADO quando a situação muda na régua, e só nesse caso. Um recorte de
+   prazo pressupõe as em aberto, e a janela de concluídas pressupõe "Feito":
+   mexer na situação desfaz a premissa dos dois, e um recorte de pé sobre uma
+   premissa desfeita é um filtro invisível — o pior defeito que esta tela pode
+   ter. Trocar de pessoa, de área ou de cliente NÃO o apaga: essas três só
+   estreitam, e quem clicou em "Atrasado" e depois marcou uma pessoa quer as
+   atrasadas dela, não recomeçar. */
+let FOCO=null;                        // null | {prazo:'atrasado'} | {feitas:true}
+let PERIODO='semana';                 // a janela do bloco "Concluídas"
 const ABERTAS=['A fazer','Em andamento','Esperando terceiro'];
 const cls=s=>({'Em andamento':'andamento','Esperando terceiro':'esperando','Feito':'feito','Cancelado':'cancelado'}[s]||'afazer');
 const ehTodos=v=>String(v==null?'':v).trim().toUpperCase()===TODOS_ID;
@@ -1012,8 +1112,23 @@ function comVoce(nome){
   return '<span class="nm">'+esc(nome)+'</span>'+(souEu(nome)?'<span class="vc">(você)</span>':'');
 }
 
-/* ---------- filtro ---------- */
-function visiveis(){
+/* ---------- filtro ----------
+   `filtrar()` é o `visiveis()` de sempre com duas torneiras. O mini-painel precisa
+   de contas que a LISTA não faz: "quantas em aberto" tem de responder a mesma
+   coisa enquanto a pessoa está lendo as concluídas, e "quantas por área" tem de
+   mostrar as nove áreas mesmo com uma só marcada — senão o painel some justamente
+   quando serve para voltar.
+
+   Por isso as opções, e por isso são só estas duas: SITUAÇÃO e ÁREA. Quem, cliente
+   e busca continuam valendo em toda conta, porque é isso que faz o painel falar do
+   que está na tela e não de uma daily paralela.
+
+     visiveis()                       a lista: tudo, mais o FOCO
+     filtrar({semSituacao:true})      base do painel: prazo e concluídas
+     filtrar({semSituacao,semArea})   base do quadro por área */
+function visiveis(){ return filtrar({foco:true}); }
+function filtrar(op){
+  op=op||{};
   const termo=normTxt(TERMO), dig=soDigitos(TERMO);
   /* Normalizado UMA vez, fora do laço. Com trezentas tarefas e trinta nomes
      marcados, `normTxt` por linha era o custo de digitar na busca. */
@@ -1034,14 +1149,18 @@ function visiveis(){
     const r=normTxt(t.responsavel||'');
     if(!r){ if(!semQuem) return false; }
     else if(quem.indexOf(r)<0) return false;
-    const a=normTxt(t.area||'');
-    if(!a){ if(!semArea) return false; }
-    else if(area.indexOf(a)<0) return false;
+    if(!op.semArea){
+      const a=normTxt(t.area||'');
+      if(!a){ if(!semArea) return false; }
+      else if(area.indexOf(a)<0) return false;
+    }
     /* SITUAÇÃO: mesma regra de De quem e Área — lista vazia quer dizer nada, e
        isso cai sozinho de `indexOf` em lista vazia. */
-    const s=t.situacao==null?'':String(t.situacao);
-    if(!s.trim()){ if(!semSit) return false; }
-    else if(sit.indexOf(s)<0) return false;
+    if(!op.semSituacao){
+      const s=t.situacao==null?'':String(t.situacao);
+      if(!s.trim()){ if(!semSit) return false; }
+      else if(sit.indexOf(s)<0) return false;
+    }
     /* CLIENTE: aqui, e SÓ aqui, a lista vazia quer dizer TODOS — é o filtro que
        nasce sem nada marcado.
 
@@ -1069,6 +1188,12 @@ function visiveis(){
     if(termo){
       const alvo=normTxt([t.assunto,t.detalhe,t.cliente,t.responsavel,t.id].join(' '));
       if(!alvo.includes(termo) && !(dig && soDigitos(t.cliente_id+' '+t.id).includes(dig))) return false;
+    }
+    /* O RECORTE do painel, por último: ele é o mais estreito de todos e só faz
+       sentido depois que os quatro de sempre já disseram o que sobra. */
+    if(op.foco && FOCO){
+      if(FOCO.prazo){ const g=GRUPOS.find(x=>x.k===FOCO.prazo); if(!g||!g.fn(t)) return false; }
+      if(FOCO.feitas && !feitaNaJanela(t)) return false;
     }
     return true;
   });
@@ -1107,6 +1232,199 @@ function agrupar(lista){
   return out.filter(o=>o.itens.length);
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   MINI-PAINEL
+   ------------------------------------------------------------------
+   Responde três perguntas em uma faixa, e cada resposta é um botão:
+
+     1. o que está EM ABERTO, repartido por prazo   -> filtra por prazo
+     2. o que foi CONCLUÍDO no período              -> lista as concluídas
+     3. o aberto POR ÁREA                           -> filtra por área
+
+   TODA CONTA RESPEITA A RÉGUA (de quem, cliente, busca). Abrindo em "minhas
+   tarefas", o painel é o meu; clicando em "todo o time", vira o do time. A
+   alternativa — o painel sempre falar do time inteiro — foi descartada porque
+   faria o número do painel discordar da contagem da lista quase sempre, e um
+   painel que a lista não confirma vira um segundo sistema para conferir.
+
+   AS DUAS EXCEÇÕES, e por que existem:
+
+     SITUAÇÃO não entra em conta nenhuma. Se entrasse, clicar em "Concluídas"
+     zeraria os cinco números de "Em aberto" — e o painel se apagaria no exato
+     clique em que ele precisa continuar de pé para trazer a pessoa de volta.
+     "Em aberto" quer dizer em aberto, sempre, e não "em aberto dentro do que a
+     situação deixou passar".
+
+     ÁREA não entra no quadro por área, pelo mesmo motivo: com uma área marcada,
+     o quadro mostraria uma barra só e deixaria de ser o lugar de onde se troca
+     de área. Ele mostra as nove e marca a que está valendo.
+   ══════════════════════════════════════════════════════════════════ */
+/* Dia corrido a partir de uma data ISO. Mesmo 'T12:00:00' do `maisDiasUteis`,
+   pela mesma razão: `new Date('2026-08-10')` é meia-noite UTC, que em Brasília é
+   o dia 9 — a data volta um dia calada. */
+function maisDias(iso,n){
+  const base=/^\d{4}-\d{2}-\d{2}/.test(String(iso||''))?String(iso).slice(0,10):null;
+  const d=base?new Date(base+'T12:00:00'):new Date();
+  if(isNaN(d.getTime())) return '';
+  d.setHours(12,0,0,0); d.setDate(d.getDate()+n);
+  const p=x=>String(x).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+/* HOJE vem do SERVIDOR — a mesma escolha do prazo padrão. Celular com data
+   errada daria uma "semana" diferente para uma pessoa só, e ninguém descobriria
+   olhando a tela. O relógio local é só o último recurso. */
+function hojeISO(){ const h=String(HOJE||'').slice(0,10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(h)?h:maisDias(null,0); }
+/* Quatro janelas fixas, e não um par de campos de data. Estas quatro são as
+   perguntas que se faz de verdade — "o que saiu nesta daily", "o que saiu na
+   passada", "como está o mês", "e nos últimos 30 dias". Um seletor de datas
+   livre atende um caso raro cobrando dois cliques e um teclado de todo mundo. */
+const PERIODOS=[
+  {v:'semana',  r:'esta semana'},
+  {v:'passada', r:'semana passada'},
+  {v:'mes',     r:'este mês'},
+  {v:'dias30',  r:'últimos 30 dias'}
+];
+/* A semana começa na SEGUNDA. Semana de trabalho, não semana de calendário: numa
+   segunda-feira de manhã "esta semana" tem de estar quase vazia, que é o ponto de
+   partida da daily — e não vir cheia com o que se entregou na sexta anterior. */
+function janela(){
+  const h=hojeISO();
+  const dow=new Date(h+'T12:00:00').getDay();          // 0 domingo … 6 sábado
+  const segunda=maisDias(h,-((dow+6)%7));
+  if(PERIODO==='semana')  return {de:segunda,           ate:maisDias(segunda,6)};
+  if(PERIODO==='passada'){ const s=maisDias(segunda,-7); return {de:s, ate:maisDias(s,6)}; }
+  if(PERIODO==='mes'){
+    const um=h.slice(0,8)+'01';
+    /* +32 dias cai sempre no mês seguinte (fevereiro de 28 inclusive); o dia 1
+       dele, menos um dia, é o último deste. Sem tabela de dias por mês. */
+    const fim=maisDias(maisDias(um,32).slice(0,8)+'01',-1);
+    return {de:um, ate:fim};
+  }
+  return {de:maisDias(h,-29), ate:h};
+}
+/* CONCLUÍDA é "Feito", e só. Cancelado sai do aberto mas não é entrega: contá-lo
+   engordaria o número da semana com o que se decidiu NÃO fazer — e esse número
+   existe justamente para dizer o que saiu. Cancelado continua alcançável pela
+   caixa de Situação, que é onde ele é a pergunta. */
+function feitaNaJanela(t){
+  if(String(t.situacao||'')!=='Feito') return false;
+  const c=String(t.concluido_em||'').slice(0,10);
+  if(!c) return false;                    // sem data não dá para dizer em que semana saiu
+  const p=janela();
+  return c>=p.de && c<=p.ate;
+}
+/* A cor de cada faixa de prazo. Vermelho -> âmbar -> teal -> teal claro é a
+   urgência descendo; "sem prazo" é AREIA, a mesma cor de "A fazer" na faixa
+   lateral da linha, porque é o mesmo estado: parado, sem alarme. Deixá-la no
+   fim do degradê de teal diria que tarefa sem prazo é a menos urgente de todas,
+   quando ela é a que ninguém decidiu ainda. */
+const CORPRAZO={atrasado:'var(--vermelho)', hoje:'var(--amber)',
+                semana:'var(--brand-teal)', depois:'#9FD3CD', semprazo:'#C8B18C'};
+const ROTPRAZO={atrasado:'atrasadas', hoje:'para hoje', semana:'esta semana',
+                depois:'depois', semprazo:'sem prazo'};
+const ORDEMPRAZO=['atrasado','hoje','semana','depois','semprazo'];
+function contagens(){
+  const base=filtrar({semSituacao:true});
+  const prazo={}; ORDEMPRAZO.forEach(k=>prazo[k]=0);
+  let aberto=0;
+  base.forEach(t=>{
+    if(ENCERRADA(t)) return;
+    const g=GRUPOS.find(x=>x.k!=='encerrado'&&x.fn(t));
+    if(g){ prazo[g.k]++; aberto++; }
+  });
+  const feitas=base.filter(feitaNaJanela).length;
+  /* O quadro por área ignora o filtro de área — ver a nota lá em cima. */
+  const areas={};
+  filtrar({semSituacao:true,semArea:true}).forEach(t=>{
+    if(ENCERRADA(t)) return;
+    const a=String(t.area||'').trim()||SEM;
+    areas[a]=(areas[a]||0)+1;
+  });
+  /* Ordem: a lista canônica de áreas primeiro (é a ordem que a equipe conhece,
+     das caixas e da ficha), depois o que a planilha tiver de área fora dela, e
+     "sem área" por último — ele é falta de cadastro, não uma área. */
+  const chaves=AREAS.filter(a=>areas[a])
+    .concat(Object.keys(areas).filter(a=>a!==SEM&&AREAS.indexOf(a)<0).sort())
+    .concat(areas[SEM]?[SEM]:[]);
+  return {prazo:prazo, aberto:aberto, feitas:feitas,
+          areas:chaves.map(a=>({a:a, n:areas[a]})), janela:janela()};
+}
+const ddmm=iso=>{ const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?m[3]+'/'+m[2]:''; };
+function desenharPainel(){
+  const box=document.getElementById('painel'); if(!box) return;
+  const c=contagens();
+  const p=c.janela;
+  const maior=c.areas.reduce((m,x)=>Math.max(m,x.n),0)||1;
+  const seg=ORDEMPRAZO.filter(k=>c.prazo[k]>0).map(k=>
+    `<button class="pn-seg" type="button" style="flex:${c.prazo[k]};--c:${CORPRAZO[k]}"
+       data-pn="prazo" data-v="${k}" aria-label="${c.prazo[k]} ${ROTPRAZO[k]}"
+       title="${c.prazo[k]} ${ROTPRAZO[k]}"></button>`).join('');
+  const selos=ORDEMPRAZO.map(k=>
+    `<button class="pn-selo${FOCO&&FOCO.prazo===k?' ativo':''}" type="button"
+       style="--c:${CORPRAZO[k]}" data-pn="prazo" data-v="${k}"
+       aria-pressed="${FOCO&&FOCO.prazo===k?'true':'false'}"${c.prazo[k]||(FOCO&&FOCO.prazo===k)?'':' disabled'}
+       ><i></i><b>${c.prazo[k]}</b> ${esc(ROTPRAZO[k])}</button>`).join('');
+  const areas=c.areas.length
+    ? c.areas.map(x=>{
+        const so=F_AREA.length===1&&String(F_AREA[0])===String(x.a);
+        const rot=x.a===SEM?'sem área':x.a;
+        return `<button class="pn-area${so?' ativo':''}" type="button"
+          style="--p:${Math.round(x.n/maior*100)}%" data-pn="area" data-v="${esc(x.a)}"
+          aria-pressed="${so?'true':'false'}" title="${esc(rot)}: ${x.n} em aberto"
+          ><span>${esc(rot)}</span><b>${x.n}</b></button>`;
+      }).join('')
+    : `<span class="pn-vazio">Nada em aberto neste recorte.</span>`;
+  box.innerHTML=`
+  <div class="pn-bl">
+    <div class="pn-cab">Em aberto</div>
+    <button class="pn-num" type="button" data-pn="aberto"
+      title="Ver tudo o que está em aberto">${c.aberto}<span class="un">${c.aberto===1?'tarefa':'tarefas'}</span></button>
+    ${seg?`<div class="pn-barra">${seg}</div>`:''}
+    <div class="pn-selos">${selos}</div>
+  </div>
+  <div class="pn-bl">
+    <div class="pn-cab">Concluídas
+      <select class="pn-per" id="pn-periodo" aria-label="Período das concluídas">
+        ${PERIODOS.map(o=>`<option value="${o.v}"${o.v===PERIODO?' selected':''}>${esc(o.r)}</option>`).join('')}
+      </select></div>
+    <button class="pn-num verde${FOCO&&FOCO.feitas?' ativo':''}" type="button" data-pn="feitas"
+      aria-pressed="${FOCO&&FOCO.feitas?'true':'false'}"
+      title="Listar só as concluídas deste período">${c.feitas}<span class="un">${c.feitas===1?'tarefa':'tarefas'}</span></button>
+    <div class="pn-sub">${ddmm(p.de)} a ${ddmm(p.ate)}</div>
+  </div>
+  <div class="pn-bl">
+    <div class="pn-cab">Em aberto por área</div>
+    <div class="pn-areas">${areas}</div>
+  </div>`;
+}
+/* O clique do painel escreve na RÉGUA — não num estado paralelo. É o que faz o
+   painel ensinar a régua em vez de competir com ela: depois de clicar em
+   "Atrasadas", a caixa de Situação está em "Em aberto" à vista de todos, e o
+   caminho de volta é o mesmo de sempre.
+   Todo alvo é ALTERNADOR: clicar de novo no que já está ligado desliga. Sem
+   isso, desfazer um recorte exigiria adivinhar qual controle o produziu. */
+function acaoPainel(qual,v){
+  const emAberto=()=>{ F_SIT=sitPadrao(); if(FILTROS.sit) FILTROS.sit.marcados(F_SIT); };
+  if(qual==='aberto'){ emAberto(); FOCO=null; }
+  else if(qual==='prazo'){ const igual=!!(FOCO&&FOCO.prazo===v);
+                           emAberto(); FOCO=igual?null:{prazo:v}; }
+  else if(qual==='feitas'){
+    if(FOCO&&FOCO.feitas){ emAberto(); FOCO=null; }
+    else { F_SIT=['Feito']; if(FILTROS.sit) FILTROS.sit.marcados(F_SIT); FOCO={feitas:true}; }
+  }
+  else if(qual==='area'){
+    const so=F_AREA.length===1&&String(F_AREA[0])===String(v);
+    F_AREA = so ? todosOsValores(itensArea()) : [String(v)];
+    if(FILTROS.area) FILTROS.area.marcados(F_AREA);
+    /* A barra clicada conta ABERTAS. Se a tela estivesse nas concluídas, obedecer
+       ao clique sem trocar a situação mostraria uma lista que não tem relação
+       nenhuma com o número que a pessoa apontou. Um recorte de PRAZO, esse fica:
+       "atrasadas do Fiscal" é uma pergunta inteira. */
+    if(!FOCO||FOCO.feitas){ FOCO=null; emAberto(); }
+  }
+  desenharLista();
+}
 /* ---------- desenho ---------- */
 function pillSit(s){ return `<span class="pill p-${cls(s)}">${esc(s)}</span>`; }
 function linhaHTML(t){
@@ -1184,6 +1502,7 @@ function layout(){
     <button class="btn btn--primary" id="nova" type="button">+ Nova tarefa</button>
   </div>
   ${datalistClientes()}
+  <div class="painel" id="painel"></div>
   <div id="lista"></div>`;
 }
 
@@ -1228,7 +1547,8 @@ function montarFiltros(){
          no estado padrão — trocando a palavra que a equipe usa por uma contagem
          que ninguém pediu. Ver a regra 6 do b4u-filtro.js. */
       rotEspecial:[{quando:sitAbertas(), rot:'Em aberto'}],
-      aoMudar:m=>{ F_SIT=m; desenharLista(); }
+      /* Mexeu na situação à mão: o recorte do painel cai. Ver a nota do `FOCO`. */
+      aoMudar:m=>{ F_SIT=m; FOCO=null; desenharLista(); }
     });
     const fa=B4UFiltro.criar({
       id:'f-area', rot:'Área', itens:itensArea(), marcados:F_AREA,
@@ -1276,11 +1596,16 @@ function marcarTudo(qual){
      com que a tela abre — quem esvaziou a situação queria ver tarefas, não a lista
      de encerradas de dois anos. Marcar todas está a um clique dali, na própria
      caixa. */
-  if(qual==='sit'){ F_SIT=sitPadrao(); if(FILTROS.sit) FILTROS.sit.marcados(F_SIT); }
+  if(qual==='sit'){ F_SIT=sitPadrao(); if(FILTROS.sit) FILTROS.sit.marcados(F_SIT); FOCO=null; }
   desenharLista();
 }
 function desenharLista(){
   const box=document.getElementById('lista'); if(!box) return;
+  /* O painel é redesenhado JUNTO, e por aqui — não por quem mexe no filtro. Todo
+     caminho que muda o que a lista mostra passa neste ponto (régua, busca, link,
+     salvar, recarga em segundo plano), e um painel atualizado em outro lugar
+     ficaria devendo em algum deles. Um só ponto, uma só verdade. */
+  desenharPainel();
   const vis=visiveis();
   const gs=agrupar(vis);
   document.getElementById('cont').textContent=vis.length+(vis.length===1?' tarefa':' tarefas');
@@ -1324,6 +1649,12 @@ function telaVazia(){
     <button type="button" class="link-btn" id="marcar-area">Marcar todas as áreas</button>.</div>`;
   if(!F_SIT.length) return `<div class="vazio">Nenhuma situação marcada.
     <button type="button" class="link-btn" id="marcar-sit">Voltar para as em aberto</button>.</div>`;
+  /* Recorte do painel sem resultado tem saída própria. Ele é o único filtro sem
+     caixa na régua: quem não sabe que clicou nele não tem onde procurar, e a
+     frase de sempre ("nada com esses filtros") mandaria a pessoa conferir quatro
+     controles que estão todos certos. */
+  if(FOCO) return `<div class="vazio">Nada neste recorte.
+    <button type="button" class="link-btn" id="limpar-foco">Ver tudo em aberto</button>.</div>`;
   const tudo=marcadoTudo(F_QUEM,itensQuem());
   return `<div class="vazio">Nada por aqui com esses filtros.${tudo?''
     :' Ver <button type="button" class="link-btn" id="ir-time">todo o time</button>.'}</div>`;
@@ -1725,6 +2056,12 @@ async function salvarFicha(){
 document.addEventListener('click',e=>{
   const linha=e.target.closest&&e.target.closest('.t');
   if(linha){ const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id); if(t) abrirFicha(t); return; }
+  /* `closest` e não `e.target.dataset`: os alvos do painel têm filhos (o pontinho,
+     o número em negrito, o nome da área), e clicar em cima do número devolveria o
+     <b>, que não tem data-pn nenhum. */
+  const pn=e.target.closest&&e.target.closest('[data-pn]');
+  if(pn){ acaoPainel(pn.dataset.pn,pn.dataset.v); return; }
+  if(e.target.id==='limpar-foco'){ acaoPainel('aberto'); return; }
   if(e.target.id==='nova'){ abrirFicha(null); return; }
   if(e.target.id==='ir-time'||e.target.id==='marcar-quem'){ marcarTudo('quem'); return; }
   if(e.target.id==='marcar-area'){ marcarTudo('area'); return; }
@@ -1747,10 +2084,23 @@ document.addEventListener('change',e=>{
      `f-area` e `f-cli` são botões, e botão não dispara `change` nem `input`. Os
      checkboxes de dentro do painel disparam, sim — mas sem `id`, e por isso não
      caem aqui. */
+  /* O período das concluídas. Ele NÃO é um filtro da régua: muda a pergunta do
+     bloco, e a lista só o sente quando o recorte de concluídas está ligado — mas
+     redesenhar tudo é uma volta pelo `desenharLista()`, e ela é barata. */
+  if(e.target.id==='pn-periodo'){
+    PERIODO=e.target.value; desenharLista();
+    /* O `desenharLista()` reescreve o painel inteiro, e com ele este <select> —
+       quem acabou de escolher ficaria com o foco no <body>, e a seta para baixo
+       deixaria de mudar o período. Devolvemos o foco ao controle que a pessoa
+       ainda está usando. */
+    const s=document.getElementById('pn-periodo'); if(s) s.focus();
+    return;
+  }
   if(e.target.id==='f-sit'){
     const v=e.target.value;
     F_SIT = v==='abertas' ? sitPadrao()
           : (v==='__todas__' ? todosOsValores(itensSit()) : [v]);
+    FOCO=null;
     desenharLista();
   }
   if(e.target.id==='f-quem'){
