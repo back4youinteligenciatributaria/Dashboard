@@ -688,6 +688,11 @@ details.situacao>.resumo{padding:0 12px 12px}
      ficha não abre — e mais nada muda: a chamada é protegida por
      `window.B4UModal &&` e a lista continua inteira. -->
 <script src="b4u-modal.js" charset="utf-8"></script>
+<!-- O RECADO de gravação que falhou. Esta tela já grava em segundo plano e já
+     marca a linha; o que faltava era avisar quem NÃO está com a ficha aberta —
+     e é quase sempre o caso, porque a ficha agora fecha sem esperar. Se ele não
+     carregar, o selo na linha continua lá, como sempre esteve. -->
+<script src="b4u-gravar.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -2327,7 +2332,48 @@ function seloFalha(id){
     : '<button type="button" class="btn-retry" data-retry="'+esc(String(id))+'">não salvou — tentar de novo</button>';
 }
 
-function marcarFalha(id,falhou){
+/* ---------- o recado, para quem NÃO está com a ficha aberta ----------
+   O selo na linha continua sendo a marca de longe: é ele que mostra, varrendo a
+   lista, quais clientes têm coisa por gravar. Mas ele só é visto por quem está
+   olhando a lista — e desde que a ficha passou a fechar sem esperar, a pessoa
+   quase nunca está. O recado é a mesma notícia indo atrás de quem precisa dela.
+
+   As duas ofertas saem do que a página JÁ decidiu: `INCERTOS` é a dúvida (a
+   gravação pode ter entrado, e repetir gravaria duas vezes), o resto é recusa —
+   e recusa tem `tentarDeNovo`, que é a função que o botão da linha já chama.
+   Nada de lógica nova aqui: só quem é avisado. */
+function avisarFalha(id,falhou,motivo){
+  /* TUDO AQUI DENTRO É PROTEGIDO, e não por precaução vaga: o teste pegou o
+     estrago real. Uma exceção nesta função sobe pelo `marcarFalha()` e cai
+     dentro do `catch` do `salvar()` — o mesmo `catch` que estava tratando a
+     falha de gravação. Resultado: o recado quebrado engolia o registro da
+     falha, e o que não gravou passava a não estar marcado em lugar nenhum.
+     É a mesma regra do `_dailyLog_` no backend: quem acompanha a gravação não
+     pode derrubar a gravação que acompanha. */
+  try{ avisarFalha_(id,falhou,motivo); }catch(e){}
+}
+function avisarFalha_(id,falhou,motivo){
+  if(!window.B4UGravar||typeof B4UGravar.falhou!=='function') return;
+  const k=String(id);
+  if(!falhou) return B4UGravar.resolvida('lic:'+k);
+  const l=linhaPorId(k), f=FALHAS.get(k), duvida=INCERTOS.has(k);
+  B4UGravar.falhou({
+    chave:'lic:'+k,
+    duvida:duvida,
+    titulo:(l&&(l.nome_cliente||l.id))||('Licença '+k),
+    /* Os NOMES das colunas que não entraram. A página guarda a coluna, não o
+       valor — e é a coluna que responde a pergunta de quem lê o recado: "o que
+       eu preciso digitar de novo?". */
+    itens:(f&&f.campos)?Array.from(f.campos):[],
+    motivo:motivo||'',
+    /* Dúvida não ganha botão de repetir. É a regra que esta tela já seguia no
+       selo (`seloFalha` não põe botão no caso incerto) — o recado obedece à
+       mesma, porque é a mesma decisão. */
+    aoRepetir:duvida?null:()=>tentarDeNovo(k)
+  });
+}
+function marcarFalha(id,falhou,motivo){
+  avisarFalha(id,falhou,motivo);
   const chave=CSS.escape(String(id));
   /* A LINHA continua marcada na lista mesmo com a ficha fechada — é o que
      mostra, de longe, que aquele cliente tem coisa que não gravou. */
@@ -2429,7 +2475,8 @@ async function salvar(id){
        ("coluna travada", "linha mudou de lugar") e vai para a tela: aqui quem lê é
        da equipe, e esconder o motivo já custou caro neste painel. */
     if(e&&e.doServidor){
-      FALHAS.set(k,{campos:s.campos}); INCERTOS.delete(k); marcarFalha(k,true);
+      FALHAS.set(k,{campos:s.campos}); INCERTOS.delete(k);
+      marcarFalha(k,true,String((e&&e.message)||e));
       setSave('err','O servidor recusou: '+String((e&&e.message)||e));
       return;
     }
@@ -2473,7 +2520,8 @@ async function salvar(id){
     if(r==='nao-bateu'){
       /* Única hora em que "mande de novo" é conselho honesto: a linha foi lida e o
          valor não está lá. */
-      INCERTOS.delete(k); marcarFalha(k,true);
+      INCERTOS.delete(k);
+      marcarFalha(k,true,'Reli a linha e algum campo não está com o que você mandou.');
       setSave('err','Não gravou tudo: reli a linha e algum campo não está com o que você mandou. Pode mandar de novo.');
       return;
     }
@@ -2592,34 +2640,44 @@ function fecharCadastro(forcado){if(CAD)CAD.fechar(forcado);}
    Só fecha se gravou MESMO. Falha mantém a ficha na tela: fechar por cima de uma
    gravação que não foi levaria embora o aviso e a chance de tentar de novo, e a
    pessoa sairia achando que salvou. */
-async function salvarAgoraCad(){
-  const id=CAD_ID, btn=document.getElementById('cadSalvar');
+/* ---------- A FICHA NÃO ESPERA MAIS ----------
+   Ela segurava o modal até todas as gravações pendentes voltarem, e só fechava
+   se nenhuma tivesse falhado. Numa rota de Apps Script isso são segundos por
+   ficha; o dono descreveu como "atrapalhando e demorando", e a espera não
+   comprava nada — quem preencheu já sabe o que escreveu.
+
+   O QUE MUDOU: as gravações são DISPARADAS e a ficha fecha. Nada mais.
+
+   O QUE NÃO MUDOU, e é o que torna isso seguro: o `salvar()` continua sendo o
+   mesmo, com a mesma conferência do caso incerto, o mesmo selo na linha e a
+   mesma sequência. O que ele ganhou foi o RECADO (ver `avisarFalha`) — e é ele
+   que ocupa o lugar que a espera ocupava: antes a ficha ficava aberta para
+   contar a má notícia, agora a má notícia vai atrás de quem precisa dela.
+
+   A DÚVIDA continua não voltando para a fila. Reenviar o que pode ter entrado é
+   exatamente o que este caminho todo existe para não fazer — e agora quem diz
+   isso é o recado, que oferece "recarregar e conferir" em vez de "tentar de
+   novo". Fechar a aba com gravação em voo continua pedindo confirmação: o
+   `beforeunload` é da casca, pelo `sujo:()=>temPendencia()`, e `temPendencia()`
+   continua verdadeiro enquanto houver o que gravar. */
+function salvarAgoraCad(){
+  const id=CAD_ID;
   if(temPendencia()){
-    if(btn){btn.disabled=true;btn.dataset.rot=btn.textContent;btn.textContent='Salvando…';}
-    try{
-      /* Linha em DÚVIDA não volta para a fila. Tirar o botão "tentar de novo" da
-         linha e deixar o botão primário da ficha reenviando a mesma coisa seria
-         fechar a porta e deixar a janela aberta: a gravação pode ter entrado, e
-         mandar de novo é o que este caminho todo existe para não fazer. Ela fica
-         pendente — a ficha não fecha, e o recado diz o que fazer. */
-      /* o que falhou antes volta para a fila de sujos antes do disparo */
-      if(id&&FALHAS.has(String(id))&&!INCERTOS.has(String(id))){
-        const f=FALHAS.get(String(id));
-        const su=SUJOS.get(String(id))||{timer:null,campos:new Set()};
-        f.campos.forEach(c=>su.campos.add(c));
-        SUJOS.set(String(id),su);FALHAS.delete(String(id));
-      }
-      const ids=Array.from(SUJOS.keys());
-      ids.forEach(k=>{const su=SUJOS.get(k);if(su)clearTimeout(su.timer);});
-      await Promise.all(ids.map(k=>salvar(k)));
-    }catch(e){ /* salvar() já registra a falha em FALHAS e avisa na tela */ }
-    if(btn){btn.disabled=false;btn.textContent=btn.dataset.rot||'Salvar alterações';}
+    /* O que falhou antes volta para a fila — menos o que está em dúvida. */
+    if(id&&FALHAS.has(String(id))&&!INCERTOS.has(String(id))){
+      const f=FALHAS.get(String(id));
+      const su=SUJOS.get(String(id))||{timer:null,campos:new Set()};
+      f.campos.forEach(c=>su.campos.add(c));
+      SUJOS.set(String(id),su);FALHAS.delete(String(id));
+    }
+    const ids=Array.from(SUJOS.keys());
+    ids.forEach(k=>{const su=SUJOS.get(k);if(su)clearTimeout(su.timer);});
+    /* Sem `await`: cada `salvar()` cuida do próprio desfecho, inclusive do
+       recado. O `catch` existe só para que uma promessa rejeitada não vire
+       "unhandled rejection" no console — o tratamento de verdade está lá
+       dentro. */
+    ids.forEach(k=>{ try{ Promise.resolve(salvar(k)).catch(()=>{}); }catch(e){} });
   }
-    /* Sobrou dúvida: a ficha NÃO fecha (o `temPendencia()` abaixo cuida disso) e
-       agora ela diz por quê. Sem este recado, o botão pareceria não ter feito
-       nada. */
-    if(INCERTOS.size) setSave('err','Uma gravação ficou sem confirmação. Recarregue a página para ver se ela entrou — não mande de novo.');
-  if(temPendencia())return;            // não gravou: a ficha continua aberta
   fecharCadastro(true);
 }
 

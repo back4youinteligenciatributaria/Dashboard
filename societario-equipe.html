@@ -601,6 +601,11 @@ tr.falhou>td{background:#FBEAE7!important}
      com quem competir: o Esc da página está num ouvinte de BORBULHA e o do
      componente só age com o painel aberto e o foco dentro dele. -->
 <script src="b4u-filtro.js" charset="utf-8"></script>
+<!-- O RECADO de gravação que falhou. Esta tela já grava em segundo plano e já
+     marca a linha; o que faltava era avisar quem NÃO está com a ficha aberta —
+     e é quase sempre o caso, porque a ficha agora fecha sem esperar. Se ele não
+     carregar, o selo na linha continua lá, como sempre esteve. -->
+<script src="b4u-gravar.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -2114,7 +2119,9 @@ function fecharFicha(){
    Só fecha se gravou MESMO. Falha mantém a ficha na tela: fechar por cima de uma
    gravação que não foi levaria embora o aviso e a chance de tentar de novo, e a
    pessoa sairia achando que salvou. */
-async function salvarAgoraCad(){
+/* Deixou de ser `async`: não há mais `await` aqui dentro. O corpo inteiro
+   roda de uma vez e a ficha fecha no mesmo quadro do clique. */
+function salvarAgoraCad(){
   const btn=document.getElementById('cadSalvar');
   if(temPendencia()){
     if(btn){btn.disabled=true;btn.dataset.rot=btn.textContent;btn.textContent='Salvando…';}
@@ -2134,7 +2141,10 @@ async function salvarAgoraCad(){
       /* e o que JÁ estava viajando quando a pessoa clicou também é esperado —
          senão o botão terminava antes da resposta e a ficha não fechava nunca. */
       EMVOO.forEach(pr=>disparos.push(pr));
-      await Promise.all(disparos);
+      /* Sem `await`: cada gravação cuida do próprio desfecho, inclusive do
+         recado. O `catch` só evita "unhandled rejection" no console — o
+         tratamento de verdade está dentro de cada uma. */
+      Promise.all(disparos).catch(()=>{});
     }catch(e){ /* salvarAuto() já registra a falha em FALHAS e avisa na tela */ }
     if(btn){btn.disabled=false;btn.textContent=btn.dataset.rot||'Salvar alterações';}
   }
@@ -2142,7 +2152,13 @@ async function salvarAgoraCad(){
        agora ela diz por quê. Sem este recado, o botão pareceria não ter feito
        nada. */
     if(INCERTOS.size) setMsg(0,'msg err','Uma gravação ficou sem confirmação. Recarregue a página para ver se ela entrou — não mande de novo.');
-  if(temPendencia())return;            // não gravou: a ficha continua aberta
+  /* A FICHA NÃO ESPERA MAIS. Antes ela só fechava quando tudo tinha
+     voltado do servidor, e não fechava se algo falhasse — segundos por
+     ficha, numa tela em que se abre dezenas. O que ocupa esse lugar
+     agora é o `avisarFalha()`: antes a ficha ficava aberta para contar a
+     má notícia; agora a má notícia vai atrás de quem precisa dela.
+     Fechar a ABA com gravação em voo continua pedindo confirmação — é o
+     `sujo:()=>temPendencia()`, que não mudou. */
   CAD_AVISADO=false;avisoCad(false);
   fecharFicha();
 }
@@ -2203,7 +2219,78 @@ function seloFalha(id){
     : '<button type="button" class="btn-retry" data-retry="'+esc(String(id))+'">não salvou — tentar de novo</button>';
 }
 
-function marcarFalha(row,falhou){
+/* ---------- o recado, para quem NÃO está com a ficha aberta ----------
+   O selo na linha continua sendo a marca de longe: é ele que mostra, varrendo a
+   lista, quais linhas têm coisa por gravar. Mas ele só é visto por quem está
+   olhando a lista — e desde que a ficha passou a fechar sem esperar, quase
+   ninguém está. O recado é a mesma notícia indo atrás de quem precisa dela.
+
+   NADA DE LÓGICA NOVA AQUI. As duas ofertas saem do que esta página JÁ decidiu:
+   `INCERTOS` é a dúvida (a gravação pode ter entrado, e repetir gravaria duas
+   vezes), o resto é recusa. Só muda quem é avisado.
+
+   Ele lê o estado com cuidado de propósito: as seis telas guardam a falha em
+   formatos diferentes (Map de campos, Map de colunas, Set de linhas, objeto de
+   dados), e um adaptador que aceita os quatro é mais seguro do que seis funções
+   parecidas que ninguém vai reler juntas. */
+function avisarFalha(id,falhou,motivo){
+  /* TUDO PROTEGIDO, e não por precaução vaga: uma exceção aqui sobe pelo
+     `marcarFalha()` e cai dentro do `catch` que estava tratando a falha de
+     gravação — o recado quebrado engoliria o registro da falha, e o que não
+     gravou passaria a não estar marcado em lugar nenhum. É a mesma regra do
+     `_dailyLog_` no backend: quem acompanha a gravação não pode derrubá-la.
+     (Aconteceu de verdade no Licenças, e foi o teste que pegou.) */
+  try{ avisarFalha_(id,falhou,motivo); }catch(e){}
+}
+function avisarFalha_(id,falhou,motivo){
+  if(!window.B4UGravar||typeof B4UGravar.falhou!=='function') return;
+  const k=String(id), ch='soc:'+k;
+  if(!falhou) return B4UGravar.resolvida(ch);
+  const duvida=(typeof INCERTOS!=='undefined')&&!!(INCERTOS&&INCERTOS.has&&INCERTOS.has(k));
+  /* Como a linha se chama para quem lê. O id sozinho não diz nada a quem está
+     olhando a tela de longe; o nome do cliente diz tudo. */
+  let nome='';
+  try{
+    /* Cada tela chama sua lista de um jeito — LINHAS nas de ficha, CLIENTES no
+       Registro, CONTATOS nos Contatos, PROCS no Societário. Procurar em todas as
+       que existirem custa nada e evita seis versões desta função; a que não
+       existe na página nem chega a ser olhada (o `typeof` não estoura em nome não
+       declarado, que é o motivo de ele estar aqui em vez de um `try` só). */
+    const fontes=[
+      typeof LINHAS  !=='undefined'&&LINHAS,
+      typeof CLIENTES!=='undefined'&&CLIENTES,
+      typeof CONTATOS!=='undefined'&&CONTATOS,
+      typeof PROCS   !=='undefined'&&PROCS
+    ];
+    for(const L of fontes){
+      if(!L||!L.find) continue;
+      const l=L.find(x=>x&&(String(x.id)===k||String(x.row)===k));
+      if(!l) continue;
+      nome=l.nome_cliente||l.razao||l.nome||l.cliente||l.id||'';
+      if(nome) break;
+    }
+  }catch(e){}
+  /* O QUE não entrou. Os quatro formatos, na ordem em que aparecem nas telas. */
+  let itens=[];
+  try{
+    const f=(FALHAS&&FALHAS.get)?FALHAS.get(k):null;
+    const s=f&&(f.campos||f.colunas||f);
+    if(s instanceof Set) itens=Array.from(s);
+    else if(s&&typeof s==='object') itens=Object.keys(s);
+  }catch(e){}
+  if(!itens.length&&'') itens=[''];
+  B4UGravar.falhou({
+    chave:ch, duvida:duvida,
+    titulo:nome||('Linha '+k),
+    itens:itens, motivo:motivo||'',
+    /* Dúvida não ganha botão de repetir — é a regra que o selo desta tela já
+       segue. E página sem `tentarDeNovo` não ganha botão nenhum: oferecer sem
+       ter o que chamar é pior do que não oferecer. */
+    aoRepetir:(duvida||typeof tentarDeNovo!=='function')?null:()=>tentarDeNovo(k)
+  });
+}
+function marcarFalha(row,falhou,motivo){
+  avisarFalha(row,falhou,motivo);
   /* A LINHA continua marcada na lista mesmo com a ficha fechada — é o que mostra,
      de longe, que aquele processo tem coisa que não gravou. */
   const cx=document.querySelector('.proc[data-row="'+row+'"]');

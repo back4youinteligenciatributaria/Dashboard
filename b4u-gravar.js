@@ -157,6 +157,7 @@
   var EM_VOO = {};      // chave -> número de sequência da gravação que vale
   var SEQ = 0;
   var ABERTOS = [];     // recados na tela, para o Esc fechar o de cima
+  var POR_CHAVE = {};   // chave -> recado na tela, para não empilhar o mesmo duas vezes
 
   function pendentes() {
     return Object.keys(EM_VOO).length;
@@ -199,12 +200,20 @@
 
     var acoes = cx.querySelector('.b4g-acoes');
     var api = {
+      chave: op.chave || null,
       fechar: function () {
         var i = ABERTOS.indexOf(api);
         if (i >= 0) ABERTOS.splice(i, 1);
+        if (api.chave && POR_CHAVE[api.chave] === api) delete POR_CHAVE[api.chave];
         cx.remove();
       }
     };
+    /* UM RECADO POR CHAVE. As telas de fichas chamam `marcarFalha()` a cada
+       redesenho, não só na hora da falha — sem isto, a mesma linha que não gravou
+       empilharia um recado por tentativa até cobrir a tela. O novo SUBSTITUI o
+       antigo em vez de somar: é a mesma notícia, atualizada. */
+    if (api.chave && POR_CHAVE[api.chave]) POR_CHAVE[api.chave].fechar();
+    if (api.chave) POR_CHAVE[api.chave] = api;
     (op.botoes || []).forEach(function (b) {
       var bt = d.createElement('button');
       bt.type = 'button';
@@ -285,9 +294,58 @@
       });
   }
 
+  /* ---------- para as telas que JÁ gravam em segundo plano ----------
+     As seis telas de fichas (Licenças, Registro, Certificados, Contatos,
+     Restituição, Societário) não precisam da fila: elas já têm a delas, com
+     debounce, sequência e marcação na linha. O que faltava nelas era só o
+     RECADO — a falha ficava num selo dentro da ficha, e a ficha estava fechada.
+
+     `falhou()` dá esse recado com a mesma cara e as mesmas duas ofertas do
+     `enviar()`, sem tomar conta da gravação. `resolvida()` o retira quando
+     aquela linha finalmente entrou. As duas trabalham por CHAVE, que é o
+     identificador que a página já usa (id da licença, linha da planilha). */
+  function falhou(op) {
+    op = op || {};
+    var msg = String(op.motivo || '').trim();
+    if (op.duvida) {
+      return recado({
+        chave: op.chave, duvida: true, titulo: op.titulo,
+        texto: 'A resposta do servidor não chegou, então não dá para dizer se gravou. ' +
+               'Recarregue e confira antes de mandar de novo — repetir pode gravar duas vezes.',
+        itens: op.itens,
+        motivo: msg ? 'Motivo: ' + msg : '',
+        botoes: [
+          { rot: 'Recarregar e conferir', primario: true, aoClicar: function () { w.location.reload(); } },
+          { rot: 'Fechar', aoClicar: function (r) { r.fechar(); } }
+        ]
+      });
+    }
+    var botoes = [];
+    /* O botão só existe se a página souber repetir. Oferecer "tentar de novo"
+       sem ter o que chamar seria um botão que não faz nada — pior do que não
+       ter botão, porque quem clica acha que resolveu. */
+    if (op.aoRepetir) botoes.push({ rot: 'Tentar de novo', primario: true, aoClicar: function (r) {
+      r.fechar(); op.aoRepetir();
+    } });
+    botoes.push({ rot: botoes.length ? 'Deixar assim' : 'Fechar', aoClicar: function (r) { r.fechar(); } });
+    return recado({
+      chave: op.chave, titulo: op.titulo,
+      texto: 'O servidor recusou. Não gravou — o que está abaixo continua como estava.',
+      itens: op.itens,
+      motivo: msg ? 'Motivo: ' + msg : '',
+      botoes: botoes
+    });
+  }
+  function resolvida(chave) {
+    var r = POR_CHAVE[String(chave)];
+    if (r) r.fechar();
+  }
+
   w.B4UGravar = {
     enviar: enviar,
     pendentes: pendentes,
+    falhou: falhou,
+    resolvida: resolvida,
     /* Para quem quiser dar o próprio recado com a mesma cara (a página não
        precisa saber montar caixa nenhuma). */
     recado: recado
