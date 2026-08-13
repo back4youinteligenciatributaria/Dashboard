@@ -408,6 +408,54 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 .pill.p-cancelado{background:#EFEAE3;color:var(--muted)}
 .pill.p-todos{background:#EDE6FA;color:#5B3E9E;border-color:#CFC0EE}
 .pill.p-interno{background:#EFEAE3;color:var(--ink-2)}
+/* ---------- o balão da linha ----------
+   Substitui o `title` nativo. O nativo tinha três defeitos que só apareceram no
+   uso: demora quase um segundo para nascer e some sozinho depois de alguns; some
+   ao menor tremor do mouse; e mostra tudo na mesma letra cinza, sem separar o
+   detalhe do histórico. Quem tentava ler o histórico de uma tarefa acabava
+   abrindo a ficha — o balão existia e não servia.
+   Este nasce em 140ms, fica enquanto o mouse estiver na linha, e separa as duas
+   coisas com tipografia.
+
+   `pointer-events:none` é o que o torna calmo: ele NUNCA recebe o mouse. Sem
+   isso, um balão desenhado embaixo do cursor tomaria o `mouseover` da linha, a
+   linha "perderia" o mouse, o balão sumiria, a linha ganharia o mouse de volta —
+   e ele piscaria para sempre. Em troca, não dá para rolar por dentro dele: por
+   isso o conteúdo é limitado e o excesso vira uma linha de "e mais N". */
+.dica-balao{position:fixed;z-index:60;pointer-events:none;
+  max-width:min(470px,calc(100vw - 24px));max-height:min(60vh,520px);overflow:hidden;
+  background:var(--surface);color:var(--ink);border:1px solid var(--line-2);
+  border-radius:var(--radius);box-shadow:0 8px 26px rgba(7,48,52,.20);
+  padding:11px 13px;font-size:var(--fs-2);line-height:1.5}
+.dica-balao[hidden]{display:none}
+.db-cli{font-size:var(--fs-1);font-weight:700;color:var(--brand-teal-txt);margin-bottom:6px;
+  white-space:pre-line}
+/* O detalhe é o PLANO, e é o que mais se vem buscar aqui: fica no corpo do
+   texto, no tamanho de ler. O histórico vem depois, menor, porque é consulta. */
+.db-det{font-size:var(--fs-3);line-height:1.45;white-space:pre-line;overflow-wrap:anywhere;
+  /* Detalhe muito longo é cortado por LINHA, com reticências, e não pela altura
+     da caixa: corte por altura parte a letra ao meio e parece defeito. Sete
+     linhas é o plano de qualquer tarefa; o que passa disso está na ficha. */
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;overflow:hidden}
+.db-sem{color:var(--muted);font-style:italic}
+.db-h{margin-top:9px;padding-top:8px;border-top:1px solid var(--line);
+  font-size:var(--fs-1);font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.db-i{display:grid;grid-template-columns:auto 1fr;gap:1px 9px;padding:4px 0}
+.db-i+.db-i{border-top:1px solid var(--line)}
+.db-q{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:var(--fs-1)}
+.db-t{overflow-wrap:anywhere}
+.db-t .quem{font-weight:700}
+.db-i.mudanca .db-t{color:var(--ink-2)}
+.db-i.mudanca .db-t b{color:var(--ink)}
+.db-mais{margin-top:5px;font-size:var(--fs-1);color:var(--muted);font-style:italic}
+@media(prefers-reduced-motion:no-preference){
+  .dica-balao{animation:db-entra .1s ease-out}
+  @keyframes db-entra{from{opacity:0}to{opacity:1}}
+}
+/* Sem mouse não há hover, e um balão que nasce do toque brigaria com o toque que
+   abre a ficha. No celular ele simplesmente não existe. */
+@media(hover:none){ .dica-balao{display:none!important} }
+
 .vazio{background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--radius);
   padding:26px 18px;text-align:center;color:var(--muted)}
 /* "Experimente Todo o time" era texto: a saída da tela vazia estava escrita e não
@@ -424,6 +472,13 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
    ninguém decidiu, só aconteceram. O que fica abaixo é o que é DESTA ficha. */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+/* `display:flex` VENCE o `[hidden]` da folha do navegador, que é só
+   `display:none` sem classe nenhuma. Sem esta linha, esconder um campo pela
+   propriedade `.hidden` não esconde nada — e foi exatamente o que aconteceu com
+   a célula de conclusão: o JS marcava certo, a ficha mostrava o campo de data E
+   o botão de concluir ao mesmo tempo. Vale para todo `.fld`, não só para aquele:
+   quem esconder o próximo campo não vai desconfiar disto sozinho. */
+.fld[hidden]{display:none}
 .fld.full{grid-column:1/-1}
 .fld>label,.fld>.lbl{font-size:var(--fs-1);font-weight:700;color:var(--muted);
   text-transform:uppercase;letter-spacing:.04em}
@@ -456,6 +511,13 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 .gsec h3{margin:0 0 10px;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.05em;
   color:var(--muted);display:flex;align-items:center;gap:7px}
 .gsec h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--brand-euc);flex:none}
+/* O botão de concluir. Verde cheio, do tamanho do campo, porque ele ocupa o
+   lugar de um campo — é a resposta inteira para "terminei", e não um controle
+   auxiliar ao lado de outro. */
+.btn--feito{background:var(--verde-2);border-color:var(--verde-2);color:#fff;width:100%;
+  text-align:center}
+.btn--feito:hover{background:#1C6B3D;border-color:#1C6B3D}
+.btn--feito:disabled{opacity:.55;cursor:default}
 .msg{min-height:17px;font-size:var(--fs-2)}
 .msg.err{color:var(--vermelho);font-weight:700}
 .msg.ok{color:var(--verde-2);font-weight:700}
@@ -1451,9 +1513,10 @@ function linhaHTML(t){
   const nomeCli=t.escopo==='Cliente'
     ? `<span class="t-cli">${esc(t.cliente||nomeCliente(t.cliente_id)||'')}</span>` : '';
   const nLog=LOGS.filter(l=>String(l.daily_id)===String(t.id)&&l.tipo==='nota').length;
+  /* Sem `title`. O resumo agora é o balão do `mostrarBalao()` — e os dois juntos
+     dariam duas caixas dizendo a mesma coisa, uma por cima da outra. */
   return `<div class="t s-${cls(t.situacao)}${d!==null&&d<0?' venceu':''}"
-     role="button" tabindex="0" data-id="${esc(t.id)}"
-     title="${esc(resumoHover(t))}">
+     role="button" tabindex="0" data-id="${esc(t.id)}">
     <div class="t-id">${idAlvo}</div>
     <div class="t-assunto">${esc(t.assunto||'(sem assunto)')}</div>
     <div class="t-area">${esc(t.area||'')}</div>
@@ -1463,26 +1526,141 @@ function linhaHTML(t){
     <div class="t-meta">${nomeCli}${nLog?`<span>· ${nLog} nota${nLog>1?'s':''}</span>`:''}</div>
   </div>`;
 }
-/* O que o mouse revela: o detalhe e as últimas linhas do histórico. Vai no `title`
-   nativo de propósito — um balão nosso teria de resolver posicionamento, borda de
-   tela e toque, e a linha inteira já é um botão que abre a ficha com o histórico
-   completo. Aqui é espiada, não leitura. */
-function resumoHover(t){
-  const partes=[];
+/* ══════════════════════════════════════════════════════════════════
+   O BALÃO DA LINHA
+   ------------------------------------------------------------------
+   O que o mouse revela: o detalhe e o histórico. Era o `title` nativo, e o
+   nativo foi trocado porque no uso ele não entregava o que prometia — demora
+   quase um segundo para nascer, some sozinho passados alguns, some ao menor
+   tremor do mouse e mostra detalhe e histórico na mesma letra cinza. Quem
+   queria ler o histórico abria a ficha; o balão existia e não servia.
+
+   O QUE MUDOU DE VERDADE: ele deixou de ser uma espiada e virou leitura. Por
+   isso o histórico vem inteiro (até o teto abaixo), com hora, autor e a mudança
+   em negrito — e não mais as quatro últimas linhas amassadas num parágrafo.
+
+   UM SÓ NÓ para a página toda, criado na primeira vez que alguém passa o mouse.
+   Um por linha seriam trezentos nós de um conteúdo que só um deles mostra de
+   cada vez.
+   ══════════════════════════════════════════════════════════════════ */
+const BALAO_ESPERA=140;      // ms — o bastante para varrer a lista sem piscar
+/* Teto de PARTIDA, não o final. Quem decide de verdade quantas linhas cabem é a
+   `apararBalao()`, medindo — porque nota de uma linha e nota de seis ocupam
+   alturas diferentes, e um número fixo ou sobra (balão curto à toa) ou estoura
+   (o rodapé "e mais N" fica embaixo do corte e ninguém fica sabendo do resto).
+   Este número existe só para não montar HTML de duzentas linhas que a medição
+   vai jogar fora em seguida. */
+const BALAO_TETO=24;
+let BALAO=null, BALAO_ALVO=null, BALAO_T=0;
+function balaoNo(){
+  if(!BALAO){
+    BALAO=document.createElement('div');
+    BALAO.className='dica-balao';
+    BALAO.hidden=true;
+    /* No <body> e `position:fixed`: dentro da linha ele seria cortado pelo
+       `overflow` dela e empurraria a grade. Fora, ele só depende da janela. */
+    document.body.appendChild(BALAO);
+  }
+  return BALAO;
+}
+function balaoHTML(t){
+  const out=[];
   /* Com vários clientes a coluna só mostra o primeiro e um "+N". A lista por
      extenso tem de estar em algum lugar alcançável sem abrir a ficha, e este é
      o lugar: o mesmo gesto que já revela o detalhe. */
   const lc=(t.clientes&&t.clientes.length)?t.clientes:[];
-  if(lc.length>1) partes.push('Clientes: '+lc.map(c=>c.id+(c.nome?' · '+c.nome:'')).join('\n          '));
-  if(t.detalhe) partes.push(t.detalhe);
+  if(lc.length>1) out.push('<div class="db-cli">'+
+    esc(lc.map(c=>c.id+(c.nome?' · '+c.nome:'')).join('\n'))+'</div>');
+  out.push(t.detalhe
+    ? '<div class="db-det">'+esc(t.detalhe)+'</div>'
+    : '<div class="db-det db-sem">Sem detalhe escrito.</div>');
   const log=LOGS.filter(l=>String(l.daily_id)===String(t.id))
-    .slice().sort((a,b)=>String(b.quando).localeCompare(String(a.quando))).slice(0,4);
+    .slice().sort((a,b)=>String(b.quando).localeCompare(String(a.quando)));
   if(log.length){
-    partes.push('— histórico —');
-    log.forEach(l=>partes.push((l.quando||'')+'  '+(l.quem||'equipe')+': '+
-      (l.tipo==='nota'?l.texto:(l.tipo+' '+l.texto))));
+    out.push('<div class="db-h">Histórico</div>');
+    /* Mais novo em cima, igual à ficha — a mesma história não pode ser contada em
+       ordens diferentes em duas telas. */
+    out.push(log.slice(0,BALAO_TETO).map(l=>
+      '<div class="db-i'+(l.tipo==='nota'?'':' mudanca')+'">'+
+        '<span class="db-q">'+esc(l.quando||'')+'</span>'+
+        '<span class="db-t"><span class="quem">'+esc(l.quem||'equipe')+'</span> '+
+          (l.tipo==='nota'?esc(l.texto):('mudou '+esc(l.tipo)+': <b>'+esc(l.texto)+'</b>'))+
+        '</span></div>').join(''));
+    /* O balão não recebe o mouse, então não há como rolar dentro dele. Quando o
+       histórico não cabe, ele DIZ quanto ficou de fora em vez de cortar calado —
+       e a ficha, que é onde ele cabe inteiro, está a um clique.
+       A linha nasce SEMPRE, escondida: quem descobre o número final é a
+       `apararBalao()`, depois de medir — e um nó que já está na página é mais
+       barato de atualizar do que um que precisa ser criado no meio da medição. */
+    const fora=Math.max(0,log.length-BALAO_TETO);
+    out.push('<div class="db-mais" data-fora="'+fora+'"'+(fora?'':' hidden')+'>'+
+             textoMais(fora)+'</div>');
   }
-  return partes.join('\n') || t.assunto || '';
+  return out.join('');
+}
+const textoMais=n=>'e mais '+n+' — abra a tarefa para ver o histórico inteiro.';
+/* Tira linhas do FIM do histórico até o balão caber, e atualiza o "e mais N" a
+   cada uma. Existe porque o teto de altura sozinho cortava justamente o rodapé:
+   ele é o último elemento, e num balão de 14 notas ficava debaixo do corte — o
+   histórico aparecia truncado sem nada dizendo que estava truncado, que é a
+   única coisa pior do que truncar.
+   Mede com `scrollHeight` contra `clientHeight`: com `overflow:hidden`, o
+   primeiro continua sendo a altura do conteúdo inteiro e o segundo é o que a
+   caixa mostra. O laço converge porque cada volta tira uma linha e o rodapé, que
+   cresce no máximo uma vez, já está contado na medição seguinte. */
+function apararBalao(){
+  const b=BALAO; if(!b) return;
+  const itens=[].slice.call(b.querySelectorAll('.db-i'));
+  const mais=b.querySelector('.db-mais');
+  let fora=mais?(parseInt(mais.dataset.fora,10)||0):0;
+  let i=itens.length;
+  while(i>0 && b.scrollHeight>b.clientHeight+1){
+    itens[--i].remove();
+    fora++;
+    if(mais){ mais.hidden=false; mais.textContent=textoMais(fora); }
+  }
+}
+/* Encostado na linha, e não grudado no cursor: seguir o mouse faria o texto
+   tremer enquanto se lê. Abaixo da linha por padrão; acima quando não cabe; e
+   preso às bordas da janela nos dois eixos, para nunca nascer metade fora. */
+function posicionarBalao(linha){
+  const b=balaoNo(), r=linha.getBoundingClientRect(), m=10;
+  const bw=b.offsetWidth, bh=b.offsetHeight;
+  let x=r.left+16;
+  if(x+bw>innerWidth-m)  x=innerWidth-m-bw;
+  if(x<m) x=m;
+  let y=r.bottom+6;
+  if(y+bh>innerHeight-m) y=r.top-6-bh;          // não cabe embaixo: vai para cima
+  if(y<m) y=Math.max(m, innerHeight-m-bh);      // não cabe nem acima: encosta
+  b.style.left=Math.round(x)+'px';
+  b.style.top =Math.round(y)+'px';
+}
+function esconderBalao(){
+  clearTimeout(BALAO_T); BALAO_ALVO=null;
+  if(BALAO) BALAO.hidden=true;
+}
+function mostrarBalao(linha){
+  const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id);
+  if(!t) return esconderBalao();
+  const b=balaoNo();
+  b.innerHTML=balaoHTML(t);
+  /* Mostra ANTES de medir: `offsetWidth` de um nó com `hidden` é zero, e o balão
+     nasceria sempre no canto superior esquerdo. Ele aparece já posicionado
+     porque as duas coisas acontecem no mesmo quadro. */
+  b.hidden=false;
+  apararBalao();               // depois de visível (nó com `hidden` mede zero)
+  posicionarBalao(linha);
+}
+function agendarBalao(linha){
+  if(linha===BALAO_ALVO) return;
+  clearTimeout(BALAO_T);
+  BALAO_ALVO=linha;
+  if(!linha){ if(BALAO) BALAO.hidden=true; return; }
+  /* Já visível: troca na hora. A espera existe para não piscar ao ENTRAR na
+     lista; andando de linha em linha com o balão aberto, esperar de novo faria a
+     leitura engasgar a cada linha. */
+  if(BALAO && !BALAO.hidden) return mostrarBalao(linha);
+  BALAO_T=setTimeout(()=>{ if(BALAO_ALVO===linha) mostrarBalao(linha); },BALAO_ESPERA);
 }
 function layout(){
   /* Os QUATRO filtros saem daqui vazios e são preenchidos pelo `montarFiltros()`,
@@ -1606,6 +1784,10 @@ function desenharLista(){
      salvar, recarga em segundo plano), e um painel atualizado em outro lugar
      ficaria devendo em algum deles. Um só ponto, uma só verdade. */
   desenharPainel();
+  /* A lista inteira é reescrita abaixo: a linha que o balão está descrevendo
+     deixa de existir, e ele ficaria de pé falando de um nó que já não está na
+     página. Some, e volta no próximo `pointerover`. */
+  esconderBalao();
   const vis=visiveis();
   const gs=agrupar(vis);
   document.getElementById('cont').textContent=vis.length+(vis.length===1?' tarefa':' tarefas');
@@ -1750,8 +1932,27 @@ function fichaHTML(t){
            gastar uma linha da ficha para repetir o calendário. -->
       ${nova?'':`<div class="fld"><span class="lbl">Aberto em</span>
         <span class="valor">${esc(fmtData(t.aberto_em)||'—')}</span></div>`}
-      ${nova?'':`<div class="fld"><label for="f-concl">Concluído em</label><input id="f-concl" type="date" value="${esc(t.concluido_em)}">
-        <span class="dica">Preenche sozinho ao marcar Feito; dá para corrigir.</span></div>`}
+      <!-- CONCLUSÃO: duas caras da mesma célula, e quem escolhe é a Situação.
+           Enquanto a tarefa está EM ABERTO, um campo "Concluído em" vazio não é
+           informação, é uma pergunta que ninguém fez — e quem terminou tinha de
+           descer até Situação, achar "Feito", conferir se a data entrou e só
+           então salvar. Ali o que cabe é o gesto inteiro num botão.
+           Depois de concluída, o botão não teria o que fazer e o que importa é a
+           DATA: ela volta como campo, editável, porque quem concluiu ontem
+           corrige aqui (foi por isso que ela sempre foi campo).
+           Os dois ficam no HTML e um deles fica escondido — o salvarFicha() lê o
+           campo f-concl SEMPRE, e um campo que só existe às vezes viraria um
+           "if" a mais em todo lugar que toca a ficha. Quem alterna entre os dois
+           é a mostrarConclusao().
+           (Sem crase nesta nota, pelo mesmo motivo da nota do campo Cliente logo
+           acima: ela mora dentro de um template literal, e uma crase aqui
+           fecharia a string no meio do HTML.) -->
+      ${nova?'':`<div class="fld" id="fld-concl"><label for="f-concl">Concluído em</label>
+        <input id="f-concl" type="date" value="${esc(t.concluido_em)}">
+        <span class="dica">Preenche sozinho ao marcar Feito; dá para corrigir.</span></div>
+      <div class="fld" id="fld-concluir"><span class="lbl">Conclusão</span>
+        <button type="button" class="btn btn--feito" id="f-concluir">✓ Concluir tarefa</button>
+        <span class="dica">Marca <b>Feito</b> com a data de hoje, grava e fecha.</span></div>`}
     </div>
   </div>
   ${nova?'':`
@@ -1888,6 +2089,38 @@ function pintarSituacao(){
   const c=COR_SIT[el.value]||['','',];
   el.style.background=c[0]||''; el.style.color=c[1]||''; el.style.fontWeight=c[0]?'700':'';
 }
+/* Quem manda na célula de conclusão é a Situação que está ESCOLHIDA AGORA na
+   ficha — não a que está gravada. Trocar para "Feito" no seletor faz a data
+   aparecer no mesmo gesto, já preenchida (ver o ouvinte de `f-sit2`), e voltar
+   para "Em andamento" traz o botão de volta. A ficha acompanha a decisão em vez
+   de esperar o salvar para se atualizar. */
+function mostrarConclusao(){
+  const sel=document.getElementById('f-sit2');
+  const campo=document.getElementById('fld-concl'), botao=document.getElementById('fld-concluir');
+  if(!sel||!campo||!botao) return;                  // ficha nova: nenhum dos dois existe
+  const emAberto=ABERTAS.indexOf(sel.value)>=0;
+  campo.hidden=emAberto;
+  botao.hidden=!emAberto;
+}
+/* O gesto inteiro num clique: marca Feito, põe a data de hoje, grava e fecha.
+   Escreve nos CAMPOS e chama o `salvarFicha()` de sempre em vez de mandar um
+   POST próprio — assim ele passa pelas mesmas validações (assunto vazio,
+   cliente que não resolveu), pela mesma mensagem de erro, pelo mesmo "salvo ✓" e
+   pelo mesmo tratamento de resposta perdida. Um segundo caminho de gravação
+   seria um segundo lugar para consertar bug.
+   E como o `salvarFicha()` só fecha quando o servidor confirma, se der errado a
+   ficha fica aberta com "Feito" já escolhido e a data preenchida: a pessoa vê o
+   que ia ser gravado e tenta de novo pelo Salvar. */
+function concluirAgora(){
+  const sel=document.getElementById('f-sit2'), dt=document.getElementById('f-concl');
+  if(!sel||!dt) return;
+  sel.value='Feito';
+  /* Data já gravada é respeitada: quem corrigiu a data à mão e clicou em
+     concluir não quer que o botão desfaça a correção. */
+  if(!dt.value) dt.value=(HOJE||'').slice(0,10);
+  pintarSituacao(); mostrarConclusao();
+  salvarFicha();
+}
 /* O que está escrito na ficha, num texto só. Esta tela NÃO tem autosave: o que
    foi digitado e não passou pelo botão Salvar só existe aqui. Comparar com o
    instantâneo tirado na abertura é o jeito de saber se fechar agora perde alguma
@@ -1936,6 +2169,7 @@ function abrirFicha(t){
   MODAL.abrir();
   validarCliFicha();
   pintarSituacao();
+  mostrarConclusao();
   setTimeout(()=>{const f=document.getElementById('f-assunto');if(f)f.focus();},40);
 }
 function fecharFicha(forcado){ if(MODAL) MODAL.fechar(forcado); }
@@ -2002,6 +2236,10 @@ function validarCliFicha(aoVivo){
 
 async function salvarFicha(){
   const btn=document.getElementById('m-salvar'), msg=document.getElementById('m-msg');
+  /* O botão de concluir também trava enquanto grava — ele chama esta mesma
+     função, e deixá-lo clicável mandaria uma segunda gravação da mesma tarefa
+     enquanto a primeira está em voo. */
+  const btc=document.getElementById('f-concluir');
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
   const cli=validarCliFicha();
   /* ABERTO EM NÃO É MAIS CAMPO — mas continua sendo DADO, e ele não pode se
@@ -2022,7 +2260,8 @@ async function salvarFicha(){
   /* Texto escrito que não virou cliente NÃO vira tarefa interna calada: seria
      perder a intenção de quem digitou e ainda esconder o engano. */
   if(!cli.ok){ msg.className='msg err'; msg.textContent=cli.msg||'Confira o cliente.'; return; }
-  btn.disabled=true; msg.className='msg'; msg.textContent='Salvando…';
+  btn.disabled=true; if(btc) btc.disabled=true;
+  msg.className='msg'; msg.textContent='Salvando…';
   try{
     let d;
     if(ABERTA){
@@ -2049,13 +2288,14 @@ async function salvarFicha(){
       msg.className='msg err';
       msg.textContent='O servidor recusou: '+String((e&&e.message)||e);
     }
-  }finally{ btn.disabled=false; }
+  }finally{ btn.disabled=false; if(btc) btc.disabled=false; }
 }
 
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
   const linha=e.target.closest&&e.target.closest('.t');
-  if(linha){ const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id); if(t) abrirFicha(t); return; }
+  if(linha){ esconderBalao(); const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id); if(t) abrirFicha(t); return; }
+  if(e.target.id==='f-concluir'){ concluirAgora(); return; }
   /* `closest` e não `e.target.dataset`: os alvos do painel têm filhos (o pontinho,
      o número em negrito, o nome da área), e clicar em cima do número devolveria o
      <b>, que não tem data-pn nenhum. */
@@ -2073,7 +2313,32 @@ document.addEventListener('click',e=>{
 });
 /* Esc com a ficha aberta NÃO chega aqui: a casca do b4u-modal.js escuta na
    captura, fecha o modal de cima da pilha e corta a propagação. */
+/* ---------- o balão segue o mouse pela lista ----------
+   `pointerover` e não `mouseover` por causa do `pointerType`: no celular o toque
+   também dispara mouseover, e um balão nascendo do toque brigaria com o toque
+   que abre a ficha. Delegado no documento — a lista é reescrita a cada filtro, e
+   ouvinte preso em linha morre junto com ela. */
+document.addEventListener('pointerover',e=>{
+  if(e.pointerType && e.pointerType!=='mouse') return;
+  agendarBalao((e.target.closest&&e.target.closest('.t'))||null);
+});
+/* Rolar move a linha e o balão ficaria apontando para o vazio; sair da janela
+   deixaria um balão órfão na tela. Nos dois casos ele some — reaparece no
+   próximo `pointerover`, que custa nada. `passive` porque este ouvinte nunca
+   cancela a rolagem e dizer isso deixa a rolagem no caminho rápido. */
+addEventListener('scroll',esconderBalao,{passive:true,capture:true});
+addEventListener('resize',esconderBalao);
+addEventListener('blur',esconderBalao);
+/* Pelo TECLADO também: a linha é focável (`tabindex=0`) e quem anda por ela com
+   Tab tem o mesmo direito de ler o detalhe sem abrir a ficha. */
+document.addEventListener('focusin',e=>{
+  const l=e.target.closest&&e.target.closest('.t');
+  if(l) mostrarBalao(l); else if(BALAO_ALVO) esconderBalao();
+});
 document.addEventListener('keydown',e=>{
+  /* Esc some com o balão antes de qualquer outra coisa — mas só se ele estiver
+     aberto, senão roubaria o Esc de quem quer fechar a ficha. */
+  if(e.key==='Escape'&&BALAO&&!BALAO.hidden){ esconderBalao(); return; }
   const linha=e.target&&e.target.closest&&e.target.closest('.t');
   if(linha&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); linha.click(); return; }
   if(e.key==='/'&&!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName||''))){
@@ -2121,9 +2386,14 @@ document.addEventListener('change',e=>{
      deixou de estar concluída, e uma data de conclusão pendurada mentiria. */
   if(e.target.id==='f-sit2'){
     pintarSituacao();
-    const cc=document.getElementById('f-concl'); if(!cc) return;
-    if(e.target.value==='Feito'){ if(!cc.value) cc.value=(HOJE||'').slice(0,10); }
-    else cc.value='';
+    const cc=document.getElementById('f-concl');
+    if(cc){
+      if(e.target.value==='Feito'){ if(!cc.value) cc.value=(HOJE||'').slice(0,10); }
+      else cc.value='';
+    }
+    /* Depois de mexer no valor, e não antes: a célula tem de aparecer já com a
+       data certa dentro, e não vazia por um quadro. */
+    mostrarConclusao();
   }
 });
 document.addEventListener('input',e=>{
