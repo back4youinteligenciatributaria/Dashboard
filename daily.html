@@ -389,6 +389,23 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
 .t.s-feito{border-left-color:var(--verde);opacity:.72}
 .t.s-cancelado{border-left-color:var(--line-2);opacity:.55}
 .t.venceu{border-left-color:var(--vermelho)}
+/* GRAVANDO — a mudança já está na lista, mas ainda não foi confirmada pelo
+   servidor. Ela aparece porque esconder até confirmar faria a tarefa que a
+   pessoa acabou de concluir continuar em aberto por alguns segundos, que é o
+   incômodo que esta mudança toda veio resolver.
+   E aparece MARCADA porque a tela não afirma o que não sabe: o pontinho diz "a
+   caminho". Ele some quando o servidor confirma, e a linha inteira volta ao que
+   era se ele recusar. */
+.t.gravando{opacity:.72;cursor:default}
+.t.gravando:hover{box-shadow:none;border-color:var(--line)}
+.t-gr{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-1);
+  font-weight:700;color:var(--brand-teal-txt)}
+.t-gr::before{content:'';width:7px;height:7px;border-radius:50%;
+  background:var(--brand-teal);flex:none}
+@media(prefers-reduced-motion:no-preference){
+  .t-gr::before{animation:gr-pulsa 1.1s ease-in-out infinite}
+  @keyframes gr-pulsa{0%,100%{opacity:1}50%{opacity:.25}}
+}
 .t-assunto{font-weight:700;font-size:var(--fs-4);min-width:0;overflow-wrap:anywhere;grid-column:2}
 .t.s-feito .t-assunto,.t.s-cancelado .t-assunto{text-decoration:line-through;text-decoration-thickness:1px}
 .t-meta{grid-column:2;display:flex;flex-wrap:wrap;gap:3px 10px;font-size:var(--fs-2);color:var(--muted)}
@@ -574,6 +591,11 @@ input.filtro.on{border-color:var(--brand-teal);color:var(--brand-teal-txt);font-
      ficha não abre — e mais nada muda: a chamada é protegida por
      `window.B4UModal &&` e a lista continua inteira. -->
 <script src="b4u-modal.js" charset="utf-8"></script>
+<!-- A fila de gravação: a ficha fecha na hora e o POST viaja sozinho; se falhar,
+     o recado diz O QUE não gravou e oferece a ação certa para cada desfecho.
+     Se ele não carregar, o `salvarFicha()` volta a esperar o servidor de ficha
+     aberta — o jeito antigo, mais lento e correto. -->
+<script src="b4u-gravar.js" charset="utf-8"></script>
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -1515,7 +1537,7 @@ function linhaHTML(t){
   const nLog=LOGS.filter(l=>String(l.daily_id)===String(t.id)&&l.tipo==='nota').length;
   /* Sem `title`. O resumo agora é o balão do `mostrarBalao()` — e os dois juntos
      dariam duas caixas dizendo a mesma coisa, uma por cima da outra. */
-  return `<div class="t s-${cls(t.situacao)}${d!==null&&d<0?' venceu':''}"
+  return `<div class="t s-${cls(t.situacao)}${d!==null&&d<0?' venceu':''}${t._gravando?' gravando':''}"
      role="button" tabindex="0" data-id="${esc(t.id)}">
     <div class="t-id">${idAlvo}</div>
     <div class="t-assunto">${esc(t.assunto||'(sem assunto)')}</div>
@@ -1523,7 +1545,8 @@ function linhaHTML(t){
     <div class="t-quem">${quem}</div>
     <div class="t-cel">${pillSit(t.situacao)}</div>
     <div class="t-cel"><span class="t-prazo ${prazoCls}">${esc(prazoTxt)}</span></div>
-    <div class="t-meta">${nomeCli}${nLog?`<span>· ${nLog} nota${nLog>1?'s':''}</span>`:''}</div>
+    <div class="t-meta">${nomeCli}${nLog?`<span>· ${nLog} nota${nLog>1?'s':''}</span>`:''}${
+      t._gravando?'<span class="t-gr">gravando…</span>':''}</div>
   </div>`;
 }
 /* ══════════════════════════════════════════════════════════════════
@@ -2260,27 +2283,147 @@ async function salvarFicha(){
   /* Texto escrito que não virou cliente NÃO vira tarefa interna calada: seria
      perder a intenção de quem digitou e ainda esconder o engano. */
   if(!cli.ok){ msg.className='msg err'; msg.textContent=cli.msg||'Confira o cliente.'; return; }
+  /* ══════════════════════════════════════════════════════════════════
+     DAQUI PARA A FRENTE A FICHA NÃO ESPERA MAIS
+     ------------------------------------------------------------------
+     Ela segurava o modal até o servidor responder. Numa rota de Apps Script
+     isso são alguns segundos, e a daily tem dezenas de tarefas — o dono
+     descreveu como "atrapalhando e demorando", e a espera não comprava nada:
+     quem preencheu já sabe o que escreveu.
+
+     O QUE CONTINUA ANTES DO FECHAMENTO: a validação. Assunto vazio e cliente
+     que não resolveu são erros DA FICHA, e a ficha é onde eles se consertam —
+     transformá-los em recado depois de fechar seria mandar a pessoa reabrir
+     para corrigir o que estava na frente dela.
+
+     O QUE VAI PARA DEPOIS: só a viagem. A lista já mostra a mudança, marcada
+     como "gravando…", e o `B4UGravar` cuida do desfecho. ══════════════════ */
+  const nota=v('f-nota');
+  const alvo=ABERTA;
+
+  /* Sem o módulo, o jeito antigo — espera de ficha aberta. Mais lento e
+     correto: melhor esperar do que fechar sem ter quem avise da falha. */
+  if(!window.B4UGravar) return salvarEsperando(dados,nota,alvo,btn,btc,msg);
+
+  gravarTarefa(dados,nota,alvo);
+  fecharFicha(true);
+}
+
+/* ---------- a linha como ela FICARÁ, montada aqui ----------
+   O servidor devolve a linha gravada e é ela que vale no fim; esta é a melhor
+   previsão que a tela consegue fazer enquanto a resposta não chega. Os campos
+   DERIVADOS (nome do cliente, escopo, lista de clientes) são recalculados em
+   vez de herdados: trocar o cliente e manter o nome antigo faria a linha dizer
+   o nome de um e o id de outro pelos dois segundos em que ninguém está
+   desconfiando de nada. */
+let TMP_N=0;
+function idsDoTexto(cid){
+  return String(cid||'').split(/[;,\/]+/).map(x=>x.trim()).filter(Boolean);
+}
+function tarefaOtimista(alvo,dados){
+  const t=Object.assign({},alvo||{id:'novo-'+(++TMP_N)},dados);
+  const ids=idsDoTexto(dados.cliente_id);
+  t.escopo = !ids.length ? 'Interno' : (ids.some(ehTodos) ? 'Todos' : 'Cliente');
+  t.clientes = ids.filter(x=>!ehTodos(x)).map(id=>({id:id,nome:nomeCliente(id)}));
+  t.cliente  = (t.escopo==='Cliente'&&ids.length===1) ? nomeCliente(ids[0]) : '';
+  t._gravando=true;
+  return t;
+}
+/* A hora da nota provisória. Vem do relógio LOCAL com o dia do SERVIDOR: o dia
+   é a informação que não pode errar (é ele que agrupa o histórico) e o servidor
+   é quem sabe qual é; a hora é enfeite de ordenação e vive dois segundos, até a
+   resposta trazer a de verdade. */
+function agoraTxt(){
+  const p=x=>String(x).padStart(2,'0'), n=new Date();
+  return (HOJE||'').slice(0,10)+' '+p(n.getHours())+':'+p(n.getMinutes());
+}
+const ROT_CAMPO={assunto:'Assunto',detalhe:'Detalhe',responsavel:'Responsável',
+                 situacao:'Situação',area:'Área',cliente_id:'Cliente',
+                 prazo:'Prazo',concluido_em:'Concluído em'};
+function valorLegivel(k,v){
+  if(!v) return '—';
+  if(k==='prazo'||k==='concluido_em') return fmtData(v);
+  if(k==='cliente_id') return rotuloClientes(v);
+  return String(v).length>60?String(v).slice(0,60)+'…':String(v);
+}
+/* O QUE não gravou — é isto que separa um recado em que dá para confiar de um
+   "não salvou" que não ajuda ninguém: quem lê precisa saber o que perdeu para
+   decidir se redigita ou se recarrega. Só o que MUDOU entra; repetir os onze
+   campos da ficha esconderia a linha que importa no meio das dez que não. */
+function oQueMudou(alvo,dados,nota){
+  const out=[];
+  if(!alvo) out.push('Tarefa nova: '+valorLegivel('assunto',dados.assunto));
+  else Object.keys(ROT_CAMPO).forEach(k=>{
+    const de=String(alvo[k]==null?'':alvo[k]).trim(), para=String(dados[k]||'').trim();
+    if(de===para) return;
+    out.push(ROT_CAMPO[k]+': '+valorLegivel(k,de)+' → '+valorLegivel(k,para));
+  });
+  if(nota) out.push('Nota: '+(nota.length>80?nota.slice(0,80)+'…':nota));
+  return out;
+}
+/* Grava sem segurar ninguém: pinta a mudança, entrega o envio à fila, e ensina
+   a fila a desfazer. O `enviar` é chamado com a MESMA closure no "tentar de
+   novo", então repetir repinta a linha e reconta a nota — a segunda tentativa
+   parte do mesmo estado que a primeira, e não de meio caminho. */
+function gravarTarefa(dados,nota,alvo){
+  const t=tarefaOtimista(alvo,dados);
+  const id=String(t.id);
+  const i=TAREFAS.findIndex(x=>String(x.id)===id);
+  const antes=i>=0?TAREFAS[i]:null;
+  if(i>=0) TAREFAS[i]=t; else TAREFAS.push(t);
+  const logTmp=nota?{daily_id:id,quando:agoraTxt(),quem:(EU&&EU.nome)||'você',
+                     tipo:'nota',texto:nota,_gravando:true}:null;
+  if(logTmp) LOGS.push(logTmp);
+  desenharLista();
+
+  const limparProvisorios=()=>{
+    if(logTmp){ const k=LOGS.indexOf(logTmp); if(k>=0) LOGS.splice(k,1); }
+    const j=TAREFAS.findIndex(x=>x===t);
+    if(j>=0){ if(antes) TAREFAS[j]=antes; else TAREFAS.splice(j,1); }
+  };
+
+  B4UGravar.enviar({
+    /* Uma gravação por tarefa. Duas em voo pela mesma linha voltam fora de ordem
+       com facilidade, e a mais velha pintaria por cima da mais nova. */
+    chave:'daily:'+id,
+    titulo:alvo?('Tarefa #'+id+' — '+(dados.assunto||'')):('Tarefa nova — '+(dados.assunto||'')),
+    itens:oQueMudou(alvo,dados,nota),
+    envio:()=>alvo
+      ? postAcao(Object.assign({acao:'daily_salvar',id:alvo.id,campos:dados},nota?{nota:nota}:{}))
+      : postAcao(Object.assign({acao:'daily_nova'},dados)),
+    aoOk:d=>{
+      /* O provisório sai ANTES de o definitivo entrar. Numa tarefa nova os dois
+         têm ids diferentes (o provisório é "novo-3"), e deixar o primeiro para
+         depois deixaria as duas linhas na lista — a mesma tarefa, duas vezes. */
+      limparProvisorios();
+      /* `aplicarUma` já redesenha quando aceita a linha do servidor. Quando não
+         aceita (backend antigo, sem `tarefa` na resposta), a lista ainda está
+         com o provisório recém-removido e precisa de um redesenho AGORA — a
+         recarga completa vem depois, e é lenta demais para ser o único. */
+      if(!aplicarUma(d)){ desenharLista(); recarregar().catch(()=>{}); }
+    },
+    /* Desfazer é devolver a lista ao que era, e "a lista" inclui o que está
+       pintado: sem o redesenho, o recado diria "não gravou" com a mudança ainda
+       na tela — duas informações que se contradizem, e a que fica é a que se vê. */
+    aoDesfazer:()=>{ limparProvisorios(); desenharLista(); }
+  });
+}
+
+/* ---------- o caminho SEM o b4u-gravar.js ----------
+   O de sempre: a ficha espera, mostra "Salvando…" e só fecha com a confirmação.
+   Ele fica porque a alternativa, sem o módulo, seria fechar a ficha sem ter
+   quem avise que a gravação falhou — e aí a pessoa acha que salvou. */
+async function salvarEsperando(dados,nota,alvo,btn,btc,msg){
   btn.disabled=true; if(btc) btc.disabled=true;
   msg.className='msg'; msg.textContent='Salvando…';
   try{
-    let d;
-    if(ABERTA){
-      const nota=v('f-nota');
-      d=await postAcao(Object.assign({acao:'daily_salvar',id:ABERTA.id,campos:dados},nota?{nota:nota}:{}));
-    }else{
-      d=await postAcao(Object.assign({acao:'daily_nova'},dados));
-    }
+    const d=alvo
+      ? await postAcao(Object.assign({acao:'daily_salvar',id:alvo.id,campos:dados},nota?{nota:nota}:{}))
+      : await postAcao(Object.assign({acao:'daily_nova'},dados));
     msg.className='msg ok'; msg.textContent='Salvo ✓';
-    /* Troca só a linha mexida. Se o servidor não mandou a linha, relê tudo. */
     if(!aplicarUma(d)) await recarregar();
-    fecharFicha(true);          // gravou: sair não perde nada, e o aviso não faz sentido
+    fecharFicha(true);
   }catch(e){
-    /* A ficha CONTINUA ABERTA — fechar por cima de um salvamento que não foi
-       levaria embora a única pista de que deu errado.
-       Duas mensagens, porque são duas situações: o servidor recusar (aí sim não
-       gravou, e "tente de novo" é o conselho certo) e a resposta se perder (a
-       gravação PODE ter acontecido, e mandar de novo criaria tarefa em dobro —
-       por isso o conselho vira "recarregue antes"). */
     if(e&&e.incerto){
       msg.className='msg err';
       msg.textContent='Não consegui confirmar se salvou. Recarregue a página antes de mandar de novo — a tarefa pode já estar gravada.';
@@ -2294,7 +2437,17 @@ async function salvarFicha(){
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
   const linha=e.target.closest&&e.target.closest('.t');
-  if(linha){ esconderBalao(); const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id); if(t) abrirFicha(t); return; }
+  if(linha){
+    esconderBalao();
+    const t=TAREFAS.find(x=>String(x.id)===linha.dataset.id);
+    /* Linha em voo não abre. Numa tarefa NOVA o id ainda é provisório e salvar
+       por cima mandaria o servidor procurar uma tarefa que não existe; numa
+       edição, seriam duas gravações da mesma linha correndo uma atrás da outra.
+       São uns dois segundos, e o "gravando…" na linha diz por que não abriu. */
+    if(t&&t._gravando) return;
+    if(t) abrirFicha(t);
+    return;
+  }
   if(e.target.id==='f-concluir'){ concluirAgora(); return; }
   /* `closest` e não `e.target.dataset`: os alvos do painel têm filhos (o pontinho,
      o número em negrito, o nome da área), e clicar em cima do número devolveria o
@@ -2428,6 +2581,17 @@ function aplicar(d){
   SITUACOES=d.situacoes||['A fazer','Em andamento','Esperando terceiro','Feito','Cancelado'];
   AREAS=d.areas||['Contábil','Pessoal','Fiscal','Jurídico','Societário','Restituição','Financeiro','Atendimento','Gestão'];
   HOJE=d.hoje||''; PLANILHA=d.planilha_url||'';
+  /* QUEM RESPONDEU, guardado onde dá para perguntar. O editor do Apps Script
+     mostra o código novo, mas o site serve a última IMPLANTAÇÃO — e um conserto
+     colado sem republicar é, de fora, idêntico a um conserto que não funcionou.
+     Já custou duas rodadas de investigação, a última no fuso das datas: o
+     conserto estava escrito, o sintoma continuava, e a tela não tinha como
+     dizer que estava falando com código velho.
+     Agora tem. No console do navegador, `B4U_VERSAO` diz a versão publicada e
+     `B4U_FUSO` diz em que fuso o servidor está lendo as datas — as duas
+     perguntas que a tela sozinha nunca soube responder. */
+  window.B4U_VERSAO=d.versao||'(anterior ao carimbo — republique o Web App)';
+  window.B4U_FUSO=d.fuso_planilha||'(desconhecido)';
   /* O nome de quem está usando vai para o botão da barra. Vem de `d.eu`, o mesmo
      campo que decide o que é "meu" na régua de filtros — então a barra e o filtro
      nunca podem discordar sobre quem é a pessoa. Fica aqui, no `aplicar()`, e não
