@@ -543,14 +543,27 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .fer-card:hover .fer-arw{color:var(--brand-teal-txt)}
 button.fer-card[aria-expanded="true"]{border-color:var(--brand-teal)}
 button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);transform:rotate(180deg)}
-/* Selo de pendência: no topo do card, ao lado da seta (só onde o dado já está carregado). */
+/* Selo do card: no topo, ao lado da seta. São TRÊS e a diferença entre eles é o
+   que a pessoa tem de fazer:
+
+     vermelho (padrão)  já passou do prazo — certificado vencido, tarefa atrasada
+     laranja            vence HOJE: ainda dá tempo, e só hoje
+     neutro             não é pendência, é TAMANHO — quantos contatos, quantos
+                        clientes ativos, quantos processos abertos
+
+   O neutro nasceu junto com os contadores dos outros cards: pintar "412
+   contatos" de vermelho transformaria o tamanho da base em alarme, e o alarme
+   que toca sempre deixa de ser ouvido — inclusive o vermelho de verdade, dois
+   cards ao lado. Cor é informação nesta casa (ver b4u-design.css), e o número
+   que não pede ação nenhuma não pode usar a cor de quem pede. */
 .fer-selo{flex:none;font-size:11px;font-weight:800;white-space:nowrap;
   background:#F8E3DF;color:var(--vermelho);border:1px solid #F0C9C1;border-radius:var(--radius-pill);padding:2px 8px}
-/* Restituição é um card de menu: aberto, ele precisa passar por cima dos cards
-   vizinhos — senão a lista do dropdown nasce por baixo do card de Clientes ativos. */
-.fer-grid .menu{display:flex;flex-direction:column}
-.fer-grid .menu>.fer-card{flex:1}
-.fer-grid .menu.aberto{z-index:40}
+.fer-selo--laranja{background:var(--amber-soft,#FBF0DF);color:var(--amber-txt,#8A5A10);border-color:var(--amber-line,#EBD9BC)}
+.fer-selo--n{background:var(--surface-warm);color:var(--muted);border-color:var(--line)}
+/* Dois selos no mesmo card (a daily: atrasadas e para hoje) precisam de um
+   respiro entre eles — e o `gap` do .fer-cab não serve, porque ele é o mesmo que
+   separa o ícone da seta. */
+.fer-selo+.fer-selo{margin-left:-3px}
 
 /* Status do cliente: chip de destaque, três estados (Ativo / Em inativação / Inativo). */
 .info-chips{align-items:center;gap:7px}
@@ -1147,31 +1160,14 @@ function fecharOutros(){
 }
 
 /* ---- Restituição ----
-   Aqui existia um dropdown com o NOME e o CÓDIGO de cada colaborador escritos
-   neste arquivo — e este arquivo é servido pelo GitHub Pages, ou seja, público.
-   Além do vazamento, era errado de uso: quem entra vê a própria carteira, não
-   um menu para escolher a de quem quiser.
-   Agora o link é um só e não leva código nenhum: o servidor já sabe quem entrou
-   pela chave do dia e devolve a carteira dessa pessoa (Principal vê todas). */
-function pintarRestituicao(){
-  const menu=document.getElementById('menu-restituicao'); if(!menu) return;
-  const ch=encodeURIComponent(chaveAtual());
-  const pleno=!!(EU&&EU.pleno);
-  const rot=pleno?'Restituição (todos)':'Minha restituição';
-  const minha=`<a href="restituicao?chave=${ch}" target="_blank" rel="noopener"><span class="ic">${icone('calendario')}</span>${esc(rot)}</a>`;
-  /* O atalho para a planilha de Controle saiu daqui a pedido do dono. Quem
-     precisa da carteira inteira usa a tela de Restituição, que mostra o mesmo
-     dado com filtro e histórico; a planilha crua deixou de ser caminho oferecido
-     pelo painel. */
-  const fer=FERRAMENTAS.filter(f=>f.id==='menu-restituicao')[0]||{};
-  menu.innerHTML=`<button type="button" class="fer-card" id="btn-restituicao" aria-expanded="false" data-dica="${esc(fer.desc||'')}">
-      <span class="fer-cab"><span class="fer-ic">${fer.ic||icone('calendario')}</span><span class="fer-arw">▾</span></span>
-      <span class="fer-nome">Restituição</span>
-    </button><div class="menu-pop" id="pop-restituicao" hidden>${minha}</div>`;
-  const btn=document.getElementById('btn-restituicao'), pop=document.getElementById('pop-restituicao');
-  btn.addEventListener('click', e=>{ e.stopPropagation(); const abrir=pop.hidden; pop.hidden=!abrir;
-    btn.setAttribute('aria-expanded',abrir?'true':'false'); menu.classList.toggle('aberto',abrir); });
-}
+   NÃO HÁ MAIS FUNÇÃO AQUI, e o histórico explica por quê.
+   Este card já foi um dropdown com o NOME e o CÓDIGO de cada colaborador escritos
+   neste arquivo — que é servido pelo GitHub Pages, ou seja, público. O vazamento
+   foi tapado trocando tudo por UM link sem código: o servidor já sabe quem entrou
+   pela chave do dia e devolve a carteira dessa pessoa (Principal vê todas).
+   O que sobrou foi um menu suspenso com um item só dentro — dois cliques e uma
+   animação para chegar onde os outros oito cards chegam com um. Agora ele é um
+   card comum, na lista FERRAMENTAS, apontando direto para `restituicao`. */
 /* ---- Ferramentas da equipe: lista única, renderizada e filtrável ----
    `alias` é só para a busca: são as palavras que a pessoa realmente digita
    quando está procurando aquela ferramenta (e não o nome oficial dela). */
@@ -1189,7 +1185,8 @@ const AREAS_CARTEIRA=['fiscal','contabil','pessoal','societario','financeiro'];
 const FERRAMENTAS=[
   {id:'fp-registro',      nome:'Registros de clientes',         url:'registro',          ic:icone('pessoal'), area:AREAS_OPERACAO,
    desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
-   alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj'},
+   alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj',
+   badge:seloRegistro},
   /* Primeira da lista de propósito: é a tela que se abre de manhã, antes de
      saber qual cliente vai dar trabalho hoje. AREAS_TODAS porque não existe área
      que não tenha o que combinar na daily. */
@@ -1206,16 +1203,25 @@ const FERRAMENTAS=[
    alias:'licenca alvara sanitario crm pj cli licenciamento integrado regularidade cnes'},
   {id:'fp-contatos',      nome:'Contatos',                      url:'contatos-equipe',   ic:icone('chat'), area:AREAS_TODAS,
    desc:'Quem fala pelo cliente: e-mail, telefone, papel e permissão de acesso.',
-   alias:'contato email e-mail telefone acesso permissao papel principal secundario'},
+   alias:'contato email e-mail telefone acesso permissao papel principal secundario',
+   badge:seloContatos},
   {id:'fp-societario',    nome:'Processos Paralegal',           url:'societario-equipe', ic:icone('livro'), area:'societario',
    desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
-   alias:'societario paralegal mestra alteracao contratual junta etapa processo protocolo andamento finalizado'},
-  {id:'menu-restituicao', nome:'Restituição',                   tipo:'menu',                  ic:icone('calendario'), area:'equiparacao',
+   alias:'societario paralegal mestra alteracao contratual junta etapa processo protocolo andamento finalizado',
+   badge:seloProcessos},
+  /* Restituição VOLTOU A SER UM CARD COMUM. Ele era um menu suspenso com um item
+     só dentro — dois cliques e uma animação para chegar onde os outros oito
+     cards chegam com um. O dropdown fazia sentido quando havia uma lista de
+     colaboradores ali; desde que o link virou um só (o servidor resolve a
+     carteira pela chave de quem entrou), a caixa que abria só tinha o que já
+     estava escrito na frente dela. */
+  {id:'fp-restituicao',   nome:'Restituição',                   url:'restituicao',       ic:icone('calendario'), area:'equiparacao',
    desc:'Relatório de restituição de cada colaborador — prazos, etapas e responsável.',
    alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
   {id:'fp-ativos',        nome:'Clientes ativos',               url:'clientes-ativos',   ic:icone('planilha'), area:AREAS_CARTEIRA,
    desc:'Quantos clientes ativos em cada competência, mês a mês.',
-   alias:'ativos competencia mes calendario quantos clientes'},
+   alias:'ativos competencia mes calendario quantos clientes',
+   badge:seloAtivos},
   {id:'fp-comercial',     nome:'Comercial',                     url:'comercial',         ic:icone('grafico'), area:'comercial',
    desc:'Material de proposta, simulador e calculadora para o comercial.',
    alias:'comercial material materiais proposta marketing simulador calculadora'}
@@ -1248,28 +1254,31 @@ function pintarFerramentas(){
   const lista=FERRAMENTAS.filter(f=>podeArea(f.area))
     .filter(f=>!termo||normTxt(f.nome+' '+(f.desc||'')+' '+(f.alias||'')).includes(termo));
   cx.innerHTML=lista.map(f=>{
-    if(f.tipo==='menu') return `<div class="menu" id="${f.id}"></div>`;
-    // `badge` é opcional: uma função que devolve {n,tit} quando a ferramenta tem
-    // pendência. Só as que usam dado JÁ carregado (tipo=equipe) têm selo —
-    // licenças, contatos e afins ficam sem, porque isso exigiria chamada nova.
-    const b=(typeof f.badge==='function')?f.badge():null;
-    const selo=(b&&b.n)?`<span class="fer-selo" title="${esc(b.tit||'')}">${esc(String(b.n))} ${icone('alerta')}</span>`:'';
     return `<a class="fer-card" id="${f.id}" href="${esc(comChave(f.url))}" data-dica="${esc(f.desc||'')}">
-      <span class="fer-cab"><span class="fer-ic">${f.ic}</span>${selo}<span class="fer-arw">›</span></span>
+      <span class="fer-cab"><span class="fer-ic">${f.ic}</span>${selosHTML(f)}<span class="fer-arw">›</span></span>
       <span class="fer-nome">${esc(f.nome)}</span>
     </a>`;
   }).join('');
-  if(lista.some(f=>f.tipo==='menu')) pintarRestituicao();
   const vazio=document.getElementById('fer-vazio'); if(vazio) vazio.hidden=lista.length>0;
   const cnt=document.getElementById('fer-cnt');
   const totalVisivel=FERRAMENTAS.filter(f=>podeArea(f.area)).length;
   if(cnt) cnt.textContent = termo ? lista.length+' de '+totalVisivel : '';
 }
 
-function fecharRestituicao(){
-  const pop=document.getElementById('pop-restituicao'), btn=document.getElementById('btn-restituicao');
-  if(pop && !pop.hidden){ pop.hidden=true; btn.setAttribute('aria-expanded','false'); }
-  const menu=document.getElementById('menu-restituicao'); if(menu) menu.classList.remove('aberto');
+/* Os selos de um card.
+   `badge` é opcional e devolve OU um selo OU uma lista deles — a daily precisa de
+   dois (atrasadas e para hoje) e um número só somando os dois esconderia a
+   diferença entre "corre" e "dá tempo", que é a única coisa que o selo tem para
+   dizer. Selo com n=0 não é desenhado: um zero ocupa o mesmo espaço de um
+   número e ensina o olho a ignorar aquele canto do card.
+   `ic` (o ⚠) só onde é PENDÊNCIA. Contador de tamanho não leva alerta — ver a
+   nota das três cores do `.fer-selo`, na folha. */
+function selosHTML(f){
+  const b=(typeof f.badge==='function')?f.badge():null;
+  if(!b) return '';
+  return (Array.isArray(b)?b:[b]).filter(x=>x&&x.n).map(x=>
+    `<span class="fer-selo${x.cor?' fer-selo--'+x.cor:''}" title="${esc(x.tit||'')}">`+
+    `${esc(String(x.n))}${x.ic?' '+icone('alerta'):''}</span>`).join('');
 }
 
 /* ---------- Quem está usando: o botão do nome na barra ----------
@@ -2057,12 +2066,11 @@ function secDaily(lista,c){
   const idc=String((c&&c.id)||'').trim();
   const abrir=`daily?chave=${ch}${idc?'&cli='+encodeURIComponent(idc):''}`;
   const nova=`daily?chave=${ch}${idc?'&cli='+encodeURIComponent(idc):''}&nova=1`;
-  /* Alimenta o selo do card sem uma segunda chamada. Só o que é MEU e vence
-     hoje ou já venceu — ver seloDaily. */
-  const meu=n=>EU&&normTxt(n||'')===normTxt(EU.nome||'');
-  let urgentes=0;
-  lista.forEach(t=>{ if(!meu(t.responsavel)) return; const d=diasAte(t.prazo); if(d!==null&&d<=0) urgentes++; });
-  DAILY_MINHAS={n:urgentes};
+  /* Aqui se contavam as tarefas urgentes para alimentar o selo do card da Daily.
+     A conta saiu: ela só enxergava as tarefas DESTE cliente (é o dossiê de um
+     cliente), então o selo dizia "2" quando a pessoa tinha 11 atrasadas — e só
+     depois de alguém abrir um cliente. Quem conta agora é o servidor, pela rota
+     `equipe_contadores`, olhando a fila inteira. */
 
   const body=lista.length?('<div class="lic-grid">'+lista.map(t=>{
     const prazo=pillPrazoDaily(t.prazo);
@@ -2131,22 +2139,75 @@ function calcPendencias(){
   });
   return g;
 }
-/* Selo do card da Daily. Ele NÃO conta a fila inteira: conta o que é meu e já
-   venceu ou vence hoje. Um número que sobe com tarefa de mês que vem vira
-   paisagem em uma semana; um número que só aparece quando há algo para hoje
-   continua querendo dizer alguma coisa.
-   Sai do mesmo payload da ficha do cliente — nenhuma chamada nova — e por isso
-   só existe depois que alguém abriu um cliente. Sem dado, sem selo. */
-let DAILY_MINHAS=null;      // preenchido por secDaily quando o dossiê carrega
+/* ---- Os números dos cards ----
+ *
+ * O card de Certificados era o único da parede que dizia alguma coisa antes de
+ * ser clicado. Os outros cinco agora também dizem, e cada um diz o que a sua
+ * tela é: Daily mostra PRESSA (atrasadas em vermelho, para hoje em laranja),
+ * e Registros, Contatos, Processos e Clientes ativos mostram TAMANHO — um
+ * número neutro, que não pede ação nenhuma.
+ *
+ * DE ONDE VEM: `tipo=equipe_contadores`, uma segunda chamada que traz só os
+ * números (ver carregarContadores). Ela NÃO segura a tela: o painel abre com o
+ * que já tem e os selos entram quando chegam. Enquanto não chegam, os cards
+ * ficam como sempre foram — sem selo, e não com um "…" ou um esqueleto cinza,
+ * que anunciariam uma espera que ninguém pediu.
+ *
+ * A EXCEÇÃO É REGISTROS: o total de clientes a tela já tem na mão (é o tamanho
+ * da lista do combo). Pedir esse número ao servidor seria uma viagem para não
+ * descobrir nada, e ele aparece junto com o painel, sem esperar. */
+let CONTADORES=null;        // preenchido por carregarContadores()
+
 function seloDaily(){
-  if(!DAILY_MINHAS||!DAILY_MINHAS.n) return null;
-  return {n:DAILY_MINHAS.n, tit:DAILY_MINHAS.n+' tarefa(s) sua(s) atrasada(s) ou para hoje'};
+  const d=CONTADORES&&CONTADORES.daily;
+  if(!d) return null;
+  /* DOIS selos, e não a soma. "3 atrasadas e 2 para hoje" e "5 pendências" têm o
+     mesmo tamanho na tela e não querem dizer a mesma coisa: o primeiro número é
+     dívida, o segundo é o dia de trabalho que está começando. */
+  return [
+    {n:d.atrasadas, cor:'', ic:true, tit:d.atrasadas+' tarefa(s) sua(s) ATRASADA(s)'},
+    {n:d.hoje,      cor:'laranja',   tit:d.hoje+' tarefa(s) sua(s) para hoje'}
+  ];
 }
-/* Selo do card "Certificados e acessos": vencidos + a vencer em 60 dias. */
+/* Selo do card "Certificados e acessos": vencidos + a vencer em 60 dias.
+   Continua saindo do TODOS que a tela já carregou — nenhuma chamada nova. */
 function seloCertificados(){
   if(!PEND) return null;
   const n=PEND.venc.length+PEND.d30.length+PEND.d60.length;
-  return n?{n:n,tit:n+' cliente(s) com certificado ou procuração vencido ou a vencer em 60 dias'}:null;
+  return n?{n:n,ic:true,tit:n+' cliente(s) com certificado ou procuração vencido ou a vencer em 60 dias'}:null;
+}
+function seloRegistro(){
+  return TODOS.length?{n:TODOS.length,cor:'n',tit:TODOS.length+' cliente(s) na sua carteira'}:null;
+}
+function seloContatos(){
+  const c=CONTADORES&&CONTADORES.contatos;
+  return c&&c.n?{n:c.n,cor:'n',tit:c.n+' contato(s) cadastrado(s)'}:null;
+}
+function seloProcessos(){
+  const p=CONTADORES&&CONTADORES.processos;
+  return p&&p.n?{n:p.n,cor:'n',tit:p.n+' processo(s) em andamento'}:null;
+}
+function seloAtivos(){
+  const a=CONTADORES&&CONTADORES.ativos;
+  /* A competência entra no title: "142" sozinho não diz de que mês, e este é o
+     único selo da parede que fala de um mês específico — o PASSADO, que é o que
+     a contabilidade fecha agora. */
+  return a&&a.n?{n:a.n,cor:'n',tit:a.n+' cliente(s) ativo(s) em contabilidade na competência '+(a.competencia||'atual')}:null;
+}
+
+/* A segunda chamada. Best-effort de ponta a ponta: se ela falhar, demorar ou o
+   servidor ainda estiver sem a rota (implantação antiga), o painel continua
+   inteiro e os cards ficam sem selo — que é exatamente como eles estavam ontem.
+   Por isso o `.catch` é vazio e não pinta recado nenhum: um erro na tela por
+   causa de um enfeite numérico assusta mais do que a ausência do número. */
+function carregarContadores(){
+  return jsonp(API_URL+'?tipo=equipe_contadores&chave='+encodeURIComponent(chaveAtual()))
+    .then(d=>{
+      if(!d||d.erro) return;
+      CONTADORES=d;
+      pintarFerramentas();          // repinta só para os selos aparecerem
+    })
+    .catch(()=>{});
 }
 
 /* ---- Combobox de clientes ---- */
@@ -2250,7 +2311,7 @@ function ligarCombo(){
   document.addEventListener('click', e=>{
     if(!e.target.closest('.combo')) fechar();
     if(!e.target.closest('#menu-outros')) fecharOutros();
-    if(!e.target.closest('#menu-restituicao')) fecharRestituicao();
+    /* Restituição não fecha mais nada: virou card comum, sem dropdown. */
   });
 }
 
@@ -2303,7 +2364,6 @@ function boot(){
       // terminavam mais lentas do que qualquer uma sozinha — 15s e 17s no log,
       // contra ~8s isoladas.
       pintarCentrais(d.centrais && d.centrais.length ? d.centrais : null);
-      pintarRestituicao();
       /* Continua sendo escrito, e continua escondido: ver o <span id="cnt"> na
          barra. O tamanho da carteira quem mostra agora é a dica logo abaixo — em
          negrito, porque ela passou a ser o único lugar onde esse número aparece. */
@@ -2315,6 +2375,11 @@ function boot(){
       /* Só agora a tela está de fato pronta: a barra corre até 100% e o overlay
          sai revelando o painel já desenhado por baixo. */
       if (window.B4UEspera) B4UEspera.concluir();
+      /* DEPOIS de revelar a tela, e sem `await`: os números dos cards são a
+         última coisa a chegar e a primeira que pode faltar. Colocá-los antes do
+         `concluir()` faria a parede inteira esperar por quatro selos — e uma
+         planilha lenta de UMA área seguraria o painel de todo mundo. */
+      carregarContadores();
     })
     .catch(e=>{
       /* O e.message continua sendo LIDO aqui — é ele que separa "chave recusada"
