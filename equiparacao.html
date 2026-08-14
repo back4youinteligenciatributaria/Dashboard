@@ -1909,7 +1909,8 @@ function render(M){
   construirResumoStatus(M);
   construirAlertaPagamento(M);
 
-  desenharDocumentos(M, []);
+  desenharDocumentos(M, MODELOS_CACHE, MODELOS_CACHE !== null);
+  garantirModelos(M);
   /* Gráfico é apoio: se o Chart.js não chegar ou o canvas estiver escondido, a página
      continua inteira com os números e as listas. Falha engolida de propósito — derrubar
      o painel por causa de um desenho seria bem pior. */
@@ -2746,10 +2747,16 @@ function desenharMemoria(M){
   });
 }
 
+/* `categoria` é filtro do SERVIDOR (montarModelos no Apps Script): a aba Modelos
+   tem dezenas de linhas de outras áreas e trazer tudo para jogar fora aqui é peso
+   de rede à toa. Backend antigo ignora o parâmetro e devolve tudo — por isso o
+   filtro por categoria continua existindo no desenho, como rede de segurança. */
+const CATEGORIA_MODELOS = 'Equiparação';
 async function carregarModelos(){
   if (API_URL){
     const { id, codigo } = IDENTIDADE;
-    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=modelos';
+    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) +
+      '&tipo=modelos&categoria=' + encodeURIComponent(CATEGORIA_MODELOS);
     const d = await jsonp(url);
     return (d && d.modelos) || [];
   }
@@ -2759,20 +2766,53 @@ async function carregarModelos(){
   return d.modelos || [];
 }
 
+/* Os modelos são os mesmos para todo cliente e não dependem de ter PER/DCOMP: busca
+   uma vez só, guarda, e repinta a seção quando chegarem. Fica pendurado no render
+   (e não no fim do carregamento) porque a página também se pinta do cache local —
+   se a atualização falhar, quem veio do cache continua vendo os modelos. */
+let MODELOS_CACHE = null, MODELOS_PROMESSA = null;
+function garantirModelos(M){
+  if (MODELOS_CACHE) { desenharDocumentos(M, MODELOS_CACHE, true); return; }
+  if (!MODELOS_PROMESSA) MODELOS_PROMESSA = carregarModelos().catch(()=>[]);
+  MODELOS_PROMESSA.then(ms => { MODELOS_CACHE = ms || []; desenharDocumentos(M, MODELOS_CACHE, true); });
+}
+
 function normTxt(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
 
+/* A aba Modelos é digitada à mão: o cabeçalho pode vir "Categoria" ou "categoria".
+   O backend já lê tolerante; aqui era case-sensitive e uma maiúscula na planilha
+   apagava os modelos da página inteira sem erro nenhum. */
+function campoPor(obj, nome){
+  if (!obj) return '';
+  if (obj[nome] !== undefined) return obj[nome];
+  const alvo = normTxt(nome);
+  const k = Object.keys(obj).find(k => normTxt(k) === alvo);
+  return k ? obj[k] : '';
+}
+
 /** Junta os documentos específicos deste cliente (Relatório de Adequação Jurídica etc.)
-    com os modelos genéricos da categoria Equiparação (Modelo de emissão de NF etc.). */
+    com os modelos genéricos da categoria Equiparação (Modelo de emissão de NF etc.).
+    `carregado` = os modelos já voltaram do servidor. Sem esse aviso, a primeira
+    pintura (que acontece ANTES da busca dos modelos, com a lista vazia) removia a
+    seção inteira sempre que os relatórios do cliente já estavam todos em destaque
+    — e quando os modelos chegavam não existia mais onde pintá-los. Era por isso
+    que os modelos sumiam justamente para quem TEM os relatórios. */
 let DESTACADOS = [];
-function desenharDocumentos(M, modelos){
+function desenharDocumentos(M, modelos, carregado){
   const box = document.getElementById('documentos-equip');
   if (!box) return;
-  const doCategoria = (modelos||[]).filter(m => normTxt(m.categoria) === normTxt('Equiparação'));
+  const doCategoria = (modelos||[]).filter(m => normTxt(campoPor(m,'categoria')) === normTxt(CATEGORIA_MODELOS));
   const todos = [...(M.documentos||[]), ...doCategoria]
+    .map(d => ({ documento: campoPor(d,'documento'), link: campoPor(d,'link'), categoria: campoPor(d,'categoria') }))
     .filter(d => d.link && String(d.link).trim())
     .filter(d => DESTACADOS.indexOf(d.documento) < 0);   // já aparecem como cartão em destaque
   if (!todos.length){
-    // se tudo já está em destaque acima, a seção inteira sai de cena
+    // modelos ainda a caminho: a seção FICA de pé, é o lugar onde eles vão entrar
+    if (!carregado){
+      box.innerHTML = '<div class="vazio" style="padding:16px 0;text-align:center;color:var(--muted)">Carregando os modelos…</div>';
+      return;
+    }
+    // acabou de chegar e não veio nada: se tudo já está em destaque acima, a seção sai de cena
     const sec = document.getElementById('secao-docs');
     if (DESTACADOS.length && sec){ sec.remove(); return; }
     box.innerHTML = '<div class="vazio" style="padding:16px 0;text-align:center;color:var(--muted)">Nenhum documento cadastrado ainda.</div>'; return;
@@ -2856,8 +2896,7 @@ function horaCache(ts){ return ts ? new Date(ts).toLocaleString('pt-BR',{dateSty
     const raw = await carregar();
     if (API_URL && ic.id && window.B4U && B4U.cacheGravar) B4U.cacheGravar('equiparacao', ic.id, raw);
     const M = preparar(raw);
-    render(M); pararEspera(); tarja('');
-    carregarModelos().then(modelos => desenharDocumentos(M, modelos)).catch(()=>desenharDocumentos(M, []));
+    render(M); pararEspera(); tarja('');   // os modelos entram sozinhos: quem os busca é o render (garantirModelos)
   } catch (e) {
     /* Sem pararEspera() aqui: se o painel do cache está na tela, a espera nem chegou a
        subir; e no caminho de erro quem tira o overlay é a própria tela de erro. */
