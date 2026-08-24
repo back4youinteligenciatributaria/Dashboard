@@ -1175,7 +1175,7 @@ function fecharOutros(){
    listas no próprio literal, e `const` não é içado — declarar depois derruba a
    página inteira com ReferenceError antes de qualquer coisa desenhar. */
 const AREAS_OPERACAO=['fiscal','contabil','pessoal','societario'];
-const AREAS_TODAS=['fiscal','contabil','pessoal','societario','equiparacao','financeiro'];
+const AREAS_TODAS=['fiscal','contabil','pessoal','societario','equiparacao','financeiro','juridico'];
 const AREAS_CARTEIRA=['fiscal','contabil','pessoal','societario','financeiro'];
 
 /* `ic` é o ícone já montado: cada card leva EXATAMENTE o mesmo desenho que o
@@ -1218,6 +1218,14 @@ const FERRAMENTAS=[
   {id:'fp-restituicao',   nome:'Restituição',                   url:'restituicao',       ic:icone('calendario'), area:'equiparacao',
    desc:'Relatório de restituição de cada colaborador — prazos, etapas e responsável.',
    alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
+  /* Jurídico entra DEPOIS da Restituição de propósito: é a continuação dela.
+     O caso nasce quando a equiparação termina o relatório e o cliente decide ir
+     para o mandado de segurança — quem trabalha nos dois lê a parede nessa
+     ordem. Ícone de balança, o mesmo do menu lateral. */
+  {id:'fp-juridico',      nome:'Jurídico',                      url:'juridico',          ic:icone('balanca'), area:'juridico',
+   desc:'Os mandados de segurança da equiparação: fase, prazos e o que cada caso está devendo.',
+   alias:'juridico mandado seguranca ms processo liminar sentenca acordao transito habilitacao advogado protocolo tribunal trf pje vara',
+   badge:seloJuridico},
   {id:'fp-ativos',        nome:'Clientes ativos',               url:'clientes-ativos',   ic:icone('planilha'), area:AREAS_CARTEIRA,
    desc:'Quantos clientes ativos em cada competência, mês a mês.',
    alias:'ativos competencia mes calendario quantos clientes',
@@ -2186,6 +2194,20 @@ function seloContatos(){
 function seloProcessos(){
   const p=CONTADORES&&CONTADORES.processos;
   return p&&p.n?{n:p.n,cor:'n',tit:p.n+' processo(s) em andamento'}:null;
+}
+/* Selo do Jurídico: PRESSA, como o da Daily, e não tamanho. O número de casos
+   não pede nada de ninguém; "4 casos precisando de ação" pede. Dois selos pela
+   mesma razão do daily: prazo vencido é dívida, e o resto dos alertas (liminar
+   sem fiscal ajustado, intimação pendente) é trabalho que ainda dá para fazer
+   a tempo — somar os dois esconderia justamente o que é urgente. */
+function seloJuridico(){
+  const j=CONTADORES&&CONTADORES.juridico;
+  if(!j) return null;
+  return [
+    {n:j.vencidos, cor:'', ic:true, tit:j.vencidos+' caso(s) com prazo vencido'},
+    {n:Math.max(0,(j.vermelhos||0)-(j.vencidos||0)), cor:'laranja',
+     tit:'casos com alerta (liminar sem fiscal ajustado, intimação pendente, protocolo atrasado…)'}
+  ];
 }
 function seloAtivos(){
   const a=CONTADORES&&CONTADORES.ativos;

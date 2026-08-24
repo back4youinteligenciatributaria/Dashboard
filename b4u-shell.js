@@ -84,6 +84,7 @@
       { id: 'certificados',rot: 'Certificados e acessos',pag: 'certificados',     ic: 'escudo' },
       { id: 'societario',  rot: 'Societário',            pag: 'societario-equipe',ic: 'livro' },
       { id: 'restituicao', rot: 'Restituição',           pag: 'restituicao',      ic: 'guias' },
+      { id: 'juridico',    rot: 'Jurídico',              pag: 'juridico',         ic: 'balanca' },
       { sec: 'Relacionamento' },
       { id: 'contatos',    rot: 'Contatos',              pag: 'contatos-equipe',  ic: 'chat' },
       { id: 'comercial',   rot: 'Comercial',             pag: 'comercial',        ic: 'grafico' }
@@ -562,7 +563,10 @@
     escudo:'<path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/>',
     doc:'<path d="M6 2h7l5 5v15H6Z"/><path d="M13 2v5h5"/><path d="M9 13h6M9 17h4"/>',
     chat:'<path d="M21 12a8 8 0 0 1-11.5 7.2L3 21l1.8-6.5A8 8 0 1 1 21 12Z"/>',
-    grafico:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'
+    grafico:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    /* Balança: o Jurídico precisava de um desenho que não se confundisse com o
+       livro do Societário nem com o escudo dos Certificados. */
+    balanca:'<path d="M12 3.2v17M8 20.2h8"/><path d="M4 7.5h16"/><path d="M4 7.5 1.5 14h5Z"/><path d="M20 7.5 17.5 14h5Z"/>'
   };
   function svg(n){
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '

@@ -1,268 +1,1342 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- Guia nova por padrão: link clicado não tira o colaborador de onde ele estava. -->
+<base target="_blank">
+<meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jurídico — back4you</title>
+<title>Jurídico (equipe) — back4you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<!-- Duas origens porque o /exec responde 302 para a segunda: sem isto o aparelho paga
+     DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<!-- A fonte não pode segurar a primeira pintura: entra como preload e vira folha depois. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
+<style>
+/* B4U-DESIGN:INICIO — paleta, cantos e fonte que as 22 páginas dividem.
+   Bloco copiado de b4u-design.css (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-design.js`.
+
+   Entra ANTES do <style> da página de propósito — é a camada base. Se esta
+   página precisar mesmo de um valor diferente, redeclare o token no `:root`
+   dela, que vem depois e vence. */
+:root{
+  /* ── Superfícies ─────────────────────────────────────────────────────────
+     `--canvas` é o bege do fundo da página; `--surface` é o branco do cartão
+     que se apoia nele; `--surface-warm` é o branco quebrado das faixas e
+     cabeçalhos de tabela, que separam sem precisar de borda. */
+  --canvas:#F1E7DC;
+  --surface:#FFFFFF;
+  --surface-warm:#FBF6EF;
+
+  /* ── Letra ───────────────────────────────────────────────────────────────
+     `--ink` é o texto normal, `--ink-2` o secundário, `--muted` o rótulo.
+     `--muted` já foi #8A7D70 e reprovava em contraste (3,28:1); #6E6256 dá
+     4,85:1 no bege e 5,92:1 no branco, e é a cor de quase todo rótulo do
+     sistema — por isso ela precisa passar, e não só quase. */
+  --ink:#113D39;
+  --ink-2:#3F5854;
+  --muted:#6E6256;
+
+  /* ── Traços ──────────────────────────────────────────────────────────────
+     `--line` divide o que é do mesmo grupo; `--line-2` fecha o que é caixa. */
+  --line:#E4D9C9;
+  --line-2:#D6C3AC;
+
+  /* ── Marca ───────────────────────────────────────────────────────────────
+     `--brand-teal` é canônico em logo, foco, borda e série de gráfico. Como
+     TEXTO ele reprova (4,11:1 no branco, 3,44:1 no receita-soft), e para isso
+     existe o `--brand-teal-txt`: o mesmo teal escurecido, 5,54:1 no branco e
+     4,54:1 no bege, usado só onde é letra ou fundo de letra. Os dois são a
+     mesma cor com dois trabalhos. O 4,54:1 passa, mas passa RASPANDO: quem for
+     escurecer o `--canvas` um dia tem de conferir este par antes. */
+  --brand-dark:#073034;
+  --brand-teal:#0F8C85;
+  --brand-euc:#3FA680;
+  --brand-teal-txt:#0C756F;
+
+  /* ── SINAL: as quatro cores que querem dizer alguma coisa ────────────────
+     Estas quatro NÃO seguem o tema (ver OS QUATRO TEMAS, no fim do arquivo). Se
+     "vencido" mudasse de vermelho conforme a pele escolhida, a cor deixaria de
+     ser informação e viraria decoração — e quem trabalha nesta tela o dia
+     inteiro lê a cor antes de ler a palavra.
+
+     `--amber` tem 2,61:1 no branco: serve de PREENCHIMENTO e de borda, nunca de
+     letra. Para letra âmbar existe o `--amber-txt` (5,91:1 no branco).
+
+     ┌── PENDÊNCIA CONHECIDA: `--verde` E `--vermelho` REPROVAM COMO LETRA ────┐
+     │                                                                        │
+     │ Os dois NÃO têm o par `-txt` que o âmbar tem, e são usados nas duas     │
+     │ funções ao mesmo tempo:                                                │
+     │                                                                        │
+     │     --verde     12 usos como `color`, 11 como `background`, 7 em borda │
+     │     --vermelho  41 usos como `color`, 31 como `background`, 41 em borda │
+     │                                                                        │
+     │ E o lado TEXTO reprova. Medido nos valores atuais:                     │
+     │                                                                        │
+     │     --verde     #2E9D5F   2,82:1 no bege · 3,44:1 no branco   REPROVA  │
+     │     --vermelho  #C0392B   4,46:1 no bege · 5,43:1 no branco   raspando │
+     │                                                                        │
+     │ O mínimo para texto é 4,5:1. É a mesma falha do `--muted` antigo (que   │
+     │ dava 3,28:1), e atinge `.hint.ok` e `.lk.ok`, que são letra e nada      │
+     │ mais. Há prova de que alguém já tinha esbarrado nisso sem nomear: o     │
+     │ `.det-fbtn.ativo` escreve `color:#0E5B37` à mão — um verde bem mais     │
+     │ escuro — em vez de usar o token.                                       │
+     │                                                                        │
+     │ CONSERTO MEDIDO E NÃO APLICADO (decisão de 10/08/2026):                 │
+     │                                                                        │
+     │     --verde     #2E9D5F -> #1F7546   (2,82:1 -> 4,66:1 no bege)        │
+     │     --vermelho  #C0392B -> #BB3728   (4,46:1 -> 4,66:1 no bege)        │
+     │                                                                        │
+     │ Matiz e saturação ficam onde estão; só a luminosidade desce, o mínimo   │
+     │ para passar com folga. Escurecer é seguro pelo lado do FUNDO: TODAS as  │
+     │ regras `background:var(--verde)` / `background:var(--vermelho)` já vêm  │
+     │ com `color:#fff` (ou são faixa/pontinho sem texto), e fundo mais escuro │
+     │ com letra branca só melhora.                                           │
+     │                                                                        │
+     │ POR QUE NÃO FOI APLICADO AGORA: mexer nestes dois repinta as 22         │
+     │ páginas, inclusive as 8 do cliente. A rodada que centralizou os tokens  │
+     │ era de ESTRUTURA — nenhum pixel de cor mudou nela de propósito, para    │
+     │ que qualquer diferença que aparecesse em produção tivesse uma causa só. │
+     │ Trocar cor é decisão de produto e vai junto da varredura do MODO        │
+     │ ESCURO, que já vai ter de abrir os 22 arquivos.                         │
+     │                                                                        │
+     │ QUANDO FOR FAZER, olhe também o `--verde-2`: várias páginas o declaram  │
+     │ valendo #25804C, com a nota "o verde um degrau mais escuro, para virar  │
+     │ FUNDO de texto branco". Com o conserto acima, o `--verde` do núcleo     │
+     │ fica MAIS ESCURO que o `--verde-2`, e a convenção do sufixo -2 se       │
+     │ inverte nesse par. Não dá para resolver daqui: o `--verde-2` mora no    │
+     │ `:root` de cada página.                                                │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     (Escrito assim, sem dois-pontos colado no nome, de propósito: a
+     `tokensCanonicos()` do `_aplica-design.js` varre este bloco com um regex de
+     declaração e NÃO pula comentário. Nome de token seguido de dois-pontos aqui
+     dentro vira token canônico de mentira, e o `--verde-2` de mentira faria as
+     22 páginas aparecerem como "exceção mantida" no terminal. Vale para todo
+     comentário deste arquivo: cite o token, nunca o escreva como declaração.) */
+  --amber:#E8892E;
+  --amber-txt:#8A5A10;
+  --vermelho:#C0392B;
+  --verde:#2E9D5F;
+
+  /* ── Cantos ──────────────────────────────────────────────────────────────
+     Uma escala só, no site inteiro, e mais QUADRADA que redonda.
+       4px  campo, selo, célula
+       6px  cartão, linha da lista, botão
+       8px  bloco grande e modal
+     `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é citado
+     em mais de cem regras, mas o valor acompanha o resto — pílula virou
+     etiqueta. Círculo de verdade (avatar, contador, spinner) continua com
+     `border-radius:50%` escrito na regra e não passa por aqui. */
+  --radius-sm:4px;
+  --radius:6px;
+  --radius-lg:8px;
+  --radius-pill:6px;
+
+  /* ── Escala tipográfica ──────────────────────────────────────────────────
+     Seis degraus, e o pulo entre eles é de propósito irregular: 11-12-13 é a
+     faixa de rótulo, selo e nota de rodapé, onde 1px já muda a hierarquia; 15 é
+     o corpo; 19 e 24 são título de bloco e de tela. Um degrau constante (1,2×,
+     por exemplo) daria 11-13-16-19-23-28 e gastaria três tamanhos na faixa em
+     que o olho não distingue nada.
+     ATENÇÃO: o `body{font-size:15px}` das páginas está escrito à mão e NÃO sai
+     daqui. Quem mexer na escala não muda o corpo do texto; muda só quem usa
+     `var(--fs-N)` — que é rótulo, selo, cabeçalho de tabela e título. */
+  --fs-1:11px;
+  --fs-2:12px;
+  --fs-3:13px;
+  --fs-4:15px;
+  --fs-5:19px;
+  --fs-6:24px;
+
+  /* ── Fonte ───────────────────────────────────────────────────────────────
+     Montserrat vem do Google Fonts, declarado no <head> de cada página. O
+     `system-ui` é o que aparece enquanto ela não chega — e é o que fica se ela
+     não chegar nunca. */
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+/* B4U-DESIGN:FIM */
+</style>
 <style>
 :root{
-  --canvas:#F1E7DC; --surface:#FFFFFF; --surface-warm:#FBF6EF;
-  --ink:#113D39; --ink-2:#3F5854; --muted:#8A7D70; --line:#E4D9C9; --line-2:#D6C3AC;
-  --brand-dark:#073034; --brand-teal:#0F8C85; --brand-eucalipto2:#3FA680;
-  --receita:#0F8C85; --receita-soft:#DCEFEC;
-  --andamento:#A7715D; --andamento-soft:#F1E1D8;
-  --aguardando:#8A7D70; --aguardando-soft:#EDE7DD;
-  --radius:12px; --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+  --amber-soft:#FCEFE0;--amber-line:#F0D6B4;
+  --amber-2:#B05F12;
+  --verde-2:#25804C;
+  --receita-soft:#DBEFEC;
+  --lift:0 8px 20px rgba(17,61,57,.10);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
-:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px;border-radius:4px}
-.wrap{max-width:900px;margin:0 auto;padding:0 24px 72px}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 20px;box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:800;font-size:19px}.barra .logo .y{color:var(--brand-euc)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);padding:5px 11px;border-radius:var(--radius-pill)}
+.barra .spacer{flex:1}.barra .cnt{font-size:12px;color:#bcd}.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600}
+.save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:var(--radius-pill);background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
+.save-status:empty{display:none}
+.save-status.saving{background:var(--amber-2);color:#fff}.save-status.ok{background:var(--verde-2);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
+.save-status.claro{background:var(--surface-warm);color:var(--ink-2)}
 
-header{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:30}
-.bar{max-width:900px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.logo{font-weight:900;font-size:19px;letter-spacing:-.02em;line-height:1}
-.logo .b{color:var(--brand-dark)} .logo .y{color:var(--brand-teal)}
-.brand-sub{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:1px}
-.voltar{display:inline-block;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:4px}
-.voltar:hover{color:var(--brand-teal)}
-.spacer{flex:1}
-.badge-topo{font-size:11px;font-weight:700;color:var(--brand-teal);background:var(--receita-soft);padding:5px 12px;border-radius:20px}
+/* ---------- o topo: cinco números, e cada um é um filtro ----------
+   Não é enfeite de dashboard. Cada tile responde a uma pergunta que se faz de
+   manhã ("o que venceu?", "o que vence?") e clicar nele filtra a lista para
+   exatamente aquilo — o número e a lista nunca podem discordar porque são a
+   mesma conta. Tile com zero fica apagado e não clica: oferecer um filtro que
+   não devolve nada é ensinar a pessoa a desconfiar dos outros quatro. */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 16px 6px}
+.tile{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line-2);
+  border-radius:var(--radius);padding:11px 13px;cursor:pointer;text-align:left;font-family:var(--sans);
+  display:flex;flex-direction:column;gap:1px;transition:box-shadow .12s,transform .1s}
+.tile:hover{box-shadow:var(--lift);transform:translateY(-1px)}
+.tile:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.tile[aria-pressed="true"]{border-color:var(--brand-teal-txt);box-shadow:0 0 0 1px var(--brand-teal-txt) inset}
+.tile.zero{opacity:.45;cursor:default;transform:none;box-shadow:none}
+.tile .n{font-size:24px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .r{font-size:var(--fs-2);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tile.t-total{border-left-color:var(--brand-teal-txt)}
+.tile.t-vermelho{border-left-color:var(--vermelho)}.tile.t-vermelho .n{color:#8E2A1D}
+.tile.t-vencido{border-left-color:var(--vermelho)}.tile.t-vencido .n{color:#8E2A1D}
+.tile.t-semana{border-left-color:var(--amber)}.tile.t-semana .n{color:var(--amber-txt)}
+.tile.t-semprazo{border-left-color:#6B8486}
 
-.busca{margin:28px 0 24px}
-.busca input{
-  width:100%;font-family:var(--sans);font-size:14px;padding:12px 16px;border-radius:24px;
-  border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
-}
-.busca input::placeholder{color:var(--muted)}
-.busca input:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+/* ---------- régua ---------- */
+.filtros{padding:4px 16px 10px;display:flex;flex-direction:column;gap:9px}
+.busca{width:100%;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.busca:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.chips .rot{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.chip{font-family:var(--sans);font-size:13px;font-weight:700;border-radius:var(--radius-pill);padding:6px 13px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.chip:hover{border-color:var(--brand-teal)}
+.chip.on{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
+.chip .n{background:rgba(0,0,0,.10);border-radius:var(--radius-pill);padding:1px 7px;margin-left:6px;font-size:11px}
+.chip.on .n{background:rgba(255,255,255,.25)}
+.chip.zero{opacity:.45}
+.chip.limpar{border-style:dashed;color:var(--muted)}
+select.sel{font-family:var(--sans);font-size:13px;font-weight:700;padding:7px 11px;border-radius:var(--radius-pill);
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);cursor:pointer;max-width:230px}
+select.sel:focus{outline:2px solid var(--brand-teal);outline-offset:1px}
 
-.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:30px 0 14px}
-.sec-head h2{font-size:16px;font-weight:700;letter-spacing:-.01em}
-.sec-head p{font-size:13px;color:var(--muted)}
+.btn{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  font-weight:700;font-size:13px;padding:10px 14px;border-radius:var(--radius-sm);transition:border-color .12s,transform .1s}
+.btn:hover{border-color:var(--brand-teal);transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn--pri{background:var(--brand-teal-txt);border-color:var(--brand-teal-txt);color:#fff}
+.btn--pri:hover{background:#0C7871;border-color:#0C7871}
+.btn--sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+.btn--mini{padding:6px 11px;font-size:12px}
 
-.processo-card{padding:20px 22px;margin-bottom:14px}
-.processo-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
-.processo-head h3{font-size:14.5px;font-weight:700}
-.status-chip{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:10px;white-space:nowrap}
-.status-concluido{background:var(--receita-soft);color:var(--receita)}
-.status-andamento{background:var(--andamento-soft);color:var(--andamento)}
+/* ---------- o cartão do caso ----------
+   SEIS informações e nada mais, e a ordem é a das perguntas: de quem é, em que
+   pé está, há quanto tempo, quem toca, o que vem agora, e o que está pegando.
+   As 136 colunas existem — elas moram na ficha. Um cartão que mostrasse trinta
+   campos seria a planilha de novo, e a planilha eles já têm. */
+.lista{padding:6px 16px 44px;display:grid;grid-template-columns:repeat(auto-fill,minmax(305px,1fr));gap:11px}
+.caso{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line-2);
+  border-radius:var(--radius);padding:12px 13px;cursor:pointer;text-align:left;font-family:var(--sans);
+  color:inherit;display:flex;flex-direction:column;gap:7px;transition:box-shadow .12s,transform .1s}
+.caso:hover{box-shadow:var(--lift);transform:translateY(-1px);border-color:var(--line-2)}
+.caso:focus-visible{outline:2px solid var(--brand-teal);outline-offset:1px}
+.caso.u-vermelho{border-left-color:var(--vermelho)}
+.caso.u-ambar{border-left-color:var(--amber)}
+.caso.u-ok{border-left-color:var(--verde)}
+.caso.u-espera{border-left-color:#007EB5}
+.caso.destaque{background:#FFF3B0}
+.c-topo{display:flex;align-items:baseline;gap:7px;min-width:0}
+.c-id{font-size:var(--fs-2);font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.c-nome{font-weight:700;font-size:var(--fs-4);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.c-seq{font-size:10px;font-weight:800;color:#fff;background:var(--muted);border-radius:var(--radius-pill);padding:1px 6px;flex:none}
+.c-fase{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.fase-pill{font-size:11px;font-weight:800;border-radius:var(--radius-pill);padding:3px 10px;line-height:1.3;
+  border:1px solid transparent;white-space:normal}
+.fase-pill.f-preparo{background:#EEE9E2;color:#4A4A4A}
+.fase-pill.f-andamento{background:var(--receita-soft);color:#0B6E68;border-color:#AFD8D3}
+.fase-pill.f-bom{background:#DCF3E4;color:#1C6B41;border-color:#B7E2C6}
+.fase-pill.f-ruim{background:#FBE3DF;color:#8E2A1D;border-color:#EFC4BC}
+.fase-pill.f-recurso{background:var(--amber-soft);color:var(--amber-txt);border-color:var(--amber-line)}
+.fase-pill.f-execucao{background:#DDEEF7;color:#0A5C82;border-color:#B7D8EA}
+.fase-pill.f-fim{background:#E7E3F5;color:#4A3A82;border-color:#CFC7EA}
+.c-desde{font-size:var(--fs-1);color:var(--muted);font-weight:700;white-space:nowrap}
+.c-linha{font-size:var(--fs-2);color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-linha b{color:var(--ink);font-weight:700}
+.c-falta{color:var(--muted);font-weight:600;font-style:italic}
+.c-acao{font-size:var(--fs-3);line-height:1.35;display:flex;gap:7px;align-items:baseline}
+.c-acao .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.c-prazo{font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:var(--fs-2)}
+.c-prazo.venceu{color:var(--vermelho)}
+.c-prazo.hoje{color:var(--amber-txt)}
+.c-prazo.sem{color:var(--muted);font-weight:600}
+.c-alertas{display:flex;gap:5px;flex-wrap:wrap}
+.al{font-size:10px;font-weight:800;border-radius:var(--radius-pill);padding:2px 8px;line-height:1.4;white-space:nowrap}
+.al.vermelho{background:#FBE3DF;color:#8E2A1D}
+.al.ambar{background:var(--amber-soft);color:var(--amber-txt)}
+.al.mais{background:var(--surface-warm);color:var(--muted)}
 
-.timeline{position:relative;padding-left:22px}
-.timeline::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line-2)}
-.etapa{position:relative;padding-bottom:16px}
-.etapa:last-child{padding-bottom:0}
-.etapa::before{content:'';position:absolute;left:-22px;top:3px;width:11px;height:11px;border-radius:50%;background:var(--aguardando);border:2px solid var(--surface)}
-.etapa.concluido::before{background:var(--receita)}
-.etapa.andamento::before{background:var(--andamento);box-shadow:0 0 0 3px var(--andamento-soft)}
-.etapa-nome{font-size:13.5px;font-weight:600}
-.etapa-meta{font-size:11.5px;color:var(--muted);margin-top:2px;display:flex;gap:8px;align-items:center}
-.etapa-status{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px}
-.etapa-status.concluido{background:var(--receita-soft);color:var(--receita)}
-.etapa-status.andamento{background:var(--andamento-soft);color:var(--andamento)}
-.etapa-status.aguardando{background:var(--aguardando-soft);color:var(--aguardando)}
+/* ---------- a ficha ---------- */
+.modal[hidden]{display:none}
+.modal{position:fixed;inset:0;z-index:960;background:rgba(7,48,52,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto}
+.modal-box{background:var(--canvas);border-radius:var(--radius-lg);width:100%;max-width:980px;overflow:hidden;
+  box-shadow:0 20px 60px rgba(7,48,52,.35);display:flex;flex-direction:column;max-height:calc(100vh - 72px);margin:36px auto}
+.modal-body{flex:1;min-height:0;overflow:auto;padding:16px}
+.modal-foot{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:11px 16px;background:var(--surface);border-top:1px solid var(--line)}
+.modal-foot .spacer{flex:1}
+.modal-top{position:sticky;top:0;z-index:2;background:var(--brand-dark);color:#fff;display:flex;align-items:center;gap:10px;padding:13px 16px}
+.modal-top b{font-size:15px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-top .cad-id{font-size:12px;font-weight:700;color:#cfe6e2;white-space:nowrap}
+.modal-top .spacer{flex:1}
+.modal-top a.proc{color:#cfe6e2;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
+.modal-top a.proc:hover{text-decoration:underline}
+.modal-top button.x{font-family:var(--sans);font-size:19px;font-weight:800;line-height:1;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:var(--radius-pill);width:32px;height:32px;cursor:pointer}
+.cad-aviso{font-size:12px;font-weight:700;color:#8a5117;background:var(--amber-soft);
+  border:1px solid var(--amber-line);border-radius:var(--radius-sm);padding:6px 10px}
+.cad-aviso[hidden]{display:none}
 
-.lista{padding:8px 24px}
-.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
-.item:first-child{border-top:none}
-.item .nome{font-size:13.5px;font-weight:600}
-.item .cat{font-size:11px;color:var(--muted);margin-top:2px}
-.item a{font-size:12.5px;font-weight:700;color:var(--brand-teal);text-decoration:none;white-space:nowrap}
-.item a:hover{color:var(--brand-dark)}
-.item .em-breve{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+/* ---------- a linha do tempo da ficha ----------
+   Oito marcos, lidos em dois segundos. Ela existe porque a pergunta que se faz
+   ao abrir um caso não é "qual o valor da causa": é "onde isto está". Os campos
+   respondem à segunda pergunta; esta faixa responde à primeira, e é por isso que
+   ela vem antes dos blocos e não dentro de nenhum deles. */
+.tl{display:flex;gap:0;overflow-x:auto;padding:2px 0 10px;margin-bottom:6px}
+.tl-m{flex:1 1 0;min-width:78px;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;text-align:center}
+.tl-m::before{content:"";position:absolute;top:9px;left:-50%;width:100%;height:2px;background:var(--line-2)}
+.tl-m:first-child::before{display:none}
+.tl-m.feito::before{background:var(--verde)}
+.tl-b{width:20px;height:20px;border-radius:50%;border:2px solid var(--line-2);background:var(--surface);
+  position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--muted)}
+.tl-m.feito .tl-b{background:var(--verde);border-color:var(--verde);color:#fff}
+.tl-m.ruim .tl-b{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
+.tl-m.agora .tl-b{border-color:var(--brand-teal);background:var(--brand-teal);color:#fff;box-shadow:0 0 0 4px var(--receita-soft)}
+.tl-r{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);line-height:1.25}
+.tl-m.feito .tl-r,.tl-m.agora .tl-r{color:var(--ink-2)}
+.tl-d{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
 
-.vazio{color:var(--muted);font-size:13.5px;padding:16px 0;text-align:center}
+/* ---------- a anotação rápida ----------
+   Fica no topo da ficha, antes dos blocos, porque é o gesto mais frequente:
+   "voltei do PJe, quero registrar o que vi". Se estivesse no bloco N, no fim de
+   catorze sanfonas, ninguém anotaria nada e o diário do caso nasceria morto. */
+.nota{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px;margin-bottom:12px}
+.nota h4{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:7px}
+.nota .linha{display:flex;gap:8px;align-items:flex-start}
+.nota textarea{flex:1;font-family:var(--sans);font-size:13px;padding:8px 10px;border:1px solid var(--line-2);
+  border-radius:var(--radius-sm);background:var(--canvas);color:var(--ink);resize:vertical;min-height:40px;line-height:1.35}
+.nota textarea:focus{outline:2px solid var(--brand-teal);outline-offset:0}
+.diario{margin-top:9px;max-height:132px;overflow:auto;font-size:12px;line-height:1.45;color:var(--ink-2);
+  white-space:pre-wrap;border-top:1px dashed var(--line-2);padding-top:8px}
+.diario:empty{display:none}
 
-.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:70vh;text-align:center;padding:0 24px}
-.state h1{font-size:19px;font-weight:700}
-.state p{color:var(--muted);font-size:14px;max-width:44ch}
-.state code{background:var(--surface-warm);padding:2px 6px;border-radius:4px;border:1px solid var(--line);font-size:13px}
-.spin{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
+/* ---------- os blocos ---------- */
+.bl{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:8px;overflow:hidden}
+.bl>summary{list-style:none;cursor:pointer;padding:10px 13px;display:flex;align-items:center;gap:9px;
+  font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark)}
+.bl>summary::-webkit-details-marker{display:none}
+.bl>summary:hover{background:var(--surface-warm)}
+.bl>summary:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.bl>summary .seta{font-size:11px;color:var(--muted);transition:transform .15s}
+.bl[open]>summary .seta{transform:rotate(90deg)}
+.bl>summary .cheio{margin-left:auto;font-size:10px;font-weight:800;color:var(--muted);
+  background:var(--surface-warm);border-radius:var(--radius-pill);padding:2px 8px;letter-spacing:0;text-transform:none}
+.bl>summary .aqui{font-size:10px;font-weight:800;color:#fff;background:var(--brand-teal-txt);
+  border-radius:var(--radius-pill);padding:2px 8px;letter-spacing:0;text-transform:none}
+.bl .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:2px 13px 13px}
+.fld{display:flex;flex-direction:column;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld>.lbl{font-size:11px;font-weight:800;color:var(--ink-2);margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.fld>.lbl .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Só a etiqueta diz que o campo é interno. Vale a pena dizer: é o que impede
+   alguém de escrever no lugar errado a frase que um dia vai para o cliente. */
+.fld>.lbl .int{font-size:9px;font-weight:800;color:var(--muted);background:var(--surface-warm);
+  border-radius:var(--radius-pill);padding:1px 6px;flex:none;letter-spacing:.02em}
+.fld input,.fld select,.fld textarea{font-family:var(--sans);font-size:13px;padding:8px 10px;
+  border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);width:100%}
+.fld textarea{resize:vertical;min-height:52px;line-height:1.35}
+.fld select{font-weight:600;cursor:pointer}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:0}
+.fld .linha-campo{display:flex;gap:7px;align-items:center}
+.fld .linha-campo a.abrir{color:var(--brand-teal-txt);text-decoration:none;font-weight:800;font-size:15px;flex:none}
+.fld .ro{font-size:13px;padding:8px 10px;border:1px dashed var(--line-2);border-radius:var(--radius-sm);
+  background:#EFE8DE;color:var(--ink-2);min-height:38px;word-break:break-word;display:flex;align-items:center;
+  gap:7px;cursor:not-allowed;white-space:normal}
+.fld .ro.roarea{display:block;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.35;font-size:12px;cursor:auto}
+.mudou input,.mudou select,.mudou textarea{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-soft)}
+.ign{background:var(--amber-soft);border:1px solid var(--amber-line);color:#8a5117;border-radius:var(--radius-sm);
+  padding:8px 11px;font-size:12px;font-weight:700;margin-bottom:10px}
+.ign:empty,.ign[hidden]{display:none}
+
+.vazio{padding:30px 16px;text-align:center;color:var(--muted);font-size:15px}
+.mais{display:flex;gap:9px;justify-content:center;padding:2px 16px 40px}
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;text-align:center;padding:0 24px}
+.state h1{font-size:19px}.state p{color:var(--muted);font-size:15px;max-width:48ch}
+.spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:640px){
+  .modal{padding:8px}.modal-box{max-height:calc(100vh - 16px);margin:8px auto}
+  .bl .grid{grid-template-columns:1fr}
+  .lista{grid-template-columns:1fr}
+}
 </style>
-</head>
-<body>
+<script src="config.js"></script>
+<!-- A tela de espera mora num arquivo só, igual em todas as telas do painel. Entra
+     depois do config.js, e se não carregar nada quebra: as chamadas são protegidas. -->
+<script src="b4u-espera.js" charset="utf-8"></script>
+<!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
+     chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
+<script src="b4u-shell.js" charset="utf-8"></script>
+<!-- O RECADO de gravação que falhou. A ficha desta tela fecha sem esperar o
+     servidor; quem precisa ser avisado é quem NÃO está mais olhando para ela.
+     Se este arquivo não carregar, a gravação continua acontecendo e o erro
+     aparece no rodapé da ficha, como sempre. -->
+<script src="b4u-gravar.js" charset="utf-8"></script>
+<style>
+/* Identificador que chegou da planilha com dígito faltando. O número aparece
+   como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
+   e ganha um sublinhado pontilhado âmbar mais o ⚠. O title diz quantos dígitos
+   vieram, quantos deveriam vir e onde consertar. Cor só de aviso: âmbar, não
+   vermelho, porque o cadastro não está errado, está incompleto na origem. */
+.b4u-trunc{text-decoration:underline dotted var(--amber,#E8892E);text-underline-offset:2px;cursor:help}
+.b4u-trunc-m{color:var(--amber-txt,#8A5A10);font-size:.85em;margin-left:3px;vertical-align:1px}
+/* Só para leitor de tela: o ⚠ é aria-hidden, e sem isto quem não vê a tela não
+   ficaria sabendo que o número está incompleto. */
+.b4u-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* O mesmo aviso por extenso, dentro da ficha. Na lista cabe um ⚠; aqui, com o
+   campo à vista e espaço para uma linha, cabe dizer o que aconteceu e o que
+   fazer — que é o único jeito de o dado ser corrigido na origem. */
+.fld-aviso{display:block;margin-top:4px;font-size:var(--fs-1,11px);line-height:1.35;
+  color:var(--amber-txt,#8A5A10);font-weight:600}
+</style>
+<script charset="utf-8">
+/* B4U-TEXTO:INICIO — identificador é TEXTO, nunca número.
+   Bloco copiado de _b4u-texto.js (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-texto.js`.
 
-<div id="app">
-  <div class="state">
-    <div class="spin" role="status" aria-label="Carregando"></div>
-    <p>Carregando o painel…</p>
+   Em uma frase: a planilha converte para número toda célula que só tem dígito,
+   e 00.623.904/0001-73 chega no painel como 623904000173 — dois zeros a menos,
+   calado. Estas funções são a fronteira: todo identificador passa por elas antes
+   de ir para a tela e antes de voltar para a planilha. Elas NÃO completam o zero
+   que sumiu (isso esconderia erro de cadastro): mostram o número como veio e
+   sinalizam que falta dígito. O conserto definitivo é formatar a coluna como
+   Texto na planilha e ler com getDisplayValues() no backend. */
+/* String de verdade, sem notação científica.
+   `String()` só recorre a expoente a partir de 1e21 — abaixo disso ela já
+   devolve o número por extenso, e é o que esta função faz na esmagadora maioria
+   das vezes. Acima, "6.2e+21" não é só feio: `soDigitos()` extrai "62" mais o
+   expoente e a busca passa a achar cliente errado. Aí o BigInt reescreve por
+   extenso.
+
+   O caminho `toLocaleString('fullwide', …)`, que é a receita que se acha por aí,
+   está ERRADO aqui: 'fullwide' não é locale nenhum, o motor cai no locale do
+   navegador e, num pt-BR, 1234.5 volta como "1234,5". Como esta função também
+   atende o `esc()` da página inteira, isso trocaria a vírgula decimal em todo
+   valor em dinheiro da tela. */
+function b4uTexto(v){
+  if(v==null)return '';
+  if(typeof v==='number'){
+    if(!isFinite(v))return '';
+    const s=String(v);
+    if(!/e/i.test(s))return s;
+    if(Number.isInteger(v)){try{return BigInt(v).toString();}catch(_){}}
+    return s;
+  }
+  if(v instanceof Date){
+    /* Data em coluna de identificador é a planilha tendo interpretado errado.
+       Devolve ISO em vez de "Tue Aug 04 2026 ...", que ninguém consegue ler. */
+    const p=n=>String(n).padStart(2,'0');
+    return v.getFullYear()+'-'+p(v.getMonth()+1)+'-'+p(v.getDate());
+  }
+  return String(v);
+}
+
+function b4uDigitos(v){return b4uTexto(v).replace(/\D/g,'');}
+
+function b4uEsc(s){
+  return b4uTexto(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* Normalização de nome de coluna: sem acento, sem caixa, sem pontuação. Os nomes
+   reais vêm do backend em tempo de execução e mudam sozinhos quando alguém
+   renomeia a coluna na planilha — comparar string crua quebraria no primeiro
+   "CNPJ/CPF" que virasse "CNPJ ou CPF". */
+function b4uNorm(s){
+  return b4uTexto(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+
+/* Que tipo de identificador é esta coluna, e quantos dígitos ele deveria ter.
+   `tam` null = comprimento variável (telefone, inscrição): dá para garantir que
+   é texto, não dá para dizer que está faltando dígito. */
+const B4U_IDENT=[
+  {re:/\bcnpj\b.*\bcpf\b|\bcpf\b.*\bcnpj\b/, tipo:'doc',   tam:[11,14], rot:'CNPJ ou CPF'},
+  {re:/\bcnpj\b/,                            tipo:'cnpj',  tam:[14],    rot:'CNPJ'},
+  {re:/\bcpf\b/,                             tipo:'cpf',   tam:[11],    rot:'CPF'},
+  {re:/\bcep\b/,                             tipo:'cep',   tam:[8],     rot:'CEP'},
+  {re:/\bpis\b|\bnit\b|\bpasep\b/,           tipo:'pis',   tam:[11],    rot:'PIS/NIT'},
+  /* CNES: sete dígitos, e uma boa parte começa com zero. É número de cadastro,
+     nunca quantidade — a planilha come o zero dele igual come o do CNPJ. */
+  {re:/\bcnes\b/,                            tipo:'cnes',  tam:[7],     rot:'CNES'},
+  {re:/\bmatricula\b/,                       tipo:'gen',   tam:null,    rot:'matrícula'},
+  {re:/\binscricao\b|\bcadastro municipal\b|\bregistro na junta\b/, tipo:'gen', tam:null, rot:'inscrição'},
+  {re:/\btelefone\b|\bcelular\b|\bwhatsapp\b|\bfone\b/, tipo:'tel', tam:null, rot:'telefone'},
+  {re:/\bagencia\b|\bconta\b/,               tipo:'gen',   tam:null,    rot:'conta'}
+];
+function b4uIdent(coluna){
+  const n=b4uNorm(coluna);
+  for(const d of B4U_IDENT)if(d.re.test(n))return d;
+  return null;
+}
+function b4uEhIdentificador(coluna){return !!b4uIdent(coluna);}
+
+/* O diagnóstico de um valor: veio inteiro, veio truncado, ou não dá para dizer.
+   `truncado` só é true quando o valor é SÓ DÍGITO e mais curto do que o tipo
+   pede — que é exatamente a assinatura de zero comido pela planilha. Valor com
+   pontuação ("00.623.904/0001-73") chegou como texto e está a salvo; valor de
+   comprimento livre nunca é acusado. */
+function b4uEstado(valor,coluna){
+  const s=b4uTexto(valor).trim();
+  const d=b4uDigitos(s);
+  const tipo=b4uIdent(coluna);
+  const tam=tipo&&tipo.tam;
+  if(!s||!tam)return {vazio:!s,truncado:false,digitos:d,tipo:tipo,completo:!!s};
+  const completo=tam.indexOf(d.length)>=0;
+  /* Só acusa quando é dígito puro: pontuado veio como texto e está íntegro. */
+  const soDigito=/^\d+$/.test(s);
+  const esperado=tam[tam.length-1];
+  return {
+    vazio:false,
+    completo:completo,
+    truncado:!completo&&soDigito&&d.length>0&&d.length<esperado,
+    digitos:d,
+    tipo:tipo,
+    esperado:tam
+  };
+}
+
+/* Máscara só quando o número está inteiro. Documento curto vai como veio: pôr
+   máscara em 12 dígitos produziria "62.390.400/017" — um CNPJ que não existe,
+   com aparência de CNPJ que existe. */
+function b4uFmtDoc(v){
+  const d=b4uDigitos(v);
+  if(d.length===14)return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+  if(d.length===11)return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  return b4uTexto(v);
+}
+function b4uFmtCep(v){
+  const d=b4uDigitos(v);
+  return d.length===8?d.replace(/(\d{5})(\d{3})/,'$1-$2'):b4uTexto(v);
+}
+function b4uFmt(valor,coluna){
+  const t=b4uIdent(coluna);
+  if(!t)return b4uTexto(valor);
+  if(t.tipo==='cep')return b4uFmtCep(valor);
+  if(t.tipo==='doc'||t.tipo==='cnpj'||t.tipo==='cpf')return b4uFmtDoc(valor);
+  return b4uTexto(valor);
+}
+
+/* A frase que explica o estrago, no title do valor marcado. Ela precisa dizer
+   três coisas em uma linha: quantos dígitos vieram, quantos deveriam vir, e que
+   o conserto é na planilha — senão a marca vira enfeite e ninguém age. */
+function b4uAviso(e){
+  const rot=(e.tipo&&e.tipo.rot)||'identificador';
+  const alvo=e.esperado.join(' ou ');
+  const faltam=e.esperado[e.esperado.length-1]-e.digitos.length;
+  return rot+' chegou com '+e.digitos.length+' dígito'+(e.digitos.length>1?'s':'')+
+    ', e deveria ter '+alvo+': a planilha guardou a célula como número e comeu '+
+    faltam+' zero'+(faltam>1?'s':'')+' à esquerda. Para consertar, formate a coluna '+
+    'como Texto na planilha e digite o número inteiro de novo.';
+}
+
+/* O valor pronto para a tela: já mascarado, e marcado quando está truncado.
+   `vazio` é o que aparece no lugar do branco ("sem CNPJ") — a lista diz o que
+   falta em vez de deixar buraco. */
+function b4uIdentHTML(valor,coluna,vazio){
+  const e=b4uEstado(valor,coluna);
+  if(e.vazio)return vazio?'<span class="c-falta">'+b4uEsc(vazio)+'</span>':'';
+  const txt=b4uEsc(b4uFmt(valor,coluna));
+  if(!e.truncado)return txt;
+  return '<span class="b4u-trunc" title="'+b4uEsc(b4uAviso(e))+'">'+txt+
+         '<span class="b4u-trunc-m" aria-hidden="true">⚠</span>'+
+         '<span class="b4u-sr"> (faltam dígitos)</span></span>';
+}
+
+/* Volta para a planilha em forma que o Sheets NÃO consegue reinterpretar como
+   número. Enquanto a coluna não estiver formatada como Texto, gravar
+   "00623904000173" faz a planilha comer os zeros de novo — desta vez com o
+   usuário assistindo, logo depois de ele ter digitado certo. Com a máscara, a
+   célula tem ponto e barra, o Sheets desiste e guarda texto.
+   Onde não existe máscara canônica (telefone, inscrição), o valor vai como foi
+   digitado: o conserto ali depende do patch do backend. */
+function b4uParaPlanilha(valor,coluna){
+  const s=b4uTexto(valor).trim();
+  const t=b4uIdent(coluna);
+  if(!s||!t||!/^\d+$/.test(s))return s;
+  const d=b4uDigitos(s);
+  if((t.tipo==='doc'||t.tipo==='cnpj')&&d.length===14)return b4uFmtDoc(d);
+  if((t.tipo==='doc'||t.tipo==='cpf')&&d.length===11)return b4uFmtDoc(d);
+  if(t.tipo==='cep'&&d.length===8)return b4uFmtCep(d);
+  return s;
+}
+/* B4U-TEXTO:FIM */
+</script>
+</head>
+<body data-b4u-espera="equipe">
+<div class="barra">
+  <a class="logo" id="logo-home" href="colaborador" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
+  <span class="tag" id="tag">Jurídico</span>
+  <span class="spacer"></span>
+  <span class="save-status" id="saveStatus"></span>
+  <span class="cnt" id="cnt"></span>
+  <a class="volta" id="volta" href="colaborador" target="_self">← Painel</a>
+</div>
+<div id="app"><div class="state"><div class="spin"></div><p>Carregando os casos…</p></div></div>
+
+<!-- A ficha fica FORA do #app: o render() repinta o #app inteiro, e uma
+     recarga não pode apagar a ficha que alguém está preenchendo. -->
+<div class="modal" id="modalCad" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cadTitulo" tabindex="-1">
+    <div class="modal-top">
+      <b id="cadTitulo">Caso</b>
+      <span class="cad-id" id="cadId"></span>
+      <a class="proc" id="cadProc" hidden></a>
+      <span class="spacer"></span>
+      <button type="button" class="x" id="fechaCad" title="Fechar" aria-label="Fechar a ficha">×</button>
+    </div>
+    <div class="modal-body" id="cadBody"></div>
+    <div class="modal-foot">
+      <span class="save-status claro" id="saveStatusCad"></span>
+      <span class="cad-aviso" id="cadAviso" hidden>Ainda não gravei o que você mudou. Use <b>Salvar alterações</b> — ou clique de novo em Fechar para sair assim mesmo.</span>
+      <span class="spacer"></span>
+      <button class="btn btn--sec" id="btnTarefa" type="button" title="Cria (ou atualiza) a tarefa deste caso na Daily">Gerar tarefa na daily</button>
+      <button class="btn btn--sec" id="cadFechar" type="button">Fechar</button>
+      <button class="btn btn--pri" id="cadSalvar" type="button">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- Caso novo. Caixa pequena de propósito: o que ela pede é o mínimo para a
+     linha existir; o resto se preenche na ficha, que é onde já se trabalha. -->
+<div class="modal" id="modalNovo" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="novoTitulo" tabindex="-1" style="max-width:520px">
+    <div class="modal-top">
+      <b id="novoTitulo">Caso novo</b>
+      <span class="spacer"></span>
+      <button type="button" class="x" id="fechaNovo" title="Fechar" aria-label="Fechar">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="ign" id="novoErro" hidden></div>
+      <div class="fld full" style="margin-bottom:10px">
+        <label class="lbl" for="novoId"><span class="txt">ID do cliente</span></label>
+        <input id="novoId" type="text" inputmode="numeric" placeholder="250033" autocomplete="off">
+      </div>
+      <div class="fld full" style="margin-bottom:10px">
+        <label class="lbl" for="novoAdv"><span class="txt">Advogado responsável</span></label>
+        <input id="novoAdv" type="text" autocomplete="off">
+      </div>
+      <p style="font-size:12px;color:var(--muted);line-height:1.45">
+        O caso nasce em <b>Análise de viabilidade</b>, ativo, com a data de hoje.
+        Se este cliente já tiver um caso, o novo entra como <b>Seq 2</b> — o
+        primeiro continua onde está.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <span class="spacer"></span>
+      <button class="btn btn--sec" id="novoCancelar" type="button">Cancelar</button>
+      <button class="btn btn--pri" id="novoCriar" type="button">Criar caso</button>
+    </div>
   </div>
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyGAro0qPWpZcVX665KwKd-BK3ouSvVkAj5Vxw_phgO82EDa3gJrURcHjWIPYNQXT5d/exec';
-const TIPO = 'juridico';
-const TITULO_PAGINA = 'Jurídico';
-const CATEGORIA_MODELOS = 'Jurídico';
+// A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
+// é reserva: se o config.js não carregar, a página continua de pé.
+const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
+  'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
+/* A chave da equipe é o código do dia de cada colaborador (aba "Colaboradores"),
+   que chega por e-mail no index.html. Vazia de propósito: se voltar a ter valor,
+   volta a existir uma senha compartilhada que não expira e não diz quem é quem. */
+const CHAVE_PADRAO = '';
+function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');return q?q.trim():CHAVE_PADRAO;}
+function codAtual(){return (new URLSearchParams(location.search).get('cod')||'').trim();}
 
-function normTxt(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
-
-function getIdCodigo(){
-  const qs = new URLSearchParams(location.search);
-  let id = qs.get('id') || '';
-  let codigo = qs.get('codigo') || '';
-  if (!id){
-    const h = location.hash.replace('#','').trim();
-    const comCodigo = h.match(/^(\d+)-(.+)$/);
-    const soId = h.match(/^(\d+)$/);
-    if (comCodigo) { id = comCodigo[1]; codigo = comCodigo[2]; }
-    else if (soId) { id = soId[1]; }
-  }
-  return { id: id.replace(/\D/g,''), codigo: codigo.trim() };
+/* Sem chave na URL não há painel da equipe. A porta é o index.html: a pessoa
+   digita o e-mail, recebe o código do dia e volta para CÁ — é para isso que
+   serve o `destino`, senão todo login despejaria a pessoa na home da equipe,
+   longe do que ela tinha clicado. */
+if (!chaveAtual()) {
+  location.replace('index?destino=' + encodeURIComponent(
+    location.pathname.split('/').pop() + location.search + location.hash));
 }
 
+function esc(s){return b4uTexto(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function normTxt(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+function soDigitos(s){return b4uDigitos(s);}
+/** Casa o texto normalizado e, quando o termo tem 6 dígitos ou mais, também só
+ *  os dígitos — assim "12345678000190" acha "12.345.678/0001-90". */
+function casaBusca(alvoTxt,alvoDig,termo){
+  const t=normTxt(termo); if(!t)return true;
+  if(alvoTxt.indexOf(t)>=0)return true;
+  const d=soDigitos(termo);
+  return d.length>=6&&alvoDig.indexOf(d)>=0;
+}
+
+/* ---------------- rede ----------------
+   Leitura por JSONP (é o que atravessa o redirecionamento do /exec sem CORS) e
+   escrita por POST. Uma repetição na leitura, nunca mais que uma: a primeira
+   execução costuma deixar o cache quente no servidor. */
+const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
+function jsonpRepetivel(url){return !/[?&]acao=[^&]/.test(url);}
+function jsonpTentativa(url){return new Promise((ok,fail)=>{const cb='cb_'+Math.random().toString(36).slice(2);const s=document.createElement('script');const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);function limpa(){clearTimeout(t);delete window[cb];s.remove();}window[cb]=d=>{limpa();ok(d);};s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;document.body.appendChild(s);});}
 function jsonp(url){
-  return new Promise((ok,fail)=>{
-    const cb = 'cb_'+Math.random().toString(36).slice(2);
-    const s = document.createElement('script');
-    const t = setTimeout(()=>{ limpa(); fail(new Error('A API não respondeu.')); }, 20000);
-    function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
-    window[cb] = d => { limpa(); ok(d); };
-    s.onerror = () => { limpa(); fail(new Error('Não consegui alcançar a API.')); };
-    s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
-    document.body.appendChild(s);
+  return jsonpTentativa(url).catch(e=>{
+    if(!jsonpRepetivel(url)) throw e;
+    return new Promise(r=>setTimeout(r,JSONP_PAUSA)).then(()=>jsonpTentativa(url));
+  });
+}
+async function postAcao(obj){
+  const body=JSON.stringify(Object.assign({chave:chaveAtual(),cod:codAtual()},obj));
+  const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+  const d=await r.json(); if(d&&d.erro)throw new Error(d.erro); return d;
+}
+
+/* ---------------- estado ---------------- */
+let LINHAS=[],CAMPOS=[],BLOCOS=[],PORCH={},LISTAS={},ADVOGADOS=[],HOJE='',EU=null,LINK_PLAN='';
+let FILTRO={q:'',meus:false,tile:'',fase:'',adv:''};
+const PASSO=24; let TETO=PASSO;
+let FICHA=null;              // {row,id,seq,campos,orig}
+let CONF_SEQ=0;
+
+function setSave(cls,txt,onde){
+  const el=document.getElementById(onde||'saveStatus'); if(!el)return;
+  el.className='save-status'+(onde==='saveStatusCad'?' claro':'')+(cls?' '+cls:'');
+  el.textContent=txt||'';
+}
+
+/* ---------------- vocabulário das fases ----------------
+   A cor do chip sai do NÚMERO da fase, não do texto. É por isso que a lista da
+   planilha é numerada: "17. Em 2ª instância" continua sendo a 17 mesmo que
+   alguém reescreva o rótulo, e o painel não precisa conhecer as 27 frases. */
+function faseNum(v){const m=String(v||'').match(/^\s*(\d{1,2})\./);return m?parseInt(m[1],10):0;}
+function faseClasse(v){
+  const n=faseNum(v);
+  if(!n)return 'f-preparo';
+  if(n<=6)return 'f-preparo';
+  if(n<=13)return 'f-andamento';
+  if(n===14)return 'f-bom';
+  if(n===15)return 'f-ruim';
+  if(n<=21)return 'f-recurso';
+  if(n<=24)return 'f-execucao';
+  if(n===25)return 'f-bom';
+  return 'f-fim';
+}
+function faseCurta(v){return String(v||'').replace(/^\s*\d{1,2}\.\s*/,'');}
+function encerrado(l){const n=faseNum(l.fase_atual);return n>=25;}
+
+/** O bloco que a ficha abre sozinha: o da fase em que o caso está.
+ *  Abrir os catorze seria devolver a planilha; abrir nenhum obrigaria a caçar. */
+function blocoDaFase(v){
+  const n=faseNum(v);
+  if(n<=3)return 'C'; if(n<=6)return 'D'; if(n===7)return 'E';
+  if(n<=10)return 'F'; if(n<=12)return 'G'; if(n<=15)return 'H';
+  if(n<=18)return 'I'; if(n<=20)return 'J'; if(n<=22)return 'K';
+  if(n<=24)return 'L'; return 'N';
+}
+
+/* ---------------- datas ---------------- */
+function ehISO(s){return /^\d{4}-\d{2}-\d{2}$/.test(String(s||''));}
+function fmtBR(iso){
+  if(!ehISO(iso))return String(iso||'');
+  const a=iso.slice(0,4),m=iso.slice(5,7),d=iso.slice(8,10);
+  const anoAtual=String(new Date().getFullYear());
+  return d+'/'+m+(a===anoAtual?'':'/'+a.slice(2));
+}
+function dias(isoDe,isoAte){
+  if(!ehISO(isoDe)||!ehISO(isoAte))return null;
+  const a=new Date(+isoDe.slice(0,4),+isoDe.slice(5,7)-1,+isoDe.slice(8,10));
+  const b=new Date(+isoAte.slice(0,4),+isoAte.slice(5,7)-1,+isoAte.slice(8,10));
+  return Math.round((b-a)/86400000);
+}
+/** O domingo desta semana, em ISO. "Esta semana" é até domingo — é como a
+ *  restituição já conta, e duas telas contando semana de jeitos diferentes é
+ *  garantia de discussão sobre número na reunião de segunda. */
+function fimDaSemana(){
+  const d=new Date(+HOJE.slice(0,4),+HOJE.slice(5,7)-1,+HOJE.slice(8,10));
+  d.setDate(d.getDate()+(7-(d.getDay()===0?7:d.getDay())));
+  const p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+
+/* ---------------- classificação de urgência ----------------
+   Uma linha por caso, e ela decide a faixa lateral E a ordem da lista. Existir
+   num lugar só é o que impede o cartão de estar vermelho e aparecer no fim. */
+function urgencia(l){
+  if(encerrado(l))return {c:'u-ok',peso:9};
+  const al=l.alertas||[];
+  if(al.some(a=>a.grau==='vermelho'))return {c:'u-vermelho',peso:0};
+  if(ehISO(l.prazo_da_proxima_acao)&&l.prazo_da_proxima_acao<=fimDaSemana())return {c:'u-ambar',peso:1};
+  if(al.length)return {c:'u-ambar',peso:2};
+  if(/^(Aguardando|Parado)/.test(String(l.situacao_da_fase||'')))return {c:'u-espera',peso:4};
+  return {c:'u-ok',peso:3};
+}
+function souEu(l){
+  const meu=normTxt((EU&&EU.nome)||''); if(!meu)return false;
+  return normTxt(l.advogado_responsavel)===meu||normTxt(l.apoio_juridico)===meu||
+         normTxt(l.responsavel_pela_proxima_acao)===meu;
+}
+
+/* ---------------- os cinco números do topo ---------------- */
+function contas(base){
+  const fim=fimDaSemana();
+  let total=0,vermelho=0,vencido=0,semana=0,semPrazo=0;
+  base.forEach(l=>{
+    if(encerrado(l))return;
+    total++;
+    const al=l.alertas||[];
+    if(al.some(a=>a.grau==='vermelho'))vermelho++;
+    const p=l.prazo_da_proxima_acao;
+    if(ehISO(p)){ if(p<HOJE)vencido++; else if(p<=fim)semana++; }
+    else if(String(l.proxima_acao||'').trim())semPrazo++;
+  });
+  return {total:total,vermelho:vermelho,vencido:vencido,semana:semana,semPrazo:semPrazo};
+}
+function passaTile(l,tile){
+  if(!tile)return true;
+  if(encerrado(l))return false;
+  const fim=fimDaSemana(),p=l.prazo_da_proxima_acao;
+  if(tile==='vermelho')return (l.alertas||[]).some(a=>a.grau==='vermelho');
+  if(tile==='vencido')return ehISO(p)&&p<HOJE;
+  if(tile==='semana')return ehISO(p)&&p>=HOJE&&p<=fim;
+  if(tile==='semprazo')return !ehISO(p)&&!!String(l.proxima_acao||'').trim();
+  return true;
+}
+
+function filtrar(){
+  const termo=FILTRO.q;
+  return LINHAS.filter(l=>{
+    if(FILTRO.meus&&!souEu(l))return false;
+    if(FILTRO.fase&&String(l.fase_atual||'')!==FILTRO.fase)return false;
+    if(FILTRO.adv&&String(l.advogado_responsavel||'')!==FILTRO.adv)return false;
+    if(!passaTile(l,FILTRO.tile))return false;
+    if(!termo)return true;
+    const txt=normTxt([l.id,l.nome,l.cidade,l.numero_do_processo_cnj,l.advogado_responsavel,
+      l.proxima_acao,l.fase_atual,l.vara_juizo,l.tribunal].join(' '));
+    const dig=soDigitos([l.id,l.cnpj,l.numero_do_processo_cnj].join(' '));
+    return casaBusca(txt,dig,termo);
+  }).sort((a,b)=>{
+    const ua=urgencia(a),ub=urgencia(b);
+    if(ua.peso!==ub.peso)return ua.peso-ub.peso;
+    const pa=ehISO(a.prazo_da_proxima_acao)?a.prazo_da_proxima_acao:'9999-99-99';
+    const pb=ehISO(b.prazo_da_proxima_acao)?b.prazo_da_proxima_acao:'9999-99-99';
+    if(pa!==pb)return pa<pb?-1:1;
+    return String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR');
   });
 }
 
-let IDENTIDADE = { id: '', codigo: '' };
+/* ---------------- desenho ---------------- */
+function tile(k,n,rot,cls){
+  const zero=n===0;
+  return `<button class="tile t-${cls}${zero?' zero':''}" data-tile="${esc(k)}"
+    ${zero?'disabled':''} aria-pressed="${FILTRO.tile===k}">
+    <span class="n">${n}</span><span class="r">${esc(rot)}</span></button>`;
+}
+function cartao(l){
+  const u=urgencia(l);
+  const al=(l.alertas||[]).slice(0,2);
+  const sobra=(l.alertas||[]).length-al.length;
+  const p=l.prazo_da_proxima_acao;
+  let cp='sem',tp='sem prazo';
+  if(ehISO(p)){ tp=fmtBR(p); cp=p<HOJE?'venceu':(p===HOJE?'hoje':''); }
+  const d=ehISO(l.fase_atual_desde)?dias(l.fase_atual_desde,HOJE):null;
+  return `<button class="caso ${u.c}" data-row="${esc(l.row)}" data-id="${esc(l.id)}" data-seq="${esc(l.seq)}" type="button">
+    <span class="c-topo">
+      <span class="c-id">${esc(l.id)}</span>
+      <span class="c-nome">${esc(l.nome||'(sem nome)')}</span>
+      ${String(l.seq)!=='1'?`<span class="c-seq">#${esc(l.seq)}</span>`:''}
+    </span>
+    <span class="c-fase">
+      <span class="fase-pill ${faseClasse(l.fase_atual)}">${esc(faseCurta(l.fase_atual)||'sem fase')}</span>
+      ${d!==null&&d>0?`<span class="c-desde">há ${d} d</span>`:''}
+    </span>
+    <span class="c-linha">${l.advogado_responsavel
+      ?esc(l.advogado_responsavel):'<span class="c-falta">sem advogado</span>'}${
+      l.escritorio_correspondente&&l.escritorio_correspondente!=='-'
+        ?' · '+esc(l.escritorio_correspondente):''}</span>
+    <span class="c-acao">
+      <span class="txt">${l.proxima_acao?esc(l.proxima_acao):'<span class="c-falta">sem próxima ação</span>'}</span>
+      <span class="c-prazo ${cp}">${esc(tp)}</span>
+    </span>
+    ${al.length||sobra>0?`<span class="c-alertas">${
+      al.map(a=>`<span class="al ${esc(a.grau)}">${esc(a.rot)}</span>`).join('')
+    }${sobra>0?`<span class="al mais">+${sobra}</span>`:''}</span>`:''}
+  </button>`;
+}
 
-async function carregarTipo(tipo){
-  const { id, codigo } = IDENTIDADE;
-  if (API_URL){
-    const url = API_URL + '?id=' + encodeURIComponent(id) + '&codigo=' + encodeURIComponent(codigo) + '&tipo=' + tipo;
-    const d = await jsonp(url);
-    if (d.erro) throw new Error(d.erro);
-    return d;
+function render(){
+  const app=document.getElementById('app');
+  const lista=filtrar();
+  const c=contas(LINHAS);
+  const mostrados=lista.slice(0,TETO);
+  const fases=[...new Set(LINHAS.map(l=>l.fase_atual).filter(Boolean))]
+    .sort((a,b)=>faseNum(a)-faseNum(b));
+  const meus=LINHAS.filter(souEu).length;
+
+  app.innerHTML=`
+  <div class="tiles">
+    <button class="tile t-total" data-tile="" disabled aria-pressed="false">
+      <span class="n">${c.total}</span><span class="r">casos em andamento</span></button>
+    ${tile('vermelho',c.vermelho,'precisam de ação','vermelho')}
+    ${tile('vencido',c.vencido,'prazo vencido','vencido')}
+    ${tile('semana',c.semana,'vencem até domingo','semana')}
+    ${tile('semprazo',c.semPrazo,'ação sem prazo','semprazo')}
+  </div>
+  <div class="filtros">
+    <input class="busca" id="busca" type="search" placeholder="Buscar por cliente, ID, CNPJ, processo, cidade ou advogado…"
+      value="${esc(FILTRO.q)}" autocomplete="off" aria-label="Buscar casos">
+    <div class="chips">
+      <span class="rot">Filtrar</span>
+      <button class="chip${FILTRO.meus?' on':''}${meus?'':' zero'}" id="chip-meus" type="button"
+        ${meus?'':'disabled'}>Meus casos<span class="n">${meus}</span></button>
+      <select class="sel" id="f-fase" aria-label="Filtrar por fase">
+        <option value="">Todas as fases</option>
+        ${fases.map(f=>`<option value="${esc(f)}"${FILTRO.fase===f?' selected':''}>${esc(f)}</option>`).join('')}
+      </select>
+      <select class="sel" id="f-adv" aria-label="Filtrar por advogado">
+        <option value="">Todos os advogados</option>
+        ${ADVOGADOS.map(a=>`<option value="${esc(a)}"${FILTRO.adv===a?' selected':''}>${esc(a)}</option>`).join('')}
+      </select>
+      ${(FILTRO.q||FILTRO.meus||FILTRO.fase||FILTRO.adv||FILTRO.tile)
+        ?'<button class="chip limpar" id="chip-limpar" type="button">Limpar filtros</button>':''}
+      <span class="spacer" style="flex:1"></span>
+      <button class="btn btn--pri btn--mini" id="btn-novo" type="button">+ Caso novo</button>
+    </div>
+  </div>
+  ${mostrados.length
+    ? `<div class="lista">${mostrados.map(cartao).join('')}</div>`
+    : `<div class="vazio">${LINHAS.length
+        ?'Nenhum caso com esses filtros.'
+        :'Nenhum caso ativo na planilha do jurídico ainda.'}</div>`}
+  ${lista.length>mostrados.length?`<div class="mais">
+      <button class="btn btn--sec btn-mais" type="button">Mostrar mais ${Math.min(PASSO,lista.length-mostrados.length)}</button>
+      <button class="btn btn--sec btn-todos" type="button">Mostrar todos (${lista.length})</button>
+    </div>`:''}`;
+
+  document.getElementById('cnt').textContent=lista.length===LINHAS.length
+    ? LINHAS.length+' caso'+(LINHAS.length===1?'':'s')
+    : lista.length+' de '+LINHAS.length;
+}
+
+/* ---------------- a linha do tempo da ficha ----------------
+   Os oito marcos saem de campos que já existem — nenhuma coluna nova, nenhuma
+   segunda verdade para alguém manter em dia. */
+const MARCOS=[
+  {r:'Checklist', ok:c=>!!c.checklist_liberado_em},
+  {r:'Cobrança',  ok:c=>/^(Paga|Isenta)$/.test(c.status_da_cobranca||''),
+                  ruim:c=>/^Em atraso$/.test(c.status_da_cobranca||'')},
+  {r:'Protocolo', ok:c=>!!c.data_do_protocolo},
+  {r:'Liminar',   ok:c=>/^Deferida/.test(c.resultado_da_liminar||''),
+                  ruim:c=>/^(Indeferida|Cassada)/.test(c.resultado_da_liminar||'')},
+  {r:'Sentença',  ok:c=>/^Concedida/.test(c.resultado_da_sentenca||''),
+                  ruim:c=>/^(Denegada|Extinta)/.test(c.resultado_da_sentenca||'')},
+  {r:'2ª inst.',  ok:c=>/^Provido/.test(c.resultado_do_acordao||''),
+                  ruim:c=>/^(Improvido|Sentença anulada)/.test(c.resultado_do_acordao||'')},
+  {r:'Trânsito',  ok:c=>!!c.data_do_transito_em_julgado},
+  {r:'Receita',   ok:c=>/^(Deferida)$/.test(c.situacao_da_habilitacao||'')||
+                        /^Conclu/.test(c.situacao_da_compensacao||''),
+                  ruim:c=>/^Indeferida$/.test(c.situacao_da_habilitacao||'')}
+];
+const MARCO_DATA=['checklist_liberado_em','data_do_pagamento','data_do_protocolo',
+  'data_da_decisao_da_liminar','data_da_sentenca','data_do_julgamento',
+  'data_do_transito_em_julgado','data_do_despacho_decisorio'];
+
+function timelineHTML(c){
+  let ultimoOk=-1;
+  const est=MARCOS.map((m,i)=>{
+    const ruim=m.ruim&&m.ruim(c);
+    const ok=m.ok(c);
+    if(ok)ultimoOk=i;
+    return ruim?'ruim':(ok?'feito':'');
+  });
+  return `<div class="tl">${MARCOS.map((m,i)=>{
+    let cls=est[i];
+    if(!cls&&i===ultimoOk+1)cls='agora';
+    const d=c[MARCO_DATA[i]];
+    return `<div class="tl-m ${cls}">
+      <span class="tl-b">${est[i]==='feito'?'✓':(est[i]==='ruim'?'×':(cls==='agora'?'•':''))}</span>
+      <span class="tl-r">${esc(m.r)}</span>
+      <span class="tl-d">${ehISO(d)?esc(fmtBR(d)):''}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+/* ---------------- os campos da ficha ---------------- */
+/* Campos que pedem caixa alta em vez de linha. A regra é o QUE se escreve neles,
+   não o tipo: "Teses da RFB" é texto como "Relator" é texto, e num campo de uma
+   linha só a pessoa escreve menos do que precisaria. */
+const LONGOS=new Set(['ressalvas_do_parecer','documentos_pendentes','proxima_acao',
+  'efeitos_da_liminar','teses_da_rfb_nas_informacoes','resumo_da_sentenca','objeto_assegurado',
+  'observacao_da_fase_superior','observacao_da_receita','descricao_da_ultima_movimentacao',
+  'observacoes_internas_interno','alertas_e_riscos_interno','andamentos_interno']);
+
+function campoHTML(d,valor){
+  const v=valor==null?'':String(valor);
+  const rot=`<span class="lbl"><span class="txt">${esc(d.col.replace(/\s*\(interno\)$/,''))}</span>${
+    d.vis==='int'?'<span class="int">interno</span>':''}</span>`;
+  const full=LONGOS.has(d.chave)||d.tipo==='link'?' full':'';
+  let ctrl;
+  if(d.tipo==='calc'||d.tipo==='auto'){
+    ctrl=`<span class="ro${LONGOS.has(d.chave)?' roarea':''}">${v?esc(v):'—'}</span>`;
+  }else if(d.tipo==='sel'){
+    const opts=(LISTAS[d.lista]||[]).slice();
+    if(v&&opts.indexOf(v)<0)opts.unshift(v);          // valor que a lista não tem não pode sumir
+    ctrl=`<select data-k="${esc(d.chave)}"><option value=""></option>${
+      opts.map(o=>`<option value="${esc(o)}"${o===v?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  }else if(d.tipo==='data'){
+    /* Data que a planilha guarda como texto livre ("a definir", "N/A") não cabe
+       num <input type=date>: o navegador a apagaria em silêncio na primeira
+       gravação. Nesse caso vira campo de texto, e o que a pessoa escreveu fica. */
+    ctrl=ehISO(v)||!v
+      ? `<input type="date" data-k="${esc(d.chave)}" value="${esc(v)}">`
+      : `<input type="text" data-k="${esc(d.chave)}" value="${esc(v)}" title="Texto livre — a planilha tem algo que não é data neste campo">`;
+  }else if(d.tipo==='link'){
+    ctrl=`<span class="linha-campo"><input type="url" data-k="${esc(d.chave)}" value="${esc(v)}" placeholder="https://…">${
+      /^https?:/i.test(v)?`<a class="abrir" href="${esc(v)}" title="Abrir">↗</a>`:''}</span>`;
+  }else if(LONGOS.has(d.chave)){
+    ctrl=`<textarea data-k="${esc(d.chave)}" rows="3">${esc(v)}</textarea>`;
+  }else if(d.tipo==='moeda'||d.tipo==='num'||d.tipo==='pct'){
+    ctrl=`<input type="text" inputmode="decimal" data-k="${esc(d.chave)}" value="${esc(v)}">`;
+  }else{
+    ctrl=`<input type="text" data-k="${esc(d.chave)}" value="${esc(v)}">`;
   }
-  const arq = tipo === 'modelos' ? 'demo_modelos.json' : `demo_${TIPO}.json`;
-  const r = await fetch(arq);
-  if (!r.ok) throw new Error(`Sem API configurada e sem ${arq} ao lado deste arquivo.`);
-  return r.json();
+  return `<div class="fld${full}">${rot}${ctrl}</div>`;
 }
 
-function dBR(iso){
-  if (!iso) return '';
-  const [a,m,d] = String(iso).split('-');
-  return `${d}/${m}/${a}`;
-}
-
-function classeStatus(status){
-  const n = normTxt(status);
-  if (n.includes('conclu')) return 'concluido';
-  if (n.includes('andament')) return 'andamento';
-  return 'aguardando';
-}
-
-function render(M, modelos){
-  const app = document.getElementById('app');
-  app.innerHTML = '';
-
-  app.appendChild(el(`
-    <header><div class="bar">
-      <div>
-        <a class="voltar" href="index.html#${IDENTIDADE.id}-${IDENTIDADE.codigo}">← Painel do cliente</a>
-        <div class="logo"><span class="b">back</span><span class="y">4you</span></div>
-        <div class="brand-sub">${(M.config && M.config.razao_social) || TITULO_PAGINA} · cliente ${M.id}</div>
-      </div>
-      <div class="spacer"></div>
-      <span class="badge-topo">${TITULO_PAGINA}</span>
-    </div></header>`));
-
-  const wrap = el('<div class="wrap"></div>');
-  app.appendChild(wrap);
-
-  appendAll(wrap, `
-    <div class="busca">
-      <input type="search" id="busca" placeholder="Buscar documento, modelo ou processo…">
-    </div>`);
-
-  appendAll(wrap, `
-    <div class="sec-head"><div><h2>Documentos</h2></div></div>
-    <div class="card lista" id="documentos"></div>`);
-
-  appendAll(wrap, `
-    <div class="sec-head"><div><h2>Modelos</h2><p>Documentos padrão, iguais para todo cliente.</p></div></div>
-    <div class="card lista" id="modelos"></div>`);
-
-  wrap.appendChild(el(`<footer>
-      <span>Fonte: planilha de ${TITULO_PAGINA.toLowerCase()} do cliente ${M.id}.</span>
-      <span>Atualizado em ${new Date(M.atualizado_em||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
-    </footer>`));
-
-  desenharDocumentos(M.documentos || []);
-  desenharModelos(modelos);
-
-  document.getElementById('busca').addEventListener('input', e => filtrar(e.target.value));
-}
-
-function desenharDocumentos(documentos){
-  const box = document.getElementById('documentos');
-  if (!documentos.length){ box.innerHTML = '<div class="vazio">Nenhum documento cadastrado ainda.</div>'; return; }
-  box.innerHTML = documentos.map(d=>{
-    const link = d.link && String(d.link).trim();
-    return `<div class="item" data-busca="${normTxt(d.documento)}">
-      <div class="nome">${d.documento}</div>
-      ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
-    </div>`;
+function fichaHTML(f){
+  const c=f.campos;
+  const abrir=blocoDaFase(c.fase_atual);
+  const diario=String(c.andamentos_interno||'');
+  const blocos=BLOCOS.map(b=>{
+    const letra=b[0],rot=b[1];
+    const meus=CAMPOS.filter(x=>x[2]===letra&&Object.prototype.hasOwnProperty.call(c,x[0]));
+    if(!meus.length)return '';
+    const cheios=meus.filter(x=>String(c[x[0]]||'').trim()).length;
+    const aberto=(letra===abrir||letra==='B')?' open':'';
+    return `<details class="bl"${aberto}>
+      <summary><span class="seta">▶</span>${esc(letra)}. ${esc(rot)}
+        ${letra===abrir?'<span class="aqui">fase atual</span>':''}
+        <span class="cheio">${cheios}/${meus.length}</span></summary>
+      <div class="grid">${meus.map(x=>{
+        const d=PORCH[x[0]];
+        /* O diário tem caixa própria no topo da ficha — repeti-lo aqui como
+           campo editável convidaria a apagar o histórico sem querer. */
+        if(d.chave==='andamentos_interno')
+          return `<div class="fld full"><span class="lbl"><span class="txt">Andamentos</span><span class="int">interno</span></span>
+            <span class="ro roarea" data-diario="1">${diario?esc(diario):'Ainda sem anotações.'}</span></div>`;
+        return campoHTML(d,c[d.chave]);
+      }).join('')}</div>
+    </details>`;
   }).join('');
+
+  return `${f.faltando&&f.faltando.length
+    ? `<div class="ign">A planilha não tem ${f.faltando.length} coluna(s) que o painel conhece — elas não aparecem aqui: ${esc(f.faltando.slice(0,6).join(' · '))}${f.faltando.length>6?' …':''}</div>`
+    : ''}
+  ${timelineHTML(c)}
+  <div class="nota">
+    <h4>Anotar no diário do caso</h4>
+    <div class="linha">
+      <textarea id="notaTxt" rows="1" placeholder="O que aconteceu hoje neste processo…"></textarea>
+      <button class="btn btn--sec" id="btnNota" type="button">Anotar</button>
+    </div>
+    <div class="diario" id="diario">${diario?esc(diario):''}</div>
+  </div>
+  ${blocos}`;
 }
 
-function desenharModelos(modelos){
-  const box = document.getElementById('modelos');
-  const doCategoria = modelos.filter(m => normTxt(m.categoria) === normTxt(CATEGORIA_MODELOS));
-  if (!doCategoria.length){ box.innerHTML = '<div class="vazio">Nenhum modelo cadastrado ainda.</div>'; return; }
-  box.innerHTML = doCategoria.map(m=>{
-    const link = m.link && String(m.link).trim();
-    return `<div class="item" data-busca="${normTxt(m.documento)}">
-      <div><div class="nome">${m.documento}</div><div class="cat">${m.categoria}</div></div>
-      ${link ? `<a href="${link}" target="_blank" rel="noopener">Abrir ↗</a>` : `<span class="em-breve">Em breve</span>`}
-    </div>`;
-  }).join('');
+/* ---------------- abrir / fechar a ficha ---------------- */
+function cadAberto(){return !document.getElementById('modalCad').hidden;}
+let PEDIU_FECHAR=false;
+
+function abrirFicha(row,id,seq){
+  const m=document.getElementById('modalCad');
+  document.getElementById('cadTitulo').textContent='Carregando…';
+  document.getElementById('cadId').textContent=id+(String(seq)!=='1'?(' · caso '+seq):'');
+  document.getElementById('cadProc').hidden=true;
+  document.getElementById('cadBody').innerHTML='<div class="state"><div class="spin"></div><p>Abrindo o caso…</p></div>';
+  m.hidden=false; PEDIU_FECHAR=false;
+  document.getElementById('cadAviso').hidden=true;
+  setSave('','', 'saveStatusCad');
+  m.querySelector('.modal-box').focus({preventScroll:true});
+
+  const u=API_URL+'?tipo=juridico_caso&chave='+encodeURIComponent(chaveAtual())
+    +'&id='+encodeURIComponent(id)+'&seq='+encodeURIComponent(seq)+'&row='+encodeURIComponent(row);
+  jsonp(u).then(d=>{
+    if(d.erro)throw new Error(d.erro);
+    FICHA={row:d.row,id:d.id,seq:d.seq,campos:d.campos,faltando:d.faltando,
+           orig:Object.assign({},d.campos)};
+    const c=d.campos;
+    document.getElementById('cadTitulo').textContent=c.nome||d.id;
+    document.getElementById('cadId').textContent=d.id+(String(d.seq)!=='1'?(' · caso '+d.seq):'');
+    const proc=document.getElementById('cadProc');
+    if(c.numero_do_processo_cnj){
+      proc.textContent=c.numero_do_processo_cnj+(/^https?:/i.test(c.link_do_processo||'')?' ↗':'');
+      if(/^https?:/i.test(c.link_do_processo||'')){proc.href=c.link_do_processo;proc.removeAttribute('aria-disabled');}
+      else proc.removeAttribute('href');
+      proc.hidden=false;
+    }
+    document.getElementById('cadBody').innerHTML=fichaHTML(FICHA);
+  }).catch(e=>{
+    document.getElementById('cadBody').innerHTML=
+      `<div class="state"><h1>Não consegui abrir este caso</h1><p>${esc(String((e&&e.message)||e))}</p></div>`;
+  });
+}
+function fecharFicha(forcar){
+  if(!forcar&&FICHA&&Object.keys(coletar()).length&&!PEDIU_FECHAR){
+    PEDIU_FECHAR=true; document.getElementById('cadAviso').hidden=false; return;
+  }
+  document.getElementById('modalCad').hidden=true; FICHA=null; PEDIU_FECHAR=false;
+}
+/** Só o que MUDOU. Mandar as 136 a cada gravação faria o log da planilha
+ *  registrar campo por campo em toda visita, e um histórico que registra tudo
+ *  não registra nada. */
+function coletar(){
+  const out={}; if(!FICHA)return out;
+  document.querySelectorAll('#cadBody [data-k]').forEach(el=>{
+    const k=el.dataset.k, v=String(el.value==null?'':el.value);
+    if(String(FICHA.orig[k]==null?'':FICHA.orig[k])!==v)out[k]=v;
+  });
+  return out;
 }
 
-function filtrar(termo){
-  const alvo = normTxt(termo);
-  document.querySelectorAll('[data-busca]').forEach(el=>{
-    el.style.display = !alvo || el.dataset.busca.includes(alvo) ? '' : 'none';
+function salvarFicha(){
+  if(!FICHA)return;
+  const campos=coletar();
+  if(!Object.keys(campos).length){setSave('ok','Nada mudou.','saveStatusCad');return;}
+  const f=FICHA, rot=(f.campos.nome||f.id);
+  const itens=Object.keys(campos).map(k=>(PORCH[k]?PORCH[k].col:k)+' → '+(campos[k]||'—'));
+  document.getElementById('cadAviso').hidden=true;
+  setSave('saving','Gravando…','saveStatusCad');
+  const enviar=()=>postAcao({acao:'jur_salvar',row:f.row,id:f.id,seq:f.seq,campos:campos});
+  const aoOk=(d)=>{
+    Object.keys(campos).forEach(k=>{f.orig[k]=campos[k];f.campos[k]=campos[k];});
+    setSave('ok','Salvo.','saveStatusCad');
+    setTimeout(()=>setSave('','','saveStatusCad'),2500);
+    if(d&&d.tarefa&&d.tarefa.id)
+      setSave('ok',(d.tarefa.novo?'Salvo · tarefa #':'Salvo · tarefa #')+d.tarefa.id+(d.tarefa.novo?' criada':' atualizada'),'saveStatusCad');
+    carregar(true);
+  };
+  if(window.B4UGravar){
+    B4UGravar.enviar({chave:'jur:'+f.id+'-'+f.seq,titulo:'Caso '+rot,itens:itens,
+      envio:enviar,aoOk:aoOk,aoDesfazer:()=>{}});
+  }else{
+    enviar().then(aoOk).catch(e=>setSave('err',String((e&&e.message)||e),'saveStatusCad'));
+  }
+}
+
+function anotar(){
+  if(!FICHA)return;
+  const ta=document.getElementById('notaTxt');
+  const txt=String(ta.value||'').trim();
+  if(!txt){ta.focus();return;}
+  setSave('saving','Anotando…','saveStatusCad');
+  postAcao({acao:'jur_nota',row:FICHA.row,id:FICHA.id,texto:txt}).then(d=>{
+    ta.value='';
+    const dv=document.getElementById('diario');
+    const antes=FICHA.campos.andamentos_interno||'';
+    FICHA.campos.andamentos_interno=antes?(d.linha+'\n'+antes):d.linha;
+    FICHA.orig.andamentos_interno=FICHA.campos.andamentos_interno;
+    if(dv)dv.textContent=FICHA.campos.andamentos_interno;
+    /* O bloco N mostra o MESMO diário numa caixa só-leitura. Atualizar as duas
+       na hora evita o efeito mais confuso possível: a anotação aparecer no topo
+       e a caixa de baixo continuar dizendo o que era antes. */
+    document.querySelectorAll('#cadBody .fld .ro.roarea').forEach(el=>{
+      if(el.dataset.diario==='1')el.textContent=FICHA.campos.andamentos_interno;
+    });
+    setSave('ok','Anotado.','saveStatusCad');
+    setTimeout(()=>setSave('','','saveStatusCad'),2200);
+  }).catch(e=>setSave('err',String((e&&e.message)||e),'saveStatusCad'));
+}
+
+function gerarTarefa(){
+  if(!FICHA)return;
+  setSave('saving','Criando a tarefa…','saveStatusCad');
+  postAcao({acao:'jur_tarefa',row:FICHA.row,id:FICHA.id,seq:FICHA.seq}).then(d=>{
+    const t=d&&d.tarefa;
+    setSave('ok','Tarefa #'+((t&&t.id)||'')+(t&&t.novo?' criada na daily.':' atualizada na daily.'),'saveStatusCad');
+    setTimeout(()=>setSave('','','saveStatusCad'),4000);
+  }).catch(e=>setSave('err',String((e&&e.message)||e),'saveStatusCad'));
+}
+
+/* ---------------- caso novo ---------------- */
+function abrirNovo(){
+  document.getElementById('novoErro').hidden=true;
+  document.getElementById('novoId').value='';
+  document.getElementById('novoAdv').value=(EU&&EU.nome)||'';
+  document.getElementById('modalNovo').hidden=false;
+  document.getElementById('novoId').focus();
+}
+function criarNovo(){
+  const id=String(document.getElementById('novoId').value||'').trim();
+  const adv=String(document.getElementById('novoAdv').value||'').trim();
+  const err=document.getElementById('novoErro');
+  if(!id){err.textContent='Informe o ID do cliente.';err.hidden=false;return;}
+  const bt=document.getElementById('novoCriar');bt.disabled=true;bt.textContent='Criando…';
+  postAcao({acao:'jur_novo',id:id,advogado_responsavel:adv,fase_atual:''}).then(d=>{
+    document.getElementById('modalNovo').hidden=true;
+    bt.disabled=false;bt.textContent='Criar caso';
+    carregar().then(()=>abrirFicha(d.row,d.id,d.seq));
+  }).catch(e=>{
+    err.textContent=String((e&&e.message)||e);err.hidden=false;
+    bt.disabled=false;bt.textContent='Criar caso';
   });
 }
 
-function el(h){ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; }
-function appendAll(parent, h){
-  const t = document.createElement('template'); t.innerHTML = h.trim();
-  Array.from(t.content.children).forEach(n => parent.appendChild(n));
+/* ---------------- carregar ---------------- */
+function telaChave(titulo,msg){
+  if(window.B4UEspera)B4UEspera.cancelar();
+  document.getElementById('app').innerHTML=
+    `<div class="state"><div style="font-size:36px">🔒</div><h1>${esc(titulo)}</h1><p>${esc(msg)}</p></div>`;
+  setSave('','');document.getElementById('cnt').textContent='';
+}
+function carregar(silencioso){
+  if(!silencioso)setSave('saving','Carregando…');
+  const u=API_URL+'?tipo=juridico_equipe&chave='+encodeURIComponent(chaveAtual());
+  return jsonp(u).then(d=>{
+    if(d.erro)throw new Error(d.erro);
+    LINHAS=d.linhas||[]; CAMPOS=d.campos||[]; BLOCOS=d.blocos||[];
+    LISTAS=d.listas||{}; ADVOGADOS=d.advogados||[]; HOJE=d.hoje||''; LINK_PLAN=d.link_planilha||'';
+    EU=d.eu||EU;
+    PORCH={}; CAMPOS.forEach(c=>{PORCH[c[0]]={chave:c[0],col:c[1],bloco:c[2],tipo:c[3],vis:c[4],lista:c[5]};});
+    /* "Meus casos" nasce ligado para quem TEM casos — é a visão de quem abre a
+       tela para trabalhar. Para quem não tem nenhum (o Principal que só
+       acompanha), ligar o filtro mostraria uma tela vazia e a conclusão seria
+       que o painel está quebrado. Só na primeira carga: depois manda a escolha
+       de quem está usando. */
+    if(!carregar._jaAjustou){
+      carregar._jaAjustou=true;
+      if(LINHAS.some(souEu))FILTRO.meus=true;
+    }
+    setSave('','');
+    render();
+    if(window.B4UShell&&EU&&EU.nome)B4UShell.usuario({nome:EU.nome});
+    if(window.B4UEspera)B4UEspera.concluir();
+  }).catch(e=>{
+    const m=String((e&&e.message)||e||'');
+    setSave('err','Não foi possível carregar.');
+    if(/inv[aá]lid/i.test(m))telaChave('Este link não está mais valendo','O seu código do dia venceu ou não confere. Volte ao painel e peça um novo acesso pelo seu e-mail.');
+    else if(/falta/i.test(m))telaChave('Abra pelo seu link pessoal','O link que abre esta tela é o que chegou no seu e-mail, com o código do dia junto.');
+    else if(/restrit|acesso n[ãa]o inclui/i.test(m))telaChave('Acesso restrito','Esta tela é da equipe jurídica. Se você precisa entrar aqui, peça para marcarem a coluna Jurídico no seu cadastro de colaborador.');
+    else if(/Config sem a chave/i.test(m))telaChave('Falta ligar a planilha','A aba Config do "Links App Script" precisa da linha "Juridico Equiparacao Controle" com o link da planilha. Depois de colar, rode limparCacheConfig() no editor.');
+    else if(window.B4UEspera)B4UEspera.telaErro(document.getElementById('app'));
+    else document.getElementById('app').innerHTML='<div class="state"><h1>Não conseguimos carregar as informações</h1>'
+      +'<p>Houve um erro ao recuperar as informações. Tente novamente em alguns minutos.</p></div>';
+  });
 }
 
-function erro(msg){
-  document.getElementById('app').innerHTML = `
-    <div class="state">
-      <h1>Não deu para abrir o painel</h1>
-      <p>${msg}</p>
-      <p>Confira se o endereço termina com o ID e o código de acesso do cliente, assim: <code>#482913-AbC123</code></p>
-    </div>`;
-}
-
-(async function(){
-  const { id, codigo } = getIdCodigo();
-  IDENTIDADE = { id, codigo };
-  if (!id || !codigo) return erro('Informe o ID e o código de acesso no final do endereço.');
-  try {
-    const [dados, modelosResp] = await Promise.all([
-      carregarTipo(TIPO),
-      carregarTipo('modelos').catch(()=>({modelos:[]})),
-    ]);
-    render(dados, modelosResp.modelos || []);
-  } catch (e) {
-    erro(e.message || String(e));
+/* ---------------- eventos ---------------- */
+document.addEventListener('input',e=>{
+  if(e.target.id==='busca'){FILTRO.q=e.target.value;TETO=PASSO;
+    clearTimeout(document.__jb);document.__jb=setTimeout(()=>{const v=e.target.value;render();
+      const b=document.getElementById('busca');if(b){b.focus();b.setSelectionRange(v.length,v.length);}},220);return;}
+  /* O campo mexido ganha contorno âmbar na hora: com catorze blocos, a única
+     coisa pior que não saber o que mudou é achar que sabe. */
+  const el=e.target.closest&&e.target.closest('#cadBody [data-k]');
+  if(el&&FICHA){
+    const k=el.dataset.k;
+    el.closest('.fld').classList.toggle('mudou',
+      String(FICHA.orig[k]==null?'':FICHA.orig[k])!==String(el.value||''));
   }
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='f-fase'){FILTRO.fase=e.target.value;TETO=PASSO;render();return;}
+  if(e.target.id==='f-adv'){FILTRO.adv=e.target.value;TETO=PASSO;render();return;}
+  const el=e.target.closest&&e.target.closest('#cadBody [data-k]');
+  if(el&&FICHA){
+    const k=el.dataset.k;
+    el.closest('.fld').classList.toggle('mudou',
+      String(FICHA.orig[k]==null?'':FICHA.orig[k])!==String(el.value||''));
+  }
+});
+document.addEventListener('click',e=>{
+  const t=e.target;
+  const tl=t.closest&&t.closest('.tile[data-tile]');
+  if(tl&&!tl.disabled){const k=tl.dataset.tile;FILTRO.tile=(FILTRO.tile===k?'':k);TETO=PASSO;render();return;}
+  if(t.closest&&t.closest('#chip-meus')){FILTRO.meus=!FILTRO.meus;TETO=PASSO;render();return;}
+  if(t.closest&&t.closest('#chip-limpar')){FILTRO={q:'',meus:false,tile:'',fase:'',adv:''};TETO=PASSO;render();return;}
+  if(t.closest&&t.closest('.btn-mais')){TETO+=PASSO;render();return;}
+  if(t.closest&&t.closest('.btn-todos')){TETO=LINHAS.length;render();return;}
+  if(t.closest&&t.closest('#btn-novo')){abrirNovo();return;}
+  const cs=t.closest&&t.closest('.caso[data-row]');
+  if(cs){abrirFicha(cs.dataset.row,cs.dataset.id,cs.dataset.seq);return;}
+  if(t.closest&&(t.closest('#fechaCad')||t.closest('#cadFechar'))){fecharFicha(false);return;}
+  if(t.closest&&t.closest('#cadSalvar')){salvarFicha();return;}
+  if(t.closest&&t.closest('#btnNota')){anotar();return;}
+  if(t.closest&&t.closest('#btnTarefa')){gerarTarefa();return;}
+  if(t.closest&&(t.closest('#fechaNovo')||t.closest('#novoCancelar'))){document.getElementById('modalNovo').hidden=true;return;}
+  if(t.closest&&t.closest('#novoCriar')){criarNovo();return;}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(!document.getElementById('modalNovo').hidden){document.getElementById('modalNovo').hidden=true;return;}
+    if(cadAberto()){e.preventDefault();fecharFicha(false);return;}
+  }
+  /* Ctrl/Cmd+Enter grava a ficha inteira de onde a pessoa estiver. Enter sozinho
+     NÃO grava: metade dos campos aqui são de texto longo, e um Enter que salva
+     no meio de uma frase é o jeito mais rápido de a pessoa parar de escrever. */
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&cadAberto()){e.preventDefault();salvarFicha();return;}
+  if(e.key==='Enter'&&e.target&&e.target.id==='notaTxt'&&(e.ctrlKey||e.metaKey)){e.preventDefault();anotar();return;}
+  const b=document.getElementById('busca'); if(!b)return;
+  const a=document.activeElement,tag=a&&a.tagName;
+  const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
+  if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!digitando&&!cadAberto()){e.preventDefault();b.focus();b.select();}
+});
+
+document.getElementById('volta').href='colaborador?chave='+encodeURIComponent(chaveAtual());
+
+/* ---------------- menu lateral ----------------
+   Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
+   URL desde a primeira linha — não há o que esperar da API. Se a busca falhar, a
+   tela de bloqueio pinta dentro do #app com o menu inteiro de pé. */
+if (window.B4UShell) {
+  B4UShell.montar({
+    perfil: 'equipe',
+    ativo: 'juridico',
+    link: function (pag) { return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
+  });
+  B4UShell.usuario();
+  /* Esta página tem <base target="_blank">, para o colaborador nunca perder a
+     tela em que estava ao abrir um link de processo. O menu lateral é o
+     contrário disso: é navegação DENTRO do painel, e sair pela guia atual é o
+     gesto — a mesma exceção que o logo e o "← Painel" já traziam. */
+  document.querySelectorAll('.b4s-side a[href]').forEach(function (a) {
+    if (!a.getAttribute('target')) a.setAttribute('target', '_self');
+  });
+}
+
+carregar();
+
+</script>
+<script>
+/* Logo = home do colaborador, levando a chave. Roda depois dos scripts da
+   página, quando o "← Painel" já foi montado. */
+(function(){
+  var lg = document.getElementById('logo-home');
+  if (lg) {
+    var aplica = function () {
+      var vt = document.getElementById('volta');
+      var href = (vt && vt.getAttribute('href')) || '';
+      if (!href || href === 'colaborador') {
+        try { href = 'colaborador?chave=' + encodeURIComponent(chaveAtual()); }
+        catch (e) { href = 'colaborador'; }
+      }
+      lg.setAttribute('href', href);
+    };
+    aplica();
+    setTimeout(aplica, 0);
+  }
+  /* Com <base target="_blank">, um href="#" abriria uma guia em branco. */
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('a[href="#"]');
+    if (a) e.preventDefault();
+  }, true);
 })();
 </script>
 </body>
