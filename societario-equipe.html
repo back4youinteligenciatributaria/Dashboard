@@ -492,6 +492,33 @@ select.filtro.corta{background:var(--amber-soft);border-color:var(--amber);color
 .etapa-datas{font-size:12px;font-weight:600;color:var(--muted)}
 .etapa-body{display:none;padding:12px;border-top:1px solid var(--line)}
 .etapa.aberta .etapa-body{display:block}
+/* ── Aplicável Sim/Não ──────────────────────────────────────────────────────
+   O catálogo de etapas é o MESMO em todo processo; o que muda é quais delas
+   existem naquele. Antes isso se dizia deixando a célula do nome vazia — um
+   silêncio que também era o jeito de dizer "ainda não cheguei nessa etapa", e
+   os dois casos ficavam iguais na tela. Agora tem resposta: Sim/Não.
+   Etapa "Não" não some da ficha (some seria fingir que o catálogo é outro):
+   fica apagada e fechada, e não vai ao cliente, não entra no prazo estimado
+   nem conta no % concluído. */
+.etapa-cab{display:flex;align-items:center;gap:8px;padding-right:11px}
+.etapa-cab .etapa-h{flex:1;min-width:0}
+.apl{flex:none;display:inline-flex;border:1px solid var(--line-2);border-radius:var(--radius-pill);overflow:hidden;background:var(--surface)}
+.apl button{font-family:var(--sans);font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);padding:6px 10px;background:none;border:0;cursor:pointer;line-height:1}
+.apl button:hover{background:var(--surface-warm)}
+.apl button:focus-visible{outline:2px solid var(--brand-teal);outline-offset:-2px}
+.apl button[aria-pressed="true"]{background:var(--brand-euc);color:#fff}
+.apl button[data-v="Não"][aria-pressed="true"]{background:var(--muted)}
+.etapa.nao{opacity:.6}
+.etapa.nao .etapa-titulo{text-decoration:line-through;color:var(--muted)}
+.etapa.nao .etapa-body{display:none}
+/* Faixa de prazo: o que a MESTRA calculou. É leitura — nenhum destes números
+   tem campo, porque quem manda neles é a fórmula da planilha. */
+.prazo{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 12px}
+.prazo i{font-style:normal;display:inline-flex;gap:5px;align-items:center;font-size:12px;font-weight:800;color:var(--ink-2);background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius-pill);padding:5px 11px}
+.prazo i s{text-decoration:none;font-weight:600;color:var(--muted)}
+.prazo i.atrasado{background:#fbe3e3;border-color:#f0c9c9;color:#b3261e}
+.prazo i.atencao{background:#fff1d6;border-color:#f0dcae;color:#8a5800}
+.prazo i.noprazo{background:#e7f5ee;border-color:#c9e6d6;color:#1b6b3e}
 .etapa-top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .etapa-n{flex:none;font-size:11px;font-weight:800;color:#fff;background:var(--brand-euc);border-radius:var(--radius-sm);padding:3px 7px;white-space:nowrap}
 /* Deixou de ser sticky: quem segura o indicador de gravação e os botões agora é
@@ -814,6 +841,11 @@ function b4uParaPlanilha(valor,coluna){
   <div class="fld"><label>Código Processo</label><input id="n-cod" placeholder="ex.: B4Y - 040"></div>
   <div class="fld"><label>Processo *</label><textarea id="n-proc" placeholder="Descrição do processo (ex.: 4ª ACS …)"></textarea></div>
   <div class="fld"><label>Status Geral</label><select id="n-stg"></select></div>
+  <!-- A data de início é o ponto de partida de TODO o cálculo de prazo da MESTRA
+       (prazo estimado, data prevista, situação). Sem ela o processo nasce sem
+       previsão nenhuma, e a falta só aparece depois, quando alguém procura a
+       previsão e encontra a faixa vazia. Perguntar aqui custa um campo. -->
+  <div class="fld"><label>Data de início do processo</label><input id="n-ini" placeholder="dd/mm/aaaa"></div>
   <div class="barra-salvar" style="position:static;background:none;padding:0;border-top:0;margin-top:0">
     <button class="btn btn--pri" id="n-criar">Criar processo</button>
     <button class="btn btn--sec" id="n-cancelar">Cancelar</button>
@@ -1026,7 +1058,8 @@ async function conferirGravacao(row,dados){
     if(!mesmoTexto(p.codigo_processo,dados.codigo_processo)) return 'nao-bateu';
     if(!mesmoTexto(p.processo,dados.processo)) return 'nao-bateu';
     if(!mesmoTexto(p.status_geral,dados.status_geral)) return 'nao-bateu';
-    /* Os extras (responsável, UF, órgão, protocolo, dias) só entram na conferência
+    if(p.data_inicio_processo!==undefined&&!mesmaData(p.data_inicio_processo,dados.data_inicio_processo)) return 'nao-bateu';
+    /* Os extras (responsável, UF, órgão, protocolo) só entram na conferência
        quando a releitura os traz. Cobrar um campo que o payload não devolve seria
        transformar um buraco no formato da resposta em "não gravou". */
     const ex=p.extras, exM=dados.extras||{};
@@ -1040,6 +1073,7 @@ async function conferirGravacao(row,dados){
     for(const e of (dados.etapas||[])){
       const a=lidas.find(x=>+x.n===+e.n);
       if(!a) return 'nao-bateu';
+      if(a.aplicavel!==undefined&&!mesmoTexto(a.aplicavel,e.aplicavel)) return 'nao-bateu';
       if(!mesmoTexto(a.nome,e.nome)) return 'nao-bateu';
       if(!mesmoTexto(a.status,e.status)) return 'nao-bateu';
       if(!mesmaData(a.data_inicio,e.data_inicio)) return 'nao-bateu';
@@ -1112,12 +1146,18 @@ function fmtDuracao(dias){
   if(!partes.length)partes.push(anos===1?'1 ano':anos+' anos');
   return partes.join(' e ');
 }
-function etapasOrdenadas(p){return (p.etapas||[]).filter(Boolean).slice().sort((a,b)=>(+a.n||0)-(+b.n||0));}
+/* "Não" é resposta, não ausência: a etapa marcada assim não faz parte deste
+   processo e portanto não conta em lugar nenhum — nem na duração, nem no
+   "3/7 etapas ok", nem na etapa atual. Sem esta função cada uma dessas contas
+   teria de lembrar da marcação por conta própria, e uma delas ia esquecer. */
+function aplicavelDe(e){return /^\s*n[ãa]o\s*$/i.test(String((e&&e.aplicavel)||'Sim'))?'Não':'Sim';}
+function etapaVale(e){return !!e&&aplicavelDe(e)==='Sim';}
+function etapasOrdenadas(p){return (p.etapas||[]).filter(etapaVale).slice().sort((a,b)=>(+a.n||0)-(+b.n||0));}
 function primeiroInicio(p){for(const e of etapasOrdenadas(p)){const r=parseDataFlex(e.data_inicio);if(r)return r;}return null;}
 function ultimoFim(p){const arr=etapasOrdenadas(p).reverse();for(const e of arr){const r=parseDataFlex(e.data_fim);if(r)return r;}return null;}
 function procConcluido(p){
   if(RE_CONCLUIDO.test(normTxt(p.status_geral)))return true;
-  const nomeadas=(p.etapas||[]).filter(e=>e&&String(e.nome||'').trim());
+  const nomeadas=(p.etapas||[]).filter(e=>etapaVale(e)&&String(e.nome||'').trim());
   return nomeadas.length>0&&nomeadas.every(e=>RE_CONCLUIDO.test(normTxt(e.status)));
 }
 function calcDuracao(p){
@@ -1155,8 +1195,8 @@ function ultimaMov(p){
 }
 function diasDesde(d){const h=new Date();h.setHours(0,0,0,0);return Math.floor((h-d)/86400000);}
 function metaHTML(p){
-  const nEt=(p.etapas||[]).filter(e=>e&&e.nome).length;
-  const nOk=(p.etapas||[]).filter(e=>e&&e.nome&&RE_CONCLUIDO.test(normTxt(e.status))).length;
+  const nEt=(p.etapas||[]).filter(e=>etapaVale(e)&&e.nome).length;
+  const nOk=(p.etapas||[]).filter(e=>etapaVale(e)&&e.nome&&RE_CONCLUIDO.test(normTxt(e.status))).length;
   return duracaoHTML(p)+bdgStatus(p.status_geral)+`<span class="bdg agu">${nOk}/${nEt} etapas ok</span>`+(p.codigo_processo?`<span class="bdg na">${esc(p.codigo_processo)}</span>`:'');
 }
 
@@ -1164,10 +1204,9 @@ let PROCS=[];
 function carregar(){
   return jsonp(API_URL+'?tipo=societario_equipe&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{if(d.erro)throw new Error(d.erro);
-      /* Quantas etapas cabem é a PLANILHA quem diz — o servidor conta os blocos
-         "Etapa N" do cabeçalho e manda aqui. Eram 10 fixas escritas neste
-         arquivo, e acrescentar a coluna na planilha não adiantava nada. */
-      ETAPAS_MAX=Math.max(1,+d.etapas_max||10);
+      /* Quantas etapas existem é a PLANILHA quem diz: o servidor conta os blocos
+         "Etapa N" do cabeçalho. Hoje são as 14 do catálogo padrão; se um dia a
+         MESTRA ganhar um bloco 15, esta tela desenha os 15 sem deploy nenhum. */
       /* Quem está usando, para o botão da barra. ESTA ROTA AINDA NÃO MANDA O NOME:
          só `tipo=equipe` (colaborador) e `tipo=daily_equipe` trazem um `eu`, e o
          `?cod=` da URL é código de log, não nome — batizar o botão com ele seria
@@ -1178,7 +1217,11 @@ function carregar(){
          devolver `eu:{nome}` — o servidor já resolve o colaborador pela chave, em
          `exigirEquipe_` — o nome aparece aqui sem tocar nesta tela. */
       if(window.B4UShell) B4UShell.usuario({nome:(d.eu&&d.eu.nome)||''});
-      PROCS=(d.processos||[]).map(p=>{p._visN=p.etapas.reduce((m,e)=>e.nome?e.n:m,0);return p;});render();
+      /* Antes a ficha revelava só até a última etapa PREENCHIDA, porque as etapas
+         eram texto livre e mostrar dez campos vazios não dizia nada. Com o catálogo
+         fixo o contrário é que vale: as 14 aparecem sempre, e é a marcação Sim/Não
+         que diz quais valem — inclusive as que ainda não começaram. */
+      PROCS=d.processos||[];render();
       /* A lista já está pintada: a barra corre até 100% e o overlay sai revelando
          a tela pronta, sem somar espera de verdade. */
       if(window.B4UEspera)B4UEspera.concluir();})
@@ -1944,21 +1987,35 @@ function resumoDatasEtapa(ini,fim){
   if(b)bits.push('fim '+b);
   return bits.join(' · ');
 }
+/* O nome da etapa deixou de ser campo: as 14 são as mesmas em todos os processos
+   (aba "Etapas Padrão" da MESTRA) e renomear uma aqui quebraria a comparação
+   entre processos, que é justamente o que o catálogo veio dar. O input continua
+   no DOM, em somente-leitura, porque é dele que o coletar() tira o nome que volta
+   para a planilha — o mesmo que já estava lá. */
 function etapaHTML(p,e){
   const log=e.obs_interna||'';
   const nome=String(e.nome||'').trim();
-  const vazia=!nome;   // slot ainda não preenchido: fica aberto, como era antes, mas discreto
-  return `<div class="etapa${vazia?' vazia aberta':''}" data-n="${e.n}">
+  const apl=aplicavelDe(e);
+  const na=apl==='Não';
+  const vazia=!nome&&!na;   // slot sem nome (planilha antiga): abre, como era antes
+  return `<div class="etapa${na?' nao':''}${vazia?' vazia aberta':''}" data-n="${e.n}">
+    <div class="etapa-cab">
     <button type="button" class="etapa-h" data-etapa-toggle="${e.n}" aria-expanded="${vazia?'true':'false'}">
       <span class="etapa-chev" aria-hidden="true">${vazia?'▾':'▸'}</span>
       <span class="etapa-n">Etapa ${e.n}</span>
       <span class="etapa-titulo">${esc(nome||'Etapa sem nome')}</span>
-      ${bdgStatus(e.status)}
-      <span class="etapa-datas">${esc(resumoDatasEtapa(e.data_inicio,e.data_fim))}</span>
+      ${na?'':bdgStatus(e.status)}
+      <span class="etapa-datas">${na?'não se aplica a este processo':esc(resumoDatasEtapa(e.data_inicio,e.data_fim))}</span>
     </button>
+    <span class="apl" role="group" aria-label="A etapa ${e.n} se aplica a este processo?">
+      <button type="button" data-apl="${e.n}" data-v="Sim" aria-pressed="${na?'false':'true'}">Sim</button>
+      <button type="button" data-apl="${e.n}" data-v="Não" aria-pressed="${na?'true':'false'}">Não</button>
+    </span>
+    </div>
     <div class="etapa-body">
+    <input type="hidden" class="e-apl" value="${apl}">
     <div class="etapa-top">
-      <input class="e-nome" style="flex:1;font-weight:700;padding:7px 10px;border:1px solid var(--line-2);border-radius:var(--radius-sm)" value="${esc(e.nome)}" placeholder="Nome da etapa"></div>
+      <input class="e-nome" readonly title="O nome vem do catálogo padrão de etapas da MESTRA — igual em todos os processos." style="flex:1;font-weight:700;padding:7px 10px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--ink-2)" value="${esc(e.nome)}"></div>
     <div class="grid2">
       <div class="fld"><label>Status</label>${selectHTML('e-status',e.status)}</div>
       <div class="fld"><label>Data início</label><input class="e-ini" value="${esc(e.data_inicio)}" placeholder="dd/mm/aaaa ou set/2025"></div>
@@ -1975,6 +2032,9 @@ function etapaHTML(p,e){
 // coletar()/salvar continuam funcionando igual.
 function alternarEtapa(btn){
   const bloco=btn.closest('.etapa');if(!bloco)return;
+  /* Etapa marcada "Não" não abre: não há o que preencher numa etapa que este
+     processo não tem. Quem quiser mexer marca "Sim" primeiro — e aí ela abre. */
+  if(bloco.classList.contains('nao'))return;
   const aberta=bloco.classList.toggle('aberta');
   btn.setAttribute('aria-expanded',aberta?'true':'false');
   const ch=btn.querySelector('.etapa-chev');if(ch)ch.textContent=aberta?'▾':'▸';
@@ -1987,11 +2047,61 @@ function sincronizarEtapa(campo){
   const nome=v('.e-nome').trim();
   const tit=bloco.querySelector('.etapa-titulo');if(tit)tit.textContent=nome||'Etapa sem nome';
   bloco.classList.toggle('vazia',!nome);
-  const bdg=bloco.querySelector('.etapa-h .bdg');if(bdg)bdg.outerHTML=bdgStatus(v('.e-status'));
+  /* Voltar de "Não" para "Sim" reencontra um cabeçalho SEM badge — ele não é
+     desenhado enquanto a etapa não se aplica. Então ou troca o que existe, ou
+     coloca o que falta; senão o status ficava invisível até recarregar. */
+  const bdg=bloco.querySelector('.etapa-h .bdg');
+  if(bdg)bdg.outerHTML=bdgStatus(v('.e-status'));
+  else{const dt0=bloco.querySelector('.etapa-datas');if(dt0)dt0.insertAdjacentHTML('beforebegin',bdgStatus(v('.e-status')));}
   const dt=bloco.querySelector('.etapa-datas');if(dt)dt.textContent=resumoDatasEtapa(v('.e-ini'),v('.e-fim'));
 }
+/* Marcar "Não" NÃO apaga nada: status, datas e histórico continuam na planilha,
+   intactos. O que muda é o significado — esta etapa não faz parte deste processo.
+   Voltar para "Sim" devolve tudo como estava, e é por isso que a marcação pode
+   ser desfeita sem medo. */
+function marcarAplicavel(btn){
+  const bloco=btn.closest('.etapa');if(!bloco)return;
+  const v=btn.dataset.v==='Não'?'Não':'Sim';
+  const inp=bloco.querySelector('.e-apl');if(!inp||inp.value===v)return;
+  inp.value=v;
+  bloco.querySelectorAll('.apl button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v?'true':'false'));
+  const nao=v==='Não';
+  bloco.classList.toggle('nao',nao);
+  if(nao){
+    bloco.classList.remove('aberta');
+    const h=bloco.querySelector('.etapa-h');if(h)h.setAttribute('aria-expanded','false');
+    const ch=bloco.querySelector('.etapa-chev');if(ch)ch.textContent='▸';
+    const bd=bloco.querySelector('.etapa-h .bdg');if(bd)bd.remove();
+    const dt=bloco.querySelector('.etapa-datas');if(dt)dt.textContent='não se aplica a este processo';
+  }else{
+    sincronizarEtapa(inp);
+  }
+  const ed=btn.closest('.editor');if(ed&&ed.dataset.row)agendarSalvar(ed.dataset.row);
+}
+/* O que a MESTRA calculou para este processo: prazo em dias úteis das etapas
+   marcadas "Sim", data prevista e situação. Vem pronto da planilha e entra aqui
+   como LEITURA — nenhum destes números tem campo, porque quem manda neles é a
+   fórmula. Ficha sem data de início não mostra faixa nenhuma: previsão sem ponto
+   de partida seria chute com cara de conta. */
+function prazoHTML(p){
+  const c=p.calc||{};
+  const val=x=>String(x==null?'':x).trim();
+  const sit=val(c.situacao);
+  const cls=/atrasad/i.test(sit)?'atrasado':/aten/i.test(sit)?'atencao':/no prazo/i.test(sit)?'noprazo':'';
+  const bits=[];
+  if(val(c.aplicaveis))bits.push(`<i><s>etapas</s> ${esc(val(c.concluidas)||'0')}/${esc(val(c.aplicaveis))}`
+    +(val(c.pct)?` · ${esc(val(c.pct))}%`:'')+`</i>`);
+  if(val(c.prazo_estimado))bits.push(`<i><s>prazo estimado</s> ${esc(val(c.prazo_estimado))} dias úteis</i>`);
+  if(val(c.previsao))bits.push(`<i class="${cls}"><s>previsão</s> ${esc(rotuloData(c.previsao))}`
+    +(sit&&sit!=='—'?` · ${esc(sit)}`:'')+`</i>`);
+  else if(sit&&sit!=='—')bits.push(`<i class="${cls}">${esc(sit)}</i>`);
+  if(val(c.dias_andamento))bits.push(`<i><s>em andamento há</s> ${esc(val(c.dias_andamento))} dias</i>`);
+  if(val(c.dias_totais))bits.push(`<i><s>levou</s> ${esc(val(c.dias_totais))} dias</i>`);
+  if(!bits.length)return '';
+  return `<div class="prazo" title="Calculado pela MESTRA em dias úteis, a partir da data de início e das etapas marcadas Sim, descontando os feriados.">${bits.join('')}</div>`;
+}
 function editorHTML(p){
-  const etv=[];for(let n=1;n<=p._visN;n++)etv.push(p.etapas[n-1]);
+  const etv=(p.etapas||[]).filter(Boolean).slice().sort((a,b)=>(+a.n||0)-(+b.n||0));
   const glog=p.observacoes_internas||'';
   /* O resumo em badges (⏱ duração, status geral, etapas ok, código) abre a ficha:
      é a mesma informação que a linha da lista não comporta mais, montada pela
@@ -2004,24 +2114,26 @@ function editorHTML(p){
       <div class="fld"><label>Código Processo</label><input class="f-cod" value="${esc(p.codigo_processo)}"></div>
     </div>
     <div class="fld"><label>Processo</label><textarea class="f-proc">${esc(p.processo)}</textarea></div>
-    <div class="fld"><label>Status Geral</label>${selectHTML('f-stg',p.status_geral)}</div>
+    <div class="grid2">
+      <div class="fld"><label>Status Geral</label>${selectHTML('f-stg',p.status_geral)}</div>
+      <div class="fld"><label>Data de início do processo</label><input class="f-ini" value="${esc(p.data_inicio_processo||'')}" placeholder="dd/mm/aaaa"></div>
+    </div>
+    ${prazoHTML(p)}
 
     <div class="sub">Observações internas (geral)</div>
     <div class="log ${glog?'':'vazio'}" data-glog>${glog?esc(glog):'Sem observações.'}</div>
     <div class="addobs"><textarea data-gobs placeholder="Nova observação (entra com a data de hoje)"></textarea>
       <button class="btn btn--mini btn--pri" data-addgeral>Adicionar</button></div>
 
-    <div class="sub">Etapas</div>
+    <div class="sub">Etapas <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)">— as 14 do catálogo padrão. Marque Sim/Não em cada uma.</span></div>
     <div data-etapas>${etv.map(e=>etapaHTML(p,e)).join('')}</div>
-    <button class="btn btn--mini" data-addetapa>+ Adicionar etapa</button>
 
     <div class="sub">Campos internos</div>
     <div class="grid2">
-      <div class="fld"><label>Responsável (Extra 34)</label><input class="f-e34" value="${esc(p.extras.responsavel)}"></div>
-      <div class="fld"><label>UF / cidade (Extra 35)</label><input class="f-e35" value="${esc(p.extras.uf)}"></div>
-      <div class="fld"><label>Órgão (Extra 36)</label><input class="f-e36" value="${esc(p.extras.orgao)}"></div>
-      <div class="fld"><label>Protocolo (Extra 37)</label><input class="f-e37" value="${esc(p.extras.protocolo)}"></div>
-      <div class="fld"><label>Dias p/ finalização</label><input class="f-dias" value="${esc(p.extras.dias)}"></div>
+      <div class="fld"><label>Responsável</label><input class="f-e34" value="${esc(p.extras.responsavel)}"></div>
+      <div class="fld"><label>UF / cidade</label><input class="f-e35" value="${esc(p.extras.uf)}"></div>
+      <div class="fld"><label>Órgão</label><input class="f-e36" value="${esc(p.extras.orgao)}"></div>
+      <div class="fld"><label>Protocolo</label><input class="f-e37" value="${esc(p.extras.protocolo)}"></div>
     </div>
 
     <div class="barra-salvar">
@@ -2035,7 +2147,7 @@ function editorHTML(p){
    inteiro abre aqui, por cima, sem trocar de página e sem empurrar as
    outras linhas para baixo. O conteúdo é o MESMO editorHTML() de
    sempre — e ele continua morando num #ed-<row>, então coletar(),
-   agendarSalvar(), addObs() e addEtapa() não mudaram uma linha.
+   agendarSalvar() e addObs() não mudaram uma linha.
    =================================================================== */
 let FICHA_ROW='';        // de qual processo é a ficha aberta
 let CAD_AVISADO=false;   // já avisamos que tem coisa por gravar? (fechar em 2 tempos)
@@ -2081,12 +2193,6 @@ function abrirEditor(row){
      de novo junto com os campos. */
   if(FALHAS.has(String(p.row)))marcarFalha(p.row,true);
   const cx=m.querySelector('.modal-box');if(cx)cx.focus();
-}
-function reabrir(row){
-  const ed=document.getElementById('ed-'+row);const p=PROCS.find(x=>x.row==row);
-  if(!ed||!p)return;
-  ed.innerHTML=editorHTML(p);
-  if(FALHAS.has(String(row)))marcarFalha(row,true);   // repintar não apaga o que não gravou
 }
 /* Fechar com alteração por gravar avisa antes, em dois tempos como o resto da casa
    (nunca uma caixa do navegador): o primeiro Fechar/Esc/clique no véu explica, o
@@ -2165,8 +2271,10 @@ function salvarAgoraCad(){
 
 function coletar(row){
   const ed=document.getElementById('ed-'+row);
-  const etapas=[...ed.querySelectorAll('.etapa')].map(el=>({n:+el.dataset.n,nome:el.querySelector('.e-nome').value.trim(),status:el.querySelector('.e-status').value,data_inicio:el.querySelector('.e-ini').value.trim(),data_fim:el.querySelector('.e-fim').value.trim()}));
-  return {nome:ed.querySelector('.f-nome').value.trim(),codigo_processo:ed.querySelector('.f-cod').value.trim(),processo:ed.querySelector('.f-proc').value.trim(),status_geral:ed.querySelector('.f-stg').value,extras:{responsavel:ed.querySelector('.f-e34').value.trim(),uf:ed.querySelector('.f-e35').value.trim(),orgao:ed.querySelector('.f-e36').value.trim(),protocolo:ed.querySelector('.f-e37').value.trim(),dias:ed.querySelector('.f-dias').value.trim()},etapas};
+  /* "dias" saiu do payload: virou fórmula na planilha (última finalização menos a
+     data de início) e mandar valor para lá apagaria a fórmula daquela linha. */
+  const etapas=[...ed.querySelectorAll('.etapa')].map(el=>({n:+el.dataset.n,aplicavel:(el.querySelector('.e-apl')||{}).value||'Sim',nome:el.querySelector('.e-nome').value.trim(),status:el.querySelector('.e-status').value,data_inicio:el.querySelector('.e-ini').value.trim(),data_fim:el.querySelector('.e-fim').value.trim()}));
+  return {nome:ed.querySelector('.f-nome').value.trim(),codigo_processo:ed.querySelector('.f-cod').value.trim(),processo:ed.querySelector('.f-proc').value.trim(),status_geral:ed.querySelector('.f-stg').value,data_inicio_processo:ed.querySelector('.f-ini').value.trim(),extras:{responsavel:ed.querySelector('.f-e34').value.trim(),uf:ed.querySelector('.f-e35').value.trim(),orgao:ed.querySelector('.f-e36').value.trim(),protocolo:ed.querySelector('.f-e37').value.trim()},etapas};
 }
 let saveTimers={};
 /* ---------- pendências e falhas de gravação (C.3) ----------
@@ -2484,58 +2592,14 @@ async function addObs(row,btn,tipo,n){
   }
   btn.disabled=false;btn.textContent=txtOrig;
 }
-/* Quantos blocos de etapa a MESTRA tem hoje. Vem do servidor a cada carga. */
-let ETAPAS_MAX=10;
-/* Pedir a etapa seguinte: se ainda há bloco livre na planilha, é só revelar mais
-   um campo. Se acabou, o servidor CRIA as cinco colunas e o teto sobe — é isso
-   que faz o "infinitas" ser verdade em vez de só um número maior escrito aqui.
-   O botão espera a criação antes de revelar o campo: revelar primeiro deixaria a
-   pessoa preencher uma etapa que a planilha ainda não tem onde guardar. */
-async function addEtapa(row){
-  const p=PROCS.find(x=>x.row==row); if(!p) return;
-  const bt=document.querySelector('[data-addetapa]');
-  if(p._visN<ETAPAS_MAX){ p._visN++; reabrir(row); return; }
-  const txt=bt?bt.textContent:'';
-  if(bt){ bt.disabled=true; bt.textContent='Criando a etapa na planilha…'; }
-  try{
-    /* Prazo próprio: esta rota acrescenta CINCO colunas na MESTRA inteira, e o
-       Apps Script leva o tempo que a planilha exigir. Com os 45 s de todo mundo,
-       uma criação normal estouraria o prazo e cairia no aviso de dúvida — que é o
-       pior lugar para mandar alguém, porque o conselho de lá é não repetir. */
-    const d=await postAcao({acao:'soc_nova_etapa'},120000);
-    ETAPAS_MAX=Math.max(ETAPAS_MAX,+((d&&d.etapas_max)||0));
-    p.etapas.push({n:ETAPAS_MAX,nome:'',status:'',data_inicio:'',obs_interna:'',data_fim:''});
-    p._visN=Math.min(p._visN+1,ETAPAS_MAX);
-    reabrir(row);
-  }catch(e){
-    if(bt){ bt.disabled=false; bt.textContent=txt; }
-    /* Esta rota CRIA cinco colunas na MESTRA. Clicar de novo depois de um silêncio
-       cria outras cinco, e a planilha fica com um bloco de etapa vazio no meio do
-       caminho — que ninguém apaga depois porque ninguém sabe de onde veio.
-       Recusa do servidor continua aparecendo com o motivo: aqui quem lê é da
-       equipe, e "não deu" sem dizer o quê já custou caro neste painel. */
-    alertaEtapa((e&&e.incerto)
-      ? 'não sei se ela foi criada. Recarregue a página antes de clicar de novo.'
-      : (e&&e.doServidor)
-      ? String((e&&e.message)||e)
-      /* Estourou depois do post, ao revelar o campo: a etapa FOI criada na
-         planilha. Clicar de novo criaria outras cinco colunas. */
-      : 'ela foi criada, mas a tela não acompanhou. Recarregue a página — não clique de novo.');
-  }
-}
-/* Aviso curto embaixo do botão — sem caixa do navegador, que trava a página. */
-function alertaEtapa(msg){
-  const bt=document.querySelector('[data-addetapa]'); if(!bt) return;
-  let av=document.getElementById('av-etapa');
-  if(!av){ av=document.createElement('div'); av.id='av-etapa';
-    av.style.cssText='margin-top:6px;font-size:var(--fs-2);color:var(--vermelho);font-weight:700';
-    bt.insertAdjacentElement('afterend',av); }
-  av.textContent='Não consegui criar a etapa: '+msg;
-  setTimeout(()=>{ if(av) av.textContent=''; },9000);
-}
+/* O "+ Adicionar etapa" saiu daqui junto com o texto livre: as etapas são as 14
+   do catálogo padrão, e criar uma 15ª pela tela seria a porta de volta para cada
+   processo inventar o nome da sua. A rota `soc_nova_etapa` continua no servidor —
+   quem um dia precisar de um bloco a mais acrescenta na MESTRA e este painel
+   enxerga sozinho, porque o laço lê enquanto existir "Etapa N". */
 
 // modal novo processo
-function abrirNovo(){document.getElementById('n-stg').innerHTML=STATUS.filter(Boolean).map(o=>`<option${o==='Em andamento'?' selected':''}>${o}</option>`).join('');['n-id','n-nome','n-cod','n-proc'].forEach(i=>document.getElementById(i).value='');document.getElementById('n-msg').textContent='';document.getElementById('modal').classList.add('on');}
+function abrirNovo(){document.getElementById('n-stg').innerHTML=STATUS.filter(Boolean).map(o=>`<option${o==='Em andamento'?' selected':''}>${o}</option>`).join('');['n-id','n-nome','n-cod','n-proc','n-ini'].forEach(i=>document.getElementById(i).value='');document.getElementById('n-msg').textContent='';document.getElementById('modal').classList.add('on');}
 function fecharNovo(){document.getElementById('modal').classList.remove('on');}
 async function criarNovo(btn){
   const id=document.getElementById('n-id').value.trim(),proc=document.getElementById('n-proc').value.trim();
@@ -2543,7 +2607,7 @@ async function criarNovo(btn){
   if(!id||!proc){msg.className='msg err';msg.textContent='Informe ID e Processo.';return;}
   btn.disabled=true;msg.className='msg';msg.textContent='Criando…';
   try{
-    const d=await postAcao({acao:'soc_novo',id,nome:document.getElementById('n-nome').value.trim(),codigo_processo:document.getElementById('n-cod').value.trim(),processo:proc,status_geral:document.getElementById('n-stg').value});
+    const d=await postAcao({acao:'soc_novo',id,nome:document.getElementById('n-nome').value.trim(),codigo_processo:document.getElementById('n-cod').value.trim(),processo:proc,status_geral:document.getElementById('n-stg').value,data_inicio_processo:document.getElementById('n-ini').value.trim()});
     fecharNovo();F_STATUS=[];F_ATALHO=[];BUSCA='';SORT={k:'dur',dir:dirPadrao('dur')};TETO=PASSO;
     /* As caixas acompanham o estado limpo. O `carregar()` logo abaixo repinta a
        tela inteira e monta caixas novas, mas escrever aqui mantém a régua
@@ -2610,6 +2674,7 @@ document.addEventListener('click',e=>{
     desenhar();
     return;
   }
+  const ap=e.target.closest('[data-apl]');if(ap){marcarAplicavel(ap);return;}
   const et=e.target.closest('[data-etapa-toggle]');if(et){alternarEtapa(et);return;}
   const tg=e.target.closest('[data-toggle]');if(tg){abrirEditor(tg.dataset.toggle);return;}
   /* De qual processo é este botão: o editor deixou de morar dentro da linha
@@ -2618,7 +2683,6 @@ document.addEventListener('click',e=>{
      chegava a salvar nada. */
   const ag=e.target.closest('[data-addgeral]');if(ag){addObs(rowDoEditor(ag),ag,'geral');return;}
   const ae=e.target.closest('[data-addet]');if(ae){addObs(rowDoEditor(ae),ae,'etapa',+ae.dataset.addet);return;}
-  const at=e.target.closest('[data-addetapa]');if(at){addEtapa(rowDoEditor(at));return;}
   if(e.target.id==='n-criar')criarNovo(e.target);
   if(e.target.id==='n-cancelar')fecharNovo();
   if(e.target.id==='modal')fecharNovo();

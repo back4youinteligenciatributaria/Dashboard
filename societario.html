@@ -1537,19 +1537,29 @@ function desenharHeroi(alteracoes){
   }
 }
 
-/* Barra de progresso horizontal (linha do tempo resumida): etapa 1 → 2 → 3. */
+/* Barra de progresso horizontal (linha do tempo resumida): etapa 1 → 2 → 3.
+   As etapas que chegam aqui são só as que se APLICAM a este processo — a MESTRA
+   marca Sim/Não em cada uma das 14 do catálogo, e o backend não manda as de "Não".
+   Então "3 de 7" quer dizer 3 das 7 que este processo realmente tem, e não 3 de um
+   catálogo que inclui coisa que nunca vai acontecer aqui. */
 function stepperHTML(p){
   const n = (p.etapas||[]).length; if(!n) return '';
   const done = p.etapas.filter(e=>classeStatus(e.status)==='concluido').length;
   const emAnd = p.etapas.some(e=>classeStatus(e.status)==='andamento');
+  /* Previsão: vem calculada da MESTRA, em dias úteis, só das etapas aplicáveis e
+     descontando feriados. É ESTIMATIVA e a tela diz isso com todas as letras —
+     prazo de órgão público não se promete, e o cliente que lê "conclusão em 12/09"
+     sem a palavra "prevista" cobra a data. */
+  const prev = String(p.previsao||'').trim();
   const dots = p.etapas.map((e,i)=>{ const cl=classeStatus(e.status);
     return `<span class="st-passo"><span class="st-dot ${cl}"></span><span class="st-lbl">${esc(e.nome)}</span></span>`;
   }).join('<span class="st-linha"></span>');
   const pct = Math.round((done/n)*100);
   return `<div class="stepper">
-    <div class="stepper-topo"><span class="stepper-cap">${done} de ${n} etapa${n>1?'s':''} concluída${done===1?'':'s'}${emAnd&&done<n?' · 1 em andamento':''}</span><b class="stepper-pct">${pct}%</b></div>
+    <div class="stepper-topo"><span class="stepper-cap">${done} de ${n} etapa${n>1?'s':''} concluída${done===1?'':'s'}${emAnd&&done<n?' · 1 em andamento':''}${prev?` · previsão: ${esc(dBR(prev))}`:''}</span><b class="stepper-pct">${pct}%</b></div>
     <div class="stepper-track"><div class="stepper-fill" style="width:${Math.max(3,pct)}%"></div></div>
     <div class="stepper-passos">${dots}</div>
+    ${prev?`<p class="stepper-cap" style="margin:7px 0 0">Previsão estimada em dias úteis, considerando as etapas deste processo e os feriados. Prazos de cartório, junta comercial e conselho podem variar — avisamos a cada passo.</p>`:''}
   </div>`;
 }
 
