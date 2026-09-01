@@ -44,6 +44,15 @@
  *   multi     várias escolhas, `opts`; gravadas numa célula só, unidas por ' · '
  *   money     texto com máscara de valor — a planilha guarda como texto
  *
+ * `dono:'atuacao'` a coluna é RESPONDIDA no grupo "Atuação empresarial" da ficha,
+ *           e por isso NÃO é desenhada de novo na seção de onboarding. Existe
+ *           porque o mesmo fato começou a ser perguntado nos dois lugares — a
+ *           natureza jurídica, o alvará, o CNES, a descrição da nota — e dois
+ *           campos para um dado é uma divergência esperando acontecer: um dia
+ *           alguém responde num, outro alguém responde no outro, e nenhum dos
+ *           dois está errado o bastante para alguém notar. Uma coluna, um
+ *           lugar. A seção de onboarding ganha uma placa dizendo onde ir.
+ *
  * `req:1`  obrigatório no cadastro de cliente novo (e SÓ lá)
  * `full:1` ocupa a linha inteira do formulário
  * `role`   apelido usado pelo código (id, nome, cnpj, razao, cidade, uf…)
@@ -123,7 +132,7 @@ var CAMPOS = [
    no formulário de cliente novo (quem cria pasta e planilha é o onboarding). */
 {col:'ID',                        s:'Identificação', t:'text', role:'id',       sistema:1},
 {col:'Nome',                      s:'Identificação', t:'text', role:'nome',     sistema:1, full:1},
-{col:'Ativo',                     s:'Identificação', t:'select', role:'ativo',  sistema:1, opts:['','Ativo','Em inativação','Inativo','Prospect']},
+{col:'Ativo',                     s:'Identificação', t:'select', role:'ativo',  sistema:1, opts:['','Ativo','Em inativação','Inativo']},
 {col:'Drive',                     s:'Identificação', t:'text', role:'drive',    sistema:1, full:1},
 {col:'Produtos Back4you',         s:'Identificação', t:'text', role:'produtos', sistema:1, full:1},
 
@@ -154,7 +163,7 @@ var CAMPOS = [
  opts:['','Sociedade Empresária Limitada','Sociedade Simples Limitada','Sociedade Simples Pura','Sociedade Limitada Unipessoal','Empresário (Individual)','Pessoa física']},
 {col:'Registro na Junta',         s:'Empresa e societário', t:'select',
  opts:['','Junta','Junta (EI/SLU)','Cartório','Não sabe'],
- dica:'sociedade simples registrada em cartório costuma ter a equiparação negada na entrada'},
+ dica:'sociedade simples registrada em cartório costuma ter a equiparação negada na entrada', dono:'atuacao'},
 {col:'CNAEs',                     s:'Empresa e societário', t:'textarea', full:1},
 {col:'Número de sócios',          s:'Empresa e societário', t:'text'},
 {col:'Descrição sócios',          s:'Empresa e societário', t:'textarea', full:1},
@@ -166,7 +175,7 @@ var CAMPOS = [
  dica:'quem cuida do financeiro no dia a dia — às vezes é um terceiro'},
 {col:'Como cada sócio fatura',    s:'Empresa e societário', t:'textarea', nova:1, full:1,
  dica:'uma frase curta por sócio: de onde vem a receita dele'},
-{col:'Acordo de sócios ou atas',  s:'Empresa e societário', t:'select', nova:1, opts:SIM_NAO_SEI},
+{col:'Acordo de sócios ou atas',  s:'Empresa e societário', t:'select', nova:1, opts:SIM_NAO_SEI, dono:'atuacao'},
 {col:'Outros CNPJs do grupo',     s:'Empresa e societário', t:'textarea', nova:1, full:1,
  dica:'CNPJ, situação e para que serve — inclusive os que só existem no papel'},
 {col:'Pendências societárias em aberto', s:'Empresa e societário', t:'textarea', nova:1, full:1,
@@ -194,7 +203,7 @@ var CAMPOS = [
 
 /* ── Faturamento ────────────────────────────────────────────────────────── */
 {col:'Faturamento mensal médio',  s:'Faturamento', t:'money', nova:1},
-{col:'Fontes de recebimento',     s:'Faturamento', t:'multi', nova:1, full:1,
+{col:'Fontes de recebimento',     s:'Faturamento', t:'multi', nova:1, full:1, dono:'atuacao',
  opts:['Particular','Convênios','Hospitais','Poder público','Outras PJ','Outros']},
 {col:'Detalhe das fontes de recebimento', s:'Faturamento', t:'textarea', nova:1, full:1},
 {col:'Modalidades de atendimento e emissão', s:'Faturamento', t:'multi', nova:1, full:1,
@@ -210,7 +219,8 @@ var CAMPOS = [
    'Realiza treinamentos ou aulas e emite NF para PF',
    'Realiza treinamentos ou aulas e emite NF para PJ (laboratórios ou cursos)'
  ]},
-{col:'Possui contratos com convênios ou hospitais', s:'Faturamento', t:'select', nova:1, opts:SIM_NAO_SEI},
+{col:'Possui contratos com convênios ou hospitais', s:'Faturamento', t:'select', nova:1, dono:'atuacao',
+ opts:['','Sim, vigente','Existe, mas vencido','Sem contrato formal','Não se aplica','Não sabe']},
 {col:'Quais convênios e hospitais', s:'Faturamento', t:'textarea', nova:1, full:1,
  dica:'o nome de cada um, e se o contrato está vigente'},
 {col:'Médicos que recebem pela PJ', s:'Faturamento', t:'textarea', nova:1, full:1},
@@ -218,15 +228,15 @@ var CAMPOS = [
  opts:['','Sim','Não','Às vezes','Não sabe']},
 {col:'Todos os atendimentos geram NF', s:'Faturamento', t:'select', nova:1,
  opts:['','Sim','Não','Às vezes','Não sabe']},
-{col:'Entradas na conta PJ sem NF', s:'Faturamento', t:'select', nova:1, opts:SIM_NAO_SEI},
+{col:'Entradas na conta PJ sem NF', s:'Faturamento', t:'select', nova:1, dono:'atuacao', opts:SIM_NAO_SEI},
 {col:'Volume mensal sem NF',      s:'Faturamento', t:'textarea', nova:1, full:1},
-{col:'% Procedimentos e cirurgias', s:'Faturamento', t:'text', nova:1},
-{col:'% Consultas',               s:'Faturamento', t:'text', nova:1},
-{col:'% Exames',                  s:'Faturamento', t:'text', nova:1},
-{col:'% Educação',                s:'Faturamento', t:'text', nova:1},
-{col:'% Outros',                  s:'Faturamento', t:'text', nova:1},
+{col:'% Procedimentos e cirurgias', s:'Faturamento', t:'text', nova:1, dono:'atuacao'},
+{col:'% Consultas',               s:'Faturamento', t:'text', nova:1, dono:'atuacao'},
+{col:'% Exames',                  s:'Faturamento', t:'text', nova:1, dono:'atuacao'},
+{col:'% Educação',                s:'Faturamento', t:'text', nova:1, dono:'atuacao'},
+{col:'% Outros',                  s:'Faturamento', t:'text', nova:1, dono:'atuacao'},
 {col:'Detalhe da divisão de faturamento', s:'Faturamento', t:'textarea', nova:1, full:1},
-{col:'NF descreve serviço e profissional', s:'Faturamento', t:'select', nova:1, opts:SIM_NAO_PARC},
+{col:'NF descreve serviço e profissional', s:'Faturamento', t:'select', nova:1, opts:SIM_NAO_PARC, dono:'atuacao'},
 {col:'Exemplo de descrição da NF', s:'Faturamento', t:'textarea', nova:1, full:1},
 {col:'Distribuição de lucros mensal (PJ→PF)', s:'Faturamento', t:'textarea', nova:1, full:1,
  dica:'atenção a valores acima de R$ 50 mil'},
@@ -299,7 +309,8 @@ var CAMPOS = [
 /* ── Outras contratações ────────────────────────────────────────────────── */
 {col:'Possui prestadores autônomos', s:'Outras contratações', t:'select', nova:1, opts:SIM_NAO_SEI},
 {col:'Funções dos autônomos',     s:'Outras contratações', t:'textarea', nova:1, full:1},
-{col:'Contrato formal com autônomos', s:'Outras contratações', t:'select', nova:1, opts:SIM_NAO_PARC},
+{col:'Contrato formal com autônomos', s:'Outras contratações', t:'select', nova:1, dono:'atuacao',
+ opts:['','Contrato assinado e política de repasse escrita','Contrato sem política, ou política sem contrato','Acordo verbal ou sem documento','Não há repasse','Não sabe']},
 {col:'Forma de pagamento dos autônomos', s:'Outras contratações', t:'textarea', nova:1, full:1},
 {col:'Autônomos emitem NF',       s:'Outras contratações', t:'select', nova:1,
  opts:['','Sim','Não','Alguns','Não sabe']},
@@ -318,10 +329,10 @@ var CAMPOS = [
  dica:'consultórios · salas de procedimento · leitos de observação'},
 {col:'Alvará de funcionamento',   s:'Estrutura e funcionamento', t:'select', nova:1, opts:SIM_NAO_SEI},
 {col:'Alvará sanitário',          s:'Estrutura e funcionamento', t:'select', nova:1,
- opts:['','Vigente','Vencido','Não possui','Não sabe']},
+ opts:['','Vigente','Vencido','Não possui','Não sabe'], dono:'atuacao'},
 {col:'AVCB',                      s:'Estrutura e funcionamento', t:'select', nova:1, opts:SIM_NAO_SEI},
 {col:'CNES (situação)',           s:'Estrutura e funcionamento', t:'select', nova:1,
- opts:['','Possui','Possui, desatualizado','Não possui','Não sabe']},
+ opts:['','Possui','Possui, desatualizado','Não possui','Não sabe'], dono:'atuacao'},
 {col:'Autuações ou multas sanitárias', s:'Estrutura e funcionamento', t:'textarea', nova:1, full:1},
 {col:'Observações de estrutura',  s:'Estrutura e funcionamento', t:'textarea', nova:1, full:1},
 
@@ -353,7 +364,7 @@ var CAMPOS = [
 {col:'Possui controle financeiro', s:'Controladoria', t:'select', nova:1,
  opts:['','Sim','Não','Está iniciando']},
 {col:'Formato do controle',       s:'Controladoria', t:'select', nova:1,
- opts:['','Planilha','Sistema','Outro','Nenhum']},
+ opts:['','Planilha','Sistema','Outro','Nenhum'], dono:'atuacao'},
 {col:'Responsável pelo controle', s:'Controladoria', t:'text', nova:1},
 {col:'Recebe por cartão de crédito', s:'Controladoria', t:'select', nova:1, opts:SIM_NAO},
 {col:'Recebe por link de pagamento', s:'Controladoria', t:'select', nova:1, opts:SIM_NAO},

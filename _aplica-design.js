@@ -35,14 +35,14 @@ const FIM = 'B4U-DESIGN:FIM';
 const FONTE = 'b4u-design.css';
 const CHECAR = process.argv.includes('--check');
 
-/* As 24 (o juridico.html entrou em 24/08/2026; o diagnostico-equiparacao.html em 01/09/2026). Diferente do `_aplica-texto.js`, que pula as quatro páginas sem
+/* As 24 (o juridico.html entrou em 24/08/2026; o registro-cliente.html em 01/09/2026). Diferente do `_aplica-texto.js`, que pula as quatro páginas sem
    `b4u-shell.js` (analise-tributaria, calculadora, onboarding, simulador):
    aquelas quatro não têm menu lateral, mas têm fundo bege e cartão branco como
    todas as outras. Paleta é para as 23. */
 const ARQUIVOS = [
   'analise-tributaria.html', 'calculadora-equiparacao.html', 'certificados.html',
   'clientes-ativos.html', 'colaborador.html', 'comercial.html', 'contabil.html',
-  'diagnostico-equiparacao.html',
+  'registro-cliente.html',
   'contatos-equipe.html', 'daily.html', 'dptopessoal.html', 'equiparacao.html',
   'fiscal.html', 'guias.html', 'index.html', 'juridico.html', 'licencas.html',
   'meustickets.html',

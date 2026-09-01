@@ -191,11 +191,6 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .barra a.plan{border:1px solid rgba(255,255,255,.25);border-radius:var(--radius-pill);padding:4px 11px}
 .save-status{font-size:13px;font-weight:800;padding:6px 13px;border-radius:var(--radius-pill);background:rgba(255,255,255,.14);color:#e7f2f0;white-space:nowrap;transition:background .15s}
 .save-status:empty{display:none}
-/* O MESMO indicador aparece em dois lugares: a faixa da barra escura e o rodape
-   do modal de cadastro (claro). So o estado neutro precisa de outra tinta — o da
-   barra e feito para fundo escuro e sumiria no branco. Vem ANTES dos estados
-   coloridos de proposito: mesma especificidade, quem vier depois ganha. */
-.save-status.claro{background:var(--surface-warm);color:var(--ink-2)}
 /* Branco sobre --amber da 2,61:1 e sobre --verde 3,44:1 — o rotulo do proprio
    status de gravacao some. Um degrau mais escuro na MESMA familia: 4,68:1 e 4,92:1. */
 .save-status.saving{background:var(--amber-2);color:#fff}.save-status.ok{background:var(--verde-2);color:#fff}.save-status.err{background:var(--vermelho);color:#fff}
@@ -238,7 +233,8 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .rcard.semdado2 .rhead{background:var(--brand-teal-txt)}
 .rhead .n{background:rgba(255,255,255,.25);border-radius:var(--radius-pill);padding:2px 9px;font-size:12px}
 .rlista{max-height:158px;overflow:auto;padding:5px}
-.tk{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px}
+/* Também é <a> (ver itemResumo), pelo mesmo motivo da linha da lista. */
+.tk{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;text-decoration:none;color:inherit}
 .tk:hover{background:var(--surface-warm)}
 .tk .d{font-weight:800;white-space:nowrap;color:var(--brand-teal-txt)}
 .tk .lb{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -297,8 +293,12 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
    a que acha o cadastro mais atrasado. Em vez de sumir, ela virou o segundo
    botão da célula em que o selo já mora. */
 .lista-cab .dois{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+/* É um <a> de verdade (ver cabecaHTML): a ficha é outra página, e o colaborador
+   precisa do meio do mouse e do Cmd+clique para abrir três clientes lado a lado.
+   Como <a>, ele chega com sublinhado e cor de link do navegador — as duas coisas
+   que uma linha de tabela não pode ter. */
 .cli-head{width:100%;text-align:left;background:none;border:0;padding:12px 14px;
-  cursor:pointer;font-family:var(--sans);color:inherit}
+  cursor:pointer;font-family:var(--sans);color:inherit;text-decoration:none}
 .cli-head:hover{background:var(--surface-warm)}
 /* O .cli tem overflow:hidden e o contorno global (offset 2px) sairia cortado na
    borda do cartão: aqui ele entra para dentro, senão o foco de teclado some. */
@@ -374,15 +374,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .pill.sit-inativo{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
 .pill.sit-sem{background:#EEE9E2;color:var(--muted);border-color:var(--line)}
 
-/* ---------- o cadastro completo (hoje dentro do modal) ----------
-   O corpoHTML() é o mesmo de sempre; só mudou onde ele é pintado. Dentro do
-   modal ele não precisa mais da moldura que o separava da linha de cima. */
-.corpo{border-top:1px solid var(--line);background:var(--surface-warm);padding:13px 13px 16px}
-.modal-cad .corpo{border-top:0;background:transparent;padding:0}
-.gsec{margin-bottom:13px}
-.gsec:last-of-type{margin-bottom:6px}
-.gsec h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark);display:flex;align-items:center;gap:7px;margin-bottom:8px}
-.gsec h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--brand-teal);flex:none}
+/* ---------- os campos do formulário ----------
+   Esta grade era dividida com a ficha do cliente, que morava num modal desta
+   página. A ficha virou página própria (registro-cliente.html) e levou o que era
+   só dela: o .corpo (a moldura do cadastro), as .gsec e o destaque de campo
+   vazio. O que ficou aqui é o que o "+ Novo cliente" usa. */
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .fld{display:flex;flex-direction:column;min-width:0}
 .fld.full{grid-column:1/-1}
@@ -393,24 +389,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .fld textarea{resize:vertical;min-height:42px;line-height:1.35}
 .fld select{font-weight:600;cursor:pointer}
 .fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--brand-teal);outline-offset:0}
-/* Campo esperado e ainda em branco: fundo avermelhado bem suave + borda um tom
-   mais forte. É dica visual para varrer a tela, não erro — some ao preencher. */
-.fld.emfalta>input,.fld.emfalta>select,.fld.emfalta>textarea{background:#FDF2EF;border-color:#E7C3BB}
-.fld.emfalta>.lbl{color:#8A5A50}
-.fld .ro{font-size:13px;padding:8px 10px;border:1px dashed var(--line-2);border-radius:var(--radius-sm);background:#EFE8DE;color:var(--ink-2);
-  min-height:38px;word-break:break-word;display:flex;align-items:center;gap:7px;cursor:not-allowed}
-.fld .ro .cad-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fld .ro a{color:var(--brand-teal-txt);text-decoration:none;font-weight:800;flex:none;cursor:pointer}
-.rodape{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--muted)}
-.rodape .lk{color:var(--brand-teal-txt);text-decoration:none;font-weight:800;font-size:12px}
-.ign{background:var(--amber-soft);border:1px solid var(--amber-line);color:#8a5117;border-radius:var(--radius-sm);padding:8px 11px;font-size:12px;font-weight:700;margin-bottom:10px}
-.ign:empty{display:none}
-
-/* ---------- modais (cliente novo e cadastro) ----------
-   A MOLDURA — véu, caixa, cabeçalho escuro, rodapé, aviso de "tem coisa por
-   gravar" — saiu daqui e mora no b4u-modal.js, que a monta em `b4m-` para os
-   sete modais do painel de uma vez. O que fica abaixo é só o que é DESTE
-   cadastro: como o formulário se arruma dentro da caixa. */
+/* ---------- o modal de cliente novo ----------
+   A MOLDURA — véu, caixa, cabeçalho escuro, rodapé — mora no b4u-modal.js, que a
+   monta em `b4m-` para os modais do painel de uma vez. O que fica abaixo é só
+   como o formulário se arruma dentro da caixa. Era "cliente novo E cadastro" até
+   09/2026; o cadastro saiu para registro-cliente.html e sobrou um modal só. */
 .modal .grid{grid-template-columns:repeat(2,1fr)}
 .sec{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
 .sec>h2{font-size:13px;font-weight:800;margin:0 0 11px;color:var(--brand-dark);display:flex;align-items:center;gap:8px}
@@ -572,22 +555,6 @@ details.situacao>.resumo{padding:0 12px 12px}
 
 /* ---------- explicacao recolhida (C.2) ----------
    O dado vem primeiro; a instrucao fica a um clique e lembra a escolha. */
-/* ---------- o que nao gravou (C.3) ----------
-   A linha (ou o campo) fica marcada e o "tentar de novo" nasce ali mesmo. */
-.falhou{outline:2px solid var(--vermelho);outline-offset:-2px}
-tr.falhou>td{background:#FBEAE7!important}
-.btn-retry{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;cursor:pointer;
-  border:1px solid var(--vermelho);background:var(--vermelho);color:#fff;border-radius:var(--radius-pill);padding:2px 9px;white-space:nowrap}
-.btn-retry:disabled{opacity:.6;cursor:default}
-/* O painel passou a ter TRES estados de gravacao, nao dois: gravou, nao gravou e
-   NAO SEI. O terceiro nao pode usar o mesmo selo do segundo — o .btn-retry diz
-   "nao salvou" e convida a repetir, e nesta hora ninguem sabe se a gravacao
-   aconteceu. Repetir uma gravacao que talvez tenha ido e o estrago que este
-   caminho todo existe para evitar. Por isso a duvida tem selo proprio: cor de
-   aviso, nao de erro, e sem botao nenhum para clicar. */
-.ign-duvida{display:block;margin-top:4px;font-family:var(--sans);font-size:11px;font-weight:800;
-  color:var(--amber-2);background:var(--amber-soft);border:1px solid var(--amber-line);
-  border-radius:var(--radius-pill);padding:2px 9px}
 /* ---------- padroes compartilhados (B.10 e B.12) ---------- */
 /* Foco de teclado sempre visivel — quem navega por Tab precisa ver onde esta. */
 :focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
@@ -612,46 +579,10 @@ details.sec>summary .cnt-sec{font-size:11px;color:var(--muted,#8A7D70);font-weig
   background:#F1ECE4;border-radius:var(--radius-pill);padding:2px 8px}
 details.sec>summary .cnt-sec.falta{color:#A4303F;background:#FBEDEE}
 details.sec .grid{margin-top:10px}
-/* ---- a ficha do cliente, assunto por assunto ----
-   A ficha passou de 41 para 170 colunas e de 6 para 16 assuntos. Aberta de uma
-   vez ela vira uma parede: quem rola perde o lugar onde estava e desiste de
-   procurar. Recolhida, ela vira uma lista de 16 assuntos com um contador em
-   cada — e a seção só se abre quando alguém tem a informação DAQUELE assunto na
-   mão, que é como a reunião acontece de verdade.
-   O <details> é o mesmo do cliente novo (details.sec, logo acima). O que muda
-   aqui é a frase de apoio embaixo do título e o selo de produto. */
-.corpo details.secf{padding:12px 14px;margin-bottom:10px}
-.corpo details.secf>summary{align-items:flex-start}
-.corpo details.secf>summary .arw{padding-top:3px}
-.corpo details.secf>summary .cnt-sec{margin-top:1px}
-/* O título e a frase são uma coluna só, e é ela que ocupa a linha — o `flex:1`
-   que a folha dá ao h2 valia quando o h2 era filho direto do summary. */
-.sec-cab{flex:1;min-width:0}
-.corpo details.secf>summary h2{font-size:13px;font-weight:800;color:var(--brand-dark);
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
-.sec-sobre{display:block;margin-top:3px;font-size:12px;font-weight:400;color:var(--muted);line-height:1.35}
-/* O selo diz "esta seção costuma valer para este cliente" e NADA MAIS: não
-   esconde, não trava e não muda o que é gravado. Discreto de propósito — um selo
-   berrante seria lido como permissão, e permissão é justamente o que ele não é. */
-.selo-prod{font-size:10px;font-weight:800;letter-spacing:.2px;text-transform:none;
-  color:var(--brand-teal-txt);background:rgba(15,140,133,.10);border:1px solid rgba(15,140,133,.30);
-  border-radius:var(--radius-pill);padding:1px 8px}
-/* ---- campo de várias escolhas (t:'multi') ---- */
-.multi{display:flex;flex-direction:column;gap:7px}
-.mopts{display:flex;flex-wrap:wrap;gap:6px}
-.mopt{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2);
-  background:var(--surface-warm);border:1px solid var(--line-2);border-radius:var(--radius-pill);
-  padding:5px 11px;cursor:pointer;user-select:none}
-.mopt input{accent-color:var(--brand-teal);width:15px;height:15px;margin:0}
-.mopt.on{background:rgba(15,140,133,.10);border-color:var(--brand-teal);color:var(--brand-dark)}
-.fld .multi input.mlivre{font-size:12px}
-/* Valor em dinheiro alinha à direita, e é só isso que a coluna money faz — a
-   razão de não haver máscara está escrita no campoEditHTML. */
-.fld input.money{text-align:right}
-/* A dica da coluna, quando o catálogo traz uma. É onde cabe dizer POR QUE a
-   pergunta existe ("sete dígitos — muitos começam com zero"), que é o que evita
-   a resposta errada em vez de corrigi-la depois. */
-.fld-dica{display:block;margin-top:4px;font-size:var(--fs-1,11px);line-height:1.35;color:var(--muted)}
+/* O que morava aqui — .secf (a seção da ficha), o selo de produto, o campo de
+   várias escolhas, o dinheiro alinhado à direita e a dica embaixo do campo — foi
+   para registro-cliente.html junto com a ficha. O `details.sec` logo acima fica:
+   é o do formulário de cliente novo, que continua recolhendo por assunto. */
 /* ---- contatos do cliente novo ---- */
 .ct-novo{display:grid;grid-template-columns:1.2fr 1.4fr .9fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}
 .ct-novo .fld{margin:0}
@@ -671,18 +602,19 @@ details.sec .grid{margin-top:10px}
      ELE VEM ANTES DO b4u-modal.js DE PROPÓSITO. Os dois escutam Esc na CAPTURA do
      documento, e ouvintes de captura no mesmo nó disparam na ordem em que foram
      registrados. Com o modal primeiro, um Esc com o painel de um filtro aberto
-     fecharia o cadastro em vez da lista que está na cara da pessoa. -->
+     fecharia o "Novo cliente" em vez da lista que está na cara da pessoa. -->
 <script src="b4u-filtro.js" charset="utf-8"></script>
 <!-- A casca dos modais mora num arquivo só (b4u-modal.js): véu, Esc, foco preso
-     dentro da caixa e o aviso de "tem coisa por gravar". Se ele não carregar, as
-     fichas não abrem — e mais nada muda: as chamadas são protegidas por
-     `window.B4UModal &&` e a lista continua inteira. -->
+     dentro da caixa e a trava de "não feche enquanto está criando". Sobrou UM
+     modal nesta página — o "+ Novo cliente" —, porque a ficha do cliente deixou
+     de ser modal e virou página (registro-cliente.html). Se ele não carregar, o
+     cadastro de cliente novo não abre e mais nada muda: a chamada é protegida
+     por `window.B4UModal &&` e a lista continua inteira. -->
 <script src="b4u-modal.js" charset="utf-8"></script>
-<!-- O RECADO de gravação que falhou. Esta tela já grava em segundo plano e já
-     marca a linha; o que faltava era avisar quem NÃO está com a ficha aberta —
-     e é quase sempre o caso, porque a ficha agora fecha sem esperar. Se ele não
-     carregar, o selo na linha continua lá, como sempre esteve. -->
-<script src="b4u-gravar.js" charset="utf-8"></script>
+<!-- O b4u-gravar.js (o RECADO de gravação que falhou) saiu daqui junto com a
+     ficha: quem grava campo de cliente agora é o registro-cliente.html, e é lá
+     que ele passou a ser carregado. Esta página tem uma escrita só — criar
+     cliente novo —, e essa fala pela faixa da barra e pela própria caixa. -->
 <style>
 /* Identificador que chegou da planilha com dígito faltando. O número aparece
    como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
@@ -694,11 +626,6 @@ details.sec .grid{margin-top:10px}
 /* Só para leitor de tela: o ⚠ é aria-hidden, e sem isto quem não vê a tela não
    ficaria sabendo que o número está incompleto. */
 .b4u-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-/* O mesmo aviso por extenso, dentro da ficha. Na lista cabe um ⚠; aqui, com o
-   campo à vista e espaço para uma linha, cabe dizer o que aconteceu e o que
-   fazer — que é o único jeito de o dado ser corrigido na origem. */
-.fld-aviso{display:block;margin-top:4px;font-size:var(--fs-1,11px);line-height:1.35;
-  color:var(--amber-txt,#8A5A10);font-weight:600}
 </style>
 <script charset="utf-8">
 /* B4U-TEXTO:INICIO — identificador é TEXTO, nunca número.
@@ -893,39 +820,35 @@ function b4uParaPlanilha(valor,coluna){
   </div>
 </div>
 
-<!-- Cadastro do cliente. Fica FORA do #app de propósito: carregar() repinta o
-     #app inteiro, e uma recarga em segundo plano não pode apagar o formulário
-     que alguém está preenchendo. -->
-<div class="modal modal-cad" id="modalCad" hidden>
-  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cadTitulo" tabindex="-1">
-    <div class="modal-top">
-      <b id="cadTitulo">Cadastro</b>
-      <span class="cad-id" id="cadId"></span>
-      <span class="pill sit-sem" id="cadSit"></span>
-      <span class="spacer"></span>
-      <button type="button" id="fechaCad" title="Fechar" aria-label="Fechar o cadastro">×</button>
-    </div>
-    <div class="modal-body" id="cadBody"></div>
-    <div class="modal-foot">
-      <span class="save-status claro" id="saveStatusCad"></span>
-      <span class="cad-aviso" id="cadAviso" hidden>Ainda não gravei o que você mudou. Use <b>Salvar alterações</b> — ou clique de novo em Fechar para sair assim mesmo.</span>
-      <span class="spacer"></span>
-      <button class="btn btn--sec" id="cadFechar" type="button">Fechar</button>
-      <button class="btn btn--pri" id="cadSalvar" type="button">Salvar alterações</button>
-    </div>
-  </div>
-</div>
+<!-- ┌── A FICHA DO CLIENTE MUDOU DE LUGAR — 09/2026 ─────────────────────────┐
+     │ Aqui ficava o #modalCad: o cadastro completo do cliente aberto por cima │
+     │ da lista, com as seções em <details> e a gravação campo a campo.        │
+     │ Ele foi embora inteiro. A ficha chegou a 188 colunas em 15 seções, e    │
+     │ nessa altura deixou de caber numa caixa sobre a lista: a caixa rolava   │
+     │ por dentro enquanto a lista rolava por fora, o Esc fechava o que estava │
+     │ sendo digitado e não havia endereço para mandar a um colega olhar o     │
+     │ mesmo cliente.                                                          │
+     │ Hoje ela é uma PÁGINA — registro-cliente.html —, que recebe o cliente   │
+     │ pelo endereço (?chave=&cod=&id=) e abre já carregada. A linha da lista  │
+     │ é o link para ela: ver fichaURL() e cabecaHTML() no script abaixo.      │
+     │ Esta página continua sendo a LISTA e o cadastro de cliente NOVO — o     │
+     │ #modal logo acima, que não mudou nada.                                  │
+     └────────────────────────────────────────────────────────────────────────┘ -->
 
 <!-- O CATÁLOGO das colunas do Registro: em que seção cada uma entra, que tipo de
      campo ela é e quais são as opções quando é uma escolha. Sai da página pela
-     MESMA razão do config.js: são 170 colunas, e três coisas precisam concordar
-     sobre elas — esta tela, o Apps Script que cria as colunas que ainda faltam e
-     quem for acrescentar uma pergunta daqui a seis meses.
+     MESMA razão do config.js: são 188 colunas, e várias coisas precisam concordar
+     sobre elas — esta tela, a ficha (registro-cliente.html), o Apps Script que
+     cria as colunas que ainda faltam e quem for acrescentar uma pergunta daqui a
+     seis meses.
+     ELE CONTINUA AQUI mesmo depois de a ficha ter mudado de página, e não é
+     sobra: o formulário de "+ Novo cliente" é montado por montarCampos(...,
+     'novo'), que lê o catálogo para saber quais das colunas vivas da planilha são
+     as quatro do cadastro inicial, com que rótulo e em que ordem.
      Se ele NÃO carregar, a página continua inteira: o montador cai no catálogo de
-     reserva que ficou aqui dentro (HINTS_RESERVA e companhia), a ficha volta a ter
-     as seis seções antigas e as colunas novas aparecem em "Outros" — feio, e
-     funcionando. Ele nunca decide quais colunas EXISTEM: isso continua vindo dos
-     cabeçalhos vivos da planilha. -->
+     reserva que ficou aqui dentro (HINTS_RESERVA e companhia) e o cadastro de
+     cliente novo continua pedindo as mesmas quatro colunas. Ele nunca decide quais
+     colunas EXISTEM: isso continua vindo dos cabeçalhos vivos da planilha. -->
 <script src="b4u-registro-campos.js" charset="utf-8"></script>
 <script>
 // A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
@@ -1081,80 +1004,28 @@ async function postAcao(obj,ms){
   }finally{ clearTimeout(t); }
 }
 
-/* ---------------- releitura de confirmação ----------------
-   `incerto` quer dizer "não sei", e "não sei" é o pior recado que um painel pode
-   dar a quem acabou de digitar. Só existe um jeito de saber: PERGUNTAR DE NOVO.
-   E perguntar é uma LEITURA — não repete a gravação e não cria cliente nenhum.
-   Por isso ela pode rodar sozinha, sem pedir licença.
-
-   Duas escolhas que sustentam a conferência:
-
-   • Compara pelo MESMO funil que converteu o valor na ida (`b4uParaPlanilha`).
-     Comparar o que a planilha devolve com o que a tela mostra acusaria diferença
-     de MÁSCARA — "00.623.904/0001-73" contra "00623904000173" — como se fosse
-     falta de gravação, e a conferência viraria mentira ao contrário.
-
-   • Nada do que volta é pintado. O cadastro aberto continua como está: quem está
-     digitando não pode ver o próprio texto ser trocado por causa de uma
-     conferência que ele não pediu e não vê acontecer.
-
-   Vale só para a gravação de CAMPO. A criação de cliente (`onboard`) não passa
-   por aqui: lá não há linha para reler — o ID nasce no servidor, e procurar
-   "algum cliente parecido" é adivinhação numa hora em que errar significa deixar
-   dois cadastros e duas pastas no Drive.
-
-   Não existe rota de leitura por linha — esta página tem uma leitura só, a de
-   bloco. `relerCliente` é o ponto único onde isso está escrito: no dia em que o
-   backend ganhar um `tipo=registro_linha&id=`, muda esta função e mais nada. */
-const CONF_ESPERA=3000;   // o servidor grava DENTRO do lock: perguntar antes de ele soltar devolve o valor velho
-/* Teto da conferência. O `jsonp()` desta página tem prazo de 45 s e AINDA repete
-   uma vez depois de 4 s de pausa: no pior caso a pergunta levaria mais de um
-   minuto e meio, com a faixa dizendo "conferindo se gravou…" o tempo todo. Passou
-   de 25 s, a conferência desiste e vira dúvida — que é a resposta honesta, e é o
-   mesmo que ela diria depois de esperar mais um minuto. */
-const CONF_TETO=25000;
-function comTeto(p,ms){return Promise.race([p,new Promise((_,f)=>setTimeout(()=>f(new Error('a conferência demorou')),ms))]);}
-let CONF_N=0;                 // numera as gravações
-const CONF_SEQ=new Map();     // id → número da última gravação disparada neste cadastro
-function esperaMs(ms){return new Promise(r=>setTimeout(r,ms));}
-async function relerCliente(id){
-  const d=await jsonp(API_URL+'?tipo=registro_equipe&chave='+encodeURIComponent(chaveAtual()));
-  if(!d||d.erro) throw new Error(String((d&&d.erro)||'releitura vazia'));
-  const c=(d.clientes||[]).find(x=>String(x.id)===String(id));
-  if(!c) throw new Error('cadastro não encontrado na releitura');
-  return c.valores||{};
-}
-/* 'bateu' | 'nao-bateu' | 'nao-sei'.
-   NUNCA devolve 'bateu' por falta de informação: releitura que falhou é dúvida,
-   não é confirmação. Um "Salvo ✓" errado custa mais caro que a dúvida. */
-async function conferirGravacao(id,campos){
-  try{
-    await esperaMs(CONF_ESPERA);
-    const v=await comTeto(relerCliente(id),CONF_TETO);
-    /* Coluna travada NUNCA grava — é a mesma lista que alimenta o "Não gravei:"
-       da ficha. Cobrá-la na conferência faria uma gravação inteira e correta ser
-       anunciada como perdida por causa de um campo que o servidor recusa de
-       propósito, todo dia, desde sempre. */
-    const cols=Object.keys(campos).filter(c=>!ehTravada(c)&&Object.prototype.hasOwnProperty.call(v,c));
-    if(!cols.length) return 'nao-sei';   // só travadas (ou colunas que sumiram): vazio não é prova
-    const igual=c=>String(b4uParaPlanilha(v[c]==null?'':v[c],c)).trim()
-                  ===String(campos[c]==null?'':campos[c]).trim();
-    return cols.every(igual)?'bateu':'nao-bateu';
-  }catch(_){ return 'nao-sei'; }
-}
+/* A RELEITURA DE CONFIRMAÇÃO foi junto com a ficha (09/2026).
+   Ela existia para o caso em que a gravação de um campo sai, o servidor grava e a
+   RESPOSTA se perde: em vez de decretar "não salvou" (e convidar a regravar) ou
+   "salvou" (e mentir), a página relia o cliente e comparava. Isso é assunto de
+   quem grava campo — hoje registro-cliente.html —, e a explicação inteira mora
+   lá, ao lado do código. Esta página tem uma escrita só, a criação de cliente
+   novo, e essa NÃO passa por conferência de propósito: o ID nasce no servidor e
+   procurar "um cliente parecido" na lista é adivinhação numa hora em que errar
+   significa deixar dois cadastros e duas pastas no Drive (ver o `criarCliente`). */
 /* normaliza rótulo de coluna igual ao backend (sem acento, minúsculo, sem ?:. no fim) */
 function norm(s){return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim().replace(/[?:.]+$/,'');}
-/* Um texto de gravação, dois lugares: a faixa da barra (#saveStatus, que continua
-   sendo a de sempre) e o rodapé do modal de cadastro. Com o cadastro aberto a
-   barra fica atrás do véu — e o indicador não pode sumir justamente na tela em
-   que se digita. A classe "claro" só troca a tinta do estado neutro, que foi
-   desenhado para fundo escuro. */
+/* A faixa de estado da barra. Ela já teve um irmão no rodapé do modal de
+   cadastro (#saveStatusCad): com a ficha aberta por cima, a barra ficava atrás do
+   véu e o indicador precisava existir duas vezes. A ficha saiu desta página e
+   sobrou um lugar só — aqui a faixa fala da CARGA da lista e da criação de
+   cliente novo, e as duas acontecem com a barra à vista. */
 function setSave(cl,txt,tit){
-  const base='save-status '+(cl||'');
   const barra=document.getElementById('saveStatus');
-  if(barra){barra.className=base;barra.textContent=txt||'';barra.title=tit||'';}
-  const cad=document.getElementById('saveStatusCad');
-  if(cad){cad.className=base+' claro';cad.textContent=txt||'';cad.title=tit||'';}
+  if(!barra)return;
+  barra.className='save-status '+(cl||'');
+  barra.textContent=txt||'';
+  barra.title=tit||'';
 }
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 
@@ -1283,11 +1154,10 @@ if(CATALOGO&&CATALOGO.campos&&CATALOGO.campos.length){
   Object.assign(HINTS_SISTEMA,HINTS_SISTEMA_RESERVA);
 }
 const SEC_ORDER=(CATALOGO&&CATALOGO.ordem&&CATALOGO.ordem.length)?CATALOGO.ordem.slice():SEC_ORDER_RESERVA.slice();
-/* A frase de cada seção e os produtos que a tornam provável. Sem catálogo os dois
-   somem sozinhos e nada quebra: seção sem frase mostra só o nome, e seção sem
-   produto vale para todo mundo — que é o repouso. */
-function sobreSec(s){return (CATALOGO&&CATALOGO.sobre&&CATALOGO.sobre[s])||'';}
-function produtosSec(s){return (CATALOGO&&CATALOGO.relevancia&&CATALOGO.relevancia[s])||null;}
+/* O `sobre` e a `relevancia` do catálogo (a frase de apoio da seção e os produtos
+   que a tornam provável) são lidos hoje pelo registro-cliente.html, que é quem
+   desenha as seções. O catálogo continua sendo carregado AQUI porque o formulário
+   de cliente novo depende dele — ver montarCampos(...,'novo'). */
 
 /* As colunas marcadas `ro` no catálogo: o diagnóstico de equiparação escreve, a
    ficha só mostra. Elas ficam fora da conta de completude pelo mesmo motivo pelo
@@ -1297,7 +1167,6 @@ function produtosSec(s){return (CATALOGO&&CATALOGO.relevancia&&CATALOGO.relevanc
 const SO_LEITURA=new Set();
 Object.keys(HINTS).forEach(k=>{if(HINTS[k].ro)SO_LEITURA.add(k);});
 function ehSoLeitura(col){return SO_LEITURA.has(norm(col));}
-const MOTIVO_RO='Escrito pela página de diagnóstico — editar aqui faria a nota deixar de corresponder às respostas.';
 
 /* Campo sintético UF — hoje é RESERVA, e não mais a regra.
    A UF virou coluna de verdade da aba Registro (está no catálogo). Quando o
@@ -1328,14 +1197,10 @@ const CAMPOS_FALLBACK=['Razão social da empresa','CNPJ ou CPF','Nome Fantasia',
    campo não aparece. A planilha voltou a ser a fonte da verdade. */
 const REMOVIDOS=[];
 
-/* Motivo de cada coluna travada (vira o title do campo somente-leitura). */
-const MOTIVO_TRAVA={
-  'id':'O ID é a chave do cadastro — não muda depois de criado.',
-  'drive':'A pasta do Drive é criada no cadastro do cliente (botão “+ Novo cliente”).',
-  'produtos back4you':'Os produtos definem quais planilhas o cliente tem — mudam no cadastro, não aqui.'
-};
-function motivoTrava(col){return MOTIVO_TRAVA[norm(col)]||'Coluna mantida pelo sistema — não dá para editar por aqui.';}
-
+/* O MOTIVO de cada coluna travada (o title do campo com 🔒) foi para a ficha:
+   é lá que existe campo travado para explicar. As colunas travadas em si
+   continuam chegando da planilha, em TRAVADAS, e ainda pesam aqui — é o
+   `ehTravada` que as tira da conta do selo de campos vazios. */
 /**
  * Monta os campos a partir dos cabeçalhos vivos.
  * modo 'novo'    -> cadastro inicial: SÓ as colunas de NOVO_MIN (ver a caixa lá em cima),
@@ -1382,11 +1247,15 @@ function montarCampos(headers,modo){
 /* ===================================================================
    Estado da lista
    =================================================================== */
-let COLUNAS=[],TRAVADAS=new Set(),CLIENTES=[],META={},CAMPOS_EDIT=[],COL={};
-/* ABERTOS não expande mais a linha (o cadastro virou modal), mas continua sendo
-   quem sabe QUAL cadastro está aberto: acende a linha na lista e guarda o cliente
-   recém-criado que o carregar({expandir}) marca ANTES de a lista existir. Continua
-   Set porque essa marcação acontece fora do modal, sem ninguém para fechar. */
+/* CAMPOS_EDIT saiu daqui: era a ficha (montarCampos(COLUNAS,'edicao')), e a ficha
+   virou página. O montarCampos FICA — o "+ Novo cliente" chama ele no modo
+   'novo', e é de lá que saem as quatro colunas mínimas do cadastro inicial. */
+let COLUNAS=[],TRAVADAS=new Set(),CLIENTES=[],META={},COL={};
+/* ABERTOS já quis dizer "a linha está expandida", depois "esta é a ficha aberta no
+   modal". Com a ficha em outra página, sobrou o terceiro uso, que é o que
+   realmente importa: ACENDER na lista o cliente recém-criado. O carregar({expandir})
+   marca o ID ANTES de a lista existir, e o desenharLista lê daqui. Continua Set
+   porque a marcação acontece fora de qualquer caixa, sem ninguém para fechar. */
 let ABERTOS=new Set(),FILTRO='todos',TERMO='';
 
 /* ===================================================================
@@ -1408,8 +1277,9 @@ let ABERTOS=new Set(),FILTRO='todos',TERMO='';
    O selo fica âmbar quando falta mais de um terço dos campos esperados
    (mínimo de 3), que é quando o cadastro deixa de ser "quase pronto".
 
-   Essa MESMA lista (COLS_COMPLETUDE) é a régua do destaque avermelhado dos
-   campos em branco lá no cadastro aberto — selo e destaque contam a mesma coisa.
+   Essa MESMA lista (COLS_COMPLETUDE) é a régua do destaque avermelhado dos campos
+   em branco lá na ficha (registro-cliente.html) — selo e destaque contam a mesma
+   coisa, e por isso a régua tem de continuar sendo calculada dos dois lados.
    =================================================================== */
 const FORA_DA_CONTA=['data de fim da contabilidade','ativo'];
 const PISO_USO=0.2;
@@ -1427,9 +1297,6 @@ function calcularCompletude(){
   LIMIAR_VAZIOS=Math.max(3,Math.ceil(COLS_COMPLETUDE.length/3));
   CLIENTES.forEach(c=>{c._v=null;});
 }
-/* Campo que "conta": editável, esperado pela régua acima. É o que ganha o
-   destaque avermelhado quando está em branco. */
-function ehEsperado(col){return !ehTravada(col)&&SET_COMPLETUDE.has(col);}
 function vaziasDe(cli){return COLS_COMPLETUDE.filter(col=>!valorDe(cli,col));}
 function vaziosDe(cli){if(cli._v==null)cli._v=vaziasDe(cli).length;return cli._v;}
 function tituloSelo(cli){
@@ -1536,10 +1403,15 @@ function normalizarOrdem(){
 function ordemDe(k){return ORDENS.find(o=>o.k===k)||null;}
 
 /* ---------------- cards de resumo ---------------- */
+/* O item do cartão é um <a> para a FICHA, e não mais um clique que abria o modal
+   por cima da lista. Quem varre "cadastros mais incompletos" abre três ou quatro
+   de uma vez — com link de verdade isso é Cmd+clique; com um data-goto capturado
+   no clique, era abrir, fechar, abrir, fechar. */
 function itemResumo(cli,tp){
-  return `<div class="tk" data-goto="${esc(cli.id)}" title="Abrir o cadastro de ${esc(cli.nome||cli.id)}">
+  return `<a class="tk" href="${esc(fichaURL(cli.id))}" target="_blank" rel="noopener noreferrer"
+     title="Abrir a ficha de ${esc(cli.nome||cli.id)} em outra guia">
     <span class="d">${esc(cli.id)}</span><span class="lb">${esc(cli.nome||'(sem nome)')}</span>
-    <span class="tp">${esc(tp)}</span></div>`;
+    <span class="tp">${esc(tp)}</span></a>`;
 }
 function cardResumo(cls,titulo,tit,lista,render){
   return `<div class="rcard ${cls}"><div class="rhead" title="${esc(tit)}"><span>${esc(titulo)}</span><span class="n">${lista.length}</span></div>
@@ -1551,7 +1423,7 @@ function desenharResumo(){
   const base=CLIENTES.filter(c=>ativoDe(c)!==false);
   const incompletos=base.filter(c=>vaziosDe(c)>0).sort((a,b)=>vaziosDe(b)-vaziosDe(a)||porId(a,b));
   const cards=[cardResumo('incompletos','Cadastros mais incompletos',
-    'Clientes que não estão marcados como inativos, do mais vazio para o mais completo. Clique para abrir o cadastro.',
+    'Clientes que não estão marcados como inativos, do mais vazio para o mais completo. Clique para abrir a ficha em outra guia.',
     incompletos,c=>itemResumo(c,vaziosDe(c)+' vazios'))];
   if(COL.cnpj)cards.push(cardResumo('semdado','Sem CNPJ ou CPF',
     'Clientes não inativos sem CNPJ/CPF.',
@@ -1824,8 +1696,10 @@ function passaProd(c){
 
    NÃO é "cadastro incompleto" (o selo de campos vazios): esse conta ~40 colunas
    e daria pendência para quase toda a carteira, que é o mesmo que não filtrar.
-   O nome `temPendencia` já está tomado nesta página por outra coisa — alteração
-   por gravar —, e por isso este se chama `comPendencia`. */
+   Chama-se `comPendencia` porque o nome `temPendencia` estava tomado nesta página
+   por outra coisa — "tem alteração por gravar", do cadastro que abria aqui dentro.
+   Esse foi embora com a ficha em 09/2026; o nome de cá fica como está, que é o
+   que está escrito no botão, na URL (?pend=1) e na cabeça de quem usa. */
 function filtrosFalta(){return filtrosVivos().filter(f=>f.cls==='falta');}
 function comPendencia(c){return filtrosFalta().some(f=>f.fn(c));}
 function passaPend(c){return !F_PEND||comPendencia(c);}
@@ -1975,6 +1849,37 @@ function produtosHTML(cli){
   return mostrar.map(p=>`<span class="c-tag">${esc(p)}</span>`).join('')+
     (resto>0?`<span class="c-tag mais" title="${esc(ps.slice(mostrar.length).join(', '))}">+${resto}</span>`:'');
 }
+/* ┌── O ENDEREÇO DA FICHA — O ÚNICO LUGAR EM QUE ELE É MONTADO ─────────────┐
+   │ A ficha do cliente é outra PÁGINA desde 09/2026 (registro-cliente.html):│
+   │ ela cresceu para 188 colunas em 15 seções e não cabia mais num modal    │
+   │ por cima desta lista. Ela recebe o cliente pelo endereço e abre já      │
+   │ carregada — e é por isso que os três parâmetros são obrigatórios:       │
+   │                                                                        │
+   │   chave — o código do dia do colaborador. Sem ela a página nova cai no  │
+   │           "Acesso restrito", exatamente como esta cairia.               │
+   │   cod   — quem está usando. É o que assina o log de gravação do outro   │
+   │           lado; perder o cod aqui faria toda alteração feita na ficha   │
+   │           entrar sem autor, e ninguém percebe isso olhando a tela.      │
+   │   id    — qual cliente.                                                 │
+   │                                                                        │
+   │ Os três passam por encodeURIComponent. Parece exagero para um ID e uma  │
+   │ chave — mas o `cod` já chegou por #hash com acento junto, e um & solto  │
+   │ no meio do endereço leva o colaborador para a ficha de outro cliente.   │
+   │ Um lugar só: quem mudar o nome do arquivo mexe aqui e mais nada.        │
+   └────────────────────────────────────────────────────────────────────────┘ */
+function fichaURL(id){
+  return 'registro-cliente.html?chave='+encodeURIComponent(chaveAtual())+
+         '&cod='+encodeURIComponent(codAtual())+
+         '&id='+encodeURIComponent(String(id==null?'':id));
+}
+/* Abrir a ficha por CÓDIGO. Só para quem não é um link — hoje é um caso só, o
+   botão "Ver a ficha" da tela de cliente recém-criado. A linha da lista e os
+   cartões de resumo são <a> de verdade de propósito: window.open sempre custa o
+   meio do mouse, o Cmd+clique e o "abrir em guia nova" do botão direito.
+   `noopener` porque a página aberta não tem nada a fazer com esta. */
+function abrirFicha(id){
+  try{ window.open(fichaURL(id),'_blank','noopener'); }catch(e){}
+}
 /** O que não cabe nas sete colunas vira o title da linha: dá para conferir sem
  *  abrir nada — inclusive o Regime, que tem chip de filtro mas não tem coluna. */
 function tituloCabeca(cli){
@@ -1982,12 +1887,20 @@ function tituloCabeca(cli){
   const add=(col,rot)=>{if(!col)return;const v=valorDe(cli,col);p.push(rot+': '+(v||'em branco'));};
   add(COL.cnpj,'CNPJ');add(COL.regime,'Regime');add(COL.produtos,'Produtos');
   if(COL.ativo||cli.ativo)p.push('Situação: '+SITUACOES[situacaoDe(cli)].rot);
-  p.push('Clique para abrir o cadastro.');
+  p.push('Clique para abrir a ficha deste cliente em outra guia.');
   return p.join(' · ');
 }
 /* A linha da lista: ID · Nome · CNPJ/CPF · Cidade · Produtos · Início · Situação.
-   É um role="button" (e não um <button>) porque dentro dele há pilulas e selos com
-   title próprio; o teclado é atendido à mão no keydown (Enter e Espaço). */
+   É um <a> DE VERDADE, e não mais o role="button" que abria o modal daqui.
+   A ficha virou outra página, e a diferença entre um link e um clique capturado é
+   o dia inteiro de quem usa esta tela: com <a>, o meio do mouse e o Cmd+clique
+   abrem três clientes em três guias e a lista fica onde estava — que é como se
+   confere uma carteira. Com clique capturado, era abrir e voltar, um por um.
+   De brinde, o teclado deixou de precisar de código: Enter num <a> é nativo, e
+   com ele saíram o tabindex="0", o role="button" e o ramo do keydown que existia
+   só para isso. O `target="_blank"` é redundante com o <base> do topo da página e
+   está escrito assim mesmo: quem lê esta linha não deveria ter de subir 2000
+   linhas para saber em que guia ela abre. */
 function cabecaHTML(cli){
   const s=situacaoDe(cli),info=SITUACOES[s];
   const doc=valorDe(cli,COLS_LINHA.cnpj);
@@ -1998,7 +1911,7 @@ function cabecaHTML(cli){
      equipe a ignorar a coluna inteira. */
   const dataHTML=ini?esc(fmtData(ini))
     :(exigeInicio(cli)?'<span class="c-falta">sem data</span>':'<span class="c-falta">—</span>');
-  return `<div class="cli-head" role="button" tabindex="0" aria-haspopup="dialog" title="${esc(tituloCabeca(cli))}">
+  return `<a class="cli-head" href="${esc(fichaURL(cli.id))}" target="_blank" rel="noopener noreferrer" title="${esc(tituloCabeca(cli))}">
       <span class="c-id">${esc(cli.id)}</span>
       <span class="c-nome">${esc(cli.nome||'(sem nome)')}</span>
       <span class="c-doc">${b4uIdentHTML(doc,COLS_LINHA.cnpj||'CNPJ ou CPF','sem CNPJ')}</span>
@@ -2006,7 +1919,7 @@ function cabecaHTML(cli){
       <span class="c-prod">${produtosHTML(cli)}</span>
       <span class="c-data">${dataHTML}</span>
       <span class="c-fim"><span class="pill sit-${s}" title="${esc(info.dica)}">${esc(info.rot)}</span>${seloHTML(cli)}</span>
-    </div>`;
+    </a>`;
 }
 /** Seta da coluna ativa — só ela ganha marca, senão a lista pareceria ordenada
  *  por sete critérios ao mesmo tempo.
@@ -2052,196 +1965,30 @@ function cabecalhoLista(){
     `<span role="columnheader" class="dois"${fim}>`+bt('ativo','Situação')+bt('vazios','Vazios')+`</span>`+
     `</div>`;
 }
-/* ── Campo de várias escolhas numa célula só (t:'multi') ──────────────────
-   A planilha tem UMA célula por coluna, e algumas perguntas têm várias respostas
-   ao mesmo tempo ("de onde vem a receita"). As marcadas são gravadas juntas,
-   separadas por ' · ' — o mesmo separador que a equipe já usava à mão nas colunas
-   de lista, e que não aparece dentro de nenhuma das opções.
-   Na LEITURA o corte é tolerante com o espaçamento, porque na planilha existem
-   "a·b" e "a  ·  b" digitados por pessoas diferentes. Na ESCRITA é sempre a forma
-   canônica, que é o que impede a mesma resposta de existir em três grafias.
-   O pedaço que não casa com nenhuma opção conhecida NÃO é jogado fora: vira o
-   campo de texto livre embaixo do grupo e continua sendo gravado junto. Dado que
-   alguém digitou na planilha não pode sumir da tela porque o catálogo mudou de
-   ideia sobre quais eram as opções. */
-const MULTI_SEP=' \u00b7 ';
-function multiPartes(v){return String(v==null?'':v).split(/\s*\u00b7\s*/).map(x=>x.trim()).filter(Boolean);}
-function multiHTML(col,v,opts){
-  const lista=(opts||[]).filter(Boolean);
-  const partes=multiPartes(v);
-  const conhecidas=new Set(lista);
-  const marcadas=new Set(partes.filter(p=>conhecidas.has(p)));
-  const sobra=partes.filter(p=>!conhecidas.has(p)).join(MULTI_SEP);
-  const caixas=lista.map(o=>`<label class="mopt${marcadas.has(o)?' on':''}">`+
-    `<input type="checkbox" data-emulti="${esc(col)}" value="${esc(o)}"${marcadas.has(o)?' checked':''}> ${esc(o)}</label>`).join('');
-  return `<div class="multi" data-multi="${esc(col)}" data-ecol="${esc(col)}"><div class="mopts">${caixas}</div>`+
-    `<input class="mlivre" type="text" data-emlivre="${esc(col)}" value="${esc(sobra)}" placeholder="outro (texto livre)"`+
-    ` title="O que já estava gravado na planilha e não é nenhuma das opções acima. Continua sendo gravado junto."></div>`;
-}
-/* O valor que vai para a célula: as caixas marcadas na ordem das opções e, por
-   último, o texto livre. Ler daqui em vez de guardar um estado à parte é o que
-   garante que a célula seja sempre o que está na tela. */
-function multiValor(box){
-  const v=[];
-  box.querySelectorAll('input[type="checkbox"][data-emulti]').forEach(c=>{if(c.checked)v.push(c.value);});
-  const livre=box.querySelector('[data-emlivre]');
-  const extra=livre?String(livre.value||'').trim():'';
-  if(extra)v.push(extra);
-  return v.join(MULTI_SEP);
-}
-/* Um campo da ficha. TRÊS coisas chegam aqui como somente-leitura e não podem ser
-   confundidas: a coluna TRAVADA (a planilha diz que é do sistema), a coluna `ro`
-   do catálogo (o diagnóstico escreve, a ficha mostra) e o resto, que é editável.
-   As duas primeiras usam a MESMA caixa tracejada de propósito: para quem está
-   olhando, a pergunta é "posso digitar aqui?", e a resposta é a mesma nas duas.
-   O que muda é o motivo, que vai no title. */
-function campoEditHTML(cli,f){
-  const col=f.col,v=valorDe(cli,col);
-  const bloqueado=ehTravada(col)||!!f.ro;
-  const motivo=ehTravada(col)?motivoTrava(col):MOTIVO_RO;
-  const rot=`<span class="lbl">${esc(col)}${bloqueado?' <span class="cad">🔒</span>':''}</span>`;
-  let ctrl;
-  if(bloqueado){
-    const link=/^https?:/i.test(v)?`<a href="${esc(v)}" target="_blank" rel="noopener" title="abrir">↗</a>`:'';
-    ctrl=`<div class="ro" title="${esc(motivo)}"><span class="cad-txt">${esc(v||'—')}</span>${link}</div>`;
-  }else if(f.t==='multi'){
-    ctrl=multiHTML(col,v,f.opts);
-  }else if(f.t==='select'){
-    const opts=(f.opts||['','Sim','Não']).slice();
-    /* Valor que o cliente já tem e que não está na lista (sujeira da planilha,
-       tipo "Nao" no ISS) entra na lista assim mesmo, logo abaixo do vazio e com
-       o aviso "(fora da lista)". A página NUNCA apaga nem troca sozinha: o valor
-       gravado continua igual até alguém escolher outro à mão. */
-    const fora=!!v&&opts.indexOf(v)<0;
-    if(fora)opts.splice(1,0,v);
-    ctrl=`<select data-ecol="${esc(col)}">`+opts.map(o=>{
-      const rot=o?esc(o)+(fora&&o===v?' (fora da lista)':''):'—';
-      return `<option value="${esc(o)}"${o===v?' selected':''}>${rot}</option>`;
-    }).join('')+`</select>`;
-  }else if(f.t==='textarea'){
-    ctrl=`<textarea data-ecol="${esc(col)}" rows="2">${esc(v)}</textarea>`;
-  }else if(f.t==='date'&&(!v||/^\d{4}-\d{2}-\d{2}$/.test(v))){
-    ctrl=`<input type="date" data-ecol="${esc(col)}" value="${esc(v)}">`;
-  }else{
-    /* coluna de data com texto livre (ex.: "a definir") continua editável como texto */
-    /* Identificador NUNCA vira type="number". O campo numérico do navegador
-       recusa o zero à esquerda, engole o que não entende e devolve '' — quem
-       digitasse 00623904000173 veria o campo esvaziar sozinho. type="text" com
-       inputmode="numeric" dá o teclado de números no celular e não toca no valor. */
-    const num=b4uEhIdentificador(col)?' inputmode="numeric"':'';
-    /* `money` é uma linha alinhada à direita e mais nada. Sem máscara automática:
-       a planilha guarda TEXTO, e nela já convivem "R$ 12.000", "12000" e "12 mil"
-       escritos por gente diferente. Formatar na digitação faria a tela mostrar um
-       número que não é o que está gravado — divergência é pior que inconsistência,
-       porque some da vista. */
-    const din=f.t==='money'?' class="money"':'';
-    ctrl=`<input type="text"${din} data-ecol="${esc(col)}" value="${esc(v)}"${num}${f.t==='date'?' placeholder="aaaa-mm-dd"':''}>`;
-  }
-  /* data-esperado marca o campo que conta para a régua de completude: é o que
-     ganha (e perde) o destaque avermelhado conforme a pessoa vai preenchendo. */
-  /* Documento que chegou com dígito faltando avisa aqui dentro, embaixo do
-     campo. Na lista o ⚠ diz que tem coisa errada; é na ficha, com o campo à
-     vista, que cabe dizer o quê e onde consertar. */
-  const est=b4uEstado(v,col);
-  const aviso=est.truncado?`<span class="fld-aviso">⚠ ${b4uEsc(b4uAviso(est))}</span>`:'';
-  const esperado=ehEsperado(col);
-  /* A dica do catálogo explica POR QUE a pergunta existe, e é a diferença entre a
-     resposta certa na primeira vez e a correção seis meses depois. */
-  const dica=f.dica?`<span class="fld-dica">${esc(f.dica)}</span>`:'';
-  return `<div class="fld ${f.full?'full':''}${esperado&&!v?' emfalta':''}"${esperado?' data-esperado="1"':''}>${rot}${ctrl}${aviso}${dica}</div>`;
-}
-/* ── A FICHA COMPARTIMENTADA ──────────────────────────────────────────────
-   O cliente vê TODAS as seções, sempre — a decisão é deliberada e é do dono:
-   "mostrar tudo mas compartimentalizar, o colaborador decide se preenche ou
-   não". Seção escondida por regra de produto é pergunta que ninguém faz nunca
-   mais, e o produto do cliente muda depois do cadastro.
-   O que muda é o ESFORÇO de chegar em cada uma. Cada seção é um <details>
-   recolhido, com a frase que diz para que ela serve e um contador de quantos
-   campos já têm resposta — e é o contador que impede a seção fechada de virar
-   esconderijo: dá para saber que falta coisa lá dentro sem abrir.
-   Nascem abertas a Identificação (é quem o cliente é) e as seções que o produto
-   dele torna prováveis. Daí em diante quem manda é a MEMÓRIA: abrir e fechar é
-   escolha de quem usa, e ela sobrevive ao F5 — mesmo espírito do ligarDetalhes
-   que a régua de filtros já usa. */
-function chaveSec(sc){return 'b4u_reg_sec_'+norm(sc).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
-/* Quantos campos daquela seção já têm resposta. Fora da conta: as travadas e as
-   `ro` do diagnóstico. O contador mede o que dá para PREENCHER — senão a seção do
-   diagnóstico ficaria eternamente em "0 de 11" e pareceria abandonada. */
-function contaSec(cli,sc){
-  const campos=CAMPOS_EDIT.filter(f=>f.s===sc&&!ehTravada(f.col)&&!f.ro);
-  return {tot:campos.length,cheios:campos.filter(f=>valorDe(cli,f.col)).length};
-}
-/* Seção em que NADA se digita — o Diagnóstico é a única hoje — não tem contador:
-   "0 de 0" pareceria seção abandonada, quando na verdade não há o que preencher
-   ali. Diz o que ela é. */
-function rotuloConta(c){return c.tot?(c.cheios+' de '+c.tot):'só leitura';}
-/* A seção é "do produto deste cliente"? Seção sem entrada em `relevancia` vale
-   para todo mundo e não ganha selo — selo que aparece em toda seção não informa
-   nada. A comparação é sem acento e sem caixa porque a coluna Produtos tem
-   "Equiparação" e "equiparacao" digitados por pessoas diferentes. */
-function secDoProduto(cli,sc){
-  const prods=produtosSec(sc);
-  if(!prods||!prods.length)return false;
-  const meus=produtosNorm(cli);
-  return prods.some(p=>meus.indexOf(normTxt(p))>=0);
-}
-function secHTML(cli,sc){
-  const c=contaSec(cli,sc);
-  const doProd=secDoProduto(cli,sc);
-  const sobre=sobreSec(sc);
-  const selo=doProd?'<span class="selo-prod" title="Este cliente tem um produto para o qual esta seção costuma valer. Não esconde nem trava nada: a seção só nasce aberta.">do produto deste cliente</span>':'';
-  /* A frase e o contador moram no <summary>, e não no corpo do <details>: eles
-     existem justamente para a seção FECHADA — quem está de fora precisa decidir
-     se abre sem abrir. No corpo eles só apareceriam depois de aberta, que é
-     quando já não servem para nada. */
-  return `<details class="sec secf" data-sec="${esc(sc)}" data-secmem="${esc(chaveSec(sc))}"${(sc==='Identificação'||doProd)?' open':''}>
-    <summary><span class="arw">▶</span>
-      <span class="sec-cab">
-        <h2><span class="dot"></span>${esc(sc)}${selo}</h2>
-        ${sobre?`<span class="sec-sobre">${esc(sobre)}</span>`:''}
-      </span>
-      <span class="cnt-sec" data-cntsec="${esc(sc)}">${esc(rotuloConta(c))}</span>
-    </summary>
-    <div class="grid">${CAMPOS_EDIT.filter(f=>f.s===sc).map(f=>campoEditHTML(cli,f)).join('')}</div>
-  </details>`;
-}
-/* A memória de aberto/fechado, seção por seção. Roda DEPOIS do `open` que o
-   secHTML escreveu: o padrão (Identificação e as do produto) vale enquanto
-   ninguém tiver dito o contrário naquele navegador. Por isso o teste é `!==null`
-   e não um `==='1'` — este último transformaria "nunca mexi nisso" em "quero
-   fechada" e apagaria o padrão logo na primeira ficha aberta. */
-function ligarSecoesFicha(raiz){
-  (raiz||document).querySelectorAll('details[data-secmem]').forEach(d=>{
-    const k=d.dataset.secmem;
-    try{const g=localStorage.getItem(k);if(g!==null)d.open=(g==='1');}catch(e){}
-    d.addEventListener('toggle',()=>{try{localStorage.setItem(k,d.open?'1':'0');}catch(e){}});
-  });
-}
-/* O contador acompanha a digitação. Se ele congelasse no valor de quando a ficha
-   abriu, fechar a seção que a pessoa acabou de preencher a mostraria vazia — e
-   aí ele passaria a mentir justamente sobre o trabalho recém-feito. */
-function atualizarContadorSec(el){
-  const det=el.closest&&el.closest('details[data-sec]');
-  if(!det||!det.dataset.sec)return;
-  const corpo=det.closest('.corpo');if(!corpo)return;
-  const cli=clientePorId(corpo.dataset.id);if(!cli)return;
-  const alvo=det.querySelector('[data-cntsec]');if(!alvo)return;
-  alvo.textContent=rotuloConta(contaSec(cli,det.dataset.sec));
-}
-function corpoHTML(cli){
-  const secs=SEC_ORDER.filter(s=>CAMPOS_EDIT.some(f=>f.s===s));
-  const blocos=secs.map(sc=>secHTML(cli,sc)).join('');
-  const drive=valorDe(cli,COL.drive);
-  return `<div class="corpo" data-id="${esc(cli.id)}">
-    <div class="ign" id="ign_${esc(cli.id)}"></div>
-    ${blocos||'<div class="vazio">Esse cliente não tem colunas para mostrar.</div>'}
-    <div class="rodape">
-      <span>As alterações salvam sozinhas. Campos com 🔒 não se editam aqui: ou são mantidos pelo sistema, ou vêm da página de diagnóstico.</span>
-      ${/^https?:/i.test(drive)?`<a class="lk" href="${esc(drive)}" target="_blank" rel="noopener">📁 Pasta no Drive ↗</a>`:''}
-      ${META.planilha_url?`<a class="lk" href="${esc(META.planilha_url)}" target="_blank" rel="noopener">Planilha ↗</a>`:''}
-    </div>
-  </div>`;
-}
+/* ┌── A FICHA SAIU DAQUI — 09/2026 ─────────────────────────────────────────┐
+   │ Este era o maior pedaço desta página, e sumiu inteiro:                  │
+   │   campoEditHTML()      um campo da ficha, com trava, dica e aviso        │
+   │   multiHTML/multiValor o campo de várias respostas numa célula só        │
+   │   secHTML, contaSec,   a seção recolhível com contador e selo de produto │
+   │   chaveSec, ligarSecoesFicha, atualizarContadorSec, secDoProduto         │
+   │   corpoHTML()          o que era pintado dentro do #modalCad             │
+   │                                                                        │
+   │ POR QUÊ: a ficha passou de 41 para 188 colunas em 15 seções. Nessa      │
+   │ altura ela deixou de caber numa caixa por cima da lista — a caixa       │
+   │ rolava por dentro enquanto a lista rolava por fora, o Esc fechava o     │
+   │ que estava sendo digitado e não havia endereço para mandar a um colega  │
+   │ olhar o mesmo cliente.                                                  │
+   │                                                                        │
+   │ ONDE ESTÁ AGORA: registro-cliente.html, uma página por cliente, com a   │
+   │ gravação por campo junto. Quem chegar aqui procurando o cadastro: a     │
+   │ linha da lista é o link — ver fichaURL() lá em cima.                    │
+   │                                                                        │
+   │ O que NÃO saiu, e não pode sair: o montarCampos, o catálogo             │
+   │ (b4u-registro-campos.js), HINTS e SEC_ORDER. O formulário de "+ Novo    │
+   │ cliente" desta página chama montarCampos(...,'novo') e depende dos      │
+   │ quatro.                                                                 │
+   └────────────────────────────────────────────────────────────────────────┘ */
+
 /* Quantos filtros estão ESTREITANDO a lista agora (C.5). Só conta o que TIRA
    cliente da vista: a busca fica à mostra na régua, e a ordenação não esconde
    ninguém — foi por isso que ela saiu daqui junto com o <select> "Ordenar por".
@@ -2322,14 +2069,14 @@ function desenharLista(){
   }
   /* Teto de 20: a tela abre com o começo da lista, não com as 110 linhas. */
   const n=Math.min(TETO,arr.length);
-  /* A linha não expande mais: o cadastro abre no modal. O que ABERTOS marca aqui
-     é só QUAL linha está com o cadastro aberto, para ela ficar acesa na lista. */
+  /* A linha é um link para a ficha (outra página). ABERTOS não marca mais "ficha
+     aberta" — ninguém abre nada por cima daqui: ele acende o cliente recém-criado,
+     para quem acabou de cadastrar achá-lo na lista sem procurar. */
   el.innerHTML=cabecalhoLista()+
     arr.slice(0,n).map(c=>`<div class="cli ${classeSituacao(c)}${ABERTOS.has(c.id)?' aberto':''}" data-id="${esc(c.id)}">${cabecaHTML(c)}</div>`).join('')+
     rodapeLista(n,arr.length);
   if(dica)dica.textContent=arr.length>n?('Mostrando '+n+' de '+arr.length+'.'):'';
   desenharChips();desenharResumoLista();
-  FALHAS.forEach((v,k)=>marcarFalha(k,true));   // redesenhar não pode apagar o que não gravou
   sincronizarURL();
 }
 /* A contagem em texto é o que permite recolher chips e cartões sem esconder
@@ -2406,144 +2153,26 @@ function traduzirFiltroLegado(){
   FILTRO='todos';
 }
 
-function clientePorId(id){return CLIENTES.find(c=>String(c.id)===String(id));}
-
-/* ===================================================================
-   O cadastro no modal
-   -------------------------------------------------------------------
-   A lista mostra as colunas que a equipe lê de relance; o resto do
-   cadastro abre aqui, por cima, sem trocar de página e sem empurrar as
-   outras linhas para baixo. O conteúdo é o MESMO corpoHTML() de sempre —
-   só mudou onde ele é pintado, então campos, travas, destaque de campo
-   vazio e faixa de "não gravei" continuam idênticos.
-   =================================================================== */
-let CAD_ID='';           // de quem é o cadastro aberto — ou o último que esteve
-/* A MOLDURA do cadastro mora no b4u-modal.js: véu e clique fora, Esc, trava da
-   rolagem do fundo, foco preso dentro da caixa, o aviso de "tem coisa por
-   gravar" e o fechar em dois tempos. O que fica nesta página é o que é DESTE
-   cadastro — o que se pinta dentro da caixa e o que se grava. Sem o arquivo, CAD
-   é nulo: as fichas não abrem e a lista continua inteira. */
-const CAD = window.B4UModal && window.B4UModal.adotar('modalCad', {
-  ids:{titulo:'cadTitulo',selo:'cadId',pill:'cadSit',corpo:'cadBody',
-       status:'saveStatusCad',aviso:'cadAviso',fechar:'cadFechar',x:'fechaCad'},
-  base:{pill:'pill',status:'save-status claro'},
-  sujo:()=>temPendencia(),
-  /* Ao sair, a gravação que ainda esperava o debounce é DESCARREGADA na hora:
-     deixá-lo correndo com o formulário fora da tela é exatamente o jeito de
-     perder o que foi digitado. */
-  aoFechar:()=>{
-    if(SUJOS.size)descarregarPendentes();
-    ABERTOS.delete(String(CAD_ID));marcarLinhaAberta();
-    document.getElementById('cadBody').innerHTML='';
-  },
-  /* O foco volta para a linha de onde saiu: quem navega por teclado não é jogado
-     de volta para o topo da página. */
-  focoVolta:()=>document.querySelector(`.cli[data-id="${CSS.escape(String(CAD_ID))}"] .cli-head`)
-});
-function cadAberto(){return !!CAD&&CAD.aberto();}
-/** Nome, ID e situação no topo do modal — acompanham a edição sem redesenhar nada. */
-function atualizarTopoCad(id){
-  if(!cadAberto()||String(CAD_ID)!==String(id))return;
-  const cli=clientePorId(id);if(!cli)return;
-  const s=situacaoDe(cli),info=SITUACOES[s];
-  CAD.titulo(cli.nome||'(sem nome)').selo(cli.id).pill({texto:info.rot,classe:'sit-'+s,dica:info.dica});
-}
-/** Acende na lista a linha do cadastro que está aberto. */
-function marcarLinhaAberta(){
-  document.querySelectorAll('.cli').forEach(n=>n.classList.toggle('aberto',ABERTOS.has(n.dataset.id)));
-}
-function abrirCadastro(id){
-  const cli=clientePorId(id);if(!cli)return;
-  if(!CAD)return;
-  CAD_ID=String(cli.id);
-  document.getElementById('cadBody').innerHTML=corpoHTML(cli);
-  /* A memória das seções é ligada AQUI, e não dentro do corpoHTML: aquele monta
-     texto, e este é o único ponto em que os <details> existem de fato no
-     documento — que é onde dá para escutar o toggle. */
-  ligarSecoesFicha(document.getElementById('cadBody'));
-  CAD.abrir();
-  atualizarTopoCad(CAD_ID);
-  /* ABERTOS deixou de expandir a linha, mas continua dizendo QUAL cadastro está
-     aberto: é ele que acende a linha e é nele que carregar({expandir}) marca o
-     cliente recém-criado antes de a lista existir. */
-  ABERTOS.clear();ABERTOS.add(CAD_ID);
-  marcarLinhaAberta();
-  /* Reabrir não pode apagar o que não gravou: a faixa e o "tentar de novo"
-     nascem de novo junto com os campos. */
-  if(FALHAS.has(CAD_ID))marcarFalha(CAD_ID,true);
-}
-/* Grava agora o que estava esperando o debounce. É o salvar() de sempre, só sem
-   os 700 ms de espera. */
-function descarregarPendentes(){
-  Array.from(SUJOS.keys()).forEach(id=>{const s=SUJOS.get(id);if(s)clearTimeout(s.timer);salvar(id);});
-}
-function fecharCadastro(forcado){if(CAD)CAD.fechar(forcado);}
-/* O botão "Salvar alterações" NÃO substitui o autosave: cada edição continua
-   chamando agendarSalvar(), e é ele que impede perder texto digitado — foi para
-   isso que ele existe nesta tela. O botão ANTECIPA a gravação pendente (mata o
-   debounce e salva na hora), reenvia o que falhou e, quando tudo entrou, FECHA o
-   cadastro: salvar é o gesto de encerrar, e ficar com a ficha aberta depois de
-   confirmar faz a pessoa clicar em Fechar sem saber se gravou.
-
-   Só fecha se gravou MESMO. Falha mantém o cadastro na tela: fechar por cima de
-   uma gravação que não foi levaria embora o aviso e a chance de tentar de novo,
-   e a pessoa sairia achando que salvou. */
-/* Deixou de ser `async`: não há mais `await` aqui dentro. O corpo inteiro
-   roda de uma vez e a ficha fecha no mesmo quadro do clique. */
-function salvarAgoraCad(){
-  const id=CAD_ID, btn=document.getElementById('cadSalvar');
-  if(temPendencia()){
-    if(btn){btn.disabled=true;btn.dataset.rot=btn.textContent;btn.textContent='Salvando…';}
-    try{
-      /* Linha em DÚVIDA não volta para a fila. Tirar o botão "tentar de novo" da
-         linha e deixar o botão primário da ficha reenviando a mesma coisa seria
-         fechar a porta e deixar a janela aberta: a gravação pode ter entrado, e
-         mandar de novo é o que este caminho todo existe para não fazer. Ela fica
-         pendente — a ficha não fecha, e o recado diz o que fazer. */
-      /* o que falhou antes volta para a fila de sujos antes do disparo */
-      if(id&&FALHAS.has(String(id))&&!INCERTOS.has(String(id))){
-        const f=FALHAS.get(String(id));
-        const su=SUJOS.get(id)||{timer:null,colunas:new Set()};
-        f.colunas.forEach(c=>su.colunas.add(c));
-        SUJOS.set(id,su);FALHAS.delete(String(id));
-      }
-      const ids=Array.from(SUJOS.keys());
-      ids.forEach(k=>{const su=SUJOS.get(k);if(su)clearTimeout(su.timer);});
-      /* Sem `await`: cada gravação cuida do próprio desfecho, inclusive do
-         recado. O `catch` só evita "unhandled rejection" no console — o
-         tratamento de verdade está dentro de cada uma. */
-      Promise.all(ids.map(k=>salvar(k))).catch(()=>{});
-    }catch(e){ /* salvar() já registra a falha em FALHAS e avisa na tela */ }
-    if(btn){btn.disabled=false;btn.textContent=btn.dataset.rot||'Salvar alterações';}
-  }
-    /* Sobrou dúvida: a ficha NÃO fecha (o `temPendencia()` abaixo cuida disso) e
-       agora ela diz por quê. Sem este recado, o botão pareceria não ter feito
-       nada. */
-    if(INCERTOS.size) setSave('err','Uma gravação ficou sem confirmação. Recarregue a página para ver se ela entrou — não mande de novo.');
-  /* A FICHA NÃO ESPERA MAIS. Antes ela só fechava quando tudo tinha
-     voltado do servidor, e não fechava se algo falhasse — segundos por
-     ficha, numa tela em que se abre dezenas. O que ocupa esse lugar
-     agora é o `avisarFalha()`: antes a ficha ficava aberta para contar a
-     má notícia; agora a má notícia vai atrás de quem precisa dela.
-     Fechar a ABA com gravação em voo continua pedindo confirmação — é o
-     `sujo:()=>temPendencia()`, que não mudou. */
-  fecharCadastro(true);
-}
-/* ---------- ?abrir=ID: chegar com a ficha já aberta ----------
+/* ---------- ?abrir=ID: chegar com o cliente à vista ----------
    O dossiê da pesquisa rápida manda para cá em guia nova quando o colaborador
    clica em "Alterar". Sem isto ele cairia na lista e teria de procurar de novo o
    cliente que já estava na tela — que é exatamente o passo que o botão existe
    para poupar.
 
-   Só na PRIMEIRA carga, e o parâmetro sai do endereço assim que é usado. Se
-   ficasse, um F5 reabriria a ficha por cima do que a pessoa estivesse fazendo, e
-   o endereço que ela copiasse da barra levaria o colega para dentro de uma ficha
-   que ele não pediu.
+   O QUE MUDOU EM 09/2026: antes isto terminava abrindo a ficha no modal. A ficha
+   virou página, e abrir guia nova SEM um clique é justamente o que o bloqueador
+   de pop-up mata — a pessoa ficaria olhando uma lista sem entender o que falhou.
+   Então o parâmetro faz o que dá para fazer com honestidade: limpa o filtro que
+   esconderia o cliente, rola até a linha e a acende. E a linha É o link para a
+   ficha, a um clique de distância.
+   O caminho definitivo é o dossiê passar a apontar direto para
+   registro-cliente.html — isso é mudança na OUTRA página, e enquanto ela não
+   acontece o `?abrir=` continua valendo e não leva ninguém a lugar nenhum errado.
 
-   Quem faz o trabalho é o irPara(), o MESMO dos cartões de resumo: ele limpa o
-   filtro se o cliente estiver escondido, sobe o teto da lista se ele estiver
-   além dele, rola até a linha e abre. Reaproveitar em vez de reimplementar é o
-   que garante que o link funcione mesmo quando a tela abriu filtrada. */
+   Só na PRIMEIRA carga, e o parâmetro sai do endereço assim que é usado. Se
+   ficasse, um F5 refaria o gesto por cima do que a pessoa estivesse fazendo, e o
+   endereço que ela copiasse da barra levaria o colega para um recorte que ele não
+   pediu. */
 let JA_ABRIU_PELO_ENDERECO=false;
 function abrirPeloEndereco(){
   if(JA_ABRIU_PELO_ENDERECO) return;
@@ -2567,302 +2196,27 @@ function irPara(id){
   const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);if(!no)return;
   no.scrollIntoView({block:'center',behavior:'smooth'});
   no.classList.add('flash');setTimeout(()=>no.classList.remove('flash'),1800);
-  /* Enquanto o "Novo cliente" está na tela (inclusive na tela de sucesso, que
-     recarrega a lista por baixo), o cadastro NÃO sobe por cima: dois modais
-     empilhados roubariam a tela de quem acabou de criar o cliente. Ali quem abre
-     é o botão "Ver o cadastro". */
-  const novo=document.getElementById('modal');
-  if(!novo||novo.hidden)abrirCadastro(id);
+  /* E PARA AQUI. Até 09/2026 esta função terminava abrindo o cadastro no modal —
+     com um desvio para não subir por cima do "Novo cliente". Não há mais modal de
+     cadastro nem pilha de caixas: quem chega por aqui fica na linha acesa, e a
+     linha é o link para a ficha. */
 }
 
-/* ---------------- salvar (auto-save com debounce) ---------------- */
-const SUJOS=new Map();   // id -> {timer, colunas:Set}
-/* ---------- falhas de gravação (C.3) ----------
-   FALHAS = o servidor recusou e o dado só existe na tela. O cadastro fica
-   marcado com um "tentar de novo" no topo dele, e fechar a aba pede confirmação. */
-const FALHAS=new Map();   // id -> {colunas:Set}
-function temPendencia(){return SUJOS.size>0||FALHAS.size>0;}
-/* ---------- o terceiro estado ----------
-   Uma gravação que não deu para confirmar NÃO é uma gravação que falhou. As duas
-   pedem que o texto digitado não se perca (e por isso as duas entram em FALHAS,
-   que é o que segura o aviso de "sair sem gravar"), mas só uma delas autoriza
-   repetir. Este conjunto é a diferença: quem está aqui recebe selo de dúvida, sem
-   botão, e a instrução de recarregar. */
-const INCERTOS=new Set();
-
-/* O selo que a linha ganha quando algo não gravou. Duas formas, porque são dois
-   fatos diferentes — e a diferença aparece no que ele OFERECE: o de falha tem
-   botão (repetir é seguro, o servidor disse que não gravou); o de dúvida não tem
-   botão nenhum, porque a única ação segura ali é recarregar e olhar. */
-function seloFalha(id){
-  return INCERTOS.has(String(id))
-    ? '<span class="ign-duvida">sem confirmação — recarregue a página para ver se gravou</span>'
-    : '<button type="button" class="btn-retry" data-retry="'+esc(String(id))+'">não salvou — tentar de novo</button>';
-}
-
-/* ---------- o recado, para quem NÃO está com a ficha aberta ----------
-   O selo na linha continua sendo a marca de longe: é ele que mostra, varrendo a
-   lista, quais linhas têm coisa por gravar. Mas ele só é visto por quem está
-   olhando a lista — e desde que a ficha passou a fechar sem esperar, quase
-   ninguém está. O recado é a mesma notícia indo atrás de quem precisa dela.
-
-   NADA DE LÓGICA NOVA AQUI. As duas ofertas saem do que esta página JÁ decidiu:
-   `INCERTOS` é a dúvida (a gravação pode ter entrado, e repetir gravaria duas
-   vezes), o resto é recusa. Só muda quem é avisado.
-
-   Ele lê o estado com cuidado de propósito: as seis telas guardam a falha em
-   formatos diferentes (Map de campos, Map de colunas, Set de linhas, objeto de
-   dados), e um adaptador que aceita os quatro é mais seguro do que seis funções
-   parecidas que ninguém vai reler juntas. */
-function avisarFalha(id,falhou,motivo){
-  /* TUDO PROTEGIDO, e não por precaução vaga: uma exceção aqui sobe pelo
-     `marcarFalha()` e cai dentro do `catch` que estava tratando a falha de
-     gravação — o recado quebrado engoliria o registro da falha, e o que não
-     gravou passaria a não estar marcado em lugar nenhum. É a mesma regra do
-     `_dailyLog_` no backend: quem acompanha a gravação não pode derrubá-la.
-     (Aconteceu de verdade no Licenças, e foi o teste que pegou.) */
-  try{ avisarFalha_(id,falhou,motivo); }catch(e){}
-}
-function avisarFalha_(id,falhou,motivo){
-  if(!window.B4UGravar||typeof B4UGravar.falhou!=='function') return;
-  const k=String(id), ch='reg:'+k;
-  if(!falhou) return B4UGravar.resolvida(ch);
-  const duvida=(typeof INCERTOS!=='undefined')&&!!(INCERTOS&&INCERTOS.has&&INCERTOS.has(k));
-  /* Como a linha se chama para quem lê. O id sozinho não diz nada a quem está
-     olhando a tela de longe; o nome do cliente diz tudo. */
-  let nome='';
-  try{
-    /* Cada tela chama sua lista de um jeito — LINHAS nas de ficha, CLIENTES no
-       Registro, CONTATOS nos Contatos, PROCS no Societário. Procurar em todas as
-       que existirem custa nada e evita seis versões desta função; a que não
-       existe na página nem chega a ser olhada (o `typeof` não estoura em nome não
-       declarado, que é o motivo de ele estar aqui em vez de um `try` só). */
-    const fontes=[
-      typeof LINHAS  !=='undefined'&&LINHAS,
-      typeof CLIENTES!=='undefined'&&CLIENTES,
-      typeof CONTATOS!=='undefined'&&CONTATOS,
-      typeof PROCS   !=='undefined'&&PROCS
-    ];
-    for(const L of fontes){
-      if(!L||!L.find) continue;
-      const l=L.find(x=>x&&(String(x.id)===k||String(x.row)===k));
-      if(!l) continue;
-      nome=l.nome_cliente||l.razao||l.nome||l.cliente||l.id||'';
-      if(nome) break;
-    }
-  }catch(e){}
-  /* O QUE não entrou. Os quatro formatos, na ordem em que aparecem nas telas. */
-  let itens=[];
-  try{
-    const f=(FALHAS&&FALHAS.get)?FALHAS.get(k):null;
-    const s=f&&(f.campos||f.colunas||f);
-    if(s instanceof Set) itens=Array.from(s);
-    else if(s&&typeof s==='object') itens=Object.keys(s);
-  }catch(e){}
-  if(!itens.length&&'') itens=[''];
-  B4UGravar.falhou({
-    chave:ch, duvida:duvida,
-    titulo:nome||('Linha '+k),
-    itens:itens, motivo:motivo||'',
-    /* Dúvida não ganha botão de repetir — é a regra que o selo desta tela já
-       segue. E página sem `tentarDeNovo` não ganha botão nenhum: oferecer sem
-       ter o que chamar é pior do que não oferecer. */
-    aoRepetir:(duvida||typeof tentarDeNovo!=='function')?null:()=>tentarDeNovo(k)
-  });
-}
-function marcarFalha(id,falhou,motivo){
-  avisarFalha(id,falhou,motivo);
-  const chave=CSS.escape(String(id));
-  /* A LINHA continua marcada na lista mesmo com o cadastro fechado — é o que
-     mostra, de longe, que aquele cliente tem coisa que não gravou. */
-  const no=document.querySelector('.cli[data-id="'+chave+'"]');
-  if(no)no.classList.toggle('falhou',!!falhou);
-  /* A faixa e os campos vivem no .corpo, que hoje é pintado dentro do modal:
-     procurar pelo .corpo funciona esteja ele onde estiver (e não existe quando o
-     cadastro está fechado, que é o caso em que não há o que marcar). */
-  const corpo=document.querySelector('.corpo[data-id="'+chave+'"]');
-  if(!corpo)return;
-  const cx=corpo.querySelector('.ign');
-  if(cx){
-    /* Trocar, não só inserir. O guarda antigo era `se falhou e ainda não há selo,
-       insere` — o que bastava quando havia UM selo só. Com dois, ele congelava o
-       primeiro: uma linha que falhou (botão vermelho) e depois ficou em dúvida
-       continuaria oferecendo "tentar de novo" embaixo de um texto que pede para NÃO
-       repetir; e o contrário — dúvida antes, recusa do servidor depois — esconderia o
-       botão justamente quando repetir passou a ser o certo. O selo é redesenhado a
-       cada chamada, e some quando não há mais o que marcar. */
-    const antigo=cx.querySelector('.btn-retry,.ign-duvida');
-    if(falhou&&antigo)antigo.outerHTML=seloFalha(id);
-    else if(falhou)cx.insertAdjacentHTML('beforeend',seloFalha(id));
-    else if(antigo)antigo.remove();
-  }
-  /* o campo que não gravou também fica marcado, para não sobrar dúvida de onde foi */
-  const f=FALHAS.get(String(id));
-  corpo.querySelectorAll('[data-ecol]').forEach(el=>{
-    el.classList.toggle('falhou',!!(falhou&&f&&f.colunas.has(el.dataset.ecol)));
-  });
-}
-/* Sair com alteração pendente (ou com uma gravação que falhou) pede confirmação.
-   Quem faz o pedido é a casca do b4u-modal.js, pelo `sujo:()=>temPendencia()` da
-   adoção lá em cima — a mesma pergunta valia em sete telas e estava escrita sete
-   vezes. */
-function agendarSalvar(id,coluna,ms){
-  let s=SUJOS.get(id);
-  if(!s){s={timer:null,colunas:new Set()};SUJOS.set(id,s);}
-  s.colunas.add(coluna);
-  clearTimeout(s.timer);
-  s.timer=setTimeout(()=>salvar(id),ms==null?700:ms);
-  setSave('saving','Alterado…');
-}
-async function salvar(id){
-  const s=SUJOS.get(id);if(!s)return;
-  SUJOS.delete(id);
-  const cli=clientePorId(id);if(!cli)return;
-  const campos={};s.colunas.forEach(c=>campos[c]=b4uParaPlanilha(cli.valores[c],c));
-  const ign=document.getElementById('ign_'+id);
-  /* Cada gravação recebe um número. A conferência do caso incerto demora alguns
-     segundos, e nesse meio-tempo a pessoa pode ter digitado de novo: sem este
-     carimbo, a resposta de uma conferência VELHA pintaria "Salvo ✓ (confirmado)"
-     por cima de uma gravação nova que ainda está viajando. */
-  /* O post voltou? É o que separa "a tela quebrou depois de gravar" de "a exceção
-     nem chegou a virar requisição". Sem esta marca, um erro lançado ANTES do post
-     — dentro do mesmo try — seria anunciado como gravação bem-sucedida. */
-  let respondeu=false;
-  const seq=++CONF_N; CONF_SEQ.set(String(id),seq);
-  try{
-    setSave('saving','Salvando…');
-    const r=await postAcao({acao:'registro_salvar',id:cli.id,cliente:cli.nome||'',cod:codAtual(),campos});
-    respondeu=true;
-    const ignoradas=(r&&r.ignoradas||[]).filter(Boolean);
-    setSave('ok','Salvo ✓ '+horaAgora()+(ignoradas.length?' · '+ignoradas.length+' ignorada'+(ignoradas.length>1?'s':''):''),
-      ignoradas.length?('Não gravadas: '+ignoradas.join(', ')):'');
-    if(ign)ign.innerHTML=ignoradas.length?('Não gravei: <b>'+ignoradas.map(esc).join('</b>, <b>')+'</b> — coluna travada ou que não existe mais no cadastro.'):'';
-    /* o nome pode ter mudado: reflete no cabeçalho e na busca */
-    cli.nome=valorDe(cli,COL.nome)||cli.nome;
-    if(COL.ativo)cli.ativo=valorDe(cli,COL.ativo);
-    /* Os produtos do cliente podem ter mudado: as duas caches da caixa de
-       Produtos (a lista e a versão normalizada) caem junto com as outras, senão
-       a régua continuaria contando o produto antigo. */
-    cli._b=null;cli._bd=null;cli._v=null;cli._pl=null;cli._pn=null;
-    FALHAS.delete(String(id));INCERTOS.delete(String(id));marcarFalha(id,false);
-    /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé do modal sai, e o
-       Fechar volta a ser Fechar. */
-    if(!temPendencia()&&CAD)CAD.aviso(false);
-    atualizarCabeca(id);
-    /* O `desenharChips()` já atualiza as caixas por dentro — a lista de produtos
-       e as contagens mudam quando alguém grava. */
-    desenharChips();desenharResumo();
-  }catch(e){
-    /* o que não gravou volta para a fila: a próxima tentativa manda tudo de novo */
-    const guardarFalha=()=>{
-      const f=FALHAS.get(String(id))||{colunas:new Set()};
-      s.colunas.forEach(c=>f.colunas.add(c));
-      FALHAS.set(String(id),f);
-      marcarFalha(id,true);
-    };
-    /* Uma resposta que chega depois de outra gravação já ter assumido este
-       cadastro não tem mais nada a dizer sobre ele: o que está na tela é o texto
-       da gravação nova, e o veredicto desta aqui — sucesso ou fracasso — falaria
-       de algo que já não está mais lá. Sai calada, sem tocar na faixa. */
-    if(CONF_SEQ.get(String(id))!==seq) return;
-    /* TRÊS desfechos, não dois — e a diferença é toda ela sobre o que dá para
-       AFIRMAR. */
-
-    /* (1) O servidor leu, decidiu e recusou. Não gravou. O texto é escrito por nós
-       ("coluna travada", "cadastro mudou de lugar") e vai para a tela: aqui quem
-       lê é da equipe, e esconder o motivo já custou caro neste painel. */
-    if(e&&e.doServidor){
-      guardarFalha(); INCERTOS.delete(String(id)); marcarFalha(id,true);
-      setSave('err','O servidor recusou: '+String((e&&e.message)||e));
-      return;
-    }
-    /* (2) A exceção NÃO veio do postAcao — ele só devolve `doServidor` ou
-       `incerto`. Restam dois casos, e o `respondeu` os separa:
-       • o post JÁ tinha voltado e quem estourou foi o código de tela que roda
-         depois dele — então GRAVOU, e dizer "o servidor recusou" seria inverter o
-         fato e ainda oferecer um "tentar de novo" que regravaria o que já está lá;
-       • o post NEM chegou a sair (algo estourou antes dele, dentro do mesmo try) —
-         aí nada foi gravado e repetir é seguro. */
-    if(!e||!e.incerto){
-      if(respondeu){
-        FALHAS.delete(String(id)); INCERTOS.delete(String(id)); marcarFalha(id,false);
-        setSave('ok','Salvo ✓ '+horaAgora()+' · a tela não acompanhou — recarregue para vê-la certa');
-      }else{
-        guardarFalha(); INCERTOS.delete(String(id)); marcarFalha(id,true);
-        setSave('err','Não foi possível salvar. Tente de novo.');
-      }
-      return;
-    }
-    /* (3) A resposta se perdeu. A gravação acontece ANTES da resposta, e o front
-       não tem como saber se ela aconteceu — então, em vez de decretar, ele vai
-       PERGUNTAR.
-       A pendência é registrada AGORA, antes de perguntar: a conferência leva até
-       28 s, e nesse intervalo `SUJOS` já foi esvaziado. Sem isto, `temPendencia()`
-       diria "não há nada por gravar" e o F5 que a mensagem seguinte vai pedir
-       sairia sem aviso nenhum, levando o texto junto. Só o SELO no cadastro espera
-       — porque o selo é uma afirmação, e ainda não há nada a afirmar. */
-    guardarFalha(); marcarFalha(id,false);
-    setSave('saving','A resposta não chegou — conferindo se gravou…');
-    const r=await conferirGravacao(cli.id,campos);
-    if(CONF_SEQ.get(String(id))!==seq) return;   // enquanto conferíamos, outra gravação assumiu o cadastro
-    if(r==='bateu'){
-      FALHAS.delete(String(id)); INCERTOS.delete(String(id)); marcarFalha(id,false);
-      setSave('ok','Salvo ✓ (confirmado) '+horaAgora());
-      /* A faixa de "Não gravei: <coluna>" é da gravação ANTERIOR. Deixá-la de pé
-         embaixo de um "confirmado" faria esta gravação parecer ter perdido uma
-         coluna que ela nem mandou. */
-      if(ign)ign.innerHTML='';
-      cli.nome=valorDe(cli,COL.nome)||cli.nome;
-      if(COL.ativo)cli.ativo=valorDe(cli,COL.ativo);
-      cli._b=null;cli._bd=null;cli._v=null;cli._pl=null;cli._pn=null;
-      if(!temPendencia()&&CAD)CAD.aviso(false);
-      atualizarCabeca(id);
-      desenharChips();desenharResumo();
-      return;
-    }
-    if(r==='nao-bateu'){
-      /* Única hora em que "mande de novo" é conselho honesto: o cadastro foi lido
-         e o valor não está lá. */
-      INCERTOS.delete(String(id)); marcarFalha(id,true);
-      setSave('err','Não gravou tudo: reli o cadastro e algum campo não está com o que você mandou. Pode mandar de novo.');
-      return;
-    }
-    /* 'nao-sei': a dúvida continua de pé. Selo de dúvida, sem botão — e o pedido é
-       recarregar, nunca repetir. */
-    INCERTOS.add(String(id)); marcarFalha(id,true);
-    setSave('err','Não consegui confirmar se salvou. Recarregue antes de mandar de novo.');
-  }
-}
-/** Manda de novo o que ficou para trás naquele cadastro. */
-function tentarDeNovo(id){
-  const f=FALHAS.get(String(id));if(!f)return;
-  const s=SUJOS.get(id)||{timer:null,colunas:new Set()};
-  f.colunas.forEach(c=>s.colunas.add(c));
-  SUJOS.set(id,s);
-  FALHAS.delete(String(id)); INCERTOS.delete(String(id));
-  salvar(id);
-}
-function atualizarCabeca(id){
-  const cli=clientePorId(id);if(!cli)return;
-  const no=document.querySelector(`.cli[data-id="${CSS.escape(String(id))}"]`);
-  if(no){
-    /* Os campos vivem no modal, não mais dentro da linha: repintar a linha inteira
-       aqui não tira o foco de ninguém — e assim CNPJ, cidade, produtos e data
-       acompanham a edição, não só o nome. Redesenhar a LISTA continua proibido
-       durante a digitação. */
-    /* Se o foco estava NA linha (é onde ele volta ao fechar o cadastro), ele volta
-       para ela depois da repintura: uma gravação que termina meio segundo depois
-       não pode jogar quem navega por teclado de volta para o topo da página. */
-    const cabeca=no.querySelector('.cli-head');
-    const tinhaFoco=!!cabeca&&document.activeElement===cabeca;
-    no.innerHTML=cabecaHTML(cli);
-    if(tinhaFoco){const nova=no.querySelector('.cli-head');if(nova)nova.focus();}
-    /* a faixa lateral acompanha a mudança de situação sem redesenhar a lista */
-    no.classList.remove('sit-ativo','sit-inativando','sit-inativo','sit-sem');
-    no.classList.add(classeSituacao(cli));
-  }
-  atualizarTopoCad(id);   // e o topo do modal mostra o nome e a situação novos
-}
+/* ┌── A GRAVAÇÃO POR CAMPO FOI JUNTO COM A FICHA — 09/2026 ─────────────────┐
+   │ Saíram daqui, inteiros: SUJOS/FALHAS/INCERTOS, agendarSalvar(),        │
+   │ salvar(), tentarDeNovo(), temPendencia(), o selo de "não salvou —      │
+   │ tentar de novo" na linha (seloFalha/marcarFalha), o recado do          │
+   │ b4u-gravar.js (avisarFalha) e o atualizarCabeca() que repintava a      │
+   │ linha enquanto alguém digitava.                                        │
+   │ Nada disso era da LISTA. Era do cadastro que abria por cima dela, e    │
+   │ foi inteiro para registro-cliente.html, onde os campos agora moram —   │
+   │ com os três desfechos de gravação (recusou · não sei · gravou) e a     │
+   │ releitura de confirmação, que só fazem sentido ao lado do formulário.  │
+   │                                                                        │
+   │ Sobrou nesta página UMA escrita: criar cliente novo (`acao:'onboard'`),│
+   │ logo abaixo. É por isso que o postAcao() e o b4uParaPlanilha()         │
+   │ continuam aqui enquanto o resto do caminho de gravação não está.       │
+   └────────────────────────────────────────────────────────────────────────┘ */
 
 /* ===================================================================
    Cliente novo — o formulário do onboarding, dentro desta página
@@ -2888,7 +2242,9 @@ function campoHTML(f,i){
   let inner;
   if(f.t==='select'){inner=`<select id="${id}" data-col="${esc(f.col)}">${(f.opts||[]).map(o=>`<option value="${esc(o)}">${o?esc(o):'—'}</option>`).join('')}</select>`;}
   else if(f.t==='textarea'){inner=`<textarea id="${id}" data-col="${esc(f.col)}" rows="2" placeholder="${esc(f.ph||'')}"></textarea>`;}
-  /* Ver campoEditHTML: identificador é texto com teclado numérico, nunca type="number". */
+  /* Identificador é texto com teclado numérico, nunca type="number" — a razão
+     inteira está no b4u-texto, no topo desta página (o campo numérico do
+     navegador recusa o zero à esquerda e devolve o campo vazio). */
   else{inner=`<input id="${id}" data-col="${esc(f.col)}" type="${f.t==='date'?'date':'text'}"${b4uEhIdentificador(f.col)?' inputmode="numeric"':''} ${f.max?`maxlength="${f.max}"`:''} placeholder="${esc(f.ph||'')}">`;}
   return `<div class="fld ${f.full?'full':''}" data-fld="${esc(f.col)}"><label for="${id}">${esc(f.col)} ${req}</label>${inner}</div>`;
 }
@@ -3144,11 +2500,18 @@ function sucessoNovo(d){
       <p class="hint">Cadastro gravado. Os contatos e e-mails de acesso do cliente são cadastrados à parte, em <b>Contatos</b>.</p>
       <div class="foot" style="margin-top:14px">
         <button class="btn btn--sec btn--pill" id="outro" type="button">Cadastrar outro</button>
-        <button class="btn btn--pri btn--pill" id="verCad" type="button">Ver o cadastro de ${esc(d.id||'')}</button>
+        <button class="btn btn--pri btn--pill" id="verCad" type="button">Ver a ficha de ${esc(d.id||'')} ↗</button>
       </div>
     </div>`;
   PROX_ID='';
-  const irVer=()=>{fecharModal();if(clientePorId(d.id))irPara(d.id);else carregar({expandir:d.id});};
+  /* A ficha do cliente novo abre em OUTRA guia e esta caixa fecha — a lista por
+     baixo já está sendo recarregada com ele dentro (ver a última linha desta
+     função). Antes daqui saía o modal do cadastro por cima desta mesma tela;
+     hoje quem cadastrou fica com a lista à mão, que é onde ele cadastra o
+     próximo, e a ficha espera na guia ao lado.
+     É `window.open` e não um <a> porque aqui não há link para clicar: o botão já
+     existia, e o clique da pessoa é o que autoriza a guia nova. */
+  const irVer=()=>{abrirFicha(d.id);fecharModal();};
   document.getElementById('verCad').addEventListener('click',irVer);
   document.getElementById('outro').addEventListener('click',()=>{carregar({silencioso:true});abrirModal();});
   /* já recarrega a lista por baixo, para o cliente novo estar lá quando fechar */
@@ -3159,8 +2522,11 @@ function sucessoNovo(d){
    Eventos
    =================================================================== */
 document.addEventListener('click',e=>{
-  const rt=e.target.closest('[data-retry]');
-  if(rt){e.stopPropagation();rt.textContent='enviando…';rt.disabled=true;tentarDeNovo(rt.dataset.retry);return;}
+  /* A LINHA DA LISTA NÃO ESTÁ MAIS AQUI, e é de propósito: ela virou um <a> para a
+     ficha (ver cabecaHTML). Interceptar o clique num link é o que tira do
+     colaborador o meio do mouse, o Cmd+clique e o "abrir em guia nova" do botão
+     direito — e é justamente assim que se confere três clientes lado a lado. O
+     mesmo vale para os itens dos cartões de resumo (.tk). */
   if(e.target.closest('#btn-limpar')){limparFiltros();return;}
   /* Liga/desliga o corte de pendência. É botão e não caixa de seleção: a
      pergunta tem duas respostas, e o estado ligado se anuncia no aria-pressed e
@@ -3169,12 +2535,6 @@ document.addEventListener('click',e=>{
   /* "mais 20" para quem está lendo, "todos" para quem vai usar Ctrl+F. */
   if(e.target.closest('.btn-mais')){TETO+=PASSO;desenharLista();return;}
   if(e.target.closest('.btn-todos')){TETO=CLIENTES.length;desenharLista();return;}
-  /* Salvar agora. Fechar, × e clique no véu não estão aqui: quem cuida deles é
-     a casca do b4u-modal.js, que precisa passar pelo aviso de "tem coisa por
-     gravar" antes de deixar sair. */
-  if(e.target.closest('#cadSalvar')){salvarAgoraCad();return;}
-  const head=e.target.closest('.cli-head');
-  if(head){const no=head.closest('.cli');if(no)abrirCadastro(no.dataset.id);return;}
   /* ORDENAR TÍTULOS AZ ZA — o gesto todo mora aqui. Coluna nova sempre começa em
      A→Z; a mesma coluna de novo inverte. É o ÚNICO caminho de ordenação da tela
      desde que o <select> "Ordenar por" saiu da régua, e ele vale igual no
@@ -3190,74 +2550,29 @@ document.addEventListener('click',e=>{
     normalizarOrdem();desenharLista();
       return;}   // desenharLista() sincroniza a URL
 
-  const tk=e.target.closest('.tk[data-goto]');
-  if(tk){irPara(tk.dataset.goto);return;}
   if(e.target.closest('#btnNovo')){abrirModal();return;}
 });
-function anotar(el){
-  const corpo=el.closest('.corpo');if(!corpo)return;
-  const cli=clientePorId(corpo.dataset.id);if(!cli)return;
-  const col=el.dataset.ecol;
-  /* o destaque de campo em branco some assim que digita (e volta se apagar),
-     na hora, sem esperar o salvamento */
-  const fld=el.closest('.fld');
-  if(fld&&fld.dataset.esperado==='1')fld.classList.toggle('emfalta',!String(el.value||'').trim());
-  atualizarContadorSec(el);
-  /* 'input' e 'change' disparam os dois no mesmo campo — não salva duas vezes à toa */
-  if(cli.valores[col]===el.value&&!SUJOS.has(cli.id))return;
-  cli.valores[col]=el.value;cli._bd=null;
-  /* A coluna de produtos é travada e não deveria chegar aqui — mas a trava vem
-     da planilha, e o dia em que ela sair a caixa de Produtos não pode continuar
-     lendo a lista antiga desta cache. */
-  if(COLS_LINHA.produtos&&col===COLS_LINHA.produtos){cli._pl=null;cli._pn=null;}
-  if(COL.nome&&col===COL.nome){cli.nome=el.value;atualizarCabeca(cli.id);}
-  /* mudou a situação: selo e faixa lateral acompanham na hora */
-  if(COL.ativo&&col===COL.ativo){cli.ativo=el.value;atualizarCabeca(cli.id);}
-  agendarSalvar(cli.id,col,el.tagName==='SELECT'||el.type==='date'?250:700);
-}
-/* O campo de várias escolhas não passa pelo `anotar`: lá o valor é o `el.value` de
-   UM controle, e aqui ele é a soma de nove caixas mais o texto livre. As duas
-   entradas são separadas de propósito — a caixa responde ao 'change' (marcar é um
-   gesto só, não precisa dos 700 ms de espera) e o texto livre ao 'input', como
-   qualquer outro campo de texto. */
-function anotarMulti(el){
-  const box=el.closest('[data-multi]');if(!box)return;
-  const corpo=box.closest('.corpo');if(!corpo)return;
-  const cli=clientePorId(corpo.dataset.id);if(!cli)return;
-  const col=box.dataset.multi;
-  /* A pílula acende junto com a caixa: num grupo de nove opções, o quadradinho é
-     justamente o que ninguém olha. */
-  if(el.type==='checkbox'){const l=el.closest('.mopt');if(l)l.classList.toggle('on',el.checked);}
-  const valor=multiValor(box);
-  if(cli.valores[col]===valor&&!SUJOS.has(cli.id))return;
-  cli.valores[col]=valor;cli._bd=null;
-  atualizarContadorSec(box);
-  agendarSalvar(cli.id,col,el.type==='checkbox'?250:700);
-}
-document.addEventListener('input',e=>{
-  if(e.target.dataset&&e.target.dataset.emlivre){anotarMulti(e.target);return;}
-  if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
+/* O `anotar()` e o `anotarMulti()` — quem lia cada tecla digitada na ficha e
+   agendava a gravação — foram para registro-cliente.html com o resto do
+   formulário. Com eles saiu o ouvinte de 'input' desta página: não há mais
+   nenhum campo de cliente para escutar aqui. O que sobrou de digitação nesta
+   tela é a BUSCA (ouvinte próprio, no carregar) e o formulário de cliente novo
+   (ouvintes próprios, no renderNovo) — os dois escutam o que é deles em vez de
+   um ouvinte de documento inteiro. */
 /* Os dois <select> abaixo só existem quando o b4u-filtro.js não carregou — com
    ele, quem responde é o `aoMudar` de cada caixa. */
 document.addEventListener('change',e=>{
   if(e.target.id==='f-sit'){ FILTRO=e.target.value; TETO=PASSO; redesenhar(); return; }
   if(e.target.id==='f-prod-sel'){ F_PROD=e.target.value?[e.target.value]:[]; TETO=PASSO; redesenhar(); return; }
-  if(e.target.dataset&&e.target.dataset.emulti){anotarMulti(e.target);return;}
-  if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
+});
 /* Atalhos de busca (C.4): "/" foca, Esc limpa. Com um modal aberto, Esc fecha o
    modal — e o atalho não atrapalha quem já está digitando noutro campo. */
-/* Esc com modal aberto NÃO chega aqui: a casca do b4u-modal.js escuta na captura,
-   fecha o modal de cima da pilha e corta a propagação — senão o mesmo Esc que
-   fecha o cadastro limparia também a busca da lista por baixo. */
+/* Esc com o "Novo cliente" aberto NÃO chega aqui: a casca do b4u-modal.js escuta na
+   captura, fecha o modal e corta a propagação — senão o mesmo Esc que fecha a caixa
+   limparia também a busca da lista por baixo.
+   O ramo que atendia Enter e Espaço na linha da lista saiu daqui: a linha é um <a>,
+   e Enter num link é o navegador que faz. Código a menos fazendo a mesma coisa. */
 document.addEventListener('keydown',e=>{
-  /* A linha da lista é um role="button": sem isto, Enter e Espaço não abririam o
-     cadastro para quem navega por teclado — e a tela ficaria só para o mouse. */
-  const linha=e.target&&e.target.closest&&e.target.closest('.cli-head');
-  if(linha&&(e.key==='Enter'||e.key===' '||e.key==='Spacebar')){
-    e.preventDefault();
-    const no=linha.closest('.cli');if(no)abrirCadastro(no.dataset.id);
-    return;
-  }
   const b=document.getElementById('busca');if(!b)return;
   const a=document.activeElement,tag=a&&a.tagName;
   const digitando=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||!!(a&&a.isContentEditable);
@@ -3270,8 +2585,8 @@ document.addEventListener('keydown',e=>{
    =================================================================== */
 /* A ordem aqui é a da tela: primeiro o que responde (busca, cadastrar, contagem),
    depois o que refina (filtros e ordenação, recolhidos), depois os exemplos, e só
-   então as fichas. Os 13 chips e os 3 cartões continuam existindo — deixaram de
-   ser pedágio. */
+   então a lista. Os 13 chips e os 3 cartões continuam existindo — deixaram de ser
+   pedágio. */
 function layout(){
   /* A régua tem TRÊS controles, e o dono disse quais: "Ativos (status), um filtro
      checkbox · Produtos, outro filtro checkbox · Com pendências um botão". Os
@@ -3313,7 +2628,6 @@ async function carregar(op){
     CLIENTES=(d.clientes||[]).map(c=>Object.assign({},c,{id:String(c.id||''),valores:c.valores||{}}));
     mapearColunas();
     calcularCompletude();
-    CAMPOS_EDIT=montarCampos(COLUNAS,'edicao');
     if(op.expandir)ABERTOS.add(String(op.expandir));
     const busca=document.getElementById('busca');
     /* Na primeira carga a visão vem do endereço (C.10); nas recargas em segundo

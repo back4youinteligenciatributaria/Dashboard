@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha do cliente — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
+<style>
+/* B4U-DESIGN:INICIO — paleta, cantos e fonte que as 22 páginas dividem.
+   Bloco copiado de b4u-design.css (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-design.js`.
+
+   Entra ANTES do <style> da página de propósito — é a camada base. Se esta
+   página precisar mesmo de um valor diferente, redeclare o token no `:root`
+   dela, que vem depois e vence. */
+:root{
+  /* ── Superfícies ─────────────────────────────────────────────────────────
+     `--canvas` é o bege do fundo da página; `--surface` é o branco do cartão
+     que se apoia nele; `--surface-warm` é o branco quebrado das faixas e
+     cabeçalhos de tabela, que separam sem precisar de borda. */
+  --canvas:#F1E7DC;
+  --surface:#FFFFFF;
+  --surface-warm:#FBF6EF;
+
+  /* ── Letra ───────────────────────────────────────────────────────────────
+     `--ink` é o texto normal, `--ink-2` o secundário, `--muted` o rótulo.
+     `--muted` já foi #8A7D70 e reprovava em contraste (3,28:1); #6E6256 dá
+     4,85:1 no bege e 5,92:1 no branco, e é a cor de quase todo rótulo do
+     sistema — por isso ela precisa passar, e não só quase. */
+  --ink:#113D39;
+  --ink-2:#3F5854;
+  --muted:#6E6256;
+
+  /* ── Traços ──────────────────────────────────────────────────────────────
+     `--line` divide o que é do mesmo grupo; `--line-2` fecha o que é caixa. */
+  --line:#E4D9C9;
+  --line-2:#D6C3AC;
+
+  /* ── Marca ───────────────────────────────────────────────────────────────
+     `--brand-teal` é canônico em logo, foco, borda e série de gráfico. Como
+     TEXTO ele reprova (4,11:1 no branco, 3,44:1 no receita-soft), e para isso
+     existe o `--brand-teal-txt`: o mesmo teal escurecido, 5,54:1 no branco e
+     4,54:1 no bege, usado só onde é letra ou fundo de letra. Os dois são a
+     mesma cor com dois trabalhos. O 4,54:1 passa, mas passa RASPANDO: quem for
+     escurecer o `--canvas` um dia tem de conferir este par antes. */
+  --brand-dark:#073034;
+  --brand-teal:#0F8C85;
+  --brand-euc:#3FA680;
+  --brand-teal-txt:#0C756F;
+
+  /* ── SINAL: as quatro cores que querem dizer alguma coisa ────────────────
+     Estas quatro NÃO seguem o tema (ver OS QUATRO TEMAS, no fim do arquivo). Se
+     "vencido" mudasse de vermelho conforme a pele escolhida, a cor deixaria de
+     ser informação e viraria decoração — e quem trabalha nesta tela o dia
+     inteiro lê a cor antes de ler a palavra.
+
+     `--amber` tem 2,61:1 no branco: serve de PREENCHIMENTO e de borda, nunca de
+     letra. Para letra âmbar existe o `--amber-txt` (5,91:1 no branco).
+
+     ┌── PENDÊNCIA CONHECIDA: `--verde` E `--vermelho` REPROVAM COMO LETRA ────┐
+     │                                                                        │
+     │ Os dois NÃO têm o par `-txt` que o âmbar tem, e são usados nas duas     │
+     │ funções ao mesmo tempo:                                                │
+     │                                                                        │
+     │     --verde     12 usos como `color`, 11 como `background`, 7 em borda │
+     │     --vermelho  41 usos como `color`, 31 como `background`, 41 em borda │
+     │                                                                        │
+     │ E o lado TEXTO reprova. Medido nos valores atuais:                     │
+     │                                                                        │
+     │     --verde     #2E9D5F   2,82:1 no bege · 3,44:1 no branco   REPROVA  │
+     │     --vermelho  #C0392B   4,46:1 no bege · 5,43:1 no branco   raspando │
+     │                                                                        │
+     │ O mínimo para texto é 4,5:1. É a mesma falha do `--muted` antigo (que   │
+     │ dava 3,28:1), e atinge `.hint.ok` e `.lk.ok`, que são letra e nada      │
+     │ mais. Há prova de que alguém já tinha esbarrado nisso sem nomear: o     │
+     │ `.det-fbtn.ativo` escreve `color:#0E5B37` à mão — um verde bem mais     │
+     │ escuro — em vez de usar o token.                                       │
+     │                                                                        │
+     │ CONSERTO MEDIDO E NÃO APLICADO (decisão de 10/08/2026):                 │
+     │                                                                        │
+     │     --verde     #2E9D5F -> #1F7546   (2,82:1 -> 4,66:1 no bege)        │
+     │     --vermelho  #C0392B -> #BB3728   (4,46:1 -> 4,66:1 no bege)        │
+     │                                                                        │
+     │ Matiz e saturação ficam onde estão; só a luminosidade desce, o mínimo   │
+     │ para passar com folga. Escurecer é seguro pelo lado do FUNDO: TODAS as  │
+     │ regras `background:var(--verde)` / `background:var(--vermelho)` já vêm  │
+     │ com `color:#fff` (ou são faixa/pontinho sem texto), e fundo mais escuro │
+     │ com letra branca só melhora.                                           │
+     │                                                                        │
+     │ POR QUE NÃO FOI APLICADO AGORA: mexer nestes dois repinta as 22         │
+     │ páginas, inclusive as 8 do cliente. A rodada que centralizou os tokens  │
+     │ era de ESTRUTURA — nenhum pixel de cor mudou nela de propósito, para    │
+     │ que qualquer diferença que aparecesse em produção tivesse uma causa só. │
+     │ Trocar cor é decisão de produto e vai junto da varredura do MODO        │
+     │ ESCURO, que já vai ter de abrir os 22 arquivos.                         │
+     │                                                                        │
+     │ QUANDO FOR FAZER, olhe também o `--verde-2`: várias páginas o declaram  │
+     │ valendo #25804C, com a nota "o verde um degrau mais escuro, para virar  │
+     │ FUNDO de texto branco". Com o conserto acima, o `--verde` do núcleo     │
+     │ fica MAIS ESCURO que o `--verde-2`, e a convenção do sufixo -2 se       │
+     │ inverte nesse par. Não dá para resolver daqui: o `--verde-2` mora no    │
+     │ `:root` de cada página.                                                │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     (Escrito assim, sem dois-pontos colado no nome, de propósito: a
+     `tokensCanonicos()` do `_aplica-design.js` varre este bloco com um regex de
+     declaração e NÃO pula comentário. Nome de token seguido de dois-pontos aqui
+     dentro vira token canônico de mentira, e o `--verde-2` de mentira faria as
+     22 páginas aparecerem como "exceção mantida" no terminal. Vale para todo
+     comentário deste arquivo: cite o token, nunca o escreva como declaração.) */
+  --amber:#E8892E;
+  --amber-txt:#8A5A10;
+  --vermelho:#C0392B;
+  --verde:#2E9D5F;
+
+  /* ── Cantos ──────────────────────────────────────────────────────────────
+     Uma escala só, no site inteiro, e mais QUADRADA que redonda.
+       4px  campo, selo, célula
+       6px  cartão, linha da lista, botão
+       8px  bloco grande e modal
+     `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é citado
+     em mais de cem regras, mas o valor acompanha o resto — pílula virou
+     etiqueta. Círculo de verdade (avatar, contador, spinner) continua com
+     `border-radius:50%` escrito na regra e não passa por aqui. */
+  --radius-sm:4px;
+  --radius:6px;
+  --radius-lg:8px;
+  --radius-pill:6px;
+
+  /* ── Escala tipográfica ──────────────────────────────────────────────────
+     Seis degraus, e o pulo entre eles é de propósito irregular: 11-12-13 é a
+     faixa de rótulo, selo e nota de rodapé, onde 1px já muda a hierarquia; 15 é
+     o corpo; 19 e 24 são título de bloco e de tela. Um degrau constante (1,2×,
+     por exemplo) daria 11-13-16-19-23-28 e gastaria três tamanhos na faixa em
+     que o olho não distingue nada.
+     ATENÇÃO: o `body{font-size:15px}` das páginas está escrito à mão e NÃO sai
+     daqui. Quem mexer na escala não muda o corpo do texto; muda só quem usa
+     `var(--fs-N)` — que é rótulo, selo, cabeçalho de tabela e título. */
+  --fs-1:11px;
+  --fs-2:12px;
+  --fs-3:13px;
+  --fs-4:15px;
+  --fs-5:19px;
+  --fs-6:24px;
+
+  /* ── Fonte ───────────────────────────────────────────────────────────────
+     Montserrat vem do Google Fonts, declarado no <head> de cada página. O
+     `system-ui` é o que aparece enquanto ela não chega — e é o que fica se ela
+     não chegar nunca. */
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+/* B4U-DESIGN:FIM */
+</style>
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   A ESCALA DE SINAL
+
+   Só o grupo "Atuação empresarial" usa cor como informação, e ali ela não é
+   decoração: cada alternativa ocupa um lugar fixo numa régua de quatro
+   degraus, lido três vezes — na bolinha, na borda esquerda e no fundo quando
+   marcada.
+
+     verde   (--sg-v)  empresarial · atuação de fato · documento em mãos
+     oliva   (--sg-o)  empresarial, em grau menor
+     âmbar   (--sg-a)  em cima do muro — nem soma nem subtrai
+     vermelho(--sg-r)  pessoal · sem gasto · sem documento
+     cinza   (--sg-x)  "não sei" — sai da conta, vira pendência
+
+   Os tons fortes são os tokens do sistema; `-bg` é a mesma cor lavada e `-tx`
+   a versão que passa em contraste como LETRA (o --verde do núcleo reprova como
+   texto — está anotado no b4u-design.css). */
+:root{
+  --sg-v:#2E9D5F;  --sg-v-bg:#E7F6EC;  --sg-v-tx:#186B41;
+  --sg-o:#7FAF4A;  --sg-o-bg:#F0F6E4;  --sg-o-tx:#4E6E28;
+  --sg-a:#E8892E;  --sg-a-bg:#FCF1E4;  --sg-a-tx:#8A5A10;
+  --sg-r:#C0392B;  --sg-r-bg:#FBEAE7;  --sg-r-tx:#96271B;
+  --sg-x:#9C9086;  --sg-x-bg:#F2EDE7;  --sg-x-tx:#5F564E;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{font-family:var(--sans);font-size:15px;color:var(--ink);background:var(--canvas);
+     -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;font-weight:800;letter-spacing:-.01em}
+a{color:var(--brand-teal-txt)}
+
+/* ── topo ─────────────────────────────────────────────────────────────────── */
+.topo{flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:11px 20px;
+      background:var(--surface);border-bottom:1px solid var(--line)}
+.topo .volta{font-size:var(--fs-2);font-weight:700;text-decoration:none;white-space:nowrap}
+.topo .quem{min-width:0;flex:1}
+.topo .quem h1{font-size:var(--fs-5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topo .quem .sub{font-size:var(--fs-2);color:var(--muted);font-weight:600;
+                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.selo{display:inline-block;font-size:var(--fs-1);font-weight:800;padding:2px 7px;
+      border-radius:var(--radius-pill);border:1px solid;vertical-align:1px;margin-left:6px}
+.selo.pro{background:var(--sg-a-bg);border-color:var(--sg-a);color:var(--sg-a-tx)}
+.selo.ok{background:var(--sg-v-bg);border-color:var(--sg-v);color:var(--sg-v-tx)}
+
+.btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+     padding:8px 15px;border-radius:var(--radius);font-weight:700;font-size:var(--fs-3);
+     cursor:pointer;white-space:nowrap;transition:background .12s,border-color .12s,transform .06s}
+.btn:hover{background:var(--surface-warm)}
+.btn:active{transform:translateY(1px)}
+.btn--pri{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff}
+.btn--pri:hover{background:var(--brand-teal-txt)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,
+textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
+
+/* ── três colunas ─────────────────────────────────────────────────────────── */
+.corpo{flex:1;display:grid;grid-template-columns:262px minmax(0,1fr) 320px;min-height:0}
+
+.nav{border-right:1px solid var(--line);background:var(--surface-warm);overflow:auto;padding:12px 10px 30px}
+.nav .grupo{font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.07em;
+            color:var(--muted);margin:16px 10px 6px}
+.nav .grupo:first-child{margin-top:2px}
+.item{display:flex;gap:9px;align-items:flex-start;width:100%;text-align:left;background:none;
+      border:0;padding:8px 10px;border-radius:var(--radius);cursor:pointer;color:var(--ink-2);line-height:1.25}
+.item:hover{background:rgba(15,140,133,.07)}
+.item.on{background:var(--surface);color:var(--ink);box-shadow:inset 3px 0 0 var(--brand-teal)}
+.item .tt{display:block;font-size:var(--fs-3);font-weight:700}
+.item .st{display:block;font-size:var(--fs-1);color:var(--muted);font-weight:600;margin-top:2px}
+.item .pip{flex:0 0 auto;width:8px;height:8px;border-radius:50%;margin-top:5px;background:var(--line-2)}
+.item.cheio .pip{background:var(--sg-v)}
+.item.parcial .pip{background:var(--amber)}
+
+.tela{overflow:auto;padding:24px 26px 60px;min-width:0}
+.tela h2{font-size:var(--fs-6);margin-bottom:6px}
+.sobre{font-size:var(--fs-3);color:var(--ink-2);line-height:1.5;margin:0 0 20px;padding:10px 12px;
+       background:var(--surface-warm);border-left:3px solid var(--brand-euc);
+       border-radius:0 var(--radius) var(--radius) 0}
+
+.painel{border-left:1px solid var(--line);background:var(--surface-warm);overflow:auto;padding:18px 18px 40px}
+
+/* ── campos do cadastro ───────────────────────────────────────────────────── */
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.fld{min-width:0}
+.fld.full{grid-column:1/-1}
+.fld label{display:block;font-size:var(--fs-1);font-weight:800;color:var(--muted);
+           text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--line-2);
+     border-radius:var(--radius-sm);padding:8px 9px;background:#fff;font-size:var(--fs-3)}
+.fld textarea{min-height:74px;resize:vertical;line-height:1.45}
+.fld input.money{text-align:right}
+.fld .dica{font-size:var(--fs-1);color:var(--muted);margin-top:4px;line-height:1.4}
+.fld .ro{background:var(--surface-warm);border-style:dashed;color:var(--ink-2)}
+.mopts{display:flex;flex-wrap:wrap;gap:6px}
+.mopt{border:1px solid var(--line-2);background:#fff;border-radius:var(--radius-pill);
+      padding:5px 10px;font-size:var(--fs-2);font-weight:600;cursor:pointer}
+.mopt.on{background:var(--brand-teal);border-color:var(--brand-teal);color:#fff;font-weight:700}
+.mlivre{margin-top:6px}
+
+/* ── perguntas pontuadas ──────────────────────────────────────────────────── */
+.perg{border-top:1px solid var(--line);padding:20px 0 6px}
+.perg:first-of-type{border-top:0;padding-top:2px}
+.pt-t{font-size:var(--fs-4);font-weight:700;line-height:1.35}
+.pt-t .peso{font-size:var(--fs-1);font-weight:700;color:var(--muted);border:1px solid var(--line-2);
+            border-radius:var(--radius-sm);padding:1px 5px;margin-left:8px;white-space:nowrap;vertical-align:2px}
+.pt-d{font-size:var(--fs-2);color:var(--muted);margin-top:4px;line-height:1.45}
+.pt-col{font-size:var(--fs-1);color:var(--muted);margin-top:3px;font-weight:600}
+.ops{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.op{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;cursor:pointer;
+    border:1px solid var(--line);border-left-width:5px;border-radius:var(--radius);
+    background:var(--surface);line-height:1.35;font-size:var(--fs-3);transition:background .1s,border-color .1s}
+.op:hover{background:var(--surface-warm)}
+.op .marca{flex:0 0 auto;width:16px;height:16px;border:2px solid var(--line-2);border-radius:50%;
+           margin-top:1px;position:relative;background:#fff}
+.op[data-multi="1"] .marca{border-radius:var(--radius-sm)}
+.op.sel .marca::after{content:"";position:absolute;inset:2px;border-radius:inherit;background:currentColor}
+.op .rot{flex:1}
+.op .nota{display:block;font-size:var(--fs-1);color:var(--muted);margin-top:2px}
+.op[data-tom="v"]{border-left-color:var(--sg-v)}
+.op[data-tom="o"]{border-left-color:var(--sg-o)}
+.op[data-tom="a"]{border-left-color:var(--sg-a)}
+.op[data-tom="r"]{border-left-color:var(--sg-r)}
+.op[data-tom="x"]{border-left-color:var(--sg-x)}
+.op[data-tom="v"].sel{background:var(--sg-v-bg);border-color:var(--sg-v);color:var(--sg-v-tx)}
+.op[data-tom="o"].sel{background:var(--sg-o-bg);border-color:var(--sg-o);color:var(--sg-o-tx)}
+.op[data-tom="a"].sel{background:var(--sg-a-bg);border-color:var(--sg-a);color:var(--sg-a-tx)}
+.op[data-tom="r"].sel{background:var(--sg-r-bg);border-color:var(--sg-r);color:var(--sg-r-tx)}
+.op[data-tom="x"].sel{background:var(--sg-x-bg);border-color:var(--sg-x);color:var(--sg-x-tx)}
+.op.sel{font-weight:700}
+.legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--fs-1);color:var(--muted);font-weight:700;margin:0 0 18px}
+.legenda i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+
+.fatias{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.fatia{display:grid;grid-template-columns:1fr 190px 62px;gap:10px;align-items:center;font-size:var(--fs-3)}
+.fatia .fr{display:flex;align-items:center;gap:8px}
+.fatia i{width:9px;height:9px;border-radius:2px;flex:0 0 auto}
+.fatia input[type=range]{width:100%;accent-color:var(--brand-teal)}
+.fatia .vv{border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:5px 6px;width:62px;
+           text-align:right;font-weight:700;font-size:var(--fs-3);background:#fff}
+.soma{font-size:var(--fs-2);font-weight:700;margin-top:8px}
+.soma.ok{color:var(--sg-v-tx)}
+.soma.nao{color:var(--sg-r-tx)}
+
+.obs-bt{margin-top:10px;font-size:var(--fs-2);font-weight:700;color:var(--brand-teal-txt);
+        background:none;border:0;padding:2px 0;cursor:pointer}
+.obs-bt:hover{text-decoration:underline}
+.obs-bt.tem{color:var(--amber-txt)}
+.obs-cx{margin-top:8px}
+.obs-cx textarea{width:100%;min-height:64px;border:1px solid var(--line-2);border-radius:var(--radius-sm);
+                 padding:8px 9px;background:var(--surface-warm);font-size:var(--fs-3);resize:vertical}
+
+/* ── painel da direita ────────────────────────────────────────────────────── */
+.esc-rot{font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+         color:var(--muted);margin-bottom:4px}
+.esc-num{font-size:56px;font-weight:900;line-height:1;letter-spacing:-.04em}
+.esc-num small{font-size:var(--fs-3);font-weight:700;color:var(--muted);letter-spacing:0}
+.regua{position:relative;height:12px;border-radius:6px;margin:14px 0 6px;
+       background:linear-gradient(90deg,#C0392B 0%,#E8892E 34%,#D8C24A 50%,#7FAF4A 68%,#2E9D5F 100%)}
+.regua .muro{position:absolute;left:50%;top:-5px;bottom:-5px;width:2px;background:var(--brand-dark);opacity:.55}
+.regua .pino{position:absolute;top:-6px;width:6px;height:24px;border-radius:3px;background:var(--brand-dark);
+             border:2px solid #fff;transform:translateX(-50%);transition:left .25s cubic-bezier(.4,0,.2,1)}
+.regua-rot{display:flex;justify-content:space-between;font-size:9px;font-weight:800;color:var(--muted);
+           text-transform:uppercase;letter-spacing:.05em}
+.faixa{margin-top:14px;padding:11px 12px;border-radius:var(--radius);border:1px solid;
+       font-size:var(--fs-3);font-weight:800;line-height:1.3}
+.faixa[data-t="1"]{background:var(--sg-v-bg);border-color:var(--sg-v);color:var(--sg-v-tx)}
+.faixa[data-t="2"]{background:var(--sg-o-bg);border-color:var(--sg-o);color:var(--sg-o-tx)}
+.faixa[data-t="3"]{background:var(--sg-a-bg);border-color:var(--sg-a);color:var(--sg-a-tx)}
+.faixa[data-t="4"]{background:var(--sg-r-bg);border-color:var(--sg-r);color:var(--sg-r-tx)}
+.faixa[data-t="0"]{background:var(--sg-x-bg);border-color:var(--line-2);color:var(--muted);font-weight:700}
+.faixa .cap{display:block;font-size:var(--fs-1);font-weight:700;margin-top:4px;opacity:.85}
+.trava{margin-top:12px;padding:11px 12px;border-radius:var(--radius);background:var(--sg-r);color:#fff;
+       font-size:var(--fs-2);font-weight:700;line-height:1.4}
+.trava b{display:block;font-size:var(--fs-3);font-weight:900;margin-bottom:3px}
+.medidor{margin-top:18px}
+.medidor .mt{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--fs-2);
+             font-weight:800;margin-bottom:5px}
+.medidor .mt span:last-child{font-size:var(--fs-4);font-weight:900}
+.barra{height:9px;border-radius:5px;background:var(--line);overflow:hidden}
+.barra i{display:block;height:100%;border-radius:5px;transition:width .25s}
+.medidor .md{font-size:var(--fs-1);color:var(--muted);margin-top:5px;line-height:1.4;font-weight:600}
+.mini{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+.mini h4{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:9px}
+.bm{margin-bottom:9px}
+.bm .bl{display:flex;justify-content:space-between;font-size:var(--fs-2);font-weight:700;margin-bottom:3px}
+.bm .bl span:last-child{color:var(--muted);font-variant-numeric:tabular-nums}
+.bm .barra{height:6px}
+
+/* ── resultado ────────────────────────────────────────────────────────────── */
+.res-cab{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:var(--radius-lg);
+         border:2px solid;margin-bottom:20px}
+.res-cab .rn{font-size:52px;font-weight:900;line-height:1;letter-spacing:-.04em}
+.res-cab .rt{font-size:var(--fs-5);font-weight:900;line-height:1.2}
+.res-cab .rd{font-size:var(--fs-2);font-weight:700;margin-top:3px;opacity:.85}
+.res-cab[data-t="1"]{background:var(--sg-v-bg);border-color:var(--sg-v);color:var(--sg-v-tx)}
+.res-cab[data-t="2"]{background:var(--sg-o-bg);border-color:var(--sg-o);color:var(--sg-o-tx)}
+.res-cab[data-t="3"]{background:var(--sg-a-bg);border-color:var(--sg-a);color:var(--sg-a-tx)}
+.res-cab[data-t="4"]{background:var(--sg-r-bg);border-color:var(--sg-r);color:var(--sg-r-tx)}
+.res-bl{margin-bottom:22px}
+.res-bl h4{font-size:var(--fs-4);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.res-bl h4 .cont{font-size:var(--fs-1);font-weight:800;background:var(--line);color:var(--ink-2);
+                 border-radius:var(--radius-pill);padding:2px 7px}
+.lista{list-style:none;margin:0;padding:0}
+.lista li{padding:9px 12px;border:1px solid var(--line);border-left-width:4px;border-radius:var(--radius);
+          margin-bottom:6px;font-size:var(--fs-3);line-height:1.45;background:var(--surface)}
+.lista li b{display:block;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.04em;
+            color:var(--muted);margin-bottom:2px}
+.lista li[data-tom="r"]{border-left-color:var(--sg-r)}
+.lista li[data-tom="a"]{border-left-color:var(--sg-a)}
+.lista li[data-tom="x"]{border-left-color:var(--sg-x)}
+.vazio{font-size:var(--fs-3);color:var(--muted);font-style:italic;padding:8px 0}
+.roteiro{background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius);
+         padding:14px 16px;font-size:var(--fs-3);line-height:1.6;white-space:pre-wrap}
+
+.placa{margin-top:18px;border:1px dashed var(--line-2);background:var(--surface-warm);
+       border-radius:var(--radius);padding:12px 14px;font-size:var(--fs-3);line-height:1.5}
+.placa b{display:block;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.04em;
+         color:var(--muted);margin-bottom:5px}
+.placa span{display:block}
+.placa a{font-weight:700}
+.placa i{display:block;font-size:var(--fs-1);color:var(--muted);margin-top:6px;font-style:normal;font-weight:600}
+.aviso-cx{padding:10px 12px;border-radius:var(--radius);font-size:var(--fs-2);font-weight:700;
+          line-height:1.45;margin-bottom:16px;border:1px solid}
+.aviso-cx.a{background:var(--sg-a-bg);border-color:var(--sg-a);color:var(--sg-a-tx)}
+.aviso-cx.v{background:var(--sg-v-bg);border-color:var(--sg-v);color:var(--sg-v-tx)}
+.aviso-cx.r{background:var(--sg-r-bg);border-color:var(--sg-r);color:var(--sg-r-tx)}
+.aviso{font-size:var(--fs-2);font-weight:700;color:var(--amber-txt)}
+.aviso.ok{color:var(--sg-v-tx)}
+.aviso.erro{color:var(--sg-r-tx)}
+
+@media (max-width:1180px){
+  .corpo{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .nav{display:none}
+  .painel{grid-row:1;border-left:0;border-bottom:1px solid var(--line);padding:10px 14px 12px;overflow:visible}
+  .painel .esc-rot{display:inline;margin-right:8px}
+  .painel .esc-num{display:inline;font-size:30px;vertical-align:-2px}
+  .painel .regua{margin:8px 0 4px;height:10px}
+  .painel .regua .pino{height:20px;top:-5px}
+  .painel .faixa{margin-top:8px;padding:8px 10px;font-size:var(--fs-2)}
+  .painel .faixa .cap,.painel .mini,.painel .medidor .md,.painel .regua-rot{display:none}
+  .painel .medidor{margin-top:10px}
+  .painel .medidor .mt{margin-bottom:2px;font-size:var(--fs-1)}
+  .tela{grid-row:2}
+  .fatia{grid-template-columns:1fr 110px 56px}
+  .topo{flex-wrap:wrap}
+  .topo .quem{order:-1;width:100%}
+}
+@media print{
+  body{height:auto;display:block}
+  .topo .btn,.nav,.painel,.obs-bt{display:none}
+  .corpo{display:block;overflow:visible}
+  .tela{overflow:visible;padding:0}
+}
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <a class="volta" id="voltar" href="registro.html">← Registro</a>
+  <div class="quem">
+    <h1 id="tTitulo">Carregando…</h1>
+    <div class="sub" id="tSub"></div>
+  </div>
+  <span class="aviso" id="aviso"></span>
+  <button class="btn" id="btnImprimir" type="button">Imprimir</button>
+  <button class="btn" id="btnCopiar" type="button">Copiar diagnóstico</button>
+  <button class="btn btn--pri" id="btnSalvar" type="button">Salvar</button>
+</div>
+
+<div class="corpo">
+  <nav class="nav" id="nav" aria-label="Seções da ficha"></nav>
+  <main class="tela" id="tela"></main>
+  <aside class="painel" id="painel" aria-live="polite"></aside>
+</div>
+
+<script src="config.js"></script>
+<script src="b4u-registro-campos.js" charset="utf-8"></script>
+<script charset="utf-8">
+/* =============================================================================
+   registro-cliente.html — a ficha do cliente.
+
+   POR QUE ESTA PÁGINA EXISTE
+   Até 09/2026 o cadastro do cliente era um MODAL dentro do `registro.html`,
+   sobre a lista. Funcionava com 41 colunas. Com 188, em 15 seções, e com o
+   diagnóstico de atuação empresarial junto, deixou de caber: uma janela sobre
+   uma lista é o lugar de corrigir um campo, não de conduzir uma reunião de
+   uma hora. Virou página, e a lista passou a linká-la.
+
+   A ficha se divide em TRÊS GRUPOS, e a divisão é de trabalho, não de assunto:
+
+     IDENTIFICAÇÃO      quem é a empresa. Confere-se em dois minutos.
+     ONBOARDING GERAL   o levantamento por área — fiscal, faturamento, DP,
+                        controladoria, estrutura, acessos, transição. É o
+                        formulário da reunião inicial, e cada seção é de um
+                        produto diferente.
+     ATUAÇÃO EMPRESARIAL  o diagnóstico pontuado. É onde mora o escore de
+                        equiparação, e é a única parte da ficha em que a cor
+                        quer dizer alguma coisa.
+
+   ---------------------------------------------------------------------------
+   UM ESTADO SÓ, E ELE É A COLUNA
+
+   `VAL` é `{ nome da coluna: valor }` — e vale para os campos do cadastro E
+   para as perguntas pontuadas que gravam numa coluna que a planilha já tem
+   ("Registro na Junta", "Alvará sanitário", "CNES (situação)"…). É por isso
+   que responder no diagnóstico atualiza o campo do onboarding e vice-versa:
+   não são duas telas sincronizadas, é o mesmo dado desenhado duas vezes. As
+   alternativas dessas perguntas têm como valor a própria opção do catálogo,
+   exatamente escrita — se alguém mudar uma das duas listas sem mudar a outra,
+   o vínculo se rompe em silêncio, e é por isso que elas estão comentadas nos
+   dois lugares.
+
+   `RESP` guarda o que NÃO tem coluna no catálogo: as perguntas que nascem com
+   coluna própria "Diag …", criadas pela rota `diag_salvar` na primeira
+   gravação. `OBS` guarda a anotação de cada pergunta.
+
+   Nada de escore é guardado. Ele é recalculado a cada clique — guardar seria
+   criar uma segunda verdade que envelhece na primeira resposta trocada.
+   ============================================================================= */
+
+var API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
+  'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
+
+function par(n){ return (new URLSearchParams(location.search).get(n) || '').trim(); }
+function chaveAtual(){ return par('chave'); }
+function codAtual(){
+  var q = par('cod'); if (q) return q;
+  try { return decodeURIComponent((location.hash || '').replace(/^#/, '')).trim(); }
+  catch (e) { return (location.hash || '').replace(/^#/, '').trim(); }
+}
+
+/* MODO PROSPECT — a ficha aberta sem `id`.
+   Ele NÃO grava nada, nunca. Não é uma trava de permissão: é a definição do
+   modo. Cliente nasce por "+ Novo cliente" no Registro, que cria pasta,
+   planilha e contatos; deixar esta tela criar uma linha solta produziria
+   cadastro pela metade, com ID queimado. Aqui o consultor conduz a reunião,
+   vê o escore andar e IMPRIME. Se o prospect fechar, cadastra-se o cliente e
+   a ficha dele já abre para valer. */
+var PROSPECT = !par('id');
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function hoje(){ var d = new Date(), p = function(n){ return ('0'+n).slice(-2); };
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function norm(s){ return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g,'')
+  .toLowerCase().replace(/\s+/g,' ').trim().replace(/[?:.]+$/,''); }
+function slug(s){ return norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+
+/* JSONP: o /exec responde 302 e o fetch simples não sobrevive ao
+   redirecionamento com CORS. Mesma solução das outras telas da equipe. */
+function jsonp(url){
+  return new Promise(function(ok, fail){
+    var cb = 'cb_' + Math.random().toString(36).slice(2);
+    var s = document.createElement('script');
+    var t = setTimeout(function(){ limpa(); fail(new Error('A API não respondeu.')); }, 45000);
+    function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
+    window[cb] = function(d){ limpa(); ok(d); };
+    s.onerror = function(){ limpa(); fail(new Error('Não consegui alcançar a API.')); };
+    s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+function postAcao(obj){
+  var body = JSON.stringify(Object.assign({ chave: chaveAtual() }, obj));
+  return fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if (d && d.erro) throw new Error(d.erro); return d; });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   O CATÁLOGO — as colunas da aba Registro
+   ═══════════════════════════════════════════════════════════════════════════ */
+var CAT = window.B4U_REGISTRO_CAMPOS || { ordem:[], sobre:{}, relevancia:{}, campos:[] };
+var PORCOL = {};
+CAT.campos.forEach(function(c){ PORCOL[norm(c.col)] = c; });
+
+/* A seção "Diagnóstico de equiparação" do catálogo não vira formulário: aquelas
+   colunas são o RESULTADO (escore, faixa, roteiro, o JSON que reabre tudo), e
+   editá-las à mão faria a nota deixar de corresponder às respostas que a
+   produziram. Elas aparecem na tela de Resultado, calculadas. */
+var SEC_CALCULADA = 'Diagnóstico de equiparação';
+var SECOES_ONBOARDING = CAT.ordem.filter(function(s){
+  return s !== 'Identificação' && s !== SEC_CALCULADA && s !== 'Outros';
+});
+function camposDaSecao(sec){ return CAT.campos.filter(function(c){ return c.s === sec; }); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   O DIAGNÓSTICO — atuação empresarial
+
+   Dois medidores, e a separação é a decisão de projeto mais importante da
+   página:
+
+     EIXO A — ATUAÇÃO DE FATO (1 a 100, e é ele que classifica)
+       O que a empresa REALMENTE faz: que ato executa, com que gasto, com que
+       equipe, em que estrutura, como a receita se forma. Não olha papel.
+
+     EIXO B — PRONTIDÃO PROBATÓRIA (0 a 100%, e NÃO classifica)
+       O registro documental: alvará, contrato, natureza jurídica, POP,
+       descrição da nota. Tudo aqui é AJUSTÁVEL — e é por isso que não entra no
+       escore. Uma empresa pode ser hospitalar de fato e ter a pasta vazia; o
+       diagnóstico dela não é "ruim", é "dá trabalho". Cada item vermelho vira
+       uma linha nominal do "o que precisamos de você".
+
+   A matemática é a mesma nos dois: cada pergunta vale um peso, cada resposta
+   entrega uma fração dele (1 verde · 0,5 muro · 0 vermelho), e o escore é
+   `ganho ÷ peso respondido × 100`. Duas consequências de propósito:
+
+     · meio ponto em tudo dá EXATAMENTE 50 — o muro sai da conta, não de
+       calibragem à mão;
+     · "não sei" sai do numerador E do denominador. Não pune nem premia: vira
+       pendência e derruba a COMPLETUDE, mostrada ao lado do escore, para um
+       escore de seis respostas não se disfarçar de escore de quarenta.
+
+   A ÚNICA TRAVA é "somente consulta / atividade intelectual pura" — o único
+   item que impede o benefício por si só, porque não se conserta com documento.
+   Sociedade simples e alvará vencido NÃO travam: são registro, e registro se
+   ajusta (decisão de 09/2026).
+
+   `cat:1` numa pergunta significa que ela grava numa coluna que o catálogo já
+   tem, e então o valor de cada alternativa é a própria opção do catálogo,
+   escrita igual. Mexer numa das duas listas sem mexer na outra rompe o vínculo
+   sem erro nenhum aparecer — por isso a coluna também é marcada `dono:'atuacao'`
+   lá, e as duas anotações se apontam.
+
+   Coluna com `dono:'atuacao'` NÃO é desenhada na seção de onboarding: a pergunta
+   daqui é o único lugar em que ela é respondida. Foi assim que os fatos que
+   apareciam duas vezes — natureza jurídica, alvará, CNES, descrição da nota,
+   contrato com convênio, receita sem nota, contrato com autônomos, as fatias de
+   faturamento e as fontes pagadoras — voltaram a ter um lugar só. Dois campos
+   para o mesmo dado é uma divergência esperando acontecer: um dia alguém
+   responde num, outro alguém responde no outro, e nenhum dos dois está errado o
+   bastante para alguém notar.
+   ═══════════════════════════════════════════════════════════════════════════ */
+var NAO_SEI = { v:'nao_sei', r:'Não sei — confirmar depois', f:null, tom:'x' };
+
+var BLOCOS = [
+
+{ id:'servicos', n:'O que executa de fato', sub:'26 pontos', eixo:'A', peso:26,
+  objetivo:'O que a empresa EXECUTA e em que proporção — é o núcleo do diagnóstico e a base da segregação de receitas. Pergunte pelo que acontece na agenda, não pelo que está no contrato social.',
+  perguntas:[
+    {k:'a_servicos', col:'Diag Serviços realizados', peso:10, tipo:'multi',
+     t:'Quais serviços são efetivamente realizados?',
+     d:'Marque tudo o que a empresa executa hoje. Cada item soma; o teto é o peso da pergunta.',
+     ops:[
+       {v:'cirurgia',   r:'Cirurgias e procedimentos invasivos', p:3, tom:'v'},
+       {v:'sedacao',    r:'Procedimentos com sedação ou anestesia', p:3, tom:'v'},
+       {v:'endoscopia', r:'Endoscopia, colonoscopia ou exames com preparo', p:2.5, tom:'v'},
+       {v:'plantao',    r:'Plantão hospitalar, urgência ou emergência', p:2.5, tom:'v'},
+       {v:'internacao', r:'Internação, observação ou day-hospital', p:3, tom:'v'},
+       {v:'terapia',    r:'Terapia infusional, quimioterapia ou hemodiálise', p:3, tom:'v'},
+       {v:'imagem',     r:'Exames de imagem ou diagnósticos com equipamento próprio', p:2, tom:'v'},
+       {v:'ambulat',    r:'Pequenos procedimentos ambulatoriais (sutura, drenagem, biópsia, infiltração)', p:1.5, tom:'o'},
+       {v:'laudo',      r:'Laudo a distância, telemedicina ou segunda opinião', p:0, tom:'a',
+                        nota:'Não soma nem subtrai: é serviço intelectual, e o benefício não alcança.'},
+       {v:'so_consulta',r:'SOMENTE consulta, avaliação e acompanhamento', p:0, tom:'r', exclusiva:1,
+                        nota:'Marcar isto TRAVA o diagnóstico na faixa pessoal — é o único impeditivo real.'},
+       NAO_SEI
+     ]},
+    /* As cinco fatias SÃO as cinco colunas "% …" da seção Faturamento — a régua
+       aqui é o único lugar em que elas se preenchem. Antes havia uma coluna
+       "Diag % receita por tipo de serviço" ao lado delas dizendo a mesma coisa
+       com outras palavras. */
+    {k:'a_receita_tipo', peso:10, tipo:'pct', catpct:1,
+     t:'Percentual da receita por tipo de serviço',
+     d:'É o que define quanto da receita entra no benefício. Se o cliente não souber de cabeça, peça a estimativa e anote na observação.',
+     fatias:[
+       {v:'proc',     col:'% Procedimentos e cirurgias', r:'Procedimentos e cirurgias', f:1,    tom:'v'},
+       {v:'exames',   col:'% Exames',                    r:'Exames',                    f:1,    tom:'v'},
+       {v:'outros',   col:'% Outros',                    r:'Outros',                    f:0.5,  tom:'a'},
+       {v:'educacao', col:'% Educação',                  r:'Educação, aulas e treinamentos', f:0, tom:'r'},
+       {v:'consulta', col:'% Consultas',                 r:'Consultas',                 f:0,    tom:'r'}
+     ]},
+    {k:'a_estetica', col:'Diag Procedimentos estéticos', peso:2, tipo:'unica',
+     t:'Realiza procedimentos estéticos?',
+     d:'Estética não entra no benefício. O problema não é realizar — é não separar no faturamento, porque contamina a base inteira.',
+     ops:[
+       {v:'nao',     r:'Não realiza', f:1, tom:'v'},
+       {v:'segrega', r:'Realiza e segrega no faturamento', f:0.8, tom:'o'},
+       {v:'nao_seg', r:'Realiza sem segregar', f:0, tom:'r',
+                     nota:'Contamina a base de cálculo: precisa ser separado antes de apurar.'},
+       NAO_SEI
+     ]},
+    {k:'a_gastos_ato', col:'Diag Gastos diretos por atendimento', peso:4, tipo:'unica',
+     t:'Quais são os gastos diretos de cada atendimento?',
+     d:'Aqui mora a diferença entre uma empresa e um profissional com CNPJ: ato assistencial custa material, apoio e sala.',
+     ops:[
+       {v:'alto',  r:'Material, equipe de apoio, uso de sala e repasses — custo relevante por ato', f:1, tom:'v'},
+       {v:'medio', r:'Algum custo além do tempo do médico (material ou apoio pontual)', f:0.5, tom:'a'},
+       {v:'zero',  r:'Custo praticamente zero além do tempo do médico', f:0, tom:'r'},
+       NAO_SEI
+     ]}
+  ]},
+
+{ id:'custos', n:'Gastos e risco econômico', sub:'20 pontos', eixo:'A', peso:20,
+  objetivo:'Custos, folha e quem assume o resultado. Empresa que não tem custo e não corre risco é, economicamente, uma pessoa física com CNPJ.',
+  perguntas:[
+    {k:'b_custofixo', col:'Diag Custo fixo e folha', peso:5, tipo:'unica',
+     t:'Como é o custo fixo mensal e a folha?',
+     d:'Os valores em si ficam na seção Departamento pessoal e Controladoria — aqui é o porte da estrutura.',
+     ops:[
+       {v:'relev', r:'Custo fixo relevante e folha própria (estrutura, equipe registrada)', f:1, tom:'v'},
+       {v:'moder', r:'Custo fixo moderado — aluguel e pouca gente', f:0.5, tom:'a'},
+       {v:'zero',  r:'Custo fixo próximo de zero', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'b_itens', col:'Diag Itens de custo', peso:4, tipo:'multi',
+     t:'Principais itens de custo',
+     ops:[
+       {v:'aluguel',   r:'Aluguel de espaço ou sala', p:1, tom:'v'},
+       {v:'materiais', r:'Materiais e insumos', p:1, tom:'v'},
+       {v:'equipam',   r:'Equipamentos, manutenção ou leasing', p:1, tom:'v'},
+       {v:'equipe',    r:'Equipe própria (folha)', p:1, tom:'v'},
+       {v:'repasses',  r:'Repasses a terceiros', p:0.5, tom:'o'},
+       {v:'mkt',       r:'Marketing e captação', p:0.5, tom:'o'},
+       {v:'sistema',   r:'Sistema de gestão ou software clínico', p:0.5, tom:'o'},
+       {v:'so_socios', r:'Apenas repasse aos sócios — nada além disso', p:0, tom:'r', exclusiva:1},
+       NAO_SEI
+     ]},
+    {k:'b_prejuizo', col:'Diag Quem assume o prejuízo', peso:4, tipo:'unica',
+     t:'Quem assume o prejuízo em caso de resultado negativo?',
+     d:'É a pergunta mais direta sobre risco empresarial que existe nesta ficha.',
+     ops:[
+       {v:'pj',       r:'A própria PJ — o caixa da empresa absorve', f:1, tom:'v'},
+       {v:'socios',   r:'Os sócios, pessoalmente', f:0, tom:'r'},
+       {v:'terceiro', r:'Um terceiro (hospital, clínica contratante)', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'b_dividas', col:'Diag Dívidas em nome da PJ', peso:2, tipo:'unica',
+     t:'Há financiamentos, empréstimos ou dívidas relevantes?',
+     d:'Risco assumido em nome da PJ é indício de atividade empresarial — não é um defeito no diagnóstico.',
+     ops:[
+       {v:'sim', r:'Sim, em nome da PJ (financiamento de equipamento, capital de giro)', f:1, tom:'v'},
+       {v:'nao', r:'Nenhum compromisso em nome da empresa', f:0.5, tom:'a'},
+       {v:'pf',  r:'Só em nome dos sócios, pessoa física', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'b_materiais_nf', col:'Diag Materiais e equipe dentro da NF da PJ', peso:3, tipo:'unica',
+     t:'Materiais e equipes auxiliares entram na NF emitida pela PJ?',
+     ops:[
+       {v:'sim',   r:'Sim — a nota da PJ cobre o ato inteiro', f:1, tom:'v'},
+       {v:'parte', r:'Parte entra, parte é cobrada por fora', f:0.5, tom:'a'},
+       {v:'fora',  r:'São cobrados à parte, fora da PJ', f:0, tom:'r'},
+       {v:'na',    r:'Não há materiais nem equipe auxiliar', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'b_remun', col:'Diag Remuneração dos sócios', peso:2, tipo:'unica',
+     t:'Como os sócios são remunerados?',
+     d:'Distribuição pela produção individual é, na prática, salário de autônomo com outro nome — e é assim que a fiscalização lê.',
+     ops:[
+       {v:'quotas',   r:'Pró-labore + distribuição de lucros conforme as quotas', f:1, tom:'v'},
+       {v:'despro',   r:'Distribuição desproporcional por critério de gestão ou aporte', f:0.7, tom:'o'},
+       {v:'prolab',   r:'Somente pró-labore', f:0.25, tom:'a'},
+       {v:'producao', r:'Distribuição conforme a produção individual de cada sócio', f:0, tom:'r'},
+       NAO_SEI
+     ]}
+  ]},
+
+{ id:'equipe', n:'Equipe e impessoalidade', sub:'20 pontos', eixo:'A', peso:20,
+  objetivo:'Quem executa os serviços, com que vínculo e sob qual organização de trabalho. A pergunta que mais decide é a da ausência do sócio: se a receita para quando ele para, a empresa é ele.',
+  perguntas:[
+    {k:'c_quem', col:'Diag Quem atende os pacientes', peso:5, tipo:'unica',
+     t:'Quem atende os pacientes?',
+     ops:[
+       {v:'ambos',   r:'Sócios e profissionais contratados', f:1, tom:'v'},
+       {v:'contrat', r:'Somente profissionais contratados', f:1, tom:'v'},
+       {v:'socios',  r:'Somente os sócios', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'c_aux', col:'Diag Auxiliares no ato', peso:2, tipo:'unica',
+     t:'Existem auxiliares no ato assistencial?',
+     d:'Instrumentador, técnico de enfermagem, circulante de sala.',
+     ops:[
+       {v:'sim',      r:'Sim, há equipe de apoio no ato', f:1, tom:'v'},
+       {v:'as_vezes', r:'Só em alguns procedimentos', f:0.5, tom:'a'},
+       {v:'nao',      r:'Não — o médico atua sozinho', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'c_vinculo', col:'Diag Vínculo da equipe assistencial', peso:5, tipo:'unica',
+     t:'Sob qual vínculo está a equipe assistencial?',
+     ops:[
+       {v:'clt',    r:'Registrada em CLT', f:1, tom:'v'},
+       {v:'misto',  r:'Parte CLT, parte PJ ou autônomo', f:0.75, tom:'o'},
+       {v:'pj',     r:'PJ, autônomo ou cooperado', f:0.5, tom:'a'},
+       {v:'nenhum', r:'Nenhum profissional além dos sócios', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'c_admin', col:'Diag Equipe administrativa', peso:3, tipo:'unica',
+     t:'Existe equipe administrativa própria?',
+     ops:[
+       {v:'propria', r:'Sim — recepção, faturamento e gestão com pessoas dedicadas', f:1, tom:'v'},
+       {v:'terc',    r:'Terceirizado avulso ou contador cuidando de tudo', f:0.5, tom:'a'},
+       {v:'socio',   r:'O próprio sócio administra', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'c_ausencia', col:'Diag Operação sem o sócio', peso:3, tipo:'unica',
+     t:'A operação continua se um sócio se ausenta?',
+     d:'Não precisa ser total — o ponto é se a receita depende de uma única pessoa.',
+     ops:[
+       {v:'segue',   r:'Segue — há quem substitua e a receita não para', f:1, tom:'v'},
+       {v:'parcial', r:'Parte da agenda para', f:0.5, tom:'a'},
+       {v:'para',    r:'A operação para por completo', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'c_papel', col:'Diag Papel dos sócios', peso:2, tipo:'unica',
+     t:'Qual o papel de cada sócio no dia a dia?',
+     ops:[
+       {v:'gestao',   r:'Há quem administre, quem atenda e quem só participe do capital', f:1, tom:'v'},
+       {v:'atende_e', r:'Todos atendem, mas um deles também administra', f:0.6, tom:'o'},
+       {v:'so_atend', r:'Todos apenas atendem — ninguém na gestão', f:0, tom:'r'},
+       NAO_SEI
+     ]}
+  ]},
+
+{ id:'estrutura', n:'Onde e com que estrutura', sub:'18 pontos', eixo:'A', peso:18,
+  objetivo:'Onde o ato assistencial é executado e com que estrutura física. Atuar dentro de hospital de terceiro é positivo: é o ambiente da tese.',
+  perguntas:[
+    {k:'d_local', col:'Diag % por local de execução', peso:7, tipo:'pct',
+     t:'Onde o serviço acontece e em que proporção?',
+     fatias:[
+       {v:'hospital',  r:'Hospital ou clínica de terceiro', f:1, tom:'v'},
+       {v:'sede',      r:'Sede própria (clínica, ala, centro de procedimentos)', f:1, tom:'v'},
+       {v:'domicilio', r:'Domicílio do paciente', f:0.5, tom:'a'},
+       {v:'tele',      r:'Telemedicina', f:0, tom:'r'}
+     ]},
+    {k:'d_salas', col:'Diag Salas de procedimento', peso:4, tipo:'unica',
+     t:'Que salas existem?',
+     d:'A contagem detalhada fica em "Número de salas", na seção Estrutura e funcionamento.',
+     ops:[
+       {v:'centro',   r:'Tem centro cirúrgico', f:1, tom:'v'},
+       {v:'sala',     r:'Tem sala de procedimento (sem centro cirúrgico)', f:0.75, tom:'o'},
+       {v:'sem_sede', r:'Não tem estrutura própria — usa a do terceiro', f:0.5, tom:'a',
+                      nota:'Neutro: a estrutura existe, só não é da PJ. O que importa é o contrato de uso, no bloco de prova.'},
+       {v:'consult',  r:'Apenas consultórios', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'d_equip', col:'Diag Equipamentos', peso:4, tipo:'unica',
+     t:'Os equipamentos utilizados são de quem?',
+     ops:[
+       {v:'proprios', r:'Próprios ou em leasing, registrados no ativo do CNPJ', f:1, tom:'v'},
+       {v:'alugados', r:'Alugados pela PJ, com contrato', f:0.8, tom:'o'},
+       {v:'mistos',   r:'Parte da PJ, parte do terceiro', f:0.6, tom:'o'},
+       {v:'terceiro', r:'Todos do terceiro', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'d_endereco', col:'Diag Natureza do endereço da sede', peso:3, tipo:'unica',
+     t:'Qual a natureza do endereço da sede?',
+     ops:[
+       {v:'clinica', r:'Clínica ou ala hospitalar', f:1, tom:'v'},
+       {v:'comerc',  r:'Sala comercial', f:0.5, tom:'a'},
+       {v:'casa',    r:'Casa adaptada', f:0, tom:'r'},
+       {v:'fiscal',  r:'Só endereço fiscal — não há atendimento ali', f:0, tom:'r'},
+       NAO_SEI
+     ]}
+  ]},
+
+{ id:'receita', n:'Como a receita se forma', sub:'16 pontos', eixo:'A', peso:16,
+  objetivo:'Quem emite a nota e como o serviço chega ao documento fiscal. Nota emitida por cada médico com o nome dele na descrição é o indício mais comum e mais fatal.',
+  perguntas:[
+    {k:'e_quem_emite', col:'Diag Quem emite a nota', peso:6, tipo:'unica',
+     t:'A nota sai pela PJ ou cada médico emite a sua?',
+     ops:[
+       {v:'pj',     r:'Integralmente pela PJ', f:1, tom:'v'},
+       {v:'ambos',  r:'Os dois modelos convivem', f:0.35, tom:'a'},
+       {v:'medico', r:'Cada médico emite a sua, com o nome na descrição', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    /* Grava na coluna "Fontes de recebimento", que o onboarding tinha como lista
+       de caixas. A proporção CONTÉM a lista — quem marcou "Convênios" e
+       "Particular" disse menos do que quem escreveu 70 e 30 —, então a lista saiu
+       e ficou a régua. Os `alias` existem para ler o que já está gravado como
+       lista: "Particular · Convênios" abre com as fatias certas em zero,
+       esperando o percentual. */
+    {k:'e_fontes', col:'Fontes de recebimento', catpct:1, peso:4, tipo:'pct',
+     t:'Para quem a empresa fatura e em que proporção?',
+     fatias:[
+       {v:'convenio',   r:'Convênio ou operadora',     f:1,   tom:'v', alias:['Convênios','Convenio','Convênio']},
+       {v:'hospital',   r:'Hospital ou outra clínica', f:1,   tom:'v', alias:['Hospitais','Hospital']},
+       {v:'publico',    r:'Poder público',             f:1,   tom:'v', alias:['SUS']},
+       {v:'outra_pj',   r:'Outra PJ',                  f:0.5, tom:'a', alias:['Outras PJ','Outros']},
+       {v:'particular', r:'Paciente particular',       f:0.5, tom:'a', alias:['Particular']}
+     ]},
+    {k:'e_repasse', col:'Diag Repasse a terceiros', peso:3, tipo:'unica',
+     t:'Como é feito o repasse a terceiros?',
+     d:'A regra em si (percentuais por médico) fica em "Regra de repasse aos médicos", na seção Outras contratações.',
+     ops:[
+       {v:'producao', r:'Por produção ou percentual, com critério definido', f:1, tom:'v'},
+       {v:'fixo',     r:'Valor fixo por plantão ou por período', f:0.9, tom:'v'},
+       {v:'sem_crit', r:'Há repasse, mas sem critério definido', f:0.4, tom:'a'},
+       {v:'nenhum',   r:'Não há repasse — a receita fica toda com os sócios', f:0.15, tom:'r'},
+       NAO_SEI
+     ]},
+    /* Atenção à polaridade: a coluna se chama "Entradas na conta PJ sem NF", então
+       "Sim" é a resposta RUIM. O valor gravado é o do catálogo; quem responde lê o
+       texto da alternativa, não o valor. */
+    {k:'e_sem_nota', col:'Entradas na conta PJ sem NF', cat:1, peso:3, tipo:'unica',
+     t:'Existe receita sem nota fiscal?',
+     d:'Pergunta desconfortável e obrigatória: receita sem nota não entra na apuração e vira contingência no meio do processo. O volume estimado fica em "Volume mensal sem NF", na seção Faturamento.',
+     ops:[
+       {v:'Não',      r:'Não — todo o faturamento é notado', f:1, tom:'v'},
+       {v:'Sim',      r:'Sim, há recebimento sem nota', f:0, tom:'r',
+                      nota:'Alerta: fica fora da base do crédito e é risco no processo.'},
+       {v:'Não sabe', r:'Não sabe — confirmar depois', f:null, tom:'x'}
+     ]}
+  ]},
+
+/* ── EIXO B ────────────────────────────────────────────────────────────────
+   Nada aqui entra no escore, e cada item negativo sai da tela como tarefa
+   nominal, com o texto do que pedir e a quem. É deste bloco que nasce o
+   "precisaremos da sua ajuda".
+
+   Seis destas perguntas têm `cat:1`: elas gravam numa coluna que a aba
+   Registro JÁ TEM, e o valor de cada alternativa é a opção do catálogo escrita
+   igual. Responder aqui muda o campo do onboarding, e vice-versa. */
+{ id:'prova', n:'Registro documental', sub:'Prontidão probatória', eixo:'B',
+  objetivo:'O que existe no papel. Nada aqui derruba o escore: são pontos ajustáveis, e cada um em vermelho vira uma linha do plano de trabalho na tela de Resultado.',
+  perguntas:[
+    {k:'p_natjur', col:'Registro na Junta', cat:1, peso:12, tipo:'unica',
+     t:'Natureza jurídica e registro',
+     d:'Sociedade simples costuma ter a equiparação negada na porta de entrada — e é conversível.',
+     acao:'Converter a sociedade simples em sociedade empresária e registrar na Junta Comercial antes de impetrar.',
+     ops:[
+       {v:'Junta',          r:'Sociedade empresária registrada na Junta Comercial', f:1, tom:'v'},
+       {v:'Junta (EI/SLU)', r:'Empresário individual ou SLU empresária, na Junta', f:1, tom:'v'},
+       {v:'Cartório',       r:'Sociedade simples, registrada em cartório', f:0, tom:'r'},
+       {v:'Não sabe',       r:'Não sabe — confirmar depois', f:null, tom:'x'}
+     ]},
+    {k:'p_alvara', col:'Alvará sanitário', cat:1, peso:10, tipo:'unica',
+     t:'Alvará sanitário do cliente',
+     acao:'Obter ou renovar o alvará sanitário do estabelecimento do cliente.',
+     ops:[
+       {v:'Vigente',    r:'Vigente', f:1, tom:'v'},
+       {v:'Vencido',    r:'Vencido — existe, mas fora da validade', f:0.3, tom:'a'},
+       {v:'Não possui', r:'Não possui', f:0, tom:'r'},
+       {v:'Não sabe',   r:'Não sabe — confirmar depois', f:null, tom:'x'}
+     ]},
+    {k:'p_escopo', col:'Diag Escopo do alvará', peso:8, tipo:'unica',
+     t:'O escopo do alvará cobre a complexidade praticada?',
+     d:'É a pergunta que quase ninguém faz. Alvará vigente que descreve só "consultório médico" não sustenta cirurgia.',
+     acao:'Ampliar o escopo do alvará sanitário para contemplar os procedimentos efetivamente praticados.',
+     ops:[
+       {v:'cobre',    r:'Contempla procedimento invasivo, sedação e recuperação', f:1, tom:'v'},
+       {v:'parcial',  r:'Cobre parte do que é praticado', f:0.4, tom:'a'},
+       {v:'consulta', r:'Descreve apenas consulta e assistência sem internação', f:0, tom:'r'},
+       {v:'na',       r:'Não se aplica — sem alvará próprio', f:null, tom:'x'},
+       NAO_SEI
+     ]},
+    {k:'p_alvara_terc', col:'Diag Alvará do local de terceiro', peso:8, tipo:'unica',
+     t:'Temos cópia do alvará sanitário do local de TERCEIRO?',
+     d:'A regularidade que importa é a do ambiente onde o ato é executado.',
+     acao:'Pedir ao hospital ou clínica a cópia vigente do alvará sanitário do local onde os atos são praticados.',
+     ops:[
+       {v:'tem',    r:'Cópia disponível e vigente', f:1, tom:'v'},
+       {v:'existe', r:'Sabe que existe, mas não temos a cópia', f:0.5, tom:'a'},
+       {v:'nao',    r:'Não possui ou não sabe informar', f:0, tom:'r'},
+       {v:'na',     r:'Não se aplica — não atua em estrutura de terceiro', f:null, tom:'x'},
+       NAO_SEI
+     ]},
+    {k:'p_contrato_terc', col:'Diag Contrato com o local de terceiro', peso:9, tipo:'unica',
+     t:'Contrato com a estrutura de terceiro, em nome do CNPJ?',
+     d:'Cessão de espaço, credenciamento ou parceria.',
+     acao:'Formalizar (ou recuperar) o contrato de cessão, credenciamento ou parceria em nome do CNPJ, assinado e vigente.',
+     ops:[
+       {v:'vigente', r:'Assinado, em nome do CNPJ e vigente', f:1, tom:'v'},
+       {v:'vencido', r:'Existe, mas vencido ou em nome do sócio PF', f:0.45, tom:'a'},
+       {v:'verbal',  r:'Apenas acordo verbal', f:0, tom:'r'},
+       {v:'na',      r:'Não se aplica', f:null, tom:'x'},
+       NAO_SEI
+     ]},
+    {k:'p_contrato_conv', col:'Possui contratos com convênios ou hospitais', cat:1, peso:8, tipo:'unica',
+     t:'Há contrato assinado e vigente com convênio ou hospital?',
+     d:'Os nomes de cada um ficam em "Quais convênios e hospitais", na seção Faturamento.',
+     acao:'Reunir os contratos com convênios e hospitais em nome do CNPJ, dentro da vigência.',
+     ops:[
+       {v:'Sim, vigente',        r:'Sim, em nome do CNPJ e dentro da vigência', f:1, tom:'v'},
+       {v:'Existe, mas vencido', r:'Existe, mas vencido ou desatualizado', f:0.45, tom:'a'},
+       {v:'Sem contrato formal', r:'Sem contrato formal', f:0, tom:'r'},
+       {v:'Não se aplica',       r:'Não se aplica — não fatura para convênio nem hospital', f:null, tom:'x'},
+       {v:'Não sabe',            r:'Não sabe — confirmar depois', f:null, tom:'x'}
+     ]},
+    {k:'p_locacao', col:'Diag Locação da sede em nome do CNPJ', peso:6, tipo:'unica',
+     t:'O contrato de locação da sede está em nome do CNPJ?',
+     acao:'Transferir o contrato de locação da sede para o CNPJ (ou formalizar a cessão de uso).',
+     ops:[
+       {v:'pj',      r:'Sim, em nome do CNPJ', f:1, tom:'v'},
+       {v:'propria', r:'Imóvel próprio da PJ', f:1, tom:'v'},
+       {v:'pf',      r:'Em nome do sócio, pessoa física', f:0.3, tom:'a'},
+       {v:'sem',     r:'Sem contrato', f:0, tom:'r'},
+       {v:'na',      r:'Não se aplica — não há sede', f:null, tom:'x'},
+       NAO_SEI
+     ]},
+    {k:'p_licencas', col:'Diag Licenças específicas', peso:7, tipo:'unica',
+     t:'Licenças específicas (radiologia, medicina nuclear, PGRSS, farmácia e controlados)',
+     acao:'Regularizar as licenças específicas aplicáveis à atividade (radiologia, PGRSS, controlados).',
+     ops:[
+       {v:'ok',      r:'Vigentes, todas as aplicáveis', f:1, tom:'v'},
+       {v:'parcial', r:'Alguma pendente ou vencida', f:0.4, tom:'a'},
+       {v:'ausente', r:'Aplicável e ausente', f:0, tom:'r'},
+       {v:'na',      r:'Nenhuma é aplicável', f:null, tom:'x'},
+       NAO_SEI
+     ]},
+    {k:'p_desc_nf', col:'NF descreve serviço e profissional', cat:1, peso:8, tipo:'unica',
+     t:'A descrição da nota fiscal é técnica ou genérica?',
+     d:'Sem descrição técnica não há como segregar receita equiparável de consulta — e a apuração vira estimativa.',
+     acao:'Ajustar a descrição das notas para identificar o procedimento e separar consulta de ato assistencial.',
+     ops:[
+       {v:'Sim',      r:'Descreve o procedimento e o profissional responsável', f:1, tom:'v'},
+       {v:'Parcial',  r:'Mista — algumas descrevem, outras não', f:0.5, tom:'a'},
+       {v:'Não',      r:'Sai como "serviços médicos"', f:0, tom:'r'},
+       {v:'Não sabe', r:'Não sabe — confirmar depois', f:null, tom:'x'}
+     ]},
+    {k:'p_cnes', col:'CNES (situação)', cat:1, peso:8, tipo:'unica',
+     t:'O estabelecimento tem CNES ativo?',
+     d:'O CNES é a prova cadastral de que existe um estabelecimento de saúde, e não só um profissional. O número fica na Identificação.',
+     acao:'Cadastrar o estabelecimento no CNES (ou reativar o cadastro) em nome do CNPJ.',
+     ops:[
+       {v:'Possui',               r:'Sim, ativo e em nome do CNPJ', f:1, tom:'v'},
+       {v:'Possui, desatualizado',r:'Existe, mas desatualizado', f:0.45, tom:'a'},
+       {v:'Não possui',           r:'Não possui', f:0, tom:'r'},
+       {v:'Não sabe',             r:'Não sabe — confirmar depois', f:null, tom:'x'}
+     ]},
+    {k:'p_estetica_seg', col:'Diag Segregação da estética', peso:4, tipo:'unica',
+     t:'A estética está segregada no faturamento?',
+     acao:'Segregar o faturamento de procedimentos estéticos do faturamento assistencial.',
+     ops:[
+       {v:'sim', r:'Sim, segregada', f:1, tom:'v'},
+       {v:'nao', r:'Não segregada', f:0, tom:'r'},
+       {v:'na',  r:'Não realiza estética', f:null, tom:'x'},
+       NAO_SEI
+     ]},
+    {k:'p_pop', col:'Diag POP e organização formal', peso:6, tipo:'unica',
+     t:'Há POP escrito ou divisão formal de funções?',
+     d:'Protocolos, organograma e escala de plantão por escrito.',
+     acao:'Produzir POPs, organograma e escala de plantão por escrito — é prova barata de organização empresarial.',
+     ops:[
+       {v:'sim',  r:'Protocolos, organograma e escala por escrito', f:1, tom:'v'},
+       {v:'elab', r:'Em elaboração', f:0.5, tom:'a'},
+       {v:'nada', r:'Nada formalizado', f:0, tom:'r'},
+       NAO_SEI
+     ]},
+    {k:'p_governanca', col:'Acordo de sócios ou atas', cat:1, peso:5, tipo:'unica',
+     t:'Existe acordo de sócios ou atas de reunião?',
+     acao:'Formalizar acordo de sócios e passar a registrar atas das decisões.',
+     ops:[
+       {v:'Sim',      r:'Governança formalizada por escrito', f:1, tom:'v'},
+       {v:'Não',      r:'Decisões apenas informais', f:0, tom:'r'},
+       {v:'Não sabe', r:'Não sabe — confirmar depois', f:null, tom:'x'}
+     ]},
+    {k:'p_pol_repasse', col:'Contrato formal com autônomos', cat:1, peso:5, tipo:'unica',
+     t:'Há contrato assinado e política escrita de repasse?',
+     d:'A regra em si (quanto cada médico recebe) fica em "Regra de repasse aos médicos", na seção Outras contratações.',
+     acao:'Formalizar por escrito a política de repasse e os contratos com os profissionais repassados.',
+     ops:[
+       {v:'Contrato assinado e política de repasse escrita', r:'Contrato assinado e política escrita', f:1, tom:'v'},
+       {v:'Contrato sem política, ou política sem contrato', r:'Contrato sem política, ou política sem contrato', f:0.5, tom:'a'},
+       {v:'Acordo verbal ou sem documento',                  r:'Acordo verbal ou sem documento algum', f:0, tom:'r'},
+       {v:'Não há repasse',                                  r:'Não há repasse', f:null, tom:'x'},
+       {v:'Não sabe',                                        r:'Não sabe — confirmar depois', f:null, tom:'x'}
+     ]},
+    {k:'p_ativo', col:'Diag Equipamentos no ativo ou com contrato', peso:5, tipo:'unica',
+     t:'Os equipamentos estão registrados no ativo ou têm contrato?',
+     acao:'Registrar os equipamentos no ativo imobilizado da PJ ou formalizar o leasing/locação.',
+     ops:[
+       {v:'sim', r:'Registrados no ativo, ou leasing/locação formalizada', f:1, tom:'v'},
+       {v:'usa', r:'Usa, mas sem registro nem contrato', f:0.35, tom:'a'},
+       {v:'na',  r:'Não se aplica — todos são do terceiro', f:null, tom:'x'},
+       NAO_SEI
+     ]},
+    {k:'p_sistema', col:'Formato do controle', cat:1, peso:5, tipo:'unica',
+     t:'Usa sistema de gestão?',
+     d:'Qual é o sistema fica em "Responsável pelo controle" e nas observações da Controladoria.',
+     acao:'Implantar sistema de gestão que emita relatório por procedimento — é o que sustenta a segregação de receita.',
+     ops:[
+       {v:'Sistema',  r:'Sistema com relatórios por procedimento', f:1, tom:'v'},
+       {v:'Planilha', r:'Controle manual em planilha', f:0.35, tom:'a'},
+       {v:'Outro',    r:'Outro formato', f:0.35, tom:'a'},
+       {v:'Nenhum',   r:'Nenhum controle', f:0, tom:'r'}
+     ]},
+    {k:'p_comunic', col:'Diag Comunicação institucional', peso:6, tipo:'unica',
+     t:'Site, marca e presença em mídia',
+     d:'A comunicação é prova pública e gratuita: descreve a estrutura, ou apresenta o médico?',
+     acao:'Ajustar site e redes para comunicar a CLÍNICA — estrutura, equipe e procedimentos —, e não o perfil pessoal do médico.',
+     ops:[
+       {v:'clinica', r:'Comunica a clínica: estrutura, equipe e procedimentos', f:1, tom:'v'},
+       {v:'misto',   r:'Marca da clínica, mas conteúdo centrado no médico', f:0.5, tom:'a'},
+       {v:'pessoal', r:'Apenas perfil pessoal do médico principal', f:0, tom:'r'},
+       {v:'nenhuma', r:'Nenhuma presença institucional', f:0, tom:'r'},
+       NAO_SEI
+     ]}
+  ]},
+
+{ id:'resultado', n:'Resultado e recomendação', sub:'Leia com o cliente', resultado:1 }
+];
+
+var FAIXAS = [
+  {t:1, min:75, nome:'Empresa de FATO',
+   res:'Alta empresarialidade, baixa pessoalidade, estrutura de gasto compatível.'},
+  {t:2, min:50, nome:'Empresa com potencial para ser de FATO',
+   res:'Há base empresarial real, com pontos que precisam ser construídos junto com o cliente.'},
+  {t:3, min:25, nome:'Empresa com baixo potencial para ser de FATO',
+   res:'Poucos elementos empresariais. Risco moderado de indeferimento mesmo com mandado de segurança.'},
+  {t:4, min:0,  nome:'Empresa com atuação totalmente PESSOAL',
+   res:'A operação é a pessoa do médico. Risco enorme de indeferimento.'}
+];
+
+/* Os três grupos da navegação. */
+var GRUPOS = [
+  { n:'Identificação',       painéis:[{ id:'cat:Identificação', n:'Identificação', tipo:'cat', sec:'Identificação' }] },
+  { n:'Onboarding geral',    painéis:SECOES_ONBOARDING.map(function(s){
+      return { id:'cat:' + s, n:s, tipo:'cat', sec:s }; }) },
+  { n:'Atuação empresarial', painéis:BLOCOS.map(function(b){
+      return { id:'diag:' + b.id, n:b.n, tipo:'diag', bloco:b }; }) }
+];
+function painelPorId(id){
+  for (var g = 0; g < GRUPOS.length; g++)
+    for (var i = 0; i < GRUPOS[g].painéis.length; i++)
+      if (GRUPOS[g].painéis[i].id === id) return GRUPOS[g].painéis[i];
+  return GRUPOS[0].painéis[0];
+}
+
+/* =============================================================================
+   ESTADO
+   ============================================================================= */
+var VAL  = {};   // nome da coluna -> valor (cadastro E perguntas com cat:1)
+var ORIG = {};   // como veio do servidor, para gravar só o que mudou
+var RESP = {};   // perguntas sem coluna no catálogo (nascem como "Diag …")
+var OBS  = {};   // anotação por pergunta
+var CLI  = { id:'', nome:'', valores:{} };
+var ABA  = 'cat:Identificação';
+var SUJO = false;
+
+function pontua(p){ return !!p.peso; }
+function perguntas(){
+  var L = [];
+  BLOCOS.forEach(function(b){ (b.perguntas || []).forEach(function(p){ p._b = b; L.push(p); }); });
+  return L;
+}
+function acharP(k){ var L = perguntas(); for (var i=0;i<L.length;i++) if (L[i].k === k) return L[i]; return null; }
+
+/* O acessor que faz os dois estados parecerem um só. Pergunta com `cat:1` mora
+   na coluna do catálogo (e por isso o campo do onboarding e a alternativa do
+   diagnóstico mostram sempre a mesma coisa); as demais moram no RESP. */
+function respostaDe(p){
+  if (p.cat)    return VAL[p.col] || '';
+  if (p.catpct) return pctLer(p);
+  return RESP[p.k];
+}
+
+/* ── as perguntas de proporção que moram em colunas ──────────────────────────
+   Duas formas, e as duas existem porque a planilha já tinha o dado:
+
+     fatia com `col`  — uma coluna por fatia. É o caso das cinco "% …" da seção
+                        Faturamento, que vieram do formulário de papel.
+     pergunta com `col` — uma coluna só, com o resumo escrito ("Convênio 70% ·
+                        Particular 30%"). É o caso de "Fontes de recebimento",
+                        que era uma lista de caixas.
+
+   O `alias` da segunda forma lê o que JÁ está gravado como lista: um cadastro
+   antigo com "Particular · Convênios" abre com essas fatias em zero, esperando
+   o percentual, em vez de aparecer vazio e fazer alguém digitar de novo. O que
+   não casa com fatia nenhuma é preservado no fim da célula — dado que a equipe
+   digitou não some da planilha porque a lista de opções mudou. */
+var PCT_EXTRA = {};
+
+function pctLer(p){
+  var o = {};
+  if (p.fatias[0] && p.fatias[0].col) {
+    p.fatias.forEach(function(f){
+      var n = parseFloat(String(VAL[f.col] || '').replace('%','').replace(',','.'));
+      if (!isNaN(n)) o[f.v] = Math.max(0, Math.min(100, n));
+    });
+    return Object.keys(o).length ? o : null;
+  }
+  var bruto = String(VAL[p.col] || '').trim();
+  if (!bruto) return null;
+  var sobra = [];
+  bruto.split(/\s*·\s*/).forEach(function(parte){
+    parte = parte.trim(); if (!parte) return;
+    var m = parte.match(/^(.*?)[\s:]*(\d+(?:[.,]\d+)?)\s*%?$/);
+    var rot = (m ? m[1] : parte).trim(), n = m ? parseFloat(m[2].replace(',','.')) : 0;
+    var achou = null;
+    p.fatias.forEach(function(f){
+      if (achou) return;
+      var nomes = [f.r].concat(f.alias || []);
+      for (var i = 0; i < nomes.length; i++) if (norm(nomes[i]) === norm(rot)) achou = f;
+    });
+    if (achou) o[achou.v] = n; else sobra.push(parte);
+  });
+  PCT_EXTRA[p.k] = sobra;
+  return Object.keys(o).length ? o : null;
+}
+
+function pctGravar(p, fatiaV, valor){
+  if (p.fatias[0] && p.fatias[0].col) {
+    var f0 = null; p.fatias.forEach(function(f){ if (f.v === fatiaV) f0 = f; });
+    if (f0) { if (valor > 0) VAL[f0.col] = String(valor); else delete VAL[f0.col]; }
+    return;
+  }
+  var atual = pctLer(p) || {};
+  atual[fatiaV] = valor;
+  var partes = [];
+  p.fatias.forEach(function(f){ var n = +(atual[f.v] || 0); if (n > 0) partes.push(f.r + ' ' + n + '%'); });
+  partes = partes.concat(PCT_EXTRA[p.k] || []);
+  if (partes.length) VAL[p.col] = partes.join(MULTI_SEP); else delete VAL[p.col];
+}
+function porResposta(p, v){
+  if (p.cat) { if (v) VAL[p.col] = v; else delete VAL[p.col]; }
+  else RESP[p.k] = v;
+  SUJO = true;
+}
+
+/* =============================================================================
+   O CÁLCULO
+   ============================================================================= */
+function fracaoDe(p){
+  /* `null` = a pergunta NÃO entra na conta (sem resposta, "não sei", "não se
+     aplica"). É esse null que tira o item do numerador E do denominador. */
+  var r = respostaDe(p);
+
+  if (p.tipo === 'unica') {
+    if (!r) return null;
+    var op = null;
+    for (var i=0;i<p.ops.length;i++) if (p.ops[i].v === r) op = p.ops[i];
+    if (!op || op.f === null || op.f === undefined) return null;
+    return op.f;
+  }
+  if (p.tipo === 'multi') {
+    if (!r || !r.length) return null;
+    if (r.indexOf('nao_sei') >= 0) return null;
+    var pts = 0;
+    p.ops.forEach(function(o){ if (r.indexOf(o.v) >= 0 && o.p) pts += o.p; });
+    return Math.min(pts, p.peso) / p.peso;
+  }
+  if (p.tipo === 'pct') {
+    if (!r) return null;
+    var soma = 0, ganho = 0;
+    p.fatias.forEach(function(f){ var v = +(r[f.v] || 0); soma += v; ganho += v * f.f; });
+    if (soma <= 0) return null;
+    /* Divide pela SOMA declarada, não por 100: se o consultor anotou 70/20 e
+       esqueceu os 10 que faltam, a nota não pode cair pelo esquecimento. A tela
+       avisa que não fecha 100; a conta usa a proporção do que foi declarado. */
+    return ganho / soma;
+  }
+  return null;
+}
+
+function calcular(){
+  var eixo = { A:{num:0,den:0}, B:{num:0,den:0} };
+  var porBloco = {}, contadas = 0, total = 0, naoSei = [];
+
+  BLOCOS.forEach(function(b){ if (b.eixo) porBloco[b.id] = { num:0, den:0 }; });
+
+  perguntas().forEach(function(p){
+    if (!pontua(p)) return;
+    var b = p._b; if (!b.eixo) return;
+    total++;
+    var f = fracaoDe(p);
+    if (f === null) { if (respostaDe(p)) naoSei.push(p); return; }
+    contadas++;
+    eixo[b.eixo].num += f * p.peso;  eixo[b.eixo].den += p.peso;
+    porBloco[b.id].num += f * p.peso; porBloco[b.id].den += p.peso;
+  });
+
+  var bruto = eixo.A.den > 0 ? Math.round(eixo.A.num / eixo.A.den * 100) : null;
+  var prova = eixo.B.den > 0 ? Math.round(eixo.B.num / eixo.B.den * 100) : null;
+
+  /* A trava age DEPOIS da média: o escore continua sendo calculado por inteiro
+     (o consultor precisa ver que a empresa tinha 78 de estrutura), mas o número
+     que classifica fica com teto 24. Zerar esconderia justamente a informação
+     de que há empresa ali — só não há ato assistencial. */
+  var sv = RESP.a_servicos || [];
+  var travado = sv.indexOf && sv.indexOf('so_consulta') >= 0;
+  var escore = bruto;
+  if (travado && escore !== null && escore > 24) escore = 24;
+
+  var faixa = null;
+  if (escore !== null) for (var i=0;i<FAIXAS.length;i++) if (escore >= FAIXAS[i].min) { faixa = FAIXAS[i]; break; }
+
+  return { escore:escore, bruto:bruto, prova:prova, faixa:faixa, travado:travado,
+           completude: total ? Math.round(contadas / total * 100) : 0,
+           contadas:contadas, total:total, naoSei:naoSei, blocos:porBloco };
+}
+
+/* Completude do CADASTRO — outra conta, e de propósito: um cliente pode ter o
+   diagnóstico inteiro e a ficha pela metade. As colunas do sistema e as
+   calculadas ficam fora, senão todo cliente nasce com um teto que nunca alcança. */
+function completudeCadastro(){
+  var n = 0, t = 0;
+  CAT.campos.forEach(function(c){
+    /* As colunas com `dono` são respondidas em Atuação empresarial e já contam
+       na completude DO DIAGNÓSTICO. Contá-las aqui também faria a mesma resposta
+       aparecer em dois números, que é exatamente o que a separação de donos veio
+       resolver. */
+    if (c.sistema || c.ro || c.dono || c.s === SEC_CALCULADA) return;
+    t++; if (String(VAL[c.col] || '').trim()) n++;
+  });
+  return { n:n, t:t, pct: t ? Math.round(n / t * 100) : 0 };
+}
+function contaSecao(sec){
+  var n = 0, t = 0;
+  camposDaSecao(sec).forEach(function(c){
+    if (c.sistema || c.ro || c.dono) return;
+    t++; if (String(VAL[c.col] || '').trim()) n++;
+  });
+  return { n:n, t:t };
+}
+
+/* =============================================================================
+   PLANO DE TRABALHO E ROTEIRO
+
+   Três listas, e cada uma vira um parágrafo diferente:
+     ajustes    eixo B em vermelho ou pela metade — é o trabalho da Back4you.
+     construir  eixo A baixo — não se resolve com papel; depende do cliente.
+     confirmar  o que ficou em "não sei".
+   Sem essa separação a recomendação sairia com trinta linhas indistintas e o
+   consultor teria de adivinhar quais dependiam dele.
+   ============================================================================= */
+function planoDeTrabalho(){
+  var ajustes = [], construir = [], confirmar = [], alertas = [];
+
+  perguntas().forEach(function(p){
+    var b = p._b;
+    if (!pontua(p) || !b.eixo) return;
+    var r = respostaDe(p), f = fracaoDe(p);
+    if (f === null) { if (r && r.length) confirmar.push({ t:p.t }); return; }
+    var rot = '';
+    if (p.tipo === 'unica') p.ops.forEach(function(o){ if (o.v === r) rot = o.r; });
+    if (b.eixo === 'B' && f < 1) ajustes.push({ t:p.acao || p.t, sit:rot, peso:p.peso, grave:f === 0 });
+    if (b.eixo === 'A' && f <= 0.34) construir.push({ t:p.t, sit:rot, peso:p.peso });
+  });
+
+  ajustes.sort(function(a,b){ return (b.grave - a.grave) || (b.peso - a.peso); });
+  construir.sort(function(a,b){ return b.peso - a.peso; });
+
+  var c = calcular();
+  /* Os alertas vêm da FICHA, não de perguntas próprias. O regime, os débitos e
+     o histórico de equiparação já são campos do onboarding — perguntar de novo
+     no diagnóstico criaria duas respostas para o mesmo fato, e um dia elas
+     divergiriam. */
+  if (c.travado) alertas.push('TRAVA: a empresa realiza somente consulta ou atividade intelectual. Sem ato assistencial não há serviço hospitalar a equiparar, e nenhum documento conserta isso.');
+  if (VAL['Regime'] === 'Simples Nacional') alertas.push('No Simples Nacional: no período em que esteve, não há IRPJ/CSLL a recuperar pela tese. Levante as datas exatas de entrada e saída antes de estimar valor.');
+  if (VAL['Débitos na Receita Federal'] === 'Sim') alertas.push('Débitos federais em aberto: o indébito pode ser alcançado por compensação de ofício. Levante a situação fiscal antes de projetar caixa para o cliente.');
+  if (VAL['Cliente já equiparado'] === 'Aplicou e parou') alertas.push('Aplicou a tese e parou: descubra POR QUE antes de qualquer promessa. Autuação anterior ou glosa muda completamente o caso.');
+  if (VAL['Entradas na conta PJ sem NF'] === 'Sim') alertas.push('Há receita sem nota fiscal: ela fica fora da base do crédito e vira contingência no meio do processo.');
+  if (RESP.a_estetica === 'nao_seg') alertas.push('Estética sem segregação no faturamento: contamina a base de cálculo e precisa ser separada antes de apurar.');
+  if (c.escore !== null && c.completude < 60) alertas.push('Diagnóstico ' + c.completude + '% completo: o escore ainda é provisório. Complete antes de levar número ao cliente.');
+
+  return { ajustes:ajustes, construir:construir, confirmar:confirmar, alertas:alertas, calc:c };
+}
+
+function roteiro(){
+  var pl = planoDeTrabalho(), c = pl.calc, L = [];
+  if (c.escore === null) return 'Responda ao menos uma pergunta pontuada para o roteiro aparecer.';
+  var t = c.faixa.t;
+
+  L.push('CLIENTE: ' + (CLI.nome || VAL['Razão social da empresa'] || '(prospect)') +
+         (CLI.id ? '  ·  ID ' + CLI.id : '') + '  ·  ' + hoje());
+  L.push('CLASSIFICAÇÃO: ' + c.faixa.nome + '  ·  escore ' + c.escore + '/100  ·  prontidão probatória ' +
+         (c.prova === null ? '—' : c.prova + '%') + '  ·  diagnóstico ' + c.completude + '% completo');
+  L.push('');
+
+  if (t === 1) {
+    L.push('O QUE DIZER AO CLIENTE');
+    L.push('A operação já se apresenta como empresa: há ato assistencial além da consulta, estrutura de custo compatível e a receita não depende de uma pessoa só. O mérito está de pé.');
+    /* O mérito e a prova andam separados, e aqui a diferença precisa aparecer na
+       fala. Prometer "os poucos pontos que faltam" com a prontidão probatória em
+       20% é vender um trabalho de dois dias que vai levar dois meses — e o
+       cliente cobra a promessa, não o escore. */
+    if (c.prova !== null && c.prova < 60) {
+      L.push('O que falta é PROVA, não fato: a documentação está bem atrás da realidade da operação (' + c.prova + '% de prontidão). Vamos seguir para o mandado de segurança, mas a coleta e os ajustes listados abaixo são um trabalho de fôlego — combine prazo antes de prometer data.');
+    } else {
+      L.push('Vamos seguir com a coleta das documentações e ajustar os poucos pontos que faltam para impetrar o mandado de segurança.');
+    }
+  } else if (t === 2) {
+    L.push('O QUE DIZER AO CLIENTE');
+    L.push('Há base empresarial real, e o caso se sustenta. Vamos seguir com a coleta das documentações e os ajustes que faltam para o mandado de segurança — mas precisaremos da sua ajuda na obtenção ou na construção de alguns fatores, porque parte deles depende de decisões da própria clínica, não de documento que a gente busque sozinho.');
+  } else if (t === 3) {
+    L.push('O QUE DIZER AO CLIENTE — E ISTO PRECISA SER DITO COM CLAREZA');
+    L.push('Hoje há poucos elementos empresariais na operação. Mesmo com o mandado de segurança, o risco de vir negativo é MODERADO, e o caminho até a impetração dá bastante trabalho: além da documentação, há fatores da própria atuação que precisam ser construídos antes.');
+    L.push('Deixe o cliente ciente do risco de indeferimento. E combine desde já: se vier indeferido na primeira instância, a recomendação é deixar de lado e considerar outra estratégia — o ISS fixo é o caminho natural.');
+  } else {
+    L.push('O QUE DIZER AO CLIENTE — E ISTO PRECISA SER DITO COM CLAREZA');
+    L.push('A atuação hoje é, para todos os efeitos, pessoal: a empresa é o médico com um CNPJ. Mesmo com o mandado de segurança, o risco de vir negativo é ENORME, e o trabalho até a impetração é grande — quase tudo precisa ser construído antes, e construir leva tempo.');
+    L.push('Deixe o cliente ciente do risco elevado de indeferimento. E combine desde já: se vier indeferido na primeira instância, a recomendação é firme — deixar de lado e considerar outra estratégia, sendo o ISS fixo o caminho natural.');
+  }
+
+  L.push('');
+  L.push('O QUE NÓS AJUSTAMOS (' + pl.ajustes.length + ')' + (pl.ajustes.length ? '' : ' — nada pendente'));
+  pl.ajustes.forEach(function(a){ L.push('  · ' + a.t + (a.sit ? '   [hoje: ' + a.sit + ']' : '')); });
+  L.push('');
+  L.push('O QUE PRECISAMOS DE VOCÊ (' + pl.construir.length + ')' + (pl.construir.length ? '' : ' — nada pendente'));
+  if (!pl.construir.length) L.push('  · Nenhum fator da atuação precisa ser construído.');
+  pl.construir.forEach(function(a){ L.push('  · ' + a.t + (a.sit ? '   [hoje: ' + a.sit + ']' : '')); });
+  if (pl.confirmar.length) {
+    L.push(''); L.push('A CONFIRMAR (' + pl.confirmar.length + ')');
+    pl.confirmar.forEach(function(a){ L.push('  · ' + a.t); });
+  }
+  if (pl.alertas.length) {
+    L.push(''); L.push('ALERTAS');
+    pl.alertas.forEach(function(a){ L.push('  ! ' + a); });
+  }
+  return L.join('\n');
+}
+
+/* =============================================================================
+   DESENHO
+   ============================================================================= */
+var $ = function(id){ return document.getElementById(id); };
+var MULTI_SEP = ' · ';
+
+function desenharTopo(){
+  $('voltar').href = 'registro.html?chave=' + encodeURIComponent(chaveAtual()) +
+                     '&cod=' + encodeURIComponent(codAtual());
+  if (PROSPECT) {
+    $('tTitulo').innerHTML = esc(VAL['Razão social da empresa'] || 'Prospect sem cadastro') +
+      '<span class="selo pro">prospect · não grava</span>';
+    $('tSub').textContent = 'Reunião de sondagem. Nada nesta tela é gravado — ao final, imprima.';
+  } else {
+    $('tTitulo').innerHTML = esc(CLI.nome || 'Cliente ' + CLI.id);
+    var cc = completudeCadastro();
+    $('tSub').textContent = 'ID ' + CLI.id +
+      (VAL['Produtos Back4you'] ? ' · ' + VAL['Produtos Back4you'] : '') +
+      ' · cadastro ' + cc.pct + '% (' + cc.n + ' de ' + cc.t + ')';
+  }
+  $('btnSalvar').hidden = PROSPECT;
+}
+
+function desenharNav(){
+  var H = [];
+  GRUPOS.forEach(function(g){
+    H.push('<div class="grupo">' + esc(g.n) + '</div>');
+    g.painéis.forEach(function(pn){
+      var st = '', cl = '';
+      if (pn.tipo === 'cat') {
+        var c = contaSecao(pn.sec);
+        st = c.t ? (c.n + ' de ' + c.t + ' preenchidos') : 'só leitura';
+        cl = !c.t ? '' : (c.n === c.t ? ' cheio' : (c.n ? ' parcial' : ''));
+      } else if (pn.bloco.resultado) {
+        st = 'Leia com o cliente';
+      } else {
+        var d = calcular().blocos[pn.bloco.id];
+        var pct = d && d.den > 0 ? Math.round(d.num / d.den * 100) : null;
+        st = (pct === null ? 'sem resposta' : pct + ' de 100') +
+             (pn.bloco.peso ? ' · peso ' + pn.bloco.peso : '');
+        var resp = pn.bloco.perguntas.filter(function(p){ var r = respostaDe(p); return r && r.length; }).length;
+        cl = resp === pn.bloco.perguntas.length ? ' cheio' : (resp ? ' parcial' : '');
+      }
+      H.push('<button type="button" class="item' + (ABA === pn.id ? ' on' : '') + cl +
+             '" data-aba="' + esc(pn.id) + '"><span class="pip"></span>' +
+             '<span><span class="tt">' + esc(pn.n) + '</span><span class="st">' + esc(st) + '</span></span></button>');
+    });
+  });
+  $('nav').innerHTML = H.join('');
+}
+
+function corBarra(pct){
+  if (pct === null) return 'var(--sg-x)';
+  if (pct >= 75) return 'var(--sg-v)';
+  if (pct >= 50) return 'var(--sg-o)';
+  if (pct >= 25) return 'var(--sg-a)';
+  return 'var(--sg-r)';
+}
+
+function desenharPainel(){
+  var c = calcular(), cc = completudeCadastro();
+  var pos = c.escore === null ? 50 : Math.max(2, Math.min(98, c.escore));
+  var H = [];
+  H.push('<div class="esc-rot">Atuação de fato</div>');
+  H.push('<div class="esc-num">' + (c.escore === null ? '—' : c.escore) + '<small> /100</small></div>');
+  H.push('<div class="regua"><div class="muro" title="50 — em cima do muro"></div>' +
+         '<div class="pino" style="left:' + pos + '%"></div></div>');
+  H.push('<div class="regua-rot"><span>pessoal</span><span>muro</span><span>empresa</span></div>');
+  if (c.faixa) {
+    H.push('<div class="faixa" data-t="' + c.faixa.t + '">' + esc(c.faixa.nome) +
+           '<span class="cap">' + esc(c.faixa.res) + '</span></div>');
+  } else {
+    H.push('<div class="faixa" data-t="0">Diagnóstico ainda em branco<span class="cap">O escore aparece na primeira pergunta pontuada, em Atuação empresarial.</span></div>');
+  }
+  if (c.travado) {
+    H.push('<div class="trava"><b>TRAVA — somente consulta</b>Sem ato assistencial não há serviço hospitalar a equiparar. O escore fica com teto 24' +
+           (c.bruto !== null && c.bruto > 24 ? ' (a estrutura sozinha daria ' + c.bruto + ')' : '') + '.</div>');
+  }
+  H.push('<div class="medidor"><div class="mt"><span>Prontidão probatória</span><span>' +
+         (c.prova === null ? '—' : c.prova + '%') + '</span></div><div class="barra"><i style="width:' +
+         (c.prova || 0) + '%;background:' + corBarra(c.prova) + '"></i></div>' +
+         '<div class="md">O quanto está provado em documento. Não entra no escore: é ajustável.</div></div>');
+  H.push('<div class="medidor"><div class="mt"><span>Diagnóstico completo</span><span>' + c.completude + '%</span></div>' +
+         '<div class="barra"><i style="width:' + c.completude + '%;background:var(--brand-teal)"></i></div>' +
+         '<div class="md">' + c.contadas + ' de ' + c.total + ' perguntas pontuadas respondidas' +
+         (c.naoSei.length ? ' · ' + c.naoSei.length + ' em "não sei"' : '') + '.</div></div>');
+  H.push('<div class="medidor"><div class="mt"><span>Cadastro preenchido</span><span>' + cc.pct + '%</span></div>' +
+         '<div class="barra"><i style="width:' + cc.pct + '%;background:var(--brand-euc)"></i></div>' +
+         '<div class="md">' + cc.n + ' de ' + cc.t + ' campos do onboarding.</div></div>');
+
+  var mini = BLOCOS.filter(function(b){ return b.eixo === 'A'; }).map(function(b){
+    var d = c.blocos[b.id], pct = d && d.den > 0 ? Math.round(d.num / d.den * 100) : null;
+    return '<div class="bm"><div class="bl"><span>' + esc(b.n) + '</span><span>' + (pct === null ? '—' : pct) +
+           '</span></div><div class="barra"><i style="width:' + (pct || 0) + '%;background:' + corBarra(pct) + '"></i></div></div>';
+  }).join('');
+  H.push('<div class="mini"><h4>Por bloco — atuação de fato</h4>' + mini + '</div>');
+  $('painel').innerHTML = H.join('');
+}
+
+/* ---------- campos do cadastro ---------- */
+function partesMulti(v){ return String(v || '').split(/\s*·\s*/).map(function(x){ return x.trim(); }).filter(Boolean); }
+
+function campoHTML(c){
+  var v = VAL[c.col] == null ? '' : String(VAL[c.col]);
+  var ro = !!(c.sistema || c.ro);
+  var H = ['<div class="fld' + (c.full || c.t === 'multi' || c.t === 'textarea' ? ' full' : '') + '">'];
+  H.push('<label for="f_' + slug(c.col) + '">' + esc(c.col) + '</label>');
+
+  if (ro) {
+    H.push('<input id="f_' + slug(c.col) + '" class="ro" type="text" value="' + esc(v) + '" readonly title="' +
+           esc(c.ro ? 'Escrito pela seção Atuação empresarial — editar aqui faria a nota deixar de corresponder às respostas.'
+                    : 'Coluna mantida pelo sistema.') + '">');
+  } else if (c.t === 'select') {
+    H.push('<select id="f_' + slug(c.col) + '" data-col="' + esc(c.col) + '">' +
+      (c.opts || ['']).map(function(o){
+        return '<option value="' + esc(o) + '"' + (o === v ? ' selected' : '') + '>' + esc(o || '—') + '</option>';
+      }).join('') + '</select>');
+  } else if (c.t === 'multi') {
+    var marc = partesMulti(v);
+    H.push('<div class="mopts" data-multicol="' + esc(c.col) + '">' + (c.opts || []).map(function(o){
+      return '<button type="button" class="mopt' + (marc.indexOf(o) >= 0 ? ' on' : '') + '" data-mv="' + esc(o) + '">' + esc(o) + '</button>';
+    }).join('') + '</div>');
+    /* O que a equipe digitou na planilha e não casa com nenhuma opção não pode
+       sumir da tela só porque a lista mudou: continua editável, e continua sendo
+       gravado junto. */
+    var livres = marc.filter(function(x){ return (c.opts || []).indexOf(x) < 0; });
+    H.push('<input class="mlivre" type="text" data-mlivre="' + esc(c.col) + '" value="' + esc(livres.join(MULTI_SEP)) +
+           '" placeholder="outros, separados por ·">');
+  } else if (c.t === 'textarea') {
+    H.push('<textarea id="f_' + slug(c.col) + '" data-col="' + esc(c.col) + '">' + esc(v) + '</textarea>');
+  } else {
+    H.push('<input id="f_' + slug(c.col) + '" type="' + (c.t === 'date' ? 'date' : 'text') + '"' +
+           (c.t === 'money' ? ' class="money"' : '') + (c.max ? ' maxlength="' + c.max + '"' : '') +
+           ' data-col="' + esc(c.col) + '" value="' + esc(v) + '">');
+  }
+  if (c.dica) H.push('<div class="dica">' + esc(c.dica) + '</div>');
+  H.push('</div>');
+  return H.join('');
+}
+
+function telaCatalogo(pn){
+  var cps = camposDaSecao(pn.sec);
+  var H = ['<h2>' + esc(pn.n) + '</h2>'];
+  if (CAT.sobre[pn.sec]) H.push('<p class="sobre">' + esc(CAT.sobre[pn.sec]) + '</p>');
+  var prod = String(VAL['Produtos Back4you'] || '');
+  var rel = CAT.relevancia[pn.sec];
+  if (rel && !PROSPECT) {
+    var casa = rel.some(function(p){ return prod.toLowerCase().indexOf(p.toLowerCase()) >= 0; });
+    H.push('<div class="aviso-cx ' + (casa ? 'v' : 'a') + '">' + (casa
+      ? 'Esta seção é do produto contratado por este cliente.'
+      : 'Esta seção costuma ser de ' + esc(rel.join(', ')) + ' — e este cliente não tem esses produtos. Preencha só se fizer sentido.') + '</div>');
+  }
+  /* O campo com `dono` NÃO é desenhado aqui: ele é respondido no grupo Atuação
+     empresarial, e desenhá-lo nos dois lugares recriaria o problema que o `dono`
+     existe para resolver. No lugar dele vai uma placa com o nome da coluna e o
+     atalho — quem está preenchendo a seção precisa saber que a pergunta existe e
+     onde ela está, senão vai achar que ela sumiu. */
+  var remetidos = cps.filter(function(c){ return c.dono; });
+  H.push('<div class="grade">' + cps.filter(function(c){ return !c.dono; }).map(campoHTML).join('') + '</div>');
+  if (remetidos.length) {
+    var alvo = {};
+    perguntas().forEach(function(p){ if (p.cat) alvo[norm(p.col)] = p._b.id;
+      if (p.catpct) { if (p.col) alvo[norm(p.col)] = p._b.id;
+        (p.fatias || []).forEach(function(f){ if (f.col) alvo[norm(f.col)] = p._b.id; }); } });
+    H.push('<div class="placa"><b>' + remetidos.length +
+      (remetidos.length === 1 ? ' campo desta seção é respondido' : ' campos desta seção são respondidos') +
+      ' em Atuação empresarial</b><span>' +
+      remetidos.map(function(c){
+        var b = alvo[norm(c.col)];
+        return '<a href="#" data-ir="' + esc(b || 'servicos') + '">' + esc(c.col) + '</a>';
+      }).join(' · ') +
+      '</span><i>Lá eles valem ponto no escore. Um dado, um lugar.</i></div>');
+  }
+  return H.join('');
+}
+
+/* ---------- perguntas pontuadas ---------- */
+function opHTML(p, o, multi){
+  var r = respostaDe(p);
+  var sel = multi ? (r || []).indexOf(o.v) >= 0 : r === o.v;
+  return '<label class="op' + (sel ? ' sel' : '') + '" data-tom="' + (o.tom || 'a') + '" data-multi="' + (multi ? 1 : 0) +
+    '" data-k="' + p.k + '" data-v="' + esc(o.v) + '"><span class="marca"></span><span class="rot">' + esc(o.r) +
+    (o.nota ? '<span class="nota">' + esc(o.nota) + '</span>' : '') + '</span></label>';
+}
+function pctHTML(p){
+  var r = respostaDe(p) || {}, soma = 0;
+  p.fatias.forEach(function(f){ soma += +(r[f.v] || 0); });
+  var linhas = p.fatias.map(function(f){
+    var v = +(r[f.v] || 0);
+    return '<div class="fatia"><span class="fr"><i style="background:var(--sg-' + (f.tom || 'a') + ')"></i>' + esc(f.r) + '</span>' +
+      '<input type="range" min="0" max="100" step="5" value="' + v + '" data-k="' + p.k + '" data-f="' + f.v + '">' +
+      '<input type="number" class="vv" min="0" max="100" value="' + v + '" data-k="' + p.k + '" data-f="' + f.v + '"></div>';
+  }).join('');
+  return '<div class="fatias">' + linhas + '</div><div class="soma ' + (soma === 100 ? 'ok' : 'nao') + '">' +
+         esc(textoSoma(soma)) + '</div>';
+}
+function textoSoma(s){
+  return s === 0 ? 'Nada declarado ainda — a pergunta não entra na conta.'
+       : s === 100 ? 'Soma 100%.'
+       : 'Soma ' + s + '%. A conta usa a proporção do que foi declarado, mas confira se falta alguma fatia.';
+}
+function pergHTML(p){
+  var H = ['<div class="perg">'];
+  H.push('<div class="pt-t">' + esc(p.t) + (p.peso ? '<span class="peso">' + p.peso + ' pt</span>' : '') + '</div>');
+  if (p.d) H.push('<div class="pt-d">' + esc(p.d) + '</div>');
+  if (p.cat || p.catpct) {
+    var cols = p.catpct && p.fatias[0] && p.fatias[0].col
+      ? p.fatias.map(function(f){ return '«' + f.col + '»'; }).join(', ')
+      : '«' + p.col + '»';
+    H.push('<div class="pt-col">Grava em ' + esc(cols) +
+           ' — e este é o único lugar em que essa coluna é respondida.</div>');
+  }
+  if (p.tipo === 'pct') H.push(pctHTML(p));
+  else H.push('<div class="ops">' + p.ops.map(function(o){ return opHTML(p, o, p.tipo === 'multi'); }).join('') + '</div>');
+  var ov = OBS[p.k] || '';
+  H.push('<button type="button" class="obs-bt' + (ov ? ' tem' : '') + '" data-obs="' + p.k + '">' +
+    (ov ? '✎ observação anotada' : '＋ anotar observação sobre este ponto') + '</button>' +
+    '<div class="obs-cx" data-cx="' + p.k + '"' + (ov ? '' : ' hidden') + '>' +
+    '<textarea data-obsk="' + p.k + '" placeholder="O que o cliente disse, com as palavras dele. Vai para a planilha junto com a resposta.">' +
+    esc(ov) + '</textarea></div>');
+  H.push('</div>');
+  return H.join('');
+}
+function telaBloco(b){
+  var H = ['<h2>' + esc(b.n) + '</h2>'];
+  if (b.objetivo) H.push('<p class="sobre">' + esc(b.objetivo) + '</p>');
+  H.push('<div class="legenda">' +
+    '<span><i style="background:var(--sg-v)"></i>empresarial</span>' +
+    '<span><i style="background:var(--sg-o)"></i>empresarial em grau menor</span>' +
+    '<span><i style="background:var(--sg-a)"></i>em cima do muro</span>' +
+    '<span><i style="background:var(--sg-r)"></i>pessoal · sem gasto · sem documento</span>' +
+    '<span><i style="background:var(--sg-x)"></i>não sei — sai da conta</span></div>');
+  H.push(b.perguntas.map(pergHTML).join(''));
+  return H.join('');
+}
+
+function telaResultado(){
+  var pl = planoDeTrabalho(), c = pl.calc, H = ['<h2>Resultado e recomendação</h2>'];
+  if (c.escore === null) return H.join('') + '<p class="vazio">Nenhuma pergunta pontuada foi respondida ainda.</p>';
+  H.push('<div class="res-cab" data-t="' + c.faixa.t + '"><div class="rn">' + c.escore + '</div><div>' +
+    '<div class="rt">' + esc(c.faixa.nome) + '</div><div class="rd">' + esc(c.faixa.res) +
+    ' · prontidão probatória ' + (c.prova === null ? '—' : c.prova + '%') +
+    ' · diagnóstico ' + c.completude + '% completo</div></div></div>');
+  if (c.travado) H.push('<div class="aviso-cx r"><b>Trava ativa.</b> A empresa realiza somente consulta ou atividade intelectual pura. É o único item que impede o benefício por si só, e não se conserta com documento.</div>');
+
+  function lista(tit, itens, tom, vazio){
+    var s = '<div class="res-bl"><h4>' + esc(tit) + '<span class="cont">' + itens.length + '</span></h4>';
+    if (!itens.length) return s + '<p class="vazio">' + esc(vazio) + '</p></div>';
+    return s + '<ul class="lista">' + itens.map(function(a){
+      return '<li data-tom="' + (a.grave ? 'r' : tom) + '">' + (a.sit ? '<b>hoje: ' + esc(a.sit) + '</b>' : '') + esc(a.t) + '</li>';
+    }).join('') + '</ul></div>';
+  }
+  H.push('<div class="res-bl"><h4>Roteiro para a conversa</h4><div class="roteiro">' + esc(roteiro()) + '</div></div>');
+  H.push(lista('O que nós ajustamos — documental', pl.ajustes, 'a', 'Nada pendente do lado documental.'));
+  H.push(lista('O que precisamos de você — atuação', pl.construir, 'a', 'Nenhum fator da atuação precisa ser construído.'));
+  H.push(lista('A confirmar', pl.confirmar, 'x', 'Nada ficou em aberto.'));
+  H.push(lista('Alertas', pl.alertas.map(function(x){ return { t:x, grave:1 }; }), 'r', 'Nenhum alerta.'));
+  return H.join('');
+}
+
+function desenharTela(){
+  var pn = painelPorId(ABA);
+  var H = '';
+  if (PROSPECT && pn.id === 'cat:Identificação') {
+    H += '<div class="aviso-cx a"><b>Modo prospect.</b> Esta ficha não grava nada, nunca — não há botão de salvar. ' +
+         'Conduza a reunião, veja o escore andar e IMPRIMA no fim. Se o prospect fechar, cadastre-o em "+ Novo cliente" ' +
+         'no Registro e abra a ficha dele para valer.</div>';
+  }
+  H += (pn.tipo === 'cat') ? telaCatalogo(pn) : (pn.bloco.resultado ? telaResultado() : telaBloco(pn.bloco));
+  $('tela').innerHTML = H;
+  $('tela').scrollTop = 0;
+}
+function redesenhar(){ desenharTopo(); desenharNav(); desenharPainel(); desenharTela(); }
+function soLados(){ desenharTopo(); desenharNav(); desenharPainel(); }
+
+/* =============================================================================
+   EVENTOS
+   ============================================================================= */
+function marcar(k, v){
+  var p = acharP(k); if (!p) return;
+  if (p.tipo === 'multi') {
+    var arr = (RESP[k] || []).slice(), ex = null;
+    p.ops.forEach(function(o){ if (o.v === v && (o.exclusiva || o.v === 'nao_sei')) ex = o; });
+    var i = arr.indexOf(v);
+    if (i >= 0) arr.splice(i, 1);
+    else if (ex) arr = [v];                       // exclusiva zera o resto
+    else {
+      arr = arr.filter(function(x){               // e é zerada por qualquer outra
+        var oo = null; p.ops.forEach(function(o){ if (o.v === x) oo = o; });
+        return !(oo && (oo.exclusiva || oo.v === 'nao_sei'));
+      });
+      arr.push(v);
+    }
+    RESP[k] = arr; SUJO = true;
+  } else {
+    porResposta(p, respostaDe(p) === v ? '' : v);
+  }
+  desenharTela(); soLados(); avisar('');
+}
+
+document.addEventListener('click', function(e){
+  var it = e.target.closest && e.target.closest('.item');
+  if (it) { ABA = it.getAttribute('data-aba'); redesenhar(); return; }
+  var op = e.target.closest && e.target.closest('.op');
+  if (op) { e.preventDefault(); marcar(op.getAttribute('data-k'), op.getAttribute('data-v')); return; }
+  var mo = e.target.closest && e.target.closest('.mopt');
+  if (mo) {
+    var cx = mo.parentNode, col = cx.getAttribute('data-multicol');
+    mo.classList.toggle('on');
+    var marc = [];
+    cx.querySelectorAll('.mopt.on').forEach(function(b){ marc.push(b.getAttribute('data-mv')); });
+    var livre = document.querySelector('[data-mlivre="' + CSS.escape(col) + '"]');
+    if (livre && livre.value.trim()) marc = marc.concat(partesMulti(livre.value));
+    VAL[col] = marc.join(MULTI_SEP); SUJO = true; soLados(); return;
+  }
+  var ir = e.target.closest && e.target.closest('[data-ir]');
+  if (ir) { e.preventDefault(); ABA = 'diag:' + ir.getAttribute('data-ir'); redesenhar(); return; }
+  var ob = e.target.closest && e.target.closest('.obs-bt');
+  if (ob) {
+    var cxo = document.querySelector('[data-cx="' + ob.getAttribute('data-obs') + '"]');
+    if (cxo) { cxo.hidden = !cxo.hidden; if (!cxo.hidden) cxo.querySelector('textarea').focus(); }
+  }
+});
+
+document.addEventListener('input', function(e){
+  var t = e.target;
+  if (t.hasAttribute && t.hasAttribute('data-f')) {
+    var k = t.getAttribute('data-k'), f = t.getAttribute('data-f');
+    var v = Math.max(0, Math.min(100, +t.value || 0));
+    var pq = acharP(k);
+    if (pq.catpct) pctGravar(pq, f, v); else { RESP[k] = RESP[k] || {}; RESP[k][f] = v; }
+    SUJO = true;
+    /* Só o par de controles da fatia e os painéis: redesenhar a tela inteira
+       enquanto alguém arrasta um cursor mataria o arrasto no primeiro pixel. */
+    var pares = document.querySelectorAll('[data-k="' + k + '"][data-f="' + f + '"]');
+    for (var i=0;i<pares.length;i++) if (pares[i] !== t) pares[i].value = v;
+    var p = acharP(k), soma = 0, rr = respostaDe(p) || {};
+    p.fatias.forEach(function(x){ soma += +(rr[x.v] || 0); });
+    var el = t.closest('.perg').querySelector('.soma');
+    if (el) { el.className = 'soma ' + (soma === 100 ? 'ok' : 'nao'); el.textContent = textoSoma(soma); }
+    soLados(); return;
+  }
+  if (t.hasAttribute && t.hasAttribute('data-obsk')) { OBS[t.getAttribute('data-obsk')] = t.value; SUJO = true; return; }
+  if (t.hasAttribute && t.hasAttribute('data-mlivre')) {
+    var colL = t.getAttribute('data-mlivre');
+    var cxL = document.querySelector('[data-multicol="' + CSS.escape(colL) + '"]');
+    var m = [];
+    if (cxL) cxL.querySelectorAll('.mopt.on').forEach(function(b){ m.push(b.getAttribute('data-mv')); });
+    VAL[colL] = m.concat(partesMulti(t.value)).join(MULTI_SEP); SUJO = true; soLados(); return;
+  }
+  if (t.hasAttribute && t.hasAttribute('data-col')) {
+    VAL[t.getAttribute('data-col')] = t.value; SUJO = true; soLados(); return;
+  }
+});
+document.addEventListener('change', function(e){
+  var t = e.target;
+  if (t.tagName === 'SELECT' && t.hasAttribute('data-col')) {
+    VAL[t.getAttribute('data-col')] = t.value; SUJO = true; soLados();
+  }
+});
+
+/* =============================================================================
+   CARGA
+   ============================================================================= */
+function avisar(txt, cl){ var el = $('aviso'); el.textContent = txt || ''; el.className = 'aviso' + (cl ? ' ' + cl : ''); }
+
+function carregar(){
+  if (PROSPECT) { redesenhar(); return Promise.resolve(); }
+  if (!chaveAtual()) {
+    /* Sem chave não há painel da equipe. A porta é o index.html, e o `destino`
+       é o que traz a pessoa de volta para CÁ depois do login — senão todo
+       acesso por link despejaria o colaborador na home, longe do cliente que
+       ele queria abrir. */
+    location.replace('index?destino=' + encodeURIComponent(
+      location.pathname.split('/').pop() + location.search + location.hash));
+    return Promise.resolve();
+  }
+  avisar('Carregando a ficha…');
+  return jsonp(API_URL + '?tipo=registro_equipe&chave=' + encodeURIComponent(chaveAtual()))
+    .then(function(d){
+      if (d && d.erro) throw new Error(d.erro);
+      var alvo = null;
+      (d.clientes || []).forEach(function(c){ if (String(c.id) === par('id')) alvo = c; });
+      if (!alvo) throw new Error('Não achei o cliente ' + par('id') + ' no Registro.');
+      CLI = { id: alvo.id, nome: alvo.nome, valores: alvo.valores || {} };
+      VAL = {}; Object.keys(CLI.valores).forEach(function(k){ VAL[k] = CLI.valores[k]; });
+      ORIG = {}; Object.keys(VAL).forEach(function(k){ ORIG[k] = VAL[k]; });
+      var js = VAL['Diag Dados (JSON)'];
+      if (js) {
+        try { var o = JSON.parse(js); RESP = o.resp || {}; OBS = o.obs || {}; }
+        catch (e) { /* JSON estragado não pode derrubar a ficha */ }
+      }
+      avisar('');
+      redesenhar();
+    })
+    .catch(function(e){ avisar(e.message, 'erro'); redesenhar(); });
+}
+
+/* =============================================================================
+   GRAVAÇÃO
+
+   Vai tudo por `acao=diag_salvar`, que é a rota que grava por NOME de coluna e
+   CRIA a que ainda não existir — e é isso que permite as perguntas nascerem com
+   coluna própria sem ninguém abrir a planilha antes. O `origem` distingue, no
+   log, a ficha do diagnóstico.
+
+   Só viaja o que MUDOU. Campo em branco que continua em branco não vira uma
+   escrita, e campo que o servidor já tem igual não vira uma linha de log.
+
+   As observações de cada pergunta não ganham coluna própria: juntam-se na
+   observação do BLOCO, com o nome da pergunta na frente. Quarenta colunas quase
+   sempre vazias tornariam a planilha ilegível, e a anotação é para ser lida em
+   conjunto de qualquer forma.
+   ============================================================================= */
+function rotuloResposta(p){
+  var r = respostaDe(p);
+  if (r === undefined || r === null || r === '') return '';
+  if (p.tipo === 'unica') { var s = ''; p.ops.forEach(function(o){ if (o.v === r) s = o.r; }); return p.cat ? r : s; }
+  if (p.tipo === 'multi') {
+    if (!r.length) return '';
+    var L = []; p.ops.forEach(function(o){ if (r.indexOf(o.v) >= 0) L.push(o.r); });
+    return L.join(MULTI_SEP);
+  }
+  if (p.tipo === 'pct') {
+    var L2 = []; p.fatias.forEach(function(f){ var v = +((r || {})[f.v] || 0); if (v) L2.push(f.r + ' ' + v + '%'); });
+    return L2.join(MULTI_SEP);
+  }
+  return String(r);
+}
+
+function montarCampos(){
+  var campos = {}, c = calcular(), pl = planoDeTrabalho();
+
+  // 1. o cadastro — só o que mudou, e nunca uma coluna do sistema ou calculada
+  CAT.campos.forEach(function(cc){
+    if (cc.sistema || cc.ro) return;
+    var v = VAL[cc.col] == null ? '' : String(VAL[cc.col]);
+    var o = ORIG[cc.col] == null ? '' : String(ORIG[cc.col]);
+    if (v !== o) campos[cc.col] = v;
+  });
+
+  // 2. o diagnóstico — as perguntas com coluna própria (as `cat:1` já foram acima)
+  BLOCOS.forEach(function(b){
+    var notas = [];
+    (b.perguntas || []).forEach(function(p){
+      /* `cat` e `catpct` já viajam como campo do cadastro (o VAL é a coluna).
+         Aqui só as perguntas que nascem com coluna própria "Diag …". */
+      if (!p.cat && !p.catpct && p.col) { var v = rotuloResposta(p); if (v) campos[p.col] = v; }
+      if (OBS[p.k]) notas.push(p.t + ': ' + OBS[p.k]);
+    });
+    if (notas.length) campos['Diag Obs — ' + b.n] = notas.join('\n');
+  });
+
+  // 3. o resultado
+  campos['Diag Data'] = hoje();
+  campos['Diag Consultor'] = codAtual();
+  campos['Diag Escore Fato'] = c.escore === null ? '' : String(c.escore);
+  campos['Diag Classificação'] = c.faixa ? c.faixa.nome : '';
+  campos['Diag Prontidão Prova %'] = c.prova === null ? '' : String(c.prova);
+  campos['Diag Completude %'] = String(c.completude);
+  campos['Diag Trava'] = c.travado ? 'Somente consulta — teto 24' : 'Não';
+  campos['Diag Pendências'] = pl.ajustes.map(function(a){ return '· ' + a.t; })
+    .concat(pl.construir.map(function(a){ return '· (cliente) ' + a.t; })).join('\n');
+  campos['Diag Recomendação'] = roteiro();
+  campos['Diag Alertas'] = pl.alertas.join('\n');
+  campos['Diag Dados (JSON)'] = JSON.stringify({ v:1, data:hoje(), resp:RESP, obs:OBS });
+  return campos;
+}
+
+function salvar(){
+  if (PROSPECT) { avisar('Modo prospect não grava. Use Imprimir.', 'erro'); return; }
+  var campos = montarCampos();
+  $('btnSalvar').disabled = true;
+  avisar('Gravando…');
+  postAcao({ acao:'diag_salvar', cod:codAtual(), id:CLI.id, cliente:CLI.nome,
+             origem:'Ficha do cliente', campos:campos })
+    .then(function(d){
+      SUJO = false;
+      Object.keys(campos).forEach(function(k){ ORIG[k] = campos[k]; });
+      var extra = (d.criadas && d.criadas.length) ? ' · ' + d.criadas.length + ' colunas criadas' : '';
+      avisar((d.mensagem || 'Salvo.') + extra, 'ok');
+      soLados();
+    })
+    .catch(function(e){ avisar('Não gravei: ' + e.message, 'erro'); })
+    .then(function(){ $('btnSalvar').disabled = false; });
+}
+
+function copiar(){
+  var txt = roteiro();
+  var ok = function(){ avisar('Diagnóstico copiado.', 'ok'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, manual);
+  else manual();
+  function manual(){
+    var ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); ok(); }
+    catch (e) { avisar('Não consegui copiar — o texto está na tela de Resultado.', 'erro'); }
+    ta.remove();
+  }
+}
+
+$('btnSalvar').addEventListener('click', salvar);
+$('btnCopiar').addEventListener('click', copiar);
+$('btnImprimir').addEventListener('click', function(){
+  ABA = 'diag:resultado'; redesenhar(); setTimeout(function(){ window.print(); }, 60);
+});
+window.addEventListener('beforeunload', function(e){ if (SUJO && !PROSPECT) { e.preventDefault(); e.returnValue = ''; } });
+
+carregar();
+
+</script>
+</body>
+</html>
