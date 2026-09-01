@@ -612,6 +612,46 @@ details.sec>summary .cnt-sec{font-size:11px;color:var(--muted,#8A7D70);font-weig
   background:#F1ECE4;border-radius:var(--radius-pill);padding:2px 8px}
 details.sec>summary .cnt-sec.falta{color:#A4303F;background:#FBEDEE}
 details.sec .grid{margin-top:10px}
+/* ---- a ficha do cliente, assunto por assunto ----
+   A ficha passou de 41 para 170 colunas e de 6 para 16 assuntos. Aberta de uma
+   vez ela vira uma parede: quem rola perde o lugar onde estava e desiste de
+   procurar. Recolhida, ela vira uma lista de 16 assuntos com um contador em
+   cada — e a seção só se abre quando alguém tem a informação DAQUELE assunto na
+   mão, que é como a reunião acontece de verdade.
+   O <details> é o mesmo do cliente novo (details.sec, logo acima). O que muda
+   aqui é a frase de apoio embaixo do título e o selo de produto. */
+.corpo details.secf{padding:12px 14px;margin-bottom:10px}
+.corpo details.secf>summary{align-items:flex-start}
+.corpo details.secf>summary .arw{padding-top:3px}
+.corpo details.secf>summary .cnt-sec{margin-top:1px}
+/* O título e a frase são uma coluna só, e é ela que ocupa a linha — o `flex:1`
+   que a folha dá ao h2 valia quando o h2 era filho direto do summary. */
+.sec-cab{flex:1;min-width:0}
+.corpo details.secf>summary h2{font-size:13px;font-weight:800;color:var(--brand-dark);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
+.sec-sobre{display:block;margin-top:3px;font-size:12px;font-weight:400;color:var(--muted);line-height:1.35}
+/* O selo diz "esta seção costuma valer para este cliente" e NADA MAIS: não
+   esconde, não trava e não muda o que é gravado. Discreto de propósito — um selo
+   berrante seria lido como permissão, e permissão é justamente o que ele não é. */
+.selo-prod{font-size:10px;font-weight:800;letter-spacing:.2px;text-transform:none;
+  color:var(--brand-teal-txt);background:rgba(15,140,133,.10);border:1px solid rgba(15,140,133,.30);
+  border-radius:var(--radius-pill);padding:1px 8px}
+/* ---- campo de várias escolhas (t:'multi') ---- */
+.multi{display:flex;flex-direction:column;gap:7px}
+.mopts{display:flex;flex-wrap:wrap;gap:6px}
+.mopt{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2);
+  background:var(--surface-warm);border:1px solid var(--line-2);border-radius:var(--radius-pill);
+  padding:5px 11px;cursor:pointer;user-select:none}
+.mopt input{accent-color:var(--brand-teal);width:15px;height:15px;margin:0}
+.mopt.on{background:rgba(15,140,133,.10);border-color:var(--brand-teal);color:var(--brand-dark)}
+.fld .multi input.mlivre{font-size:12px}
+/* Valor em dinheiro alinha à direita, e é só isso que a coluna money faz — a
+   razão de não haver máscara está escrita no campoEditHTML. */
+.fld input.money{text-align:right}
+/* A dica da coluna, quando o catálogo traz uma. É onde cabe dizer POR QUE a
+   pergunta existe ("sete dígitos — muitos começam com zero"), que é o que evita
+   a resposta errada em vez de corrigi-la depois. */
+.fld-dica{display:block;margin-top:4px;font-size:var(--fs-1,11px);line-height:1.35;color:var(--muted)}
 /* ---- contatos do cliente novo ---- */
 .ct-novo{display:grid;grid-template-columns:1.2fr 1.4fr .9fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}
 .ct-novo .fld{margin:0}
@@ -876,6 +916,17 @@ function b4uParaPlanilha(valor,coluna){
   </div>
 </div>
 
+<!-- O CATÁLOGO das colunas do Registro: em que seção cada uma entra, que tipo de
+     campo ela é e quais são as opções quando é uma escolha. Sai da página pela
+     MESMA razão do config.js: são 170 colunas, e três coisas precisam concordar
+     sobre elas — esta tela, o Apps Script que cria as colunas que ainda faltam e
+     quem for acrescentar uma pergunta daqui a seis meses.
+     Se ele NÃO carregar, a página continua inteira: o montador cai no catálogo de
+     reserva que ficou aqui dentro (HINTS_RESERVA e companhia), a ficha volta a ter
+     as seis seções antigas e as colunas novas aparecem em "Outros" — feio, e
+     funcionando. Ele nunca decide quais colunas EXISTEM: isso continua vindo dos
+     cabeçalhos vivos da planilha. -->
+<script src="b4u-registro-campos.js" charset="utf-8"></script>
 <script>
 // A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
 // é reserva: se o config.js não carregar, a página continua de pé.
@@ -1108,21 +1159,49 @@ function setSave(cl,txt,tit){
 function horaAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 
 /* ===================================================================
-   Campos do cadastro — os mesmos do onboarding.html
-   O formulário é AUTO-CONSTRUÍDO a partir dos cabeçalhos VIVOS da aba
-   "Registro". As HINTS só enfeitam colunas conhecidas (seção/tipo/
-   obrigatório); coluna nova que a equipe criar na planilha aparece
-   sozinha, como texto, na seção "Outros".
+   Campos — a FICHA e o CADASTRO INICIAL são duas coisas diferentes
+   -------------------------------------------------------------------
+   A ficha (modo 'edicao') é AUTO-CONSTRUÍDA a partir dos cabeçalhos
+   VIVOS da aba "Registro": coluna que a equipe criar na planilha
+   aparece sozinha, como texto, na seção "Outros". O catálogo só
+   enfeita as colunas que ele conhece — seção, tipo, opções.
+   O cadastro inicial (modo 'novo') deixou de ser "tudo menos o que o
+   sistema gerencia" e virou uma LISTA BRANCA de quatro colunas. Ver a
+   caixa do NOVO_MIN logo abaixo.
    =================================================================== */
 
 /* Produtos -> quais planilhas (só informativo na tela; a regra real está no backend) */
 const PRODUTOS=['Contabilidade','Controladoria','Equiparação','Agora Tem Especialistas','DP pessoa física','INSS'];
 
-/* Colunas gerenciadas pelo sistema — NÃO viram campo no form de cliente novo. */
-const SKIP=['id','nome','drive','produtos back4you','ativo'];
+/* ┌── O CADASTRO INICIAL É UMA LISTA BRANCA, NÃO UMA SUBTRAÇÃO ─────────────┐
+   │ Até 08/2026 o formulário de cliente novo era "todas as colunas menos as │
+   │ que o sistema gerencia". Com 41 colunas isso dava uma tela. Com 170 dá  │
+   │ dez — e dez telas de formulário no momento em que a pessoa só quer criar│
+   │ o cliente e seguir com a reunião é exatamente como se produz cadastro   │
+   │ abandonado no meio. O preenchimento detalhado passou para a FICHA, que  │
+   │ é onde ele acontece de verdade: cliente por cliente, assunto por        │
+   │ assunto, por quem tem a informação na mão naquele dia.                  │
+   │                                                                        │
+   │ Estas quatro são o mínimo para o cliente EXISTIR, e não é opinião: são  │
+   │ as mesmas que o `onboardViaFormulario` do Apps Script exige antes de    │
+   │ criar pasta no Drive e copiar planilha (com os Produtos, que são        │
+   │ escolhidos à parte, fora desta lista). Acrescentar campo aqui é         │
+   │ acrescentar tela ao momento mais caro do cadastro.                      │
+   │ Chaves normalizadas por norm(), e a ORDEM aqui é a ordem em que se      │
+   │ pergunta na tela.                                                       │
+   └────────────────────────────────────────────────────────────────────────┘ */
+const NOVO_MIN=['cnpj ou cpf','razao social da empresa','cidade','uf'];
 
-/* Dicas por coluna (chave normalizada): s=seção, t=text|select|date|textarea, opts, full, req, role. */
-const HINTS={
+/* ── O CATÁLOGO DE RESERVA ────────────────────────────────────────────────
+   Este é o catálogo que a página tinha ANTES do b4u-registro-campos.js, e ele
+   fica aqui por um motivo só: se o arquivo do catálogo não carregar (rede ruim,
+   publicação pela metade, alguém renomeando arquivo), a ficha continua abrindo
+   com seção e tipo nas quarenta colunas antigas, em vez de virar uma parede de
+   caixas de texto na seção "Outros".
+   NÃO catalogue coluna nova aqui — o lugar disso é o b4u-registro-campos.js.
+   Quem a tela usa são as três constantes montadas logo depois desta.
+   Chave normalizada; s=seção, t=text|select|date|textarea, opts, full, req, role. */
+const HINTS_RESERVA={
   'razao social da empresa':{s:'Identificação',req:true,full:true,role:'razao'},
   'cnpj ou cpf':{s:'Identificação',req:true,role:'cnpj'},
   'nome fantasia':{s:'Identificação'},
@@ -1161,17 +1240,74 @@ const HINTS={
   'valor do aluguel':{s:'Aluguel'},
   'obs aluguel':{s:'Aluguel',t:'textarea',full:true}
 };
-/* Colunas que o sistema gerencia: não entram no form de cliente novo, mas aparecem
-   no cadastro (as travadas, só de leitura). */
-const HINTS_SISTEMA={
+/* Reserva das colunas que o sistema gerencia: aparecem na ficha (as travadas, só
+   de leitura) e nunca no cadastro inicial. */
+const HINTS_SISTEMA_RESERVA={
   'id':{s:'Identificação',role:'id'},
   'nome':{s:'Identificação',full:true,role:'nome'},
   'ativo':{s:'Identificação',t:'select',opts:['','Ativo','Em inativação','Inativo'],role:'ativo'},
   'drive':{s:'Identificação',full:true,role:'drive'},
   'produtos back4you':{s:'Identificação',full:true,role:'produtos'}
 };
-const SEC_ORDER=['Identificação','Empresa','Fiscal / Contábil','Departamento Pessoal','Aluguel','Outros'];
-/* Campo sintético UF: NÃO é coluna do Registro (vai só p/ o Config fiscal), mas é obrigatório. */
+const SEC_ORDER_RESERVA=['Identificação','Empresa','Fiscal / Contábil','Departamento Pessoal','Aluguel','Outros'];
+
+/* ── DAQUI PARA BAIXO QUEM MANDA É O CATÁLOGO ─────────────────────────────
+   As três constantes abaixo são as que a tela inteira usa. Elas nascem do
+   b4u-registro-campos.js quando ele está no ar e caem para a reserva quando não
+   está — e é a ÚNICA coisa que muda entre um caso e o outro. As trinta funções
+   que leem a ficha não sabem de onde veio o catálogo, e é isso que impede a
+   página de ter duas leituras diferentes da mesma coluna.
+   A chave continua sendo norm(col): é ela que casa com o cabeçalho VIVO da
+   planilha, que segue sendo quem decide quais colunas existem de fato. Campo
+   com `sistema:1` vai para HINTS_SISTEMA (aparece na ficha, travado, e nunca no
+   cadastro inicial); todo o resto vai para HINTS. */
+const CATALOGO=(typeof window!=='undefined'&&window.B4U_REGISTRO_CAMPOS)||null;
+const HINTS={},HINTS_SISTEMA={};
+if(CATALOGO&&CATALOGO.campos&&CATALOGO.campos.length){
+  CATALOGO.campos.forEach(c=>{
+    const k=norm(c.col);if(!k)return;
+    const h={s:c.s||'Outros'};
+    if(c.t&&c.t!=='text')h.t=c.t;
+    if(c.opts)h.opts=c.opts;
+    if(c.full)h.full=true;
+    if(c.req)h.req=true;
+    if(c.role)h.role=c.role;
+    if(c.dica)h.dica=c.dica;
+    if(c.max)h.max=c.max;
+    if(c.up)h.up=true;
+    if(c.ro)h.ro=true;
+    (c.sistema?HINTS_SISTEMA:HINTS)[k]=h;
+  });
+}else{
+  Object.assign(HINTS,HINTS_RESERVA);
+  Object.assign(HINTS_SISTEMA,HINTS_SISTEMA_RESERVA);
+}
+const SEC_ORDER=(CATALOGO&&CATALOGO.ordem&&CATALOGO.ordem.length)?CATALOGO.ordem.slice():SEC_ORDER_RESERVA.slice();
+/* A frase de cada seção e os produtos que a tornam provável. Sem catálogo os dois
+   somem sozinhos e nada quebra: seção sem frase mostra só o nome, e seção sem
+   produto vale para todo mundo — que é o repouso. */
+function sobreSec(s){return (CATALOGO&&CATALOGO.sobre&&CATALOGO.sobre[s])||'';}
+function produtosSec(s){return (CATALOGO&&CATALOGO.relevancia&&CATALOGO.relevancia[s])||null;}
+
+/* As colunas marcadas `ro` no catálogo: o diagnóstico de equiparação escreve, a
+   ficha só mostra. Elas ficam fora da conta de completude pelo mesmo motivo pelo
+   qual são travadas — ninguém as digita, e contá-las como campo vazio faria todo
+   cadastro do painel parecer pela metade por causa de onze colunas que nenhuma
+   pessoa deveria preencher à mão. */
+const SO_LEITURA=new Set();
+Object.keys(HINTS).forEach(k=>{if(HINTS[k].ro)SO_LEITURA.add(k);});
+function ehSoLeitura(col){return SO_LEITURA.has(norm(col));}
+const MOTIVO_RO='Escrito pela página de diagnóstico — editar aqui faria a nota deixar de corresponder às respostas.';
+
+/* Campo sintético UF — hoje é RESERVA, e não mais a regra.
+   A UF virou coluna de verdade da aba Registro (está no catálogo). Quando o
+   cabeçalho existe, ela é uma coluna como qualquer outra: aparece na ficha e é
+   gravada por lá. Este campo aqui só entra enquanto a coluna NÃO existir na
+   planilha — porque mesmo sem lugar para guardar, a UF continua obrigatória no
+   cadastro: é ela que preenche o "estado" do Config da planilha fiscal, e sem
+   ela a planilha do cliente novo nasce torta.
+   Nos dois caminhos o campo se chama 'UF', e é por esse NOME que o valor chega
+   ao `onboardViaFormulario`. É a única parte disto que não pode mudar. */
 const UF_FIELD={s:'Identificação',col:'UF',t:'text',req:true,max:2,up:true,role:'uf'};
 /* Reserva: se o servidor não devolver os cabeçalhos, a tela ainda tem quais campos
    pedir, em vez de abrir um formulário vazio. */
@@ -1202,8 +1338,11 @@ function motivoTrava(col){return MOTIVO_TRAVA[norm(col)]||'Coluna mantida pelo s
 
 /**
  * Monta os campos a partir dos cabeçalhos vivos.
- * modo 'novo'    -> form de cliente novo: pula as colunas do sistema e injeta UF depois de Cidade.
- * modo 'edicao'  -> cadastro completo: TODAS as colunas (as travadas entram só de leitura).
+ * modo 'novo'    -> cadastro inicial: SÓ as colunas de NOVO_MIN (ver a caixa lá em cima),
+ *                   na ordem da lista, com a UF sintética entrando apenas se a
+ *                   planilha ainda não tiver a coluna.
+ * modo 'edicao'  -> ficha completa: TODAS as colunas (as travadas e as `ro` entram
+ *                   só de leitura).
  */
 function montarCampos(headers,modo){
   const campos=[],roles={},edicao=(modo==='edicao');
@@ -1212,16 +1351,27 @@ function montarCampos(headers,modo){
     const k=norm(h);
     if(!k)return;
     if(REMOVIDOS.indexOf(k)>=0)return;                // coluna aposentada: não vira campo
-    if(!edicao&&SKIP.indexOf(k)>=0)return;            // colunas que o sistema gerencia
+    if(!edicao&&NOVO_MIN.indexOf(k)<0)return;         // cadastro inicial: só a lista branca
     const hint=dicas[k]||{s:'Outros'};
     if(hint.role)roles[hint.role]=h;
-    campos.push({s:hint.s||'Outros',col:h,t:hint.t||'text',req:!edicao&&!!hint.req,full:!!hint.full,opts:hint.opts,ph:hint.ph||'',max:hint.max,up:!!hint.up});
+    campos.push({s:hint.s||'Outros',col:h,t:hint.t||'text',req:!edicao&&!!hint.req,full:!!hint.full,
+                 opts:hint.opts,ph:hint.ph||'',max:hint.max,up:!!hint.up,ro:!!hint.ro,dica:hint.dica||''});
   });
   if(!edicao){
-    roles.uf='UF';
-    const uf=Object.assign({},UF_FIELD);
-    const iC=campos.findIndex(f=>norm(f.col)==='cidade');
-    if(iC>=0)campos.splice(iC+1,0,uf);else campos.push(uf);
+    /* A UF só é inventada quando a planilha ainda não tem a coluna — ver UF_FIELD.
+       O `roles.uf` aponta para 'UF' de um jeito ou do outro, porque é o NOME que
+       o onboarding lê, e ele é o mesmo com coluna e sem. */
+    if(!campos.some(f=>norm(f.col)==='uf')){
+      roles.uf='UF';
+      const uf=Object.assign({},UF_FIELD);
+      const iC=campos.findIndex(f=>norm(f.col)==='cidade');
+      if(iC>=0)campos.splice(iC+1,0,uf);else campos.push(uf);
+    }
+    /* A ordem do cadastro inicial é a do NOVO_MIN, não a da planilha: quem
+       escreveu a lista branca escolheu em que ordem se pergunta, e mexer na ordem
+       das colunas da aba não pode reordenar a tela em que se cria cliente. */
+    const pos=f=>{const i=NOVO_MIN.indexOf(norm(f.col));return i<0?NOVO_MIN.length:i;};
+    campos.sort((a,b)=>pos(a)-pos(b));
   }
   const ord=f=>{const i=SEC_ORDER.indexOf(f.s);return i<0?SEC_ORDER.length:i;};
   const lista=campos.map((f,i)=>(f._i=i,f)).sort((a,b)=>ord(a)-ord(b)||a._i-b._i);
@@ -1248,6 +1398,9 @@ let ABERTOS=new Set(),FILTRO='todos',TERMO='';
      em andamento, não buraco no cadastro;
    · "Ativo" — é situação do cliente, não campo de cadastro;
    · as colunas APOSENTADAS (REMOVIDOS) — já não aparecem no cadastro;
+   · as colunas `ro` do catálogo (o diagnóstico de equiparação) — elas
+     aparecem na ficha, mas quem as escreve é outra página, e contá-las
+     faria todo cadastro parecer pela metade;
    · toda coluna preenchida por menos de 20% dos clientes (coluna de
      exceção: CNES, obs de aluguel e afins). O corte sai dos próprios
      dados que vieram, então se ajusta sozinho quando a equipe cria uma
@@ -1265,7 +1418,7 @@ function calcularCompletude(){
   const base=CLIENTES.length||1;
   COLS_COMPLETUDE=COLUNAS.filter(col=>{
     const k=norm(col);
-    if(!k||ehTravada(col)||FORA_DA_CONTA.indexOf(k)>=0||REMOVIDOS.indexOf(k)>=0)return false;
+    if(!k||ehTravada(col)||ehSoLeitura(col)||FORA_DA_CONTA.indexOf(k)>=0||REMOVIDOS.indexOf(k)>=0)return false;
     let preenchidas=0;
     CLIENTES.forEach(c=>{if(valorDe(c,col))preenchidas++;});
     return preenchidas/base>=PISO_USO;
@@ -1899,13 +2052,60 @@ function cabecalhoLista(){
     `<span role="columnheader" class="dois"${fim}>`+bt('ativo','Situação')+bt('vazios','Vazios')+`</span>`+
     `</div>`;
 }
+/* ── Campo de várias escolhas numa célula só (t:'multi') ──────────────────
+   A planilha tem UMA célula por coluna, e algumas perguntas têm várias respostas
+   ao mesmo tempo ("de onde vem a receita"). As marcadas são gravadas juntas,
+   separadas por ' · ' — o mesmo separador que a equipe já usava à mão nas colunas
+   de lista, e que não aparece dentro de nenhuma das opções.
+   Na LEITURA o corte é tolerante com o espaçamento, porque na planilha existem
+   "a·b" e "a  ·  b" digitados por pessoas diferentes. Na ESCRITA é sempre a forma
+   canônica, que é o que impede a mesma resposta de existir em três grafias.
+   O pedaço que não casa com nenhuma opção conhecida NÃO é jogado fora: vira o
+   campo de texto livre embaixo do grupo e continua sendo gravado junto. Dado que
+   alguém digitou na planilha não pode sumir da tela porque o catálogo mudou de
+   ideia sobre quais eram as opções. */
+const MULTI_SEP=' \u00b7 ';
+function multiPartes(v){return String(v==null?'':v).split(/\s*\u00b7\s*/).map(x=>x.trim()).filter(Boolean);}
+function multiHTML(col,v,opts){
+  const lista=(opts||[]).filter(Boolean);
+  const partes=multiPartes(v);
+  const conhecidas=new Set(lista);
+  const marcadas=new Set(partes.filter(p=>conhecidas.has(p)));
+  const sobra=partes.filter(p=>!conhecidas.has(p)).join(MULTI_SEP);
+  const caixas=lista.map(o=>`<label class="mopt${marcadas.has(o)?' on':''}">`+
+    `<input type="checkbox" data-emulti="${esc(col)}" value="${esc(o)}"${marcadas.has(o)?' checked':''}> ${esc(o)}</label>`).join('');
+  return `<div class="multi" data-multi="${esc(col)}" data-ecol="${esc(col)}"><div class="mopts">${caixas}</div>`+
+    `<input class="mlivre" type="text" data-emlivre="${esc(col)}" value="${esc(sobra)}" placeholder="outro (texto livre)"`+
+    ` title="O que já estava gravado na planilha e não é nenhuma das opções acima. Continua sendo gravado junto."></div>`;
+}
+/* O valor que vai para a célula: as caixas marcadas na ordem das opções e, por
+   último, o texto livre. Ler daqui em vez de guardar um estado à parte é o que
+   garante que a célula seja sempre o que está na tela. */
+function multiValor(box){
+  const v=[];
+  box.querySelectorAll('input[type="checkbox"][data-emulti]').forEach(c=>{if(c.checked)v.push(c.value);});
+  const livre=box.querySelector('[data-emlivre]');
+  const extra=livre?String(livre.value||'').trim():'';
+  if(extra)v.push(extra);
+  return v.join(MULTI_SEP);
+}
+/* Um campo da ficha. TRÊS coisas chegam aqui como somente-leitura e não podem ser
+   confundidas: a coluna TRAVADA (a planilha diz que é do sistema), a coluna `ro`
+   do catálogo (o diagnóstico escreve, a ficha mostra) e o resto, que é editável.
+   As duas primeiras usam a MESMA caixa tracejada de propósito: para quem está
+   olhando, a pergunta é "posso digitar aqui?", e a resposta é a mesma nas duas.
+   O que muda é o motivo, que vai no title. */
 function campoEditHTML(cli,f){
   const col=f.col,v=valorDe(cli,col);
-  const rot=`<span class="lbl">${esc(col)}${ehTravada(col)?' <span class="cad">🔒</span>':''}</span>`;
+  const bloqueado=ehTravada(col)||!!f.ro;
+  const motivo=ehTravada(col)?motivoTrava(col):MOTIVO_RO;
+  const rot=`<span class="lbl">${esc(col)}${bloqueado?' <span class="cad">🔒</span>':''}</span>`;
   let ctrl;
-  if(ehTravada(col)){
+  if(bloqueado){
     const link=/^https?:/i.test(v)?`<a href="${esc(v)}" target="_blank" rel="noopener" title="abrir">↗</a>`:'';
-    ctrl=`<div class="ro" title="${esc(motivoTrava(col))}"><span class="cad-txt">${esc(v||'—')}</span>${link}</div>`;
+    ctrl=`<div class="ro" title="${esc(motivo)}"><span class="cad-txt">${esc(v||'—')}</span>${link}</div>`;
+  }else if(f.t==='multi'){
+    ctrl=multiHTML(col,v,f.opts);
   }else if(f.t==='select'){
     const opts=(f.opts||['','Sim','Não']).slice();
     /* Valor que o cliente já tem e que não está na lista (sujeira da planilha,
@@ -1929,7 +2129,13 @@ function campoEditHTML(cli,f){
        digitasse 00623904000173 veria o campo esvaziar sozinho. type="text" com
        inputmode="numeric" dá o teclado de números no celular e não toca no valor. */
     const num=b4uEhIdentificador(col)?' inputmode="numeric"':'';
-    ctrl=`<input type="text" data-ecol="${esc(col)}" value="${esc(v)}"${num}${f.t==='date'?' placeholder="aaaa-mm-dd"':''}>`;
+    /* `money` é uma linha alinhada à direita e mais nada. Sem máscara automática:
+       a planilha guarda TEXTO, e nela já convivem "R$ 12.000", "12000" e "12 mil"
+       escritos por gente diferente. Formatar na digitação faria a tela mostrar um
+       número que não é o que está gravado — divergência é pior que inconsistência,
+       porque some da vista. */
+    const din=f.t==='money'?' class="money"':'';
+    ctrl=`<input type="text"${din} data-ecol="${esc(col)}" value="${esc(v)}"${num}${f.t==='date'?' placeholder="aaaa-mm-dd"':''}>`;
   }
   /* data-esperado marca o campo que conta para a régua de completude: é o que
      ganha (e perde) o destaque avermelhado conforme a pessoa vai preenchendo. */
@@ -1939,18 +2145,98 @@ function campoEditHTML(cli,f){
   const est=b4uEstado(v,col);
   const aviso=est.truncado?`<span class="fld-aviso">⚠ ${b4uEsc(b4uAviso(est))}</span>`:'';
   const esperado=ehEsperado(col);
-  return `<div class="fld ${f.full?'full':''}${esperado&&!v?' emfalta':''}"${esperado?' data-esperado="1"':''}>${rot}${ctrl}${aviso}</div>`;
+  /* A dica do catálogo explica POR QUE a pergunta existe, e é a diferença entre a
+     resposta certa na primeira vez e a correção seis meses depois. */
+  const dica=f.dica?`<span class="fld-dica">${esc(f.dica)}</span>`:'';
+  return `<div class="fld ${f.full?'full':''}${esperado&&!v?' emfalta':''}"${esperado?' data-esperado="1"':''}>${rot}${ctrl}${aviso}${dica}</div>`;
+}
+/* ── A FICHA COMPARTIMENTADA ──────────────────────────────────────────────
+   O cliente vê TODAS as seções, sempre — a decisão é deliberada e é do dono:
+   "mostrar tudo mas compartimentalizar, o colaborador decide se preenche ou
+   não". Seção escondida por regra de produto é pergunta que ninguém faz nunca
+   mais, e o produto do cliente muda depois do cadastro.
+   O que muda é o ESFORÇO de chegar em cada uma. Cada seção é um <details>
+   recolhido, com a frase que diz para que ela serve e um contador de quantos
+   campos já têm resposta — e é o contador que impede a seção fechada de virar
+   esconderijo: dá para saber que falta coisa lá dentro sem abrir.
+   Nascem abertas a Identificação (é quem o cliente é) e as seções que o produto
+   dele torna prováveis. Daí em diante quem manda é a MEMÓRIA: abrir e fechar é
+   escolha de quem usa, e ela sobrevive ao F5 — mesmo espírito do ligarDetalhes
+   que a régua de filtros já usa. */
+function chaveSec(sc){return 'b4u_reg_sec_'+norm(sc).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+/* Quantos campos daquela seção já têm resposta. Fora da conta: as travadas e as
+   `ro` do diagnóstico. O contador mede o que dá para PREENCHER — senão a seção do
+   diagnóstico ficaria eternamente em "0 de 11" e pareceria abandonada. */
+function contaSec(cli,sc){
+  const campos=CAMPOS_EDIT.filter(f=>f.s===sc&&!ehTravada(f.col)&&!f.ro);
+  return {tot:campos.length,cheios:campos.filter(f=>valorDe(cli,f.col)).length};
+}
+/* Seção em que NADA se digita — o Diagnóstico é a única hoje — não tem contador:
+   "0 de 0" pareceria seção abandonada, quando na verdade não há o que preencher
+   ali. Diz o que ela é. */
+function rotuloConta(c){return c.tot?(c.cheios+' de '+c.tot):'só leitura';}
+/* A seção é "do produto deste cliente"? Seção sem entrada em `relevancia` vale
+   para todo mundo e não ganha selo — selo que aparece em toda seção não informa
+   nada. A comparação é sem acento e sem caixa porque a coluna Produtos tem
+   "Equiparação" e "equiparacao" digitados por pessoas diferentes. */
+function secDoProduto(cli,sc){
+  const prods=produtosSec(sc);
+  if(!prods||!prods.length)return false;
+  const meus=produtosNorm(cli);
+  return prods.some(p=>meus.indexOf(normTxt(p))>=0);
+}
+function secHTML(cli,sc){
+  const c=contaSec(cli,sc);
+  const doProd=secDoProduto(cli,sc);
+  const sobre=sobreSec(sc);
+  const selo=doProd?'<span class="selo-prod" title="Este cliente tem um produto para o qual esta seção costuma valer. Não esconde nem trava nada: a seção só nasce aberta.">do produto deste cliente</span>':'';
+  /* A frase e o contador moram no <summary>, e não no corpo do <details>: eles
+     existem justamente para a seção FECHADA — quem está de fora precisa decidir
+     se abre sem abrir. No corpo eles só apareceriam depois de aberta, que é
+     quando já não servem para nada. */
+  return `<details class="sec secf" data-sec="${esc(sc)}" data-secmem="${esc(chaveSec(sc))}"${(sc==='Identificação'||doProd)?' open':''}>
+    <summary><span class="arw">▶</span>
+      <span class="sec-cab">
+        <h2><span class="dot"></span>${esc(sc)}${selo}</h2>
+        ${sobre?`<span class="sec-sobre">${esc(sobre)}</span>`:''}
+      </span>
+      <span class="cnt-sec" data-cntsec="${esc(sc)}">${esc(rotuloConta(c))}</span>
+    </summary>
+    <div class="grid">${CAMPOS_EDIT.filter(f=>f.s===sc).map(f=>campoEditHTML(cli,f)).join('')}</div>
+  </details>`;
+}
+/* A memória de aberto/fechado, seção por seção. Roda DEPOIS do `open` que o
+   secHTML escreveu: o padrão (Identificação e as do produto) vale enquanto
+   ninguém tiver dito o contrário naquele navegador. Por isso o teste é `!==null`
+   e não um `==='1'` — este último transformaria "nunca mexi nisso" em "quero
+   fechada" e apagaria o padrão logo na primeira ficha aberta. */
+function ligarSecoesFicha(raiz){
+  (raiz||document).querySelectorAll('details[data-secmem]').forEach(d=>{
+    const k=d.dataset.secmem;
+    try{const g=localStorage.getItem(k);if(g!==null)d.open=(g==='1');}catch(e){}
+    d.addEventListener('toggle',()=>{try{localStorage.setItem(k,d.open?'1':'0');}catch(e){}});
+  });
+}
+/* O contador acompanha a digitação. Se ele congelasse no valor de quando a ficha
+   abriu, fechar a seção que a pessoa acabou de preencher a mostraria vazia — e
+   aí ele passaria a mentir justamente sobre o trabalho recém-feito. */
+function atualizarContadorSec(el){
+  const det=el.closest&&el.closest('details[data-sec]');
+  if(!det||!det.dataset.sec)return;
+  const corpo=det.closest('.corpo');if(!corpo)return;
+  const cli=clientePorId(corpo.dataset.id);if(!cli)return;
+  const alvo=det.querySelector('[data-cntsec]');if(!alvo)return;
+  alvo.textContent=rotuloConta(contaSec(cli,det.dataset.sec));
 }
 function corpoHTML(cli){
   const secs=SEC_ORDER.filter(s=>CAMPOS_EDIT.some(f=>f.s===s));
-  const blocos=secs.map(sc=>`<div class="gsec"><h3><span class="dot"></span>${esc(sc)}</h3>
-      <div class="grid">${CAMPOS_EDIT.filter(f=>f.s===sc).map(f=>campoEditHTML(cli,f)).join('')}</div></div>`).join('');
+  const blocos=secs.map(sc=>secHTML(cli,sc)).join('');
   const drive=valorDe(cli,COL.drive);
   return `<div class="corpo" data-id="${esc(cli.id)}">
     <div class="ign" id="ign_${esc(cli.id)}"></div>
     ${blocos||'<div class="vazio">Esse cliente não tem colunas para mostrar.</div>'}
     <div class="rodape">
-      <span>As alterações salvam sozinhas. Campos com 🔒 são mantidos pelo sistema.</span>
+      <span>As alterações salvam sozinhas. Campos com 🔒 não se editam aqui: ou são mantidos pelo sistema, ou vêm da página de diagnóstico.</span>
       ${/^https?:/i.test(drive)?`<a class="lk" href="${esc(drive)}" target="_blank" rel="noopener">📁 Pasta no Drive ↗</a>`:''}
       ${META.planilha_url?`<a class="lk" href="${esc(META.planilha_url)}" target="_blank" rel="noopener">Planilha ↗</a>`:''}
     </div>
@@ -2171,6 +2457,10 @@ function abrirCadastro(id){
   if(!CAD)return;
   CAD_ID=String(cli.id);
   document.getElementById('cadBody').innerHTML=corpoHTML(cli);
+  /* A memória das seções é ligada AQUI, e não dentro do corpoHTML: aquele monta
+     texto, e este é o único ponto em que os <details> existem de fato no
+     documento — que é onde dá para escutar o toggle. */
+  ligarSecoesFicha(document.getElementById('cadBody'));
   CAD.abrir();
   atualizarTopoCad(CAD_ID);
   /* ABERTOS deixou de expandir a linha, mas continua dizendo QUAL cadastro está
@@ -2912,6 +3202,7 @@ function anotar(el){
      na hora, sem esperar o salvamento */
   const fld=el.closest('.fld');
   if(fld&&fld.dataset.esperado==='1')fld.classList.toggle('emfalta',!String(el.value||'').trim());
+  atualizarContadorSec(el);
   /* 'input' e 'change' disparam os dois no mesmo campo — não salva duas vezes à toa */
   if(cli.valores[col]===el.value&&!SUJOS.has(cli.id))return;
   cli.valores[col]=el.value;cli._bd=null;
@@ -2924,12 +3215,34 @@ function anotar(el){
   if(COL.ativo&&col===COL.ativo){cli.ativo=el.value;atualizarCabeca(cli.id);}
   agendarSalvar(cli.id,col,el.tagName==='SELECT'||el.type==='date'?250:700);
 }
-document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
+/* O campo de várias escolhas não passa pelo `anotar`: lá o valor é o `el.value` de
+   UM controle, e aqui ele é a soma de nove caixas mais o texto livre. As duas
+   entradas são separadas de propósito — a caixa responde ao 'change' (marcar é um
+   gesto só, não precisa dos 700 ms de espera) e o texto livre ao 'input', como
+   qualquer outro campo de texto. */
+function anotarMulti(el){
+  const box=el.closest('[data-multi]');if(!box)return;
+  const corpo=box.closest('.corpo');if(!corpo)return;
+  const cli=clientePorId(corpo.dataset.id);if(!cli)return;
+  const col=box.dataset.multi;
+  /* A pílula acende junto com a caixa: num grupo de nove opções, o quadradinho é
+     justamente o que ninguém olha. */
+  if(el.type==='checkbox'){const l=el.closest('.mopt');if(l)l.classList.toggle('on',el.checked);}
+  const valor=multiValor(box);
+  if(cli.valores[col]===valor&&!SUJOS.has(cli.id))return;
+  cli.valores[col]=valor;cli._bd=null;
+  atualizarContadorSec(box);
+  agendarSalvar(cli.id,col,el.type==='checkbox'?250:700);
+}
+document.addEventListener('input',e=>{
+  if(e.target.dataset&&e.target.dataset.emlivre){anotarMulti(e.target);return;}
+  if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
 /* Os dois <select> abaixo só existem quando o b4u-filtro.js não carregou — com
    ele, quem responde é o `aoMudar` de cada caixa. */
 document.addEventListener('change',e=>{
   if(e.target.id==='f-sit'){ FILTRO=e.target.value; TETO=PASSO; redesenhar(); return; }
   if(e.target.id==='f-prod-sel'){ F_PROD=e.target.value?[e.target.value]:[]; TETO=PASSO; redesenhar(); return; }
+  if(e.target.dataset&&e.target.dataset.emulti){anotarMulti(e.target);return;}
   if(e.target.dataset&&e.target.dataset.ecol)anotar(e.target);});
 /* Atalhos de busca (C.4): "/" foca, Esc limpa. Com um modal aberto, Esc fecha o
    modal — e o atalho não atrapalha quem já está digitando noutro campo. */
