@@ -80,8 +80,12 @@
       { id: 'ativos',      rot: 'Clientes ativos',       pag: 'clientes-ativos',  ic: 'fiscal' },
       { sec: 'Operação' },
       { id: 'daily',       rot: 'Tarefas Daily',         pag: 'daily',            ic: 'guias' },
-      { id: 'licencas',    rot: 'Documentos e licenças', pag: 'licencas',         ic: 'doc' },
-      { id: 'certificados',rot: 'Certificados e acessos',pag: 'certificados',     ic: 'escudo' },
+      /* Uma entrada só desde 09/2026: as duas telas viraram a mesma página, com
+         as duas seções dentro e a permissão de cada uma preservada por bloco
+         (ver 10_Documentos.gs). Os ids velhos continuam ACEITOS na marcação de
+         "página ativa" logo abaixo — link antigo salvo por alguém ainda acende o
+         item certo no menu enquanto o redirecionamento existir. */
+      { id: 'documentos', rot: 'Documentos e acessos', pag: 'documentos',      ic: 'doc' },
       { id: 'societario',  rot: 'Societário',            pag: 'societario-equipe',ic: 'livro' },
       { id: 'restituicao', rot: 'Restituição',           pag: 'restituicao',      ic: 'guias' },
       { id: 'juridico',    rot: 'Jurídico',              pag: 'juridico',         ic: 'balanca' },

@@ -456,8 +456,8 @@ var CAMPOS = [
 {col:'Observações jurídicas',     s:'Jurídico e adequação societária', t:'textarea', nova:1, full:1},
 
 /* ── Diagnóstico de equiparação ─────────────────────────────────────────────
-   Estas colunas são escritas pela página `diagnostico-equiparacao.html`, que
-   calcula o escore. Na ficha do Registro elas aparecem para LEITURA — editar o
+   Estas colunas são escritas pela ficha do cliente (`registro-cliente.html`,
+   grupo "Atuação empresarial"), que calcula o escore. Na ficha do Registro elas aparecem para LEITURA — editar o
    escore à mão faria a nota deixar de corresponder às respostas que a
    produziram, e é isso que a coluna "Diag Dados (JSON)" existe para impedir:
    ela é o formulário inteiro, e é dela que o diagnóstico é reaberto. */
