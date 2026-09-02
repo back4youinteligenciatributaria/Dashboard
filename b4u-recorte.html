@@ -2048,8 +2048,14 @@ function estadoDaTela(herdar){
      Equiparação está vendo 79 clientes e espera 79 amanhã; nascer com 122
      seria entregar outra coisa. `herdar=false` é o "quero desfiltrar" — a
      pergunta é feita uma vez, na hora de criar. */
-  const herdado = (herdar === false) ? [] :
+  let herdado = (herdar === false) ? [] :
     ((REC && REC.filtro) ? (Array.isArray(REC.filtro) ? REC.filtro.slice() : [REC.filtro]) : []);
+  /* A FRASE vai junto do filtro. Sem ela a legenda da visualização nova viraria
+     «Produtos Back4you contém "equipar"» — mecanicamente correto e ilegível,
+     com a palavra pela metade parecendo erro de digitação de alguém. */
+  if (herdado.length && REC && REC.filtro_sobre && !REC.visualizacao) {
+    herdado = herdado.map((f, i) => i === 0 ? Object.assign({}, f, { sobre: REC.filtro_sobre }) : f);
+  }
   const filtro = herdado;
   /* Só filtro de valor único vira filtro salvo. Marcar 3 de 40 valores numa
      coluna é exploração, não regra — e salvar isso produziria uma visualização
@@ -2099,7 +2105,13 @@ function pintarVisBar(){
     b.push('<button class="vb" data-vis="nova">＋ Salvar como visualização</button>');
   }
   b.push('<button class="vb" data-vis="lista">Minhas visualizações</button>');
-  no.innerHTML = b.join('');
+  /* Só reescreve quando MUDA. `pintarVisBar` roda a cada `desenhar()`, e
+     `desenhar()` roda a cada tecla da busca, cada filtro, cada ordenação —
+     reescrever o HTML ali destrói e recria os botões debaixo do cursor. O
+     efeito para quem usa: o foco do teclado se perde, e um clique que começou
+     antes do redesenho não termina em lugar nenhum. */
+  const html = b.join('');
+  if (no.__html !== html) { no.innerHTML = html; no.__html = html; }
   no.hidden = false;
 }
 
@@ -2162,10 +2174,12 @@ document.addEventListener('click', async e => {
        sem dizer o que está sendo salvo é a pessoa descobrindo depois que
        guardou 40 colunas quando queria 6. */
     const herdado = (REC && REC.filtro && REC.filtro_sobre)
-      ? '<label class="vlin"><input type="checkbox" id="visHerda" checked> ' +
-        'Manter o filtro desta tela — <b>' + esc(REC.filtro_sobre) + '</b>' +
-        ((REC.fora_do_filtro||0) ? ' (' + REC.fora_do_filtro + ' clientes ficam de fora)' : '') +
-        '</label>'
+      /* O texto inteiro num <span>: o `.vlin` é flex, e cada nó solto viraria
+         uma COLUNA — a frase saía quebrada em três pedaços lado a lado. */
+      ? '<label class="vlin"><input type="checkbox" id="visHerda" checked>' +
+        '<span>Manter o filtro desta tela — <b>' + esc(REC.filtro_sobre) + '</b>' +
+        ((REC.fora_do_filtro||0) ? '. ' + REC.fora_do_filtro + ' clientes ficam de fora.' : '') +
+        '</span></label>'
       : '';
     const est = estadoDaTela();
     const r = await perguntarVis({
