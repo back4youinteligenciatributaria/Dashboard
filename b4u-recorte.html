@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Guia nova por padrão: link clicado não tira o colaborador de onde ele estava. -->
+<base target="_blank">
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recorte do Registro (esqueleto) — back4you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Duas origens porque o /exec responde 302 para a segunda: sem isto o aparelho paga
+     DNS+TLS duas vezes antes do primeiro byte de dado. -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"></noscript>
+<style>
+/* B4U-DESIGN:INICIO — paleta, cantos e fonte que as 22 páginas dividem.
+   Bloco copiado de b4u-design.css (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-design.js`.
+
+   Entra ANTES do <style> da página de propósito — é a camada base. Se esta
+   página precisar mesmo de um valor diferente, redeclare o token no `:root`
+   dela, que vem depois e vence. */
+:root{
+  /* ── Superfícies ─────────────────────────────────────────────────────────
+     `--canvas` é o bege do fundo da página; `--surface` é o branco do cartão
+     que se apoia nele; `--surface-warm` é o branco quebrado das faixas e
+     cabeçalhos de tabela, que separam sem precisar de borda. */
+  --canvas:#F1E7DC;
+  --surface:#FFFFFF;
+  --surface-warm:#FBF6EF;
+
+  /* ── Letra ───────────────────────────────────────────────────────────────
+     `--ink` é o texto normal, `--ink-2` o secundário, `--muted` o rótulo.
+     `--muted` já foi #8A7D70 e reprovava em contraste (3,28:1); #6E6256 dá
+     4,85:1 no bege e 5,92:1 no branco, e é a cor de quase todo rótulo do
+     sistema — por isso ela precisa passar, e não só quase. */
+  --ink:#113D39;
+  --ink-2:#3F5854;
+  --muted:#6E6256;
+
+  /* ── Traços ──────────────────────────────────────────────────────────────
+     `--line` divide o que é do mesmo grupo; `--line-2` fecha o que é caixa. */
+  --line:#E4D9C9;
+  --line-2:#D6C3AC;
+
+  /* ── Marca ───────────────────────────────────────────────────────────────
+     `--brand-teal` é canônico em logo, foco, borda e série de gráfico. Como
+     TEXTO ele reprova (4,11:1 no branco, 3,44:1 no receita-soft), e para isso
+     existe o `--brand-teal-txt`: o mesmo teal escurecido, 5,54:1 no branco e
+     4,54:1 no bege, usado só onde é letra ou fundo de letra. Os dois são a
+     mesma cor com dois trabalhos. O 4,54:1 passa, mas passa RASPANDO: quem for
+     escurecer o `--canvas` um dia tem de conferir este par antes. */
+  --brand-dark:#073034;
+  --brand-teal:#0F8C85;
+  --brand-euc:#3FA680;
+  --brand-teal-txt:#0C756F;
+
+  /* ── SINAL: as quatro cores que querem dizer alguma coisa ────────────────
+     Estas quatro NÃO seguem o tema (ver OS QUATRO TEMAS, no fim do arquivo). Se
+     "vencido" mudasse de vermelho conforme a pele escolhida, a cor deixaria de
+     ser informação e viraria decoração — e quem trabalha nesta tela o dia
+     inteiro lê a cor antes de ler a palavra.
+
+     `--amber` tem 2,61:1 no branco: serve de PREENCHIMENTO e de borda, nunca de
+     letra. Para letra âmbar existe o `--amber-txt` (5,91:1 no branco).
+
+     ┌── PENDÊNCIA CONHECIDA: `--verde` E `--vermelho` REPROVAM COMO LETRA ────┐
+     │                                                                        │
+     │ Os dois NÃO têm o par `-txt` que o âmbar tem, e são usados nas duas     │
+     │ funções ao mesmo tempo:                                                │
+     │                                                                        │
+     │     --verde     12 usos como `color`, 11 como `background`, 7 em borda │
+     │     --vermelho  41 usos como `color`, 31 como `background`, 41 em borda │
+     │                                                                        │
+     │ E o lado TEXTO reprova. Medido nos valores atuais:                     │
+     │                                                                        │
+     │     --verde     #2E9D5F   2,82:1 no bege · 3,44:1 no branco   REPROVA  │
+     │     --vermelho  #C0392B   4,46:1 no bege · 5,43:1 no branco   raspando │
+     │                                                                        │
+     │ O mínimo para texto é 4,5:1. É a mesma falha do `--muted` antigo (que   │
+     │ dava 3,28:1), e atinge `.hint.ok` e `.lk.ok`, que são letra e nada      │
+     │ mais. Há prova de que alguém já tinha esbarrado nisso sem nomear: o     │
+     │ `.det-fbtn.ativo` escreve `color:#0E5B37` à mão — um verde bem mais     │
+     │ escuro — em vez de usar o token.                                       │
+     │                                                                        │
+     │ CONSERTO MEDIDO E NÃO APLICADO (decisão de 10/08/2026):                 │
+     │                                                                        │
+     │     --verde     #2E9D5F -> #1F7546   (2,82:1 -> 4,66:1 no bege)        │
+     │     --vermelho  #C0392B -> #BB3728   (4,46:1 -> 4,66:1 no bege)        │
+     │                                                                        │
+     │ Matiz e saturação ficam onde estão; só a luminosidade desce, o mínimo   │
+     │ para passar com folga. Escurecer é seguro pelo lado do FUNDO: TODAS as  │
+     │ regras `background:var(--verde)` / `background:var(--vermelho)` já vêm  │
+     │ com `color:#fff` (ou são faixa/pontinho sem texto), e fundo mais escuro │
+     │ com letra branca só melhora.                                           │
+     │                                                                        │
+     │ POR QUE NÃO FOI APLICADO AGORA: mexer nestes dois repinta as 22         │
+     │ páginas, inclusive as 8 do cliente. A rodada que centralizou os tokens  │
+     │ era de ESTRUTURA — nenhum pixel de cor mudou nela de propósito, para    │
+     │ que qualquer diferença que aparecesse em produção tivesse uma causa só. │
+     │ Trocar cor é decisão de produto e vai junto da varredura do MODO        │
+     │ ESCURO, que já vai ter de abrir os 22 arquivos.                         │
+     │                                                                        │
+     │ QUANDO FOR FAZER, olhe também o `--verde-2`: várias páginas o declaram  │
+     │ valendo #25804C, com a nota "o verde um degrau mais escuro, para virar  │
+     │ FUNDO de texto branco". Com o conserto acima, o `--verde` do núcleo     │
+     │ fica MAIS ESCURO que o `--verde-2`, e a convenção do sufixo -2 se       │
+     │ inverte nesse par. Não dá para resolver daqui: o `--verde-2` mora no    │
+     │ `:root` de cada página.                                                │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     (Escrito assim, sem dois-pontos colado no nome, de propósito: a
+     `tokensCanonicos()` do `_aplica-design.js` varre este bloco com um regex de
+     declaração e NÃO pula comentário. Nome de token seguido de dois-pontos aqui
+     dentro vira token canônico de mentira, e o `--verde-2` de mentira faria as
+     22 páginas aparecerem como "exceção mantida" no terminal. Vale para todo
+     comentário deste arquivo: cite o token, nunca o escreva como declaração.) */
+  --amber:#E8892E;
+  --amber-txt:#8A5A10;
+  --vermelho:#C0392B;
+  --verde:#2E9D5F;
+
+  /* ── Cantos ──────────────────────────────────────────────────────────────
+     Uma escala só, no site inteiro, e mais QUADRADA que redonda.
+       4px  campo, selo, célula
+       6px  cartão, linha da lista, botão
+       8px  bloco grande e modal
+     `--radius-pill` deixou de ser cápsula (999px): o nome fica porque é citado
+     em mais de cem regras, mas o valor acompanha o resto — pílula virou
+     etiqueta. Círculo de verdade (avatar, contador, spinner) continua com
+     `border-radius:50%` escrito na regra e não passa por aqui. */
+  --radius-sm:4px;
+  --radius:6px;
+  --radius-lg:8px;
+  --radius-pill:6px;
+
+  /* ── Escala tipográfica ──────────────────────────────────────────────────
+     Seis degraus, e o pulo entre eles é de propósito irregular: 11-12-13 é a
+     faixa de rótulo, selo e nota de rodapé, onde 1px já muda a hierarquia; 15 é
+     o corpo; 19 e 24 são título de bloco e de tela. Um degrau constante (1,2×,
+     por exemplo) daria 11-13-16-19-23-28 e gastaria três tamanhos na faixa em
+     que o olho não distingue nada.
+     ATENÇÃO: o `body{font-size:15px}` das páginas está escrito à mão e NÃO sai
+     daqui. Quem mexer na escala não muda o corpo do texto; muda só quem usa
+     `var(--fs-N)` — que é rótulo, selo, cabeçalho de tabela e título. */
+  --fs-1:11px;
+  --fs-2:12px;
+  --fs-3:13px;
+  --fs-4:15px;
+  --fs-5:19px;
+  --fs-6:24px;
+
+  /* ── Fonte ───────────────────────────────────────────────────────────────
+     Montserrat vem do Google Fonts, declarado no <head> de cada página. O
+     `system-ui` é o que aparece enquanto ela não chega — e é o que fica se ela
+     não chegar nunca. */
+  --sans:'Montserrat',system-ui,-apple-system,sans-serif;
+}
+/* B4U-DESIGN:FIM */
+</style>
+<style>
+:root{
+  /* SÓ o que NÃO existe no b4u-design.css. Tudo o mais (paleta, cantos, fonte,
+     escala de corpo) vem do bloco canônico logo acima — e declarar aqui um
+     token que já existe lá seria congelar esta página no valor de hoje: o
+     `:root` da página vem DEPOIS e vence, então mexer no arquivo canônico
+     deixaria de mudar um pixel aqui. O `node _aplica-design.js` avisa quando
+     isso acontece; se ele avisar sobre esta página, apague o token daqui.
+     Os três abaixo são a faixa de aviso âmbar e o vermelho de recusa, que hoje
+     só esta tela usa com nome próprio. No dia em que uma segunda tela precisar
+     dos mesmos, o lugar deles é o b4u-design.css, não uma segunda cópia. */
+  --amber-soft:#FDF3E6;
+  --amber-line:#F2D2A8;
+  --danger:#A4303F;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.45}
+#app{max-width:1400px;margin:0 auto;padding:18px 16px 60px}
+a{color:var(--brand-teal-txt)}
+:focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
+
+/* ---------- cabeçalho ---------- */
+.topo{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.topo h1{margin:0;font-size:20px;font-weight:900;letter-spacing:-.2px;color:var(--brand-dark)}
+.topo .sobre{color:var(--muted);font-size:var(--fs-2);flex:1 1 240px}
+.topo .volta{font-size:var(--fs-2);font-weight:800;text-decoration:none}
+
+/* ---------- a régua de filtros ----------
+   Ela nunca estoura: quebra de linha, e o contador some no celular. */
+.barra{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 10px}
+.busca{flex:1 1 220px;min-width:160px;padding:7px 11px;border:1px solid var(--line);
+  border-radius:var(--radius-pill);background:var(--surface);font-family:var(--sans);font-size:var(--fs-3)}
+/* A CONTAGEM NÃO MORA NA RÉGUA, e isso não é gosto: a folha do b4u-shell.js
+   esconde `.barra .cnt` com `!important` — decisão do dono em 10/08/2026, "a
+   barra da equipe fica com título e quem está usando, e só". Um contador com o
+   nome `cnt` dentro da `.barra` nasceria invisível, e quem fosse procurar o
+   defeito passaria a tarde no CSS desta página, onde ele não está. Então ele
+   virou a LEGENDA da lista, logo acima dela, que é onde uma legenda vai. */
+.legenda{font-size:var(--fs-2);color:var(--muted);font-weight:700;margin:0 2px 8px}
+.bt{font-family:var(--sans);font-size:var(--fs-2);font-weight:800;padding:6px 12px;cursor:pointer;
+  border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--surface);color:var(--ink-2)}
+.bt:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
+.bt.on{background:var(--brand-dark);border-color:var(--brand-dark);color:#fff}
+/* O par Fichas/Planilha é UM controle, não dois botões soltos: encostados, com
+   um só marcado, ele se lê como chave de duas posições — que é o que é. */
+.modos{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius-pill);overflow:hidden;background:var(--surface)}
+.modos .bt{border:0;border-radius:0}
+.modos .bt+.bt{border-left:1px solid var(--line)}
+
+/* ---------- avisos ---------- */
+.faixa{border-radius:var(--radius-sm);padding:9px 12px;font-size:var(--fs-2);font-weight:700;margin-bottom:10px}
+.faixa.leitura{background:var(--amber-soft);border:1px solid var(--amber-line);color:var(--amber-txt)}
+.faixa.erro{background:#FBEDEE;border:1px solid #E9C3C8;color:var(--danger)}
+.faixa:empty{display:none}
+
+/* ---------- modo FICHAS: um cartão por cliente ---------- */
+.cli{display:block;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px 13px;margin-bottom:7px;text-decoration:none;color:inherit;cursor:pointer;width:100%;text-align:left;font-family:var(--sans)}
+.cli:hover{border-color:var(--brand-teal)}
+.cli .l1{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.cli .id{font-size:var(--fs-1);font-weight:900;color:var(--muted);letter-spacing:.04em}
+.cli .nm{font-size:var(--fs-3);font-weight:800;color:var(--brand-dark)}
+.cli .resumo{margin-top:4px;font-size:var(--fs-2);color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.cli .resumo b{color:var(--ink-2);font-weight:700}
+.cli .falta{color:var(--amber-txt);font-weight:800}
+
+/* ---------- modo PLANILHA ----------
+   A rolagem é do CONTAINER, nunca do <body>: dez pontos do painel leem
+   window.scrollY, e uma tabela de 40 colunas empurrando a página para o lado
+   quebraria o menu lateral e o puxar-para-atualizar junto. */
+.grade-wrap{overflow:auto;max-height:70vh;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+table.grade{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:var(--fs-2)}
+table.grade th,table.grade td{padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+table.grade thead th{position:sticky;top:0;z-index:3;background:var(--surface-warm);
+  font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-dark);text-align:left}
+/* As duas primeiras colunas ficam presas: rolando quarenta colunas para a
+   direita, sem elas ninguém sabe mais de qual cliente é a linha. */
+table.grade th.fix1,table.grade td.fix1{position:sticky;left:0;z-index:2;background:var(--surface);border-right:1px solid var(--line)}
+table.grade th.fix2,table.grade td.fix2{position:sticky;left:74px;z-index:2;background:var(--surface);border-right:1px solid var(--line)}
+table.grade thead th.fix1,table.grade thead th.fix2{z-index:4;background:var(--surface-warm)}
+table.grade tbody tr:hover td{background:#FBF8F3}
+.cel-in{width:100%;min-width:130px;max-width:280px;border:1px solid transparent;border-radius:var(--radius-sm);
+  padding:3px 6px;background:none;font-family:var(--sans);font-size:var(--fs-2);color:var(--ink)}
+.cel-in:hover{border-color:var(--line)}
+.cel-in:focus{border-color:var(--brand-teal);background:var(--surface);outline:none}
+.cel-ro{color:var(--muted)}
+/* Selo de gravação. Sobrevive a filtro e a troca de modo porque é desenhado a
+   partir do ESTADO (SUJOS/FALHAS), nunca do clique. */
+.selo{display:inline-block;font-size:10px;font-weight:900;padding:1px 6px;border-radius:var(--radius-pill);margin-left:6px}
+.selo.vai{background:#EAF4F1;color:var(--brand-teal-txt)}
+.selo.err{background:#FBEDEE;color:var(--danger)}
+
+/* ---------- a ficha (o conteúdo do modal; a moldura é do b4u-modal.js) ---------- */
+.msec{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.msec-tit{display:flex;align-items:center;gap:8px;padding:10px 13px;background:#F7F3EC;
+  font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-dark)}
+.msec-tit .n{margin-left:auto;font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)}
+.msec-campos{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:12px 13px 14px}
+@media(max-width:600px){.msec-campos{grid-template-columns:1fr}}
+.mfld{display:flex;flex-direction:column;min-width:0;gap:4px}
+.mfld.full{grid-column:1/-1}
+.mfld>.lbl{font-size:var(--fs-1);font-weight:800;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mfld>.lbl .lock{opacity:.6;font-weight:700}
+.in{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--surface);font-family:var(--sans);font-size:var(--fs-3);color:var(--ink)}
+/* SÓ LEITURA NÃO PARECE CAMPO. Uma caixa com borda convida ao clique e não
+   responde — e a pessoa conclui que a tela travou. Sem borda, sem fundo e um
+   pouco mais escura, ela se lê como o que é: o valor, escrito. */
+.in.cel-ro{border:0;background:none;padding-left:0;color:var(--ink-2);font-weight:600;
+  min-height:31px;display:flex;align-items:center}
+textarea.in{min-height:62px;resize:vertical}
+.dica{font-size:var(--fs-1);color:var(--muted)}
+/* ---- A FAIXA DE SEÇÃO, dentro da ficha ----
+   O que separa "Documentos e licenças" de "Acessos e certificados". Não é um
+   bloco recolhível a mais: é um LETREIRO, e de propósito. Empilhar recolhível
+   dentro de recolhível faria a pessoa abrir duas coisas para ver um campo. */
+.banda{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  margin:18px 0 8px;padding:0 2px;border-bottom:1px solid var(--line)}
+.banda:first-child{margin-top:0}
+.banda .t{font-size:var(--fs-3);font-weight:800;color:var(--ink)}
+.banda .s{font-size:var(--fs-1);color:var(--muted);flex:1 1 220px}
+/* O aviso de "esta seção você não grava" é dito UMA vez, na faixa — e não
+   repetido em vinte e um cadeados. */
+.banda .aviso{font-size:var(--fs-1);font-weight:800;color:var(--amber-txt);
+  background:var(--amber-soft);border:1px solid var(--amber-line);border-radius:var(--radius-pill);padding:1px 8px}
+
+/* ---- coluna de documento (Abrir / Enviar) ----
+   O endereço cru sai da tela: quem trabalha aqui quer ABRIR o documento ou
+   MANDAR um, e não ler uma URL de 120 caracteres. O campo de URL continua
+   existindo atrás do "⋯", porque colar link ainda acontece — só deixou de ser
+   o estado padrão de centenas de células. */
+.doc{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+.doc-bt{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;font-weight:700;
+  padding:4px 9px;border-radius:var(--radius);border:1px solid transparent;text-decoration:none;cursor:pointer;
+  background:none;font-family:var(--sans)}
+.doc-ir{color:var(--brand-teal-txt);border-color:#cfe6e2;background:#F2F9F8}
+.doc-env{color:var(--muted);border:1px dashed var(--line)}
+.doc-env:hover{color:var(--brand-teal-txt);border-color:var(--brand-teal)}
+.doc-mais{border:none;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;
+  padding:2px 5px;border-radius:var(--radius);font-family:var(--sans)}
+.doc-mais:hover{color:var(--brand-dark);background:var(--surface-warm)}
+.doc-spin{display:inline-block;width:12px;height:12px;border:2px solid #cfe6e2;border-top-color:var(--brand-teal);
+  border-radius:50%;animation:docgira .8s linear infinite}
+@keyframes docgira{to{transform:rotate(360deg)}}
+.doc-erro{display:block;color:var(--danger);font-size:11px;line-height:1.3;margin-top:3px;max-width:260px;white-space:normal}
+.doc-url{margin-top:4px;flex:1 1 100%}
+.rodape{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);
+  margin-top:16px;padding-top:10px;font-size:var(--fs-2);color:var(--muted)}
+.rodape a{font-weight:800;text-decoration:none}
+.vazio{text-align:center;color:var(--muted);padding:40px 10px;font-size:var(--fs-3)}
+</style>
+<script src="config.js"></script>
+<script src="b4u-espera.js" charset="utf-8"></script>
+<!-- O menu lateral mora num arquivo só (b4u-shell.js). Se ele não carregar, a
+     chamada lá embaixo é protegida e a tela fica exatamente como era antes. -->
+<script src="b4u-shell.js" charset="utf-8"></script>
+<style>
+/* Identificador que chegou da planilha com dígito faltando. O número aparece
+   como veio — inventar o zero deixaria um CNPJ inexistente com cara de certo —
+   e ganha um sublinhado pontilhado âmbar mais o ⚠. O title diz quantos dígitos
+   vieram, quantos deveriam vir e onde consertar. Cor só de aviso: âmbar, não
+   vermelho, porque o cadastro não está errado, está incompleto na origem. */
+.b4u-trunc{text-decoration:underline dotted var(--amber,#E8892E);text-underline-offset:2px;cursor:help}
+.b4u-trunc-m{color:var(--amber-txt,#8A5A10);font-size:.85em;margin-left:3px;vertical-align:1px}
+/* Só para leitor de tela: o ⚠ é aria-hidden, e sem isto quem não vê a tela não
+   ficaria sabendo que o número está incompleto. */
+.b4u-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* O mesmo aviso por extenso, dentro da ficha. Na lista cabe um ⚠; aqui, com o
+   campo à vista e espaço para uma linha, cabe dizer o que aconteceu e o que
+   fazer — que é o único jeito de o dado ser corrigido na origem. */
+.fld-aviso{display:block;margin-top:4px;font-size:var(--fs-1,11px);line-height:1.35;
+  color:var(--amber-txt,#8A5A10);font-weight:600}
+</style>
+<script charset="utf-8">
+/* B4U-TEXTO:INICIO — identificador é TEXTO, nunca número.
+   Bloco copiado de _b4u-texto.js (fonte canônica, com a explicação completa).
+   Não edite aqui: edite lá e rode `node _aplica-texto.js`.
+
+   Em uma frase: a planilha converte para número toda célula que só tem dígito,
+   e 00.623.904/0001-73 chega no painel como 623904000173 — dois zeros a menos,
+   calado. Estas funções são a fronteira: todo identificador passa por elas antes
+   de ir para a tela e antes de voltar para a planilha. Elas NÃO completam o zero
+   que sumiu (isso esconderia erro de cadastro): mostram o número como veio e
+   sinalizam que falta dígito. O conserto definitivo é formatar a coluna como
+   Texto na planilha e ler com getDisplayValues() no backend. */
+/* String de verdade, sem notação científica.
+   `String()` só recorre a expoente a partir de 1e21 — abaixo disso ela já
+   devolve o número por extenso, e é o que esta função faz na esmagadora maioria
+   das vezes. Acima, "6.2e+21" não é só feio: `soDigitos()` extrai "62" mais o
+   expoente e a busca passa a achar cliente errado. Aí o BigInt reescreve por
+   extenso.
+
+   O caminho `toLocaleString('fullwide', …)`, que é a receita que se acha por aí,
+   está ERRADO aqui: 'fullwide' não é locale nenhum, o motor cai no locale do
+   navegador e, num pt-BR, 1234.5 volta como "1234,5". Como esta função também
+   atende o `esc()` da página inteira, isso trocaria a vírgula decimal em todo
+   valor em dinheiro da tela. */
+function b4uTexto(v){
+  if(v==null)return '';
+  if(typeof v==='number'){
+    if(!isFinite(v))return '';
+    const s=String(v);
+    if(!/e/i.test(s))return s;
+    if(Number.isInteger(v)){try{return BigInt(v).toString();}catch(_){}}
+    return s;
+  }
+  if(v instanceof Date){
+    /* Data em coluna de identificador é a planilha tendo interpretado errado.
+       Devolve ISO em vez de "Tue Aug 04 2026 ...", que ninguém consegue ler. */
+    const p=n=>String(n).padStart(2,'0');
+    return v.getFullYear()+'-'+p(v.getMonth()+1)+'-'+p(v.getDate());
+  }
+  return String(v);
+}
+
+function b4uDigitos(v){return b4uTexto(v).replace(/\D/g,'');}
+
+function b4uEsc(s){
+  return b4uTexto(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* Normalização de nome de coluna: sem acento, sem caixa, sem pontuação. Os nomes
+   reais vêm do backend em tempo de execução e mudam sozinhos quando alguém
+   renomeia a coluna na planilha — comparar string crua quebraria no primeiro
+   "CNPJ/CPF" que virasse "CNPJ ou CPF". */
+function b4uNorm(s){
+  return b4uTexto(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+
+/* Que tipo de identificador é esta coluna, e quantos dígitos ele deveria ter.
+   `tam` null = comprimento variável (telefone, inscrição): dá para garantir que
+   é texto, não dá para dizer que está faltando dígito. */
+const B4U_IDENT=[
+  {re:/\bcnpj\b.*\bcpf\b|\bcpf\b.*\bcnpj\b/, tipo:'doc',   tam:[11,14], rot:'CNPJ ou CPF'},
+  {re:/\bcnpj\b/,                            tipo:'cnpj',  tam:[14],    rot:'CNPJ'},
+  {re:/\bcpf\b/,                             tipo:'cpf',   tam:[11],    rot:'CPF'},
+  {re:/\bcep\b/,                             tipo:'cep',   tam:[8],     rot:'CEP'},
+  {re:/\bpis\b|\bnit\b|\bpasep\b/,           tipo:'pis',   tam:[11],    rot:'PIS/NIT'},
+  /* CNES: sete dígitos, e uma boa parte começa com zero. É número de cadastro,
+     nunca quantidade — a planilha come o zero dele igual come o do CNPJ. */
+  {re:/\bcnes\b/,                            tipo:'cnes',  tam:[7],     rot:'CNES'},
+  {re:/\bmatricula\b/,                       tipo:'gen',   tam:null,    rot:'matrícula'},
+  {re:/\binscricao\b|\bcadastro municipal\b|\bregistro na junta\b/, tipo:'gen', tam:null, rot:'inscrição'},
+  {re:/\btelefone\b|\bcelular\b|\bwhatsapp\b|\bfone\b/, tipo:'tel', tam:null, rot:'telefone'},
+  {re:/\bagencia\b|\bconta\b/,               tipo:'gen',   tam:null,    rot:'conta'}
+];
+function b4uIdent(coluna){
+  const n=b4uNorm(coluna);
+  for(const d of B4U_IDENT)if(d.re.test(n))return d;
+  return null;
+}
+function b4uEhIdentificador(coluna){return !!b4uIdent(coluna);}
+
+/* O diagnóstico de um valor: veio inteiro, veio truncado, ou não dá para dizer.
+   `truncado` só é true quando o valor é SÓ DÍGITO e mais curto do que o tipo
+   pede — que é exatamente a assinatura de zero comido pela planilha. Valor com
+   pontuação ("00.623.904/0001-73") chegou como texto e está a salvo; valor de
+   comprimento livre nunca é acusado. */
+function b4uEstado(valor,coluna){
+  const s=b4uTexto(valor).trim();
+  const d=b4uDigitos(s);
+  const tipo=b4uIdent(coluna);
+  const tam=tipo&&tipo.tam;
+  if(!s||!tam)return {vazio:!s,truncado:false,digitos:d,tipo:tipo,completo:!!s};
+  const completo=tam.indexOf(d.length)>=0;
+  /* Só acusa quando é dígito puro: pontuado veio como texto e está íntegro. */
+  const soDigito=/^\d+$/.test(s);
+  const esperado=tam[tam.length-1];
+  return {
+    vazio:false,
+    completo:completo,
+    truncado:!completo&&soDigito&&d.length>0&&d.length<esperado,
+    digitos:d,
+    tipo:tipo,
+    esperado:tam
+  };
+}
+
+/* Máscara só quando o número está inteiro. Documento curto vai como veio: pôr
+   máscara em 12 dígitos produziria "62.390.400/017" — um CNPJ que não existe,
+   com aparência de CNPJ que existe. */
+function b4uFmtDoc(v){
+  const d=b4uDigitos(v);
+  if(d.length===14)return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+  if(d.length===11)return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  return b4uTexto(v);
+}
+function b4uFmtCep(v){
+  const d=b4uDigitos(v);
+  return d.length===8?d.replace(/(\d{5})(\d{3})/,'$1-$2'):b4uTexto(v);
+}
+function b4uFmt(valor,coluna){
+  const t=b4uIdent(coluna);
+  if(!t)return b4uTexto(valor);
+  if(t.tipo==='cep')return b4uFmtCep(valor);
+  if(t.tipo==='doc'||t.tipo==='cnpj'||t.tipo==='cpf')return b4uFmtDoc(valor);
+  return b4uTexto(valor);
+}
+
+/* A frase que explica o estrago, no title do valor marcado. Ela precisa dizer
+   três coisas em uma linha: quantos dígitos vieram, quantos deveriam vir, e que
+   o conserto é na planilha — senão a marca vira enfeite e ninguém age. */
+function b4uAviso(e){
+  const rot=(e.tipo&&e.tipo.rot)||'identificador';
+  const alvo=e.esperado.join(' ou ');
+  const faltam=e.esperado[e.esperado.length-1]-e.digitos.length;
+  return rot+' chegou com '+e.digitos.length+' dígito'+(e.digitos.length>1?'s':'')+
+    ', e deveria ter '+alvo+': a planilha guardou a célula como número e comeu '+
+    faltam+' zero'+(faltam>1?'s':'')+' à esquerda. Para consertar, formate a coluna '+
+    'como Texto na planilha e digite o número inteiro de novo.';
+}
+
+/* O valor pronto para a tela: já mascarado, e marcado quando está truncado.
+   `vazio` é o que aparece no lugar do branco ("sem CNPJ") — a lista diz o que
+   falta em vez de deixar buraco. */
+function b4uIdentHTML(valor,coluna,vazio){
+  const e=b4uEstado(valor,coluna);
+  if(e.vazio)return vazio?'<span class="c-falta">'+b4uEsc(vazio)+'</span>':'';
+  const txt=b4uEsc(b4uFmt(valor,coluna));
+  if(!e.truncado)return txt;
+  return '<span class="b4u-trunc" title="'+b4uEsc(b4uAviso(e))+'">'+txt+
+         '<span class="b4u-trunc-m" aria-hidden="true">⚠</span>'+
+         '<span class="b4u-sr"> (faltam dígitos)</span></span>';
+}
+
+/* Volta para a planilha em forma que o Sheets NÃO consegue reinterpretar como
+   número. Enquanto a coluna não estiver formatada como Texto, gravar
+   "00623904000173" faz a planilha comer os zeros de novo — desta vez com o
+   usuário assistindo, logo depois de ele ter digitado certo. Com a máscara, a
+   célula tem ponto e barra, o Sheets desiste e guarda texto.
+   Onde não existe máscara canônica (telefone, inscrição), o valor vai como foi
+   digitado: o conserto ali depende do patch do backend. */
+function b4uParaPlanilha(valor,coluna){
+  const s=b4uTexto(valor).trim();
+  const t=b4uIdent(coluna);
+  if(!s||!t||!/^\d+$/.test(s))return s;
+  const d=b4uDigitos(s);
+  if((t.tipo==='doc'||t.tipo==='cnpj')&&d.length===14)return b4uFmtDoc(d);
+  if((t.tipo==='doc'||t.tipo==='cpf')&&d.length===11)return b4uFmtDoc(d);
+  if(t.tipo==='cep'&&d.length===8)return b4uFmtCep(d);
+  return s;
+}
+/* B4U-TEXTO:FIM */
+</script>
+<!-- A caixa de seleção múltipla (b4u-filtro.js). Ela é DUAS coisas nesta tela: a
+     régua de filtros E o seletor de colunas — que é a mesma pergunta ("quais
+     destes?") feita sobre listas diferentes. Entra ANTES do b4u-modal.js de
+     propósito: os dois escutam Esc na captura do documento, e ouvinte de captura
+     no mesmo nó dispara na ordem em que foi registrado — com o modal na frente,
+     um Esc de painel aberto levaria a ficha inteira embora em vez de fechar a
+     lista que está na cara da pessoa. -->
+<script src="b4u-filtro.js" charset="utf-8"></script>
+<!-- A casca do modal: véu, Esc, foco preso, aviso de "tem coisa por gravar". -->
+<script src="b4u-modal.js" charset="utf-8"></script>
+<!-- O RECADO de gravação que falhou, para quem NÃO está com a ficha aberta. -->
+<script src="b4u-gravar.js" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+  <div class="topo">
+    <h1 id="titulo">Recorte do Registro</h1>
+    <span class="sobre" id="sobre"></span>
+  </div>
+
+  <div class="faixa leitura" id="avisoLeitura" hidden></div>
+  <div class="faixa erro" id="avisoErro" hidden></div>
+
+  <div class="barra" id="barra">
+    <input class="busca" id="busca" type="search" placeholder="Buscar por nome, ID ou CNPJ…" autocomplete="off">
+    <span id="filtros" style="display:contents"></span>
+    <span style="flex:1"></span>
+    <div class="modos">
+      <button class="bt on" id="modoFichas" type="button">Fichas</button>
+      <button class="bt"    id="modoGrade"  type="button">Planilha</button>
+    </div>
+    <!-- Dentro da régua de propósito: a folha do b4u-shell.js esconde
+         `.barra .volta` quando o menu lateral existe (o item "Painel da equipe"
+         cobre), e o traz de volta sozinho no caminho degradado, sem depender de
+         nenhum JS desta página rodar na ordem certa. -->
+    <a class="volta bt" id="volta" href="colaborador" target="_self">← Painel</a>
+  </div>
+
+  <div class="legenda" id="cnt"></div>
+
+  <div id="conteudo"><div class="vazio">Carregando…</div></div>
+
+  <div class="rodape" id="rodape"></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   b4u-recorte.html — O ESQUELETO DE TELA DE RECORTE DA ABA "Registro"
+   --------------------------------------------------------------------------
+   COMO SE USA
+
+     b4u-recorte.html?r=<id do recorte>&chave=<a chave do dia>
+
+   O `<id do recorte>` é o `id` de um objeto declarado no `_recortes_()` do
+   `11_Recorte.gs`. Não existe nada para escrever AQUI quando nasce um recorte
+   novo: esta página é genérica, e o que muda de uma tela para outra é o
+   servidor que responde. Sem `?r=`, ela pergunta ao servidor quais recortes
+   esta pessoa pode abrir e oferece os links.
+
+   --------------------------------------------------------------------------
+   POR QUE ESTA PÁGINA EXISTE
+
+   Quase tudo passou a morar na planilha "Registro Clientes". Cada vez que uma
+   equipe precisava olhar um punhado dessas colunas, nascia um HTML novo de 150
+   KB — e os três que existem (licenças, certificados, documentos) são o MESMO
+   programa com listas de coluna diferentes: uma lista, um filtro, uma ficha que
+   abre, campos que gravam sozinhos, um log.
+
+   Então virou um só. As três coisas que o pedido nomeou são as três partes
+   deste arquivo, e cada uma é independente da outra:
+
+     1. ESCOLHER QUAIS VARIÁVEIS MOSTRAR  → `montarSeletorColunas()` / `VIS`
+     2. MOSTRAR EM MODAL                  → `abrirFicha()`
+     3. MOSTRAR EM PLANILHA FILTRÁVEL     → `desenharGrade()`
+
+   --------------------------------------------------------------------------
+   A ESCOLHA DE COLUNAS TEM DUAS CAMADAS, E ISSO NÃO É REDUNDÂNCIA
+
+   O SERVIDOR decide quais colunas VIAJAM (o `colunas` do recorte, no
+   11_Recorte.gs). É a trava: coluna que não está no recorte não entra no
+   payload, não aparece em lugar nenhum, e não é aceita na gravação — nem por
+   engano de código desta página.
+
+   A PESSOA decide quais das colunas que chegaram ela quer OLHAR (o `VIS` daqui,
+   guardado no navegador dela). É conforto: com 40 colunas na tela, quem foi
+   conferir uma passa os olhos por 39.
+
+   Trocar uma pela outra estraga as duas. Se o servidor mandasse tudo e a tela
+   escondesse, "esconder" seria `display:none` sobre uma senha que já chegou no
+   aparelho. Se a pessoa não pudesse escolher, a tela ficaria ilegível no dia em
+   que o recorte crescer para 40 colunas — e cresce.
+
+   --------------------------------------------------------------------------
+   A LISTA DE COLUNAS VISÍVEIS É POR PESSOA E POR RECORTE, e mora no navegador
+
+   `localStorage`, e não uma coluna de configuração na planilha. Duas razões: é
+   preferência de OLHAR (ninguém precisa que o time inteiro concorde), e uma
+   preferência gravada no servidor seria mais uma escrita por clique numa
+   planilha que já é o gargalo de todas as telas.
+
+   O que isso custa: quem trocar de computador começa no padrão. É o preço
+   certo — a alternativa (perguntar ao servidor antes de desenhar) atrasaria a
+   primeira pintura de toda tela para guardar a escolha de sete pessoas.
+
+   --------------------------------------------------------------------------
+   SE UM DOS ARQUIVOS COMPARTILHADOS NÃO CARREGAR
+
+   Nada aqui é obrigatório. `B4UFiltro` ausente → os filtros e o seletor de
+   colunas somem, a tela mostra tudo e a busca continua. `B4UModal` ausente → a
+   ficha não abre e a lista continua inteira. `B4UGravar` ausente → grava
+   direto, e o selo na linha continua avisando. `B4UShell` ausente → a página
+   perde o menu lateral e mais nada. Todas as chamadas passam por `window.X &&`.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* A URL vive em config.js — um arquivo só, em vez de dezesseis. A cópia abaixo
+   é reserva: se o config.js não carregar, a página continua de pé. */
+const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
+  'https://script.google.com/macros/s/AKfycbzQOB0KNgwM4A5ea4lsRQ4MFAyKfnwh86eGre1RagBtLNqLouZp9-KTHK4A3FNpX5GS/exec';
+
+/* A chave da equipe é o código do dia de cada colaborador. Vazia de propósito:
+   se voltar a ter valor, volta a existir uma senha compartilhada que não expira
+   e não diz quem é quem. */
+const CHAVE_PADRAO = '';
+function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');return q?q.trim():CHAVE_PADRAO;}
+function respAtual(){const q=(new URLSearchParams(location.search).get('cod')||'').trim();
+  return q || (location.hash||'').replace(/^#/,'').trim();}
+function recorteAtual(){return (new URLSearchParams(location.search).get('r')||'').trim().toLowerCase();}
+
+/* Sem chave na URL não há painel da equipe. A porta é o index.html, e o
+   `destino` é o que faz a pessoa VOLTAR para cá depois de se identificar —
+   senão todo login a despejaria na home da equipe, longe do que ela clicou. */
+if (!chaveAtual()) {
+  location.replace('index?destino=' + encodeURIComponent(
+    location.pathname.split('/').pop() + location.search + location.hash));
+}
+
+/* O `esc` delega para o `b4uEsc` do bloco B4U-TEXTO quando ele existe. Não é
+   capricho: aquele bloco converte NÚMERO para texto sem notação científica
+   antes de escapar, e é o que impede um CNPJ que a planilha entregou como
+   6.23904e+11 de aparecer assim na tela. Sem o bloco, a reserva abaixo faz o
+   escape simples — a tela vive, e o identificador é que fica feio. */
+function esc(s){
+  if (window.b4uEsc) return b4uEsc(s);
+  return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function normTxt(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
+function normCol(s){return normTxt(s).replace(/\s+/g,' ').replace(/[?:.]+$/,'');}
+function soDigitos(s){return String(s==null?'':s).replace(/\D/g,'');}
+/* CSS.escape não existe em navegador antigo, e é usado num seletor de atributo
+   que recebe ID de cliente. Sem a reserva, um ID com ponto derrubaria o selo. */
+function selEsc(s){ return (window.CSS && CSS.escape) ? CSS.escape(String(s)) : String(s).replace(/["\\]/g,'\\$&'); }
+
+/* ---------------- JSONP: a leitura ----------------
+   O /exec responde 302 e o navegador não deixa ler o corpo de um fetch
+   cross-origin sem CORS — por isso a leitura é por <script>, e não por fetch.
+   Prazo e UMA repetição: a primeira chamada do dia acorda o Apps Script e às
+   vezes estoura sozinha. */
+const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
+function jsonpTentativa(url){
+  return new Promise((ok,fail)=>{
+    const cb='cb_'+Math.random().toString(36).slice(2);
+    const s=document.createElement('script');
+    const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);
+    function limpa(){clearTimeout(t);delete window[cb];s.remove();}
+    window[cb]=d=>{limpa();ok(d);};
+    s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};
+    s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    document.body.appendChild(s);
+  });
+}
+function jsonp(url){
+  return jsonpTentativa(url).catch(()=>
+    new Promise(r=>setTimeout(r,JSONP_PAUSA)).then(()=>jsonpTentativa(url)));
+}
+
+/* ---------------- POST: a gravação ----------------
+   "Não salvou" é uma AFIRMAÇÃO, e o front não tem como fazê-la: o servidor
+   GRAVA e só depois responde. Quando a resposta se perde, a gravação já
+   aconteceu. Por isso a exceção sai marcada:
+
+     doServidor  o servidor leu, decidiu e RECUSOU. Não gravou. Repetir é seguro.
+     incerto     a resposta se perdeu. PODE ter gravado. Não se repete às cegas:
+                 oferece-se RECARREGAR.
+
+   O b4u-gravar.js lê essas duas marcas para escolher o botão do recado. */
+async function postAcao(obj,ms){
+  const ctl=new AbortController();
+  const t=setTimeout(()=>ctl.abort(),ms||120000);
+  try{
+    const body=JSON.stringify(Object.assign({chave:chaveAtual(),cod:respAtual()},obj));
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,signal:ctl.signal});
+    const d=await r.json();
+    if(d&&d.erro){ const err=new Error(d.erro); err.doServidor=true; throw err; }
+    return d;
+  }catch(e){
+    if(e&&e.name==='AbortError'){ const x=new Error('A resposta demorou.'); x.incerto=true; throw x; }
+    if(e&&e.doServidor) throw e;
+    const x=new Error(String((e&&e.message)||e)); x.incerto=true; throw x;
+  }finally{ clearTimeout(t); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ESTADO
+   Um lugar só. Toda função de desenho lê daqui e de mais nada — é o que permite
+   redesenhar a tela inteira depois de qualquer mudança sem descobrir, meia hora
+   depois, que o filtro e a grade discordavam sobre quantas linhas existiam.
+   ══════════════════════════════════════════════════════════════════════════ */
+let REC       = null;        // o descritor do recorte (rótulo, pode_gravar…)
+/* AS SEÇÕES. A unidade de permissão, de recorte de coluna e de gravação — e não
+   uma divisória de layout. Uma seção que a pessoa não pode LER não chega aqui:
+   o servidor não a põe no payload. `SEC_DE` responde "de qual seção é esta
+   coluna?", que é a pergunta que decide por qual porta o campo grava. Sem esse
+   mapa a tela adivinharia por nome de coluna — e adivinhação de nome é o que
+   manda uma senha pela porta das licenças no dia em que alguém renomear um
+   cabeçalho na planilha. */
+let SECOES    = [];
+let SEC_DE    = new Map();   // normCol(coluna) → a seção dela
+let DO_REC    = [];          // as colunas DO recorte — as que dá para escolher e editar
+let IDENT     = [];          // ID, Nome, Ativo, CNPJ… — contexto, sempre só leitura
+let LINHAS    = [];          // [{id,row,valores,nome_cliente,ativo,drive}]
+let VALID     = {};          // coluna → {opcoes, estrito, multi}
+let ESPELHADA = new Set();   // vem do cadastro por fórmula: nunca editável
+let SIGILOSA  = new Set();   // senha: mascarada, fora da busca e fora do log
+let DATA      = new Set();
+let LINK      = new Set();
+let META      = {};          // aba, planilha_url, cabecalho_linha, ausentes…
+
+let VIS   = [];              // as colunas VISÍVEIS — a escolha desta pessoa
+let MODO  = 'fichas';        // 'fichas' | 'grade'
+let BUSCA = '';
+let F_VAL = {};              // coluna → [valores marcados] (os filtros dinâmicos)
+/* Sujos e falhas são por CLIENTE E SEÇÃO ('0012|licencas'): duas seções da mesma
+   linha viajam por portas diferentes, então uma pode falhar enquanto a outra
+   entra. Uma chave só por cliente marcaria a linha inteira de vermelho por
+   causa de um lote que nem era o que a pessoa estava editando. */
+const SUJOS  = new Map();    // 'id|secao' → { coluna: valor } ainda não confirmado
+const FALHAS = new Map();    // 'id|secao' → mensagem da última recusa
+const ENVIANDO = new Map();  // 'id|coluna' → nome do arquivo em voo
+const ERROS_CEL = new Map(); // 'id|coluna' → recado de erro do envio
+function chaveLote(id, sec){ return id + '|' + sec; }
+function chaveCel(id, col){ return id + '|' + normCol(col); }
+
+/* ---------------- a escolha de colunas, guardada ----------------
+   Chave por RECORTE: quem escolheu cinco colunas no fiscal não quer as mesmas
+   cinco no societário — são listas diferentes de perguntas diferentes.
+   Tudo em try/catch: navegador em janela anônima ou com armazenamento bloqueado
+   lança no ACESSO ao localStorage, não na leitura — e uma tela que não abre por
+   causa de uma preferência é uma tela pior do que uma sem preferência. */
+function chaveVis(){ return 'b4u.recorte.' + (recorteAtual()||'?') + '.cols'; }
+function lerVis(){
+  try{ const s=localStorage.getItem(chaveVis()); return s?JSON.parse(s):null; }catch(_){ return null; }
+}
+function salvarVis(){ try{ localStorage.setItem(chaveVis(), JSON.stringify(VIS)); }catch(_){} }
+/* O padrão de quem nunca escolheu: TUDO o que o recorte tem.
+   Não "as seis primeiras": um recorte é declarado por alguém que já decidiu o
+   que interessa, e começar escondendo parte disso faria a pessoa concluir que a
+   coluna não existe. Quem quiser menos, tira. */
+function visPadrao(){ return DO_REC.slice(); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   O QUE CADA CAMPO É
+   Uma função só, porque a ficha (modal) e a planilha (grade) precisam responder
+   à MESMA pergunta sobre a MESMA coluna. Duas cópias divergiriam no primeiro
+   campo novo — e divergir aqui quer dizer um campo editável num lugar e travado
+   no outro, para o mesmo dado.
+   ══════════════════════════════════════════════════════════════════════════ */
+/* De qual seção é esta coluna. `null` para as de identificação, que não são de
+   seção nenhuma — são o contexto da linha. */
+function secaoDe(col){ return SEC_DE.get(normCol(col)) || null; }
+
+function editavel(col){
+  if (IDENT.indexOf(col) > -1) return false;       // identificação é contexto, não cadastro
+  if (ESPELHADA.has(normCol(col))) return false;   // fórmula do cadastro: escrever destrói a IMPORTRANGE
+  /* A PERMISSÃO É DA SEÇÃO, não da tela. É esta linha que faz o societário ver
+     o alvará destravado e a senha do certificado travada na MESMA ficha — que é
+     o desenho da tela de documentos desde 09/2026, e a razão de as seções
+     existirem. */
+  var sec = secaoDe(col);
+  return !!(sec && sec.pode_gravar);
+}
+function tipoDe(col){
+  const v = VALID[col];
+  if (v && v.multi) return 'multi';
+  if (v && v.opcoes && v.opcoes.length) return v.estrito ? 'select' : 'lista';
+  if (DATA.has(normCol(col)))     return 'date';
+  if (LINK.has(normCol(col)))     return 'url';
+  if (SIGILOSA.has(normCol(col))) return 'senha';
+  return 'text';
+}
+/* Coluna longa merece a largura toda da ficha. É heurística de LAYOUT, e por
+   isso pode errar sem consequência — ao contrário de tudo o mais aqui. */
+function ehLonga(col){ return /observ|descri|resumo|pend|contatos|cnaes|hist/.test(normCol(col)); }
+/* aaaa-mm-dd → dd/mm/aaaa. O que não casar com o formato sai como veio: uma
+   célula com "a confirmar" escrito à mão não pode virar "NaN/NaN/NaN". */
+function fmtBR(iso){
+  const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? (m[3]+'/'+m[2]+'/'+m[1]) : String(iso||'');
+}
+
+/* ---------------- o campo, em HTML ----------------
+   `data-col` e `data-id` são o contrato entre o desenho e a gravação: o ouvinte
+   de `change` é UM só, no documento, e descobre por eles qual coluna de qual
+   cliente mudou. Sem isso seriam ~5.000 ouvintes numa grade de 123 linhas por
+   40 colunas, e cada redesenho os recriaria todos. */
+function campoHTML(id, col, valor, classe){
+  const ed = editavel(col);
+  const t  = tipoDe(col);
+  const at = 'data-id="'+esc(id)+'" data-col="'+esc(col)+'" class="'+classe+'"';
+  const v  = esc(valor==null?'':valor);
+
+  if (!ed) {
+    /* Só leitura vira TEXTO, não campo desabilitado. Um input cinzento convida
+       ao clique e não responde — e a pessoa conclui que a tela travou. Link
+       continua sendo link: é o que ela veio abrir. */
+    if (t==='url' && valor) return '<a class="'+classe+' cel-ro" href="'+esc(valor)+'" rel="noopener">abrir ↗</a>';
+    if (t==='senha' && valor) return '<span class="'+classe+' cel-ro">••••••</span>';
+    /* CNPJ/CPF/CEP que chegou da planilha com dígito faltando (a célula virou
+       número e comeu o zero da frente) aparece COMO VEIO, com o sublinhado
+       âmbar e o ⚠ do bloco B4U-TEXTO. Inventar o zero deixaria um CNPJ
+       inexistente com cara de certo. */
+    if (window.b4uIdent && b4uIdent(col))
+      return '<span class="'+classe+' cel-ro">'+b4uIdentHTML(valor,col,'—')+'</span>';
+    /* Data só-leitura sai em dd/mm/aaaa. O aaaa-mm-dd é o formato em que o
+       servidor entrega (e o que o <input type="date"> exige), não o formato em
+       que alguém lê um vencimento. Quem edita continua vendo o calendário do
+       navegador; quem só olha, vê a data como se escreve. */
+    if (t==='date' && valor) return '<span class="'+classe+' cel-ro">'+esc(fmtBR(valor))+'</span>';
+    return '<span class="'+classe+' cel-ro">'+(v||'—')+'</span>';
+  }
+
+  if (t==='select' || t==='lista') {
+    const opts = (VALID[col].opcoes||[]).slice();
+    /* O valor que ESTÁ na célula e não está na lista continua aparecendo. Sumir
+       com ele faria o próximo `change` de qualquer outro campo da linha gravar
+       um valor que ninguém escolheu — que é como um dado some sem culpado. */
+    if (valor && opts.indexOf(valor) < 0) opts.unshift(valor);
+    if (t==='select') {
+      /* estrito: a PLANILHA recusa o que não está na lista. Oferecer texto livre
+         aqui é reproduzir o defeito que o 9_Validacoes.gs veio matar — a pessoa
+         digita, a célula rejeita, e ela conclui que o painel está quebrado. */
+      return '<select '+at+'>' + opts.map(o=>
+        '<option value="'+esc(o)+'"'+(String(o)===String(valor)?' selected':'')+'>'+(esc(o)||'—')+'</option>'
+      ).join('') + '</select>';
+    }
+    /* não estrito: menu E texto livre no mesmo controle nativo. O <datalist> faz
+       isso sem uma linha de JavaScript, e sem inventar um combo. */
+    const dl = 'dl_'+Math.random().toString(36).slice(2);
+    return '<input '+at+' list="'+dl+'" value="'+v+'">' +
+      '<datalist id="'+dl+'">'+opts.map(o=>'<option value="'+esc(o)+'">').join('')+'</datalist>';
+  }
+  if (t==='date')  return '<input '+at+' type="date" value="'+v+'">';
+  if (t==='url')   return celDoc(id, col, valor, classe);
+  if (t==='senha') return '<input '+at+' type="password" value="'+v+'" autocomplete="new-password">';
+  if (t==='multi') {
+    /* BURACO DECLARADO, e de propósito. `multi` é gravado numa célula só, unido
+       por " · " (ver o catálogo em b4u-registro-campos.js). Um controle de
+       verdade para isso é uma lista de checkboxes que sabe montar e desmontar a
+       string — trabalho que vale a pena fazer UMA vez, quando o primeiro recorte
+       com coluna multi existir. Até lá: texto livre com as opções no `title`,
+       que grava certo se a pessoa escrever certo. */
+    return '<input '+at+' type="text" value="'+v+'" title="Separe por &quot; · &quot;. Opções: '+
+      esc((VALID[col].opcoes||[]).join(' · '))+'">';
+  }
+  if (classe === 'in' && ehLonga(col)) return '<textarea '+at+'>'+v+'</textarea>';
+  return '<input '+at+' type="text" value="'+v+'">';
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   A COLUNA DE DOCUMENTO — Abrir / Enviar
+   O motor de envio (gradeUploadLink_) sempre foi genérico, e as rotas já
+   existem no Roteador com o porteiro de cada seção (`licenca_upload`,
+   `cert_upload`). A seção viaja com `acao_upload` só quando a pessoa PODE
+   gravar aquele bloco: um botão "Enviar" para quem o servidor vai recusar não é
+   uma tela mais completa, é uma tela que mente.
+   ══════════════════════════════════════════════════════════════════════════ */
+const DOC_MAX = 10 * 1024 * 1024;   // o mesmo teto do backend (GRADE_UPLOAD_MAX_BYTES)
+
+function celDoc(id, col, valor, classe){
+  const k    = chaveCel(id, col);
+  const sec  = secaoDe(col);
+  const sobe = !!(sec && sec.acao_upload);
+  const env  = ENVIANDO.get(k);
+  const err  = ERROS_CEL.get(k);
+  const v    = esc(valor==null?'':valor);
+
+  let dentro = '';
+  if (env) {
+    dentro = '<span class="doc-spin" aria-hidden="true"></span>' +
+             '<span class="doc-obs">enviando '+esc(env)+'…</span>';
+  } else {
+    if (valor) dentro += '<a class="doc-bt doc-ir" href="'+v+'" rel="noopener">abrir ↗</a>';
+    if (sobe)  dentro += '<label class="doc-bt doc-env" title="Enviar o documento para a pasta do cliente">'+
+                         (valor?'trocar':'enviar')+
+                         '<input type="file" hidden data-up-id="'+esc(id)+'" data-up-col="'+esc(col)+'"></label>';
+    if (!valor && !sobe) dentro += '<span class="doc-obs cel-ro">—</span>';
+    /* O "⋯" revela o endereço cru. Colar link ainda acontece (documento que já
+       está em outra pasta, link de portal), só deixou de ser o estado padrão. */
+    dentro += '<button type="button" class="doc-mais" data-url-id="'+esc(id)+'" data-url-col="'+esc(col)+'" '+
+              'title="Ver e editar o endereço">⋯</button>' +
+              '<input class="in doc-url" hidden data-id="'+esc(id)+'" data-col="'+esc(col)+'" '+
+              'type="url" value="'+v+'" placeholder="https://…">';
+  }
+  if (err) dentro += '<span class="doc-erro">'+esc(err)+'</span>';
+  return '<span class="doc '+classe+'" data-doc-id="'+esc(id)+'" data-doc-col="'+esc(col)+'">'+dentro+'</span>';
+}
+
+/* Repinta UMA célula, e não a tela: repintar tudo no meio de um envio levaria
+   embora o foco de quem já está digitando noutro campo da mesma linha. */
+function repintarCel(id, col){
+  const l = LINHAS.find(x=>x.id===id); if (!l) return;
+  document.querySelectorAll('[data-doc-id="'+selEsc(id)+'"][data-doc-col="'+selEsc(col)+'"]')
+    .forEach(no=>{ no.outerHTML = celDoc(id, col, l.valores[col], no.classList.contains('in')?'in':'cel-in'); });
+}
+
+function lerBase64(file){
+  return new Promise((ok,fail)=>{
+    const fr = new FileReader();
+    /* Falha AQUI é do navegador lendo o disco: nada saiu daqui, e é o único erro
+       deste caminho sobre o qual dá para afirmar "não subiu". Marcado, para não
+       cair na peneira de erro de servidor lá embaixo. */
+    fr.onerror = ()=>{ const x=new Error('Não consegui ler o arquivo.'); x.local=true; fail(x); };
+    fr.onload  = ()=>{ const t=String(fr.result||''); ok(t.slice(t.indexOf(',')+1)); };
+    fr.readAsDataURL(file);
+  });
+}
+
+async function enviarDocumento(id, col, file){
+  const sec = secaoDe(col);
+  if (!sec || !sec.acao_upload) return;
+  const k = chaveCel(id, col);
+  if (file.size > DOC_MAX) {
+    ERROS_CEL.set(k, 'O arquivo tem '+(file.size/1048576).toFixed(1)+' MB e o limite é 10 MB.');
+    return repintarCel(id, col);
+  }
+  const l = LINHAS.find(x=>x.id===id) || {valores:{}};
+  ERROS_CEL.delete(k); ENVIANDO.set(k, file.name); repintarCel(id, col);
+  try {
+    const b64 = await lerBase64(file);
+    /* A porta é a da SEÇÃO da coluna: documento de licença sobe pela rota das
+       licenças, arquivo de certificado pela dos certificados. Cada uma com o
+       seu porteiro, e as duas gravando na pasta "Societário e Jurídico" DO
+       CLIENTE. */
+    const d = await postAcao({ acao: sec.acao_upload, id: id, coluna: col,
+      cliente: l.valores && l.valores['Nome'] || '',
+      arquivo_nome: file.name,
+      arquivo_tipo: file.type || 'application/octet-stream',
+      arquivo_base64: b64 });
+    /* Resposta sem `url` NÃO apaga o link que já estava lá. */
+    if (d && d.url && l.valores) l.valores[col] = d.url;
+  } catch (e) {
+    /* Quem responde é a MARCA da exceção, nunca o texto dela. Enviar de novo às
+       cegas duplicaria o documento na pasta do cliente — por isso este caminho
+       jamais diz "tente de novo": ele manda RECARREGAR e conferir. */
+    if (e && e.local)        ERROS_CEL.set(k, 'Não consegui ler o arquivo. Escolha de novo.');
+    else if (e && e.incerto) ERROS_CEL.set(k, 'Não consegui confirmar se subiu. Recarregue antes de mandar de novo — o documento pode já estar na pasta.');
+    else                     ERROS_CEL.set(k, 'O servidor recusou: ' + String((e&&e.message)||e));
+  } finally {
+    ENVIANDO.delete(k);
+    repintarCel(id, col);
+  }
+}
+
+/* Os dois ouvintes da coluna de documento, no documento — mesma razão do
+   `change` de campo: uma grade repinta o tempo todo, e ouvinte pendurado em nó
+   repintado morre com ele. */
+document.addEventListener('change', e=>{
+  const no = e.target;
+  if (!no || !no.dataset || !no.dataset.upCol) return;
+  const f = no.files && no.files[0];
+  if (f) enviarDocumento(no.dataset.upId, no.dataset.upCol, f);
+  no.value = '';        // escolher o MESMO arquivo de novo tem de disparar de novo
+});
+document.addEventListener('click', e=>{
+  const bt = e.target.closest && e.target.closest('[data-url-col]');
+  if (!bt) return;
+  const cx = bt.closest('.doc'); if (!cx) return;
+  const inp = cx.querySelector('.doc-url');
+  if (inp) { inp.hidden = !inp.hidden; if (!inp.hidden) inp.focus(); }
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   GRAVAÇÃO — a tela não espera, e o que falha aparece
+   Uma gravação por CLIENTE (chave 'rec:<id>'), e a última manda: duas gravações
+   da mesma linha em voo terminam fora de ordem com facilidade, e a resposta da
+   anterior falaria de um estado que já não está na tela.
+   ══════════════════════════════════════════════════════════════════════════ */
+let TIMER = null;
+function marcarSujo(id, col, valor){
+  /* O LOTE É POR SEÇÃO. Cada seção tem a sua rota e o seu porteiro; juntar os
+     campos das duas num lote só obrigaria a existir uma porta com permissão de
+     UNIÃO — que é justamente a que não pode existir (ver 10_Documentos.gs).
+     Quase sempre é um lote (mexeu numa seção); dois é quem editou o alvará e a
+     senha na mesma abertura. */
+  const sec = secaoDe(col);
+  if (!sec) return;                       // coluna de identificação: não grava
+  const k = chaveLote(id, sec.id);
+  if (!SUJOS.has(k)) SUJOS.set(k, {});
+  /* MESMO FUNIL NA IDA E NA VOLTA. `b4uParaPlanilha` tira a máscara do que é
+     identificador (00.623.904/0001-73 → 00623904000173) e deixa o resto como
+     está. Gravar o valor mascarado faria a busca do painel deixar de achar o
+     cliente pelo CNPJ no dia seguinte. */
+  SUJOS.get(k)[col] = window.b4uParaPlanilha ? b4uParaPlanilha(valor, col) : valor;
+  FALHAS.delete(k);
+  pintarSelo(id);
+  /* Espera curta antes de mandar: quem corrige três campos seguidos da mesma
+     seção manda UMA gravação, não três — e três seriam três leituras da planilha
+     inteira dentro do lock, uma esperando a outra. */
+  clearTimeout(TIMER);
+  TIMER = setTimeout(()=>{ Array.from(SUJOS.keys()).forEach(gravarLote); }, 700);
+}
+
+function gravarLote(k){
+  const campos = SUJOS.get(k);
+  if (!campos || !Object.keys(campos).length) return;
+  SUJOS.delete(k);
+  const corte = k.lastIndexOf('|');
+  const id  = k.slice(0, corte), sid = k.slice(corte + 1);
+  const sec = SECOES.find(x=>x.id===sid);
+  if (!sec) return;
+  const linha = LINHAS.find(l=>l.id===id) || {};
+  /* O que o recado nomeia quando falha. Senha nunca aparece por extenso — nem
+     num recado de erro, que é justamente o texto que fica na tela mais tempo. */
+  const itens = Object.keys(campos).map(c =>
+    c + ' → ' + (SIGILOSA.has(normCol(c)) ? '(alterado)' : (campos[c] || '(vazio)')));
+
+  const envio = () => postAcao({ acao:'recorte_salvar', recorte:recorteAtual(),
+                                 secao:sec.id, id:id, campos:campos,
+                                 cliente:linha.nome_cliente||'' })
+    .then(d => {
+      /* O servidor devolve o que IGNOROU (coluna fora da seção, célula com
+         fórmula). Ignorada NÃO foi gravada, e chamar isso de sucesso é a mentira
+         mais cara que um painel conta. */
+      if (d && d.ignoradas && d.ignoradas.length) {
+        const e = new Error('Não gravei: ' + d.ignoradas.join(', ') +
+          (d.travadas && d.travadas.length ? ' — a célula tem fórmula na planilha.' : ''));
+        e.doServidor = true;
+        throw e;
+      }
+      Object.keys(campos).forEach(c => { if (linha.valores) linha.valores[c] = campos[c]; });
+      FALHAS.delete(k); pintarSelo(id);
+      return d;
+    });
+
+  const aoFalhar = e => { FALHAS.set(k, String((e&&e.message)||e)); pintarSelo(id); };
+
+  if (window.B4UGravar) {
+    /* Uma gravação por chave, e a última manda: duas gravações do MESMO lote em
+       voo ao mesmo tempo terminam fora de ordem com facilidade, e a resposta da
+       anterior falaria de um estado que já não está na tela. Como a chave leva a
+       seção, o lote de licenças e o de acessos do mesmo cliente não se
+       atropelam — que é o que `Promise.allSettled` resolve na tela antiga. */
+    B4UGravar.enviar({
+      chave: 'rec:' + k,
+      titulo: (linha.nome_cliente||id) + ' — ' + sec.rotulo,
+      itens: itens,
+      envio: envio,
+      aoOk: ()=>{ FALHAS.delete(k); pintarSelo(id); },
+      aoDesfazer: ()=>aoFalhar(new Error('A gravação não foi confirmada.'))
+    });
+  } else {
+    envio().catch(aoFalhar);
+  }
+  pintarSelo(id);
+}
+
+/* O selo é da LINHA e soma os lotes dela: quem olha a lista quer saber se aquele
+   cliente tem coisa por gravar, não em qual das duas seções. Ele é desenhado a
+   partir do ESTADO, e por isso sobrevive a filtro, a busca e à troca de modo —
+   que é justamente quando um selo pintado "na mão" some. */
+function pintarSelo(id){
+  const meus = k => k.slice(0, k.lastIndexOf('|')) === id;
+  const falhou = Array.from(FALHAS.keys()).filter(meus);
+  const indo   = Array.from(SUJOS.keys()).filter(meus);
+  document.querySelectorAll('[data-selo="'+selEsc(id)+'"]').forEach(no=>{
+    if (falhou.length)    no.innerHTML = '<span class="selo err" title="'+esc(FALHAS.get(falhou[0]))+'">não gravou</span>';
+    else if (indo.length) no.innerHTML = '<span class="selo vai">gravando…</span>';
+    else                  no.innerHTML = '';
+  });
+}
+
+/* UM ouvinte, no documento. Ver o comentário de `campoHTML`. */
+document.addEventListener('change', e=>{
+  const no = e.target;
+  if (!no || !no.dataset || !no.dataset.col || !no.dataset.id) return;
+  marcarSujo(no.dataset.id, no.dataset.col, no.value);
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   1) ESCOLHER QUAIS VARIÁVEIS MOSTRAR
+   É a MESMA caixa de seleção múltipla dos filtros (b4u-filtro.js), sobre outra
+   lista. Não foi escrito um seletor próprio de propósito: escolher colunas e
+   filtrar por valor são a mesma pergunta — "quais destes?" — e um segundo widget
+   com o mesmo desenho é a primeira coisa a divergir do primeiro.
+   ══════════════════════════════════════════════════════════════════════════ */
+function montarSeletorColunas(){
+  const alvo = document.getElementById('filtros');
+  if (!window.B4UFiltro) return;                     // sem o arquivo: mostra tudo, e a tela vive
+  const f = B4UFiltro.criar({
+    id:'f-cols', rot:'Colunas',
+    itens: DO_REC.map(c=>({v:c, r:c})),
+    marcados: VIS.slice(),
+    /* `vazio:'nada'` porque a caixa NASCE com tudo marcado: desmarcar tudo é um
+       gesto deliberado, e a resposta certa é obedecer e avisar — não cair
+       calado em "todas", que desfaria o que a pessoa acabou de fazer. */
+    vazio:'nada',
+    rotTodos:'Todas as colunas', rotNada:'Nenhuma coluna', rotTodas:'Todas',
+    aoMudar: m => {
+      /* A ordem é a do RECORTE, nunca a ordem em que a pessoa clicou: quem
+         declarou o recorte pensou nas colunas nessa sequência, e uma tela que
+         reordena sozinha conforme os cliques nunca fica igual duas vezes. */
+      VIS = DO_REC.filter(c=>m.indexOf(c)>-1);
+      salvarVis();
+      remontarFiltrosValor();
+      desenhar();
+    }
+  });
+  alvo.appendChild(f.no);
+}
+
+/* Os filtros por VALOR: um por coluna visível que tenha lista de opções.
+   Teto de SEIS: uma régua com trinta caixas não é uma régua, é um formulário — e
+   quem precisa da trigésima usa a busca. As seis são as primeiras da ordem do
+   recorte, que é a ordem em que quem o declarou pensou nelas. */
+const TETO_FILTROS = 6;
+let NOS_FILTRO = [];
+function remontarFiltrosValor(){
+  NOS_FILTRO.forEach(n=>n.remove());
+  NOS_FILTRO = [];
+  F_VAL = {};
+  montarFiltrosValor();
+}
+function montarFiltrosValor(){
+  const alvo = document.getElementById('filtros');
+  if (!window.B4UFiltro) return;
+  VIS.filter(c => VALID[c] && VALID[c].opcoes && VALID[c].opcoes.length &&
+                  VALID[c].opcoes.length <= 25)
+     .slice(0, TETO_FILTROS)
+     .forEach(col=>{
+       const vals = VALID[col].opcoes.filter(Boolean);
+       F_VAL[col] = vals.slice();
+       const f = B4UFiltro.criar({
+         id:'f-'+normCol(col).replace(/\W+/g,'-'), rot:col,
+         itens: vals.map(v=>({v:v, r:v})),
+         marcados: vals.slice(),
+         vazio:'nada', rotTodos:'Qualquer '+col, rotNada:'Nenhum valor', rotTodas:'Todos',
+         aoMudar: m => { F_VAL[col] = m.slice(); desenhar(); }
+       });
+       alvo.appendChild(f.no);
+       NOS_FILTRO.push(f.no);
+     });
+}
+
+/* ---------------- o funil ----------------
+   Uma função, e ela é a ÚNICA que decide quem aparece. Filtro escrito duas vezes
+   (uma para as fichas, outra para a grade) é a discordância mais comum deste
+   tipo de tela: o contador diz 12 e a planilha mostra 14. */
+function filtradas(){
+  const termo = normTxt(BUSCA), dig = soDigitos(BUSCA);
+  return LINHAS.filter(l=>{
+    if (termo || dig) {
+      /* A busca varre a identificação e as colunas VISÍVEIS — nunca as
+         sigilosas: procurar por um pedaço de senha e receber o cliente certo é
+         um jeito de descobrir a senha sem nunca vê-la. */
+      const alvo = IDENT.concat(VIS).filter(c=>!SIGILOSA.has(normCol(c)))
+        .map(c=>l.valores[c]||'').join(' ') + ' ' + l.id + ' ' + (l.nome_cliente||'');
+      const casa = (termo && normTxt(alvo).includes(termo)) ||
+                   (dig && dig.length>=3 && soDigitos(alvo).includes(dig));
+      if (!casa) return false;
+    }
+    for (const col in F_VAL) {
+      if (VIS.indexOf(col) < 0) continue;            // filtro de coluna escondida não filtra
+      const marcados = F_VAL[col];
+      if (!marcados) continue;
+      const v = String(l.valores[col]||'').trim();
+      /* Célula VAZIA passa por qualquer filtro de valor. O contrário esconderia
+         justamente a linha que falta preencher — que é o que quase todo mundo
+         abre esta tela para achar. */
+      if (!v) continue;
+      if (marcados.indexOf(v) < 0) return false;
+    }
+    return true;
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   2) MOSTRAR EM MODAL — a ficha de um cliente
+   A moldura (véu, Esc, foco preso, aviso de "tem coisa por gravar") é do
+   b4u-modal.js. Daqui para dentro é só o CONTEÚDO — e é essa fronteira que
+   impede aquele arquivo de virar um catálogo de exceções.
+
+   Usa `criar()`, e não `adotar()`: as sete fichas do painel foram adotadas
+   porque já tinham o <div class="modal"> escrito à mão e dezenas de ids
+   apontando para dentro dele. Esta nasce agora, sem id nenhum para preservar —
+   é exatamente o caso para o qual o `criar()` foi escrito e nunca usado.
+   ══════════════════════════════════════════════════════════════════════════ */
+let FICHA = null;
+function abrirFicha(id){
+  const l = LINHAS.find(x=>x.id===id);
+  if (!l || !window.B4UModal) return;
+
+  const cabeca = IDENT.map(c=>
+    '<div class="mfld"><span class="lbl">'+esc(c)+'</span>'+
+    campoHTML(id,c,l.valores[c],'in')+'</div>').join('');
+
+  /* UM BLOCO POR SEÇÃO, na ordem em que o recorte as declarou. Não é divisória
+     de layout: é a mesma fronteira que decide o porteiro e a porta de gravação,
+     e mostrá-la é o que explica por que metade dos campos está travada e a
+     outra metade não.
+
+     Dentro de cada bloco, as colunas do recorte na ordem declarada, respeitando
+     a escolha da pessoa em "Colunas". A ficha mostra o que ela escolheu ver — e
+     não "tudo, porque aqui cabe": duas telas com listas diferentes para o mesmo
+     recorte é o começo de a pessoa não confiar em nenhuma das duas. */
+  const campo = c =>
+    '<div class="mfld'+(ehLonga(c)?' full':'')+'">'+
+      '<span class="lbl">'+esc(c)+(editavel(c)?'':' <span class="lock" title="Só leitura">🔒</span>')+'</span>'+
+      campoHTML(id,c,l.valores[c],'in')+
+    '</div>';
+
+  const blocos = SECOES.map(sec=>{
+    const cols = VIS.filter(c=>{ const x=secaoDe(c); return x && x.id===sec.id; });
+    if (!cols.length) return '';
+    return '<div class="banda">'+
+             '<span class="t">'+esc(sec.rotulo)+'</span>'+
+             '<span class="s">'+esc(sec.sobre||'')+'</span>'+
+             /* O aviso vive na FAIXA, dito uma vez — e não repetido em vinte e um
+                cadeados, um por campo. O cadeado do rótulo continua lá para quem
+                chegar direto num campo, mas quem explica é isto aqui. */
+             (sec.pode_gravar ? '' : '<span class="aviso">você não edita esta seção</span>')+
+             '<span class="s" style="flex:0 0 auto">'+cols.length+' de '+(sec.colunas||[]).length+'</span>'+
+           '</div>'+
+           '<div class="msec"><div class="msec-campos">'+cols.map(campo).join('')+'</div></div>';
+  }).join('');
+
+  const html =
+    '<div class="msec"><div class="msec-tit">Identificação<span class="n">só leitura</span></div>'+
+      '<div class="msec-campos">'+cabeca+'</div></div>'+
+    (blocos || '<div class="dica">Nenhuma coluna marcada em <b>Colunas</b>.</div>')+
+    (l.drive ? '<div class="dica" style="margin-top:10px"><a href="'+esc(l.drive)+'" rel="noopener">Pasta do cliente no Drive ↗</a></div>' : '');
+
+  if (!FICHA) {
+    FICHA = B4UModal.criar({
+      id:'modalRec', largura:'880px', status:true,
+      avisoSujo:'Ainda não gravei o que você mudou. Espere um instante — ou clique de novo em Fechar para sair assim mesmo.',
+      acoes:[{id:'recFechar', rot:'Fechar', tipo:'sec'}],
+      /* `sujo` é sobre a TELA (é ele que liga o beforeunload). A ficha grava
+         sozinha, então fechá-la não perde nada que já não esteja em voo — por
+         isso não há `perdeAoFechar` separado aqui. */
+      sujo: ()=> SUJOS.size>0
+    });
+  }
+  FICHA.titulo(l.nome_cliente || id);
+  FICHA.selo(id);
+  /* `corpo()` é GETTER — devolve o nó, não o preenche. A casca é dona da
+     moldura e nunca do conteúdo (é a regra 2 do b4u-modal.js), então quem
+     escreve aqui dentro é esta página. */
+  FICHA.corpo().innerHTML = html;
+  FICHA.abrir();
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   3) MOSTRAR EM PLANILHA FILTRÁVEL
+   ══════════════════════════════════════════════════════════════════════════ */
+function desenharGrade(){
+  const linhas = filtradas();
+  const th = '<th class="fix1">ID</th><th class="fix2">Cliente</th>' +
+             VIS.map(c=>'<th>'+esc(c)+'</th>').join('');
+  const tr = linhas.map(l=>
+    '<tr>'+
+      '<td class="fix1"><button class="bt" data-abrir="'+esc(l.id)+'" type="button" '+
+        'title="Abrir a ficha deste cliente">'+esc(l.id)+'</button></td>'+
+      '<td class="fix2">'+esc(l.nome_cliente||'')+'<span data-selo="'+esc(l.id)+'"></span></td>'+
+      VIS.map(c=>'<td>'+campoHTML(l.id,c,l.valores[c],'cel-in')+'</td>').join('')+
+    '</tr>').join('');
+  document.getElementById('conteudo').innerHTML = linhas.length
+    ? '<div class="grade-wrap"><table class="grade"><thead><tr>'+th+'</tr></thead><tbody>'+tr+'</tbody></table></div>'
+    : '<div class="vazio">Nenhum cliente com esses filtros.</div>';
+  linhas.forEach(l=>pintarSelo(l.id));
+}
+
+function desenharFichas(){
+  const linhas = filtradas();
+  /* O cartão mostra as TRÊS primeiras colunas visíveis e quantas faltam
+     preencher. Três porque é o que cabe numa linha sem quebrar no celular, e
+     porque o cartão é um ÍNDICE — quem quer o resto abre a ficha. */
+  const amostra = VIS.slice(0,3);
+  const html = linhas.map(l=>{
+    const faltam = VIS.filter(c=>!String(l.valores[c]||'').trim()).length;
+    const resumo = amostra.map(c=>
+      '<span>'+esc(c)+': <b>'+esc(l.valores[c]||'—')+'</b></span>').join('') +
+      (faltam ? '<span class="falta">'+faltam+' em branco</span>' : '');
+    return '<button class="cli" type="button" data-abrir="'+esc(l.id)+'">'+
+      '<span class="l1"><span class="id">'+esc(l.id)+'</span>'+
+      '<span class="nm">'+esc(l.nome_cliente||'(sem nome)')+'</span>'+
+      '<span data-selo="'+esc(l.id)+'"></span></span>'+
+      '<span class="resumo">'+resumo+'</span></button>';
+  }).join('');
+  document.getElementById('conteudo').innerHTML = html || '<div class="vazio">Nenhum cliente com esses filtros.</div>';
+  linhas.forEach(l=>pintarSelo(l.id));
+}
+
+function desenhar(){
+  (MODO==='grade' ? desenharGrade : desenharFichas)();
+  const n = filtradas().length;
+  document.getElementById('cnt').textContent =
+    n + (n===1?' cliente':' clientes') + (n!==LINHAS.length ? ' de '+LINHAS.length : '') +
+    ' · ' + VIS.length + '/' + DO_REC.length + ' colunas' +
+    (SECOES.length > 1 ? ' em ' + SECOES.length + ' seções' : '');
+}
+
+/* Abrir a ficha: UM ouvinte, pelo `data-abrir`. Vale para o cartão e para o
+   botão de ID da grade, sem que os dois precisem saber um do outro. */
+document.addEventListener('click', e=>{
+  const no = e.target.closest && e.target.closest('[data-abrir]');
+  if (no) abrirFicha(no.getAttribute('data-abrir'));
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CARGA
+   ══════════════════════════════════════════════════════════════════════════ */
+function aplicar(d){
+  REC    = d.recorte || {rotulo:'Recorte', pode_gravar:false};
+  /* As seções que CHEGARAM. Uma que a pessoa não pode ler não está aqui — o
+     servidor não a pôs no payload, e isso não é `display:none`: a coluna nem
+     viajou. */
+  SECOES = d.secoes || [];
+  SEC_DE = new Map();
+  SECOES.forEach(sec => (sec.colunas||[]).forEach(c => SEC_DE.set(normCol(c), sec)));
+  DO_REC = d.do_recorte || [];
+  IDENT  = d.identificacao || [];
+  LINHAS = d.linhas || [];
+  VALID  = d.validacoes || {};
+  ESPELHADA = new Set((d.espelhadas||[]).map(normCol));
+  SIGILOSA  = new Set((d.sigilosas ||[]).map(normCol));
+  DATA      = new Set((d.datas     ||[]).map(normCol));
+  LINK      = new Set((d.links     ||[]).map(normCol));
+  META   = d;
+
+  document.title = REC.rotulo + ' — back4you';
+  document.getElementById('titulo').textContent = REC.rotulo;
+  document.getElementById('sobre').textContent  = REC.sobre || '';
+
+  /* A escolha guardada é FILTRADA pelo que o recorte tem HOJE. Sem isso, uma
+     coluna tirada do recorte no servidor continuaria na lista de alguém para
+     sempre — e apareceria como uma coluna vazia que ninguém consegue explicar. */
+  const guardada = lerVis();
+  VIS = guardada ? DO_REC.filter(c=>guardada.indexOf(c)>-1) : visPadrao();
+  if (!guardada) salvarVis();
+
+  /* A faixa de permissão nomeia AS SEÇÕES, não a tela. "Você não pode editar"
+     seria falso para o societário, que edita as licenças e não os acessos — e
+     um aviso que a pessoa sabe estar errado é um aviso que ela deixa de ler. */
+  const travadas = SECOES.filter(s=>!s.pode_gravar);
+  if (travadas.length) {
+    const el = document.getElementById('avisoLeitura');
+    el.hidden = false;
+    el.textContent = travadas.length === SECOES.length
+      ? 'Aqui você vê, mas não edita. Os campos vêm travados.'
+      : 'Você vê, mas não edita: ' + travadas.map(s=>s.rotulo).join(' · ') +
+        '. Os campos dessa parte vêm travados.';
+  }
+
+  montarSeletorColunas();
+  montarFiltrosValor();
+
+  /* O rodapé é onde a tela CONFESSA. `ausentes` são as colunas que o recorte
+     pediu e a planilha não tem — sem esta linha, quem escreveu o recorte com um
+     acento errado procura o defeito na permissão e no cache, que é onde ele
+     não está. */
+  const pe = [];
+  if (META.aba) pe.push('Aba <b>'+esc(META.aba)+'</b>, cabeçalho na linha '+esc(META.cabecalho_linha||'?'));
+  if (META.planilha_url) pe.push('<a href="'+esc(META.planilha_url)+'" rel="noopener">abrir a planilha ↗</a>');
+  if (META.ausentes && META.ausentes.length)
+    pe.push('<span style="color:var(--amber-txt);font-weight:800">Declaradas no recorte e ausentes na planilha: '+
+            esc(META.ausentes.join(', '))+'</span>');
+  if (META.validacoes_erro)
+    pe.push('<span style="color:var(--amber-txt)">Não consegui ler as listas de opções: os campos ficaram de texto livre.</span>');
+  document.getElementById('rodape').innerHTML = pe.join(' · ');
+
+  desenhar();
+
+  /* ?abrir=ID — o link que vem do painel do colaborador já com a ficha aberta. */
+  const abrir = (new URLSearchParams(location.search).get('abrir')||'').trim();
+  if (abrir) abrirFicha(abrir);
+}
+
+function carregar(){
+  const r = recorteAtual();
+  if (!r) {
+    /* Sem `?r=` a página não tem assunto. Em vez de uma tela vazia, ela pergunta
+       ao servidor QUAIS recortes esta pessoa pode abrir e oferece os links —
+       o que também é o menu, enquanto não houver um no b4u-shell.js. */
+    return jsonp(API_URL+'?tipo=recorte_lista&chave='+encodeURIComponent(chaveAtual()))
+      .then(d=>{
+        if (d && d.erro) throw new Error(d.erro);
+        const its = (d&&d.recortes)||[];
+        document.getElementById('conteudo').innerHTML = its.length
+          ? '<div class="vazio">Escolha um recorte:</div>' + its.map(x=>
+              '<a class="cli" href="?r='+encodeURIComponent(x.id)+'&chave='+encodeURIComponent(chaveAtual())+'" target="_self">'+
+              '<span class="l1"><span class="nm">'+esc(x.rotulo)+'</span>'+
+              '<span class="id">'+x.colunas+' colunas'+(x.pode_gravar?'':' · só leitura')+'</span></span>'+
+              '<span class="resumo">'+esc(x.sobre||'')+'</span></a>').join('')
+          : '<div class="vazio">Nenhum recorte disponível para o seu acesso.</div>';
+        document.getElementById('cnt').textContent = '';
+        document.getElementById('titulo').textContent = 'Recortes do Registro';
+      })
+      .catch(mostrarErro);
+  }
+  return jsonp(API_URL+'?tipo=recorte_montar&recorte='+encodeURIComponent(r)+
+               '&chave='+encodeURIComponent(chaveAtual()))
+    .then(d=>{ if (d && d.erro) throw new Error(d.erro); aplicar(d); })
+    .catch(mostrarErro);
+}
+function mostrarErro(e){
+  const el = document.getElementById('avisoErro');
+  el.hidden = false;
+  el.textContent = String((e&&e.message)||e);
+  document.getElementById('conteudo').innerHTML = '';
+}
+
+/* ---------------- régua ---------------- */
+let TB = null;
+document.getElementById('busca').addEventListener('input', e=>{
+  BUSCA = e.target.value;
+  /* 123 linhas × 40 colunas é uma tabela de ~5.000 células: redesenhar a cada
+     tecla é o que faz a busca "engasgar" em quem digita rápido. */
+  clearTimeout(TB); TB = setTimeout(desenhar, 160);
+});
+document.getElementById('modoFichas').addEventListener('click', ()=>trocarModo('fichas'));
+document.getElementById('modoGrade') .addEventListener('click', ()=>trocarModo('grade'));
+function trocarModo(m, semDesenhar){
+  MODO = m;
+  document.getElementById('modoFichas').classList.toggle('on', m==='fichas');
+  document.getElementById('modoGrade') .classList.toggle('on', m==='grade');
+  try{ localStorage.setItem('b4u.recorte.modo', m); }catch(_){}
+  if (!semDesenhar && REC) desenhar();
+}
+/* O modo é lembrado, mas NÃO desenha aqui: quando esta linha roda ainda não
+   chegou payload nenhum, e desenhar sem dados pintaria "nenhum cliente". */
+try{ const m=localStorage.getItem('b4u.recorte.modo'); if(m) trocarModo(m, true); }catch(_){}
+
+document.getElementById('volta').href = 'colaborador?chave='+encodeURIComponent(chaveAtual());
+
+/* ---------------- menu lateral ----------------
+   Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
+   URL desde a primeira linha deste script — não há o que esperar da API. E se a
+   busca falhar, o erro pinta dentro do #app com o menu inteiro de pé, que é a
+   mesma razão de o erro nunca ser pintado no <body>.
+   Sem `ativo`: esta página serve a vários recortes e nenhum deles é uma entrada
+   do menu — marcar uma entrada errada é pior do que não marcar nenhuma. */
+/* Qual entrada do menu este recorte ACENDE. A maioria não acende nenhuma — são
+   telas que não estão no menu, e marcar uma entrada errada é pior do que não
+   marcar nenhuma: a pessoa passa a achar que está noutro lugar. O `documentos`
+   está aqui porque ele TEM entrada própria, e chegar nele com o menu apagado
+   faria a tela parecer solta. */
+const MENU_DE = { documentos: 'documentos' };
+
+if (window.B4UShell) {
+  B4UShell.montar({
+    perfil:'equipe',
+    ativo: MENU_DE[recorteAtual()] || '',
+    link: function(pag){ return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
+  });
+  B4UShell.usuario();
+}
+
+carregar();
+</script>
+</body>
+</html>
