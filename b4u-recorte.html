@@ -182,16 +182,37 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);
 a{color:var(--brand-teal-txt)}
 :focus-visible{outline:2px solid var(--brand-teal);outline-offset:2px}
 
-/* ---------- cabeçalho ---------- */
-.topo{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
-.topo h1{margin:0;font-size:20px;font-weight:900;letter-spacing:-.2px;color:var(--brand-dark)}
-.topo .sobre{color:var(--muted);font-size:var(--fs-2);flex:1 1 240px}
-.topo .volta{font-size:var(--fs-2);font-weight:800;text-decoration:none}
+/* ---------- A BARRA ESCURA DO TOPO ----------
+   Os mesmos valores das outras vinte páginas, e isso NÃO é decoração: o
+   `b4u-shell.js` pendura o botão "Minha conta" no primeiro `.b4u-bar`,
+   `.barra` ou `.topo` que achar, e o desenha em #cfe6e2 sobre um fundo
+   translúcido branco — cores calculadas para fundo ESCURO ("a barra é escura em
+   todas as nove", diz o comentário dele).
+
+   Esta página nasceu chamando de `.barra` a régua de filtros, que fica no bege:
+   o botão caiu ali e apareceu lavado, ilegível. Não era um problema de contraste
+   a resolver com uma cor nova — era a página usando o nome de outra coisa. A
+   régua virou `.regua`, e a barra voltou a ser a barra. */
+.barra{position:sticky;top:0;z-index:60;background:var(--brand-dark);color:#fff;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 20px;
+  box-shadow:0 2px 12px rgba(7,48,52,.2)}
+.barra .logo{font-weight:800;font-size:19px}
+.barra a.logo{color:inherit;text-decoration:none;cursor:pointer}
+.barra a.logo:hover{opacity:.82}
+.barra .logo .y{color:var(--brand-teal)}
+.barra .tag{font-size:12px;font-weight:700;color:#cfe6e2;background:rgba(255,255,255,.10);
+  padding:5px 11px;border-radius:var(--radius-pill);white-space:nowrap}
+.barra .spacer{flex:1}
+.barra a.volta{color:#cfe6e2;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+
+/* ---------- o que a tela é, em uma linha ---------- */
+.sobre{margin:0 2px 12px;color:var(--muted);font-size:var(--fs-2)}
+.sobre:empty{display:none}
 
 /* ---------- a régua de filtros ----------
-   Ela nunca estoura: quebra de linha, e o contador some no celular. */
-.barra{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 10px}
-.busca{flex:1 1 220px;min-width:160px;padding:7px 11px;border:1px solid var(--line);
+   Ela nunca estoura: quebra de linha. */
+.regua{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 10px}
+.regua .busca{flex:1 1 220px;min-width:160px;padding:7px 11px;border:1px solid var(--line);
   border-radius:var(--radius-pill);background:var(--surface);font-family:var(--sans);font-size:var(--fs-3)}
 /* A CONTAGEM NÃO MORA NA RÉGUA, e isso não é gosto: a folha do b4u-shell.js
    esconde `.barra .cnt` com `!important` — decisão do dono em 10/08/2026, "a
@@ -247,6 +268,81 @@ table.grade tbody tr:hover td{background:#FBF8F3}
 .cel-in:hover{border-color:var(--line)}
 .cel-in:focus{border-color:var(--brand-teal);background:var(--surface);outline:none}
 .cel-ro{color:var(--muted)}
+
+/* ---------- O FUNIL NO CABEÇALHO ----------
+   O filtro mora NA COLUNA, como no Sheets e no Excel. Enquanto ele era uma
+   fichinha na régua, a pessoa tinha de casar o rótulo do botão com o nome da
+   coluna lá do outro lado da tela — e com trinta colunas isso não se faz. */
+table.grade thead th{padding:0}
+.th-in{display:flex;align-items:center;gap:6px;padding:5px 8px}
+.th-rot{overflow:hidden;text-overflow:ellipsis}
+.th-ord{flex:none;font-size:10px;color:var(--brand-teal-txt)}
+.th-f{flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;padding:0;border:0;border-radius:var(--radius-sm);
+  background:none;color:var(--muted);cursor:pointer;opacity:.35}
+.th-f svg{width:11px;height:11px;fill:currentColor}
+.th-f:hover{opacity:1;color:var(--brand-dark);background:rgba(0,0,0,.06)}
+/* O ESTADO ATIVO É O PONTO DA MUDANÇA. Um funil que fica igual filtrando ou não
+   transforma "sumiu um cliente" num mistério — e o primeiro palpite de quem não
+   vê o filtro é que o painel perdeu dado. Então: funil cheio, na cor da marca,
+   opacidade total, e a coluna inteira ganha um fundo levemente tingido. */
+.th-f.on{opacity:1;color:var(--brand-teal-txt);background:#E7F2F0}
+table.grade thead th.filtrado{background:#EAF4F1;box-shadow:inset 0 -2px 0 var(--brand-teal)}
+
+/* ---------- o painel do funil ----------
+   Vive no <body> com `position:fixed`, e não dentro do <th>. A grade rola dentro
+   de um container com `overflow:auto`: um painel filho do cabeçalho seria
+   RECORTADO pela borda da tabela, e apareceria pela metade justamente nas
+   colunas da direita, que são as que mais precisam de rolagem. */
+.gfil{position:fixed;z-index:80;min-width:250px;max-width:min(320px,92vw);
+  background:var(--surface);border:1px solid var(--line-2,#D8CBB8);border-radius:var(--radius);
+  box-shadow:0 12px 30px rgba(7,48,52,.18);padding:6px;display:flex;flex-direction:column;
+  font-size:var(--fs-2)}
+.gfil-i{display:block;width:100%;text-align:left;border:0;background:none;cursor:pointer;
+  font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--ink-2);
+  padding:7px 9px;border-radius:var(--radius-sm)}
+.gfil-i:hover{background:var(--surface-warm)}
+.gfil-i.on{color:var(--brand-teal-txt);background:#EAF4F1}
+.gfil-sep{height:1px;background:var(--line);margin:5px 2px}
+.gfil-busca{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:var(--radius-sm);
+  font-family:var(--sans);font-size:var(--fs-2);margin:2px 0 6px}
+.gfil-topo{display:flex;align-items:center;gap:8px;padding:0 9px 6px;font-size:var(--fs-1);color:var(--muted)}
+.gfil-topo button{border:0;background:none;padding:0;cursor:pointer;font-family:var(--sans);
+  font-size:var(--fs-1);font-weight:800;color:var(--brand-teal-txt);text-decoration:underline}
+.gfil-cnt{margin-left:auto;white-space:nowrap}
+.gfil-lista{overflow:auto;min-height:40px}
+.gfil-lista label{display:flex;align-items:center;gap:8px;padding:5px 9px;border-radius:var(--radius-sm);cursor:pointer}
+.gfil-lista label:hover{background:var(--surface-warm)}
+.gfil-lista input{flex:none;accent-color:var(--brand-teal);margin:0}
+.gfil-lista .r{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+/* `gfil-b` e não `vazio`: a página já tem um `.vazio` (o estado "nenhum cliente
+   com esses filtros") com `padding:40px` e `text-align:center`, e um `.r.vazio`
+   herdava os dois — a linha "(em branco)" saía centralizada e com quatro dedos
+   de espaço em volta. É a mesma armadilha que o b4u-modal.js resolve com o
+   prefixo `b4m-`: nome curto e genérico em folha compartilhada sempre encontra
+   um homônimo. */
+.gfil-lista .r.gfil-b{font-style:italic;color:var(--muted)}
+.gfil-lista .n{flex:none;color:var(--muted);font-size:var(--fs-1);font-weight:700}
+.gfil-vazio{padding:10px;color:var(--muted);font-size:var(--fs-1);text-align:center}
+.gfil-pe{border-top:1px solid var(--line);margin-top:5px;padding-top:5px}
+
+/* ---------- os filtros ativos, por extenso ----------
+   O funil resolve para quem está OLHANDO aquela coluna. Esta linha resolve para
+   quem não está: com trinta colunas e rolagem lateral, o funil aceso pode estar
+   fora da tela — e no modo Fichas não existe cabeçalho nenhum. Sem ela, "122
+   clientes" virando "9" não teria explicação à vista. */
+.chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 2px 8px}
+.chips:empty{display:none}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-1);font-weight:700;
+  color:var(--brand-teal-txt);background:#EAF4F1;border:1px solid #cfe6e2;
+  border-radius:var(--radius-pill);padding:3px 4px 3px 10px}
+.chip .abrir{border:0;background:none;padding:0;cursor:pointer;font:inherit;color:inherit}
+.chip .x{border:0;background:none;cursor:pointer;color:inherit;opacity:.6;
+  font-size:13px;line-height:1;padding:0 4px;border-radius:var(--radius-sm)}
+.chip .x:hover{opacity:1;background:rgba(0,0,0,.07)}
+.chip.ord{color:var(--amber-txt);background:var(--amber-soft);border-color:var(--amber-line)}
+.chips .tudo{border:0;background:none;cursor:pointer;font-family:var(--sans);font-size:var(--fs-1);
+  font-weight:800;color:var(--muted);text-decoration:underline}
 /* Selo de gravação. Sobrevive a filtro e a troca de modo porque é desenhado a
    partir do ESTADO (SUJOS/FALHAS), nunca do clique. */
 .selo{display:inline-block;font-size:10px;font-weight:900;padding:1px 6px;border-radius:var(--radius-pill);margin-left:6px}
@@ -520,16 +616,26 @@ function b4uParaPlanilha(valor,coluna){
 <script src="b4u-gravar.js" charset="utf-8"></script>
 </head>
 <body>
+<!-- A BARRA ESCURA fica FORA do #app, como nas outras vinte páginas: ela é
+     `position:sticky` e ocupa a largura toda, e o #app é a coluna de conteúdo
+     com margem. O `b4u-shell.js` acrescenta o botão "Minha conta" aqui no fim,
+     e esconde o logo e o "← Painel" quando o menu lateral existe — os dois
+     voltam sozinhos no caminho degradado, sem depender de nenhum JS desta
+     página rodar na ordem certa. -->
+<div class="barra">
+  <a class="logo" id="logo-home" href="colaborador" target="_self" title="Voltar para o painel do colaborador">back<span class="y">4you</span></a>
+  <span class="tag" id="tag">Recorte do Registro</span>
+  <span class="spacer"></span>
+  <a class="volta" id="volta" href="colaborador" target="_self">← Painel</a>
+</div>
+
 <div id="app">
-  <div class="topo">
-    <h1 id="titulo">Recorte do Registro</h1>
-    <span class="sobre" id="sobre"></span>
-  </div>
+  <p class="sobre" id="sobre"></p>
 
   <div class="faixa leitura" id="avisoLeitura" hidden></div>
   <div class="faixa erro" id="avisoErro" hidden></div>
 
-  <div class="barra" id="barra">
+  <div class="regua" id="regua">
     <input class="busca" id="busca" type="search" placeholder="Buscar por nome, ID ou CNPJ…" autocomplete="off">
     <span id="filtros" style="display:contents"></span>
     <span style="flex:1"></span>
@@ -537,13 +643,9 @@ function b4uParaPlanilha(valor,coluna){
       <button class="bt on" id="modoFichas" type="button">Fichas</button>
       <button class="bt"    id="modoGrade"  type="button">Planilha</button>
     </div>
-    <!-- Dentro da régua de propósito: a folha do b4u-shell.js esconde
-         `.barra .volta` quando o menu lateral existe (o item "Painel da equipe"
-         cobre), e o traz de volta sozinho no caminho degradado, sem depender de
-         nenhum JS desta página rodar na ordem certa. -->
-    <a class="volta bt" id="volta" href="colaborador" target="_self">← Painel</a>
   </div>
 
+  <div class="chips" id="chips"></div>
   <div class="legenda" id="cnt"></div>
 
   <div id="conteudo"><div class="vazio">Carregando…</div></div>
@@ -736,7 +838,13 @@ let META      = {};          // aba, planilha_url, cabecalho_linha, ausentes…
 let VIS   = [];              // as colunas VISÍVEIS — a escolha desta pessoa
 let MODO  = 'fichas';        // 'fichas' | 'grade'
 let BUSCA = '';
-let F_VAL = {};              // coluna → [valores marcados] (os filtros dinâmicos)
+/* O FILTRO É POR COLUNA, e o conjunto guarda os valores QUE PASSAM. Coluna que
+   não está no mapa não filtra nada — e é isso, e não um `Set` com tudo dentro,
+   que faz "destravar o filtro" ser uma operação e não uma reconstrução: apagar
+   a chave devolve a coluna ao estado de repouso sem depender de a lista de
+   valores de hoje ser a mesma de quando a pessoa filtrou. */
+const F_COL = new Map();     // coluna → Set de valores que passam
+let ORD = { col:'', dir:'' }; // ordenação: coluna e 'asc' | 'desc'
 /* Sujos e falhas são por CLIENTE E SEÇÃO ('0012|licencas'): duas seções da mesma
    linha viajam por portas diferentes, então uma pode falhar enquanto a outra
    entra. Uma chave só por cliente marcaria a linha inteira de vermelho por
@@ -1118,44 +1226,17 @@ function montarSeletorColunas(){
          reordena sozinha conforme os cliques nunca fica igual duas vezes. */
       VIS = DO_REC.filter(c=>m.indexOf(c)>-1);
       salvarVis();
-      remontarFiltrosValor();
+      /* COLUNA QUE SAI DA TELA PERDE O FILTRO DELA. A alternativa — guardar e
+         reaplicar quando ela voltar — deixaria linhas sumindo por causa de uma
+         regra que não está em lugar nenhum da tela. Um filtro que a pessoa não
+         consegue ver é um filtro que ela não consegue desfazer. */
+      Array.from(F_COL.keys()).forEach(c => { if (VIS.indexOf(c) < 0) F_COL.delete(c); });
+      if (ORD.col && VIS.indexOf(ORD.col) < 0) ORD = { col:'', dir:'' };
+      fecharFiltro();
       desenhar();
     }
   });
   alvo.appendChild(f.no);
-}
-
-/* Os filtros por VALOR: um por coluna visível que tenha lista de opções.
-   Teto de SEIS: uma régua com trinta caixas não é uma régua, é um formulário — e
-   quem precisa da trigésima usa a busca. As seis são as primeiras da ordem do
-   recorte, que é a ordem em que quem o declarou pensou nelas. */
-const TETO_FILTROS = 6;
-let NOS_FILTRO = [];
-function remontarFiltrosValor(){
-  NOS_FILTRO.forEach(n=>n.remove());
-  NOS_FILTRO = [];
-  F_VAL = {};
-  montarFiltrosValor();
-}
-function montarFiltrosValor(){
-  const alvo = document.getElementById('filtros');
-  if (!window.B4UFiltro) return;
-  VIS.filter(c => VALID[c] && VALID[c].opcoes && VALID[c].opcoes.length &&
-                  VALID[c].opcoes.length <= 25)
-     .slice(0, TETO_FILTROS)
-     .forEach(col=>{
-       const vals = VALID[col].opcoes.filter(Boolean);
-       F_VAL[col] = vals.slice();
-       const f = B4UFiltro.criar({
-         id:'f-'+normCol(col).replace(/\W+/g,'-'), rot:col,
-         itens: vals.map(v=>({v:v, r:v})),
-         marcados: vals.slice(),
-         vazio:'nada', rotTodos:'Qualquer '+col, rotNada:'Nenhum valor', rotTodas:'Todos',
-         aoMudar: m => { F_VAL[col] = m.slice(); desenhar(); }
-       });
-       alvo.appendChild(f.no);
-       NOS_FILTRO.push(f.no);
-     });
 }
 
 /* ---------------- o funil ----------------
@@ -1164,7 +1245,7 @@ function montarFiltrosValor(){
    tipo de tela: o contador diz 12 e a planilha mostra 14. */
 function filtradas(){
   const termo = normTxt(BUSCA), dig = soDigitos(BUSCA);
-  return LINHAS.filter(l=>{
+  let out = LINHAS.filter(l=>{
     if (termo || dig) {
       /* A busca varre a identificação e as colunas VISÍVEIS — nunca as
          sigilosas: procurar por um pedaço de senha e receber o cliente certo é
@@ -1175,19 +1256,243 @@ function filtradas(){
                    (dig && dig.length>=3 && soDigitos(alvo).includes(dig));
       if (!casa) return false;
     }
-    for (const col in F_VAL) {
-      if (VIS.indexOf(col) < 0) continue;            // filtro de coluna escondida não filtra
-      const marcados = F_VAL[col];
-      if (!marcados) continue;
-      const v = String(l.valores[col]||'').trim();
-      /* Célula VAZIA passa por qualquer filtro de valor. O contrário esconderia
-         justamente a linha que falta preencher — que é o que quase todo mundo
-         abre esta tela para achar. */
-      if (!v) continue;
-      if (marcados.indexOf(v) < 0) return false;
+    for (const [col, passam] of F_COL) {
+      if (VIS.indexOf(col) < 0) continue;            // coluna escondida não filtra (e o mapa já foi limpo)
+      /* A CÉLULA VAZIA É UM VALOR, não uma exceção. No painel ela aparece como
+         "(em branco)" e se marca e desmarca como qualquer outro — que é como o
+         Sheets faz, e é o que permite pedir "só os que faltam preencher" sem
+         inventar um filtro especial para isso. A versão anterior deixava a
+         vazia passar por todo filtro, e com isso "Regime: Simples" trazia junto
+         os trinta clientes sem regime nenhum. */
+      if (!passam.has(String(l.valores[col]==null?'':l.valores[col]).trim())) return false;
     }
     return true;
   });
+
+  /* A ORDENAÇÃO É DA TELA, nunca da planilha. Ninguém reordena 122 linhas de uma
+     aba que outras seis rotas leem por posição — e o `row` de cada linha
+     continua sendo o da planilha, que é por onde a gravação acha o cliente. */
+  if (ORD.col && VIS.indexOf(ORD.col) > -1) {
+    const c = ORD.col, sinal = (ORD.dir === 'desc' ? -1 : 1);
+    out = out.slice().sort((a, b) => {
+      const x = String(a.valores[c]==null?'':a.valores[c]).trim();
+      const y = String(b.valores[c]==null?'':b.valores[c]).trim();
+      /* VAZIO VAI PARA O FIM NOS DOIS SENTIDOS. Invertendo a ordem, quem pediu
+         "os maiores primeiro" receberia uma tela de células em branco — e
+         concluiria, de novo, que o painel perdeu o dado. */
+      if (!x && !y) return 0;
+      if (!x) return 1;
+      if (!y) return -1;
+      return sinal * cmpVal(x, y);
+    });
+  }
+  return out;
+}
+
+/* Compara duas células. Número com número compara como número (senão "10" vem
+   antes de "9"); o resto vai no localeCompare pt-BR, que é o que põe "Ângela"
+   ao lado de "Angela" em vez de no fim do alfabeto. */
+function cmpVal(x, y){
+  const nx = Number(String(x).replace(/\./g,'').replace(',','.'));
+  const ny = Number(String(y).replace(/\./g,'').replace(',','.'));
+  if (isFinite(nx) && isFinite(ny) && /\d/.test(x) && /\d/.test(y) &&
+      !/[a-zA-Z]/.test(x) && !/[a-zA-Z]/.test(y)) return nx - ny;
+  return String(x).localeCompare(String(y), 'pt-BR', { sensitivity:'base', numeric:true });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   O FUNIL DA COLUNA — filtrar e ordenar de dentro do cabeçalho
+
+   Antes isto era uma fileira de fichinhas na régua, limitada a seis colunas e
+   montada a partir das OPÇÕES DE VALIDAÇÃO da planilha. Duas coisas erradas de
+   uma vez: a pessoa tinha de casar o rótulo do botão com o nome da coluna do
+   outro lado da tela, e a lista oferecia valores que ninguém usa enquanto
+   escondia os que estão lá e não passaram por validação nenhuma.
+
+   Agora a lista sai do QUE ESTÁ NA COLUNA — valor por valor, com a contagem de
+   linhas de cada um, como no Sheets. É a diferença entre "o que era para ter" e
+   "o que tem", e numa tela de conferência quem manda é a segunda.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Os valores distintos de uma coluna, com quantas linhas têm cada um.
+   Sobre TODAS as linhas, não sobre as filtradas: uma lista que encolhe conforme
+   se filtra é uma lista da qual não dá para voltar — desmarcou demais, o valor
+   some do painel e não há como remarcá-lo. */
+function valoresDaColuna(col){
+  const conta = new Map();
+  LINHAS.forEach(l => {
+    const v = String(l.valores[col]==null ? '' : l.valores[col]).trim();
+    conta.set(v, (conta.get(v)||0) + 1);
+  });
+  return Array.from(conta.keys())
+    .sort((a,b)=>{ if(!a) return 1; if(!b) return -1; return cmpVal(a,b); })
+    .map(v => ({ v: v, n: conta.get(v) }));
+}
+
+const FUNIL_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.6 2.6h12.8L9.4 8.7v4.7L6.6 11.6V8.7z"/></svg>';
+
+let FIL = null;   // { col, no }  — o painel aberto, se houver
+
+function fecharFiltro(){
+  if (!FIL) return;
+  FIL.no.remove();
+  document.querySelectorAll('.th-f[aria-expanded="true"], .chip .abrir[aria-expanded="true"]')
+    .forEach(b => b.setAttribute('aria-expanded','false'));
+  FIL = null;
+}
+
+function abrirFiltro(col, ancora){
+  const jaEra = FIL && FIL.col === col;
+  fecharFiltro();
+  if (jaEra) return;                      // clicar de novo no mesmo funil FECHA
+
+  const vals = valoresDaColuna(col);
+  /* Lê o estado NA HORA, e não uma cópia feita ao abrir. A versão anterior
+     capturava o `Set` na abertura, e como cada clique redesenha a lista, o
+     redesenho remarcava a caixa que a pessoa acabara de desmarcar — o filtro
+     entrava na tabela e o painel dizia que não. */
+  const marcado = v => { const p = F_COL.get(col); return !p || p.has(v); };
+
+  const no = document.createElement('div');
+  no.className = 'gfil';
+  no.setAttribute('role','dialog');
+  no.setAttribute('aria-label','Filtrar e ordenar por ' + col);
+  no.innerHTML =
+    '<button type="button" class="gfil-i' + (ORD.col===col && ORD.dir==='asc' ?' on':'') + '" data-ord="asc">Classificar A → Z</button>' +
+    '<button type="button" class="gfil-i' + (ORD.col===col && ORD.dir==='desc'?' on':'') + '" data-ord="desc">Classificar Z → A</button>' +
+    '<div class="gfil-sep"></div>' +
+    '<input class="gfil-busca" type="search" placeholder="Buscar nesta coluna…" autocomplete="off">' +
+    '<div class="gfil-topo"><button type="button" data-todos>Selecionar tudo</button>' +
+      '<button type="button" data-nada>Limpar</button>' +
+      '<span class="gfil-cnt"></span></div>' +
+    '<div class="gfil-lista"></div>' +
+    '<div class="gfil-pe"><button type="button" class="gfil-i" data-tirar>Tirar o filtro desta coluna</button></div>';
+
+  const lista = no.querySelector('.gfil-lista');
+  const cnt   = no.querySelector('.gfil-cnt');
+  const busca = no.querySelector('.gfil-busca');
+
+  function desenharLista(){
+    const t = normTxt(busca.value);
+    /* A BUSCA ESCONDE, NÃO DESMARCA. Quem digita "simples" e clica em "Limpar"
+       está pedindo para limpar o que está VENDO — mas o que não está à vista
+       continua valendo, e é por isso que `visiveis()` existe e os dois botões
+       do topo operam só sobre ela. Limpar os trezentos escondidos junto seria
+       apagar uma escolha que a pessoa não viu acontecer. */
+    const its = vals.filter(o => !t || normTxt(o.v || 'em branco').includes(t));
+    lista.innerHTML = its.length ? its.map(o =>
+      '<label><input type="checkbox" data-v="' + esc(o.v) + '"' + (marcado(o.v)?' checked':'') + '>' +
+      '<span class="r' + (o.v?'':' gfil-b') + '">' + (o.v ? esc(o.v) : '(em branco)') + '</span>' +
+      '<span class="n">' + o.n + '</span></label>').join('')
+      : '<div class="gfil-vazio">Nenhum valor com esse texto.</div>';
+    const n = vals.filter(o => marcado(o.v)).length;
+    cnt.textContent = n + ' de ' + vals.length;
+  }
+  function visiveis(){ return Array.from(lista.querySelectorAll('input[data-v]')).map(i => i.dataset.v); }
+
+  /* Grava a escolha. TUDO MARCADO = SEM FILTRO: a chave sai do mapa, o funil
+     apaga e o chip some. Guardar um Set com todos os valores "daria no mesmo"
+     hoje e mentiria amanhã — no dia em que um cliente novo trouxer um valor que
+     não estava na lista, ele seria filtrado para fora por uma escolha que
+     ninguém fez. */
+  function aplicar(){
+    const vis = new Set(visiveis());
+    const marcadosVis = new Set(Array.from(lista.querySelectorAll('input[data-v]:checked')).map(i => i.dataset.v));
+    const antes = F_COL.get(col);
+    const novo = new Set();
+    vals.forEach(o => {
+      /* Valor À VISTA: manda o checkbox. Valor que a BUSCA ESCONDEU: fica como
+         estava — e "como estava", quando ainda não havia filtro, é passando.
+         Sem esta última linha, digitar "A1" e desmarcar um item apagaria em
+         silêncio todos os outros valores da coluna. */
+      if (vis.has(o.v)) { if (marcadosVis.has(o.v)) novo.add(o.v); }
+      else if (!antes || antes.has(o.v)) novo.add(o.v);
+    });
+    if (novo.size >= vals.length) F_COL.delete(col); else F_COL.set(col, novo);
+    desenhar();
+  }
+
+  no.addEventListener('change', e => {
+    if (e.target.matches('input[data-v]')) { aplicar(); desenharLista(); }
+  });
+  busca.addEventListener('input', desenharLista);
+  no.addEventListener('click', e => {
+    const bt = e.target.closest('button'); if (!bt) return;
+    if (bt.dataset.ord)   { ORD = (ORD.col===col && ORD.dir===bt.dataset.ord) ? {col:'',dir:''} : {col:col, dir:bt.dataset.ord}; fecharFiltro(); desenhar(); return; }
+    if (bt.hasAttribute('data-todos')) { lista.querySelectorAll('input[data-v]').forEach(i => i.checked = true);  aplicar(); desenharLista(); return; }
+    if (bt.hasAttribute('data-nada'))  { lista.querySelectorAll('input[data-v]').forEach(i => i.checked = false); aplicar(); desenharLista(); return; }
+    if (bt.hasAttribute('data-tirar')) { F_COL.delete(col); fecharFiltro(); desenhar(); return; }
+  });
+
+  desenharLista();
+  document.body.appendChild(no);
+
+  /* Encaixe: abaixo da âncora, sem sair da janela. `position:fixed` calculado a
+     partir do `getBoundingClientRect()` — ver o comentário do `.gfil` no CSS
+     sobre por que ele não pode ser filho do cabeçalho. */
+  const r = ancora.getBoundingClientRect();
+  const larg = Math.min(320, window.innerWidth - 16);
+  no.style.left = Math.max(8, Math.min(r.left, window.innerWidth - larg - 8)) + 'px';
+  no.style.top  = Math.round(r.bottom + 2) + 'px';
+  no.querySelector('.gfil-lista').style.maxHeight =
+    Math.max(120, window.innerHeight - r.bottom - 140) + 'px';
+
+  ancora.setAttribute('aria-expanded','true');
+  FIL = { col: col, no: no, t: Date.now() };
+  /* `preventScroll` — sem ele, dar foco ao campo de busca faz o navegador rolar
+     o painel para dentro da vista, esse rolar dispara o `scroll` de captura logo
+     abaixo, e o painel se fecha sozinho no mesmo gesto que o abriu. */
+  busca.focus({ preventScroll: true });
+}
+
+/* Fechar: Esc, clique fora, e rolagem. Rolar é o caso que se esquece — o painel
+   é `fixed` e a grade rola por baixo dele, então sem isto ele ficaria parado
+   apontando para a coluna errada. */
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && FIL) fecharFiltro(); });
+document.addEventListener('mousedown', e => {
+  if (!FIL) return;
+  if (e.target.closest && (e.target.closest('.gfil') || e.target.closest('.th-f') || e.target.closest('.chip'))) return;
+  fecharFiltro();
+}, true);
+window.addEventListener('scroll', e => {
+  if (!FIL) return;
+  /* DUAS EXCEÇÕES, e as duas custaram um painel que piscava e sumia:
+     1. a rolagem DE DENTRO do painel é a pessoa correndo a lista de valores —
+        fechar aí é fechar no meio do gesto de usar;
+     2. os primeiros milésimos depois de abrir. Dar foco ao campo de busca faz o
+        navegador rolar, e esse rolar chega aqui como se fosse a pessoa. */
+  if (e.target && e.target.nodeType === 1 && e.target.closest && e.target.closest('.gfil')) return;
+  if (Date.now() - FIL.t < 300) return;
+  fecharFiltro();
+}, true);
+
+document.addEventListener('click', e => {
+  const f = e.target.closest('.th-f, .chip .abrir');
+  if (f && f.dataset.fcol) { e.preventDefault(); abrirFiltro(f.dataset.fcol, f); return; }
+  const x = e.target.closest('.chip .x');
+  if (x) { if (x.dataset.fcol) F_COL.delete(x.dataset.fcol); else ORD = {col:'',dir:''}; fecharFiltro(); desenhar(); return; }
+  const t = e.target.closest('.chips .tudo');
+  if (t) { F_COL.clear(); ORD = {col:'',dir:''}; fecharFiltro(); desenhar(); }
+});
+
+/* ---------------- os filtros ativos, por extenso ----------------
+   Vale nos DOIS modos, e é o único sinal no modo Fichas — que não tem cabeçalho
+   onde acender funil nenhum. */
+function pintarChips(){
+  const alvo = document.getElementById('chips');
+  const its = [];
+  if (ORD.col) its.push('<span class="chip ord"><span>Ordenado por ' + esc(ORD.col) +
+    ' ' + (ORD.dir==='desc'?'↓':'↑') + '</span><button class="x" title="Tirar a ordenação" aria-label="Tirar a ordenação">×</button></span>');
+  F_COL.forEach((passam, col) => {
+    if (VIS.indexOf(col) < 0) return;
+    const total = valoresDaColuna(col).length;
+    its.push('<span class="chip">' +
+      '<button class="abrir" data-fcol="' + esc(col) + '" aria-expanded="false" aria-haspopup="dialog" ' +
+        'title="Abrir o filtro de ' + esc(col) + '">' + esc(col) + ': ' + passam.size + ' de ' + total + '</button>' +
+      '<button class="x" data-fcol="' + esc(col) + '" title="Tirar este filtro" aria-label="Tirar o filtro de ' + esc(col) + '">×</button></span>');
+  });
+  if (its.length > 1) its.push('<button type="button" class="tudo">limpar tudo</button>');
+  alvo.innerHTML = its.join('');
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -1271,8 +1576,23 @@ function abrirFicha(id){
    ══════════════════════════════════════════════════════════════════════════ */
 function desenharGrade(){
   const linhas = filtradas();
+  /* O CABEÇALHO DE CADA COLUNA passa a ser um controle: rótulo, seta de
+     ordenação e funil. O funil fica visível sempre (fraco), e não só no hover:
+     um botão que só aparece quando o mouse passa por cima é um botão que quem
+     não sabe que ele existe nunca descobre — e no toque não existe hover. */
   const th = '<th class="fix1">ID</th><th class="fix2">Cliente</th>' +
-             VIS.map(c=>'<th>'+esc(c)+'</th>').join('');
+    VIS.map(c=>{
+      const filtrada = F_COL.has(c);
+      const seta = (ORD.col===c) ? '<span class="th-ord" aria-hidden="true">'+(ORD.dir==='desc'?'↓':'↑')+'</span>' : '';
+      return '<th'+(filtrada?' class="filtrado"':'')+'>'+
+        '<div class="th-in">'+
+          '<span class="th-rot">'+esc(c)+'</span>'+ seta +
+          '<button type="button" class="th-f'+(filtrada?' on':'')+'" data-fcol="'+esc(c)+'" '+
+            'aria-haspopup="dialog" aria-expanded="false" '+
+            'title="'+(filtrada?'Filtro ativo — clique para mudar':'Filtrar e ordenar')+'" '+
+            'aria-label="'+(filtrada?'Filtro ativo em ':'Filtrar e ordenar ')+esc(c)+'">'+FUNIL_SVG+'</button>'+
+        '</div></th>';
+    }).join('');
   const tr = linhas.map(l=>
     '<tr>'+
       '<td class="fix1"><button class="bt" data-abrir="'+esc(l.id)+'" type="button" '+
@@ -1286,6 +1606,19 @@ function desenharGrade(){
   linhas.forEach(l=>pintarSelo(l.id));
 }
 
+/* O que o CARTÃO mostra de um valor. Não é o valor cru: uma URL de 120
+   caracteres empurra as outras duas colunas para fora da linha e não diz nada
+   além de "tem" — que é justamente o que interessa saber de longe. Data sai em
+   dd/mm/aaaa, e senha nunca sai. */
+function resumoValor(col, v){
+  const t = String(v==null?'':v).trim();
+  if (!t) return '—';
+  if (SIGILOSA.has(normCol(col))) return '••••••';
+  if (LINK.has(normCol(col)))     return 'tem';
+  if (DATA.has(normCol(col)))     return fmtBR(t);
+  return t.length > 42 ? t.slice(0,40) + '…' : t;
+}
+
 function desenharFichas(){
   const linhas = filtradas();
   /* O cartão mostra as TRÊS primeiras colunas visíveis e quantas faltam
@@ -1295,7 +1628,7 @@ function desenharFichas(){
   const html = linhas.map(l=>{
     const faltam = VIS.filter(c=>!String(l.valores[c]||'').trim()).length;
     const resumo = amostra.map(c=>
-      '<span>'+esc(c)+': <b>'+esc(l.valores[c]||'—')+'</b></span>').join('') +
+      '<span>'+esc(c)+': <b>'+esc(resumoValor(c, l.valores[c]))+'</b></span>').join('') +
       (faltam ? '<span class="falta">'+faltam+' em branco</span>' : '');
     return '<button class="cli" type="button" data-abrir="'+esc(l.id)+'">'+
       '<span class="l1"><span class="id">'+esc(l.id)+'</span>'+
@@ -1309,9 +1642,10 @@ function desenharFichas(){
 
 function desenhar(){
   (MODO==='grade' ? desenharGrade : desenharFichas)();
+  pintarChips();
   const n = filtradas().length;
   document.getElementById('cnt').textContent =
-    n + (n===1?' cliente':' clientes') + (n!==LINHAS.length ? ' de '+LINHAS.length : '') +
+    n + (n===1?' cliente':' clientes') + (n!==LINHAS.length ? ' de '+LINHAS.length+' (filtrados)' : '') +
     ' · ' + VIS.length + '/' + DO_REC.length + ' colunas' +
     (SECOES.length > 1 ? ' em ' + SECOES.length + ' seções' : '');
 }
@@ -1345,7 +1679,7 @@ function aplicar(d){
   META   = d;
 
   document.title = REC.rotulo + ' — back4you';
-  document.getElementById('titulo').textContent = REC.rotulo;
+  document.getElementById('tag').textContent = REC.rotulo;
   document.getElementById('sobre').textContent  = REC.sobre || '';
 
   /* A escolha guardada é FILTRADA pelo que o recorte tem HOJE. Sem isso, uma
@@ -1369,7 +1703,6 @@ function aplicar(d){
   }
 
   montarSeletorColunas();
-  montarFiltrosValor();
 
   /* O rodapé é onde a tela CONFESSA. `ausentes` são as colunas que o recorte
      pediu e a planilha não tem — sem esta linha, quem escreveu o recorte com um
@@ -1410,7 +1743,7 @@ function carregar(){
               '<span class="resumo">'+esc(x.sobre||'')+'</span></a>').join('')
           : '<div class="vazio">Nenhum recorte disponível para o seu acesso.</div>';
         document.getElementById('cnt').textContent = '';
-        document.getElementById('titulo').textContent = 'Recortes do Registro';
+        document.getElementById('tag').textContent = 'Recortes do Registro';
       })
       .catch(mostrarErro);
   }
@@ -1448,6 +1781,7 @@ function trocarModo(m, semDesenhar){
 try{ const m=localStorage.getItem('b4u.recorte.modo'); if(m) trocarModo(m, true); }catch(_){}
 
 document.getElementById('volta').href = 'colaborador?chave='+encodeURIComponent(chaveAtual());
+document.getElementById('logo-home').href = 'colaborador?chave='+encodeURIComponent(chaveAtual());
 
 /* ---------------- menu lateral ----------------
    Montado ANTES de carregar(): a identidade desta tela é a chave, que já está na
