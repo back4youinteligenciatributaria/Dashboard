@@ -2224,6 +2224,7 @@ document.addEventListener('click', async e => {
     if (!r) return;
     try {
       await postAcao({ acao: 'vis_excluir', id: v.id });
+      if (window.B4UShell && B4UShell.esquecerAtalhos) B4UShell.esquecerAtalhos();
       location.href = 'b4u-recorte?chave=' + encodeURIComponent(chaveAtual());
     } catch (err) { mostrarErro(err); }
   }
@@ -2248,9 +2249,13 @@ async function visGravar(extra, herdar){
        o rótulo de "alterado". Recarregar quem só salvou perderia a rolagem e o
        lugar da leitura por nada. */
     if (!extra.id) {
+      if (window.B4UShell && B4UShell.esquecerAtalhos) B4UShell.esquecerAtalhos();
       location.href = '?v=' + encodeURIComponent(d.id) + '&chave=' + encodeURIComponent(chaveAtual());
       return;
     }
+    /* O menu lateral guarda a lista por aba. Renomear ou tornar pública sem
+       avisá-lo deixaria o atalho com o nome velho até a pessoa fechar a aba. */
+    if (window.B4UShell && B4UShell.esquecerAtalhos) B4UShell.esquecerAtalhos();
     VIS_SALVA = est;
     REC.visualizacao.nome = d.nome; REC.visualizacao.publico = d.publico;
     document.getElementById('tag').textContent = d.nome;
@@ -2431,20 +2436,35 @@ function carregar(){
         document.getElementById('tag').textContent = 'Recortes do Registro';
         /* E as visualizações logo abaixo, na mesma página: quem chega aqui
            está escolhendo o que abrir, e a tela salva por ele é tão "o que
-           abrir" quanto as declaradas em código. */
+           abrir" quanto as declaradas em código.
+
+           ESTA PÁGINA É O "+" DO MENU. Desde 09/2026 o menu lateral já traz os
+           recortes e as visualizações DA PESSOA; quem cai aqui de propósito
+           veio pelo "+", isto é, veio buscar uma que ainda não é dele. Por isso
+           o bloco das públicas ganhou a linha que faltava: sem ela, a pessoa
+           abre a visualização de outro, mexe, e descobre que não consegue
+           salvar — porque não é dela. Dizer "Duplicar" ANTES do clique é a
+           diferença entre uma prateleira e uma parede. */
         return jsonp(API_URL+'?tipo=vis_lista&chave='+encodeURIComponent(chaveAtual()))
           .then(w=>{
             if (!w || w.erro) return;
-            const bloco = (titulo, lista) => lista.length
-              ? '<div class="vazio">'+titulo+'</div>' + lista.map(x=>
+            const bloco = (titulo, lista, nota) => lista.length
+              ? '<div class="vazio">'+titulo+(nota?'<br><span style="font-weight:400;opacity:.75">'+nota+'</span>':'')+'</div>'
+                + lista.map(x=>
                   '<a class="cli" href="?v='+encodeURIComponent(x.id)+'&chave='+encodeURIComponent(chaveAtual())+'" target="_self">'+
                   '<span class="l1"><span class="nm">'+esc(x.nome)+'</span>'+
                   '<span class="id">'+x.colunas+' colunas'+(x.publico?' · pública':'')+'</span></span>'+
                   '<span class="resumo">'+esc(x.filtro_sobre|| (x.meu ? 'sua' : 'de '+x.dono))+'</span></a>').join('')
               : '';
+            /* "da equipe" no título não é enfeite: a sua própria visualização
+               pública aparece em "Minhas" e NÃO se repete aqui embaixo. Sem a
+               palavra, quem tornou a dele pública procura nesta lista e acha
+               que a publicação não pegou. */
             document.getElementById('conteudo').innerHTML +=
-              bloco('Minhas visualizações', (w.minhas)||[]) +
-              bloco('Públicas', (w.publicas)||[]);
+              bloco('Minhas visualizações', (w.minhas)||[],
+                    'As suas — inclusive as que você tornou públicas.') +
+              bloco('Públicas da equipe', (w.publicas)||[],
+                    'De outras pessoas. Abra para usar; para mexer sem estragar a de quem fez, use <b>Duplicar</b> lá dentro.');
           })
           .catch(()=>{});
       })
@@ -2493,21 +2513,18 @@ document.getElementById('logo-home').href = 'colaborador?chave='+encodeURICompon
    mesma razão de o erro nunca ser pintado no <body>.
    Sem `ativo`: esta página serve a vários recortes e nenhum deles é uma entrada
    do menu — marcar uma entrada errada é pior do que não marcar nenhuma. */
-/* Qual entrada do menu este recorte ACENDE. A maioria não acende nenhuma — são
-   telas que não estão no menu, e marcar uma entrada errada é pior do que não
-   marcar nenhuma: a pessoa passa a achar que está noutro lugar. O `documentos`
-   está aqui porque ele TEM entrada própria, e chegar nele com o menu apagado
-   faria a tela parecer solta. */
-const MENU_DE = { documentos: 'documentos', equiparacao: 'restituicao' };
-/* `equiparacao` acende o item cujo id é 'restituicao' porque o id do menu é o
-   nome VELHO da página (restituicao.html, hoje redirecionamento). O rótulo já
-   diz "Equiparação"; trocar o id obrigaria a mexer no b4u-shell.js e em cada
-   `ativo:` que ainda passa 'restituicao'. */
+/* SEM `ativo`, DE PROPÓSITO — e isto mudou em 09/2026.
+   Antes havia um `MENU_DE = { documentos:'documentos', equiparacao:'restituicao' }`
+   para acender à mão as duas entradas fixas que estes recortes tinham no menu.
+   As duas entradas não existem mais: a seção "Visualizações de dados" do
+   b4u-shell.js lista TODOS os recortes e as visualizações da pessoa, e acende
+   sozinha o que casa com o `?r=` / `?v=` da URL. Mandar `ativo` daqui hoje só
+   poderia acender a entrada errada. */
 
 if (window.B4UShell) {
   B4UShell.montar({
     perfil:'equipe',
-    ativo: MENU_DE[recorteAtual()] || '',
+    ativo: '',
     link: function(pag){ return pag + '?chave=' + encodeURIComponent(chaveAtual()); }
   });
   B4UShell.usuario();

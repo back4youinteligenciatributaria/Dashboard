@@ -78,27 +78,43 @@
       { id: 'painel',      rot: 'Painel da equipe',      pag: 'colaborador',      ic: 'home' },
       { id: 'registro',    rot: 'Registros de clientes', pag: 'registro',         ic: 'pessoal' },
       { id: 'ativos',      rot: 'Clientes ativos',       pag: 'clientes-ativos',  ic: 'fiscal' },
-      { sec: 'Operação' },
-      { id: 'daily',       rot: 'Tarefas Daily',         pag: 'daily',            ic: 'guias' },
-      /* Uma entrada só desde 09/2026: as duas telas viraram a mesma página, com
-         as duas seções dentro e a permissão de cada uma preservada por bloco
-         (ver 10_Documentos.gs). Os ids velhos continuam ACEITOS na marcação de
-         "página ativa" logo abaixo — link antigo salvo por alguém ainda acende o
-         item certo no menu enquanto o redirecionamento existir. */
-      { id: 'documentos', rot: 'Documentos e acessos', pag: 'documentos',      ic: 'doc' },
-      { id: 'societario',  rot: 'Societário',            pag: 'societario-equipe',ic: 'livro' },
-      /* Rótulo corrigido em 02/09/2026: a tela sempre foi de EQUIPARAÇÃO — o nome
-         "Restituição" era da planilha que a alimentava, e essa planilha foi
-         apagada. O `id` e o `pag` continuam 'restituicao' de propósito: são o
-         endereço que está em favorito e em conversa, e o arquivo lá redireciona
-         para b4u-recorte?r=equiparacao. */
-      { id: 'restituicao', rot: 'Equiparação',          pag: 'restituicao',      ic: 'guias' },
-      { id: 'juridico',    rot: 'Jurídico',              pag: 'juridico',         ic: 'balanca' },
-      { sec: 'Relacionamento' },
       { id: 'contatos',    rot: 'Contatos',              pag: 'contatos-equipe',  ic: 'chat' },
+      { sec: 'Processos e tarefas' },
+      { id: 'daily',       rot: 'Tarefas Daily',         pag: 'daily',            ic: 'guias' },
+      { id: 'societario',  rot: 'Societário',            pag: 'societario-equipe',ic: 'livro' },
+      { id: 'juridico',    rot: 'Jurídico',              pag: 'juridico',         ic: 'balanca' },
+
+      /* A ÚNICA SEÇÃO QUE ESTE ARQUIVO NÃO SABE ESCREVER.
+         "Documentos e acessos" e "Equiparação" saíram daqui em 09/2026 e não
+         foram apagados: viraram recortes do Registro, e recorte quem lista é o
+         servidor — porque a lista depende de PERMISSÃO (quem não pode ler a
+         seção não vê a entrada) e porque cada pessoa tem as visualizações dela,
+         que nasceram depois deste arquivo e mudam sem deploy.
+
+         Escrever os cinco recortes à mão aqui seria a primeira coisa a sair de
+         sincronia: bastaria um recorte novo no catálogo, ou alguém sem acesso a
+         Documentos, para o menu prometer uma tela que a pessoa não abre.
+
+         `din` marca o lugar. O bloco nasce vazio e o `pintarAtalhos()` o
+         preenche quando as duas rotas respondem — e se elas não responderem, o
+         bloco INTEIRO some, cabeçalho junto. Menu que não pode ser cumprido é
+         pior do que menu curto. */
+      { sec: 'Visualizações de dados', din: 'recortes' },
+
+      { sec: 'Outros' },
       { id: 'comercial',   rot: 'Comercial',             pag: 'comercial',        ic: 'grafico' }
     ]
   };
+
+  /* PÁGINAS DE COLABORADOR QUE NÃO ESTÃO NO MENU.
+     `paginaDoColaborador()` decide se a PELE (tema) entra, e ele varria só o
+     MENU.equipe. Isso deixava o `b4u-recorte` — a tela onde o colaborador passa
+     o dia desde 09/2026 — sem tema nenhum, e a mudança acima pioraria: tirar
+     'documentos' e 'restituicao' do menu tiraria a pele dos dois
+     redirecionamentos também. A lista é explícita de propósito: é curta, e
+     "página de equipe" e "entrada de menu" deixaram de ser a mesma coisa. */
+  var EQUIPE_EXTRA = ['b4u-recorte', 'documentos', 'restituicao',
+                      'certificados', 'licencas', 'onboarding'];
 
   /* ═════════════════════════════════════════════════════════════════════════
    * TEMAS — quatro peles do painel do colaborador
@@ -297,6 +313,7 @@
   function paginaDoColaborador() {
     var p = paginaAtual();
     for (var i = 0; i < MENU.equipe.length; i++) if (MENU.equipe[i].pag === p) return true;
+    for (var j = 0; j < EQUIPE_EXTRA.length; j++) if (EQUIPE_EXTRA[j] === p) return true;
     return false;
   }
 
@@ -575,7 +592,14 @@
     grafico:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     /* Balança: o Jurídico precisava de um desenho que não se confundisse com o
        livro do Societário nem com o escudo dos Certificados. */
-    balanca:'<path d="M12 3.2v17M8 20.2h8"/><path d="M4 7.5h16"/><path d="M4 7.5 1.5 14h5Z"/><path d="M20 7.5 17.5 14h5Z"/>'
+    balanca:'<path d="M12 3.2v17M8 20.2h8"/><path d="M4 7.5h16"/><path d="M4 7.5 1.5 14h5Z"/><path d="M20 7.5 17.5 14h5Z"/>',
+    /* Recorte e visualização são a MESMA tela vista de dois jeitos, e por isso
+       têm desenhos parentes: a grade é a planilha inteira; a lente é a grade
+       com um recorte por cima. Se fossem iguais, o menu não diria qual das duas
+       coisas a pessoa salvou. */
+    grade:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/>',
+    lente:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><circle cx="14" cy="15" r="3"/><path d="m16.4 17.4 2.1 2.1"/>',
+    mais:'<path d="M12 5v14M5 12h14"/>'
   };
   function svg(n){
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
@@ -613,6 +637,23 @@
     '.b4s-i.on{background:rgba(63,166,128,.16);color:#fff;font-weight:600;',
     'border-left-color:var(--brand-euc,#3FA680)}',
     '.b4s-i svg{width:17px;height:17px;flex-shrink:0;opacity:.9}',
+    /* O rótulo do atalho é o nome que a PESSOA deu à visualização: pode ser
+       longo, e quebrar em três linhas empurraria o resto do menu para fora da
+       tela. Corta com reticências e o title mostra inteiro no passar do mouse.
+       `min-width:0` é o que faz o ellipsis funcionar dentro de um flex. */
+    '.b4s-din .b4s-i span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}',
+    /* O "+" não é um item de navegação: é um convite. Fica mais apagado que os
+       atalhos e ganha cor ao passar o mouse, para não competir com eles. */
+    '.b4s-mais{color:rgba(255,255,255,.5);font-size:12.5px}',
+    '.b4s-mais:hover{color:var(--brand-euc,#3FA680)}',
+    '.b4s-mais svg{width:15px;height:15px}',
+    /* Um fio, e só. Os cinco recortes vêm do catálogo e são iguais para toda a
+       empresa; o que vem depois do fio é o que ESTA pessoa salvou. Sem a
+       separação, "Diagnóstico de atuação" e "Equiparação enxuta" se leem como a
+       mesma prateleira — e a segunda ela pode apagar, a primeira não. Um
+       subtítulo resolveria também, mas custaria duas linhas de menu num bloco
+       que já é o mais alto da barra. */
+    '.b4s-corte{height:1px;background:rgba(255,255,255,.10);margin:8px 16px}',
     '.b4s-pe{padding:14px 16px;border-top:1px solid rgba(255,255,255,.10);flex-shrink:0}',
     '.b4s-wa{display:flex;align-items:center;justify-content:center;gap:8px;',
     'background:rgba(255,255,255,.10);border-radius:6px;padding:10px;font-size:13px;',
@@ -936,6 +977,182 @@
     } catch (e) { return ''; }
   }
 
+  /* ═══════════════════════════════════════════════════════════════════════
+   * OS ATALHOS DO REGISTRO — a seção "Visualizações de dados"
+   *
+   * O QUE ENTRA. Os recortes que ESTA pessoa pode abrir (`recorte_lista` já
+   * devolve só esses; a rota mede permissão seção por seção) e as visualizações
+   * DELA (`vis_lista`, campo `minhas`).
+   *
+   * O QUE NÃO ENTRA, E POR QUÊ. As públicas dos outros. Menu é o que eu uso
+   * todo dia; a lista pública é uma prateleira de onde se pega. Se toda
+   * visualização pública de todo mundo caísse aqui, em três meses o menu de
+   * quem só olha Daily teria trinta linhas que não são dele. Pegar da
+   * prateleira é o "+": leva ao centro, onde as públicas estão listadas e
+   * "Duplicar" faz uma cópia SUA — que aí sim aparece aqui, com o seu nome, e
+   * que você pode mexer sem estragar a de ninguém.
+   *
+   * POR QUE FICA GUARDADO NA ABA (sessionStorage). São duas chamadas, e o menu
+   * está em nove páginas: sem guardar, seriam duas por navegação, todas
+   * devolvendo a mesma coisa. A chave leva a chave do dia — vira o dia, vira a
+   * lista. E quem cria ou apaga uma visualização chama `esquecerAtalhos()` na
+   * mesma hora, senão o menu ficaria uma sessão inteira sem a tela que a pessoa
+   * acabou de salvar, que é o momento em que ela mais procura por ela.
+   * ═══════════════════════════════════════════════════════════════════════ */
+
+  /* Desenho por recorte. O catálogo mora no servidor e não manda ícone — mandar
+     seria pôr decoração de tela dentro da regra de permissão. Recorte que eu não
+     conheça cai na grade genérica: item sem ícone ficaria torto no meio dos
+     outros, e um ícone só um pouco errado é melhor do que um buraco. */
+  var IC_RECORTE = {
+    documentos: 'doc', equiparacao: 'escudo', fiscal: 'fiscal',
+    societario: 'livro', diagnostico: 'grafico'
+  };
+
+  /* Nome de visualização é texto que uma PESSOA escreveu, e vai para dentro do
+     HTML do menu de todas as páginas. Sem isto, alguém que salvasse uma
+     visualização chamada `<img onerror=…>` executaria script na tela de todo
+     mundo que a abrisse. */
+  function escH(t) {
+    return String(t == null ? '' : t)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* A chave do dia. Vem da URL — é de lá que as nove páginas da equipe a tiram,
+     e é o que o `link()` delas reescreve em cada item. Ler o `link()` é o plano
+     B para a página que um dia guarde a chave em outro lugar: em vez de exigir
+     que as nove passem um campo novo no `montar()`, o shell pergunta ao próprio
+     gerador de href. */
+  function chaveEquipe(link) {
+    try {
+      var q = new URLSearchParams(location.search).get('chave');
+      if (q && q.trim()) return q.trim();
+    } catch (e) {}
+    try {
+      var m = /[?&]chave=([^&]*)/.exec(typeof link === 'function' ? link('_') : '');
+      if (m && m[1]) return decodeURIComponent(m[1]);
+    } catch (e2) {}
+    return '';
+  }
+
+  function atalhosChave(chave) { return 'b4s_atalhos_' + chave; }
+
+  function atalhosCache(chave, valor) {
+    try {
+      if (valor === undefined) {
+        var v = sessionStorage.getItem(atalhosChave(chave));
+        return v ? JSON.parse(v) : null;
+      }
+      sessionStorage.setItem(atalhosChave(chave), JSON.stringify(valor));
+    } catch (e) {}
+    return null;
+  }
+
+  function buscarAtalhos(chave, pronto) {
+    var api = (typeof w.B4U_API === 'string' && w.B4U_API) ? w.B4U_API : '';
+    if (!api || !chave) { pronto(null); return; }
+
+    var guardado = atalhosCache(chave);
+    if (guardado) { pronto(guardado); return; }
+
+    var out = { recortes: [], vis: [] }, faltam = 2;
+    function fim() {
+      if (--faltam) return;
+      /* Só guarda o que veio de verdade. Guardar uma resposta vazia faria um
+         tropeço de rede esconder o bloco pelo resto da sessão — e o sintoma
+         seria "sumiu o menu", sem nada na tela explicando. */
+      if (out.recortes.length || out.vis.length) atalhosCache(chave, out);
+      pronto(out);
+    }
+    pedirJSONP(api + '?tipo=recorte_lista&chave=' + encodeURIComponent(chave), function (dd) {
+      if (dd && !dd.erro && dd.recortes) out.recortes = dd.recortes;
+      fim();
+    });
+    /* A lista de visualizações pode não existir (backend antigo). Falhar aqui
+       não pode levar os recortes junto: são duas perguntas independentes, e o
+       `fim()` só junta o que chegou. */
+    pedirJSONP(api + '?tipo=vis_lista&chave=' + encodeURIComponent(chave), function (dd) {
+      if (dd && !dd.erro && dd.minhas) out.vis = dd.minhas;
+      fim();
+    });
+  }
+
+  function pintarAtalhos(chave, link, dados) {
+    if (!side) return;
+    var caixa = side.querySelector('.b4s-din[data-din="recortes"]');
+    if (!caixa) return;
+    var cab = side.querySelector('.b4s-sec-recortes');
+
+    var recs = (dados && dados.recortes) || [];
+    var vis  = (dados && dados.vis) || [];
+
+    /* Nada para oferecer: o bloco INTEIRO sai, cabeçalho junto. Uma seção com
+       título e nada embaixo é a mesma promessa quebrada que a regra "seção só
+       entra se tiver item" já evita para as fixas. */
+    if (!recs.length && !vis.length) {
+      if (cab && cab.parentNode) cab.parentNode.removeChild(cab);
+      if (caixa.parentNode) caixa.parentNode.removeChild(caixa);
+      return;
+    }
+
+    var base = link('b4u-recorte');
+    function junta(extra) { return base + (base.indexOf('?') >= 0 ? '&' : '?') + extra; }
+
+    /* Qual atalho está aceso. Só faz sentido na própria tela de recorte: em
+       qualquer outra página nenhum deles está aberto, e acender um seria dizer
+       à pessoa que ela está onde não está. */
+    var aqui = paginaAtual() === 'b4u-recorte', qr = '', qv = '';
+    if (aqui) {
+      try {
+        var u = new URLSearchParams(location.search);
+        qr = u.get('r') || ''; qv = u.get('v') || '';
+      } catch (e) {}
+    }
+
+    function item(href, ic, rot, on, dica) {
+      return '<a class="b4s-i' + (on ? ' on' : '') + '" href="' + escH(href) + '"'
+           + (on ? ' aria-current="page"' : '')
+           + (dica ? ' title="' + escH(dica) + '"' : ' title="' + escH(rot) + '"')
+           + '>' + svg(ic) + '<span>' + escH(rot) + '</span></a>';
+    }
+
+    var h = '';
+    recs.forEach(function (r) {
+      h += item(junta('r=' + encodeURIComponent(r.id)), IC_RECORTE[r.id] || 'grade',
+                r.rotulo, qr === r.id, r.sobre || r.rotulo);
+    });
+    if (recs.length && vis.length) h += '<div class="b4s-corte"></div>';
+    vis.forEach(function (v) {
+      h += item(junta('v=' + encodeURIComponent(v.id)), 'lente', v.nome, qv === v.id,
+                (v.colunas ? v.colunas + ' colunas' : '') + (v.publico ? ' · pública' : ''));
+    });
+    h += '<a class="b4s-i b4s-mais" href="' + escH(base) + '" '
+       + 'title="Escolher uma visualização pública ou criar a sua">'
+       + svg('mais') + '<span>Adicionar visualização</span></a>';
+
+    caixa.innerHTML = h;
+
+    /* MESMO ALVO DOS VIZINHOS — hoje `_blank`, que é a regra da casa escrita lá
+       em cima no `montar()`: link do menu não tira o colaborador de onde ele
+       estava. Estes itens nascem depois, quando a rede responde, e não passam
+       pelo mesmo trecho de HTML; sem esta cópia eles seriam os únicos do menu a
+       trocar a guia atual, e a diferença apareceria justamente para quem clica
+       nos atalhos o dia inteiro.
+       Copiar do vizinho em vez de repetir a constante é de propósito: no dia em
+       que a regra virar `_self`, ela vira num lugar só e estes acompanham. */
+    var irmao = side.querySelector('.b4s-nav a.b4s-i[target]');
+    var alvoIrmao = irmao && irmao.getAttribute('target');
+    if (alvoIrmao) {
+      var meus = caixa.querySelectorAll('a[href]');
+      for (var i = 0; i < meus.length; i++) {
+        meus[i].setAttribute('target', alvoIrmao);
+        var rel = irmao.getAttribute('rel');
+        if (rel) meus[i].setAttribute('rel', rel);
+      }
+    }
+  }
+
   function estilo() {
     if (d.getElementById('b4s-css')) return;
     var s = d.createElement('style');
@@ -1044,7 +1261,20 @@
       html += '<nav class="b4s-nav">';
       var pendente = null;                       // seção só entra se tiver item embaixo
       itens.forEach(function (it) {
-        if (it.sec) { pendente = it.sec; return; }
+        if (it.sec) {
+          /* Seção dinâmica não pode esperar por item: ela É o item. Nasce com
+             cabeçalho e uma caixa vazia, e o `pintarAtalhos()` decide depois se
+             preenche ou apaga os dois. Deixar o lugar marcado desde já evita o
+             salto de layout — o menu não cresce debaixo do dedo de quem já
+             estava mirando o "Comercial". */
+          if (it.din) {
+            html += '<div class="b4s-sec b4s-sec-' + it.din + '">' + it.sec + '</div>'
+                 +  '<div class="b4s-din" data-din="' + it.din + '"></div>';
+            pendente = null;
+            return;
+          }
+          pendente = it.sec; return;
+        }
         /* Área não contratada não vira item: o cliente que não tem Departamento
            Pessoal clicaria e cairia numa tela de "sem acesso" que ele não pediu.
            Sem registro nenhum (primeira visita num aparelho novo, ou logo depois de
@@ -1100,6 +1330,17 @@
 
       d.body.classList.add('b4s');
       botao();
+
+      /* Os atalhos do Registro (recortes + visualizações de quem está olhando).
+         Depois do `botao()` de propósito: o menu já está inteiro na tela e a
+         rede só acrescenta. Se as rotas não responderem, `pintarAtalhos` apaga
+         o bloco e o menu fica com as três seções que ele sabe escrever. */
+      if (perfil === 'equipe' && side.querySelector('.b4s-din')) {
+        var chaveEq = chaveEquipe(link);
+        buscarAtalhos(chaveEq, function (dados) {
+          pintarAtalhos(chaveEq, link, dados);
+        });
+      }
 
       /* Sobrou recado da troca anterior ("essa empresa não tem essa área")?
          Ele aparece uma vez, no alto, e some — a pessoa acabou de chegar aqui
@@ -1197,6 +1438,31 @@
     abrir: function () { abrir(true); return API; },
     fechar: function () { abrir(false); return API; },
     montado: function () { return !!side; },
+
+    /** Esqueça a lista guardada de recortes e visualizações.
+     *
+     *  Quem chama: a tela de recorte, logo depois de criar, renomear, tornar
+     *  pública ou apagar uma visualização. Sem isto o menu ficaria a sessão
+     *  inteira mostrando a lista de antes — e o pior momento para isso é
+     *  exatamente o de quem acabou de salvar e vai procurar a tela nova ali.
+     *
+     *  Limpa TODAS as chaves do dia, não só a atual: quem tem duas abas abertas
+     *  com chaves diferentes (aconteceu na virada da meia-noite) veria a outra
+     *  continuar desatualizada. E o menu só se repinta na próxima navegação, de
+     *  propósito — trocar o menu debaixo do cursor de quem está no meio de um
+     *  clique é o defeito que a comparação de HTML da `visbar` já teve de
+     *  consertar uma vez. */
+    esquecerAtalhos: function () {
+      try {
+        var mortas = [];
+        for (var i = 0; i < sessionStorage.length; i++) {
+          var k = sessionStorage.key(i);
+          if (k && k.indexOf('b4s_atalhos_') === 0) mortas.push(k);
+        }
+        mortas.forEach(function (k) { sessionStorage.removeItem(k); });
+      } catch (e) {}
+      return API;
+    },
 
     /* ── Temas ──────────────────────────────────────────────────────────────
        TEMAS         [{id,rot,dica}, ...] na ordem em que devem ser oferecidos
