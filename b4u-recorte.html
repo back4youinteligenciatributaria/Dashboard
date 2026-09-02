@@ -915,7 +915,12 @@ function chaveCel(id, col){ return id + '|' + normCol(col); }
    no navegador dela, por recorte. Não é preferência que o time precise combinar,
    e gravá-la no servidor seria mais uma escrita por arrasto numa planilha que já
    é o gargalo de todas as telas. */
-const ALT_PADRAO = 34;
+/* 68 e não 34: o dobro do que era. A altura de uma linha só cabe uma linha de
+   texto, e a maior parte do que se confere aqui — observação, estratégia, visão
+   geral — tem duas ou três. Como o limiar da quebra de linha é 46px, nascer em
+   68 já abre a tela com o texto quebrando, que é o estado em que ela é lida.
+   Quem quiser compacto arrasta para baixo de 46 e a escolha fica guardada. */
+const ALT_PADRAO = 68;
 let LARG = {};               // coluna → px  ('__id' e '__nome' para as duas fixas)
 let ALT  = ALT_PADRAO;       // altura de TODAS as linhas
 
@@ -1424,8 +1429,13 @@ function valoresDaColuna(col){
     const v = String(l.valores[col]==null ? '' : l.valores[col]).trim();
     conta.set(v, (conta.get(v)||0) + 1);
   });
+  /* "(em branco)" PRIMEIRO, e não no fim do alfabeto. Ele é a opção mais pedida
+     desta lista — "quais faltam preencher?" é a pergunta que traz alguém a esta
+     tela —, e no fim de uma lista de trezentos valores ela exigia rolar até o
+     fundo para ser achada. Na ORDENAÇÃO da tabela o vazio continua indo para o
+     fim: lá ele é ausência de dado, aqui é uma escolha. */
   return Array.from(conta.keys())
-    .sort((a,b)=>{ if(!a) return 1; if(!b) return -1; return cmpVal(a,b); })
+    .sort((a,b)=>{ if(!a) return -1; if(!b) return 1; return cmpVal(a,b); })
     .map(v => ({ v: v, n: conta.get(v) }));
 }
 
@@ -1532,17 +1542,43 @@ function abrirFiltro(col, ancora){
   });
 
   desenharLista();
+
+  /* ENCAIXE — o painel NUNCA pode ficar com um pedaço fora da janela.
+     A versão anterior colava ele sempre abaixo do cabeçalho e limitava a lista a
+     "o que sobra até o rodapé". Numa tabela que começa no meio da página, ou num
+     notebook baixo, "o que sobra" era negativo: o painel nascia com os botões do
+     fim — inclusive "Tirar o filtro desta coluna" — abaixo da borda da tela, e
+     não havia como clicar neles nem rolar até eles, porque ele é `fixed`.
+
+     Agora ele é MEDIDO antes de ser posicionado (por isso entra invisível), e
+     então decide: cabe abaixo, cabe acima, ou não cabe em nenhum dos dois e a
+     LISTA encolhe até caber — nessa ordem. Os botões de cima e de baixo são o
+     que menos pode sumir; a lista rola. */
+  no.style.visibility = 'hidden';
+  no.style.left = '0px';
+  no.style.top  = '0px';
   document.body.appendChild(no);
 
-  /* Encaixe: abaixo da âncora, sem sair da janela. `position:fixed` calculado a
-     partir do `getBoundingClientRect()` — ver o comentário do `.gfil` no CSS
-     sobre por que ele não pode ser filho do cabeçalho. */
   const r = ancora.getBoundingClientRect();
-  const larg = Math.min(320, window.innerWidth - 16);
-  no.style.left = Math.max(8, Math.min(r.left, window.innerWidth - larg - 8)) + 'px';
-  no.style.top  = Math.round(r.bottom + 2) + 'px';
-  no.querySelector('.gfil-lista').style.maxHeight =
-    Math.max(120, window.innerHeight - r.bottom - 140) + 'px';
+  const lista2 = no.querySelector('.gfil-lista');
+  const MARGEM = 10;
+  const abaixo = window.innerHeight - r.bottom - MARGEM;
+  const acima  = r.top - MARGEM;
+
+  let alt = no.offsetHeight;
+  if (alt > abaixo && alt > acima) {
+    /* Não cabe inteiro nem de um lado nem do outro: a lista cede o espaço. O
+       piso de 90px é para ela não virar uma fresta de um item e meio. */
+    const espaco = Math.max(abaixo, acima);
+    const semLista = alt - lista2.offsetHeight;
+    lista2.style.maxHeight = Math.max(90, espaco - semLista) + 'px';
+    alt = no.offsetHeight;
+  }
+  const top = (alt <= abaixo || abaixo >= acima) ? (r.bottom + 2) : (r.top - alt - 2);
+  no.style.top  = Math.round(Math.max(MARGEM, Math.min(top, window.innerHeight - alt - MARGEM))) + 'px';
+  no.style.left = Math.round(Math.max(MARGEM,
+    Math.min(r.left, window.innerWidth - no.offsetWidth - MARGEM))) + 'px';
+  no.style.visibility = '';
 
   ancora.setAttribute('aria-expanded','true');
   FIL = { col: col, no: no, t: Date.now() };

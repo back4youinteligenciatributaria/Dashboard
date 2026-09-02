@@ -36,10 +36,17 @@
 </head>
 <body>
   <p>"Certificados e acessos" agora faz parte de <strong>Documentos e acessos</strong>.<br>
-     Levando você para lá… <a id="ir" href="documentos">abrir agora</a></p>
+     Levando você para lá… <a id="ir" href="b4u-recorte?r=documentos">abrir agora</a></p>
 <script>
 (function(){
-  var destino = 'documentos' + location.search + location.hash;
+  /* Direto para o recorte, e não para `documentos` — que hoje também é um
+     redirecionamento. Dois saltos em sequência piscam a tela duas vezes e, se
+     um dia o do meio mudar de forma, quebram os dois de uma vez.
+     O `r` entra primeiro e a query que veio é anexada atrás, sem o "?" dela:
+     `?r=documentos?chave=…` seria lido como UM parâmetro chamado "r", a chave
+     sumiria, e a pessoa cairia no login sem entender por quê. */
+  var q = location.search ? '&' + location.search.slice(1) : '';
+  var destino = 'b4u-recorte?r=documentos' + q + location.hash;
   var ir = document.getElementById('ir');
   if (ir) ir.href = destino;
   location.replace(destino);
