@@ -373,6 +373,10 @@ textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--brand-te
 .roteiro{background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius);
          padding:14px 16px;font-size:var(--fs-3);line-height:1.6;white-space:pre-wrap}
 
+/* Senha em monoespaçada, e não por estética: numa credencial gerada por
+   sistema, 0/O e 1/l/I são o par que faz a pessoa errar o login três vezes e
+   concluir que a senha da planilha está errada. */
+input.senha{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em}
 .segredo{display:flex;gap:6px}
 .segredo input{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em}
 .segredo .ver{flex:0 0 auto;border:1px solid var(--line-2);background:var(--surface-warm);
@@ -415,7 +419,12 @@ textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--brand-te
 @media print{
   body{height:auto;display:block}
   .topo .btn,.nav,.painel,.obs-bt{display:none}
-  .segredo{display:none}   /* senha não vai para o papel */
+  /* Senha continua fora do PAPEL. Na tela ela é visível desde 02/09/2026 —
+     porque a coluna existe para ser copiada —, mas ficha impressa esquecida
+     numa mesa é o vazamento que não tem como desfazer. Some o campo inteiro:
+     um retângulo vazio ao lado do rótulo "Senha Prefeitura" já conta metade
+     da história. */
+  .segredo,[data-sensivel]{display:none}
   .corpo{display:block;overflow:visible}
   .tela{overflow:visible;padding:0}
 }
@@ -1511,17 +1520,21 @@ function campoHTML(c){
            '" placeholder="outros, separados por ·">');
   } else if (c.t === 'textarea') {
     H.push('<textarea id="f_' + slug(c.col) + '" data-col="' + esc(c.col) + '">' + esc(v) + '</textarea>');
-  } else if (c.sensivel) {
-    /* Senha. A máscara não protege de ninguém que já abriu a ficha — a planilha
-       guarda em texto puro e quem chegou aqui pode clicar em "mostrar". Ela serve
-       para o caso corriqueiro, que é o que de fato acontece: a tela aberta numa
-       reunião, num projetor, com o cliente do outro lado da mesa. */
-    H.push('<div class="segredo"><input id="f_' + slug(c.col) + '" type="password" autocomplete="off"' +
-           ' data-col="' + esc(c.col) + '" value="' + esc(v) + '">' +
-           '<button type="button" class="ver" data-ver="' + slug(c.col) + '" aria-label="Mostrar ou esconder">mostrar</button></div>');
   } else {
+    /* A SENHA NÃO É MAIS MASCARADA — 02/09/2026. Aqui havia um
+       <input type="password"> com um botão "mostrar". Ele resolvia o caso da
+       reunião com projetor e criava um pior, todo dia: campo de senha não deixa
+       COPIAR, e a coluna existe justamente para alguém copiar a credencial e
+       entrar no portal do cliente. Quem precisava dela abria a planilha ao
+       lado — ou seja, a máscara não escondeu nada de ninguém e só afastou as
+       pessoas da tela.
+       O `sensivel:1` continua no catálogo e continua tirando a senha da
+       IMPRESSÃO, que é o caso em que ela vaza para papel e não volta. */
+    /* `data-sensivel` só existe para a IMPRESSÃO (ver @media print). Na tela o
+       campo de senha é igual a qualquer outro <input type="text">. */
     H.push('<input id="f_' + slug(c.col) + '" type="' + (c.t === 'date' ? 'date' : 'text') + '"' +
            (c.t === 'money' ? ' class="money"' : '') + (c.max ? ' maxlength="' + c.max + '"' : '') +
+           (c.sensivel ? ' data-sensivel="1" class="senha"' : '') +
            ' data-col="' + esc(c.col) + '" value="' + esc(v) + '">');
   }
   /* O aviso da fusão ("a planilha só aceita a lista acima") sai junto da dica.
@@ -1710,14 +1723,8 @@ document.addEventListener('click', function(e){
   }
   var ir = e.target.closest && e.target.closest('[data-ir]');
   if (ir) { e.preventDefault(); ABA = 'diag:' + ir.getAttribute('data-ir'); redesenhar(); return; }
-  var ver = e.target.closest && e.target.closest('[data-ver]');
-  if (ver) {
-    var alvo = document.getElementById('f_' + ver.getAttribute('data-ver'));
-    if (alvo) { var esconder = alvo.type === 'text';
-                alvo.type = esconder ? 'password' : 'text';
-                ver.textContent = esconder ? 'mostrar' : 'esconder'; }
-    return;
-  }
+  /* (o ouvinte do botão "mostrar" saiu em 02/09/2026 — não há mais o que
+     mostrar: a senha já está na tela) */
   var ob = e.target.closest && e.target.closest('.obs-bt');
   if (ob) {
     var cxo = document.querySelector('[data-cx="' + ob.getAttribute('data-obs') + '"]');

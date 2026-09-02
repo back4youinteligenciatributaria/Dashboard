@@ -53,11 +53,14 @@
  *           dois está errado o bastante para alguém notar. Uma coluna, um
  *           lugar. A seção de onboarding ganha uma placa dizendo onde ir.
  *
- * `sensivel:1` é SENHA. Na ficha aparece mascarada, com um botão "mostrar", e
- *           some da impressão. A máscara não é segurança — quem abre a ficha tem
- *           a senha de qualquer jeito, e a planilha guarda tudo em texto puro.
- *           Ela existe para o caso corriqueiro: a tela aberta numa reunião, num
- *           projetor, com o cliente do outro lado da mesa.
+ * `sensivel:1` é SENHA. Desde 02/09/2026 ela aparece NORMAL na tela: visível,
+ *           selecionável, copiável, sem botão de "mostrar". A máscara nunca foi
+ *           segurança (quem abre a ficha tem a senha de qualquer jeito, e a
+ *           planilha guarda em texto puro) e cobrava um preço real: campo de
+ *           senha não deixa copiar, e a coluna existe para ser copiada.
+ *           O que a marca ainda faz: tira a senha da IMPRESSÃO — o caso em que
+ *           ela vaza para papel e não volta —, tira da BUSCA e a mascara no
+ *           LOG. E, no servidor, senha nunca viaja numa rota de cliente.
  *
  * `req:1`  obrigatório no cadastro de cliente novo (e SÓ lá)
  * `full:1` ocupa a linha inteira do formulário
@@ -385,9 +388,10 @@ var CAMPOS = [
 /* ── Acessos que vieram do "Certificados e Acessos" ────────────────────────
    Esta planilha era separada, e essa separação ERA a proteção: quem não estava
    nela não via senha nenhuma. Ao virarem colunas do Registro, passaram a ser
-   visíveis para quem abre a ficha. O `sensivel:1` mascara na tela e some da
-   impressão — é conforto, não controle de acesso. O controle continua sendo com
-   quem a planilha e o painel estão compartilhados. */
+   visíveis para quem abre a ficha. O `sensivel:1` NÃO mascara mais na tela
+   (ver o cabeçalho): some da impressão, da busca e do log. Controle de acesso
+   continua sendo com quem a planilha e o painel estão compartilhados — nunca
+   foi com a máscara. */
 {col:'Certificado Digital Link',  s:'Acessos', t:'text', nova:1, full:1},
 {col:'Senha Certificado Digital', s:'Acessos', t:'text', nova:1, sensivel:1},
 {col:'Certificado Digital Responsável Legal', s:'Acessos', t:'text', nova:1,

@@ -1728,8 +1728,13 @@ async function enviarDocumento(k,file){
     DOC_ENVIANDO.delete(k); docRepintar(k);
   }
 }
-/* Colar um endereço à mão é o outro caminho do "⋯". Grava pela mesma ação que a
-   tela cheia usa (licenca_salvar / cert_salvar), com a coluna real da planilha. */
+/* Colar um endereço à mão é o outro caminho do "⋯". Grava pela mesma porta que
+   a tela cheia usa — que desde 02/09/2026 é UMA só: `recorte_salvar`, com o
+   recorte `documentos` e a seção certa. Antes eram `licenca_salvar` e
+   `cert_salvar`, duas ações próprias que faziam exatamente isto e tinham a
+   permissão declarada em outro lugar. Duas portas para a mesma coluna é dois
+   lugares para a permissão divergir, e o dia em que divergem ninguém percebe:
+   as duas continuam gravando. */
 async function salvarEnderecoDoc(k,valor){
   const cfg=DOC_CEL.get(k); if(!cfg||!cfg.acao) return;
   const v=String(valor||'').trim();
@@ -1740,7 +1745,10 @@ async function salvarEnderecoDoc(k,valor){
   DOC_VAL.set(k,v);
   const campos={}; campos[cfg.coluna]=v;
   try{
-    await postAcao({acao:cfg.acao==='cert_upload'?'cert_salvar':'licenca_salvar',
+    /* A seção sai da MESMA marca que já decide o upload: `cert_upload` é a
+       seção de acessos, o resto é licenças. Uma marca, uma decisão. */
+    await postAcao({acao:'recorte_salvar', recorte:'documentos',
+      secao: cfg.acao==='cert_upload' ? 'acessos' : 'licencas',
       id:DOC_CTX.id, campos:campos, cliente:DOC_CTX.cliente, cod:codAtual()});
     docMensagem(k,'Endereço salvo ✓','ok');
   }catch(e){

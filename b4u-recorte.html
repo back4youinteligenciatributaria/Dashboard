@@ -209,6 +209,34 @@ a{color:var(--brand-teal-txt)}
 .sobre{margin:0 2px 12px;color:var(--muted);font-size:var(--fs-2)}
 .sobre:empty{display:none}
 
+/* A tela filtrada TEM de dizer que está filtrada. Sem este aviso, "não temos
+   esse cliente" e "esta tela não mostra esse cliente" ficam idênticos para
+   quem procura — e a segunda é uma lista que mente calada. Fica ao lado do
+   `sobre`, discreto, mas sempre visível: não é alerta, é legenda. */
+.recorte-filtro{display:inline-flex;align-items:center;gap:6px;margin:0 2px 12px;
+  padding:3px 9px;border-radius:999px;background:var(--surface-warm);
+  border:1px solid var(--linha,#e6dccd);color:var(--muted);font-size:var(--fs-2)}
+.recorte-filtro:empty{display:none}
+.recorte-filtro b{color:var(--ink-2);font-weight:700}
+
+/* ---------- a barra da visualização ----------
+   Ela só existe quando há o que decidir: numa tela do catálogo aparece só o
+   "Salvar como visualização"; numa visualização própria aparecem os botões de
+   dono. Barra que mostra botão desligado ensina a pessoa a ignorar a barra. */
+.visbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 2px 12px}
+.visbar .vb{border:1px solid var(--linha,#e6dccd);background:var(--surface);
+  color:var(--ink-2);border-radius:8px;padding:5px 11px;font:inherit;font-size:var(--fs-2);
+  font-weight:600;cursor:pointer;white-space:nowrap}
+.visbar .vb:hover{background:var(--surface-warm);color:var(--ink)}
+.visbar .vb.forte{background:var(--brand-teal,#1F6F6B);border-color:transparent;color:#fff}
+.visbar .vb.forte:hover{filter:brightness(1.08);color:#fff}
+.visbar .vb[disabled]{opacity:.45;cursor:default}
+/* O aviso de "você mexeu e não salvou". Sem ele a pessoa mexe, sai, volta e
+   não sabe se está vendo a visualização salva ou a bagunça de ontem — que é o
+   jeito mais rápido de ninguém confiar no que a tela mostra. */
+.visbar .sujo{color:#8a5a00;font-size:var(--fs-2);font-weight:700}
+.visbar .dono{color:var(--muted);font-size:var(--fs-2)}
+
 /* ---------- a régua de filtros ----------
    Ela nunca estoura: quebra de linha. */
 .regua{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 10px}
@@ -680,6 +708,8 @@ function b4uParaPlanilha(valor,coluna){
 
 <div id="app">
   <p class="sobre" id="sobre"></p>
+  <div class="recorte-filtro" id="recfiltro" hidden></div>
+  <div class="visbar" id="visbar" hidden></div>
 
   <div class="faixa leitura" id="avisoLeitura" hidden></div>
   <div class="faixa erro" id="avisoErro" hidden></div>
@@ -784,6 +814,11 @@ function chaveAtual(){const q=new URLSearchParams(location.search).get('chave');
 function respAtual(){const q=(new URLSearchParams(location.search).get('cod')||'').trim();
   return q || (location.hash||'').replace(/^#/,'').trim();}
 function recorteAtual(){return (new URLSearchParams(location.search).get('r')||'').trim().toLowerCase();}
+/* `?v=<id>` abre uma VISUALIZAÇÃO — a forma de ler o Registro que alguém salvou.
+   Convive com o `?r=`: recorte é tela da equipe, declarada em código com a
+   permissão dentro; visualização é lente de uma pessoa. */
+function visAtual(){return (new URLSearchParams(location.search).get('v')||'').trim();}
+function telaAtual(){return visAtual() ? ('v:'+visAtual()) : recorteAtual();}
 
 /* Sem chave na URL não há painel da equipe. A porta é o index.html, e o
    `destino` é o que faz a pessoa VOLTAR para cá depois de se identificar —
@@ -924,8 +959,10 @@ const ALT_PADRAO = 68;
 let LARG = {};               // coluna → px  ('__id' e '__nome' para as duas fixas)
 let ALT  = ALT_PADRAO;       // altura de TODAS as linhas
 
-function chaveVis(){ return 'b4u.recorte.' + (recorteAtual()||'?') + '.cols'; }
-function chaveLay(){ return 'b4u.recorte.' + (recorteAtual()||'?') + '.layout'; }
+/* A chave usa `telaAtual()`: largura e escolha de coluna de uma visualização
+   não podem vazar para outra, nem para o recorte de onde ela nasceu. */
+function chaveVis(){ return 'b4u.recorte.' + (telaAtual()||'?') + '.cols'; }
+function chaveLay(){ return 'b4u.recorte.' + (telaAtual()||'?') + '.layout'; }
 function lerLayout(){
   try{
     const o = JSON.parse(localStorage.getItem(chaveLay())||'{}');
@@ -999,7 +1036,19 @@ function tipoDe(col){
   if (v && v.opcoes && v.opcoes.length) return v.estrito ? 'select' : 'lista';
   if (DATA.has(normCol(col)))     return 'date';
   if (LINK.has(normCol(col)))     return 'url';
-  if (SIGILOSA.has(normCol(col))) return 'senha';
+  /* SENHA NÃO É MAIS UM TIPO DE CAMPO — 02/09/2026.
+     Ela era desenhada como `••••••` num <input type="password">, e navegador
+     nenhum deixa COPIAR de campo de senha. O resultado é que a coluna existia
+     para ser usada e não podia ser usada: quem precisava da senha do portal
+     abria a planilha ao lado. Uma tela que obriga a abrir a planilha não é uma
+     tela protegida, é uma tela ignorada.
+     Agora senha é texto como qualquer outro: visível, selecionável, copiável.
+     Sem olho, sem "mostrar", sem máscara.
+     O `SIGILOSA` CONTINUA VALENDO para as outras duas coisas que ele sempre
+     fez, e que não são sobre a tela: a senha fica fora da BUSCA (procurar por
+     um pedaço dela e receber o cliente certo é descobri-la sem nunca vê-la) e
+     fora do LOG (o histórico registra que alguém trocou a senha, não qual). E,
+     no servidor, ela nunca viaja numa rota de cliente. */
   return 'text';
 }
 /* Coluna longa merece a largura toda da ficha. É heurística de LAYOUT, e por
@@ -1028,7 +1077,7 @@ function campoHTML(id, col, valor, classe){
        ao clique e não responde — e a pessoa conclui que a tela travou. Link
        continua sendo link: é o que ela veio abrir. */
     if (t==='url' && valor) return '<a class="'+classe+' cel-ro" href="'+esc(valor)+'" rel="noopener">abrir ↗</a>';
-    if (t==='senha' && valor) return '<span class="'+classe+' cel-ro">••••••</span>';
+    /* (a máscara de senha saiu daqui em 02/09/2026 — ver tipoDe) */
     /* CNPJ/CPF/CEP que chegou da planilha com dígito faltando (a célula virou
        número e comeu o zero da frente) aparece COMO VEIO, com o sublinhado
        âmbar e o ⚠ do bloco B4U-TEXTO. Inventar o zero deixaria um CNPJ
@@ -1065,7 +1114,6 @@ function campoHTML(id, col, valor, classe){
   }
   if (t==='date')  return '<input '+at+' type="date" value="'+v+'">';
   if (t==='url')   return celDoc(id, col, valor, classe);
-  if (t==='senha') return '<input '+at+' type="password" value="'+v+'" autocomplete="new-password">';
   if (t==='multi') {
     /* BURACO DECLARADO, e de propósito. `multi` é gravado numa célula só, unido
        por " · " (ver o catálogo em b4u-registro-campos.js). Um controle de
@@ -1866,6 +1914,8 @@ function abrirFicha(id){
 /* ══════════════════════════════════════════════════════════════════════════
    3) MOSTRAR EM PLANILHA FILTRÁVEL
    ══════════════════════════════════════════════════════════════════════════ */
+/* A barra é repintada junto com a tela porque o "alterado" nasce de mexer em
+   coluna, filtro ou ordenação — as três coisas que mandam redesenhar. */
 function desenharGrade(){
   const linhas = filtradas();
   /* O CABEÇALHO DE CADA COLUNA passa a ser um controle: rótulo, seta de
@@ -1922,11 +1972,11 @@ function desenharGrade(){
 /* O que o CARTÃO mostra de um valor. Não é o valor cru: uma URL de 120
    caracteres empurra as outras duas colunas para fora da linha e não diz nada
    além de "tem" — que é justamente o que interessa saber de longe. Data sai em
-   dd/mm/aaaa, e senha nunca sai. */
+   dd/mm/aaaa. A senha SAI, inteira: é o cartão que a pessoa abre para copiar
+   a credencial e entrar no portal do cliente. */
 function resumoValor(col, v){
   const t = String(v==null?'':v).trim();
   if (!t) return '—';
-  if (SIGILOSA.has(normCol(col))) return '••••••';
   if (LINK.has(normCol(col)))     return 'tem';
   if (DATA.has(normCol(col)))     return fmtBR(t);
   return t.length > 42 ? t.slice(0,40) + '…' : t;
@@ -1956,6 +2006,11 @@ function desenharFichas(){
 function desenhar(){
   (MODO==='grade' ? desenharGrade : desenharFichas)();
   pintarChips();
+  /* A barra da visualização é repintada junto: o rótulo "alterado" nasce de
+     mexer em coluna, filtro ou ordenação — as três coisas que já mandam
+     redesenhar. Pendurá-lo aqui é o que faz ele aparecer e sumir sozinho, sem
+     um ouvinte por controle. */
+  if (typeof pintarVisBar === 'function') pintarVisBar();
   const n = filtradas().length;
   document.getElementById('cnt').textContent =
     n + (n===1?' cliente':' clientes') + (n!==LINHAS.length ? ' de '+LINHAS.length+' (filtrados)' : '') +
@@ -1973,6 +2028,182 @@ document.addEventListener('click', e=>{
 /* ══════════════════════════════════════════════════════════════════════════
    CARGA
    ══════════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════
+   VISUALIZAÇÕES — salvar esta tela do jeito que ela está
+   ══════════════════════════════════════════════════════════════════════════
+   A pessoa JÁ escolhe colunas, filtra e ordena aqui. "Salvar como" só pega o
+   estado vivo e dá um nome a ele — é o caminho mais curto entre "deixei do
+   jeito que eu gosto" e "quero isso amanhã de novo". Nenhuma tela nova. */
+
+/* O que uma visualização guarda, tirado do estado da tela neste instante. */
+function estadoDaTela(herdar){
+  /* O pré-filtro da tela de ORIGEM entra por padrão. Quem salva a partir da
+     Equiparação está vendo 79 clientes e espera 79 amanhã; nascer com 122
+     seria entregar outra coisa. `herdar=false` é o "quero desfiltrar" — a
+     pergunta é feita uma vez, na hora de criar. */
+  const herdado = (herdar === false) ? [] :
+    ((REC && REC.filtro) ? (Array.isArray(REC.filtro) ? REC.filtro.slice() : [REC.filtro]) : []);
+  const filtro = herdado;
+  /* Só filtro de valor único vira filtro salvo. Marcar 3 de 40 valores numa
+     coluna é exploração, não regra — e salvar isso produziria uma visualização
+     que ninguém consegue explicar seis meses depois. O servidor entende
+     `igual`, `contem`, `diferente` e `preenchido`; a tela salva o `igual`. */
+  F_COL.forEach((set, col) => { if (set && set.size === 1) {
+    const v = Array.from(set)[0];
+    filtro.push(v ? { coluna: col, igual: v } : { coluna: col, preenchido: false });
+  }});
+  return {
+    colunas: VIS.slice(),
+    filtro: filtro,
+    ordem: ORD && ORD.col ? { coluna: ORD.col, direcao: ORD.dir || 'asc' } : null
+  };
+}
+
+/* Igual ao que está salvo? Compara o que a visualização GUARDA — colunas,
+   filtro e ordenação —, e não largura nem altura de linha: essas são conforto
+   de cada aparelho e nunca viajaram. */
+function telaAlterada(){
+  const v = REC && REC.visualizacao;
+  if (!v || !VIS_SALVA) return false;
+  const a = estadoDaTela(), b = VIS_SALVA;   // a visualização já É o filtro dela: herda de si mesma
+  return JSON.stringify([a.colunas, a.filtro, a.ordem]) !==
+         JSON.stringify([b.colunas, b.filtro, b.ordem]);
+}
+let VIS_SALVA = null;   // o estado com que a visualização foi aberta
+
+function pintarVisBar(){
+  const no = document.getElementById('visbar');
+  if (!no) return;
+  const v = REC && REC.visualizacao;
+  const b = [];
+  if (v) {
+    b.push('<span class="dono">' + (v.meu ? 'Sua visualização' : 'De ' + esc(v.dono)) +
+           (v.publico ? ' · pública' : '') + '</span>');
+    if (telaAlterada()) b.push('<span class="sujo">alterado</span>');
+    if (v.meu) {
+      b.push('<button class="vb forte" data-vis="salvar">Salvar</button>');
+      b.push('<button class="vb" data-vis="renomear">Renomear</button>');
+      b.push('<button class="vb" data-vis="publico">' +
+             (v.publico ? 'Tornar particular' : 'Tornar pública') + '</button>');
+      b.push('<button class="vb" data-vis="excluir">Excluir</button>');
+    }
+    b.push('<button class="vb" data-vis="duplicar">Duplicar</button>');
+  } else {
+    b.push('<button class="vb" data-vis="nova">＋ Salvar como visualização</button>');
+  }
+  b.push('<button class="vb" data-vis="lista">Minhas visualizações</button>');
+  no.innerHTML = b.join('');
+  no.hidden = false;
+}
+
+document.addEventListener('click', async e => {
+  const bt = e.target.closest && e.target.closest('[data-vis]');
+  if (!bt) return;
+  const acao = bt.getAttribute('data-vis');
+  const v = REC && REC.visualizacao;
+
+  if (acao === 'lista') { location.href = 'b4u-recorte?chave=' + encodeURIComponent(chaveAtual()); return; }
+
+  if (acao === 'nova' || acao === 'duplicar') {
+    const sugestao = acao === 'duplicar' && v ? (v.nome + ' (cópia)')
+                   : ((REC && REC.rotulo) || 'Minha visualização');
+    const nome = prompt('Nome da visualização:', sugestao);
+    if (!nome) return;
+    /* Só pergunta quando há filtro herdado para largar. Perguntar sempre é
+       ensinar a pessoa a apertar OK sem ler. */
+    let herdar = true;
+    if (REC && REC.filtro && REC.filtro_sobre) {
+      herdar = confirm('Manter o filtro desta tela (' + REC.filtro_sobre + ')?\n\n' +
+        'OK mantém · Cancelar cria a visualização com TODOS os clientes.');
+    }
+    return visGravar({ nome: nome }, herdar);      // sem id = cria
+  }
+  if (!v || !v.meu) return;
+
+  if (acao === 'salvar')   return visGravar({ id: v.id, nome: v.nome, publico: v.publico });
+  if (acao === 'publico')  return visGravar({ id: v.id, nome: v.nome, publico: !v.publico });
+  if (acao === 'renomear') {
+    const nome = prompt('Novo nome:', v.nome);
+    if (!nome || nome === v.nome) return;
+    return visGravar({ id: v.id, nome: nome, publico: v.publico });
+  }
+  if (acao === 'excluir') {
+    if (!confirm('Apagar "' + v.nome + '"? Quem usa a versão pública dela perde o atalho.')) return;
+    try {
+      await postAcao({ acao: 'vis_excluir', id: v.id });
+      location.href = 'b4u-recorte?chave=' + encodeURIComponent(chaveAtual());
+    } catch (err) { alert('Não consegui apagar: ' + ((err && err.message) || err)); }
+  }
+});
+
+async function visGravar(extra, herdar){
+  const est = estadoDaTela(herdar);
+  const bt = document.querySelector('[data-vis="salvar"], [data-vis="nova"]');
+  if (bt) { bt.disabled = true; bt.textContent = 'Salvando…'; }
+  try {
+    const d = await postAcao(Object.assign({
+      acao: 'vis_salvar',
+      colunas: JSON.stringify(est.colunas),
+      filtro:  JSON.stringify(est.filtro),
+      ordem:   JSON.stringify(est.ordem)
+    }, extra));
+    /* Criar leva para a visualização nova; salvar fica onde está e só atualiza
+       o rótulo de "alterado". Recarregar quem só salvou perderia a rolagem e o
+       lugar da leitura por nada. */
+    if (!extra.id) {
+      location.href = '?v=' + encodeURIComponent(d.id) + '&chave=' + encodeURIComponent(chaveAtual());
+      return;
+    }
+    VIS_SALVA = est;
+    REC.visualizacao.nome = d.nome; REC.visualizacao.publico = d.publico;
+    document.getElementById('tag').textContent = d.nome;
+    document.title = d.nome + ' — back4you';
+    pintarVisBar();
+  } catch (err) {
+    alert('Não consegui salvar: ' + ((err && err.message) || err));
+    pintarVisBar();
+  }
+}
+
+/* A legenda do filtro do RECORTE — o que o SERVIDOR decidiu não mandar. Não
+   confundir com a régua de filtros da tela, que é escolha de quem está
+   olhando: este aqui a pessoa não desliga, e por isso precisa estar escrito.
+   `filtro_ignorado` aparece porque coluna com nome errado no catálogo faz o
+   servidor mostrar TODO MUNDO — e um filtro que silenciosamente não filtra é
+   pior do que filtro nenhum, já que a legenda promete o contrário. */
+function pintarFiltroDoRecorte(){
+  const no = document.getElementById('recfiltro');
+  if (!no) return;
+  const sobre = (REC && REC.filtro_sobre) || '';
+  const fora  = (REC && REC.fora_do_filtro) || 0;
+  const ruins = (META && META.filtro_ignorado) || [];
+  /* `ausentes` são colunas que o recorte PEDIU e a planilha não tem. O servidor
+     já as devolvia e ninguém as mostrava — foi assim que as cinco colunas de
+     prazo da equiparação sumiram da tela sem ninguém notar: a seção continuava
+     lá, com o status e o link, e só o prazo não existia. Coluna pedida e não
+     encontrada é ou erro de digitação no catálogo, ou coluna apagada da
+     planilha; as duas precisam aparecer para alguém. */
+  const faltando = (META && META.ausentes) || [];
+  if (!sobre && !ruins.length && !faltando.length) { no.hidden = true; no.innerHTML = ''; return; }
+  let html = '';
+  if (sobre) {
+    html = 'Mostrando <b>' + esc(sobre) + '</b>' +
+           (fora ? ' · ' + fora + ' cliente' + (fora > 1 ? 's' : '') + ' fora desta lista' : '');
+  }
+  if (ruins.length) {
+    html += (html ? ' · ' : '') +
+      '<b>filtro ignorado</b>: não existe a coluna ' + ruins.map(esc).join(', ');
+  }
+  if (faltando.length) {
+    html += (html ? ' · ' : '') + '<b>' + faltando.length + ' coluna' +
+      (faltando.length > 1 ? 's' : '') + ' do recorte não existe' +
+      (faltando.length > 1 ? 'm' : '') + ' na planilha</b>: ' +
+      faltando.slice(0, 6).map(esc).join(', ') + (faltando.length > 6 ? '…' : '');
+  }
+  no.innerHTML = html;
+  no.hidden = false;
+}
+
 function aplicar(d){
   REC    = d.recorte || {rotulo:'Recorte', pode_gravar:false};
   /* As seções que CHEGARAM. Uma que a pessoa não pode ler não está aqui — o
@@ -1994,6 +2225,19 @@ function aplicar(d){
   document.title = REC.rotulo + ' — back4you';
   document.getElementById('tag').textContent = REC.rotulo;
   document.getElementById('sobre').textContent  = REC.sobre || '';
+  pintarFiltroDoRecorte();
+
+  /* A ORDENAÇÃO INICIAL da visualização. `ORD` é definido aqui, ANTES de o
+     `lerVis()` abaixo montar a lista de colunas, porque a ordenação é parte do
+     que a pessoa salvou — abrir a tela desordenada e deixá-la ordenar de novo
+     seria salvar uma coisa e entregar outra. */
+  if (REC.ordem_inicial && REC.ordem_inicial.coluna) {
+    ORD = { col: REC.ordem_inicial.coluna, dir: REC.ordem_inicial.direcao || 'asc' };
+  }
+  /* O filtro salvo da visualização já veio aplicado PELO SERVIDOR (linhas que
+     não passam nem viajam). O `F_COL` daqui é o filtro que a pessoa mexe na
+     tela — começa vazio, e é isso que faz o botão "tirar filtro" da régua não
+     prometer desfazer algo que ele não desfaz. */
 
   /* A escolha guardada é FILTRADA pelo que o recorte tem HOJE. Sem isso, uma
      coluna tirada do recorte no servidor continuaria na lista de alguém para
@@ -2004,9 +2248,16 @@ function aplicar(d){
      certas na ordem errada — e com isso a ordem que a pessoa arrastou durava
      até o F5. O `filter` sobre a guardada preserva a ordem dela e joga fora a
      coluna que saiu do recorte desde a última visita. */
-  VIS = guardada ? guardada.filter(c => DO_REC.indexOf(c) > -1) : visPadrao();
+  /* Numa VISUALIZAÇÃO, quem manda na primeira abertura é o que foi salvo, e
+     não o `localStorage` — a pessoa abriu a tela DELA para ver a tela dela.
+     O localStorage continua valendo para largura, altura e para o rascunho de
+     quem mexeu e ainda não salvou. */
+  if (REC.visualizacao && !guardada) VIS = DO_REC.slice();
+  else VIS = guardada ? guardada.filter(c => DO_REC.indexOf(c) > -1) : visPadrao();
   if (!guardada) salvarVis();
   lerLayout();
+  if (REC.visualizacao) VIS_SALVA = estadoDaTela();
+  pintarVisBar();
 
   /* A faixa de permissão nomeia AS SEÇÕES, não a tela. "Você não pode editar"
      seria falso para o societário, que edita as licenças e não os acessos — e
@@ -2045,6 +2296,13 @@ function aplicar(d){
 }
 
 function carregar(){
+  const v = visAtual();
+  if (v) {
+    return jsonp(API_URL+'?tipo=recorte_montar&v='+encodeURIComponent(v)+
+                 '&chave='+encodeURIComponent(chaveAtual()))
+      .then(d=>{ if (d && d.erro) throw new Error(d.erro); aplicar(d); })
+      .catch(mostrarErro);
+  }
   const r = recorteAtual();
   if (!r) {
     /* Sem `?r=` a página não tem assunto. Em vez de uma tela vazia, ela pergunta
@@ -2063,6 +2321,24 @@ function carregar(){
           : '<div class="vazio">Nenhum recorte disponível para o seu acesso.</div>';
         document.getElementById('cnt').textContent = '';
         document.getElementById('tag').textContent = 'Recortes do Registro';
+        /* E as visualizações logo abaixo, na mesma página: quem chega aqui
+           está escolhendo o que abrir, e a tela salva por ele é tão "o que
+           abrir" quanto as declaradas em código. */
+        return jsonp(API_URL+'?tipo=vis_lista&chave='+encodeURIComponent(chaveAtual()))
+          .then(w=>{
+            if (!w || w.erro) return;
+            const bloco = (titulo, lista) => lista.length
+              ? '<div class="vazio">'+titulo+'</div>' + lista.map(x=>
+                  '<a class="cli" href="?v='+encodeURIComponent(x.id)+'&chave='+encodeURIComponent(chaveAtual())+'" target="_self">'+
+                  '<span class="l1"><span class="nm">'+esc(x.nome)+'</span>'+
+                  '<span class="id">'+x.colunas+' colunas'+(x.publico?' · pública':'')+'</span></span>'+
+                  '<span class="resumo">'+esc(x.filtro_sobre|| (x.meu ? 'sua' : 'de '+x.dono))+'</span></a>').join('')
+              : '';
+            document.getElementById('conteudo').innerHTML +=
+              bloco('Minhas visualizações', (w.minhas)||[]) +
+              bloco('Públicas', (w.publicas)||[]);
+          })
+          .catch(()=>{});
       })
       .catch(mostrarErro);
   }
