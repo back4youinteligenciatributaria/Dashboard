@@ -236,6 +236,13 @@ a{color:var(--brand-teal-txt)}
    jeito mais rápido de ninguém confiar no que a tela mostra. */
 .visbar .sujo{color:#8a5a00;font-size:var(--fs-2);font-weight:700}
 .visbar .dono{color:var(--muted);font-size:var(--fs-2)}
+.vlab{display:block;font-size:var(--fs-2);font-weight:700;color:var(--ink-2);margin:0 0 4px}
+.vinp{width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--linha,#e6dccd);
+  border-radius:8px;font:inherit;background:var(--surface)}
+.vresumo{margin:10px 0 0;color:var(--muted);font-size:var(--fs-2);line-height:1.5}
+.vlin{display:flex;gap:8px;align-items:flex-start;margin:12px 0 0;font-size:var(--fs-2);
+  color:var(--ink-2);line-height:1.5;cursor:pointer}
+.vlin input{margin-top:3px;flex:0 0 auto}
 
 /* ---------- a régua de filtros ----------
    Ela nunca estoura: quebra de linha. */
@@ -2096,6 +2103,50 @@ function pintarVisBar(){
   no.hidden = false;
 }
 
+/* O DIÁLOGO DE VISUALIZAÇÃO — e por que não é `prompt()`.
+   A primeira versão usava `prompt()` e `confirm()` nativos. Três problemas, e
+   o terceiro só apareceu ao usar: (1) não dá para explicar nada dentro deles —
+   a decisão "manter o filtro?" precisa mostrar QUAL filtro e quantos clientes
+   ficam de fora; (2) o navegador desenha do jeito dele, no meio do nada, sem
+   relação com a tela; (3) diálogo nativo TRAVA a página inteira, incluindo
+   qualquer automação — e foi assim que o teste desta tela parou na primeira
+   tentativa. O projeto já tem moldura de modal (b4u-modal.js); usar a dele é
+   de graça e é o que faz esta tela parecer com as outras. */
+let MODAL_VIS = null;
+function perguntarVis(op){
+  return new Promise(resolve => {
+    if (!window.B4UModal) { resolve(null); return; }   // sem modal, não inventa prompt
+    if (!MODAL_VIS) {
+      MODAL_VIS = B4UModal.criar({
+        id:'modalVis', largura:'520px',
+        acoes:[{id:'visOk', rot:'Salvar', tipo:'pri'}, {id:'visNao', rot:'Cancelar', tipo:'sec'}],
+        /* Fechar pelo × ou pelo Esc também resolve a promessa. Sem isto, quem
+           desiste pelo × deixa um `await` pendurado para sempre — e o próximo
+           clique em "Salvar como" abriria um modal que responde à promessa
+           errada. */
+        aoFechar: () => { if (MODAL_VIS._resolve) { const r = MODAL_VIS._resolve; MODAL_VIS._resolve = null; r(null); } }
+      });
+    }
+    MODAL_VIS.titulo(op.titulo);
+    MODAL_VIS.corpo().innerHTML = op.html;
+    const box = MODAL_VIS.corpo().closest('.b4m-box') || document;
+    const ok  = box.querySelector('#visOk'), nao = box.querySelector('#visNao');
+    ok.textContent = op.confirmar || 'Salvar';
+    MODAL_VIS._resolve = resolve;
+    const fim = valor => {
+      MODAL_VIS._resolve = null;      // antes do fechar: o aoFechar não deve resolver de novo
+      MODAL_VIS.fechar(true);
+      resolve(valor);
+    };
+    ok.onclick  = () => fim(op.ler ? op.ler(MODAL_VIS.corpo()) : true);
+    nao.onclick = () => fim(null);
+    MODAL_VIS.abrir();
+    const foco = MODAL_VIS.corpo().querySelector('input,textarea');
+    if (foco) { foco.focus(); foco.select && foco.select(); 
+      foco.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); ok.click(); } }; }
+  });
+}
+
 document.addEventListener('click', async e => {
   const bt = e.target.closest && e.target.closest('[data-vis]');
   if (!bt) return;
@@ -2107,32 +2158,59 @@ document.addEventListener('click', async e => {
   if (acao === 'nova' || acao === 'duplicar') {
     const sugestao = acao === 'duplicar' && v ? (v.nome + ' (cópia)')
                    : ((REC && REC.rotulo) || 'Minha visualização');
-    const nome = prompt('Nome da visualização:', sugestao);
-    if (!nome) return;
-    /* Só pergunta quando há filtro herdado para largar. Perguntar sempre é
-       ensinar a pessoa a apertar OK sem ler. */
-    let herdar = true;
-    if (REC && REC.filtro && REC.filtro_sobre) {
-      herdar = confirm('Manter o filtro desta tela (' + REC.filtro_sobre + ')?\n\n' +
-        'OK mantém · Cancelar cria a visualização com TODOS os clientes.');
-    }
-    return visGravar({ nome: nome }, herdar);      // sem id = cria
+    /* A caixa de criar MOSTRA o que vai ser salvo. "Salvar como visualização"
+       sem dizer o que está sendo salvo é a pessoa descobrindo depois que
+       guardou 40 colunas quando queria 6. */
+    const herdado = (REC && REC.filtro && REC.filtro_sobre)
+      ? '<label class="vlin"><input type="checkbox" id="visHerda" checked> ' +
+        'Manter o filtro desta tela — <b>' + esc(REC.filtro_sobre) + '</b>' +
+        ((REC.fora_do_filtro||0) ? ' (' + REC.fora_do_filtro + ' clientes ficam de fora)' : '') +
+        '</label>'
+      : '';
+    const est = estadoDaTela();
+    const r = await perguntarVis({
+      titulo: acao === 'duplicar' ? 'Duplicar visualização' : 'Salvar como visualização',
+      confirmar: 'Criar',
+      html: '<label class="vlab">Nome</label>' +
+            '<input class="vinp" id="visNome" value="' + esc(sugestao) + '" maxlength="80">' +
+            '<div class="vresumo">Vai guardar <b>' + VIS.length + ' colunas</b>' +
+            (est.ordem ? ', ordenado por <b>' + esc(est.ordem.coluna) + '</b>' : ', sem ordenação') +
+            '. Largura de coluna e altura de linha continuam só no seu navegador.</div>' +
+            herdado,
+      ler: c => ({ nome: (c.querySelector('#visNome').value||'').trim(),
+                   herdar: !c.querySelector('#visHerda') || c.querySelector('#visHerda').checked })
+    });
+    if (!r || !r.nome) return;
+    return visGravar({ nome: r.nome }, r.herdar);      // sem id = cria
   }
   if (!v || !v.meu) return;
 
   if (acao === 'salvar')   return visGravar({ id: v.id, nome: v.nome, publico: v.publico });
   if (acao === 'publico')  return visGravar({ id: v.id, nome: v.nome, publico: !v.publico });
+
   if (acao === 'renomear') {
-    const nome = prompt('Novo nome:', v.nome);
-    if (!nome || nome === v.nome) return;
-    return visGravar({ id: v.id, nome: nome, publico: v.publico });
+    const r = await perguntarVis({
+      titulo: 'Renomear visualização', confirmar: 'Renomear',
+      html: '<label class="vlab">Nome</label>' +
+            '<input class="vinp" id="visNome" value="' + esc(v.nome) + '" maxlength="80">',
+      ler: c => ({ nome: (c.querySelector('#visNome').value||'').trim() })
+    });
+    if (!r || !r.nome || r.nome === v.nome) return;
+    return visGravar({ id: v.id, nome: r.nome, publico: v.publico });
   }
+
   if (acao === 'excluir') {
-    if (!confirm('Apagar "' + v.nome + '"? Quem usa a versão pública dela perde o atalho.')) return;
+    const r = await perguntarVis({
+      titulo: 'Apagar visualização', confirmar: 'Apagar',
+      html: '<div class="vresumo">Apagar <b>' + esc(v.nome) + '</b>?' +
+            (v.publico ? ' Ela é pública — quem a estiver usando perde o atalho.' : '') +
+            ' Isso não apaga nenhum dado de cliente: visualização é só uma forma de olhar.</div>'
+    });
+    if (!r) return;
     try {
       await postAcao({ acao: 'vis_excluir', id: v.id });
       location.href = 'b4u-recorte?chave=' + encodeURIComponent(chaveAtual());
-    } catch (err) { alert('Não consegui apagar: ' + ((err && err.message) || err)); }
+    } catch (err) { mostrarErro(err); }
   }
 });
 
@@ -2160,7 +2238,9 @@ async function visGravar(extra, herdar){
     document.title = d.nome + ' — back4you';
     pintarVisBar();
   } catch (err) {
-    alert('Não consegui salvar: ' + ((err && err.message) || err));
+    /* Sem `alert`: a faixa de erro da própria tela já existe e não trava nada. */
+    mostrarErro(new Error('Não consegui salvar a visualização: ' +
+      ((err && err.message) || err)));
     pintarVisBar();
   }
 }
