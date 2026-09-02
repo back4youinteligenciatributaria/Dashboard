@@ -87,7 +87,12 @@
          item certo no menu enquanto o redirecionamento existir. */
       { id: 'documentos', rot: 'Documentos e acessos', pag: 'documentos',      ic: 'doc' },
       { id: 'societario',  rot: 'Societário',            pag: 'societario-equipe',ic: 'livro' },
-      { id: 'restituicao', rot: 'Restituição',           pag: 'restituicao',      ic: 'guias' },
+      /* Rótulo corrigido em 02/09/2026: a tela sempre foi de EQUIPARAÇÃO — o nome
+         "Restituição" era da planilha que a alimentava, e essa planilha foi
+         apagada. O `id` e o `pag` continuam 'restituicao' de propósito: são o
+         endereço que está em favorito e em conversa, e o arquivo lá redireciona
+         para b4u-recorte?r=equiparacao. */
+      { id: 'restituicao', rot: 'Equiparação',          pag: 'restituicao',      ic: 'guias' },
       { id: 'juridico',    rot: 'Jurídico',              pag: 'juridico',         ic: 'balanca' },
       { sec: 'Relacionamento' },
       { id: 'contatos',    rot: 'Contatos',              pag: 'contatos-equipe',  ic: 'chat' },

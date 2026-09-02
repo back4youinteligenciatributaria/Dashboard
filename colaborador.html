@@ -1221,10 +1221,14 @@ const FERRAMENTAS=[
      colaboradores ali; desde que o link virou um só (o servidor resolve a
      carteira pela chave de quem entrou), a caixa que abria só tinha o que já
      estava escrito na frente dela. */
-  {id:'fp-restituicao',   nome:'Restituição',                   url:'restituicao',       ic:icone('calendario'), area:'equiparacao',
-   desc:'Relatório de restituição de cada colaborador — prazos, etapas e responsável.',
+  /* Rótulo corrigido em 02/09/2026 (a tela virou o recorte `equiparacao` do
+     Registro). O `id` e a `url` ficaram: 'restituicao' é o endereço de fora, e
+     `restituicao.html` redireciona. "restituicao" segue no `alias` porque é a
+     palavra que metade da equipe ainda digita para achar isto. */
+  {id:'fp-restituicao',   nome:'Equiparação',                   url:'restituicao',       ic:icone('calendario'), area:'equiparacao',
+   desc:'A esteira de cada cliente: estratégia, relatórios, apuração e protocolo — com prazos e responsável.',
    alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
-  /* Jurídico entra DEPOIS da Restituição de propósito: é a continuação dela.
+  /* Jurídico entra DEPOIS da Equiparação de propósito: é a continuação dela.
      O caso nasce quando a equiparação termina o relatório e o cliente decide ir
      para o mandado de segurança — quem trabalha nos dois lê a parede nessa
      ordem. Ícone de balança, o mesmo do menu lateral. */

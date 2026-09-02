@@ -2114,7 +2114,11 @@ document.getElementById('logo-home').href = 'colaborador?chave='+encodeURICompon
    marcar nenhuma: a pessoa passa a achar que está noutro lugar. O `documentos`
    está aqui porque ele TEM entrada própria, e chegar nele com o menu apagado
    faria a tela parecer solta. */
-const MENU_DE = { documentos: 'documentos' };
+const MENU_DE = { documentos: 'documentos', equiparacao: 'restituicao' };
+/* `equiparacao` acende o item cujo id é 'restituicao' porque o id do menu é o
+   nome VELHO da página (restituicao.html, hoje redirecionamento). O rótulo já
+   diz "Equiparação"; trocar o id obrigaria a mexer no b4u-shell.js e em cada
+   `ativo:` que ainda passa 'restituicao'. */
 
 if (window.B4UShell) {
   B4UShell.montar({
