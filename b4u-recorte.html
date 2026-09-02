@@ -2163,6 +2163,7 @@ document.addEventListener('click', async e => {
   const bt = e.target.closest && e.target.closest('[data-vis]');
   if (!bt) return;
   const acao = bt.getAttribute('data-vis');
+  visBotaoAtivo = bt;
   const v = REC && REC.visualizacao;
 
   if (acao === 'lista') { location.href = 'b4u-recorte?chave=' + encodeURIComponent(chaveAtual()); return; }
@@ -2228,10 +2229,14 @@ document.addEventListener('click', async e => {
   }
 });
 
+let visBotaoAtivo = null;   // o botão que a pessoa apertou nesta gravação
 async function visGravar(extra, herdar){
   const est = estadoDaTela(herdar);
-  const bt = document.querySelector('[data-vis="salvar"], [data-vis="nova"]');
-  if (bt) { bt.disabled = true; bt.textContent = 'Salvando…'; }
+  /* O botão que a pessoa APERTOU, e não o primeiro que casa com o seletor.
+     Antes era `querySelector('[data-vis="salvar"], [data-vis="nova"]')`: clicar
+     em "Tornar pública" escrevia "Salvando…" no botão Salvar, ao lado. */
+  const bt = visBotaoAtivo;
+  if (bt) { bt.disabled = true; bt.dataset.rot = bt.textContent; bt.textContent = 'Salvando…'; }
   try {
     const d = await postAcao(Object.assign({
       acao: 'vis_salvar',
@@ -2250,11 +2255,20 @@ async function visGravar(extra, herdar){
     REC.visualizacao.nome = d.nome; REC.visualizacao.publico = d.publico;
     document.getElementById('tag').textContent = d.nome;
     document.title = d.nome + ' — back4you';
-    pintarVisBar();
   } catch (err) {
     /* Sem `alert`: a faixa de erro da própria tela já existe e não trava nada. */
     mostrarErro(new Error('Não consegui salvar a visualização: ' +
       ((err && err.message) || err)));
+  } finally {
+    /* SEMPRE devolve o botão ao normal, e invalida o cache de HTML da barra
+       antes. Sem isto, uma gravação que falha deixa "Salvando…" para sempre:
+       o `pintarVisBar` gera o MESMO html de antes do clique, o cache diz "não
+       mudou" e não reescreve — e o botão que eu havia mexido na mão fica preso.
+       Otimização que compara HTML precisa saber que alguém mexeu no DOM fora
+       dela. */
+    const barra = document.getElementById('visbar');
+    if (barra) barra.__html = null;
+    visBotaoAtivo = null;
     pintarVisBar();
   }
 }
