@@ -253,8 +253,22 @@ a{color:var(--brand-teal-txt)}
    window.scrollY, e uma tabela de 40 colunas empurrando a página para o lado
    quebraria o menu lateral e o puxar-para-atualizar junto. */
 .grade-wrap{overflow:auto;max-height:70vh;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
-table.grade{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:var(--fs-2)}
-table.grade th,table.grade td{padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+/* `table-layout:fixed` é o que torna o redimensionamento REAL. Em layout
+   automático a largura é uma sugestão que o navegador reequilibra conforme o
+   conteúdo: arrastar uma coluna mexeria nas vizinhas e a largura escolhida
+   voltaria sozinha no próximo redesenho. Com layout fixo, a largura do `<col>`
+   é a largura, ponto — e de quebra a tabela de 31 colunas pinta muito mais
+   rápido, porque o navegador para de medir célula por célula.
+   O preço: toda coluna precisa de uma largura de partida. Ver `largPadrao()`. */
+table.grade{border-collapse:separate;border-spacing:0;table-layout:fixed;width:max-content;font-size:var(--fs-2)}
+table.grade th,table.grade td{padding:0 8px;border-bottom:1px solid var(--line);
+  white-space:nowrap;vertical-align:middle;overflow:hidden;height:var(--lh,34px)}
+table.grade td{text-overflow:ellipsis}
+/* Linha alta = o texto pode quebrar. É o motivo de alguém aumentar a altura:
+   ler a observação inteira sem abrir a ficha. Abaixo disso, quebrar linha só
+   faria a célula cortar no meio de uma palavra. */
+table.grade.alto td{white-space:normal;vertical-align:top;padding-top:5px}
+table.grade.alto td .cel-ro{display:block;line-height:1.35}
 table.grade thead th{position:sticky;top:0;z-index:3;background:var(--surface-warm);
   font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-dark);text-align:left}
 /* As duas primeiras colunas ficam presas: rolando quarenta colunas para a
@@ -263,7 +277,10 @@ table.grade th.fix1,table.grade td.fix1{position:sticky;left:0;z-index:2;backgro
 table.grade th.fix2,table.grade td.fix2{position:sticky;left:74px;z-index:2;background:var(--surface);border-right:1px solid var(--line)}
 table.grade thead th.fix1,table.grade thead th.fix2{z-index:4;background:var(--surface-warm)}
 table.grade tbody tr:hover td{background:#FBF8F3}
-.cel-in{width:100%;min-width:130px;max-width:280px;border:1px solid transparent;border-radius:var(--radius-sm);
+/* `min-width:0` é obrigatório com layout fixo: um mínimo em pixels num campo
+   dentro da célula ganha da largura do `<col>` e estoura a coluna — a pessoa
+   arrasta para estreitar e nada acontece. */
+.cel-in{width:100%;min-width:0;max-width:none;border:1px solid transparent;border-radius:var(--radius-sm);
   padding:3px 6px;background:none;font-family:var(--sans);font-size:var(--fs-2);color:var(--ink)}
 .cel-in:hover{border-color:var(--line)}
 .cel-in:focus{border-color:var(--brand-teal);background:var(--surface);outline:none}
@@ -275,7 +292,33 @@ table.grade tbody tr:hover td{background:#FBF8F3}
    coluna lá do outro lado da tela — e com trinta colunas isso não se faz. */
 table.grade thead th{padding:0}
 .th-in{display:flex;align-items:center;gap:6px;padding:5px 8px}
-.th-rot{overflow:hidden;text-overflow:ellipsis}
+/* O RÓTULO É A PEGA. Arrastar a coluna e redimensioná-la são dois gestos no
+   mesmo cabeçalho, e o que os separa é ONDE se pega: o texto move a coluna, a
+   faixa de 7px na borda muda a largura, e o funil não faz nem uma coisa nem
+   outra. Sem essa divisão, tentar filtrar arrastaria a coluna sem querer. */
+.th-rot{overflow:hidden;text-overflow:ellipsis;cursor:grab;user-select:none;flex:1;min-width:0}
+.th-rot:active{cursor:grabbing}
+th.arrastando{opacity:.45}
+/* Para ONDE vai cair, mostrado na borda da coluna de destino — e não com o
+   cabeçalho flutuando junto do cursor. Quem arrasta precisa saber o resultado,
+   não ver uma cópia do que já está na mão. */
+th.alvo-e{box-shadow:inset 3px 0 0 var(--brand-teal)}
+th.alvo-d{box-shadow:inset -3px 0 0 var(--brand-teal)}
+
+/* ---------- as alças de redimensionar ----------
+   Sete pixels: menos que isso vira caça ao pixel, mais que isso rouba o clique
+   do rótulo. A alça vertical mora no cabeçalho; a horizontal, na coluna de ID —
+   a única que está sempre visível por ser fixa, e por isso a única de onde a
+   altura pode ser puxada com a tabela rolada para qualquer lado. */
+.col-h{position:absolute;top:0;right:-3px;width:7px;height:100%;z-index:5;cursor:col-resize}
+.col-h::after{content:"";position:absolute;top:6px;bottom:6px;left:3px;width:1px;background:var(--line)}
+.col-h:hover::after{background:var(--brand-teal);left:2px;width:3px;top:0;bottom:0}
+.row-h{position:absolute;left:0;right:0;bottom:-3px;height:7px;z-index:5;cursor:row-resize}
+.row-h:hover{background:var(--brand-teal)}
+/* Enquanto arrasta, o cursor não pode mudar ao passar por cima de outra coisa,
+   e nada pode ser selecionado — senão o arrasto vira seleção de texto. */
+body.redim{cursor:col-resize!important;user-select:none}
+body.redim-v{cursor:row-resize!important;user-select:none}
 .th-ord{flex:none;font-size:10px;color:var(--brand-teal-txt)}
 .th-f{flex:none;display:inline-flex;align-items:center;justify-content:center;
   width:18px;height:18px;padding:0;border:0;border-radius:var(--radius-sm);
@@ -343,6 +386,12 @@ table.grade thead th.filtrado{background:#EAF4F1;box-shadow:inset 0 -2px 0 var(-
 .chip.ord{color:var(--amber-txt);background:var(--amber-soft);border-color:var(--amber-line)}
 .chips .tudo{border:0;background:none;cursor:pointer;font-family:var(--sans);font-size:var(--fs-1);
   font-weight:800;color:var(--muted);text-decoration:underline}
+/* Só aparece depois que a pessoa mexeu em alguma coisa. Um botão de "restaurar"
+   sempre visível numa tela que ninguém personalizou é um botão que só ocupa
+   espaço e assusta. */
+.chips .restaurar{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius-pill);
+  cursor:pointer;font-family:var(--sans);font-size:var(--fs-1);font-weight:800;color:var(--muted);padding:3px 10px}
+.chips .restaurar:hover{border-color:var(--brand-teal);color:var(--brand-teal-txt)}
 /* Selo de gravação. Sobrevive a filtro e a troca de modo porque é desenhado a
    partir do ESTADO (SUJOS/FALHAS), nunca do clique. */
 .selo{display:inline-block;font-size:10px;font-weight:900;padding:1px 6px;border-radius:var(--radius-pill);margin-left:6px}
@@ -862,7 +911,52 @@ function chaveCel(id, col){ return id + '|' + normCol(col); }
    Tudo em try/catch: navegador em janela anônima ou com armazenamento bloqueado
    lança no ACESSO ao localStorage, não na leitura — e uma tela que não abre por
    causa de uma preferência é uma tela pior do que uma sem preferência. */
+/* A LARGURA, A ALTURA E A ORDEM são da PESSOA, como as colunas visíveis: moram
+   no navegador dela, por recorte. Não é preferência que o time precise combinar,
+   e gravá-la no servidor seria mais uma escrita por arrasto numa planilha que já
+   é o gargalo de todas as telas. */
+const ALT_PADRAO = 34;
+let LARG = {};               // coluna → px  ('__id' e '__nome' para as duas fixas)
+let ALT  = ALT_PADRAO;       // altura de TODAS as linhas
+
 function chaveVis(){ return 'b4u.recorte.' + (recorteAtual()||'?') + '.cols'; }
+function chaveLay(){ return 'b4u.recorte.' + (recorteAtual()||'?') + '.layout'; }
+function lerLayout(){
+  try{
+    const o = JSON.parse(localStorage.getItem(chaveLay())||'{}');
+    LARG = (o && typeof o.larg === 'object' && o.larg) ? o.larg : {};
+    ALT  = Number(o && o.alt) || ALT_PADRAO;
+  }catch(_){ LARG = {}; ALT = ALT_PADRAO; }
+}
+function salvarLayout(){
+  try{ localStorage.setItem(chaveLay(), JSON.stringify({ larg: LARG, alt: ALT })); }catch(_){}
+}
+/* A largura de partida sai do PAPEL da coluna, não de um número só para todas:
+   uma data cabe em 128px e uma observação não cabe em 165. Com layout fixo, sem
+   isto a tela abriria com trinta colunas do mesmo tamanho e todas cortadas. */
+function largPadrao(c){
+  if (c === '__id')   return 74;
+  if (c === '__nome') return 240;
+  if (DATA.has(normCol(c))) return 128;
+  if (LINK.has(normCol(c))) return 195;
+  if (ehLonga(c))           return 260;
+  return 165;
+}
+function largDe(c){ return Math.max(48, Number(LARG[c]) || largPadrao(c)); }
+
+/* "Mexeram em alguma coisa?" — é o que decide se o botão de restaurar aparece.
+   A ordem conta como mexida quando difere da ordem declarada no recorte. */
+function layoutTocado(){
+  if (Object.keys(LARG).length) return true;
+  if (ALT !== ALT_PADRAO) return true;
+  const naOrdem = DO_REC.filter(c => VIS.indexOf(c) > -1);
+  return naOrdem.join('\u0000') !== VIS.join('\u0000');
+}
+function restaurarLayout(){
+  LARG = {}; ALT = ALT_PADRAO;
+  VIS = DO_REC.filter(c => VIS.indexOf(c) > -1);   // volta à ordem do recorte, mantendo o que está marcado
+  salvarLayout(); salvarVis(); fecharFiltro(); desenhar();
+}
 function lerVis(){
   try{ const s=localStorage.getItem(chaveVis()); return s?JSON.parse(s):null; }catch(_){ return null; }
 }
@@ -1224,7 +1318,13 @@ function montarSeletorColunas(){
       /* A ordem é a do RECORTE, nunca a ordem em que a pessoa clicou: quem
          declarou o recorte pensou nas colunas nessa sequência, e uma tela que
          reordena sozinha conforme os cliques nunca fica igual duas vezes. */
-      VIS = DO_REC.filter(c=>m.indexOf(c)>-1);
+      /* Mantém a ordem que a pessoa arrastou para as que já estavam, e põe as
+         recém-marcadas no fim, na ordem do recorte. Reconstruir a partir do
+         DO_REC (como era) desfazia o arrasto a cada visita ao seletor. */
+      const m2 = new Set(m);
+      const novo = VIS.filter(c => m2.has(c));
+      DO_REC.forEach(c => { if (m2.has(c) && novo.indexOf(c) < 0) novo.push(c); });
+      VIS = novo;
       salvarVis();
       /* COLUNA QUE SAI DA TELA PERDE O FILTRO DELA. A alternativa — guardar e
          reaplicar quando ela voltar — deixaria linhas sumindo por causa de uma
@@ -1361,6 +1461,12 @@ function abrirFiltro(col, ancora){
     '<button type="button" class="gfil-i' + (ORD.col===col && ORD.dir==='asc' ?' on':'') + '" data-ord="asc">Classificar A → Z</button>' +
     '<button type="button" class="gfil-i' + (ORD.col===col && ORD.dir==='desc'?' on':'') + '" data-ord="desc">Classificar Z → A</button>' +
     '<div class="gfil-sep"></div>' +
+    /* O mesmo que o arrasto faz, para quem não arrasta. Desabilitado nas pontas
+       em vez de escondido: some­ndo, o painel da primeira coluna teria um item a
+       menos que o das outras e os itens dançariam de lugar a cada abertura. */
+    '<button type="button" class="gfil-i" data-mover="-1"' + (VIS.indexOf(col) <= 0 ? ' disabled style="opacity:.4;cursor:default"' : '') + '>← Mover para a esquerda</button>' +
+    '<button type="button" class="gfil-i" data-mover="1"'  + (VIS.indexOf(col) >= VIS.length-1 ? ' disabled style="opacity:.4;cursor:default"' : '') + '>Mover para a direita →</button>' +
+    '<div class="gfil-sep"></div>' +
     '<input class="gfil-busca" type="search" placeholder="Buscar nesta coluna…" autocomplete="off">' +
     '<div class="gfil-topo"><button type="button" data-todos>Selecionar tudo</button>' +
       '<button type="button" data-nada>Limpar</button>' +
@@ -1419,6 +1525,7 @@ function abrirFiltro(col, ancora){
   no.addEventListener('click', e => {
     const bt = e.target.closest('button'); if (!bt) return;
     if (bt.dataset.ord)   { ORD = (ORD.col===col && ORD.dir===bt.dataset.ord) ? {col:'',dir:''} : {col:col, dir:bt.dataset.ord}; fecharFiltro(); desenhar(); return; }
+    if (bt.dataset.mover) { passoColuna(col, Number(bt.dataset.mover)); return; }
     if (bt.hasAttribute('data-todos')) { lista.querySelectorAll('input[data-v]').forEach(i => i.checked = true);  aplicar(); desenharLista(); return; }
     if (bt.hasAttribute('data-nada'))  { lista.querySelectorAll('input[data-v]').forEach(i => i.checked = false); aplicar(); desenharLista(); return; }
     if (bt.hasAttribute('data-tirar')) { F_COL.delete(col); fecharFiltro(); desenhar(); return; }
@@ -1472,8 +1579,152 @@ document.addEventListener('click', e => {
   const x = e.target.closest('.chip .x');
   if (x) { if (x.dataset.fcol) F_COL.delete(x.dataset.fcol); else ORD = {col:'',dir:''}; fecharFiltro(); desenhar(); return; }
   const t = e.target.closest('.chips .tudo');
-  if (t) { F_COL.clear(); ORD = {col:'',dir:''}; fecharFiltro(); desenhar(); }
+  if (t) { F_COL.clear(); ORD = {col:'',dir:''}; fecharFiltro(); desenhar(); return; }
+  const rst = e.target.closest('.chips .restaurar');
+  if (rst) restaurarLayout();
 });
+
+/* ══════════════════════════════════════════════════════════════════════════
+   REDIMENSIONAR E REORDENAR — a visualização é de cada um
+
+   Três gestos no mesmo cabeçalho, e o que os separa é ONDE se pega:
+     o rótulo (texto)      arrasta a coluna para outro lugar
+     a faixa de 7px        muda a largura
+     o funil               filtra e ordena
+   Sem essa divisão, tentar filtrar arrastaria a coluna sem querer — que é o
+   defeito clássico de cabeçalho que faz tudo.
+
+   Nada disto toca a planilha. Largura, altura e ordem são de quem está olhando,
+   e quem olha a mesma tela ao lado continua vendo a dele.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+let REDIM = null;
+
+/* Pointer Events, e não mousedown/mousemove: o mesmo código atende dedo e
+   caneta, e o `setPointerCapture` mantém o arrasto vivo quando o cursor sai da
+   alça — que acontece sempre, porque arrastar rápido deixa o ponteiro na frente
+   do elemento que está sendo redimensionado. */
+document.addEventListener('pointerdown', e => {
+  const c = e.target.closest && e.target.closest('.col-h');
+  const r = e.target.closest && e.target.closest('.row-h');
+  if (!c && !r) return;
+  e.preventDefault();
+  fecharFiltro();
+  const tab = (c || r).closest('table.grade');
+  if (c) {
+    const col = c.dataset.larg;
+    REDIM = { tipo:'col', col: col, x0: e.clientX, w0: largDe(col),
+              alvo: tab.querySelector('col[data-col="' + (window.CSS && CSS.escape ? CSS.escape(col) : col) + '"]') };
+    document.body.classList.add('redim');
+  } else {
+    REDIM = { tipo:'lin', y0: e.clientY, h0: ALT, tab: tab };
+    document.body.classList.add('redim-v');
+  }
+  try { (c||r).setPointerCapture(e.pointerId); } catch(_) {}
+});
+
+document.addEventListener('pointermove', e => {
+  if (!REDIM) return;
+  if (REDIM.tipo === 'col') {
+    /* 48px de piso: uma coluna de 0px some da tela e leva junto a alça de
+       arrastar — não haveria como trazê-la de volta a não ser restaurando tudo. */
+    const w = Math.max(48, Math.round(REDIM.w0 + (e.clientX - REDIM.x0)));
+    LARG[REDIM.col] = w;
+    if (REDIM.alvo) REDIM.alvo.style.width = w + 'px';
+  } else {
+    const h = Math.max(28, Math.min(220, Math.round(REDIM.h0 + (e.clientY - REDIM.y0))));
+    ALT = h;
+    if (REDIM.tab) { REDIM.tab.style.setProperty('--lh', h + 'px'); REDIM.tab.classList.toggle('alto', h >= 46); }
+  }
+});
+
+document.addEventListener('pointerup', () => {
+  if (!REDIM) return;
+  const eraLinha = REDIM.tipo === 'lin';
+  REDIM = null;
+  document.body.classList.remove('redim', 'redim-v');
+  salvarLayout();
+  /* Só agora a tela é redesenhada, e só quando foi ALTURA — a quebra de linha
+     muda o que cabe em cada célula. Redesenhar durante o arrasto seria montar
+     uma tabela nova por quadro; redesenhar depois de mudar largura não é
+     preciso, porque a largura já está no <col>. */
+  if (eraLinha) desenhar(); else pintarChips();
+});
+
+/* ---------------- mudar a coluna de lugar ----------------
+   Arrastar e soltar do próprio navegador (`draggable`), e não um arrasto feito
+   à mão com pointer: o navegador já resolve o gesto de largar, o cancelar com
+   Esc e o comportamento no toque, e a marca de destino é a única coisa que
+   falta desenhar. */
+let ARRASTA = null;
+
+function limparAlvos(){
+  document.querySelectorAll('th.alvo-e, th.alvo-d').forEach(t => t.classList.remove('alvo-e','alvo-d'));
+}
+
+document.addEventListener('dragstart', e => {
+  const r = e.target.closest && e.target.closest('.th-rot');
+  if (!r || !r.dataset.col) return;
+  ARRASTA = r.dataset.col;
+  fecharFiltro();
+  try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', ARRASTA); } catch(_) {}
+  const th = r.closest('th'); if (th) th.classList.add('arrastando');
+});
+
+document.addEventListener('dragover', e => {
+  if (!ARRASTA) return;
+  const th = e.target.closest && e.target.closest('th[data-col]');
+  if (!th || th.dataset.col === ARRASTA) return;
+  e.preventDefault();                       // sem isto o navegador recusa a soltura
+  try { e.dataTransfer.dropEffect = 'move'; } catch(_) {}
+  limparAlvos();
+  const r = th.getBoundingClientRect();
+  /* Metade esquerda = entra ANTES desta coluna; metade direita = depois. É o que
+     torna possível levar uma coluna para o fim da tabela. */
+  th.classList.add(e.clientX < r.left + r.width / 2 ? 'alvo-e' : 'alvo-d');
+});
+
+document.addEventListener('drop', e => {
+  if (!ARRASTA) return;
+  const th = e.target.closest && e.target.closest('th[data-col]');
+  if (!th || th.dataset.col === ARRASTA) return;
+  e.preventDefault();
+  const r = th.getBoundingClientRect();
+  moverColuna(ARRASTA, th.dataset.col, e.clientX < r.left + r.width / 2);
+});
+
+document.addEventListener('dragend', () => {
+  ARRASTA = null;
+  limparAlvos();
+  document.querySelectorAll('th.arrastando').forEach(t => t.classList.remove('arrastando'));
+});
+
+/** Tira `col` de onde está e põe antes (ou depois) de `destino`.
+ *  A remoção acontece ANTES de procurar o destino, senão o índice do destino
+ *  estaria deslocado de um sempre que a coluna vinha da esquerda dele. */
+function moverColuna(col, destino, antes){
+  const i = VIS.indexOf(col);
+  if (i < 0 || col === destino) return;
+  VIS.splice(i, 1);
+  const j = VIS.indexOf(destino);
+  if (j < 0) { VIS.splice(i, 0, col); return; }   // destino sumiu no meio do gesto: desfaz
+  VIS.splice(antes ? j : j + 1, 0, col);
+  salvarVis();
+  fecharFiltro();
+  desenhar();
+}
+
+/** Um passo para a esquerda ou para a direita. É o caminho de TECLADO para a
+ *  mesma coisa: quem não usa mouse não arrasta, e sem isto reordenar seria um
+ *  recurso só para quem tem as duas mãos livres. Mora no painel do funil. */
+function passoColuna(col, passo){
+  const i = VIS.indexOf(col), j = i + passo;
+  if (i < 0 || j < 0 || j >= VIS.length) return;
+  VIS.splice(j, 0, VIS.splice(i, 1)[0]);
+  salvarVis();
+  fecharFiltro();
+  desenhar();
+}
 
 /* ---------------- os filtros ativos, por extenso ----------------
    Vale nos DOIS modos, e é o único sinal no modo Fichas — que não tem cabeçalho
@@ -1492,6 +1743,11 @@ function pintarChips(){
       '<button class="x" data-fcol="' + esc(col) + '" title="Tirar este filtro" aria-label="Tirar o filtro de ' + esc(col) + '">×</button></span>');
   });
   if (its.length > 1) its.push('<button type="button" class="tudo">limpar tudo</button>');
+  /* Largura, altura e ordem não são FILTRO — não escondem linha nenhuma —, mas
+     é aqui que a pessoa procura "o que eu mexi nesta tela". O rótulo diz o que
+     ele desfaz, para ninguém clicar achando que limpa os filtros. */
+  if (layoutTocado())
+    its.push('<button type="button" class="restaurar" title="Volta a largura, a altura e a ordem das colunas ao padrão. Não mexe nos filtros.">↺ restaurar largura e ordem</button>');
   alvo.innerHTML = its.join('');
 }
 
@@ -1580,28 +1836,49 @@ function desenharGrade(){
      ordenação e funil. O funil fica visível sempre (fraco), e não só no hover:
      um botão que só aparece quando o mouse passa por cima é um botão que quem
      não sabe que ele existe nunca descobre — e no toque não existe hover. */
-  const th = '<th class="fix1">ID</th><th class="fix2">Cliente</th>' +
+  /* O <colgroup> é quem manda na largura com `table-layout:fixed`. Uma tag só
+     por coluna, e o arrasto mexe no `style.width` dela — sem redesenhar a
+     tabela inteira a cada pixel, que com 122 linhas × 31 colunas seria uma
+     tabela nova por quadro de animação. */
+  const cg = '<colgroup>' +
+    '<col data-col="__id" style="width:'+largDe('__id')+'px">' +
+    '<col data-col="__nome" style="width:'+largDe('__nome')+'px">' +
+    VIS.map(c=>'<col data-col="'+esc(c)+'" style="width:'+largDe(c)+'px">').join('') +
+    '</colgroup>';
+
+  const alcaC = c => '<span class="col-h" data-larg="'+esc(c)+'" title="Arraste para mudar a largura"></span>';
+
+  const th = '<th class="fix1">ID'+alcaC('__id')+'</th>' +
+             '<th class="fix2">Cliente'+alcaC('__nome')+'</th>' +
     VIS.map(c=>{
       const filtrada = F_COL.has(c);
       const seta = (ORD.col===c) ? '<span class="th-ord" aria-hidden="true">'+(ORD.dir==='desc'?'↓':'↑')+'</span>' : '';
-      return '<th'+(filtrada?' class="filtrado"':'')+'>'+
+      return '<th data-col="'+esc(c)+'"'+(filtrada?' class="filtrado"':'')+'>'+
         '<div class="th-in">'+
-          '<span class="th-rot">'+esc(c)+'</span>'+ seta +
+          '<span class="th-rot" draggable="true" data-col="'+esc(c)+'" '+
+            'title="Arraste para mudar a coluna de lugar">'+esc(c)+'</span>'+ seta +
           '<button type="button" class="th-f'+(filtrada?' on':'')+'" data-fcol="'+esc(c)+'" '+
             'aria-haspopup="dialog" aria-expanded="false" '+
             'title="'+(filtrada?'Filtro ativo — clique para mudar':'Filtrar e ordenar')+'" '+
             'aria-label="'+(filtrada?'Filtro ativo em ':'Filtrar e ordenar ')+esc(c)+'">'+FUNIL_SVG+'</button>'+
-        '</div></th>';
+        '</div>'+ alcaC(c) +'</th>';
     }).join('');
+  /* A alça de ALTURA mora na coluna de ID: é a única sempre visível (fixa à
+     esquerda), então dá para puxar a altura com a tabela rolada para qualquer
+     lado. Ela muda a altura de TODAS as linhas, e não da linha puxada — altura
+     por linha numa tela de conferência não serve para nada, e o que se quer ao
+     aumentar é ler a observação inteira sem abrir a ficha. O title diz isso. */
   const tr = linhas.map(l=>
     '<tr>'+
       '<td class="fix1"><button class="bt" data-abrir="'+esc(l.id)+'" type="button" '+
-        'title="Abrir a ficha deste cliente">'+esc(l.id)+'</button></td>'+
+        'title="Abrir a ficha deste cliente">'+esc(l.id)+'</button>'+
+        '<span class="row-h" title="Arraste para mudar a altura de todas as linhas"></span></td>'+
       '<td class="fix2">'+esc(l.nome_cliente||'')+'<span data-selo="'+esc(l.id)+'"></span></td>'+
       VIS.map(c=>'<td>'+campoHTML(l.id,c,l.valores[c],'cel-in')+'</td>').join('')+
     '</tr>').join('');
   document.getElementById('conteudo').innerHTML = linhas.length
-    ? '<div class="grade-wrap"><table class="grade"><thead><tr>'+th+'</tr></thead><tbody>'+tr+'</tbody></table></div>'
+    ? '<div class="grade-wrap"><table class="grade'+(ALT >= 46 ? ' alto' : '')+'" style="--lh:'+ALT+'px">'+
+      cg+'<thead><tr>'+th+'</tr></thead><tbody>'+tr+'</tbody></table></div>'
     : '<div class="vazio">Nenhum cliente com esses filtros.</div>';
   linhas.forEach(l=>pintarSelo(l.id));
 }
@@ -1686,8 +1963,14 @@ function aplicar(d){
      coluna tirada do recorte no servidor continuaria na lista de alguém para
      sempre — e apareceria como uma coluna vazia que ninguém consegue explicar. */
   const guardada = lerVis();
-  VIS = guardada ? DO_REC.filter(c=>guardada.indexOf(c)>-1) : visPadrao();
+  /* Filtra pela guardada, e NÃO pela ordem do recorte. Era
+     `DO_REC.filter(c => guardada.indexOf(c) > -1)`, que devolvia as colunas
+     certas na ordem errada — e com isso a ordem que a pessoa arrastou durava
+     até o F5. O `filter` sobre a guardada preserva a ordem dela e joga fora a
+     coluna que saiu do recorte desde a última visita. */
+  VIS = guardada ? guardada.filter(c => DO_REC.indexOf(c) > -1) : visPadrao();
   if (!guardada) salvarVis();
+  lerLayout();
 
   /* A faixa de permissão nomeia AS SEÇÕES, não a tela. "Você não pode editar"
      seria falso para o societário, que edita as licenças e não os acessos — e
