@@ -53,6 +53,12 @@
  *           dois está errado o bastante para alguém notar. Uma coluna, um
  *           lugar. A seção de onboarding ganha uma placa dizendo onde ir.
  *
+ * `sensivel:1` é SENHA. Na ficha aparece mascarada, com um botão "mostrar", e
+ *           some da impressão. A máscara não é segurança — quem abre a ficha tem
+ *           a senha de qualquer jeito, e a planilha guarda tudo em texto puro.
+ *           Ela existe para o caso corriqueiro: a tela aberta numa reunião, num
+ *           projetor, com o cliente do outro lado da mesa.
+ *
  * `req:1`  obrigatório no cadastro de cliente novo (e SÓ lá)
  * `full:1` ocupa a linha inteira do formulário
  * `role`   apelido usado pelo código (id, nome, cnpj, razao, cidade, uf…)
@@ -73,6 +79,7 @@ var ORDEM = [
   'Outras contratações',
   'Estrutura e funcionamento',
   'Aluguel',
+  'Documentos e licenças',
   'Acessos',
   'Controladoria',
   'Transição contábil',
@@ -94,7 +101,8 @@ var SOBRE = {
   'Outras contratações':            'Autônomos, repasses a médicos e contratos informais.',
   'Estrutura e funcionamento':      'Imóvel, salas, alvarás, AVCB e CNES.',
   'Aluguel':                        'Contrato, valor e para quem é pago.',
-  'Acessos':                        'Certificado digital, procurações e login de prefeitura.',
+  'Documentos e licenças':          'Contrato social, cartão CNPJ, alvarás e certificados — veio do Controle de Licenças.',
+  'Acessos':                        'Certificado digital, procurações e logins de portal. CONTÉM SENHAS.',
   'Controladoria':                  'Controle financeiro, recebimentos, taxas e custos recorrentes.',
   'Transição contábil':             'A saída da contabilidade anterior e a data de início.',
   'Jurídico e adequação societária': 'Alteração contratual, minuta e alvarás hospitalares.',
@@ -348,17 +356,54 @@ var CAMPOS = [
 /* ── Acessos ────────────────────────────────────────────────────────────── */
 {col:'Tipo de certificado digital', s:'Acessos', t:'select', nova:1,
  opts:['','A1 — arquivo no computador','A3 — token ou pen-drive','Não possui','Não sabe']},
-{col:'Validade do certificado digital', s:'Acessos', t:'date', nova:1},
 {col:'Quem está de posse do certificado', s:'Acessos', t:'text', nova:1},
 {col:'Procuração e-CAC',          s:'Acessos', t:'select', nova:1,
  opts:['','Ativa','Solicitada','Não possui','N/A']},
 {col:'Procuração SPE',            s:'Acessos', t:'select', nova:1,
  opts:['','Ativa','Solicitada','Não possui','N/A']},
-{col:'Login da prefeitura',       s:'Acessos', t:'select', nova:1,
- opts:['','Recebido','Pendente','N/A']},
 {col:'Solicitação enviada ao contador', s:'Acessos', t:'select', nova:1,
  opts:['','Sim','Não, direto para o cliente','N/A']},
 {col:'Observações de acessos',    s:'Acessos', t:'textarea', nova:1, full:1},
+
+/* ── Documentos e licenças ─────────────────────────────────────────────────
+   Vieram da planilha "Controle de Licenças", que era separada. A convenção do
+   nome é "Link <o quê>", e o `registro.html` usa exatamente essa convenção para
+   saber que a célula é um DOCUMENTO (e oferecer o botão de enviar arquivo) em
+   vez de um endereço solto — ver DOC_ENDERECOS_PUROS e docEhDocumento lá.
+   Renomear qualquer uma destas tirando o "Link" quebra isso em silêncio. */
+{col:'Link Contrato Social',      s:'Documentos e licenças', t:'text', nova:1, full:1},
+{col:'Link Cartão CNPJ',          s:'Documentos e licenças', t:'text', nova:1, full:1},
+{col:'Link Inscrição Municipal',  s:'Documentos e licenças', t:'text', nova:1, full:1},
+{col:'Link Alvará Sanitário',     s:'Documentos e licenças', t:'text', nova:1, full:1,
+ dica:'a VIGÊNCIA e o escopo deste alvará são respondidos em Atuação empresarial'},
+{col:'Vencimento Alvará Sanitário', s:'Documentos e licenças', t:'date', nova:1},
+{col:'Link Certificado de Licenciamento Integrado', s:'Documentos e licenças', t:'text', nova:1, full:1},
+{col:'Vencimento Certificado de Licenciamento Integrado', s:'Documentos e licenças', t:'date', nova:1},
+{col:'Link Certificado de regularidade CRM PJ', s:'Documentos e licenças', t:'text', nova:1, full:1},
+{col:'Vencimento certificado de regularidade CRM PJ', s:'Documentos e licenças', t:'date', nova:1},
+
+/* ── Acessos que vieram do "Certificados e Acessos" ────────────────────────
+   Esta planilha era separada, e essa separação ERA a proteção: quem não estava
+   nela não via senha nenhuma. Ao virarem colunas do Registro, passaram a ser
+   visíveis para quem abre a ficha. O `sensivel:1` mascara na tela e some da
+   impressão — é conforto, não controle de acesso. O controle continua sendo com
+   quem a planilha e o painel estão compartilhados. */
+{col:'Certificado Digital Link',  s:'Acessos', t:'text', nova:1, full:1},
+{col:'Senha Certificado Digital', s:'Acessos', t:'text', nova:1, sensivel:1},
+{col:'Certificado Digital Responsável Legal', s:'Acessos', t:'text', nova:1,
+ dica:'em nome de quem o certificado foi emitido — diferente de quem está de posse do arquivo'},
+{col:'Certificado Digital Vencimento', s:'Acessos', t:'date', nova:1},
+{col:'Procuração e-CAC Vencimento', s:'Acessos', t:'date', nova:1},
+{col:'Procuração SPE Vencimento', s:'Acessos', t:'date', nova:1},
+{col:'Link Prefeitura',           s:'Acessos', t:'text', nova:1, full:1},
+{col:'Login Prefeitura',          s:'Acessos', t:'text', nova:1},
+{col:'Senha Prefeitura',          s:'Acessos', t:'text', nova:1, sensivel:1},
+{col:'Login Portal Nacional',     s:'Acessos', t:'text', nova:1},
+{col:'Senha Portal Nacional',     s:'Acessos', t:'text', nova:1, sensivel:1},
+{col:'Link CRM',                  s:'Acessos', t:'text', nova:1, full:1},
+{col:'Login CRM',                 s:'Acessos', t:'text', nova:1},
+{col:'Senha CRM',                 s:'Acessos', t:'text', nova:1, sensivel:1},
+{col:'Observações internas (não aparece ao cliente)', s:'Acessos', t:'textarea', nova:1, full:1},
 
 /* ── Controladoria ──────────────────────────────────────────────────────── */
 {col:'Possui controle financeiro', s:'Controladoria', t:'select', nova:1,
@@ -439,6 +484,96 @@ var CAMPOS = [
    criaria duas verdades sobre a mesma coisa — e a que vale é a do formulário,
    que é quem faz a pergunta. */
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   AS OPÇÕES QUE A PLANILHA ACEITA
+   ═══════════════════════════════════════════════════════════════════════════
+
+   A lista acima é o DESENHO. Quem tem a última palavra sobre o que entra numa
+   célula é a validação de dados da própria aba Registro — e as duas divergiram:
+   a validação de "Regime" foi escrita antes de "Lucro Real" existir aqui, e a
+   equipe recebia, ao salvar, a mensagem que ninguém consegue contornar:
+
+     "Os dados inseridos na célula X violam o respectivo conjunto de regras de
+      validação de dados. Insira um destes valores:"
+
+   O Apps Script (`9_Validacoes.gs`) passou a mandar, junto do cadastro, o que
+   cada coluna aceita hoje — em `dados.validacoes`. A fusão é feita aqui, num
+   lugar só, porque quem desenha campo são DUAS páginas (registro.html monta o
+   cadastro inicial, registro-cliente.html monta a ficha) e a regra tem de ser a
+   mesma nas duas; escrita duas vezes, ela divergiria como o resto divergiu.
+
+   A regra: lista ESTRITA na planilha (que recusa) manda — oferecer o que será
+   recusado é justamente o defeito. Regra de aviso, ou coluna sem regra: vale o
+   catálogo, que é o desenho atual. */
+
+/** Normalizador de rótulo — o mesmo do `_regNorm_` do Apps Script. */
+function normCol(s) {
+  return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim().replace(/[?:.]+$/, '');
+}
+
+/**
+ * Indexa `dados.validacoes` por rótulo normalizado. A página chama uma vez, ao
+ * receber o payload, e guarda o resultado.
+ */
+function indexarValidacoes(validacoes) {
+  var m = {};
+  Object.keys(validacoes || {}).forEach(function (col) {
+    var k = normCol(col);
+    if (k && !(k in m)) m[k] = validacoes[col];
+  });
+  return m;
+}
+
+/**
+ * As opções a mostrar na coluna `col`. `padrao` é a lista do catálogo (pode vir
+ * indefinida). `vAtual` é o que já está gravado na célula.
+ *
+ * Devolve { opcoes, estrito, aviso } — `aviso` é o texto a exibir sob o campo
+ * quando a planilha está barrando opções do catálogo. A tela mostra esse aviso
+ * em vez de escondê-lo: é o sinal de que falta rodar o
+ * `registroAplicarValidacoes_()` no Apps Script, e sem ele o colaborador só
+ * descobre que a opção sumiu.
+ */
+function opcoesDe(col, padrao, vAtual, idxValidacoes) {
+  var base = (padrao || []).slice();
+  var reg  = idxValidacoes ? idxValidacoes[normCol(col)] : null;
+  var out  = { opcoes: base, estrito: false, aviso: '' };
+
+  if (reg && reg.opcoes && reg.opcoes.length) {
+    out.opcoes  = reg.opcoes.slice();
+    out.estrito = !!reg.estrito;
+    if (reg.estrito && reg.catalogo_fora && reg.catalogo_fora.length) {
+      out.aviso = 'A planilha só aceita a lista acima. Fora dela, hoje: ' +
+                  reg.catalogo_fora.join(', ') + '.';
+    }
+    if (reg.conflito === 'multi_estrito') {
+      out.aviso = 'A validação desta coluna na planilha recusa mais de uma escolha. ' +
+                  'Salvar com duas ou mais vai falhar até alguém rodar registroAplicarValidacoes_().';
+    }
+  }
+
+  /* A opção vazia (= "não respondido") é do formulário, não da planilha, e a
+     planilha aceita célula vazia com qualquer regra. Se o catálogo tinha uma,
+     ela volta para a frente da lista vinda da planilha. */
+  if ((padrao || [])[0] === '' && out.opcoes[0] !== '') out.opcoes.unshift('');
+
+  /* O que JÁ está gravado na célula nunca desaparece do menu — mesmo fora de
+     qualquer lista. Uma tela que some com o valor atual faz o colaborador
+     acreditar que o campo está vazio, e o primeiro save o apaga de verdade. */
+  var v = String(vAtual == null ? '' : vAtual).trim();
+  if (v && out.opcoes.indexOf(v) < 0) {
+    out.opcoes.push(v);
+    /* Enquanto ele continuar escolhido, nada é gravado e nada falha — só o que
+       MUDA vai para a planilha. Quem trocar e quiser voltar é que vai esbarrar
+       na recusa, e é justo esse o momento em que o aviso precisa estar na tela. */
+    if (out.estrito) out.aviso = 'O valor atual (' + v + ') está fora do que a planilha aceita. ' +
+                                 'Trocar e voltar para ele vai falhar.';
+  }
+
+  return out;
+}
+
 w.B4U_REGISTRO_CAMPOS = {
   ordem: ORDEM,
   sobre: SOBRE,
@@ -446,7 +581,11 @@ w.B4U_REGISTRO_CAMPOS = {
   campos: CAMPOS,
   /* Só as que ainda não existem na planilha, na ordem — é o que o Apps Script
      anexa ao fim da aba. */
-  novas: CAMPOS.filter(function (c) { return c.nova; }).map(function (c) { return c.col; })
+  novas: CAMPOS.filter(function (c) { return c.nova; }).map(function (c) { return c.col; }),
+  /* Fusão catálogo × validação da planilha — ver o bloco logo acima. */
+  normCol: normCol,
+  indexarValidacoes: indexarValidacoes,
+  opcoesDe: opcoesDe
 };
 
 })(window);

@@ -385,6 +385,7 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .fld>label,.fld>.lbl{font-size:11px;font-weight:800;color:var(--ink-2);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fld>label .req,.fld>.lbl .req{color:var(--amber-txt)}
 .fld .cad{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.3px}
+.fld .fdica{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35}
 .fld input,.fld select,.fld textarea{font-family:var(--sans);font-size:13px;padding:8px 10px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);width:100%}
 .fld textarea{resize:vertical;min-height:42px;line-height:1.35}
 .fld select{font-weight:600;cursor:pointer}
@@ -1133,6 +1134,8 @@ const SEC_ORDER_RESERVA=['Identificação','Empresa','Fiscal / Contábil','Depar
    com `sistema:1` vai para HINTS_SISTEMA (aparece na ficha, travado, e nunca no
    cadastro inicial); todo o resto vai para HINTS. */
 const CATALOGO=(typeof window!=='undefined'&&window.B4U_REGISTRO_CAMPOS)||null;
+/* Preenchido em carregar(): rótulo normalizado -> {opcoes,estrito,…}. */
+let VALIDACOES={};
 const HINTS={},HINTS_SISTEMA={};
 if(CATALOGO&&CATALOGO.campos&&CATALOGO.campos.length){
   CATALOGO.campos.forEach(c=>{
@@ -1219,8 +1222,14 @@ function montarCampos(headers,modo){
     if(!edicao&&NOVO_MIN.indexOf(k)<0)return;         // cadastro inicial: só a lista branca
     const hint=dicas[k]||{s:'Outros'};
     if(hint.role)roles[hint.role]=h;
+    /* As opções saem da fusão catálogo × validação da planilha (uma função só,
+       no b4u-registro-campos.js, porque esta página e a ficha precisam da mesma
+       resposta). Sem catálogo carregado — o fallback HINTS_RESERVA —, vale a
+       lista de reserva como sempre valeu. */
+    const fus=(hint.opts&&CATALOGO&&CATALOGO.opcoesDe)?CATALOGO.opcoesDe(h,hint.opts,'',VALIDACOES):null;
     campos.push({s:hint.s||'Outros',col:h,t:hint.t||'text',req:!edicao&&!!hint.req,full:!!hint.full,
-                 opts:hint.opts,ph:hint.ph||'',max:hint.max,up:!!hint.up,ro:!!hint.ro,dica:hint.dica||''});
+                 opts:fus?fus.opcoes:hint.opts,ph:hint.ph||'',max:hint.max,up:!!hint.up,ro:!!hint.ro,
+                 dica:(fus&&fus.aviso)?((hint.dica?hint.dica+' — ':'')+fus.aviso):(hint.dica||'')});
   });
   if(!edicao){
     /* A UF só é inventada quando a planilha ainda não tem a coluna — ver UF_FIELD.
@@ -2246,7 +2255,12 @@ function campoHTML(f,i){
      inteira está no b4u-texto, no topo desta página (o campo numérico do
      navegador recusa o zero à esquerda e devolve o campo vazio). */
   else{inner=`<input id="${id}" data-col="${esc(f.col)}" type="${f.t==='date'?'date':'text'}"${b4uEhIdentificador(f.col)?' inputmode="numeric"':''} ${f.max?`maxlength="${f.max}"`:''} placeholder="${esc(f.ph||'')}">`;}
-  return `<div class="fld ${f.full?'full':''}" data-fld="${esc(f.col)}"><label for="${id}">${esc(f.col)} ${req}</label>${inner}</div>`;
+  /* A `dica` do campo é onde sai o aviso da fusão de opções ("a planilha só
+     aceita a lista acima"). Ela não era desenhada aqui porque nenhum campo do
+     cadastro inicial tinha dica — e um aviso que a tela não mostra é pior que
+     aviso nenhum: some o motivo de a opção ter sumido do menu. */
+  const dica=f.dica?`<div class="fdica">${esc(f.dica)}</div>`:'';
+  return `<div class="fld ${f.full?'full':''}" data-fld="${esc(f.col)}"><label for="${id}">${esc(f.col)} ${req}</label>${inner}${dica}</div>`;
 }
 function renderNovo(){
   const secs=SEC_ORDER.filter(s=>NOVO_CAMPOS.some(f=>f.s===s));
@@ -2625,6 +2639,12 @@ async function carregar(op){
     if(window.B4UShell) B4UShell.usuario({nome:(d.eu&&d.eu.nome)||''});
     COLUNAS=d.colunas||[];
     TRAVADAS=new Set((d.travadas||[]).map(norm));
+    /* O que cada coluna de fato ACEITA hoje, vindo do 9_Validacoes.gs. Sem isto
+       a tela oferecia opção que a planilha recusava, e o save morria com "os
+       dados inseridos violam as regras de validação" — ver o bloco de fusão no
+       b4u-registro-campos.js. Ausente (servidor antigo, ou erro na leitura da
+       planilha): fica {} e tudo segue pelo catálogo, como antes. */
+    VALIDACOES=(CATALOGO&&CATALOGO.indexarValidacoes)?CATALOGO.indexarValidacoes(d.validacoes):{};
     CLIENTES=(d.clientes||[]).map(c=>Object.assign({},c,{id:String(c.id||''),valores:c.valores||{}}));
     mapearColunas();
     calcularCompletude();

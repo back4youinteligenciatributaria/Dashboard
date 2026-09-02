@@ -2468,11 +2468,15 @@ async function salvar(id){
     // avisa baixinho se o backend recusou alguma coluna (espelho do Registro)
     const ignoradas=((r&&r.ignoradas)||[]).filter(Boolean);
     FALHAS.delete(k); INCERTOS.delete(k); marcarFalha(k,false);
-    setSave('ok','Salvo ✓ '+horaAgora()+(ignoradas.length?' · '+ignoradas.length+' campo(s) só de leitura':''),
+    setSave('ok','Salvo ✓ '+horaAgora()+(ignoradas.length?' · '+ignoradas.length+' campo(s) não gravado(s)':''),
       ignoradas.length?('Não gravadas: '+ignoradas.join(', ')):'');
     /* A faixa dentro da ficha diz QUAIS colunas o servidor recusou — o rodapé só
        dá o número, e "1 campo só de leitura" não diz qual foi. */
-    if(ign)ign.innerHTML=ignoradas.length?('Não gravei: <b>'+ignoradas.map(esc).join('</b>, <b>')+'</b> — coluna travada ou que não existe mais no cadastro.'):'';
+    /* Três causas, desde que esta tela virou recorte da aba Registro: coluna
+       espelho (é de outra tela), coluna que sumiu do cadastro, ou valor barrado
+       pela validação de dados da célula. Antes o texto afirmava a primeira, e
+       quem tinha esbarrado na terceira ia procurar cadeado que não existia. */
+    if(ign)ign.innerHTML=ignoradas.length?('Não gravei: <b>'+ignoradas.map(esc).join('</b>, <b>')+'</b> — coluna de outra tela, coluna que saiu do cadastro, ou valor recusado pela validação da planilha.'):'';
     /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé da ficha sai, e o
        Fechar volta a ser Fechar. */
     if(!temPendencia()&&CAD)CAD.aviso(false);

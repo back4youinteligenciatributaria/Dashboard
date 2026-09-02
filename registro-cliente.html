@@ -373,6 +373,12 @@ textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--brand-te
 .roteiro{background:var(--surface-warm);border:1px solid var(--line);border-radius:var(--radius);
          padding:14px 16px;font-size:var(--fs-3);line-height:1.6;white-space:pre-wrap}
 
+.segredo{display:flex;gap:6px}
+.segredo input{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em}
+.segredo .ver{flex:0 0 auto;border:1px solid var(--line-2);background:var(--surface-warm);
+     border-radius:var(--radius-sm);padding:0 9px;font-size:var(--fs-1);font-weight:800;
+     color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.04em}
+.segredo .ver:hover{background:#fff;color:var(--ink)}
 .placa{margin-top:18px;border:1px dashed var(--line-2);background:var(--surface-warm);
        border-radius:var(--radius);padding:12px 14px;font-size:var(--fs-3);line-height:1.5}
 .placa b{display:block;font-size:var(--fs-2);text-transform:uppercase;letter-spacing:.04em;
@@ -409,6 +415,7 @@ textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--brand-te
 @media print{
   body{height:auto;display:block}
   .topo .btn,.nav,.painel,.obs-bt{display:none}
+  .segredo{display:none}   /* senha não vai para o papel */
   .corpo{display:block;overflow:visible}
   .tela{overflow:visible;padding:0}
 }
@@ -532,6 +539,13 @@ function postAcao(obj){
    O CATÁLOGO — as colunas da aba Registro
    ═══════════════════════════════════════════════════════════════════════════ */
 var CAT = window.B4U_REGISTRO_CAMPOS || { ordem:[], sobre:{}, relevancia:{}, campos:[] };
+/* O que cada coluna da aba Registro ACEITA hoje — vem do 9_Validacoes.gs junto
+   do cadastro, indexado por rótulo normalizado. A ficha oferecia a lista do
+   catálogo e a planilha recusava o que não estava na validação DELA; a fusão
+   das duas mora no b4u-registro-campos.js, para esta tela e a de registro
+   darem a mesma resposta. Vazio = servidor antigo ou leitura falhou: vale o
+   catálogo, exatamente como antes. */
+var VALIDACOES = {};
 var PORCOL = {};
 CAT.campos.forEach(function(c){ PORCOL[norm(c.col)] = c; });
 
@@ -1467,6 +1481,11 @@ function partesMulti(v){ return String(v || '').split(/\s*·\s*/).map(function(x
 function campoHTML(c){
   var v = VAL[c.col] == null ? '' : String(VAL[c.col]);
   var ro = !!(c.sistema || c.ro);
+  /* As opções vêm da fusão catálogo × validação da planilha (b4u-registro-campos).
+     Em coluna `multi` o valor atual NÃO entra na conta: ele é a junção por " · "
+     de várias escolhas, e entraria na lista como se fosse uma opção só. */
+  var fus  = (c.opts && CAT.opcoesDe) ? CAT.opcoesDe(c.col, c.opts, c.t === 'multi' ? '' : v, VALIDACOES) : null;
+  var OPTS = fus ? fus.opcoes : (c.opts || []);
   var H = ['<div class="fld' + (c.full || c.t === 'multi' || c.t === 'textarea' ? ' full' : '') + '">'];
   H.push('<label for="f_' + slug(c.col) + '">' + esc(c.col) + '</label>');
 
@@ -1476,28 +1495,40 @@ function campoHTML(c){
                     : 'Coluna mantida pelo sistema.') + '">');
   } else if (c.t === 'select') {
     H.push('<select id="f_' + slug(c.col) + '" data-col="' + esc(c.col) + '">' +
-      (c.opts || ['']).map(function(o){
+      (OPTS.length ? OPTS : ['']).map(function(o){
         return '<option value="' + esc(o) + '"' + (o === v ? ' selected' : '') + '>' + esc(o || '—') + '</option>';
       }).join('') + '</select>');
   } else if (c.t === 'multi') {
     var marc = partesMulti(v);
-    H.push('<div class="mopts" data-multicol="' + esc(c.col) + '">' + (c.opts || []).map(function(o){
+    H.push('<div class="mopts" data-multicol="' + esc(c.col) + '">' + OPTS.map(function(o){
       return '<button type="button" class="mopt' + (marc.indexOf(o) >= 0 ? ' on' : '') + '" data-mv="' + esc(o) + '">' + esc(o) + '</button>';
     }).join('') + '</div>');
     /* O que a equipe digitou na planilha e não casa com nenhuma opção não pode
        sumir da tela só porque a lista mudou: continua editável, e continua sendo
        gravado junto. */
-    var livres = marc.filter(function(x){ return (c.opts || []).indexOf(x) < 0; });
+    var livres = marc.filter(function(x){ return OPTS.indexOf(x) < 0; });
     H.push('<input class="mlivre" type="text" data-mlivre="' + esc(c.col) + '" value="' + esc(livres.join(MULTI_SEP)) +
            '" placeholder="outros, separados por ·">');
   } else if (c.t === 'textarea') {
     H.push('<textarea id="f_' + slug(c.col) + '" data-col="' + esc(c.col) + '">' + esc(v) + '</textarea>');
+  } else if (c.sensivel) {
+    /* Senha. A máscara não protege de ninguém que já abriu a ficha — a planilha
+       guarda em texto puro e quem chegou aqui pode clicar em "mostrar". Ela serve
+       para o caso corriqueiro, que é o que de fato acontece: a tela aberta numa
+       reunião, num projetor, com o cliente do outro lado da mesa. */
+    H.push('<div class="segredo"><input id="f_' + slug(c.col) + '" type="password" autocomplete="off"' +
+           ' data-col="' + esc(c.col) + '" value="' + esc(v) + '">' +
+           '<button type="button" class="ver" data-ver="' + slug(c.col) + '" aria-label="Mostrar ou esconder">mostrar</button></div>');
   } else {
     H.push('<input id="f_' + slug(c.col) + '" type="' + (c.t === 'date' ? 'date' : 'text') + '"' +
            (c.t === 'money' ? ' class="money"' : '') + (c.max ? ' maxlength="' + c.max + '"' : '') +
            ' data-col="' + esc(c.col) + '" value="' + esc(v) + '">');
   }
-  if (c.dica) H.push('<div class="dica">' + esc(c.dica) + '</div>');
+  /* O aviso da fusão ("a planilha só aceita a lista acima") sai junto da dica.
+     Mostrar é o ponto: escondido, o colaborador só vê que a opção sumiu do menu
+     e não tem como saber que falta rodar o registroAplicarValidacoes_(). */
+  var dica = (fus && fus.aviso) ? ((c.dica ? c.dica + ' — ' : '') + fus.aviso) : (c.dica || '');
+  if (dica) H.push('<div class="dica">' + esc(dica) + '</div>');
   H.push('</div>');
   return H.join('');
 }
@@ -1679,6 +1710,14 @@ document.addEventListener('click', function(e){
   }
   var ir = e.target.closest && e.target.closest('[data-ir]');
   if (ir) { e.preventDefault(); ABA = 'diag:' + ir.getAttribute('data-ir'); redesenhar(); return; }
+  var ver = e.target.closest && e.target.closest('[data-ver]');
+  if (ver) {
+    var alvo = document.getElementById('f_' + ver.getAttribute('data-ver'));
+    if (alvo) { var esconder = alvo.type === 'text';
+                alvo.type = esconder ? 'password' : 'text';
+                ver.textContent = esconder ? 'mostrar' : 'esconder'; }
+    return;
+  }
   var ob = e.target.closest && e.target.closest('.obs-bt');
   if (ob) {
     var cxo = document.querySelector('[data-cx="' + ob.getAttribute('data-obs') + '"]');
@@ -1743,6 +1782,7 @@ function carregar(){
   return jsonp(API_URL + '?tipo=registro_equipe&chave=' + encodeURIComponent(chaveAtual()))
     .then(function(d){
       if (d && d.erro) throw new Error(d.erro);
+      VALIDACOES = CAT.indexarValidacoes ? CAT.indexarValidacoes(d.validacoes) : {};
       var alvo = null;
       (d.clientes || []).forEach(function(c){ if (String(c.id) === par('id')) alvo = c; });
       if (!alvo) throw new Error('Não achei o cliente ' + par('id') + ' no Registro.');
@@ -1839,10 +1879,24 @@ function salvar(){
   postAcao({ acao:'diag_salvar', cod:codAtual(), id:CLI.id, cliente:CLI.nome,
              origem:'Ficha do cliente', campos:campos })
     .then(function(d){
-      SUJO = false;
-      Object.keys(campos).forEach(function(k){ ORIG[k] = campos[k]; });
+      /* O que o servidor devolveu em `ignoradas` NÃO foi gravado — quase sempre
+         porque a validação da célula recusou o valor (o 9_Validacoes.gs existe
+         para que isso não aconteça mais, mas uma regra criada à mão amanhã na
+         planilha volta a acontecer). Marcar essas colunas como salvas em ORIG
+         era o pior desfecho possível: a tela dizia "Salvo", a planilha ficava
+         com o valor velho, e o próximo save nem tentava de novo, porque para ele
+         nada tinha mudado. Agora elas continuam pendentes e aparecem por nome. */
+      var ign = d.ignoradas || [], pend = {};
+      ign.forEach(function(k){ pend[k] = true; });
+      Object.keys(campos).forEach(function(k){ if (!pend[k]) ORIG[k] = campos[k]; });
+      SUJO = ign.length > 0;
       var extra = (d.criadas && d.criadas.length) ? ' · ' + d.criadas.length + ' colunas criadas' : '';
-      avisar((d.mensagem || 'Salvo.') + extra, 'ok');
+      if (ign.length) {
+        avisar('Salvei o resto, mas a planilha recusou: ' + ign.join(', ') +
+               '. O valor continua na tela e ainda não está gravado.', 'erro');
+      } else {
+        avisar((d.mensagem || 'Salvo.') + extra, 'ok');
+      }
       soLados();
     })
     .catch(function(e){ avisar('Não gravei: ' + e.message, 'erro'); })

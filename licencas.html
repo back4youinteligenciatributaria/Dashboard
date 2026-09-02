@@ -2449,10 +2449,15 @@ async function salvar(id){
     const r=await postAcao({acao:'licenca_salvar',id:l.id,campos,
       cliente:l.nome_cliente||'',cod:respAtual()});
     respondeu=true;
-    // avisa baixinho se o backend recusou alguma coluna (espelho do Registro)
+    /* Avisa baixinho se o backend recusou alguma coluna. Desde que esta tela
+       virou um RECORTE da aba Registro, "recusada" tem três causas possíveis: a
+       coluna é espelho (pertence a outra tela), sumiu do cadastro, ou a
+       validação de dados da própria célula barrou o valor. As três param aqui, e
+       nenhuma delas é "só de leitura" — dizer isso mandava o colaborador
+       procurar cadeado onde não havia. */
     const ign=(r&&r.ignoradas)||[];
     FALHAS.delete(k); INCERTOS.delete(k); marcarFalha(k,false);
-    setSave('ok','Salvo ✓ '+horaAgora()+(ign.length?' · '+ign.length+' campo(s) só de leitura':''));
+    setSave('ok','Salvo ✓ '+horaAgora()+(ign.length?' · não gravei: '+ign.join(', '):''));
     /* Gravou tudo: o aviso de "tem coisa por gravar" no rodapé da ficha sai e o
        Fechar volta a ser Fechar. */
     if(!temPendencia()&&CAD)CAD.aviso(false);
