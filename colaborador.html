@@ -565,6 +565,43 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
    separa o ícone da seta. */
 .fer-selo+.fer-selo{margin-left:-3px}
 
+/* ---- Personalizar a parede ----
+   O modo de edição é discreto de propósito: quem abre o painel para trabalhar
+   não pode tropeçar nele. Fora do modo, a única diferença na tela é um botão de
+   texto ao lado do título. */
+.sec-tit--acao{display:flex;align-items:center;gap:10px}
+.fer-pers{flex:none;font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.01em;
+  color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:var(--radius-pill);
+  padding:3px 11px;cursor:pointer;text-transform:none;transition:color .14s,border-color .14s,background .14s}
+.fer-pers:hover{color:var(--brand-teal-txt);border-color:var(--brand-teal)}
+.fer-pers.on{color:#fff;background:var(--brand-teal);border-color:var(--brand-teal)}
+.fer-estado{font-size:12px;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
+.fer-estado.ok{color:#1f6b45}
+.fer-estado.bad{color:var(--vermelho)}
+.fer-ajuda{font-size:13px;color:var(--muted);margin:-4px 0 12px}
+.fer-ajuda b{color:var(--ink)}
+/* Card em edição: mesmo tamanho e mesmo lugar do card normal. Encolher ou
+   pontilhar tudo faria a parede piscar de forma diferente da que a pessoa está
+   arrumando — ela precisa ver o resultado, não uma prévia. */
+.fer-card--ed{cursor:grab;border-style:dashed}
+.fer-card--ed:active{cursor:grabbing}
+.fer-card--ed.arrastando{opacity:.42}
+.fer-x{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);
+  background:var(--surface-warm);color:var(--muted);font-size:15px;font-weight:800;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .14s,border-color .14s,background .14s}
+.fer-x:hover{color:var(--vermelho);border-color:var(--vermelho);background:#F8E3DF}
+/* O cartão de adicionar: pontilhado o tempo todo, porque ele não é um atalho
+   para uma tela que existe — é o convite para criar uma. */
+.fer-card--mais{border-style:dashed;background:transparent}
+.fer-card--mais .fer-nome{color:var(--muted)}
+.fer-card--mais:hover .fer-nome{color:var(--ink)}
+.fer-off{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-14px 0 26px}
+.fer-off-tit{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.fer-off-i{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--ink-2);
+  background:var(--surface-warm);border:1px dashed var(--line-2);border-radius:var(--radius-pill);
+  padding:4px 12px;cursor:pointer;transition:color .14s,border-color .14s}
+.fer-off-i:hover{color:var(--brand-teal-txt);border-color:var(--brand-teal)}
+
 /* Status do cliente: chip de destaque, três estados (Ativo / Em inativação / Inativo). */
 .info-chips{align-items:center;gap:7px}
 .st-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.01em;
@@ -844,14 +881,25 @@ function b4uParaPlanilha(valor,coluna){
 </div>
 
 <div class="wrap" id="wrap" hidden>
-  <!-- FERRAMENTAS DA EQUIPE — é o que a equipe mais usa, então vem primeiro -->
-  <div class="sec-tit">Ferramentas da equipe</div>
-  <div class="fer-topo">
+  <!-- A PAREDE — as MESMAS entradas do menu lateral, na divisão dele.
+       Quem escreve a lista é o b4u-shell.js; esta tela só desenha e deixa cada
+       pessoa esconder e reordenar o que é dela (aba "Atalhos"). -->
+  <div class="sec-tit sec-tit--acao">
+    <span>Ferramentas da equipe</span>
+    <button type="button" class="fer-pers" id="btn-personalizar" aria-pressed="false">Personalizar</button>
+    <span class="fer-estado" id="fer-estado" role="status" aria-live="polite"></span>
+  </div>
+  <div class="fer-topo" id="fer-topo">
     <input class="busca-fer" id="busca-fer" type="search" autocomplete="off"
            placeholder="Buscar ferramenta…  ( / para focar · ex.: licença, e-CAC, contato)">
     <span class="fer-cnt" id="fer-cnt"></span>
   </div>
+  <div class="fer-ajuda" id="fer-ajuda" hidden>Arraste para mudar de lugar, ou toque no
+    <b>&times;</b> para tirar o card do seu painel. Só muda para você.</div>
   <div class="fer-grid" id="ferramentas"></div>
+  <div class="sec-tit" id="vis-tit">Visualizações de dados</div>
+  <div class="fer-grid" id="visualizacoes"></div>
+  <div class="fer-off" id="fer-off" hidden></div>
   <div class="fer-vazio" id="fer-vazio" hidden>Nenhuma ferramenta com esse termo.</div>
 
   <!-- PLANILHAS CENTRAIS — atalho para as planilhas cruas, recolhido -->
@@ -1166,98 +1214,41 @@ function fecharOutros(){
    foi tapado trocando tudo por UM link sem código: o servidor já sabe quem entrou
    pela chave do dia e devolve a carteira dessa pessoa (Principal vê todas).
    O que sobrou foi um menu suspenso com um item só dentro — dois cliques e uma
-   animação para chegar onde os outros oito cards chegam com um. Agora ele é um
-   card comum, na lista FERRAMENTAS, apontando direto para `restituicao`. */
-/* ---- Ferramentas da equipe: lista única, renderizada e filtrável ----
-   `alias` é só para a busca: são as palavras que a pessoa realmente digita
-   quando está procurando aquela ferramenta (e não o nome oficial dela). */
-/* Declarados ANTES do FERRAMENTAS de propósito: o array lá embaixo usa estas
-   listas no próprio literal, e `const` não é içado — declarar depois derruba a
-   página inteira com ReferenceError antes de qualquer coisa desenhar. */
-const AREAS_OPERACAO=['fiscal','contabil','pessoal','societario'];
-const AREAS_TODAS=['fiscal','contabil','pessoal','societario','equiparacao','financeiro','juridico'];
-const AREAS_CARTEIRA=['fiscal','contabil','pessoal','societario','financeiro'];
+   animação para chegar onde os outros oito cards chegam com um. Virou card
+   comum, e em 09/2026 nem isso: a tela virou um recorte do Registro, e a parede
+   deixou de ter lista própria — ela desenha o que o menu lateral desenha. */
+/* ---- A PAREDE: o MESMO que o menu lateral --------------------------------
+ *
+ * Até 09/2026 esta tela tinha a lista dela, com nove cards escritos à mão. Dois
+ * apontavam para telas que tinham saído do menu (Documentos e acessos,
+ * Equiparação viraram recortes ocultos) e nenhum conhecia as visualizações —
+ * que são justamente as telas que a equipe passou a abrir todo dia. Card e menu
+ * discordando sobre o que existe é o pior tipo de desatualização: quem lê a
+ * parede acredita nela e clica.
+ *
+ * Agora a lista vem de `B4UShell.itensEquipe()`, a MESMA que desenha a barra
+ * lateral. O que continua morando aqui é só o que a barra não tem: a descrição
+ * do balão, os apelidos de busca e os selos. Tudo casado por ID — no dia em que
+ * um item mudar de nome ou de endereço, a parede acompanha sozinha, e o pior que
+ * pode acontecer é um card ficar sem descrição.
+ *
+ * A ÁREA DEIXOU DE FILTRAR CARD. Antes, quem não tinha `juridico` não via o card
+ * do Jurídico — mas via a entrada dele na barra lateral, o que fazia as duas
+ * listas discordarem por um motivo que ninguém enxergava. E o argumento contra
+ * já estava escrito nesta mesma tela: o card é atalho, não fechadura; quem barra
+ * de verdade é o `exigirAreaEquipe_` no servidor, e ele responde dizendo qual
+ * área falta. Quem não usa uma tela agora tem coisa melhor do que um card que
+ * some sozinho: o botão Personalizar, que tira o card da parede DELA e só dela.
+ */
 
-/* `ic` é o ícone já montado: cada card leva EXATAMENTE o mesmo desenho que o
-   item do menu lateral que abre a mesma página (b4u-shell.js, MENU.equipe).
-   Card e menu apontando para o mesmo lugar com dois símbolos diferentes é o tipo
-   de detalhe que faz a pessoa achar que são duas telas. */
-const FERRAMENTAS=[
-  {id:'fp-registro',      nome:'Registros de clientes',         url:'registro',          ic:icone('pessoal'), area:AREAS_OPERACAO,
-   desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
-   alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj',
-   badge:seloRegistro},
-  /* Primeira da lista de propósito: é a tela que se abre de manhã, antes de
-     saber qual cliente vai dar trabalho hoje. AREAS_TODAS porque não existe área
-     que não tenha o que combinar na daily. */
-  {id:'fp-daily',         nome:'Tarefas Daily',                 url:'daily',             ic:icone('calendario'), area:AREAS_TODAS,
-   desc:'O que cada um tem para hoje, com histórico e notas por tarefa.',
-   alias:'daily tarefa tarefas diaria pendencia pendencias prazo atrasado historico nota anotacao combinado',
-   badge:seloDaily},
-  /* Dois cartões viraram um em 09/2026: as telas de Certificados e de Licenças
-     são a mesma página agora (documentos.html), com as duas seções dentro. A
-     `area` saiu porque LER passou a ser de toda a equipe — quem atende o cliente
-     precisa saber se o alvará dele venceu, mesmo sem ser do societário. Gravar
-     não mudou: continua cada seção com o seu porteiro, no servidor.
-     Os dois `alias` foram somados de propósito: quem procurava "alvará" e quem
-     procurava "e-CAC" tem de continuar achando, e ninguém vai adivinhar que os
-     dois assuntos passaram a morar no mesmo cartão. */
-  {id:'fp-documentos',    nome:'Documentos e acessos',          url:'documentos',        ic:icone('doc'), area:AREAS_TODAS,
-   desc:'Contrato social, alvarás e licenças; certificado digital, procurações e portais.',
-   alias:'licenca alvara sanitario crm pj cli licenciamento integrado regularidade cnes '
-        +'certificado digital procuracao e-cac ecac spe vencimento responsavel legal senha portal',
-   badge:seloCertificados},
-  {id:'fp-contatos',      nome:'Contatos',                      url:'contatos-equipe',   ic:icone('chat'), area:AREAS_TODAS,
-   desc:'Quem fala pelo cliente: e-mail, telefone, papel e permissão de acesso.',
-   alias:'contato email e-mail telefone acesso permissao papel principal secundario',
-   badge:seloContatos},
-  {id:'fp-societario',    nome:'Processos Paralegal',           url:'societario-equipe', ic:icone('livro'), area:'societario',
-   desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
-   alias:'societario paralegal mestra alteracao contratual junta etapa processo protocolo andamento finalizado',
-   badge:seloProcessos},
-  /* Restituição VOLTOU A SER UM CARD COMUM. Ele era um menu suspenso com um item
-     só dentro — dois cliques e uma animação para chegar onde os outros oito
-     cards chegam com um. O dropdown fazia sentido quando havia uma lista de
-     colaboradores ali; desde que o link virou um só (o servidor resolve a
-     carteira pela chave de quem entrou), a caixa que abria só tinha o que já
-     estava escrito na frente dela. */
-  /* Rótulo corrigido em 02/09/2026 (a tela virou o recorte `equiparacao` do
-     Registro). O `id` e a `url` ficaram: 'restituicao' é o endereço de fora, e
-     `restituicao.html` redireciona. "restituicao" segue no `alias` porque é a
-     palavra que metade da equipe ainda digita para achar isto. */
-  {id:'fp-restituicao',   nome:'Equiparação',                   url:'restituicao',       ic:icone('calendario'), area:'equiparacao',
-   desc:'A esteira de cada cliente: estratégia, relatórios, apuração e protocolo — com prazos e responsável.',
-   alias:'restituicao equiparacao controle relatorio adequacao protocolo fabiano kareane mfbd'},
-  /* Jurídico entra DEPOIS da Equiparação de propósito: é a continuação dela.
-     O caso nasce quando a equiparação termina o relatório e o cliente decide ir
-     para o mandado de segurança — quem trabalha nos dois lê a parede nessa
-     ordem. Ícone de balança, o mesmo do menu lateral. */
-  {id:'fp-juridico',      nome:'Jurídico',                      url:'juridico',          ic:icone('balanca'), area:'juridico',
-   desc:'Os mandados de segurança da equiparação: fase, prazos e o que cada caso está devendo.',
-   alias:'juridico mandado seguranca ms processo liminar sentenca acordao transito habilitacao advogado protocolo tribunal trf pje vara',
-   badge:seloJuridico},
-  {id:'fp-ativos',        nome:'Clientes ativos',               url:'clientes-ativos',   ic:icone('planilha'), area:AREAS_CARTEIRA,
-   desc:'Quantos clientes ativos em cada competência, mês a mês.',
-   alias:'ativos competencia mes calendario quantos clientes',
-   badge:seloAtivos},
-  {id:'fp-comercial',     nome:'Comercial',                     url:'comercial',         ic:icone('grafico'), area:'comercial',
-   desc:'Material de proposta, simulador e calculadora para o comercial.',
-   alias:'comercial material materiais proposta marketing simulador calculadora'}
-];
 /* Quem está usando o painel, com as permissões da aba Colaboradores. Vem no
    payload de tipo=equipe, montado FORA do cache (o cache é por rota, não por
    pessoa). */
 let EU=null;
 
-/* Se a ferramenta pede uma área, a pessoa precisa tê-la — ou ser Principal.
-   Sem `EU` (backend antigo, ou payload de cache anterior ao deploy) libera: o
-   card é atalho, não fechadura. Quem barra de verdade é o exigirAreaEquipe_ no
-   servidor, e ele responde dizendo qual área falta — bem melhor do que um card
-   que some sem explicação. */
-/* `a` pode ser uma área ou uma LISTA — lista é "qualquer uma serve". A maior
-   parte destas telas não é de uma área só: o cadastro de clientes interessa a
-   fiscal, contábil, pessoal e societário do mesmo jeito, e exigir uma área
-   específica obrigaria a marcar Fiscal em quem não é do fiscal. */
+/* Continua servindo ao dossiê do cliente (as quatro áreas do painel de um
+   cliente), que é permissão de LEITURA de dado, não de atalho.
+   `a` pode ser uma área ou uma LISTA — lista é "qualquer uma serve". */
 function podeArea(a){
   if(!a) return true;
   if(!EU) return true;
@@ -1266,21 +1257,313 @@ function podeArea(a){
   return (Array.isArray(a)?a:[a]).some(x=>!!areas[x]);
 }
 
-function pintarFerramentas(){
-  const cx=document.getElementById('ferramentas'); if(!cx) return;
-  const termo=normTxt((document.getElementById('busca-fer')||{}).value||'');
-  const lista=FERRAMENTAS.filter(f=>podeArea(f.area))
-    .filter(f=>!termo||normTxt(f.nome+' '+(f.desc||'')+' '+(f.alias||'')).includes(termo));
-  cx.innerHTML=lista.map(f=>{
-    return `<a class="fer-card" id="${f.id}" href="${esc(comChave(f.url))}" data-dica="${esc(f.desc||'')}">
-      <span class="fer-cab"><span class="fer-ic">${f.ic}</span>${selosHTML(f)}<span class="fer-arw">›</span></span>
+/* O que a barra lateral não sabe dizer, por id do MENU.equipe.
+   `alias` é só para a busca: são as palavras que a pessoa realmente digita
+   quando procura aquela ferramenta, e não o nome oficial dela. */
+const FER_META={
+  registro:{desc:'Cadastrar cliente novo e manter CNPJ, regime e dados da empresa.',
+    alias:'cadastro cadastrar cliente novo onboarding registro dados empresa cnpj ficha',
+    badge:seloRegistro},
+  daily:{desc:'O que cada um tem para hoje, com histórico e notas por tarefa.',
+    alias:'daily tarefa tarefas diaria pendencia pendencias prazo atrasado historico nota anotacao combinado',
+    badge:seloDaily},
+  ativos:{desc:'Quantos clientes ativos em cada competência, mês a mês.',
+    alias:'ativos competencia mes calendario quantos clientes',
+    badge:seloAtivos},
+  contatos:{desc:'Quem fala pelo cliente: e-mail, telefone, papel e permissão de acesso.',
+    alias:'contato email e-mail telefone acesso permissao papel principal secundario',
+    badge:seloContatos},
+  /* O card se chamava "Processos Paralegal" e a barra lateral, "Societário".
+     Ganhou a barra — duas telas com dois nomes eram duas telas na cabeça de quem
+     olha. "paralegal" e "mestra" ficam no apelido para quem procura pelo nome
+     antigo continuar achando. */
+  societario:{desc:'Andamento das alterações contratuais: etapas, protocolo e responsável.',
+    alias:'societario paralegal mestra alteracao contratual junta etapa processo protocolo andamento finalizado',
+    badge:seloProcessos},
+  juridico:{desc:'Os mandados de segurança da equiparação: fase, prazos e o que cada caso está devendo.',
+    alias:'juridico mandado seguranca ms processo liminar sentenca acordao transito habilitacao advogado protocolo tribunal trf pje vara',
+    badge:seloJuridico},
+  comercial:{desc:'Material de proposta, simulador e calculadora para o comercial.',
+    alias:'comercial material materiais proposta marketing simulador calculadora'}
+};
+
+/* Apelidos e selo de itens que NÃO estão no MENU.equipe — visualizações e
+   recortes, que nascem sem descrição nenhuma. Casados pelo NOME normalizado,
+   porque o id de uma visualização é sorteado (`v-7298`) e não diz nada a
+   ninguém. Quem renomear a visualização faz a linha parar de valer, e o preço é
+   a busca por "alvará" deixar de achar aquele card — não o card sumir. */
+const ALIAS_EXTRA={
+  'documentos, licencas e acessos':'licenca alvara sanitario crm cnes licenciamento regularidade '
+    +'certificado digital procuracao e-cac ecac vencimento responsavel legal senha portal acesso',
+  'fiscal':'fiscal imposto apuracao regime simples presumido nota',
+  'departamento pessoal':'pessoal folha funcionario admissao rescisao esocial ferias',
+  'contabil':'contabil balancete transicao cobranca honorario',
+  'societario':'societario contrato social junta alteracao quadro socio',
+  'controladoria':'controladoria financeiro cobranca maquininha atuacao diagnostico'
+};
+const BADGE_POR_NOME={
+  'documentos, licencas e acessos':seloCertificados
+};
+
+/* A lista do menu (null enquanto o shell não responde) e a parede desta pessoa.
+   As duas chegam por rede e em ordens imprevisíveis; `pintarFerramentas()` é
+   chamada por qualquer uma das duas e desenha com o que já tem. */
+let ITENS=null;
+let PREF={escondidos:[],ordem:[]};
+let MODO_EDITAR=false;
+
+function icShell(n){
+  return (window.B4UShell && B4UShell.icone) ? B4UShell.icone(n) : icone(n);
+}
+
+/* Item do menu + o que esta tela sabe sobre ele. */
+function comMeta(it){
+  const m=FER_META[it.id]||{};
+  const n=normTxt(it.rot);
+  return {
+    id:it.id, nome:it.rot, href:it.href, tipo:it.tipo, ic:icShell(it.ic),
+    desc:m.desc||it.sobre||'',
+    alias:(m.alias||'')+' '+(ALIAS_EXTRA[n]||''),
+    badge:m.badge||BADGE_POR_NOME[n]||null
+  };
+}
+
+/* A ordem escolhida vence; quem não está nela fica depois, na ordem do menu.
+   Item novo (uma visualização criada hoje) entra no fim em vez de sumir — que é
+   o que aconteceria se a lista gravada fosse tratada como a lista inteira. */
+function ordenarParede(l){
+  const o=PREF.ordem||[];
+  return l.map((x,i)=>({x,i})).sort((a,b)=>{
+    const ia=o.indexOf(a.x.id), ib=o.indexOf(b.x.id);
+    if(ia<0&&ib<0) return a.i-b.i;
+    if(ia<0) return 1;
+    if(ib<0) return -1;
+    return ia-ib;
+  }).map(p=>p.x);
+}
+
+/* Os dois blocos, na mesma divisão da barra lateral. O "Painel da equipe" sai:
+   é ESTA tela, e um card que recarrega a página em que a pessoa já está é o
+   único card garantidamente inútil da parede. */
+function paredeListas(){
+  const it=ITENS||{fixos:[],recortes:[],vis:[]};
+  return {
+    fer: ordenarParede([].concat(
+           (it.fixos||[]).filter(f=>f.id!=='painel'),
+           (it.recortes||[])).map(comMeta)),
+    vis: ordenarParede((it.vis||[]).map(comMeta))
+  };
+}
+
+function cardHTML(f){
+  const selo=selosHTML(f);
+  if(MODO_EDITAR){
+    /* Vira <div>: em modo de edição um <a> levaria a pessoa embora no primeiro
+       clique errado, e ela voltaria para achar a parede como estava. */
+    return `<div class="fer-card fer-card--ed" draggable="true" data-id="${esc(f.id)}"
+      title="Arraste para mudar de lugar">
+      <span class="fer-cab"><span class="fer-ic">${f.ic}</span>${selo}
+        <button type="button" class="fer-x" data-esconder="${esc(f.id)}"
+          aria-label="Tirar ${esc(f.nome)} do meu painel" title="Tirar do meu painel">&times;</button></span>
       <span class="fer-nome">${esc(f.nome)}</span>
-    </a>`;
-  }).join('');
-  const vazio=document.getElementById('fer-vazio'); if(vazio) vazio.hidden=lista.length>0;
+    </div>`;
+  }
+  return `<a class="fer-card" data-id="${esc(f.id)}" href="${esc(f.href)}" data-dica="${esc(f.desc||'')}">
+    <span class="fer-cab"><span class="fer-ic">${f.ic}</span>${selo}<span class="fer-arw">&rsaquo;</span></span>
+    <span class="fer-nome">${esc(f.nome)}</span>
+  </a>`;
+}
+
+function cardNovaVis(){
+  const base=(ITENS&&ITENS.novaVis)||comChave('b4u-recorte');
+  return `<a class="fer-card fer-card--mais" href="${esc(base)}"
+    data-dica="Escolher uma visualização pública ou montar a sua, coluna por coluna.">
+    <span class="fer-cab"><span class="fer-ic">${icShell('mais')}</span><span class="fer-arw">&rsaquo;</span></span>
+    <span class="fer-nome">Adicionar visualização</span>
+  </a>`;
+}
+
+function pintarFerramentas(){
+  const cxF=document.getElementById('ferramentas'); if(!cxF) return;
+  const cxV=document.getElementById('visualizacoes');
+  /* Buscar e reordenar ao mesmo tempo não faz sentido: a ordem que a pessoa
+     arrasta com o filtro ligado é a ordem de três cards, não a da parede. */
+  const termo=MODO_EDITAR?'':normTxt((document.getElementById('busca-fer')||{}).value||'');
+  const off=PREF.escondidos||[];
+  const listas=paredeListas();
+  const visivel=x=>off.indexOf(x.id)<0;
+  const casa=x=>!termo||normTxt(x.nome+' '+x.desc+' '+x.alias).includes(termo);
+
+  const lf=listas.fer.filter(visivel).filter(casa);
+  const lv=listas.vis.filter(visivel).filter(casa);
+
+  cxF.innerHTML=lf.map(cardHTML).join('');
+  if(cxV) cxV.innerHTML=lv.map(cardHTML).join('') + (termo?'':cardNovaVis());
+
+  /* O título das visualizações só entra se houver o que pôr embaixo dele — a
+     mesma regra "seção sem item não aparece" do menu lateral. O cartão de
+     adicionar conta como item: ele é a resposta para quem ainda não tem
+     nenhuma. */
+  const tv=document.getElementById('vis-tit');
+  if(tv) tv.hidden = !!termo && !lv.length;
+  if(cxV) cxV.hidden = !!termo && !lv.length;
+
+  const total=lf.length+lv.length;
+  const vazio=document.getElementById('fer-vazio'); if(vazio) vazio.hidden=total>0;
   const cnt=document.getElementById('fer-cnt');
-  const totalVisivel=FERRAMENTAS.filter(f=>podeArea(f.area)).length;
-  if(cnt) cnt.textContent = termo ? lista.length+' de '+totalVisivel : '';
+  const todos=listas.fer.filter(visivel).length+listas.vis.filter(visivel).length;
+  if(cnt) cnt.textContent = termo ? total+' de '+todos : '';
+  pintarEscondidos();
+}
+
+/* Os escondidos, para trazer de volta. Só no modo de edição: fora dele, uma
+   fileira do que a pessoa tirou é exatamente o que ela pediu para não ver. */
+function pintarEscondidos(){
+  const cx=document.getElementById('fer-off'); if(!cx) return;
+  const listas=paredeListas();
+  const todos=[].concat(listas.fer,listas.vis);
+  /* Id gravado que não casa com item nenhum (uma visualização apagada por quem
+     a criou) simplesmente não é desenhado. Ele continua na linha da pessoa sem
+     fazer mal — e volta a valer sozinho se a tela voltar. */
+  const off=(PREF.escondidos||[]).map(id=>todos.filter(x=>x.id===id)[0]).filter(Boolean);
+  cx.hidden=!MODO_EDITAR||!off.length;
+  if(cx.hidden){ cx.innerHTML=''; return; }
+  cx.innerHTML='<span class="fer-off-tit">Fora do seu painel</span>'+
+    off.map(f=>`<button type="button" class="fer-off-i" data-mostrar="${esc(f.id)}"
+      title="Trazer de volta">+ ${esc(f.nome)}</button>`).join('');
+}
+
+/* ---- Personalizar: esconder, trazer de volta, arrastar -------------------
+   Grava no SERVIDOR (aba "Atalhos", uma linha por pessoa) e não no navegador:
+   o acesso é por código do dia e a mesma pessoa entra do computador da mesa, de
+   casa e do celular. Preferência de navegador seria uma parede diferente em cada
+   aparelho — e a pessoa acharia que o sistema esqueceu. */
+function estadoParede(txt,cls){
+  const e=document.getElementById('fer-estado'); if(!e) return;
+  e.textContent=txt||'';
+  e.className='fer-estado'+(cls?' '+cls:'');
+}
+
+/* A ordem que está na tela agora. Só o que está VISÍVEL: quem foi escondido
+   perde o lugar e, ao voltar, volta para o fim do seu bloco. É previsível e cabe
+   numa frase — guardar um lugar invisível faria o card reaparecer no meio da
+   parede sem que ninguém tivesse pedido. */
+function ordemDaTela(){
+  const ids=[];
+  ['ferramentas','visualizacoes'].forEach(function(id){
+    const cx=document.getElementById(id); if(!cx) return;
+    Array.prototype.forEach.call(cx.querySelectorAll('[data-id]'),function(c){
+      if(c.dataset.id) ids.push(c.dataset.id);
+    });
+  });
+  return ids;
+}
+
+let paredeTimer=null;
+function agendarSalvarParede(){
+  PREF.ordem=ordemDaTela();
+  clearTimeout(paredeTimer);
+  estadoParede('a guardar…');
+  /* Espera antes de gravar: esconder três cards seguidos são três cliques em
+     dois segundos, e três gravações onde uma resolve. */
+  paredeTimer=setTimeout(salvarParede,700);
+}
+function salvarParede(){
+  const u=API_URL+'?acao=atalhos_salvar&chave='+encodeURIComponent(chaveAtual())
+        +'&escondidos='+encodeURIComponent((PREF.escondidos||[]).join(','))
+        +'&ordem='+encodeURIComponent((PREF.ordem||[]).join(','));
+  jsonp(u).then(d=>{
+    if(d&&d.erro) throw new Error(d.erro);
+    estadoParede('guardado','ok');
+    setTimeout(()=>{ if(!paredeTimer) estadoParede(''); },2500);
+  }).catch(()=>estadoParede('não consegui guardar — tente de novo','bad'));
+}
+
+function modoEditar(lig){
+  MODO_EDITAR=!!lig;
+  const bt=document.getElementById('btn-personalizar');
+  if(bt){
+    bt.textContent=MODO_EDITAR?'Pronto':'Personalizar';
+    bt.setAttribute('aria-pressed',MODO_EDITAR?'true':'false');
+    bt.classList.toggle('on',MODO_EDITAR);
+  }
+  const topo=document.getElementById('fer-topo');
+  if(topo) topo.hidden=MODO_EDITAR;         // buscar e reordenar não convivem
+  const aj=document.getElementById('fer-ajuda');
+  if(aj) aj.hidden=!MODO_EDITAR;
+  document.body.classList.toggle('parede-ed',MODO_EDITAR);
+  if(MODO_EDITAR) estadoParede('');
+  pintarFerramentas();
+}
+
+/* Arrasto nativo, um ouvinte por grade e só uma vez: a grade sobrevive a cada
+   repintura (é o innerHTML dela que troca), então religar a cada pintura
+   empilharia ouvintes até o arrasto disparar cinco vezes. */
+function ligarArrasto(cx){
+  if(!cx||cx.dataset.arrasto) return;
+  cx.dataset.arrasto='1';
+  let origem=null;
+  cx.addEventListener('dragstart',e=>{
+    const c=e.target.closest?e.target.closest('.fer-card--ed'):null;
+    if(!c) return;
+    origem=c; c.classList.add('arrastando');
+    if(e.dataTransfer){ e.dataTransfer.effectAllowed='move';
+      try{e.dataTransfer.setData('text/plain',c.dataset.id||'');}catch(_){} }
+  });
+  cx.addEventListener('dragend',()=>{
+    if(origem) origem.classList.remove('arrastando');
+    origem=null;
+  });
+  cx.addEventListener('dragover',e=>{
+    /* Só reordena DENTRO da mesma grade. Arrastar uma ferramenta para o bloco
+       das visualizações misturaria as duas listas, e o bloco perderia o sentido
+       que o título dele promete. */
+    if(!origem||!cx.contains(origem)) return;
+    e.preventDefault();
+    const alvo=e.target.closest?e.target.closest('.fer-card--ed'):null;
+    if(!alvo||alvo===origem||!cx.contains(alvo)) return;
+    const r=alvo.getBoundingClientRect();
+    cx.insertBefore(origem,(e.clientX-r.left)>r.width/2?alvo.nextSibling:alvo);
+  });
+  cx.addEventListener('drop',e=>{ e.preventDefault(); agendarSalvarParede(); });
+}
+
+function ligarParede(){
+  const bt=document.getElementById('btn-personalizar');
+  if(bt) bt.addEventListener('click',()=>modoEditar(!MODO_EDITAR));
+  ligarArrasto(document.getElementById('ferramentas'));
+  ligarArrasto(document.getElementById('visualizacoes'));
+  document.addEventListener('click',e=>{
+    const x=e.target.closest?e.target.closest('[data-esconder]'):null;
+    if(x){
+      e.preventDefault();
+      const id=x.getAttribute('data-esconder');
+      if((PREF.escondidos||[]).indexOf(id)<0) PREF.escondidos=(PREF.escondidos||[]).concat([id]);
+      pintarFerramentas(); agendarSalvarParede(); return;
+    }
+    const v=e.target.closest?e.target.closest('[data-mostrar]'):null;
+    if(v){
+      e.preventDefault();
+      const id=v.getAttribute('data-mostrar');
+      PREF.escondidos=(PREF.escondidos||[]).filter(k=>k!==id);
+      pintarFerramentas(); agendarSalvarParede();
+    }
+  });
+}
+
+/* As duas chamadas da parede. Best-effort as duas: sem o shell a parede fica
+   vazia com o recado; sem as preferências ela aparece inteira, na ordem do
+   menu, que é exatamente como ela nasce para quem nunca personalizou. */
+function carregarParede(){
+  if(window.B4UShell && B4UShell.itensEquipe){
+    B4UShell.itensEquipe(function(d){ ITENS=d||null; pintarFerramentas(); });
+  }
+  jsonp(API_URL+'?tipo=atalhos_meus&chave='+encodeURIComponent(chaveAtual()))
+    .then(d=>{
+      if(!d||d.erro) return;
+      PREF={escondidos:d.escondidos||[],ordem:d.ordem||[]};
+      pintarFerramentas();
+    }).catch(()=>{});
 }
 
 /* Os selos de um card.
@@ -2363,7 +2646,9 @@ function abrirPainel(){
   const url=lerURL();               // a visão vem do endereço (C.10)
   const bf=document.getElementById('busca-fer');
   if(bf) bf.value=url.fer;           // antes de pintar: o filtro já entra valendo
-  pintarFerramentas();              // ferramentas primeiro — é o que a equipe usa no dia a dia
+  pintarFerramentas();              // desenha o que já se sabe: nada, e o vazio some quando a rede chega
+  ligarParede();                    // ouvintes uma vez só — a grade sobrevive às repinturas
+  carregarParede();                 // o menu (shell) e a parede desta pessoa (servidor)
   if(bf) bf.addEventListener('input',()=>{pintarFerramentas();sincronizarURL();});
   const bc=$busca(); if(bc) bc.value=url.q;
   ligarDropCentrais();
@@ -2474,8 +2759,8 @@ document.addEventListener('keydown',e=>{
    A portaria continua fazendo o que veio fazer: o que ela guarda são os 11
    endereços de planilha interna e a lista de clientes, e esses só chegam depois
    do sim da API. O menu não acrescenta nada a isso — ele lista nomes de página
-   que já estão escritos neste mesmo arquivo (FERRAMENTAS) e no b4u-shell.js,
-   ambos servidos ao navegador. Quem barra de verdade é cada página no servidor.
+   que já estão escritos no b4u-shell.js, servido ao navegador do mesmo jeito.
+   Quem barra de verdade é cada página no servidor.
    Sem `contexto`: aqui, neste ponto do arquivo, ainda não se sabe o nome de quem
    entrou — ele vem no `eu` do payload da equipe, e o boot() só é chamado depois
    desta linha. Um rótulo inventado seria pior que bloco nenhum. (Quem mostra o

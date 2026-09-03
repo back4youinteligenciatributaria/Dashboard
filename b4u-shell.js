@@ -874,6 +874,11 @@
    * para quem tem uma empresa só. Ver _PATCH-BACKEND-EMPRESAS.md. */
 
   var MENU_ITENS = null;      // itens do perfil em uso, para achar a área da página atual
+  /* O gerador de href da página que montou o menu. Guardado porque a parede do
+     painel do colaborador (`itensEquipe`) precisa dos MESMOS endereços que o
+     menu escreveu — reconstruí-los lá daria dois links para a mesma tela, e o
+     dia em que um deles mudasse ninguém descobriria pelo card. */
+  var LINK_ATUAL = null;
 
   /** #ID-SENHAEMPRESA-SENHACONTATO -> {id, codigo}. Mesma leitura que as páginas fazem. */
   function acessoAtual() {
@@ -1241,6 +1246,7 @@
       var itens = MENU[perfil] || [];
       MENU_ITENS = itens;                 // trocarPara() descobre por aqui qual área é a página atual
       var link = typeof op.link === 'function' ? op.link : function (p) { return p; };
+      LINK_ATUAL = link;
       var ctx = op.contexto || {};
       var disp = op.disp || null;
 
@@ -1466,6 +1472,60 @@
      *  propósito — trocar o menu debaixo do cursor de quem está no meio de um
      *  clique é o defeito que a comparação de HTML da `visbar` já teve de
      *  consertar uma vez. */
+    /** A MESMA lista que o menu da equipe oferece, para quem precisa desenhá-la
+     *  em outro lugar. Hoje quem pede é a parede de cards do painel do
+     *  colaborador.
+     *
+     *  Chama de volta com `{fixos, recortes, vis}` — cada item
+     *  `{id, rot, ic, href, tipo}`, já com a chave do dia no href e já filtrado
+     *  pelos porteiros (recortes e visualizações vêm do servidor; os fixos são
+     *  o MENU.equipe, que não tem área).
+     *
+     *  POR QUE UMA FUNÇÃO E NÃO UMA CÓPIA DA LISTA: a parede tinha a dela,
+     *  escrita à mão, e em 09/2026 ela apontava para duas telas que já não
+     *  existiam no menu. Card e menu discordando sobre o que existe é o tipo de
+     *  erro que só aparece para quem clica — e a pessoa acredita no card.
+     *
+     *  `id` é a identidade que a parede grava nas preferências de quem está
+     *  olhando: o id do menu para os fixos, `r:<id>` e `v:<id>` para os
+     *  dinâmicos. Prefixo porque um recorte `fiscal` e uma visualização `fiscal`
+     *  são coisas diferentes, e sem ele esconder um esconderia o outro.
+     *
+     *  Se a rede não responder, volta só com os fixos: parede curta é melhor do
+     *  que parede que promete tela que não abre. */
+    itensEquipe: function (pronto) {
+      var link = LINK_ATUAL || function (p) { return p; };
+      var fixos = (MENU.equipe || []).filter(function (it) { return !it.sec && it.id; })
+        .map(function (it) {
+          return { id: it.id, rot: it.rot, ic: it.ic, pag: it.pag,
+                   href: link(it.pag), tipo: 'fixo' };
+        });
+
+      var base = link('b4u-recorte');
+      function junta(extra) { return base + (base.indexOf('?') >= 0 ? '&' : '?') + extra; }
+
+      buscarAtalhos(chaveEquipe(link), function (dados) {
+        var recs = ((dados && dados.recortes) || []).map(function (r) {
+          return { id: 'r:' + r.id, rot: r.rotulo, ic: IC_RECORTE[r.id] || 'grade',
+                   href: junta('r=' + encodeURIComponent(r.id)),
+                   sobre: r.sobre || '', tipo: 'recorte' };
+        });
+        var vis = ((dados && dados.vis) || []).map(function (v) {
+          return { id: 'v:' + v.id, rot: v.nome, ic: 'lente',
+                   href: junta('v=' + encodeURIComponent(v.id)),
+                   sobre: (v.colunas ? v.colunas + ' colunas' : '') +
+                          (v.meu ? '' : ' · de ' + (v.dono || 'outra pessoa')),
+                   meu: !!v.meu, dono: v.dono || '', tipo: 'vis' };
+        });
+        pronto({ fixos: fixos, recortes: recs, vis: vis, novaVis: base });
+      });
+      return API;
+    },
+
+    /** O desenho de um ícone do menu, para a página que precisa do MESMO traço.
+     *  Nome desconhecido devolve um <svg> vazio — some, não quebra. */
+    icone: svg,
+
     esquecerAtalhos: function () {
       try {
         var mortas = [];
