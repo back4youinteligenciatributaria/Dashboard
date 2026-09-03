@@ -244,6 +244,43 @@ a{color:var(--brand-teal-txt)}
   color:var(--ink-2);line-height:1.5;cursor:pointer}
 .vlin input{margin-top:3px;flex:0 0 auto}
 
+/* ---------- o construtor de visualização ----------
+   A caixa é alta e a lista é longa: quem rola a árvore não pode perder de vista
+   o contador de colunas nem o botão de salvar. Por isso a árvore tem altura
+   própria e rola por dentro, em vez de a caixa inteira crescer. */
+.csec{margin:20px 0 6px;font-weight:700;color:var(--ink);font-size:var(--fs-2);
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.csec .cdica{font-weight:400;color:var(--muted);font-size:var(--fs-2);flex:1 1 100%;line-height:1.45}
+.ccont{font-weight:700;color:var(--muted)}
+.ccont.ruim{color:var(--vermelho,#b3261e)}
+.cvazio{color:var(--muted);font-size:var(--fs-2);padding:6px 0}
+.cfiltro{display:flex;gap:6px;align-items:center;margin:0 0 6px;flex-wrap:wrap}
+.cfiltro select,.cfiltro input{padding:7px 9px;border:1px solid var(--linha,#e6dccd);
+  border-radius:7px;font:inherit;background:var(--surface);max-width:100%}
+.cfiltro select[data-f=coluna]{flex:2 1 220px;min-width:0}
+.cfiltro select[data-f=cond]{flex:0 0 150px}
+.cfiltro [data-f=valor]{flex:1 1 160px;min-width:0}
+.cfiltro .cnada{flex:1 1 160px;color:var(--muted)}
+.cfiltro .cx{border:0;background:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px 6px}
+.cfiltro .cx:hover{color:var(--vermelho,#b3261e)}
+.cadd{border:1px dashed var(--linha,#e6dccd);background:none;border-radius:7px;
+  padding:7px 11px;cursor:pointer;color:var(--ink-2);font:inherit;font-size:var(--fs-2)}
+.cadd:hover{background:var(--surface-warm)}
+.cbusca{margin:0 0 8px}
+.carv{max-height:46vh;overflow:auto;border:1px solid var(--linha,#e6dccd);border-radius:8px;padding:6px 10px}
+.ccat{margin:0 0 10px}
+.csub{margin:0 0 6px 18px}
+.clin{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:var(--fs-2);
+  color:var(--ink-2);cursor:pointer;line-height:1.4}
+.clin.forte{font-weight:700;color:var(--ink);font-size:var(--fs-1,14px);margin-top:6px}
+.clin.media{font-weight:600;color:var(--ink-2)}
+.clin span:first-of-type{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clin .cqt,.clin .ctipo{flex:0 0 auto;color:var(--muted);font-weight:400;font-size:var(--fs-2)}
+.clin:not(.forte):not(.media){margin-left:18px}
+/* A caixa "meio marcada" — a categoria com parte das colunas dentro. Sem este
+   sinal, uma categoria com 3 de 53 marcadas se parece com uma vazia. */
+.clin input[data-meio]{outline:2px solid var(--brand-euc,#3FA680);outline-offset:1px}
+
 /* ---------- a régua de filtros ----------
    Ela nunca estoura: quebra de linha. */
 .regua{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 10px}
@@ -2104,6 +2141,13 @@ function pintarVisBar(){
   } else {
     b.push('<button class="vb" data-vis="nova">＋ Salvar como visualização</button>');
   }
+  /* FILTROS FIXOS aparece SEMPRE, inclusive em recorte do catálogo que não tem
+     filtro nenhum — é onde a pessoa descobre que dá para pôr um. Escondê-lo
+     quando não há filtro faria a funcionalidade existir só para quem já sabe
+     que ela existe. */
+  b.push('<button class="vb" data-vis="fixos">Filtros fixos' +
+         (REC && REC.filtro && (Array.isArray(REC.filtro) ? REC.filtro.length : 1)
+            ? ' <b>· ' + (Array.isArray(REC.filtro) ? REC.filtro.length : 1) + '</b>' : '') + '</button>');
   b.push('<button class="vb" data-vis="lista">Minhas visualizações</button>');
   /* Só reescreve quando MUDA. `pintarVisBar` roda a cada `desenhar()`, e
      `desenhar()` roda a cada tecla da busca, cada filtro, cada ordenação —
@@ -2114,6 +2158,283 @@ function pintarVisBar(){
   if (no.__html !== html) { no.innerHTML = html; no.__html = html; }
   no.hidden = false;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   O CONSTRUTOR DE VISUALIZAÇÃO — escolher colunas e filtros fixos
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Até 03/09/2026 só dava para criar visualização A PARTIR de um recorte: abrir
+   Equiparação, mexer nas colunas, "salvar como". Quem quisesse cruzar duas
+   colunas de DP com uma de cobrança não tinha por onde começar — as duas nunca
+   aparecem na mesma tela.
+
+   Agora a árvore vem do servidor (`tipo=variaveis`, a aba "Variáveis"), com as
+   341 colunas por categoria e subcategoria, e JÁ FILTRADA pela permissão de
+   quem está olhando: coluna que a pessoa não pode ler não é oferecida, porque
+   oferecer uma coluna que voltaria vazia é pior do que não oferecer.
+
+   FILTRO FIXO NÃO É O FILTRO DA RÉGUA, e a diferença é a razão de o botão
+   existir. A régua (o funil de cada coluna) é o que ESTA pessoa está olhando
+   agora; some ao recarregar e não vai para lugar nenhum. O filtro fixo é uma
+   propriedade da VISUALIZAÇÃO: viaja com ela, vale para quem a abrir, e no
+   servidor ele é PORTA e não vitrine — a linha que ele esconde também não pode
+   ser gravada por aquela tela (ver gradeFiltroPassa_ no 3_Motor).
+
+   MARCAR CATEGORIA MARCA TUDO QUE ESTÁ EMBAIXO. Sem isso, montar uma
+   visualização de "Departamento pessoal inteiro" seriam 53 cliques — e ninguém
+   faz 53 cliques; a pessoa desiste e volta a pedir a planilha por e-mail.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+let ARV = null;   // { arvore, fixas, total, tipos } — uma leitura por sessão de tela
+async function arvoreVariaveis(){
+  if (ARV) return ARV;
+  const d = await jsonp(API_URL+'?tipo=variaveis&chave='+encodeURIComponent(chaveAtual()));
+  if (!d || d.erro) throw new Error((d && d.erro) || 'Não consegui ler o catálogo de colunas.');
+  ARV = d;
+  return ARV;
+}
+
+/** Toda coluna da árvore, achatada, na ordem da planilha. */
+function colunasPlanas(){
+  const out = [];
+  ((ARV && ARV.arvore) || []).forEach(c => c.subs.forEach(s => s.colunas.forEach(x =>
+    out.push(Object.assign({ categoria: c.categoria, subcategoria: s.subcategoria }, x)))));
+  return out;
+}
+function metaDaColuna(col){
+  const k = normCol(col);
+  return colunasPlanas().find(x => normCol(x.coluna) === k) || null;
+}
+
+const COND = [
+  { id:'contem',     rot:'contém',            valor:true  },
+  { id:'igual',      rot:'é igual a',         valor:true  },
+  { id:'diferente',  rot:'é diferente de',    valor:true  },
+  { id:'preenchido', rot:'está preenchido',   valor:false },
+  { id:'vazio',      rot:'está vazio',        valor:false }
+];
+
+/** {coluna, contem|igual|diferente|preenchido} -> a linha que a tela edita. */
+function filtroParaLinha(f){
+  if (!f || !f.coluna) return null;
+  if (f.contem    != null) return { coluna:f.coluna, cond:'contem',    valor:String(f.contem) };
+  if (f.igual     != null) return { coluna:f.coluna, cond:'igual',     valor:String(f.igual) };
+  if (f.diferente != null) return { coluna:f.coluna, cond:'diferente', valor:String(f.diferente) };
+  if (f.preenchido === false) return { coluna:f.coluna, cond:'vazio',  valor:'' };
+  return { coluna:f.coluna, cond:'preenchido', valor:'' };
+}
+function linhaParaFiltro(l){
+  if (!l || !l.coluna) return null;
+  if (l.cond === 'preenchido') return { coluna:l.coluna, preenchido:true };
+  if (l.cond === 'vazio')      return { coluna:l.coluna, preenchido:false };
+  /* Condição de valor SEM valor não vira filtro. Guardá-la produziria uma
+     visualização que esconde tudo (ninguém "contém" a string vazia de um jeito
+     útil) e a pessoa acharia que a tela quebrou. */
+  if (!String(l.valor||'').trim()) return null;
+  const o = { coluna:l.coluna }; o[l.cond] = l.valor; return o;
+}
+
+let MODAL_CRIAR = null, CRIA = null;
+
+/**
+ * op.titulo   · op.confirmar · op.nome · op.colunas[] · op.filtro[]
+ * op.soFiltro true = a caixa abre só com os filtros fixos (o botão da barra)
+ * op.aoSalvar (estado) => Promise
+ */
+async function abrirConstrutor(op){
+  await arvoreVariaveis();
+  CRIA = {
+    nome: op.nome || '',
+    sel: new Set((op.colunas||[]).map(normCol)),
+    ordemSel: (op.colunas||[]).slice(),
+    linhas: (op.filtro||[]).map(filtroParaLinha).filter(Boolean),
+    busca: '',
+    soFiltro: !!op.soFiltro,
+    aoSalvar: op.aoSalvar
+  };
+  if (!MODAL_CRIAR) {
+    MODAL_CRIAR = B4UModal.criar({
+      id:'modalCriar', largura:'760px',
+      acoes:[{id:'criaOk', rot:'Criar', tipo:'pri'}, {id:'criaNao', rot:'Cancelar', tipo:'sec'}]
+    });
+  }
+  MODAL_CRIAR.titulo(op.titulo || 'Nova visualização');
+  const box = MODAL_CRIAR.corpo().closest('.b4m-box') || document;
+  const ok = box.querySelector('#criaOk'), nao = box.querySelector('#criaNao');
+  ok.textContent = op.confirmar || 'Criar';
+  ok.onclick = () => salvarConstrutor(ok);
+  nao.onclick = () => MODAL_CRIAR.fechar(true);
+  pintarConstrutor();
+  MODAL_CRIAR.abrir();
+  const f = MODAL_CRIAR.corpo().querySelector('#criaNome, .cfiltro select');
+  if (f) f.focus();
+}
+
+function contaSel(){ return CRIA.sel.size; }
+
+function pintarConstrutor(){
+  const c = MODAL_CRIAR.corpo();
+  const planas = colunasPlanas();
+  const b = CRIA.busca ? normCol(CRIA.busca) : '';
+
+  let h = '';
+  if (!CRIA.soFiltro) {
+    h += '<label class="vlab">Nome</label>' +
+         '<input class="vinp" id="criaNome" maxlength="80" placeholder="Ex.: Clientes sem certificado válido" value="'+esc(CRIA.nome)+'">';
+  }
+
+  /* ── FILTROS FIXOS ── vem ANTES das colunas de propósito: é a pergunta
+     "quais clientes?", e ela precede "quais informações deles?". */
+  h += '<div class="csec">Filtros fixos'
+     +  '<span class="cdica">Valem sempre nesta visualização, para quem abrir. '
+     +  'Diferente do funil de cada coluna, que é só o que você está olhando agora.</span></div>';
+  h += '<div id="cfiltros">';
+  if (!CRIA.linhas.length) h += '<div class="cvazio">Sem filtro fixo — a tela mostra todos os clientes.</div>';
+  CRIA.linhas.forEach((l, i) => {
+    const meta = metaDaColuna(l.coluna);
+    const cond = COND.find(x => x.id === l.cond) || COND[0];
+    h += '<div class="cfiltro" data-i="'+i+'">'
+       +   '<select data-f="coluna">' + optsColuna(l.coluna, planas) + '</select>'
+       +   '<select data-f="cond">' + COND.map(x =>
+             '<option value="'+x.id+'"'+(x.id===l.cond?' selected':'')+'>'+x.rot+'</option>').join('') + '</select>'
+       +   (cond.valor ? campoValor(meta, l.valor) : '<span class="cnada">—</span>')
+       +   '<button type="button" class="cx" data-f="tirar" title="Tirar este filtro">✕</button>'
+       + '</div>';
+  });
+  h += '</div><button type="button" class="cadd" data-f="mais">＋ acrescentar filtro</button>';
+
+  if (!CRIA.soFiltro) {
+    h += '<div class="csec">Colunas <span class="ccont'+(contaSel()>60?' ruim':'')+'">'
+       +  contaSel()+' de 60</span>'
+       +  '<span class="cdica">Marcar a categoria marca tudo que está embaixo. '
+       +  'As seis de identificação (ID, Nome, Ativo, CNPJ, Produtos, Cidade) entram sempre.</span></div>';
+    h += '<input class="vinp cbusca" id="criaBusca" placeholder="Buscar coluna…" value="'+esc(CRIA.busca)+'">';
+    h += '<div class="carv">';
+    (ARV.arvore||[]).forEach(cat => {
+      const subs = cat.subs.map(s => ({
+        sub: s,
+        cols: s.colunas.filter(x => !b || normCol(x.coluna).indexOf(b) >= 0 ||
+                                    normCol(s.subcategoria).indexOf(b) >= 0 ||
+                                    normCol(cat.categoria).indexOf(b) >= 0)
+      })).filter(x => x.cols.length);
+      if (!subs.length) return;
+      const todas = subs.reduce((a,x)=>a.concat(x.cols),[]);
+      const nMarc = todas.filter(x => CRIA.sel.has(normCol(x.coluna))).length;
+      h += '<div class="ccat">'
+         +   '<label class="clin forte"><input type="checkbox" data-c="cat" data-nome="'+esc(cat.categoria)+'"'
+         +     (nMarc===todas.length?' checked':'') + (nMarc&&nMarc<todas.length?' data-meio="1"':'') + '>'
+         +     '<span>'+esc(cat.categoria)+'</span><span class="cqt">'+nMarc+'/'+todas.length+'</span></label>';
+      subs.forEach(x => {
+        const m = x.cols.filter(y => CRIA.sel.has(normCol(y.coluna))).length;
+        h += '<div class="csub">'
+           +   '<label class="clin media"><input type="checkbox" data-c="sub" data-nome="'+esc(cat.categoria)+'||'+esc(x.sub.subcategoria)+'"'
+           +     (m===x.cols.length?' checked':'') + '>'
+           +     '<span>'+esc(x.sub.subcategoria)+'</span><span class="cqt">'+m+'/'+x.cols.length+'</span></label>';
+        x.cols.forEach(y => {
+          h += '<label class="clin"><input type="checkbox" data-c="col" data-nome="'+esc(y.coluna)+'"'
+             +   (CRIA.sel.has(normCol(y.coluna))?' checked':'') + '>'
+             +   '<span>'+esc(y.coluna)+'</span><span class="ctipo">'+esc(y.tipo)+(y.pode_gravar?'':' · leitura')+'</span></label>';
+        });
+        h += '</div>';
+      });
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+
+  c.innerHTML = h;
+}
+
+function optsColuna(sel, planas){
+  let ultima = '', h = '<option value="">— escolha a coluna —</option>';
+  planas.forEach(x => {
+    const grupo = x.categoria + ' · ' + x.subcategoria;
+    if (grupo !== ultima) { if (ultima) h += '</optgroup>'; h += '<optgroup label="'+esc(grupo)+'">'; ultima = grupo; }
+    h += '<option value="'+esc(x.coluna)+'"'+(normCol(x.coluna)===normCol(sel||'')?' selected':'')+'>'+esc(x.coluna)+'</option>';
+  });
+  return h + (ultima ? '</optgroup>' : '');
+}
+
+/** Coluna de lista vira menu suspenso, e não caixa de texto: digitar
+ *  "protocolado" onde a planilha guarda "PROTOCOLADO" produziria um filtro que
+ *  não acha ninguém e não explica por quê. */
+function campoValor(meta, valor){
+  if (meta && meta.opcoes && meta.opcoes.length) {
+    return '<select data-f="valor"><option value="">—</option>' +
+      meta.opcoes.map(o => '<option'+(String(o)===String(valor)?' selected':'')+'>'+esc(o)+'</option>').join('') +
+      '</select>';
+  }
+  return '<input data-f="valor" value="'+esc(valor||'')+'" placeholder="valor">';
+}
+
+/* Um ouvinte só, no corpo do modal. Os nós são reescritos a cada mudança; ouvir
+   em cada caixinha deixaria ouvintes órfãos a cada repintura. */
+document.addEventListener('change', e => {
+  if (!MODAL_CRIAR || !CRIA || !MODAL_CRIAR.corpo().contains(e.target)) return;
+  const t = e.target, c = t.getAttribute('data-c'), f = t.getAttribute('data-f');
+
+  if (c) {
+    const marcar = t.checked;
+    const alvo = [];
+    if (c === 'col') alvo.push(t.getAttribute('data-nome'));
+    else {
+      const nome = t.getAttribute('data-nome');
+      (ARV.arvore||[]).forEach(cat => cat.subs.forEach(s => s.colunas.forEach(x => {
+        if (c === 'cat' && cat.categoria === nome) alvo.push(x.coluna);
+        if (c === 'sub' && (cat.categoria+'||'+s.subcategoria) === nome) alvo.push(x.coluna);
+      })));
+    }
+    alvo.forEach(nome => { if (marcar) CRIA.sel.add(normCol(nome)); else CRIA.sel.delete(normCol(nome)); });
+    /* A ordem guardada é a da PLANILHA, e não a dos cliques: é a ordem em que
+       a pessoa já conhece as colunas, e não muda se ela desmarcar e remarcar. */
+    CRIA.ordemSel = colunasPlanas().filter(x => CRIA.sel.has(normCol(x.coluna))).map(x => x.coluna);
+    pintarConstrutor();
+    return;
+  }
+  if (f === 'coluna' || f === 'cond' || f === 'valor') {
+    const linha = t.closest('.cfiltro'); const i = +linha.getAttribute('data-i');
+    if (f === 'coluna') { CRIA.linhas[i].coluna = t.value; CRIA.linhas[i].valor = ''; }
+    if (f === 'cond')   CRIA.linhas[i].cond = t.value;
+    if (f === 'valor')  { CRIA.linhas[i].valor = t.value; return; }   // digitar não repinta
+    pintarConstrutor();
+  }
+});
+document.addEventListener('input', e => {
+  if (!MODAL_CRIAR || !CRIA || !MODAL_CRIAR.corpo().contains(e.target)) return;
+  if (e.target.id === 'criaNome') { CRIA.nome = e.target.value; return; }   // não repinta: perderia o cursor
+  if (e.target.getAttribute('data-f') === 'valor') {
+    const linha = e.target.closest('.cfiltro'); CRIA.linhas[+linha.getAttribute('data-i')].valor = e.target.value; return;
+  }
+  if (e.target.id === 'criaBusca') {
+    clearTimeout(window.__cb); const v = e.target.value;
+    window.__cb = setTimeout(() => { CRIA.busca = v; pintarConstrutor();
+      const n = MODAL_CRIAR.corpo().querySelector('#criaBusca'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 200);
+  }
+});
+document.addEventListener('click', e => {
+  if (!MODAL_CRIAR || !CRIA || !MODAL_CRIAR.corpo().contains(e.target)) return;
+  const b = e.target.closest('[data-f]'); if (!b) return;
+  if (b.getAttribute('data-f') === 'mais')  { CRIA.linhas.push({coluna:'', cond:'igual', valor:''}); pintarConstrutor(); }
+  if (b.getAttribute('data-f') === 'tirar') { CRIA.linhas.splice(+b.closest('.cfiltro').getAttribute('data-i'), 1); pintarConstrutor(); }
+});
+
+async function salvarConstrutor(bt){
+  const nomeEl = MODAL_CRIAR.corpo().querySelector('#criaNome');
+  if (nomeEl) CRIA.nome = nomeEl.value;
+  const filtro = CRIA.linhas.map(linhaParaFiltro).filter(Boolean);
+  const est = { nome: (CRIA.nome||'').trim(), colunas: CRIA.ordemSel.slice(), filtro: filtro };
+
+  if (!CRIA.soFiltro) {
+    if (!est.nome)            return mostrarErro(new Error('Dê um nome à visualização — é por ele que você vai achá-la.'));
+    if (!est.colunas.length)  return mostrarErro(new Error('Escolha ao menos uma coluna.'));
+    if (est.colunas.length>60) return mostrarErro(new Error('São '+est.colunas.length+' colunas. O limite é 60 — acima disso a tela deixa de ser legível.'));
+  }
+  bt.disabled = true; const rot = bt.textContent; bt.textContent = 'Salvando…';
+  try { await CRIA.aoSalvar(est); }
+  catch (err) { mostrarErro(err); }
+  finally { bt.disabled = false; bt.textContent = rot; }
+}
+
 
 /* O DIÁLOGO DE VISUALIZAÇÃO — e por que não é `prompt()`.
    A primeira versão usava `prompt()` e `confirm()` nativos. Três problemas, e
@@ -2167,6 +2488,43 @@ document.addEventListener('click', async e => {
   const v = REC && REC.visualizacao;
 
   if (acao === 'lista') { location.href = 'b4u-recorte?chave=' + encodeURIComponent(chaveAtual()); return; }
+
+  /* DO ZERO — sem partir de recorte nenhum. É o caminho de quem quer cruzar
+     duas colunas de DP com uma de cobrança: elas não aparecem juntas em tela
+     nenhuma do catálogo, então não havia de onde "salvar como". */
+  if (acao === 'criar') {
+    try {
+      return await abrirConstrutor({
+        titulo: 'Nova visualização', confirmar: 'Criar',
+        aoSalvar: est => visGravarEstado(est)
+      });
+    } catch (err) { return mostrarErro(err); }
+  }
+
+  /* FILTROS FIXOS. Em visualização MINHA, edita no lugar. Em recorte do
+     catálogo (ou na visualização de outra pessoa), o filtro aparece editável
+     mas mexer não muda a tela de todo mundo: vira uma visualização sua, já com
+     as colunas que estão na tela e o filtro que você acabou de montar.
+     O catálogo continua sendo CÓDIGO porque é ele que carrega permissão — e o
+     filtro do recorte também trava a GRAVAÇÃO, não só a exibição. */
+  if (acao === 'fixos') {
+    const meu = !!(v && v.meu);
+    const atual = (REC && REC.filtro) ? (Array.isArray(REC.filtro) ? REC.filtro : [REC.filtro]) : [];
+    try {
+      return await abrirConstrutor({
+        titulo:    meu ? 'Filtros fixos desta visualização' : 'Filtros fixos — vira uma visualização sua',
+        confirmar: meu ? 'Salvar' : 'Criar minha visualização',
+        soFiltro:  meu,
+        nome:      meu ? (v.nome || '') : ((REC && REC.rotulo ? REC.rotulo : 'Minha visualização') + ' (com meu filtro)'),
+        colunas:   VIS.slice(),
+        filtro:    atual,
+        aoSalvar:  est => meu
+          ? visGravarEstado({ nome: v.nome, colunas: VIS.slice(), filtro: est.filtro,
+                              ordem: estadoDaTela().ordem }, { id: v.id, publico: v.publico })
+          : visGravarEstado(est)
+      });
+    } catch (err) { return mostrarErro(err); }
+  }
 
   if (acao === 'nova' || acao === 'duplicar') {
     const sugestao = acao === 'duplicar' && v ? (v.nome + ' (cópia)')
@@ -2229,6 +2587,23 @@ document.addEventListener('click', async e => {
     } catch (err) { mostrarErro(err); }
   }
 });
+
+/** Grava um estado montado PELO CONSTRUTOR (e não lido da tela aberta).
+ *  Sempre navega para a visualização: mudar coluna ou filtro fixo muda QUAIS
+ *  clientes e quais campos o servidor manda — repintar com o payload velho
+ *  mostraria a tela antiga com o nome novo, que é a pior mentira possível. */
+async function visGravarEstado(est, extra){
+  const d = await postAcao(Object.assign({
+    acao: 'vis_salvar',
+    nome: est.nome,
+    colunas: JSON.stringify(est.colunas),
+    filtro:  JSON.stringify(est.filtro || []),
+    ordem:   JSON.stringify(est.ordem || null)
+  }, extra || {}));
+  if (window.B4UShell && B4UShell.esquecerAtalhos) B4UShell.esquecerAtalhos();
+  if (MODAL_CRIAR) MODAL_CRIAR.fechar(true);
+  location.href = '?v=' + encodeURIComponent(d.id) + '&chave=' + encodeURIComponent(chaveAtual());
+}
 
 let visBotaoAtivo = null;   // o botão que a pessoa apertou nesta gravação
 async function visGravar(extra, herdar){
@@ -2425,13 +2800,18 @@ function carregar(){
       .then(d=>{
         if (d && d.erro) throw new Error(d.erro);
         const its = (d&&d.recortes)||[];
-        document.getElementById('conteudo').innerHTML = its.length
+        const criar = '<div class="vazio">Criar</div>' +
+          '<a class="cli" data-vis="criar" role="button" tabindex="0" style="cursor:pointer">' +
+          '<span class="l1"><span class="nm">＋ Criar uma visualização do zero</span></span>' +
+          '<span class="resumo">Escolha qualquer coluna das 341 — por categoria, ou a categoria inteira — ' +
+          'e os filtros fixos que valem sempre nela.</span></a>';
+        document.getElementById('conteudo').innerHTML = criar + (its.length
           ? '<div class="vazio">Escolha um recorte:</div>' + its.map(x=>
               '<a class="cli" href="?r='+encodeURIComponent(x.id)+'&chave='+encodeURIComponent(chaveAtual())+'" target="_self">'+
               '<span class="l1"><span class="nm">'+esc(x.rotulo)+'</span>'+
               '<span class="id">'+x.colunas+' colunas'+(x.pode_gravar?'':' · só leitura')+'</span></span>'+
               '<span class="resumo">'+esc(x.sobre||'')+'</span></a>').join('')
-          : '<div class="vazio">Nenhum recorte disponível para o seu acesso.</div>';
+          : '<div class="vazio">Nenhum recorte disponível para o seu acesso.</div>');
         document.getElementById('cnt').textContent = '';
         document.getElementById('tag').textContent = 'Recortes do Registro';
         /* E as visualizações logo abaixo, na mesma página: quem chega aqui
