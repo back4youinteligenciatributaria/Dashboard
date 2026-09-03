@@ -266,6 +266,21 @@ a{color:var(--brand-teal-txt)}
 .cadd{border:1px dashed var(--linha,#e6dccd);background:none;border-radius:7px;
   padding:7px 11px;cursor:pointer;color:var(--ink-2);font:inherit;font-size:var(--fs-2)}
 .cadd:hover{background:var(--surface-warm)}
+.cadd--inline{padding:2px 9px;font-size:var(--fs-1);font-weight:700;margin-left:auto}
+/* Cartão da lista com ações: o cartão continua sendo o link inteiro; as ações
+   moram FORA dele. Botão dentro de <a> é HTML inválido e, pior, cada clique em
+   "Excluir" navegaria antes de o modal abrir. */
+.cliw{position:relative;margin-bottom:7px}
+.cliw .cli{margin-bottom:0;padding-right:230px}
+.cliacoes{position:absolute;right:11px;top:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.cliac{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius-pill,999px);
+  padding:3px 10px;cursor:pointer;color:var(--muted);font:inherit;font-size:var(--fs-1);font-weight:700}
+.cliac:hover{color:var(--brand-teal-txt);border-color:var(--brand-teal)}
+.cliac.perigo:hover{color:var(--vermelho,#b3261e);border-color:var(--vermelho,#b3261e)}
+@media(max-width:720px){
+  .cliw .cli{padding-right:13px}
+  .cliacoes{position:static;margin:6px 0 0;justify-content:flex-start}
+}
 .cbusca{margin:0 0 8px}
 .carv{max-height:46vh;overflow:auto;border:1px solid var(--linha,#e6dccd);border-radius:8px;padding:6px 10px}
 .ccat{margin:0 0 10px}
@@ -2180,13 +2195,19 @@ function pintarVisBar(){
     b.push('<span class="dono">' + (v.meu ? 'Sua visualização' : 'De ' + esc(v.dono)) +
            (v.publico ? ' · pública' : '') + '</span>');
     if (telaAlterada()) b.push('<span class="sujo">alterado</span>');
-    if (v.meu) {
-      b.push('<button class="vb forte" data-vis="salvar">Salvar</button>');
-      b.push('<button class="vb" data-vis="renomear">Renomear</button>');
-      b.push('<button class="vb" data-vis="publico">' +
-             (v.publico ? 'Tornar particular' : 'Tornar pública') + '</button>');
-      b.push('<button class="vb" data-vis="excluir">Excluir</button>');
-    }
+    /* RENOMEAR, TORNAR PÚBLICA E EXCLUIR SAÍRAM DAQUI em 03/09/2026.
+       Eram três botões de ADMINISTRAR a visualização no meio da barra de USAR a
+       visualização, e o mais perigoso deles (Excluir) ficava a um clique de
+       distância de "Salvar", que é o que a pessoa aperta o dia inteiro. As três
+       ações continuam existindo — na tela "Adicionar visualização", em cada
+       cartão de "Minhas visualizações", que é onde se administra uma lista.
+       O que sobra aqui é o que só faz sentido com a tela ABERTA na frente. */
+    if (v.meu) b.push('<button class="vb forte" data-vis="salvar">Salvar</button>');
+    /* EDITAR: mesmo botão para os dois casos, com o rótulo dizendo o que vai
+       acontecer. Esconder o botão de quem não é dono faria a pessoa concluir
+       que a tela é intocável; escrever "Editar" e depois recusar seria pior. */
+    b.push('<button class="vb" data-vis="editar">' +
+           (v.meu ? 'Editar' : 'Editar uma cópia') + '</button>');
     b.push('<button class="vb" data-vis="duplicar">Duplicar</button>');
   } else {
     b.push('<button class="vb" data-vis="nova">＋ Salvar como visualização</button>');
@@ -2332,7 +2353,11 @@ async function abrirConstrutor(op){
     linhas: (op.filtro||[]).map(filtroParaLinha).filter(Boolean),
     busca: '',
     soFiltro: !!op.soFiltro,
-    aoSalvar: op.aoSalvar
+    aoSalvar: op.aoSalvar,
+    /* Guardados para o desvio "criar variável": a caixa fecha, a de variável
+       abre, e esta precisa saber com que cara voltar. */
+    titulo: op.titulo || 'Nova visualização',
+    confirmar: op.confirmar || 'Criar'
   };
   if (!MODAL_CRIAR) {
     MODAL_CRIAR = B4UModal.criar({
@@ -2387,10 +2412,16 @@ function pintarConstrutor(){
   h += '</div><button type="button" class="cadd" data-f="mais">＋ acrescentar filtro</button>';
 
   if (!CRIA.soFiltro) {
+    /* CRIAR VARIÁVEL AQUI DENTRO. É neste ponto exato que a pessoa descobre que
+       a coluna que ela queria não existe — procurando na árvore. Mandá-la
+       fechar, achar o botão na tela inicial e remontar tudo é onde a ideia
+       morre; o desvio volta com a coluna nova já marcada. */
     h += '<div class="csec">Colunas <span class="ccont'+(contaSel()>60?' ruim':'')+'">'
        +  contaSel()+' de 60</span>'
+       +  '<button type="button" class="cadd cadd--inline" data-f="novavar">＋ criar variável</button>'
        +  '<span class="cdica">Marcar a categoria marca tudo que está embaixo. '
-       +  'As seis de identificação (ID, Nome, Ativo, CNPJ, Produtos, Cidade) entram sempre.</span></div>';
+       +  'As seis de identificação (ID, Nome, Ativo, CNPJ, Produtos, Cidade) entram sempre. '
+       +  'Não achou a coluna? <b>＋ criar variável</b> cria a sua, para todo mundo.</span></div>';
     h += '<input class="vinp cbusca" id="criaBusca" placeholder="Buscar coluna…" value="'+esc(CRIA.busca)+'">';
     h += '<div class="carv">';
     (ARV.arvore||[]).forEach(cat => {
@@ -2501,6 +2532,29 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-f]'); if (!b) return;
   if (b.getAttribute('data-f') === 'mais')  { CRIA.linhas.push({coluna:'', cond:'igual', valor:''}); pintarConstrutor(); }
   if (b.getAttribute('data-f') === 'tirar') { CRIA.linhas.splice(+b.closest('.cfiltro').getAttribute('data-i'), 1); pintarConstrutor(); }
+
+  /* O desvio para criar uma coluna sem perder o que já foi montado.
+     Duas caixas ABERTAS ao mesmo tempo empilhariam foco, Esc e véu — então a de
+     visualização FECHA e é remontada depois, a partir do estado guardado aqui.
+     O nome digitado é lido do campo (e não de `CRIA.nome`) porque o `input` de
+     nome não repinta: quem digitou e não saiu do campo ainda não avisou nada. */
+  if (b.getAttribute('data-f') === 'novavar') {
+    const nomeEl = MODAL_CRIAR.corpo().querySelector('#criaNome');
+    if (nomeEl) CRIA.nome = nomeEl.value;
+    const volta = {
+      titulo: CRIA.titulo, confirmar: CRIA.confirmar, nome: CRIA.nome,
+      colunas: CRIA.ordemSel.slice(),
+      filtro: CRIA.linhas.map(linhaParaFiltro).filter(Boolean),
+      soFiltro: CRIA.soFiltro, aoSalvar: CRIA.aoSalvar
+    };
+    MODAL_CRIAR.fechar(true);
+    abrirNovaVariavel({ aoCriar: async function (coluna) {
+      /* Já marcada. Quem criou a coluna quis a coluna: fazer a pessoa procurá-la
+         na árvore logo depois de nomeá-la é pedir o mesmo trabalho duas vezes. */
+      if (coluna) volta.colunas.push(coluna);
+      await abrirConstrutor(volta);
+    }});
+  }
 });
 
 async function salvarConstrutor(bt){
@@ -2553,10 +2607,13 @@ function subsDe(cat){
   return c ? c.subs.map(s => s.subcategoria).filter(s => s && s !== '—') : [];
 }
 
-async function abrirNovaVariavel(){
+/** op.aoCriar(nomeDaColuna) — chamado depois de a coluna existir de verdade.
+ *  É por aqui que o construtor volta para a tela, com a coluna nova marcada. */
+async function abrirNovaVariavel(op){
   await arvoreVariaveis();
   NOVAVAR = { coluna:'', categoria: categoriasConhecidas()[0] || '', subcategoria:'',
-              tipo:'texto', opcoes:'', dica:'' };
+              tipo:'texto', opcoes:'', dica:'',
+              aoCriar: (op && op.aoCriar) || null };
   if (!MODAL_VAR) {
     MODAL_VAR = B4UModal.criar({
       id:'modalVar', largura:'620px',
@@ -2666,6 +2723,10 @@ async function gravarNovaVariavel(bt){
     if (el) { el.hidden = false; el.style.borderColor = 'var(--verde,#2e7d32)';
       el.textContent = 'Criei a coluna "' + d.coluna + '" no fim do Registro' +
         (d.variavel ? ', com a variável ' + d.variavel : '') + '. Ela já aparece no construtor.'; }
+    /* Veio de dentro do construtor: devolve a pessoa para lá, com a coluna
+       marcada. O `await` da árvore acontece dentro do `abrirConstrutor`, então
+       o retorno já enxerga a coluna nova. */
+    if (NOVAVAR.aoCriar) { const volta = NOVAVAR.aoCriar; await volta(d.coluna); }
   } catch (err) { mostrarErro(err); }
   finally { bt.disabled = false; bt.textContent = rot; }
 }
@@ -2769,6 +2830,32 @@ document.addEventListener('click', async e => {
     } catch (err) { return mostrarErro(err); }
   }
 
+  /* EDITAR — a mesma caixa que cria, aberta já preenchida.
+     Do DONO: grava por cima (o `id` vai no `extra`).
+     De OUTRA PESSOA: grava sem `id`, ou seja, nasce uma cópia SUA e o original
+     fica intacto. É a mesma regra do `visSalvar_` no servidor, dita antes do
+     clique em vez de virar um erro depois dele.
+     A ORDENAÇÃO viaja junto (`estadoDaTela().ordem`): ela é parte do que a
+     visualização guarda, e não mandá-la faria "editar as colunas" apagar
+     silenciosamente a ordenação que já estava salva. */
+  if (acao === 'editar') {
+    if (!v) return;
+    const meu = !!v.meu;
+    const atual = (REC && REC.filtro) ? (Array.isArray(REC.filtro) ? REC.filtro : [REC.filtro]) : [];
+    try {
+      return await comEspera(bt, () => abrirConstrutor({
+        titulo:    meu ? 'Editar visualização' : 'Editar — nasce uma cópia sua',
+        confirmar: meu ? 'Salvar' : 'Criar minha cópia',
+        nome:      meu ? (v.nome || '') : ((v.nome || 'Visualização') + ' (cópia)'),
+        colunas:   VIS.slice(),
+        filtro:    atual,
+        aoSalvar:  est => visGravarEstado(
+                     Object.assign({}, est, { ordem: estadoDaTela().ordem }),
+                     meu ? { id: v.id, publico: v.publico } : null)
+      }));
+    } catch (err) { return mostrarErro(err); }
+  }
+
   if (acao === 'nova' || acao === 'duplicar') {
     const sugestao = acao === 'duplicar' && v ? (v.nome + ' (cópia)')
                    : ((REC && REC.rotulo) || 'Minha visualização');
@@ -2830,6 +2917,82 @@ document.addEventListener('click', async e => {
     } catch (err) { mostrarErro(err); }
   }
 });
+
+/* AS TRÊS AÇÕES NOS CARTÕES DA LISTA.
+ *
+ * Ouvinte próprio, e não o do `[data-vis]`: aquele decide tudo a partir de
+ * `REC.visualizacao` — a visualização ABERTA —, e nesta tela não há nenhuma
+ * aberta. Reaproveitá-lo obrigaria a inventar um `REC` falso para cada cartão,
+ * que é o tipo de gambiarra que um dia grava na visualização errada.
+ *
+ * Depois de cada ação a lista é REPINTADA (`carregar()`), e não remendada no
+ * DOM: renomear muda o nome em dois lugares (o cartão e o menu lateral), e uma
+ * lista remendada à mão diverge da que o servidor tem na primeira vez que
+ * alguém apagar algo de outra aba.
+ */
+document.addEventListener('click', async e => {
+  const bt = e.target.closest && e.target.closest('[data-lista]');
+  if (!bt) return;
+  e.preventDefault();
+  const acao = bt.getAttribute('data-lista');
+  const id   = bt.getAttribute('data-id');
+  const nome = bt.getAttribute('data-nome') || '';
+  const pub  = !!bt.getAttribute('data-publico');
+  if (!id) return;
+
+  async function depois(){
+    if (window.B4UShell && B4UShell.esquecerAtalhos) B4UShell.esquecerAtalhos();
+    await carregar();
+  }
+
+  try {
+    if (acao === 'publico') {
+      bt.disabled = true; bt.textContent = 'Salvando…';
+      /* Só o `publico` muda. `nome`, `colunas`, `filtro` e `ordem` não são
+         mandados a partir daqui porque esta tela não os tem na mão — e mandar
+         vazio apagaria a visualização por dentro, deixando o nome de pé. */
+      await visSalvarSoCampos(id, { publico: !pub });
+      return depois();
+    }
+
+    if (acao === 'renomear') {
+      const r = await perguntarVis({
+        titulo: 'Renomear visualização', confirmar: 'Renomear',
+        html: '<label class="vlab">Nome</label>' +
+              '<input class="vinp" id="visNome" value="' + esc(nome) + '" maxlength="80">',
+        ler: c => ({ nome: (c.querySelector('#visNome').value||'').trim() })
+      });
+      if (!r || !r.nome || r.nome === nome) return;
+      await visSalvarSoCampos(id, { nome: r.nome });
+      return depois();
+    }
+
+    if (acao === 'excluir') {
+      const r = await perguntarVis({
+        titulo: 'Apagar visualização', confirmar: 'Apagar',
+        html: '<div class="vresumo">Apagar <b>' + esc(nome) + '</b>?' +
+              (pub ? ' Ela é pública — quem a estiver usando perde o atalho.' : '') +
+              ' Isso não apaga nenhum dado de cliente: visualização é só uma forma de olhar.</div>'
+      });
+      if (!r) return;
+      await postAcao({ acao: 'vis_excluir', id: id });
+      return depois();
+    }
+  } catch (err) { mostrarErro(err); }
+});
+
+/** Muda um punhado de campos de uma visualização SEM ter a tela dela aberta.
+ *
+ *  `parcial:'1'` — o servidor mantém o que não vier. A primeira versão relia a
+ *  visualização inteira aqui e devolvia tudo; além de duas chamadas por clique,
+ *  ela reconstruía as colunas a partir das SEÇÕES do payload, o que podia
+ *  reordená-las sem ninguém ter pedido. Renomear não pode mexer em coluna. */
+function visSalvarSoCampos(id, mudou){
+  const p = { acao:'vis_salvar', id:id, parcial:'1' };
+  if (mudou.nome != null)    p.nome = mudou.nome;
+  if (mudou.publico != null) p.publico = mudou.publico ? 'sim' : '';
+  return postAcao(p);
+}
 
 /** Grava um estado montado PELO CONSTRUTOR (e não lido da tela aberta).
  *  Sempre navega para a visualização: mudar coluna ou filtro fixo muda QUAIS
@@ -3079,13 +3242,28 @@ function carregar(){
         return jsonp(API_URL+'?tipo=vis_lista&chave='+encodeURIComponent(chaveAtual()))
           .then(w=>{
             if (!w || w.erro) return;
+            /* AS TRÊS AÇÕES ADMINISTRATIVAS MORAM AQUI desde 03/09/2026, e não
+               mais na barra de dentro da visualização. Administrar é olhar a
+               LISTA — é aqui que se decide o que renomear e o que apagar —, e
+               foi o que tirou o botão Excluir de encostado no Salvar que a
+               pessoa aperta o dia inteiro. Só nos cartões que são DELA: nas
+               públicas de outros não há o que administrar. */
+            const acoes = x => x.meu
+              ? '<div class="cliacoes">'
+                + '<button type="button" class="cliac" data-lista="renomear" data-id="'+esc(x.id)+'" data-nome="'+esc(x.nome)+'" data-publico="'+(x.publico?'1':'')+'">Renomear</button>'
+                + '<button type="button" class="cliac" data-lista="publico" data-id="'+esc(x.id)+'" data-nome="'+esc(x.nome)+'" data-publico="'+(x.publico?'1':'')+'">'+(x.publico?'Tornar particular':'Tornar pública')+'</button>'
+                + '<button type="button" class="cliac perigo" data-lista="excluir" data-id="'+esc(x.id)+'" data-nome="'+esc(x.nome)+'" data-publico="'+(x.publico?'1':'')+'">Excluir</button>'
+                + '</div>'
+              : '';
             const bloco = (titulo, lista, nota) => lista.length
               ? '<div class="vazio">'+titulo+(nota?'<br><span style="font-weight:400;opacity:.75">'+nota+'</span>':'')+'</div>'
                 + lista.map(x=>
+                  '<div class="cliw">'+
                   '<a class="cli" href="?v='+encodeURIComponent(x.id)+'&chave='+encodeURIComponent(chaveAtual())+'" target="_self">'+
                   '<span class="l1"><span class="nm">'+esc(x.nome)+'</span>'+
                   '<span class="id">'+x.colunas+' colunas'+(x.publico?' · pública':'')+'</span></span>'+
-                  '<span class="resumo">'+esc(x.filtro_sobre|| (x.meu ? 'sua' : 'de '+x.dono))+'</span></a>').join('')
+                  '<span class="resumo">'+esc(x.filtro_sobre|| (x.meu ? 'sua' : 'de '+x.dono))+'</span></a>'+
+                  acoes(x)+'</div>').join('')
               : '';
             /* "da equipe" no título não é enfeite: a sua própria visualização
                pública aparece em "Minhas" e NÃO se repete aqui embaixo. Sem a

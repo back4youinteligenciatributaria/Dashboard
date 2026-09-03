@@ -222,8 +222,6 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size
 .sec-tit{font-size:var(--fs-2);font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--brand-dark);margin:2px 0 10px;display:flex;align-items:center;gap:8px}
 .sec-tit::after{content:"";flex:1;height:1px;background:var(--line)}
 
-/* Acesso rápido (planilhas centrais) */
-.centrais{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;margin-bottom:26px}
 .central-lk{display:flex;align-items:center;gap:10px;text-decoration:none;background:var(--surface);border:1px solid var(--line);
   border-radius:var(--radius);padding:12px 14px;color:var(--ink);font-weight:700;font-size:13px;
   box-shadow:var(--sombra-card);transition:border-color .12s,background-color .12s}
@@ -326,8 +324,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .state code{background:var(--surface-warm);padding:2px 6px;border-radius:var(--radius-sm);border:1px solid var(--line);font-size:var(--fs-3)}
 .spin{width:24px;height:24px;border:2.5px solid var(--line-2);border-top-color:var(--brand-teal);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
-@media(max-width:560px){.wrap{padding:16px 14px 60px}.centrais{grid-template-columns:1fr}
-}
+@media(max-width:560px){.wrap{padding:16px 14px 60px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* Dossiê do cliente (contatos, licenças, certificado, mestra, equiparação) */
@@ -388,7 +385,7 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .tag-papel{font-size:var(--fs-1);font-weight:800;padding:2px 9px;border-radius:var(--radius-pill);vertical-align:middle;margin-left:4px;letter-spacing:.2px;border:1px solid transparent}
 .tag-papel.pr{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
 .tag-papel.sec{background:var(--surface-warm);color:var(--muted);border-color:var(--line)}
-/* busca das ferramentas + seção recolhível das planilhas centrais */
+/* busca das ferramentas */
 .fer-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .busca-fer{flex:1;min-width:0;font-family:var(--sans);font-size:15px;padding:12px 16px;border-radius:var(--radius-pill);
   border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
@@ -405,7 +402,6 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .sec-drop .arw{font-size:11px;color:var(--muted);transition:transform .15s}
 .sec-drop[aria-expanded="true"] .arw{transform:rotate(90deg);color:var(--brand-teal-txt)}
 .sec-drop .n{font-size:11px;font-weight:700;color:var(--muted);text-transform:none;letter-spacing:0}
-#bloco-centrais[hidden]{display:none}
 /* Aviso âmbar: mesma receita do `.ign`/`.avisos` do registro.html, e a borda pelo
    token --amber-line em vez do hex solto, que era o mesmo valor escrito à mão. */
 .aviso-off{background:var(--amber-soft);border:1px solid var(--amber-line);border-left:3px solid var(--amber);
@@ -506,10 +502,9 @@ button.central-lk[aria-expanded="true"] .arw{color:var(--brand-teal-txt)}
 .ic-chip{font-size:var(--fs-1);font-weight:700;padding:2px 8px;border-radius:var(--radius-pill);background:var(--surface-warm);color:var(--ink-2);border:1px solid var(--line)}
 .ic-chip.ok{background:#E6F3EC;color:#1f6b45;border-color:#BFE0CD}
 .ic-chip.bad{background:#F7E2DF;color:#8E2A1D;border-color:var(--vermelho)}
-/* ---- Ferramentas da equipe: o centro do painel ----
+/* ---- A parede: o centro do painel ----
    Cards grandes, com ícone em destaque, nome forte e uma linha do que se faz ali.
-   As planilhas centrais continuam discretas de propósito — é o contraste entre as
-   duas seções que deixa a hierarquia da página evidente. */
+   Dois blocos, na mesma divisão do menu lateral: ferramentas e visualizações. */
 .fer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:26px;align-items:stretch}
 @media(max-width:880px){.fer-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.fer-grid{grid-template-columns:1fr}}
@@ -907,14 +902,13 @@ function b4uParaPlanilha(valor,coluna){
   <div class="fer-off" id="fer-off" hidden></div>
   <div class="fer-vazio" id="fer-vazio" hidden>Nenhuma ferramenta com esse termo.</div>
 
-  <!-- PLANILHAS CENTRAIS — atalho para as planilhas cruas, recolhido -->
-  <button type="button" class="sec-drop" id="btn-centrais" aria-expanded="false" aria-controls="bloco-centrais">
-    <span class="arw">▸</span><span>Acesso rápido — planilhas centrais</span><span class="n" id="centrais-n"></span>
-  </button>
-  <div id="bloco-centrais" hidden>
-    <div class="aviso-off" id="aviso-centrais" hidden><svg class="b4i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 4 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4M12 17.2h.01"/></svg>A Config não devolveu os links centrais desta vez. Recarregue a página em alguns segundos.</div>
-    <div class="centrais" id="centrais"></div>
-  </div>
+  <!-- O BLOCO "Acesso rápido — planilhas centrais" SAIU em 03/09/2026, a pedido.
+       Ele era a porta de trás: uma fileira de links para as planilhas cruas, ao
+       lado das telas que existem justamente para ninguém precisar delas. Enquanto
+       estava ali, cada correção feita direto na célula passava por fora do log,
+       das validações e das permissões por área — e depois aparecia como "a tela
+       está errada". Quem precisa da planilha continua chegando nela pelo Drive.
+       Não recoloque a lista aqui. -->
 
   <!-- CLIENTES — busca com dropdown -->
   <div class="sec-tit">Pesquisa rápida</div>
@@ -943,19 +937,17 @@ const API_URL = (typeof window.B4U_API === 'string' && window.B4U_API) ||
    volta a existir uma senha compartilhada que não expira e não diz quem é quem. */
 const CHAVE_PADRAO = '';
 
-/* Planilhas centrais — vêm da Config, pelo payload de tipo=equipe. NÃO existe
-   cópia de emergência aqui, e é de propósito.
+/* NÃO EXISTE MAIS NENHUM LINK PARA PLANILHA NESTA TELA, e é em dois tempos.
 
-   Existia: 11 endereços de planilha interna escritos neste arquivo, para o painel
-   não ficar sem atalhos quando a API caísse. Só que este arquivo é servido pelo
-   GitHub Pages — é público. "Ver código-fonte" entregava o mapa inteiro do
-   sistema para quem abrisse a página, com chave, com chave errada ou sem chave
-   nenhuma. E desde que o painel passou a só desenhar depois do sim da API, a
-   cópia nem seria usada: não dá para autorizar com o autorizador fora do ar.
+   Primeiro (08/2026) saíram os 11 endereços de planilha interna que estavam
+   escritos neste arquivo como cópia de emergência: este arquivo é servido pelo
+   GitHub Pages, é público, e "ver código-fonte" entregava o mapa do sistema para
+   qualquer um. Os links passaram a vir da Config, no payload.
 
-   Ficou sem rede de segurança de propósito. Se a API cair, os atalhos somem e
-   quem precisa abre a planilha pelo Drive. Não recoloque a lista aqui. */
-let CENTRAIS_VIVOS=null;
+   Depois (03/09/2026) saiu o bloco inteiro, a pedido: painel e planilha crua
+   lado a lado transformam a planilha no atalho, e o que se edita direto na
+   célula não passa pelo log, pelas validações nem pela permissão por área. Quem
+   precisa da planilha chega nela pelo Drive. Não recoloque a lista aqui. */
 
 /* ---------- ícones (SVG de traço, sem biblioteca) ----------
    Os nove primeiros são cópia literal do conjunto do b4u-shell.js — mesmo
@@ -963,7 +955,7 @@ let CENTRAIS_VIVOS=null;
    card e o item do menu levam à MESMA página, eles têm de levar o mesmo ícone,
    senão o painel parece dois sistemas colados.
    Os de baixo foram desenhados aqui seguindo o mesmo padrão, para o que o menu
-   não cobre (planilhas centrais, dossiê e avisos).
+   não cobre (dossiê e avisos).
    Onde havia emoji: além de o dono ter pedido para tirar ("nada de emojis"),
    emoji não é ícone — cada sistema desenha o seu, em cor própria, e ele não
    acompanha a tinta nem o peso do texto ao lado. */
@@ -995,17 +987,6 @@ function icone(n){
   return '<svg class="b4i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
        + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONES[n]||ICONES.doc) + '</svg>';
 }
-
-// ícone por nome (normalizado) e quais vão pro dropdown "Outros"
-const ICONE_CENTRAL={'site links':'arquivo','registro clientes':'arquivo','societaria mestra':'livro','tickets':'ticket','contatos':'chat','feriados':'calendario','modelos':'doc','config tributario':'engrenagem','certificados e procuracoes':'escudo','certificados digitais':'escudo','equiparacao controle':'balanca','controle de licencas':'doc','extratos pendentes':'dinheiro'};
-const CENTRAIS_NO_OUTROS=['site links','registro clientes','tickets','feriados','modelos','config tributario'];
-/* Planilha que NÃO aparece no painel do colaborador, por decisão do dono: a
-   Equiparação Controle é a fonte crua e inteira da equiparação, e o caminho do
-   dia a dia é a tela de Restituição, que já mostra a mesma informação com filtro
-   de responsável. Some daqui, do menu de Restituição e do dossiê — os três
-   lugares que levavam a ela. O nome é comparado normalizado (sem acento, sem
-   caixa) porque quem escreve o rótulo é a Config, não este arquivo. */
-const CENTRAIS_FORA=['equiparacao controle'];
 
 function chaveAtual(){ const q=new URLSearchParams(location.search).get('chave'); const h=(location.hash||'').replace('#','').trim(); return q || h || CHAVE_PADRAO; }
 
@@ -1140,77 +1121,14 @@ function alertaVenc(nome, iso){
   else return ''; // só alerta quando importa (≤60d ou vencido)
   return `<span class="al ${cl}">${icone('relogio')}${esc(txt)}</span>`;
 }
-function lkArea(rot, url, ic){
-  if(url && /^https?:/.test(url)) return `<a class="lk area" href="${esc(url)}" target="_blank" rel="noopener"><span class="ic">${ic}</span>${esc(rot)}</a>`;
-  return `<span class="lk area off"><span class="ic">${ic}</span>${esc(rot)}</span>`;
-}
-function lkPasta(rot, url){
-  if(url && /^https?:/.test(url)) return `<a class="lk" href="${esc(url)}" target="_blank" rel="noopener">${esc(rot)}</a>`;
-  return '';
-}
-
-/* ---- Acesso rápido: links centrais (Config, dinâmico) + fallback ---- */
-function iconeCentral(nome){ return icone(ICONE_CENTRAL[normTxt(nome)] || 'doc'); }
-// A planilha do cadastro se chamava "Site Links" e virou "Registro Clientes" na
-// Config — os dois nomes são aceitos enquanto a troca não termina.
-const NOMES_REGISTRO=['registro clientes','site links'];
-function urlRegistros(validos){   // aba Registro, derivada do link dessa planilha
-  const sl=validos.find(p=>NOMES_REGISTRO.includes(normTxt(p.nome)));
-  return (sl && sl.url) ? sl.url.replace(/gid=\d+/g,'gid=667079147') : '';
-}
-function botaoCentral(l){
-  return `<a class="central-lk" href="${esc(l.url)}" target="_blank" rel="noopener"><span class="ic">${l.ic}</span><span>${esc(l.nome)}</span><span class="arw">›</span></a>`;
-}
-function pintarCentrais(pares){
-  if(pares && pares.length) CENTRAIS_VIVOS=pares;
-  const offline=!(pares && pares.length);
-  const validos=(pares||[]).filter(p=>p.url && /^https?:/.test(p.url))
-    .filter(p=>CENTRAIS_FORA.indexOf(normTxt(p.nome))<0);
-  // mesmo ícone do card de Registros e do item do menu lateral: é a mesma planilha
-  const registros={nome:'Registros de clientes', url:urlRegistros(validos), ic:icone('pessoal')};
-  const diretos=[registros].filter(l=>l.url).concat(validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))<0)
-    .map(p=>({nome:p.nome, url:p.url, ic:iconeCentral(p.nome)})));
-  // A lista fica separada do HTML porque é ela que o contador soma: somar a string
-  // pronta devolvia o número de caracteres ("279" no lugar de 5).
-  const recolhidos=validos.filter(p=>CENTRAIS_NO_OUTROS.indexOf(normTxt(p.nome))>=0);
-  const outros=recolhidos
-    .map(p=>`<a href="${esc(p.url)}" target="_blank" rel="noopener"><span class="ic">${iconeCentral(p.nome)}</span>${esc(p.nome)}</a>`).join('');
-  document.getElementById('centrais').innerHTML = diretos.map(botaoCentral).join('') +
-    `<div class="menu" id="menu-outros">
-       <button type="button" class="central-lk" id="btn-outros" aria-expanded="false">
-         <span class="ic">${icone('arquivo')}</span><span>Outros</span><span class="arw">▾</span>
-       </button>
-       <div class="menu-pop" id="pop-outros" hidden>${outros}</div>
-     </div>`;
-  const btn=document.getElementById('btn-outros'), pop=document.getElementById('pop-outros');
-  btn.addEventListener('click', e=>{
-    e.stopPropagation();
-    const abrir = pop.hidden;
-    pop.hidden = !abrir;
-    btn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
-  });
-  // Enquanto a Config não responder, deixa claro que os links são a cópia local.
-  const av=document.getElementById('aviso-centrais');
-  if(av) av.hidden=!offline;
-  const n=document.getElementById('centrais-n');
-  if(n) n.textContent=(diretos.length+recolhidos.length)+(offline?' · sem resposta da Config':'');
-}
-
-/* Planilhas centrais ficam recolhidas: são o atalho para a planilha crua, não
-   o caminho do dia a dia (para isso existem as ferramentas acima). */
-function ligarDropCentrais(){
-  const btn=document.getElementById('btn-centrais'), bloco=document.getElementById('bloco-centrais');
-  if(!btn||!bloco) return;
-  btn.addEventListener('click',()=>{
-    const abrir=bloco.hidden;
-    bloco.hidden=!abrir;
-    btn.setAttribute('aria-expanded',abrir?'true':'false');
-  });
-}
-function fecharOutros(){
-  const pop=document.getElementById('pop-outros'), btn=document.getElementById('btn-outros');
-  if(pop && !pop.hidden){ pop.hidden=true; btn.setAttribute('aria-expanded','false'); }
-}
+/* AS FUNÇÕES DE LINK PARA PLANILHA SAÍRAM DAQUI em 03/09/2026.
+   Eram nove — `lkArea`, `lkPasta`, `iconeCentral`, `urlRegistros`,
+   `botaoCentral`, `pintarCentrais`, `ligarDropCentrais`, `fecharOutros` — e a
+   última coisa que qualquer uma delas fazia era abrir a planilha crua numa guia
+   nova. Com o bloco e a linha "Planilhas" fora da tela, elas ficaram sem quem as
+   chamasse; código morto que abre porta é a porta que volta sozinha na próxima
+   edição distraída. O payload de `tipo=equipe` continua trazendo `centrais` —
+   esta tela simplesmente não lê mais esse campo. */
 
 /* ---- Restituição ----
    NÃO HÁ MAIS FUNÇÃO AQUI, e o histórico explica por quê.
@@ -1684,18 +1602,11 @@ function painelCliente(c){
     ${blocoInfo(c)}
     ${alertas?`<div class="alertas">${alertas}</div>`:''}
     ${drive?`<div class="linha"><span class="rot">Drive</span>${drive}</div>`:''}
-    <!-- SEM Societário: a planilha "Societario XXXXXX" foi aposentada em 07/2026 e
-         o painel societário se monta do Controle de Licenças + Mestra. O link
-         apontava para um arquivo que não existe mais.
-         Os outros só aparecem para quem tem a área. Aqui o esconder é conforto:
-         o link é uma URL do Drive, e quem barra de verdade é a permissão do
-         próprio arquivo. -->
-    <div class="linha"><span class="rot">Planilhas</span>
-      ${podeArea('fiscal')      ? lkArea('Fiscal',a.fiscal,icone('planilha')) : ''}
-      ${podeArea('equiparacao') ? lkArea('Equiparação',a.equiparacao,icone('balanca')) : ''}
-      ${podeArea('contabil')    ? lkArea('Contábil',a.contabil,icone('livro')) : ''}
-      ${podeArea('pessoal')     ? lkArea('Pessoal',a.pessoal,icone('pessoal')) : ''}
-    </div>
+    <!-- A linha "Planilhas" (Fiscal · Equiparação · Contábil · Pessoal) saiu em
+         03/09/2026, junto com o bloco de planilhas centrais e pela mesma razão:
+         painel e planilha crua lado a lado transformam a planilha no atalho, e
+         o que se edita lá não passa pelo log nem pelas validações. O Drive do
+         cliente fica — é a pasta de documentos, não uma porta de edição. -->
     <!-- O bloco "Certificado / procurações" saiu daqui: virou a seção
          "Certificados e acessos" do dossiê, logo abaixo, com os mesmos
          vencimentos e mais os endereços do certificado e dos portais. Repetir as
@@ -2698,7 +2609,6 @@ function ligarCombo(){
   });
   document.addEventListener('click', e=>{
     if(!e.target.closest('.combo')) fechar();
-    if(!e.target.closest('#menu-outros')) fecharOutros();
     /* Restituição não fecha mais nada: virou card comum, sem dropdown. */
   });
 }
@@ -2716,7 +2626,6 @@ function abrirPainel(){
   carregarParede();                 // o menu (shell) e a parede desta pessoa (servidor)
   if(bf) bf.addEventListener('input',()=>{pintarFerramentas();sincronizarURL();});
   const bc=$busca(); if(bc) bc.value=url.q;
-  ligarDropCentrais();
   ligarCombo();
   const nc=document.getElementById('novo-cliente');
   if(nc) nc.href=comChave('registro');
@@ -2748,12 +2657,10 @@ function boot(){
       marcarEu();                     // e é daqui que sai o nome no botão da barra
       const url = abrirPainel();
       TODOS=d.clientes||[]; apiOk=true;
-      // Os links vivos da Config vêm DENTRO deste payload. Antes havia um segundo
-      // jsonp para tipo=links_equipe disparado junto: as duas chamadas pegavam o
-      // cache frio ao mesmo tempo, liam as mesmas planilhas em paralelo e
-      // terminavam mais lentas do que qualquer uma sozinha — 15s e 17s no log,
-      // contra ~8s isoladas.
-      pintarCentrais(d.centrais && d.centrais.length ? d.centrais : null);
+      // `d.centrais` (os links vivos da Config) continua vindo no payload e não é
+      // mais lido: o bloco que os desenhava saiu em 03/09/2026. Deixar de pedir
+      // é trabalho de servidor, para outro dia — pedir não custa uma chamada,
+      // porque ele já vem dentro desta.
       /* Continua sendo escrito, e continua escondido: ver o <span id="cnt"> na
          barra. O tamanho da carteira quem mostra agora é a dica logo abaixo — em
          negrito, porque ela passou a ser o único lugar onde esse número aparece. */
