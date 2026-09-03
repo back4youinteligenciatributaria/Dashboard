@@ -981,7 +981,13 @@ let REC       = null;        // o descritor do recorte (rótulo, pode_gravar…)
 let SECOES    = [];
 let SEC_DE    = new Map();   // normCol(coluna) → a seção dela
 let DO_REC    = [];          // as colunas DO recorte — as que dá para escolher e editar
-let IDENT     = [];          // ID, Nome, Ativo, CNPJ… — contexto, sempre só leitura
+let IDENT     = [];          // as de identificação que NÃO foram escolhidas: contexto da linha
+/* As seis de identificação, escolhidas ou não. É a lista do `editavel()`: uma
+   coluna dessas continua só-leitura mesmo quando a visualização a declarou e
+   ela virou coluna da grade. Vem do servidor (`fixas`) para não haver duas
+   listas — uma aqui e outra no GRADE_IDENT do 3_Motor — divergindo no dia em
+   que alguém acrescentar a sétima. */
+let FIXAS     = new Set();
 let LINHAS    = [];          // [{id,row,valores,nome_cliente,ativo,drive}]
 let VALID     = {};          // coluna → {opcoes, estrito, multi}
 let ESPELHADA = new Set();   // vem do cadastro por fórmula: nunca editável
@@ -1033,6 +1039,16 @@ let ALT  = ALT_PADRAO;       // altura de TODAS as linhas
 /* A chave usa `telaAtual()`: largura e escolha de coluna de uma visualização
    não podem vazar para outra, nem para o recorte de onde ela nasceu. */
 function chaveVis(){ return 'b4u.recorte.' + (telaAtual()||'?') + '.cols'; }
+/* Quais colunas de identificação esta pessoa JÁ VIU chegar na grade desta tela.
+   Existe por causa de um caso só, e ele vale para a próxima vez também: quando
+   o servidor passa a desenhar por padrão uma coluna que antes não desenhava, a
+   escolha guardada no navegador não a contém — e a coluna nova nasce invisível
+   exatamente para quem usa a tela todo dia e por isso já mexeu na lista.
+   Acrescentá-la sempre seria pior: aí ela não poderia ser tirada, e o pedido
+   era que fosse uma variável como as outras. Então UMA vez: entra na frente da
+   lista guardada, o nome fica registrado aqui, e quem não a quiser desmarca em
+   "Colunas" e ela não volta. */
+function chaveNovas(){ return 'b4u.recorte.' + (telaAtual()||'?') + '.vistas'; }
 function chaveLay(){ return 'b4u.recorte.' + (telaAtual()||'?') + '.layout'; }
 function lerLayout(){
   try{
@@ -1074,6 +1090,20 @@ function lerVis(){
   try{ const s=localStorage.getItem(chaveVis()); return s?JSON.parse(s):null; }catch(_){ return null; }
 }
 function salvarVis(){ try{ localStorage.setItem(chaveVis(), JSON.stringify(VIS)); }catch(_){} }
+/* A estreia de uma coluna que o servidor passou a mandar por padrão. Só mexe em
+   quem já tinha lista guardada — quem não tinha recebe `visPadrao()`, que já a
+   traz. Roda uma vez por tela e por coluna; depois disso a lista é da pessoa. */
+function estrearNaGrade(novas){
+  let vistas = [];
+  try{ vistas = JSON.parse(localStorage.getItem(chaveNovas())||'[]') || []; }catch(_){ vistas = []; }
+  const jaVi = new Set(vistas.map(normCol));
+  const entrar = (novas||[]).filter(c =>
+    !jaVi.has(normCol(c)) && DO_REC.indexOf(c) > -1 && VIS.indexOf(c) < 0);
+  /* Na FRENTE, e não no fim: o documento é leitura de identificação, e uma
+     coluna de contexto no fim de trinta é uma coluna que ninguém encontra. */
+  if (entrar.length) { VIS = entrar.concat(VIS); salvarVis(); }
+  try{ localStorage.setItem(chaveNovas(), JSON.stringify((novas||[]).slice())); }catch(_){}
+}
 /* O padrão de quem nunca escolheu: TUDO o que o recorte tem.
    Não "as seis primeiras": um recorte é declarado por alguém que já decidiu o
    que interessa, e começar escondendo parte disso faria a pessoa concluir que a
@@ -1092,7 +1122,16 @@ function visPadrao(){ return DO_REC.slice(); }
 function secaoDe(col){ return SEC_DE.get(normCol(col)) || null; }
 
 function editavel(col){
-  if (IDENT.indexOf(col) > -1) return false;       // identificação é contexto, não cadastro
+  /* IDENTIFICAÇÃO É CONTEXTO, NÃO CADASTRO — e a pergunta é "esta coluna é uma
+     das de identificação?", não "ela ficou de fora do recorte?".
+     Eram a mesma pergunta enquanto nenhuma das seis podia ser escolhida. Desde
+     que CNPJ/CPF, Ativo, Produtos e Cidade voltaram para a árvore, uma delas
+     escolhida SAI de `IDENT` (passa a ser coluna de seção, como qualquer outra)
+     — e a checagem antiga a devolveria editável, com um campo de texto por cima
+     do CNPJ de cada cliente numa tela de conferência. `FIXAS` é a lista que o
+     servidor manda, e ela não depende de onde a coluna caiu. */
+  if (FIXAS.has(normCol(col))) return false;
+  if (IDENT.indexOf(col) > -1) return false;       // servidor antigo, sem `fixas`
   if (ESPELHADA.has(normCol(col))) return false;   // fórmula do cadastro: escrever destrói a IMPORTRANGE
   /* A PERMISSÃO É DA SEÇÃO, não da tela. É esta linha que faz o societário ver
      o alvará destravado e a senha do certificado travada na MESMA ficha — que é
@@ -1318,7 +1357,46 @@ document.addEventListener('click', e=>{
    da mesma linha em voo terminam fora de ordem com facilidade, e a resposta da
    anterior falaria de um estado que já não está na tela.
    ══════════════════════════════════════════════════════════════════════════ */
-let TIMER = null;
+/* UM RELÓGIO POR LOTE, E UM TETO — e por que o relógio único não servia.
+   Até 03/09/2026 havia um `TIMER` só para a tela inteira, e todo campo alterado
+   fazia `clearTimeout` nele. Duas consequências, as duas relatadas como "subo
+   várias informações rápidas e ele se enrola, se perde e para de responder":
+
+     1. QUEM MEXE SEM PARAR NUNCA GRAVA. A espera só termina depois de 700 ms
+        SEM nenhuma alteração em lugar nenhum. Preenchendo ficha atrás de ficha,
+        cada campo adiava a gravação de TODOS os lotes — o selo dizia "gravando…"
+        e nada saía. É o mesmo defeito de um elevador que só fecha a porta quando
+        ninguém mais entra.
+
+     2. UM CLIENTE SEGURAVA O OUTRO. O lote do cliente A, pronto para sair,
+        esperava a pessoa parar de digitar no cliente B. Nada os liga: são rotas
+        diferentes, linhas diferentes, permissões diferentes.
+
+   Agora cada lote tem o seu relógio (`TIMERS`, mesma chave do `SUJOS`) e um
+   TETO desde a primeira alteração pendente dele. A espera curta continua
+   juntando os três campos seguidos da mesma seção numa gravação só; o teto
+   garante que ela SAIA mesmo que a pessoa não pare — porque um lote que nunca
+   sai é dado que só existe nesta aba, e some com um F5. */
+const TIMERS = new Map();          // 'id|secao' → { id: <timeout>, desde: <ms> }
+const ESPERA = 700;                // junta o que vem em seguida
+const TETO   = 2500;               // mas não adia para sempre
+
+function agendarLote(k){
+  const agora = Date.now();
+  const t = TIMERS.get(k);
+  /* `desde` é da PRIMEIRA alteração ainda por gravar deste lote, e sobrevive às
+     seguintes — é ele que faz o teto ser um teto e não outro adiamento. */
+  const desde = t ? t.desde : agora;
+  if (t) clearTimeout(t.id);
+  const espera = Math.max(0, Math.min(ESPERA, desde + TETO - agora));
+  TIMERS.set(k, { desde: desde, id: setTimeout(()=>gravarLote(k), espera) });
+}
+
+/* Mandar agora o que estiver esperando. Fechar a ficha é o fim natural de uma
+   edição: segurar o lote mais 700 ms depois disso só aumenta a janela em que
+   fechar a aba perde o que foi digitado. */
+function descarregar(){ Array.from(TIMERS.keys()).forEach(gravarLote); }
+
 function marcarSujo(id, col, valor){
   /* O LOTE É POR SEÇÃO. Cada seção tem a sua rota e o seu porteiro; juntar os
      campos das duas num lote só obrigaria a existir uma porta com permissão de
@@ -1338,12 +1416,18 @@ function marcarSujo(id, col, valor){
   pintarSelo(id);
   /* Espera curta antes de mandar: quem corrige três campos seguidos da mesma
      seção manda UMA gravação, não três — e três seriam três leituras da planilha
-     inteira dentro do lock, uma esperando a outra. */
-  clearTimeout(TIMER);
-  TIMER = setTimeout(()=>{ Array.from(SUJOS.keys()).forEach(gravarLote); }, 700);
+     inteira dentro do lock, uma esperando a outra. Curta, mas com teto: ver
+     `agendarLote`. */
+  agendarLote(k);
 }
 
 function gravarLote(k){
+  /* O relógio deste lote morre aqui, venha a chamada dele ou do `descarregar`.
+     Sem isto, um lote descarregado à mão ainda dispararia o seu timeout depois
+     — e `gravarLote` sem campos é inofensivo, mas o `TIMERS` ficaria mentindo
+     sobre o que está por sair. */
+  const t = TIMERS.get(k);
+  if (t) { clearTimeout(t.id); TIMERS.delete(k); }
   const campos = SUJOS.get(k);
   if (!campos || !Object.keys(campos).length) return;
   SUJOS.delete(k);
@@ -1953,7 +2037,16 @@ async function abrirFicha(id){
   let ARVF = null;
   try { ARVF = (await arvoreVariaveis()).arvore; } catch (_) { ARVF = null; }
 
-  const cabeca = IDENT.map(c=>
+  /* A FAIXA DE IDENTIFICAÇÃO DA FICHA CONTINUA COM AS SEIS, escolhidas ou não.
+     Desde que o CNPJ/CPF virou coluna da grade ele saiu de `IDENT` (é coluna
+     como as outras lá), e só isto o traria de volta para cá. A alternativa era
+     deixá-lo cair no bloco "Cadastro › Identificação" mais abaixo — e aí a
+     ficha teria dois lugares chamados Identificação, com parte das colunas em
+     cada um. `identCabeca` é a lista, e é ela que os blocos descontam para o
+     campo não aparecer duas vezes na mesma ficha. */
+  const identCabeca = IDENT.concat(VIS.filter(c => FIXAS.has(normCol(c))));
+  const naCabeca = new Set(identCabeca.map(normCol));
+  const cabeca = identCabeca.map(c=>
     '<div class="mfld"><span class="lbl">'+esc(c)+'</span>'+
     campoHTML(id,c,l.valores[c],'in')+'</div>').join('');
 
@@ -1989,7 +2082,7 @@ async function abrirFicha(id){
     const usados = new Set();
     ARVF.forEach(cat => cat.subs.forEach(sub => {
       const dentro = new Set(sub.colunas.map(x => normCol(x.coluna)));
-      const cols = VIS.filter(c => dentro.has(normCol(c)));
+      const cols = VIS.filter(c => dentro.has(normCol(c)) && !naCabeca.has(normCol(c)));
       if (!cols.length) return;
       cols.forEach(c => usados.add(normCol(c)));
       const titulo = (sub.subcategoria && sub.subcategoria !== '—' && sub.subcategoria !== cat.categoria)
@@ -1999,7 +2092,7 @@ async function abrirFicha(id){
     /* Coluna que a árvore não conhece ainda existe na tela: criada na planilha
        hoje de manhã e ainda não catalogada. Ela não pode sumir da ficha por
        causa disso — some do lugar certo, não da tela. */
-    const sobra = VIS.filter(c => !usados.has(normCol(c)));
+    const sobra = VIS.filter(c => !usados.has(normCol(c)) && !naCabeca.has(normCol(c)));
     if (sobra.length) blocos += banda('Ainda sem categoria', 'rode "recatalogar" para dar categoria e tipo a estas', sobra);
   } else {
     blocos = SECOES.map(sec=>{
@@ -2007,6 +2100,12 @@ async function abrirFicha(id){
       if (!cols.length) return '';
       return banda(sec.rotulo, sec.sobre||'', cols, (sec.colunas||[]).length);
     }).join('');
+    /* Sem a árvore, coluna sem seção não tem bloco. A de identificação já está
+       na faixa de cima; qualquer outra sem seção apareceria na grade e sumiria
+       da ficha — o mesmo dado presente numa tela e ausente na outra é o começo
+       de a pessoa não confiar em nenhuma das duas. */
+    const fora = VIS.filter(c => !secaoDe(c) && !naCabeca.has(normCol(c)));
+    if (fora.length) blocos += banda('Outras colunas', 'sem seção declarada', fora);
   }
 
   const html =
@@ -2023,7 +2122,9 @@ async function abrirFicha(id){
       /* `sujo` é sobre a TELA (é ele que liga o beforeunload). A ficha grava
          sozinha, então fechá-la não perde nada que já não esteja em voo — por
          isso não há `perdeAoFechar` separado aqui. */
-      sujo: ()=> SUJOS.size>0
+      sujo: ()=> SUJOS.size>0,
+      /* Fechou a ficha: o que estiver na espera vai agora. Ver `descarregar`. */
+      aoFechar: ()=> descarregar()
     });
   }
   FICHA.titulo(l.nome_cliente || id);
@@ -2294,22 +2395,34 @@ async function comEspera(bt, fn){
   finally { if (bt) { bt.style.opacity = ''; bt.textContent = rot; } }
 }
 
-/** As seis de identificação (GRADE_IDENT) entram em TODO recorte de graça, pelo
- *  servidor. Oferecê-las na árvore não acrescenta nada e produz a coluna
- *  DUPLICADA: quem marcou "Identificação" inteira via ID e Nome duas vezes na
- *  grade — uma da lista fixa, outra da escolha. Some da árvore, e a legenda do
- *  contador diz que elas vêm sempre. */
+/** O que a árvore NÃO oferece — e desde 03/09/2026 são DUAS colunas, não seis.
+ *
+ *  Eram as seis de identificação (GRADE_IDENT), com o argumento de que elas
+ *  entram de graça em todo recorte e marcá-las produziria coluna duplicada. O
+ *  argumento só vale para ID e Nome: são as duas que a grade DESENHA sempre, na
+ *  faixa presa da esquerda (`__id` e `__nome`). Ativo, CNPJ/CPF, Produtos
+ *  Back4you e Cidade chegavam no payload e não eram desenhadas em canto nenhum
+ *  da grade — tirá-las da árvore não evitava duplicata alguma, apenas tornava
+ *  impossível pôr o CNPJ numa visualização. E o CNPJ é justamente o que separa
+ *  dois clientes de mesmo nome, que é a conferência do dia a dia.
+ *
+ *  Então elas voltam a ser escolhíveis como qualquer outra variável. O que
+ *  continua de pé é a outra metade da regra, que nunca foi sobre a árvore:
+ *  identificação NÃO SE EDITA na grade — o cadastro se edita na ficha do
+ *  cliente. Isso agora mora no `editavel()`, com a lista que o servidor manda
+ *  em `fixas`, e vale onde quer que a coluna apareça. */
+const FIXAS_DA_GRADE = ['ID', 'Nome'];
 function ehFixa(col){
   const k = normCol(col);
-  return ((ARV && ARV.fixas) || []).some(f => normCol(f) === k);
+  return FIXAS_DA_GRADE.some(f => normCol(f) === k);
 }
 
-/** Toda coluna, achatada, na ordem da planilha. `semFixas` tira as seis de
- *  identificação — e a distinção importa: elas não são ESCOLHÍVEIS (entram
- *  sempre), mas são perfeitamente FILTRÁVEIS. "Produtos Back4you contém
- *  equiparação" é o filtro fixo mais usado da casa, e tirá-lo da lista de
- *  filtros por tabela deixou a Equiparação abrir com a coluna do próprio filtro
- *  em branco. Árvore de marcar: sem as fixas. Lista de filtro: com. */
+/** Toda coluna, achatada, na ordem da planilha. `semFixas` tira ID e Nome — e a
+ *  distinção importa: elas não são ESCOLHÍVEIS (a grade já as desenha presas),
+ *  mas são perfeitamente FILTRÁVEIS. "Produtos Back4you contém equiparação" é o
+ *  filtro fixo mais usado da casa, e tirá-lo da lista de filtros por tabela
+ *  deixou a Equiparação abrir com a coluna do próprio filtro em branco. Árvore
+ *  de marcar: sem ID e Nome. Lista de filtro: com tudo. */
 function colunasTodas(semFixas){
   const out = [];
   ((ARV && ARV.arvore) || []).forEach(c => c.subs.forEach(s => s.colunas.forEach(x => {
@@ -2457,7 +2570,8 @@ function pintarConstrutor(){
        +  contaSel()+' de 60</span>'
        +  '<button type="button" class="cadd cadd--inline" data-f="novavar">＋ criar variável</button>'
        +  '<span class="cdica">Marcar a categoria marca tudo que está embaixo. '
-       +  'As seis de identificação (ID, Nome, Ativo, CNPJ, Produtos, Cidade) entram sempre. '
+       +  'ID e Cliente já vêm presos na esquerda da grade, por isso não estão na lista. '
+       +  'CNPJ/CPF, Ativo, Produtos e Cidade se escolhem aqui, e são só de leitura. '
        +  'Não achou a coluna? <b>＋ criar variável</b> cria a sua, para todo mundo.</span></div>';
     h += '<input class="vinp cbusca" id="criaBusca" placeholder="Buscar coluna…" value="'+esc(CRIA.busca)+'">';
     h += '<div class="carv">';
@@ -3202,6 +3316,7 @@ function aplicar(d){
   SECOES.forEach(sec => (sec.colunas||[]).forEach(c => SEC_DE.set(normCol(c), sec)));
   DO_REC = d.do_recorte || [];
   IDENT  = d.identificacao || [];
+  FIXAS  = new Set((d.fixas || []).map(normCol));
   LINHAS = d.linhas || [];
   VALID  = d.validacoes || {};
   ESPELHADA = new Set((d.espelhadas||[]).map(normCol));
@@ -3242,6 +3357,7 @@ function aplicar(d){
      quem mexeu e ainda não salvou. */
   if (REC.visualizacao && !guardada) VIS = DO_REC.slice();
   else VIS = guardada ? guardada.filter(c => DO_REC.indexOf(c) > -1) : visPadrao();
+  if (guardada) estrearNaGrade(d.ident_na_grade || []);
   if (!guardada) salvarVis();
   lerLayout();
   if (REC.visualizacao) VIS_SALVA = estadoDaTela();
