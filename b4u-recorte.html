@@ -261,6 +261,13 @@ a{color:var(--brand-teal-txt)}
 .cfiltro select[data-f=cond]{flex:0 0 150px}
 .cfiltro [data-f=valor]{flex:1 1 160px;min-width:0}
 .cfiltro .cnada{flex:1 1 160px;color:var(--muted)}
+/* As opções de "é qualquer um de". Rolam dentro da própria linha: uma coluna
+   com doze valores não pode empurrar o resto do formulário para fora da tela. */
+.cfiltro .copc{flex:1 1 220px;min-width:0;display:flex;flex-wrap:wrap;gap:3px 12px;
+  max-height:96px;overflow:auto;padding:6px 9px;border:1px solid var(--linha,#e6dccd);
+  border-radius:7px;background:var(--surface)}
+.cfiltro .copc label{display:flex;align-items:center;gap:5px;font-size:var(--fs-2);cursor:pointer}
+.cfiltro .copc input{margin:0}
 .cfiltro .cx{border:0;background:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px 6px}
 .cfiltro .cx:hover{color:var(--vermelho,#b3261e)}
 .cadd{border:1px dashed var(--linha,#e6dccd);background:none;border-radius:7px;
@@ -2309,22 +2316,38 @@ function metaDaColuna(col){
   return colunasTodas(false).find(x => normCol(x.coluna) === k) || null;
 }
 
+/* `valor` diz se a condição pede um valor. `lista:true` diz que o valor é uma
+   LISTA de opções, e não uma só — nasceu para matar o padrão "Ativo ≠ Inativo E
+   Ativo ≠ Em inativação", que são duas linhas para dizer uma coisa e obrigam
+   quem lê a montar a frase de cabeça.
+   `livre:true` marca a condição em que o valor é TEXTO, sempre, mesmo numa
+   coluna de lista: "contém" procura um pedaço ("equipar" dentro de "Equiparação,
+   Contabilidade"), e um menu com os valores inteiros nunca ofereceria o pedaço. */
 const COND = [
-  { id:'contem',     rot:'contém',            valor:true  },
-  { id:'igual',      rot:'é igual a',         valor:true  },
-  { id:'diferente',  rot:'é diferente de',    valor:true  },
-  { id:'preenchido', rot:'está preenchido',   valor:false },
-  { id:'vazio',      rot:'está vazio',        valor:false }
+  { id:'contem',     rot:'contém',                 valor:true, livre:true },
+  { id:'igual',      rot:'é igual a',              valor:true  },
+  { id:'diferente',  rot:'é diferente de',         valor:true  },
+  { id:'em',         rot:'é qualquer um de',       valor:true, lista:true },
+  { id:'fora',       rot:'não é qualquer um de',   valor:true, lista:true },
+  { id:'preenchido', rot:'está preenchido',        valor:false },
+  { id:'vazio',      rot:'está vazio',             valor:false }
 ];
 
-/** {coluna, contem|igual|diferente|preenchido} -> a linha que a tela edita. */
+/** {coluna, contem|igual|diferente|em|fora|preenchido} -> a linha que a tela
+ *  edita. `valores` é a lista das condições de lista; `valor` é o texto das
+ *  outras. Duas propriedades e não uma porque trocar de condição não pode
+ *  perder o que já estava escrito: quem experimenta "é igual a" e volta para
+ *  "é qualquer um de" acha as opções que tinha marcado. */
 function filtroParaLinha(f){
   if (!f || !f.coluna) return null;
-  if (f.contem    != null) return { coluna:f.coluna, cond:'contem',    valor:String(f.contem) };
-  if (f.igual     != null) return { coluna:f.coluna, cond:'igual',     valor:String(f.igual) };
-  if (f.diferente != null) return { coluna:f.coluna, cond:'diferente', valor:String(f.diferente) };
-  if (f.preenchido === false) return { coluna:f.coluna, cond:'vazio',  valor:'' };
-  return { coluna:f.coluna, cond:'preenchido', valor:'' };
+  const base = { coluna:f.coluna, valor:'', valores:[] };
+  if (f.contem    != null) return Object.assign(base, { cond:'contem',    valor:String(f.contem) });
+  if (f.igual     != null) return Object.assign(base, { cond:'igual',     valor:String(f.igual) });
+  if (f.diferente != null) return Object.assign(base, { cond:'diferente', valor:String(f.diferente) });
+  if (f.em   && f.em.length)   return Object.assign(base, { cond:'em',   valores:f.em.slice() });
+  if (f.fora && f.fora.length) return Object.assign(base, { cond:'fora', valores:f.fora.slice() });
+  if (f.preenchido === false)  return Object.assign(base, { cond:'vazio' });
+  return Object.assign(base, { cond:'preenchido' });
 }
 function linhaParaFiltro(l){
   if (!l || !l.coluna) return null;
@@ -2332,7 +2355,13 @@ function linhaParaFiltro(l){
   if (l.cond === 'vazio')      return { coluna:l.coluna, preenchido:false };
   /* Condição de valor SEM valor não vira filtro. Guardá-la produziria uma
      visualização que esconde tudo (ninguém "contém" a string vazia de um jeito
-     útil) e a pessoa acharia que a tela quebrou. */
+     útil) e a pessoa acharia que a tela quebrou. Vale igual para a lista vazia:
+     "é qualquer um de — nenhum" não esconde todo mundo, apenas não filtra. */
+  if (l.cond === 'em' || l.cond === 'fora') {
+    const vs = (l.valores||[]).filter(x => String(x).trim());
+    if (!vs.length) return null;
+    const o = { coluna:l.coluna }; o[l.cond] = vs; return o;
+  }
   if (!String(l.valor||'').trim()) return null;
   const o = { coluna:l.coluna }; o[l.cond] = l.valor; return o;
 }
@@ -2405,7 +2434,7 @@ function pintarConstrutor(){
        +   '<select data-f="coluna">' + optsColuna(l.coluna, paraFiltro) + '</select>'
        +   '<select data-f="cond">' + COND.map(x =>
              '<option value="'+x.id+'"'+(x.id===l.cond?' selected':'')+'>'+x.rot+'</option>').join('') + '</select>'
-       +   (cond.valor ? campoValor(meta, l.valor) : '<span class="cnada">—</span>')
+       +   (cond.valor ? campoValor(meta, l, cond) : '<span class="cnada">—</span>')
        +   '<button type="button" class="cx" data-f="tirar" title="Tirar este filtro">✕</button>'
        + '</div>';
   });
@@ -2470,16 +2499,52 @@ function optsColuna(sel, planas){
   return h + (ultima ? '</optgroup>' : '');
 }
 
-/** Coluna de lista vira menu suspenso, e não caixa de texto: digitar
+/** O campo de valor de UMA linha de filtro.
+ *
+ *  Coluna de lista vira menu suspenso, e não caixa de texto: digitar
  *  "protocolado" onde a planilha guarda "PROTOCOLADO" produziria um filtro que
- *  não acha ninguém e não explica por quê. */
-function campoValor(meta, valor){
-  if (meta && meta.opcoes && meta.opcoes.length) {
+ *  não acha ninguém e não explica por quê.
+ *
+ *  TRÊS EXCEÇÕES, e as três apareceram usando:
+ *  1. `contém` NUNCA vira menu. Ela procura um PEDAÇO ("equipar" dentro de
+ *     "Equiparação, Contabilidade"), e o menu só oferece valores inteiros. Foi
+ *     o que quebrou em 03/09/2026, quando a aba Variáveis passou a ter opções:
+ *     o filtro "Produtos Back4you contém equipar" abriu mostrando "—", e salvar
+ *     assim teria apagado o filtro da tela de todo mundo.
+ *  2. Valor GRAVADO que não está na lista continua aparecendo, marcado como tal.
+ *     Ele existe, está filtrando gente, e sumir do menu é perdê-lo no próximo
+ *     Salvar sem ninguém ver.
+ *  3. `é qualquer um de` desenha caixas de seleção — e, sem opções conhecidas,
+ *     uma caixa de texto com os valores separados por vírgula. */
+function campoValor(meta, linha, cond){
+  const opcoes = (meta && meta.opcoes && meta.opcoes.length) ? meta.opcoes.slice() : [];
+
+  if (cond && cond.lista) {
+    const marcados = (linha.valores||[]).map(String);
+    const todas = opcoes.slice();
+    marcados.forEach(v => { if (todas.indexOf(v) < 0) todas.push(v); });
+    if (!todas.length) {
+      return '<input data-f="valores" value="'+esc(marcados.join(', '))+'" ' +
+             'placeholder="valores separados por vírgula">';
+    }
+    return '<div class="copc">' + todas.map(o =>
+      '<label><input type="checkbox" data-f="opc" value="'+esc(o)+'"' +
+      (marcados.indexOf(String(o)) >= 0 ? ' checked' : '') + '><span>'+esc(o)+'</span></label>'
+    ).join('') + '</div>';
+  }
+
+  const valor = linha.valor;
+  if (opcoes.length && !(cond && cond.livre)) {
+    const todas = opcoes.slice();
+    const v = String(valor == null ? '' : valor);
+    const fora = v && todas.map(String).indexOf(v) < 0;
     return '<select data-f="valor"><option value="">—</option>' +
-      meta.opcoes.map(o => '<option'+(String(o)===String(valor)?' selected':'')+'>'+esc(o)+'</option>').join('') +
+      (fora ? '<option selected value="'+esc(v)+'">'+esc(v)+' (fora da lista)</option>' : '') +
+      todas.map(o => '<option'+(String(o)===v?' selected':'')+'>'+esc(o)+'</option>').join('') +
       '</select>';
   }
-  return '<input data-f="valor" value="'+esc(valor||'')+'" placeholder="valor">';
+  return '<input data-f="valor" value="'+esc(valor||'')+'" placeholder="' +
+         ((cond && cond.livre) ? 'um pedaço do texto' : 'valor') + '">';
 }
 
 /* Um ouvinte só, no corpo do modal. Os nós são reescritos a cada mudança; ouvir
@@ -2507,11 +2572,26 @@ document.addEventListener('change', e => {
     pintarConstrutor();
     return;
   }
-  if (f === 'coluna' || f === 'cond' || f === 'valor') {
+  if (f === 'opc') {
+    /* Caixa de seleção de "é qualquer um de". NÃO repinta: repintar recria as
+       caixas e o próximo clique cai num nó que já não existe. */
     const linha = t.closest('.cfiltro'); const i = +linha.getAttribute('data-i');
-    if (f === 'coluna') { CRIA.linhas[i].coluna = t.value; CRIA.linhas[i].valor = ''; }
+    const vs = (CRIA.linhas[i].valores||[]).slice();
+    const k = vs.indexOf(t.value);
+    if (t.checked && k < 0) vs.push(t.value);
+    if (!t.checked && k >= 0) vs.splice(k, 1);
+    CRIA.linhas[i].valores = vs;
+    return;
+  }
+  if (f === 'coluna' || f === 'cond' || f === 'valor' || f === 'valores') {
+    const linha = t.closest('.cfiltro'); const i = +linha.getAttribute('data-i');
+    /* Trocar de COLUNA zera o valor: "Ativo" e "Cidade" não têm as mesmas
+       opções, e um valor herdado da coluna anterior é um filtro que não acha
+       ninguém. Trocar de CONDIÇÃO não zera nada — ver `filtroParaLinha`. */
+    if (f === 'coluna') { CRIA.linhas[i].coluna = t.value; CRIA.linhas[i].valor = ''; CRIA.linhas[i].valores = []; }
     if (f === 'cond')   CRIA.linhas[i].cond = t.value;
     if (f === 'valor')  { CRIA.linhas[i].valor = t.value; return; }   // digitar não repinta
+    if (f === 'valores'){ CRIA.linhas[i].valores = t.value.split(',').map(x=>x.trim()).filter(Boolean); return; }
     pintarConstrutor();
   }
 });
@@ -2520,6 +2600,12 @@ document.addEventListener('input', e => {
   if (e.target.id === 'criaNome') { CRIA.nome = e.target.value; return; }   // não repinta: perderia o cursor
   if (e.target.getAttribute('data-f') === 'valor') {
     const linha = e.target.closest('.cfiltro'); CRIA.linhas[+linha.getAttribute('data-i')].valor = e.target.value; return;
+  }
+  if (e.target.getAttribute('data-f') === 'valores') {
+    const linha = e.target.closest('.cfiltro');
+    CRIA.linhas[+linha.getAttribute('data-i')].valores =
+      e.target.value.split(',').map(x=>x.trim()).filter(Boolean);
+    return;
   }
   if (e.target.id === 'criaBusca') {
     clearTimeout(window.__cb); const v = e.target.value;
