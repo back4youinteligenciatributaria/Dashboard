@@ -2254,17 +2254,24 @@ function ehFixa(col){
   return ((ARV && ARV.fixas) || []).some(f => normCol(f) === k);
 }
 
-/** Toda coluna da árvore, achatada, na ordem da planilha (sem as fixas). */
-function colunasPlanas(){
+/** Toda coluna, achatada, na ordem da planilha. `semFixas` tira as seis de
+ *  identificação — e a distinção importa: elas não são ESCOLHÍVEIS (entram
+ *  sempre), mas são perfeitamente FILTRÁVEIS. "Produtos Back4you contém
+ *  equiparação" é o filtro fixo mais usado da casa, e tirá-lo da lista de
+ *  filtros por tabela deixou a Equiparação abrir com a coluna do próprio filtro
+ *  em branco. Árvore de marcar: sem as fixas. Lista de filtro: com. */
+function colunasTodas(semFixas){
   const out = [];
   ((ARV && ARV.arvore) || []).forEach(c => c.subs.forEach(s => s.colunas.forEach(x => {
-    if (!ehFixa(x.coluna)) out.push(Object.assign({ categoria: c.categoria, subcategoria: s.subcategoria }, x));
+    if (semFixas && ehFixa(x.coluna)) return;
+    out.push(Object.assign({ categoria: c.categoria, subcategoria: s.subcategoria }, x));
   })));
   return out;
 }
+function colunasPlanas(){ return colunasTodas(true); }
 function metaDaColuna(col){
   const k = normCol(col);
-  return colunasPlanas().find(x => normCol(x.coluna) === k) || null;
+  return colunasTodas(false).find(x => normCol(x.coluna) === k) || null;
 }
 
 const COND = [
@@ -2349,13 +2356,14 @@ function pintarConstrutor(){
   h += '<div class="csec">Filtros fixos'
      +  '<span class="cdica">Valem sempre nesta visualização, para quem abrir. '
      +  'Diferente do funil de cada coluna, que é só o que você está olhando agora.</span></div>';
+  const paraFiltro = colunasTodas(false);
   h += '<div id="cfiltros">';
   if (!CRIA.linhas.length) h += '<div class="cvazio">Sem filtro fixo — a tela mostra todos os clientes.</div>';
   CRIA.linhas.forEach((l, i) => {
     const meta = metaDaColuna(l.coluna);
     const cond = COND.find(x => x.id === l.cond) || COND[0];
     h += '<div class="cfiltro" data-i="'+i+'">'
-       +   '<select data-f="coluna">' + optsColuna(l.coluna, planas) + '</select>'
+       +   '<select data-f="coluna">' + optsColuna(l.coluna, paraFiltro) + '</select>'
        +   '<select data-f="cond">' + COND.map(x =>
              '<option value="'+x.id+'"'+(x.id===l.cond?' selected':'')+'>'+x.rot+'</option>').join('') + '</select>'
        +   (cond.valor ? campoValor(meta, l.valor) : '<span class="cnada">—</span>')
