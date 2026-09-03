@@ -569,6 +569,92 @@ var SECOES_ONBOARDING = CAT.ordem.filter(function(s){
 function camposDaSecao(sec){ return CAT.campos.filter(function(c){ return c.s === sec; }); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   COMPLETAR O CATÁLOGO COM A ABA "VARIÁVEIS"
+   ═══════════════════════════════════════════════════════════════════════════
+
+   O `b4u-registro-campos.js` conhece 210 das 341 colunas da aba Registro. As
+   outras 131 — o bloco inteiro de equiparação, o de DP, o de cobrança, as 14
+   pastas do Drive, os 23 campos do cartão CNPJ — simplesmente NÃO APARECIAM
+   nesta ficha: ela desenha o que o catálogo declara, e o que ele não declara
+   não existe para ela. A pessoa via a coluna na planilha e não a achava aqui.
+
+   Desde 03/09/2026 a aba "Variáveis" diz categoria, subcategoria e tipo de
+   TODAS elas, e o servidor manda isso em `tipo=variaveis` já filtrado pela
+   permissão de quem está olhando. Aqui a gente só costura: cada coluna viva que
+   o catálogo não conhece vira um campo, numa seção chamada "Categoria ›
+   Subcategoria", e daí para frente o resto da página não sabe a diferença.
+
+   O QUE NÃO ENTRA, E POR QUÊ:
+     · coluna que o catálogo JÁ conhece — ele é mais específico (tem `dono`,
+       `req`, `full`, `dica` escritos à mão), e sobrescrever isso seria trocar
+       informação boa por informação genérica;
+     · as ~30 perguntas do diagnóstico (`Diag …`) — elas são respondidas no
+       grupo "Atuação empresarial", com peso e alternativas. Desenhá-las também
+       como campo de texto recriaria exatamente o problema que o `dono` existe
+       para resolver: o mesmo fato em dois lugares, e um dia as duas respostas
+       diferentes.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* tipo da aba -> tipo de campo que o `campoHTML` desta página sabe desenhar.
+   O que não estiver aqui vira 'text', que é o campo mais burro e o único que
+   nunca perde o que já está gravado. */
+var TIPO_ABA = {
+  'texto':'text', 'texto longo':'textarea', 'número':'text', 'dinheiro':'money',
+  'data':'date', 'sim/não':'select', 'lista':'select', 'lista múltipla':'multi',
+  'link':'text', 'senha':'text'
+};
+
+function completarCatalogo(colunasVivas, arvore){
+  var meta = {};
+  (arvore || []).forEach(function(cat){ cat.subs.forEach(function(sub){ sub.colunas.forEach(function(x){
+    meta[norm(x.coluna)] = { cat: cat.categoria, sub: sub.subcategoria, tipo: x.tipo,
+                             opcoes: x.opcoes || [], dica: x.dica || '' };
+  }); }); });
+
+  var doDiagnostico = {};
+  perguntas().forEach(function(pg){ if (pg.col) doDiagnostico[norm(pg.col)] = true; });
+
+  var novas = [];
+  (colunasVivas || []).forEach(function(col){
+    var k = norm(col);
+    if (!k || PORCOL[k] || doDiagnostico[k]) return;
+    var m = meta[k];
+    if (!m) return;                      // nem a aba conhece: não invento seção
+    var sec = m.cat + ((m.sub && m.sub !== '—' && m.sub !== m.cat) ? ' › ' + m.sub : '');
+    var c = { col: col, s: sec, t: TIPO_ABA[m.tipo] || 'text' };
+    if (m.dica) c.dica = m.dica;
+    /* A primeira opção vazia é a convenção do catálogo para "não respondido" —
+       sem ela, um select nasce já marcado no primeiro valor e a ficha passa a
+       afirmar uma coisa que ninguém respondeu. */
+    if (m.opcoes.length && (c.t === 'select' || c.t === 'multi')) c.opts = [''].concat(m.opcoes);
+    if (m.tipo === 'senha') c.sensivel = 1;
+    if (m.tipo === 'texto longo') c.full = 1;
+    CAT.campos.push(c); PORCOL[k] = c;
+    if (CAT.ordem.indexOf(sec) < 0 && novas.indexOf(sec) < 0) novas.push(sec);
+  });
+
+  if (!novas.length) return 0;
+  /* As seções novas entram ANTES de "Outros", que é por definição a última. */
+  var iOutros = CAT.ordem.indexOf('Outros');
+  if (iOutros < 0) CAT.ordem = CAT.ordem.concat(novas);
+  else CAT.ordem = CAT.ordem.slice(0, iOutros).concat(novas, CAT.ordem.slice(iOutros));
+
+  /* Estas duas nasceram do catálogo lá em cima e agora estão desatualizadas. */
+  SECOES_ONBOARDING = CAT.ordem.filter(function(x){
+    return x !== 'Identificação' && x !== SEC_CALCULADA && x !== 'Outros';
+  });
+  /* Pelo NOME, e não por GRUPOS[1]: o dia em que alguém acrescentar um grupo
+     antes deste, o índice fixo passaria a reescrever o grupo errado — e o
+     sintoma seria a Identificação virar a lista de seções de onboarding. */
+  for (var g = 0; g < GRUPOS.length; g++) if (GRUPOS[g].n === 'Onboarding geral') {
+    GRUPOS[g].painéis = SECOES_ONBOARDING.map(function(x){
+      return { id: 'cat:' + x, n: x, tipo: 'cat', sec: x };
+    });
+  }
+  return novas.length;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    O DIAGNÓSTICO — atuação empresarial
 
    Dois medidores, e a separação é a decisão de projeto mais importante da
@@ -1801,8 +1887,15 @@ function carregar(){
         try { var o = JSON.parse(js); RESP = o.resp || {}; OBS = o.obs || {}; }
         catch (e) { /* JSON estragado não pode derrubar a ficha */ }
       }
-      avisar('');
-      redesenhar();
+      /* A ÁRVORE VEM ANTES DE DESENHAR, e não depois. Desenhar primeiro e
+         completar em seguida faria a ficha nascer com 15 seções e ganhar mais 20
+         meio segundo depois, com a navegação lateral pulando debaixo do cursor.
+         Se a rota falhar, a ficha abre como sempre abriu — sem as 131, que é o
+         estado de ontem e não um erro. */
+      return jsonp(API_URL + '?tipo=variaveis&chave=' + encodeURIComponent(chaveAtual()))
+        .then(function(a){ if (a && !a.erro) completarCatalogo(d.colunas, a.arvore); })
+        .catch(function(){})
+        .then(function(){ avisar(''); redesenhar(); });
     })
     .catch(function(e){ avisar(e.message, 'erro'); redesenhar(); });
 }
