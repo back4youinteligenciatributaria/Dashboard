@@ -3052,13 +3052,17 @@ function carregar(){
           '<span class="l1"><span class="nm">＋ Criar uma variável nova</span></span>' +
           '<span class="resumo">A coluna que você precisa ainda não existe? Ela nasce no fim do Registro, ' +
           'vazia, com a variável de mala direta e a categoria já preenchidas.</span></a>';
+        /* Sem recorte nenhum não é erro desde 03/09/2026: os cinco do catálogo
+           foram ocultados e viraram visualizações públicas. Manter a frase
+           "Nenhum recorte disponível para o seu acesso" faria toda a equipe ler
+           que perdeu acesso a alguma coisa. O bloco simplesmente não aparece. */
         document.getElementById('conteudo').innerHTML = criar + (its.length
           ? '<div class="vazio">Escolha um recorte:</div>' + its.map(x=>
               '<a class="cli" href="?r='+encodeURIComponent(x.id)+'&chave='+encodeURIComponent(chaveAtual())+'" target="_self">'+
               '<span class="l1"><span class="nm">'+esc(x.rotulo)+'</span>'+
               '<span class="id">'+x.colunas+' colunas'+(x.pode_gravar?'':' · só leitura')+'</span></span>'+
               '<span class="resumo">'+esc(x.sobre||'')+'</span></a>').join('')
-          : '<div class="vazio">Nenhum recorte disponível para o seu acesso.</div>');
+          : '');
         document.getElementById('cnt').textContent = '';
         document.getElementById('tag').textContent = 'Recortes do Registro';
         /* E as visualizações logo abaixo, na mesma página: quem chega aqui

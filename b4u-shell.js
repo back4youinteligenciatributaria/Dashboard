@@ -984,13 +984,19 @@
    * devolve só esses; a rota mede permissão seção por seção) e as visualizações
    * DELA (`vis_lista`, campo `minhas`).
    *
-   * O QUE NÃO ENTRA, E POR QUÊ. As públicas dos outros. Menu é o que eu uso
-   * todo dia; a lista pública é uma prateleira de onde se pega. Se toda
-   * visualização pública de todo mundo caísse aqui, em três meses o menu de
-   * quem só olha Daily teria trinta linhas que não são dele. Pegar da
-   * prateleira é o "+": leva ao centro, onde as públicas estão listadas e
-   * "Duplicar" faz uma cópia SUA — que aí sim aparece aqui, com o seu nome, e
-   * que você pode mexer sem estragar a de ninguém.
+   * AS PÚBLICAS TAMBÉM ENTRAM — e isso mudou em 03/09/2026.
+   * A regra anterior era "só as minhas": o menu é o que eu uso todo dia, e a
+   * lista pública era uma prateleira de onde se pega. Ela caiu quando as seis
+   * telas centrais da casa (Documentos, Fiscal, DP, Contábil, Societário,
+   * Controladoria) passaram a ser visualizações PÚBLICAS do dono em vez de
+   * recortes de código. Com a regra velha, só o dono as via no menu; para o
+   * resto da equipe — que é quem trabalha nelas — elas simplesmente não
+   * existiam.
+   *
+   * O que evita o menu de trinta linhas não é mais a regra, é a coluna "Só
+   * para" da aba Visualizações: pública sem lista alcança a equipe inteira,
+   * pública COM lista alcança só quem está nela. O servidor já resolve isso
+   * (`_visAlcanca_`, 4_Telas) — aqui chega só o que alcança esta pessoa.
    *
    * POR QUE FICA GUARDADO NA ABA (sessionStorage). São duas chamadas, e o menu
    * está em nove páginas: sem guardar, seriam duas por navegação, todas
@@ -1073,7 +1079,11 @@
        não pode levar os recortes junto: são duas perguntas independentes, e o
        `fim()` só junta o que chegou. */
     pedirJSONP(api + '?tipo=vis_lista&chave=' + encodeURIComponent(chave), function (dd) {
-      if (dd && !dd.erro && dd.minhas) out.vis = dd.minhas;
+      if (dd && !dd.erro) {
+        /* As MINHAS primeiro, depois as públicas que me alcançam. A ordem é a
+           da propriedade: quem salvou uma tela quer achá-la sem procurar. */
+        out.vis = (dd.minhas || []).concat(dd.publicas || []);
+      }
       fim();
     });
   }
@@ -1124,8 +1134,12 @@
     });
     if (recs.length && vis.length) h += '<div class="b4s-corte"></div>';
     vis.forEach(function (v) {
+      /* A dica diz de QUEM é quando não é minha. Duas pessoas podem ter telas
+         de nome parecido, e "Fiscal" no menu sem dono deixa a pessoa achando
+         que mexer ali muda só para ela. */
       h += item(junta('v=' + encodeURIComponent(v.id)), 'lente', v.nome, qv === v.id,
-                (v.colunas ? v.colunas + ' colunas' : '') + (v.publico ? ' · pública' : ''));
+                (v.colunas ? v.colunas + ' colunas' : '') +
+                (v.meu ? '' : ' · de ' + (v.dono || 'outra pessoa')));
     });
     h += '<a class="b4s-i b4s-mais" href="' + escH(base) + '" '
        + 'title="Escolher uma visualização pública ou criar a sua">'
