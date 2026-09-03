@@ -2244,6 +2244,20 @@ async function arvoreVariaveis(){
   return ARV;
 }
 
+/** Roda `fn` avisando NO PRÓPRIO BOTÃO que está indo buscar.
+ *
+ *  A árvore são 341 colunas e leva alguns segundos na primeira vez. Sem este
+ *  aviso, clicar em "Criar visualização" logo depois de a tela abrir não fazia
+ *  nada visível por três, quatro segundos — e o que a pessoa faz nesses
+ *  segundos é clicar de novo, e de novo, e concluir que o botão está quebrado.
+ *  Botão sem resposta é a forma mais barata de perder confiança numa tela. */
+async function comEspera(bt, fn){
+  const rot = bt ? bt.textContent : '';
+  if (bt) { bt.style.opacity = '.6'; bt.textContent = 'abrindo…'; }
+  try { return await fn(); }
+  finally { if (bt) { bt.style.opacity = ''; bt.textContent = rot; } }
+}
+
 /** As seis de identificação (GRADE_IDENT) entram em TODO recorte de graça, pelo
  *  servidor. Oferecê-las na árvore não acrescenta nada e produz a coluna
  *  DUPLICADA: quem marcou "Identificação" inteira via ID e Nome duas vezes na
@@ -2718,15 +2732,15 @@ document.addEventListener('click', async e => {
      coluna que ela precisa não existe. Mandá-la abrir a planilha e voltar é
      onde a ideia morre. */
   if (acao === 'novavar') {
-    try { return await abrirNovaVariavel(); } catch (err) { return mostrarErro(err); }
+    try { return await comEspera(bt, () => abrirNovaVariavel()); } catch (err) { return mostrarErro(err); }
   }
 
   if (acao === 'criar') {
     try {
-      return await abrirConstrutor({
+      return await comEspera(bt, () => abrirConstrutor({
         titulo: 'Nova visualização', confirmar: 'Criar',
         aoSalvar: est => visGravarEstado(est)
-      });
+      }));
     } catch (err) { return mostrarErro(err); }
   }
 
@@ -2740,7 +2754,7 @@ document.addEventListener('click', async e => {
     const meu = !!(v && v.meu);
     const atual = (REC && REC.filtro) ? (Array.isArray(REC.filtro) ? REC.filtro : [REC.filtro]) : [];
     try {
-      return await abrirConstrutor({
+      return await comEspera(bt, () => abrirConstrutor({
         titulo:    meu ? 'Filtros fixos desta visualização' : 'Filtros fixos — vira uma visualização sua',
         confirmar: meu ? 'Salvar' : 'Criar minha visualização',
         soFiltro:  meu,
@@ -2751,7 +2765,7 @@ document.addEventListener('click', async e => {
           ? visGravarEstado({ nome: v.nome, colunas: VIS.slice(), filtro: est.filtro,
                               ordem: estadoDaTela().ordem }, { id: v.id, publico: v.publico })
           : visGravarEstado(est)
-      });
+      }));
     } catch (err) { return mostrarErro(err); }
   }
 
