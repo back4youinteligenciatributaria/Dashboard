@@ -1409,7 +1409,20 @@ function pintarFerramentas(){
   if(cxV) cxV.hidden = !!termo && !lv.length;
 
   const total=lf.length+lv.length;
-  const vazio=document.getElementById('fer-vazio'); if(vazio) vazio.hidden=total>0;
+  /* Três vazios diferentes, e um recado só para os três seria mentira em dois:
+     "nada com esse termo" quando não há termo manda a pessoa apagar uma busca
+     que ela não fez, e o mesmo texto durante o carregamento faz a tela parecer
+     quebrada meio segundo antes de encher. */
+  const vazio=document.getElementById('fer-vazio');
+  if(vazio){
+    if(total>0 || !ITENS){ vazio.hidden=true; }
+    else{
+      vazio.hidden=false;
+      vazio.textContent = termo
+        ? 'Nenhuma ferramenta com esse termo.'
+        : 'Você tirou tudo do seu painel. Toque em Personalizar para trazer de volta.';
+    }
+  }
   const cnt=document.getElementById('fer-cnt');
   const todos=listas.fer.filter(visivel).length+listas.vis.filter(visivel).length;
   if(cnt) cnt.textContent = termo ? total+' de '+todos : '';
@@ -1551,12 +1564,54 @@ function ligarParede(){
   });
 }
 
-/* As duas chamadas da parede. Best-effort as duas: sem o shell a parede fica
-   vazia com o recado; sem as preferências ela aparece inteira, na ordem do
-   menu, que é exatamente como ela nasce para quem nunca personalizou. */
+/* PLANO B: a mesma lista, montada aqui.
+ *
+ * `B4UShell.itensEquipe()` nasceu em 09/2026, e o navegador de quem já esteve
+ * aqui guarda o b4u-shell.js por horas. Enquanto o antigo estiver em cache, a
+ * função não existe — e a parede ficaria VAZIA para a equipe inteira durante a
+ * janela de cache. Um painel em branco no dia da subida é pior do que qualquer
+ * coisa que esta versão veio consertar.
+ *
+ * O que muda em relação ao caminho bom: os ícones. `B4UShell.icone` também é
+ * novo, então aqui cada um cai no desenho local de mesmo nome — e o que não
+ * existir vira o de documento. A LISTA continua saindo de `B4UShell.MENU.equipe`
+ * (que o shell antigo já expõe) e das mesmas duas rotas: em nenhum momento esta
+ * tela passa a ter uma lista própria, que é justamente o defeito que ela veio
+ * resolver. */
+function itensLocais(pronto){
+  const menu=(window.B4UShell&&B4UShell.MENU&&B4UShell.MENU.equipe)||[];
+  const fixos=menu.filter(it=>!it.sec&&it.id)
+    .map(it=>({id:it.id,rot:it.rot,ic:it.ic,pag:it.pag,href:comChave(it.pag),tipo:'fixo'}));
+  const base=comChave('b4u-recorte');
+  const junta=e=>base+(base.indexOf('?')>=0?'&':'?')+e;
+  const out={fixos:fixos,recortes:[],vis:[],novaVis:base};
+  let faltam=2;
+  const fim=()=>{ if(--faltam) return; pronto(out); };
+
+  jsonp(API_URL+'?tipo=recorte_lista&chave='+encodeURIComponent(chaveAtual()))
+    .then(d=>{ if(d&&!d.erro&&d.recortes) out.recortes=d.recortes.map(r=>({
+        id:'r:'+r.id, rot:r.rotulo, ic:'doc',
+        href:junta('r='+encodeURIComponent(r.id)), sobre:r.sobre||'', tipo:'recorte'})); })
+    .catch(()=>{}).then(fim);
+
+  jsonp(API_URL+'?tipo=vis_lista&chave='+encodeURIComponent(chaveAtual()))
+    .then(d=>{ if(d&&!d.erro) out.vis=(d.minhas||[]).concat(d.publicas||[]).map(v=>({
+        id:'v:'+v.id, rot:v.nome, ic:'planilha',
+        href:junta('v='+encodeURIComponent(v.id)),
+        sobre:(v.colunas?v.colunas+' colunas':'')+(v.meu?'':' · de '+(v.dono||'outra pessoa')),
+        meu:!!v.meu, dono:v.dono||'', tipo:'vis'})); })
+    .catch(()=>{}).then(fim);
+}
+
+/* As duas chamadas da parede. Best-effort as duas: sem lista nenhuma a parede
+   fica vazia e calada (o recado de vazio só aparece quando SE SABE que está
+   vazia); sem as preferências ela aparece inteira, na ordem do menu, que é
+   exatamente como ela nasce para quem nunca personalizou. */
 function carregarParede(){
   if(window.B4UShell && B4UShell.itensEquipe){
     B4UShell.itensEquipe(function(d){ ITENS=d||null; pintarFerramentas(); });
+  }else{
+    itensLocais(function(d){ ITENS=d||null; pintarFerramentas(); });
   }
   jsonp(API_URL+'?tipo=atalhos_meus&chave='+encodeURIComponent(chaveAtual()))
     .then(d=>{
