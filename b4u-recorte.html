@@ -1357,9 +1357,17 @@ function gravarLote(k){
   const itens = Object.keys(campos).map(c =>
     c + ' → ' + (SIGILOSA.has(normCol(c)) ? '(alterado)' : (campos[c] || '(vazio)')));
 
-  const envio = () => postAcao({ acao:'recorte_salvar', recorte:recorteAtual(),
+  /* QUAL TELA ESTÁ GRAVANDO — e por que não é sempre `recorte`.
+     O servidor aceita `v=<id>` (visualização) OU `recorte=<id>` (recorte do
+     catálogo); esta linha mandava SEMPRE `recorte`, e numa visualização o
+     `recorteAtual()` é vazio. O resultado, a partir de 03/09/2026 — quando as
+     seis telas da equipe viraram visualizações —, era todo Salvar morrer com
+     "Não existe um recorte chamado ''". Ler funcionava (o `carregar()` já
+     escolhia certo); gravar, não. */
+  const alvo = visAtual() ? { v: visAtual() } : { recorte: recorteAtual() };
+  const envio = () => postAcao(Object.assign({ acao:'recorte_salvar',
                                  secao:sec.id, id:id, campos:campos,
-                                 cliente:linha.nome_cliente||'' })
+                                 cliente:linha.nome_cliente||'' }, alvo))
     .then(d => {
       /* O servidor devolve o que IGNOROU (coluna fora da seção, célula com
          fórmula). Ignorada NÃO foi gravada, e chamar isso de sucesso é a mentira
