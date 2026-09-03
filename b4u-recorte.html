@@ -280,6 +280,11 @@ a{color:var(--brand-teal-txt)}
 /* A caixa "meio marcada" — a categoria com parte das colunas dentro. Sem este
    sinal, uma categoria com 3 de 53 marcadas se parece com uma vazia. */
 .clin input[data-meio]{outline:2px solid var(--brand-euc,#3FA680);outline-offset:1px}
+.nv2{display:flex;gap:12px;margin-top:14px}
+.nv2>div{flex:1 1 0;min-width:0}
+.nvprev{margin:16px 0 0;padding:10px 12px;border-radius:8px;background:var(--surface-warm);
+  color:var(--ink-2);font-size:var(--fs-2);line-height:1.55}
+.nvprev b{font-family:var(--mono,ui-monospace,SFMono-Regular,Menlo,monospace)}
 
 /* ---------- a régua de filtros ----------
    Ela nunca estoura: quebra de linha. */
@@ -1891,9 +1896,32 @@ function pintarChips(){
    é exatamente o caso para o qual o `criar()` foi escrito e nunca usado.
    ══════════════════════════════════════════════════════════════════════════ */
 let FICHA = null;
-function abrirFicha(id){
+async function abrirFicha(id){
   const l = LINHAS.find(x=>x.id===id);
   if (!l || !window.B4UModal) return;
+
+  /* A ficha se organiza pela ÁRVORE (categoria › subcategoria da aba
+     "Variáveis"), e não mais pelas seções do recorte. Duas razões:
+
+     1. É a mesma divisão que a pessoa usou para ESCOLHER as colunas no
+        construtor. Escolher por "Departamento pessoal › Folha e benefícios" e
+        reencontrar tudo espalhado em "Outras colunas (leitura)" é a tela
+        contradizendo o caminho que a própria pessoa acabou de fazer.
+     2. Visualização montada do zero não tem seção nenhuma do catálogo — todas
+        as colunas caíam num bloco só chamado "Outras colunas", que não
+        organiza nada.
+
+     O QUE A SEÇÃO EXPLICAVA E A CATEGORIA NÃO EXPLICA é a permissão de
+     gravação: a fronteira do porteiro é a seção, não a categoria. Por isso o
+     aviso de "você não edita" desceu para o nível do BLOCO calculado campo a
+     campo (`editavel`), em vez de vir declarado pela seção — e o cadeado de
+     cada rótulo continua onde estava.
+
+     Se a árvore não vier (rota fora do ar, aba "Variáveis" ainda não semeada),
+     a ficha volta a se organizar pelas seções. Ficha que não abre é pior do que
+     ficha organizada do jeito antigo. */
+  let ARVF = null;
+  try { ARVF = (await arvoreVariaveis()).arvore; } catch (_) { ARVF = null; }
 
   const cabeca = IDENT.map(c=>
     '<div class="mfld"><span class="lbl">'+esc(c)+'</span>'+
@@ -1914,20 +1942,42 @@ function abrirFicha(id){
       campoHTML(id,c,l.valores[c],'in')+
     '</div>';
 
-  const blocos = SECOES.map(sec=>{
-    const cols = VIS.filter(c=>{ const x=secaoDe(c); return x && x.id===sec.id; });
-    if (!cols.length) return '';
-    return '<div class="banda">'+
-             '<span class="t">'+esc(sec.rotulo)+'</span>'+
-             '<span class="s">'+esc(sec.sobre||'')+'</span>'+
-             /* O aviso vive na FAIXA, dito uma vez — e não repetido em vinte e um
-                cadeados, um por campo. O cadeado do rótulo continua lá para quem
-                chegar direto num campo, mas quem explica é isto aqui. */
-             (sec.pode_gravar ? '' : '<span class="aviso">você não edita esta seção</span>')+
-             '<span class="s" style="flex:0 0 auto">'+cols.length+' de '+(sec.colunas||[]).length+'</span>'+
-           '</div>'+
-           '<div class="msec"><div class="msec-campos">'+cols.map(campo).join('')+'</div></div>';
-  }).join('');
+  /* O aviso vive na FAIXA, dito uma vez — e não repetido em vinte e um
+     cadeados, um por campo. O cadeado do rótulo continua lá para quem chegar
+     direto num campo, mas quem explica é isto aqui. */
+  const banda = (titulo, sub, cols, total) =>
+    '<div class="banda">'+
+      '<span class="t">'+esc(titulo)+'</span>'+
+      '<span class="s">'+esc(sub||'')+'</span>'+
+      (cols.some(editavel) ? '' : '<span class="aviso">você não edita este bloco</span>')+
+      '<span class="s" style="flex:0 0 auto">'+cols.length+(total?' de '+total:'')+'</span>'+
+    '</div>'+
+    '<div class="msec"><div class="msec-campos">'+cols.map(campo).join('')+'</div></div>';
+
+  let blocos = '';
+  if (ARVF) {
+    const usados = new Set();
+    ARVF.forEach(cat => cat.subs.forEach(sub => {
+      const dentro = new Set(sub.colunas.map(x => normCol(x.coluna)));
+      const cols = VIS.filter(c => dentro.has(normCol(c)));
+      if (!cols.length) return;
+      cols.forEach(c => usados.add(normCol(c)));
+      const titulo = (sub.subcategoria && sub.subcategoria !== '—' && sub.subcategoria !== cat.categoria)
+        ? cat.categoria + ' › ' + sub.subcategoria : cat.categoria;
+      blocos += banda(titulo, '', cols, sub.colunas.length);
+    }));
+    /* Coluna que a árvore não conhece ainda existe na tela: criada na planilha
+       hoje de manhã e ainda não catalogada. Ela não pode sumir da ficha por
+       causa disso — some do lugar certo, não da tela. */
+    const sobra = VIS.filter(c => !usados.has(normCol(c)));
+    if (sobra.length) blocos += banda('Ainda sem categoria', 'rode "recatalogar" para dar categoria e tipo a estas', sobra);
+  } else {
+    blocos = SECOES.map(sec=>{
+      const cols = VIS.filter(c=>{ const x=secaoDe(c); return x && x.id===sec.id; });
+      if (!cols.length) return '';
+      return banda(sec.rotulo, sec.sobre||'', cols, (sec.colunas||[]).length);
+    }).join('');
+  }
 
   const html =
     '<div class="msec"><div class="msec-tit">Identificação<span class="n">só leitura</span></div>'+
@@ -2194,11 +2244,22 @@ async function arvoreVariaveis(){
   return ARV;
 }
 
-/** Toda coluna da árvore, achatada, na ordem da planilha. */
+/** As seis de identificação (GRADE_IDENT) entram em TODO recorte de graça, pelo
+ *  servidor. Oferecê-las na árvore não acrescenta nada e produz a coluna
+ *  DUPLICADA: quem marcou "Identificação" inteira via ID e Nome duas vezes na
+ *  grade — uma da lista fixa, outra da escolha. Some da árvore, e a legenda do
+ *  contador diz que elas vêm sempre. */
+function ehFixa(col){
+  const k = normCol(col);
+  return ((ARV && ARV.fixas) || []).some(f => normCol(f) === k);
+}
+
+/** Toda coluna da árvore, achatada, na ordem da planilha (sem as fixas). */
 function colunasPlanas(){
   const out = [];
-  ((ARV && ARV.arvore) || []).forEach(c => c.subs.forEach(s => s.colunas.forEach(x =>
-    out.push(Object.assign({ categoria: c.categoria, subcategoria: s.subcategoria }, x)))));
+  ((ARV && ARV.arvore) || []).forEach(c => c.subs.forEach(s => s.colunas.forEach(x => {
+    if (!ehFixa(x.coluna)) out.push(Object.assign({ categoria: c.categoria, subcategoria: s.subcategoria }, x));
+  })));
   return out;
 }
 function metaDaColuna(col){
@@ -2313,9 +2374,10 @@ function pintarConstrutor(){
     (ARV.arvore||[]).forEach(cat => {
       const subs = cat.subs.map(s => ({
         sub: s,
-        cols: s.colunas.filter(x => !b || normCol(x.coluna).indexOf(b) >= 0 ||
+        cols: s.colunas.filter(x => !ehFixa(x.coluna) &&
+                                   (!b || normCol(x.coluna).indexOf(b) >= 0 ||
                                     normCol(s.subcategoria).indexOf(b) >= 0 ||
-                                    normCol(cat.categoria).indexOf(b) >= 0)
+                                    normCol(cat.categoria).indexOf(b) >= 0))
       })).filter(x => x.cols.length);
       if (!subs.length) return;
       const todas = subs.reduce((a,x)=>a.concat(x.cols),[]);
@@ -2380,6 +2442,7 @@ document.addEventListener('change', e => {
     else {
       const nome = t.getAttribute('data-nome');
       (ARV.arvore||[]).forEach(cat => cat.subs.forEach(s => s.colunas.forEach(x => {
+        if (ehFixa(x.coluna)) return;
         if (c === 'cat' && cat.categoria === nome) alvo.push(x.coluna);
         if (c === 'sub' && (cat.categoria+'||'+s.subcategoria) === nome) alvo.push(x.coluna);
       })));
@@ -2432,6 +2495,156 @@ async function salvarConstrutor(bt){
   bt.disabled = true; const rot = bt.textContent; bt.textContent = 'Salvando…';
   try { await CRIA.aoSalvar(est); }
   catch (err) { mostrarErro(err); }
+  finally { bt.disabled = false; bt.textContent = rot; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CRIAR UMA VARIÁVEL — a coluna nasce daqui
+   ═══════════════════════════════════════════════════════════════════════════
+
+   A coluna nasce no FIM da aba Registro, vazia, com a variável de mala direta
+   escrita na linha 1 e a linha correspondente na aba "Variáveis". Os três
+   passos que antes eram manuais — e o que sempre se esquecia era o da linha 1,
+   que não dá erro: só desloca todas as variáveis dali para a direita.
+
+   A VARIÁVEL É MOSTRADA ANTES DE CRIAR, e não depois. Ela é contrato com a mala
+   direta: quem está criando precisa ver `{ID.cobranca.mensalidade.diadecorte}`
+   e poder desistir, em vez de descobrir o nome quando for montar o documento.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+let MODAL_VAR = null, NOVAVAR = null;
+
+function slugVar(s){
+  return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,'');
+}
+function variavelPrevista(){
+  return '{' + ['ID', slugVar(NOVAVAR.categoria), slugVar(NOVAVAR.subcategoria), slugVar(NOVAVAR.coluna)]
+    .filter(Boolean).join('.') + '}';
+}
+function categoriasConhecidas(){
+  return ((ARV && ARV.arvore) || []).map(c => c.categoria).filter(c => c !== 'Sem categoria');
+}
+function subsDe(cat){
+  const c = ((ARV && ARV.arvore) || []).find(x => x.categoria === cat);
+  return c ? c.subs.map(s => s.subcategoria).filter(s => s && s !== '—') : [];
+}
+
+async function abrirNovaVariavel(){
+  await arvoreVariaveis();
+  NOVAVAR = { coluna:'', categoria: categoriasConhecidas()[0] || '', subcategoria:'',
+              tipo:'texto', opcoes:'', dica:'' };
+  if (!MODAL_VAR) {
+    MODAL_VAR = B4UModal.criar({
+      id:'modalVar', largura:'620px',
+      acoes:[{id:'varOk', rot:'Criar coluna', tipo:'pri'}, {id:'varNao', rot:'Cancelar', tipo:'sec'}]
+    });
+  }
+  MODAL_VAR.titulo('Criar uma variável');
+  const box = MODAL_VAR.corpo().closest('.b4m-box') || document;
+  box.querySelector('#varOk').onclick  = () => gravarNovaVariavel(box.querySelector('#varOk'));
+  box.querySelector('#varNao').onclick = () => MODAL_VAR.fechar(true);
+  pintarNovaVariavel();
+  MODAL_VAR.abrir();
+  const f = MODAL_VAR.corpo().querySelector('#nvCol'); if (f) f.focus();
+}
+
+function pintarNovaVariavel(){
+  const cats = categoriasConhecidas(), subs = subsDe(NOVAVAR.categoria);
+  const precisaOpcoes = ['lista','lista múltipla','sim/não'].indexOf(NOVAVAR.tipo) >= 0;
+  const c = MODAL_VAR.corpo();
+  c.innerHTML =
+    '<label class="vlab">Nome da coluna <span style="font-weight:400;color:var(--muted)">— é o cabeçalho na planilha, e não muda depois sem quebrar as telas</span></label>' +
+    '<input class="vinp" id="nvCol" maxlength="90" value="'+esc(NOVAVAR.coluna)+'" placeholder="Ex.: Dia de corte da mensalidade">' +
+
+    '<div class="nv2">' +
+      '<div><label class="vlab">Categoria</label>' +
+        '<select class="vinp" id="nvCat">' +
+          cats.map(x=>'<option'+(x===NOVAVAR.categoria?' selected':'')+'>'+esc(x)+'</option>').join('') +
+          '<option value="__nova"'+(cats.indexOf(NOVAVAR.categoria)<0?' selected':'')+'>＋ criar uma categoria nova…</option>' +
+        '</select>' +
+        (cats.indexOf(NOVAVAR.categoria)<0
+          ? '<input class="vinp" id="nvCatNova" style="margin-top:6px" placeholder="nome da categoria" value="'+esc(NOVAVAR.categoria)+'">' : '') +
+      '</div>' +
+      '<div><label class="vlab">Subcategoria <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>' +
+        '<select class="vinp" id="nvSub">' +
+          '<option value="">— nenhuma —</option>' +
+          subs.map(x=>'<option'+(x===NOVAVAR.subcategoria?' selected':'')+'>'+esc(x)+'</option>').join('') +
+          '<option value="__nova"'+(NOVAVAR.subcategoria && subs.indexOf(NOVAVAR.subcategoria)<0?' selected':'')+'>＋ criar uma subcategoria nova…</option>' +
+        '</select>' +
+        (NOVAVAR.subcategoria && subs.indexOf(NOVAVAR.subcategoria)<0
+          ? '<input class="vinp" id="nvSubNova" style="margin-top:6px" placeholder="nome da subcategoria" value="'+esc(NOVAVAR.subcategoria)+'">' : '') +
+      '</div>' +
+    '</div>' +
+
+    '<label class="vlab" style="margin-top:14px">Tipo</label>' +
+    '<select class="vinp" id="nvTipo">' +
+      ((ARV && ARV.tipos) || ['texto']).map(t=>'<option'+(t===NOVAVAR.tipo?' selected':'')+'>'+esc(t)+'</option>').join('') +
+    '</select>' +
+
+    (precisaOpcoes
+      ? '<label class="vlab" style="margin-top:14px">Opções — uma por linha</label>' +
+        '<textarea class="vinp" id="nvOpc" rows="5" placeholder="Sim&#10;Não&#10;Não se aplica">'+esc(NOVAVAR.opcoes)+'</textarea>' +
+        (NOVAVAR.tipo === 'lista múltipla'
+          ? '<div class="vresumo">Escolha múltipla guarda as opções na mesma célula, unidas por " · " — por isso a planilha NÃO ganha menu suspenso nesta coluna: um menu de valor único recusaria justamente o que a tela grava.</div>'
+          : '<div class="vresumo">A planilha vai passar a recusar qualquer valor fora desta lista nesta coluna.</div>')
+      : '') +
+
+    '<label class="vlab" style="margin-top:14px">Dica <span style="font-weight:400;color:var(--muted)">(opcional — aparece embaixo do campo)</span></label>' +
+    '<input class="vinp" id="nvDica" maxlength="140" value="'+esc(NOVAVAR.dica)+'">' +
+
+    '<div class="nvprev">A variável de mala direta vai ser <b>'+esc(variavelPrevista())+'</b>' +
+      '<br>A coluna nasce <b>no fim</b> da aba Registro e <b>vazia</b> — nenhum dado existente se move.</div>';
+}
+
+document.addEventListener('input', e => {
+  if (!MODAL_VAR || !NOVAVAR || !MODAL_VAR.corpo().contains(e.target)) return;
+  const id = e.target.id;
+  if (id === 'nvCol')     { NOVAVAR.coluna = e.target.value; return atualizarPrev(); }
+  if (id === 'nvCatNova') { NOVAVAR.categoria = e.target.value; return atualizarPrev(); }
+  if (id === 'nvSubNova') { NOVAVAR.subcategoria = e.target.value; return atualizarPrev(); }
+  if (id === 'nvOpc')     { NOVAVAR.opcoes = e.target.value; return; }
+  if (id === 'nvDica')    { NOVAVAR.dica = e.target.value; return; }
+});
+/* Só a frase da variável se repinta a cada tecla. Redesenhar a caixa inteira
+   tiraria o cursor do campo em que a pessoa está digitando. */
+function atualizarPrev(){
+  const n = MODAL_VAR.corpo().querySelector('.nvprev b');
+  if (n) n.textContent = variavelPrevista();
+}
+document.addEventListener('change', e => {
+  if (!MODAL_VAR || !NOVAVAR || !MODAL_VAR.corpo().contains(e.target)) return;
+  const id = e.target.id, v = e.target.value;
+  if (id === 'nvCat')  { NOVAVAR.categoria = (v === '__nova') ? '' : v; NOVAVAR.subcategoria = ''; return pintarNovaVariavel(); }
+  if (id === 'nvSub')  { NOVAVAR.subcategoria = (v === '__nova') ? ' ' : v; return pintarNovaVariavel(); }
+  if (id === 'nvTipo') { NOVAVAR.tipo = v; return pintarNovaVariavel(); }
+});
+
+async function gravarNovaVariavel(bt){
+  const c = MODAL_VAR.corpo();
+  const pega = id => { const n = c.querySelector('#'+id); return n ? n.value : ''; };
+  NOVAVAR.coluna = pega('nvCol').trim();
+  if (c.querySelector('#nvCatNova')) NOVAVAR.categoria = pega('nvCatNova').trim();
+  if (c.querySelector('#nvSubNova')) NOVAVAR.subcategoria = pega('nvSubNova').trim();
+  NOVAVAR.opcoes = pega('nvOpc'); NOVAVAR.dica = pega('nvDica').trim();
+
+  const opcoes = NOVAVAR.opcoes.split('\n').map(x=>x.trim()).filter(Boolean);
+  bt.disabled = true; const rot = bt.textContent; bt.textContent = 'Criando…';
+  try {
+    const d = await postAcao({
+      acao:'variavel_criar', coluna:NOVAVAR.coluna, categoria:NOVAVAR.categoria,
+      subcategoria:NOVAVAR.subcategoria.trim(), tipo:NOVAVAR.tipo,
+      opcoes: JSON.stringify(opcoes), dica:NOVAVAR.dica
+    });
+    ARV = null;                                    // a árvore mudou: releitura na próxima
+    if (window.B4UShell && B4UShell.esquecerAtalhos) B4UShell.esquecerAtalhos();
+    MODAL_VAR.fechar(true);
+    const el = document.getElementById('avisoErro');
+    if (el) { el.hidden = false; el.style.borderColor = 'var(--verde,#2e7d32)';
+      el.textContent = 'Criei a coluna "' + d.coluna + '" no fim do Registro' +
+        (d.variavel ? ', com a variável ' + d.variavel : '') + '. Ela já aparece no construtor.'; }
+  } catch (err) { mostrarErro(err); }
   finally { bt.disabled = false; bt.textContent = rot; }
 }
 
@@ -2492,6 +2705,14 @@ document.addEventListener('click', async e => {
   /* DO ZERO — sem partir de recorte nenhum. É o caminho de quem quer cruzar
      duas colunas de DP com uma de cobrança: elas não aparecem juntas em tela
      nenhuma do catálogo, então não havia de onde "salvar como". */
+  /* CRIAR VARIÁVEL. Fica ao lado de "criar visualização" porque é a mesma
+     pergunta uma casa antes: a pessoa foi montar a tela e descobriu que a
+     coluna que ela precisa não existe. Mandá-la abrir a planilha e voltar é
+     onde a ideia morre. */
+  if (acao === 'novavar') {
+    try { return await abrirNovaVariavel(); } catch (err) { return mostrarErro(err); }
+  }
+
   if (acao === 'criar') {
     try {
       return await abrirConstrutor({
@@ -2804,7 +3025,11 @@ function carregar(){
           '<a class="cli" data-vis="criar" role="button" tabindex="0" style="cursor:pointer">' +
           '<span class="l1"><span class="nm">＋ Criar uma visualização do zero</span></span>' +
           '<span class="resumo">Escolha qualquer coluna das 341 — por categoria, ou a categoria inteira — ' +
-          'e os filtros fixos que valem sempre nela.</span></a>';
+          'e os filtros fixos que valem sempre nela.</span></a>' +
+          '<a class="cli" data-vis="novavar" role="button" tabindex="0" style="cursor:pointer">' +
+          '<span class="l1"><span class="nm">＋ Criar uma variável nova</span></span>' +
+          '<span class="resumo">A coluna que você precisa ainda não existe? Ela nasce no fim do Registro, ' +
+          'vazia, com a variável de mala direta e a categoria já preenchidas.</span></a>';
         document.getElementById('conteudo').innerHTML = criar + (its.length
           ? '<div class="vazio">Escolha um recorte:</div>' + its.map(x=>
               '<a class="cli" href="?r='+encodeURIComponent(x.id)+'&chave='+encodeURIComponent(chaveAtual())+'" target="_self">'+
