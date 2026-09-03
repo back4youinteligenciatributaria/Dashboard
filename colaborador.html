@@ -601,6 +601,11 @@ button.fer-card[aria-expanded="true"] .fer-arw{color:var(--brand-teal-txt);trans
   background:var(--surface-warm);border:1px dashed var(--line-2);border-radius:var(--radius-pill);
   padding:4px 12px;cursor:pointer;transition:color .14s,border-color .14s}
 .fer-off-i:hover{color:var(--brand-teal-txt);border-color:var(--brand-teal)}
+/* `hidden` é atributo, e `display:flex` numa classe ganha dele — foi assim que a
+   busca continuou na tela dentro do modo de edição, onde ela não faz sentido.
+   Vale para os quatro blocos que esta tela liga e desliga por atributo. */
+#fer-topo[hidden],#fer-off[hidden],#fer-ajuda[hidden],#vis-tit[hidden],
+#visualizacoes[hidden],#fer-vazio[hidden]{display:none!important}
 
 /* Status do cliente: chip de destaque, três estados (Ativo / Em inativação / Inativo). */
 .info-chips{align-items:center;gap:7px}
@@ -1481,12 +1486,17 @@ function agendarSalvarParede(){
      dois segundos, e três gravações onde uma resolve. */
   paredeTimer=setTimeout(salvarParede,700);
 }
+/* POST, e não JSONP.
+   `acao=` por GET cai no `executarAcao` — a porta do CLIENTE, que começa
+   exigindo o ID da empresa e responde "Informe o ID do cliente" a quem não é
+   cliente. Escrita da EQUIPE viaja por POST (`executarAcaoPost`), que é onde a
+   rota mora. O `postAcao` já põe a chave do dia no corpo e já levanta o erro. */
 function salvarParede(){
-  const u=API_URL+'?acao=atalhos_salvar&chave='+encodeURIComponent(chaveAtual())
-        +'&escondidos='+encodeURIComponent((PREF.escondidos||[]).join(','))
-        +'&ordem='+encodeURIComponent((PREF.ordem||[]).join(','));
-  jsonp(u).then(d=>{
-    if(d&&d.erro) throw new Error(d.erro);
+  postAcao({
+    acao:'atalhos_salvar',
+    escondidos:(PREF.escondidos||[]).join(','),
+    ordem:(PREF.ordem||[]).join(',')
+  },20000).then(()=>{
     estadoParede('guardado','ok');
     setTimeout(()=>{ if(!paredeTimer) estadoParede(''); },2500);
   }).catch(()=>estadoParede('não consegui guardar — tente de novo','bad'));
