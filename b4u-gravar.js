@@ -71,6 +71,33 @@
    6. FECHAR A ABA COM GRAVAÇÃO EM VOO PEDE CONFIRMAÇÃO.
       É o único momento em que fechar rápido custa dado. O `beforeunload` só
       entra quando há algo pendente de verdade.
+
+   7. UMA GRAVAÇÃO POR VEZ — as outras esperam numa FILA.
+      A regra 5 cuida da MESMA tarefa. Esta cuida de tarefas DIFERENTES, e nasceu
+      de um defeito relatado em 13/08/2026: reabrir uma tarefa e mexer noutra
+      antes de a primeira responder fazia as DUAS voltarem com "a resposta do
+      servidor não chegou" — motivo `Failed to fetch` — embora as duas tivessem
+      gravado. O dado entrava na planilha e a tela dizia que não sabia; a pessoa
+      recarregava, conferia, e aprendia a desconfiar do painel.
+
+      A causa é do outro lado. O backend é um Web App do Apps Script, que
+      SERIALIZA as execuções de um mesmo usuário e responde por redirecionamento
+      (302 do /exec para o googleusercontent). Com duas chamadas ao mesmo tempo,
+      a segunda espera a primeira terminar e o redirecionamento dela volta sem os
+      cabeçalhos que o navegador exige — e o `fetch` rejeita com "Failed to
+      fetch", que é o erro mais vazio que existe: a requisição não chegou a ter
+      resposta. Daqui é indistinguível de "a internet caiu no meio", e por isso o
+      recado é o de DÚVIDA (regra 2), o mais assustador dos dois.
+
+      Isso não se conserta do lado do servidor sem trocar de plataforma. Mas dá
+      para não CRIAR a situação: se só uma gravação viaja por vez, não existem
+      duas execuções concorrentes para o Apps Script serializar.
+
+      O preço é a segunda sair alguns segundos depois — e ele é invisível, porque
+      a tela nunca esperou resposta para mostrar o resultado (é o motivo de este
+      arquivo existir). O preço de verdade aparece quando uma gravação trava até
+      o prazo estourar: as da fila esperam junto. É barato perto de um recado de
+      dúvida em cima de dado que gravou.
    ══════════════════════════════════════════════════════════════════════════════ */
 (function (w, d) {
   'use strict';
@@ -233,6 +260,23 @@
     return api;
   }
 
+  /* ---------- a fila da regra 7 ----------
+     Uma corrente de promessas: cada gravação se pendura no fim e só sai quando a
+     anterior terminar, tenha ela dado certo ou errado. `FILA` é sempre uma
+     promessa que RESOLVE (o `catch` no fim da corrente) — uma rejeição guardada
+     aqui travaria todas as próximas, que é o oposto do que esta fila existe para
+     fazer: falha de uma gravação é assunto dela e do recado dela. */
+  var FILA = Promise.resolve();
+  /* Sentinela de "nem cheguei a sair da fila". Um objeto, e não `null` ou
+     `false`: assim ele nunca se confunde com uma resposta legítima do servidor. */
+  var SUPERADA = {};
+
+  function naFila(fn) {
+    var meu = FILA.then(fn);
+    FILA = meu.then(function () {}, function () {});
+    return meu;
+  }
+
   function enviar(op) {
     op = op || {};
     var chave = String(op.chave || ('anon:' + (++SEQ)));
@@ -242,9 +286,17 @@
     function atual() { return EM_VOO[chave] === seq; }
     function baixar() { if (atual()) delete EM_VOO[chave]; }
 
-    Promise.resolve()
-      .then(function () { return op.envio(); })
+    naFila(function () {
+        /* Superada ENQUANTO esperava a vez: não chega a sair para o servidor.
+           Mandar a versão velha para receber a nova por cima é gravar duas vezes
+           para chegar no mesmo lugar — e a primeira das duas ainda pode ser a
+           que falha, com recado e tudo. A regra 5 já descartava a RESPOSTA da
+           antiga; com a fila dá para descartar a VIAGEM. */
+        if (!atual()) return SUPERADA;
+        return op.envio();
+      })
       .then(function (dados) {
+        if (dados === SUPERADA) return;
         if (!atual()) return;            // regra 5: gravação mais nova assumiu
         baixar();
         if (op.aoOk) op.aoOk(dados);

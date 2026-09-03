@@ -52,6 +52,7 @@ const ARQUIVOS = [
   'certificados.html', 'clientes-ativos.html', 'colaborador.html', 'comercial.html', 'daily.html',
   'contabil.html', 'contatos-equipe.html', 'dptopessoal.html', 'equiparacao.html',
   'fiscal.html', 'guias.html', 'index.html', 'juridico.html', 'licencas.html', 'meustickets.html',
+  'b4u-recorte.html',
   'registro.html', 'restituicao.html', 'societario-equipe.html', 'societario.html'
 ];
 
