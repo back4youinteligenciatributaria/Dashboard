@@ -1353,9 +1353,10 @@ document.addEventListener('click', e=>{
 
 /* ══════════════════════════════════════════════════════════════════════════
    GRAVAÇÃO — a tela não espera, e o que falha aparece
-   Uma gravação por CLIENTE (chave 'rec:<id>'), e a última manda: duas gravações
-   da mesma linha em voo terminam fora de ordem com facilidade, e a resposta da
-   anterior falaria de um estado que já não está na tela.
+   Os campos alterados juntam-se em LOTES por cliente+seção (`SUJOS`), esperam
+   um instante para não virar três gravações, e saem TODOS numa requisição só
+   (`despachar`). O porquê de cada uma dessas três decisões está no comentário
+   da função correspondente, aqui embaixo.
    ══════════════════════════════════════════════════════════════════════════ */
 /* UM RELÓGIO POR LOTE, E UM TETO — e por que o relógio único não servia.
    Até 03/09/2026 havia um `TIMER` só para a tela inteira, e todo campo alterado
@@ -1389,13 +1390,13 @@ function agendarLote(k){
   const desde = t ? t.desde : agora;
   if (t) clearTimeout(t.id);
   const espera = Math.max(0, Math.min(ESPERA, desde + TETO - agora));
-  TIMERS.set(k, { desde: desde, id: setTimeout(()=>gravarLote(k), espera) });
+  TIMERS.set(k, { desde: desde, id: setTimeout(despachar, espera) });
 }
 
 /* Mandar agora o que estiver esperando. Fechar a ficha é o fim natural de uma
    edição: segurar o lote mais 700 ms depois disso só aumenta a janela em que
    fechar a aba perde o que foi digitado. */
-function descarregar(){ Array.from(TIMERS.keys()).forEach(gravarLote); }
+function descarregar(){ despachar(); }
 
 function marcarSujo(id, col, valor){
   /* O LOTE É POR SEÇÃO. Cada seção tem a sua rota e o seu porteiro; juntar os
@@ -1421,25 +1422,104 @@ function marcarSujo(id, col, valor){
   agendarLote(k);
 }
 
-function gravarLote(k){
-  /* O relógio deste lote morre aqui, venha a chamada dele ou do `descarregar`.
-     Sem isto, um lote descarregado à mão ainda dispararia o seu timeout depois
-     — e `gravarLote` sem campos é inofensivo, mas o `TIMERS` ficaria mentindo
-     sobre o que está por sair. */
-  const t = TIMERS.get(k);
-  if (t) { clearTimeout(t.id); TIMERS.delete(k); }
-  const campos = SUJOS.get(k);
-  if (!campos || !Object.keys(campos).length) return;
-  SUJOS.delete(k);
-  const corte = k.lastIndexOf('|');
-  const id  = k.slice(0, corte), sid = k.slice(corte + 1);
-  const sec = SECOES.find(x=>x.id===sid);
-  if (!sec) return;
-  const linha = LINHAS.find(l=>l.id===id) || {};
-  /* O que o recado nomeia quando falha. Senha nunca aparece por extenso — nem
-     num recado de erro, que é justamente o texto que fica na tela mais tempo. */
-  const itens = Object.keys(campos).map(c =>
-    c + ' → ' + (SIGILOSA.has(normCol(c)) ? '(alterado)' : (campos[c] || '(vazio)')));
+/* ══════════════════════════════════════════════════════════════════════════
+   O DESPACHO É DE TODOS OS LOTES, E NÃO DE UM
+
+   Ler a aba Registro custa ~40 mil células, e esse custo é por REQUISIÇÃO: o
+   servidor lê a mesma coisa para gravar um campo ou vinte. Como as gravações
+   viajam uma de cada vez (b4u-gravar.js, regra 7 — duas ao mesmo tempo voltam
+   com `Failed to fetch` em cima de dado que gravou), até 03/09/2026 alterar dez
+   clientes em sequência eram dez leituras da planilha enfileiradas: ~9 s cada,
+   um minuto e meio de fila para um trabalho de dez segundos. Foi isso que o
+   dono descreveu como "altero 10 em rápida sequência e ele ainda trava".
+
+   Então quando o relógio de QUALQUER lote toca, vão TODOS os que estiverem
+   pendentes, numa requisição só (`acao=recorte_salvar_lote`). Levar junto um
+   lote que ainda tinha 300 ms de espera pela frente não adianta nada: ele já é
+   valor confirmado (o `change` já aconteceu), e o que chegar depois disso
+   suja o lote de novo e marca outro despacho.
+
+   O SERVIDOR CONTINUA CONFERINDO CADA ITEM. O lote não é uma porta de união:
+   cada item leva a sua seção e passa pelo porteiro dela antes de qualquer
+   gravação. Ver `recorteSalvarLote_` no 3_Motor.gs.
+
+   CHAVE ÚNICA POR DESPACHO, e não uma chave fixa "rec:lote". Com chave fixa, um
+   segundo despacho enquanto o primeiro ainda está na fila marcaria o primeiro
+   como SUPERADO e ele não sairia — e ele carrega OUTROS clientes, não uma
+   versão velha dos mesmos. Seria perda de dado silenciosa, que é exatamente o
+   que a regra 5 do b4u-gravar.js existe para evitar no caso dela (mesma linha)
+   e provocaria aqui no caso oposto (linhas diferentes).
+   ══════════════════════════════════════════════════════════════════════════ */
+let SEQ_LOTE = 0;
+const VOANDO = new Set();          // lotes que já saíram e ainda não voltaram
+/* Um a menos que o REC_LOTE_MAX do 3_Motor.gs, de propósito: a folga é para o
+   dia em que alguém mexer num dos dois números e esquecer do outro. Estourar o
+   teto do servidor faz o lote INTEIRO ser recusado, não o item que sobrou. */
+const LOTE_MAX = 39;
+
+function despachar(){
+  /* JÁ TEM UM EM VOO: ESPERA ELE POUSAR — e a espera não custa nada.
+     As gravações viajam uma de cada vez de qualquer jeito (b4u-gravar.js,
+     regra 7), então um segundo pacote despachado agora só entraria na fila
+     atrás do primeiro. A diferença é o que ele leva: despachado agora, leva o
+     um ou dois campos digitados nos últimos 700 ms; despachado quando o
+     primeiro voltar, leva TUDO o que foi digitado durante a viagem inteira.
+     Quem preenche dez fichas seguidas faz dois pacotes em vez de dez, e a
+     única coisa que muda para ele é o painel parar de arrastar.
+
+     Não há como isto emperrar: quem pousa chama `despachar` de novo se sobrou
+     coisa (ver `pousar`), e o `beforeunload` da ficha continua olhando o
+     `SUJOS` — fechar a aba com algo por gravar pede confirmação como sempre. */
+  if (VOANDO.size) return;
+
+  TIMERS.forEach(t => clearTimeout(t.id));
+  TIMERS.clear();
+
+  /* Um retrato do que vai viajar. `SUJOS` é esvaziado agora, e não na resposta:
+     o que a pessoa digitar daqui em diante é um despacho novo, e não um
+     acréscimo silencioso a um pacote que já saiu. */
+  const pacote = [];
+  Array.from(SUJOS.keys()).forEach(k => {
+    /* O TETO É DO SERVIDOR (REC_LOTE_MAX, hoje 40), e ele recusa o lote INTEIRO
+       quando passa. Cortar aqui é o que impede o dia em que alguém colar num
+       filtro largo e mexer em 60 linhas virar "nada foi gravado". O que sobra
+       fica no `SUJOS` e sai no despacho seguinte — que o `pousar` marca sozinho. */
+    if (pacote.length >= LOTE_MAX) return;
+    const campos = SUJOS.get(k);
+    if (!campos || !Object.keys(campos).length) { SUJOS.delete(k); return; }
+    const corte = k.lastIndexOf('|');
+    const id = k.slice(0, corte), sid = k.slice(corte + 1);
+    const sec = SECOES.find(x => x.id === sid);
+    if (!sec) { SUJOS.delete(k); return; }          // seção que sumiu: não inventa rota
+    SUJOS.delete(k);
+    pacote.push({ k, id, sid, sec, campos, linha: LINHAS.find(l => l.id === id) || {} });
+  });
+  if (!pacote.length) return;
+  pacote.forEach(p => VOANDO.add(p.k));
+  pacote.forEach(p => pintarSelo(p.id));
+  /* Pousou: tira do ar e, se ficou coisa esperando enquanto ele viajava, manda
+     o próximo. `setTimeout(...,0)` e não chamada direta: `pousar` roda no meio
+     do tratamento da resposta, e o pacote seguinte tem de sair depois de esta
+     rodada terminar de marcar selos e falhas — senão ele lê um estado pela
+     metade. */
+  const pousar = () => {
+    pacote.forEach(p => VOANDO.delete(p.k));
+    if (!VOANDO.size && SUJOS.size) setTimeout(despachar, 0);
+  };
+
+  const nome = p => p.linha.nome_cliente || p.id;
+  /* O QUE não gravou, campo a campo. Com mais de um cliente no pacote, cada
+     item leva o nome na frente — senão o recado lista dez campos sem dizer de
+     quem, que é a mesma coisa que não listar. Senha nunca aparece por extenso,
+     nem num recado de erro (que é o texto que fica mais tempo na tela). */
+  const itens = [];
+  pacote.forEach(p => Object.keys(p.campos).forEach(c => itens.push(
+    (pacote.length > 1 ? nome(p) + ' · ' : '') + c + ' → ' +
+    (SIGILOSA.has(normCol(c)) ? '(alterado)' : (p.campos[c] || '(vazio)')))));
+
+  const titulo = pacote.length === 1
+    ? nome(pacote[0]) + ' — ' + pacote[0].sec.rotulo
+    : pacote.length + ' clientes — ' + [...new Set(pacote.map(p => p.sec.rotulo))].join(', ');
 
   /* QUAL TELA ESTÁ GRAVANDO — e por que não é sempre `recorte`.
      O servidor aceita `v=<id>` (visualização) OU `recorte=<id>` (recorte do
@@ -1449,44 +1529,87 @@ function gravarLote(k){
      "Não existe um recorte chamado ''". Ler funcionava (o `carregar()` já
      escolhia certo); gravar, não. */
   const alvo = visAtual() ? { v: visAtual() } : { recorte: recorteAtual() };
-  const envio = () => postAcao(Object.assign({ acao:'recorte_salvar',
-                                 secao:sec.id, id:id, campos:campos,
-                                 cliente:linha.nome_cliente||'' }, alvo))
-    .then(d => {
-      /* O servidor devolve o que IGNOROU (coluna fora da seção, célula com
-         fórmula). Ignorada NÃO foi gravada, e chamar isso de sucesso é a mentira
-         mais cara que um painel conta. */
-      if (d && d.ignoradas && d.ignoradas.length) {
-        const e = new Error('Não gravei: ' + d.ignoradas.join(', ') +
-          (d.travadas && d.travadas.length ? ' — a célula tem fórmula na planilha.' : ''));
-        e.doServidor = true;
-        throw e;
-      }
-      Object.keys(campos).forEach(c => { if (linha.valores) linha.valores[c] = campos[c]; });
-      FALHAS.delete(k); pintarSelo(id);
-      return d;
-    });
 
-  const aoFalhar = e => { FALHAS.set(k, String((e&&e.message)||e)); pintarSelo(id); };
+  const resolvidos = new Set();
+  const envio = () => (pacote.forEach(p => { VOANDO.add(p.k); pintarSelo(p.id); }),
+    postAcao(Object.assign({
+      acao: 'recorte_salvar_lote',
+      itens: pacote.map(p => ({ secao: p.sid, id: p.id, campos: p.campos,
+                                cliente: p.linha.nome_cliente || '' }))
+    }, alvo))
+    .then(res => {
+      const lista = Array.isArray(res) ? res : [];
+      /* Casa por (id, seção) e não por posição: se um dia o servidor devolver na
+         ordem que quiser, ou omitir um item, a resposta continua indo para a
+         linha certa. Posição é a coisa mais fácil de o servidor mudar sem que
+         ninguém repare — e o estrago seria marcar como salvo o cliente errado.
+         `pedido` é o id como ESTA tela o mandou; `id` é o que o servidor
+         normalizou (corta zero à esquerda). Compara-se o primeiro, e o segundo
+         é a reserva para um servidor antigo que ainda não devolva `pedido`. */
+      const mesmaSecao = (r,p) => String(r.secao || p.sid) === String(p.sid);
+      const achar = p => lista.find(r => r && r.pedido !== undefined &&
+                                         String(r.pedido) === String(p.id) && mesmaSecao(r,p))
+                      || lista.find(r => r && String(r.id) === String(p.id) && mesmaSecao(r,p));
+      const ruins = [];
+      pousar();
+      pacote.forEach(p => {
+        const r = achar(p);
+        if (!r) { ruins.push(nome(p) + ': o servidor não respondeu sobre este cliente'); return; }
+        /* O servidor devolve o que IGNOROU (coluna fora da seção, célula com
+           fórmula). Ignorada NÃO foi gravada, e chamar isso de sucesso é a
+           mentira mais cara que um painel conta. */
+        const ign = (r.ok === false) ? [] : (r.ignoradas || []);
+        if (r.ok === false || ign.length) {
+          const motivo = r.ok === false ? (r.erro || 'não gravou')
+            : ('não gravei ' + ign.join(', ') +
+               ((r.travadas && r.travadas.length) ? ' — a célula tem fórmula na planilha.' : ''));
+          ruins.push(nome(p) + ': ' + motivo);
+          FALHAS.set(p.k, motivo);
+          resolvidos.add(p.k);                 // já tem o seu veredito: o desfazer não mexe
+          pintarSelo(p.id);
+          return;
+        }
+        Object.keys(p.campos).forEach(c => { if (p.linha.valores) p.linha.valores[c] = p.campos[c]; });
+        FALHAS.delete(p.k);
+        resolvidos.add(p.k);
+        pintarSelo(p.id);
+      });
+      if (ruins.length) { const e = new Error(ruins.join(' · ')); e.doServidor = true; throw e; }
+      return res;
+    }));
 
-  if (window.B4UGravar) {
-    /* Uma gravação por chave, e a última manda: duas gravações do MESMO lote em
-       voo ao mesmo tempo terminam fora de ordem com facilidade, e a resposta da
-       anterior falaria de um estado que já não está na tela. Como a chave leva a
-       seção, o lote de licenças e o de acessos do mesmo cliente não se
-       atropelam — que é o que `Promise.allSettled` resolve na tela antiga. */
-    B4UGravar.enviar({
-      chave: 'rec:' + k,
-      titulo: (linha.nome_cliente||id) + ' — ' + sec.rotulo,
-      itens: itens,
-      envio: envio,
-      aoOk: ()=>{ FALHAS.delete(k); pintarSelo(id); },
-      aoDesfazer: ()=>aoFalhar(new Error('A gravação não foi confirmada.'))
-    });
-  } else {
-    envio().catch(aoFalhar);
-  }
-  pintarSelo(id);
+  /* `B4UGravar` ausente → grava do mesmo jeito, sem recado bonito (é a regra do
+     cabeçalho deste arquivo: a tela vive sem os blocos opcionais). Guardado numa
+     const: testar `window.B4UGravar` e depois chamar o nome solto `B4UGravar`
+     são DUAS resoluções de nome diferentes, e a segunda estoura com
+     ReferenceError em qualquer lugar que não seja o navegador. */
+  const G = window.B4UGravar;
+  G ? G.enviar({
+        chave: 'rec:lote:' + (++SEQ_LOTE),
+        titulo: titulo,
+        itens: itens,
+        envio: envio,
+        aoOk: ()=>{ pacote.forEach(p => pintarSelo(p.id)); },
+        /* Só o que NÃO teve veredito próprio. Numa falha parcial, marcar o
+           pacote inteiro como "não gravou" desmentiria os itens que o servidor
+           acabou de confirmar — e a informação que fica é a que se vê. */
+        aoDesfazer: ()=>{
+          pousar();
+          pacote.forEach(p => {
+            if (resolvidos.has(p.k)) return;
+            FALHAS.set(p.k, 'A gravação não foi confirmada.');
+            pintarSelo(p.id);
+          });
+        }
+      })
+    : envio().catch(e => {
+        pousar();
+        pacote.forEach(p => {
+          if (resolvidos.has(p.k)) return;
+          FALHAS.set(p.k, String((e && e.message) || e));
+          pintarSelo(p.id);
+        });
+      });
 }
 
 /* O selo é da LINHA e soma os lotes dela: quem olha a lista quer saber se aquele
@@ -1496,7 +1619,13 @@ function gravarLote(k){
 function pintarSelo(id){
   const meus = k => k.slice(0, k.lastIndexOf('|')) === id;
   const falhou = Array.from(FALHAS.keys()).filter(meus);
-  const indo   = Array.from(SUJOS.keys()).filter(meus);
+  /* ESPERANDO e VIAJANDO contam os dois como "gravando…". Antes só o `SUJOS`
+     contava, e ele é esvaziado no instante em que o pacote sai — então durante
+     os ~9 s em que o servidor grava de verdade o selo ficava VAZIO, como se
+     nada estivesse acontecendo. Quem tinha acabado de mexer em dez clientes via
+     dez linhas limpas e um painel que parecia parado. O `VOANDO` é o que falta
+     dizer: saiu, ainda não voltou. */
+  const indo   = Array.from(SUJOS.keys()).concat(Array.from(VOANDO)).filter(meus);
   document.querySelectorAll('[data-selo="'+selEsc(id)+'"]').forEach(no=>{
     if (falhou.length)    no.innerHTML = '<span class="selo err" title="'+esc(FALHAS.get(falhou[0]))+'">não gravou</span>';
     else if (indo.length) no.innerHTML = '<span class="selo vai">gravando…</span>';
