@@ -604,11 +604,38 @@ var TIPO_ABA = {
   'link':'text', 'senha':'text'
 };
 
+/* AS OPÇÕES CHEGAM NUMA STRING SÓ, E O SEPARADOR NEM SEMPRE É O MESMO.
+   A aba "Variáveis" guarda a lista de cada coluna numa célula. O separador
+   canônico é " · ", mas a célula também chega com quebra de linha: é assim que
+   se digita uma lista dentro do Sheets (Alt+Enter), e foi assim que o
+   `variaveisInferir_` gravou as 168 colunas que catalogou em 03/09/2026.
+
+   Sem esta limpeza, uma célula dessas vira UMA opção cujo texto é a lista
+   inteira — o `<select>` mostra "Matriz\nFilial" como um item só, dá para
+   escolher e não dá para gravar. Foi o que travou `Matriz ou filial`, `Optante
+   pelo Simples`, `Optante pelo MEI`, `Prospectivo ou Retrospectivo`, `Alteração
+   de CNAE?` e `STATUS da alteração societária`.
+
+   O servidor passou a quebrar nos três separadores em 04/09/2026. Isto aqui é a
+   segunda rede, de propósito: o painel e o Apps Script se publicam separados, e
+   a ficha não pode ficar quebrada no intervalo entre um deploy e o outro.
+   A vírgula NÃO separa — ela mora dentro de opção legítima ("Sim, vigente"). */
+function opcoesLimpas(lista){
+  var vistos = {}, out = [];
+  (lista || []).forEach(function(o){
+    String(o == null ? '' : o).split(/[\n·;]+/).forEach(function(p){
+      var v = p.replace(/\s+/g, ' ').trim();
+      if (v && !(v in vistos)) { vistos[v] = 1; out.push(v); }
+    });
+  });
+  return out;
+}
+
 function completarCatalogo(colunasVivas, arvore){
   var meta = {};
   (arvore || []).forEach(function(cat){ cat.subs.forEach(function(sub){ sub.colunas.forEach(function(x){
     meta[norm(x.coluna)] = { cat: cat.categoria, sub: sub.subcategoria, tipo: x.tipo,
-                             opcoes: x.opcoes || [], dica: x.dica || '' };
+                             opcoes: opcoesLimpas(x.opcoes), dica: x.dica || '' };
   }); }); });
 
   var doDiagnostico = {};

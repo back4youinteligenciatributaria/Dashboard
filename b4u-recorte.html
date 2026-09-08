@@ -2502,10 +2502,29 @@ function pintarVisBar(){
    ═══════════════════════════════════════════════════════════════════════════ */
 
 let ARV = null;   // { arvore, fixas, total, tipos } — uma leitura por sessão de tela
+/* Ver o mesmo bloco no `registro-cliente.html`: a aba "Variáveis" guarda a
+   lista de opções numa célula só, e o separador tanto pode ser " · " quanto a
+   quebra de linha do Alt+Enter. Sem quebrar nos dois, o menu de valor do
+   construtor de filtro oferece UMA opção com a lista inteira dentro — que não
+   casa com nenhuma célula da planilha, e o filtro não acha ninguém sem dizer
+   por quê. Corrigido no servidor em 04/09/2026; isto é a segunda rede, porque
+   painel e Apps Script se publicam separados. */
+function opcoesLimpas(lista){
+  const vistos = {}, out = [];
+  (lista || []).forEach(o => String(o == null ? '' : o).split(/[\n·;]+/).forEach(p => {
+    const v = p.replace(/\s+/g, ' ').trim();
+    if (v && !(v in vistos)) { vistos[v] = 1; out.push(v); }
+  }));
+  return out;
+}
+
 async function arvoreVariaveis(){
   if (ARV) return ARV;
   const d = await jsonp(API_URL+'?tipo=variaveis&chave='+encodeURIComponent(chaveAtual()));
   if (!d || d.erro) throw new Error((d && d.erro) || 'Não consegui ler o catálogo de colunas.');
+  (d.arvore || []).forEach(c => c.subs.forEach(s => s.colunas.forEach(x => {
+    x.opcoes = opcoesLimpas(x.opcoes);
+  })));
   ARV = d;
   return ARV;
 }
