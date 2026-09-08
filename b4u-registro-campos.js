@@ -87,7 +87,9 @@ var ORDEM = [
   'Controladoria',
   'Transição contábil',
   'Jurídico e adequação societária',
-  'Diagnóstico de equiparação',
+  'Cálculo da mensalidade',
+  'Diagnóstico de atuação — observações',
+  'Diagnóstico de atuação — resultado',
   'Outros'
 ];
 
@@ -109,7 +111,9 @@ var SOBRE = {
   'Controladoria':                  'Controle financeiro, recebimentos, taxas e custos recorrentes.',
   'Transição contábil':             'A saída da contabilidade anterior e a data de início.',
   'Jurídico e adequação societária': 'Alteração contratual, minuta e alvarás hospitalares.',
-  'Diagnóstico de equiparação':     'Preenchido pela página de diagnóstico. Aqui só se lê.',
+  'Cálculo da mensalidade':         'Como o valor da mensalidade foi montado — base, sócios e funcionários.',
+  'Diagnóstico de atuação — observações': 'O que o consultor observou em cada eixo, com as palavras dele.',
+  'Diagnóstico de atuação — resultado': 'Escore, classificação e pendências. Preenchido pela página de diagnóstico; aqui só se lê.',
   'Outros':                         'Colunas que existem na planilha e ainda não foram catalogadas.'
 };
 
@@ -126,7 +130,8 @@ var RELEVANCIA = {
   'Controladoria':                   ['Controladoria'],
   'Transição contábil':              ['Contabilidade', 'Controladoria'],
   'Jurídico e adequação societária': ['Equiparação'],
-  'Diagnóstico de equiparação':      ['Equiparação']
+  'Diagnóstico de atuação — observações': ['Equiparação'],
+  'Diagnóstico de atuação — resultado':   ['Equiparação']
 };
 
 var SIM_NAO       = ['', 'Sim', 'Não'];
@@ -265,7 +270,6 @@ var CAMPOS = [
 {col:'Login e senha da prefeitura', s:'Equiparação — situação', t:'select', nova:1,
  opts:['','Recebido','Pendente','N/A']},
 {col:'Podemos solicitar documentos ao contador', s:'Equiparação — situação', t:'select', nova:1, opts:SIM_NAO_SEI},
-{col:'Contato do contador',       s:'Equiparação — situação', t:'text', nova:1, full:1},
 
 /* ── Tomador de serviços ────────────────────────────────────────────────── */
 {col:'Recebe NFs de prestadores', s:'Tomador de serviços', t:'select', nova:1, opts:SIM_NAO_SEI},
@@ -276,12 +280,9 @@ var CAMPOS = [
 {col:'Observações de tomador',    s:'Tomador de serviços', t:'textarea', nova:1, full:1},
 
 /* ── Departamento pessoal ───────────────────────────────────────────────── */
-{col:'Tem DPTO pessoal',          s:'Departamento pessoal', t:'select', opts:SIM_NAO},
 {col:'Possui funcionários registrados', s:'Departamento pessoal', t:'select', nova:1, opts:SIM_NAO_SEI},
 {col:'# de funcionários',         s:'Departamento pessoal', t:'text'},
 {col:'Todos registrados neste CNPJ', s:'Departamento pessoal', t:'select', nova:1, opts:SIM_NAO_SEI},
-{col:'Onde estão os demais',      s:'Departamento pessoal', t:'select', nova:1,
- opts:['','Outro CNPJ','Pessoa Física','Ambos','N/A']},
 {col:'Detalhe dos demais registros', s:'Departamento pessoal', t:'textarea', nova:1, full:1},
 {col:'Pró Labore',                s:'Departamento pessoal', t:'text'},
 {col:'Data de pagamento dos salários', s:'Departamento pessoal', t:'textarea', nova:1, full:1},
@@ -332,8 +333,6 @@ var CAMPOS = [
 {col:'Observações de contratações', s:'Outras contratações', t:'textarea', nova:1, full:1},
 
 /* ── Estrutura e funcionamento ──────────────────────────────────────────── */
-{col:'Endereço próprio ou alugado', s:'Estrutura e funcionamento', t:'select', nova:1,
- opts:['','Próprio','Alugado','Cedido','Estrutura de terceiro']},
 {col:'Metragem do imóvel',        s:'Estrutura e funcionamento', t:'text', nova:1},
 {col:'Atividades exercidas no local', s:'Estrutura e funcionamento', t:'textarea', nova:1, full:1},
 {col:'Número de salas',           s:'Estrutura e funcionamento', t:'text', nova:1,
@@ -349,11 +348,7 @@ var CAMPOS = [
 
 /* ── Aluguel ────────────────────────────────────────────────────────────── */
 {col:'Paga aluguel?',             s:'Aluguel', t:'select', opts:SIM_NAO},
-{col:'Aluguel para PF?',          s:'Aluguel', t:'select', opts:SIM_NAO},
-{col:'Pagamento Aluguel',         s:'Aluguel', t:'text'},
 {col:'Valor do Aluguel',          s:'Aluguel', t:'text'},
-{col:'Caução ou depósito',        s:'Aluguel', t:'text', nova:1},
-{col:'Vigência do contrato de aluguel', s:'Aluguel', t:'text', nova:1},
 {col:'Obs Aluguel',               s:'Aluguel', t:'textarea', full:1},
 
 /* ── Acessos ────────────────────────────────────────────────────────────── */
@@ -437,47 +432,63 @@ var CAMPOS = [
 {col:'Observações de controladoria', s:'Controladoria', t:'textarea', nova:1, full:1},
 
 /* ── Transição contábil ─────────────────────────────────────────────────── */
-{col:'Contabilidade anterior avisada', s:'Transição contábil', t:'select', nova:1,
- opts:['','Sim','Não','Não, mas será avisada']},
-{col:'Data de início programada', s:'Transição contábil', t:'text', nova:1,
- dica:'competência — mm/aaaa'},
-{col:'Multa ou aviso prévio da contabilidade anterior', s:'Transição contábil', t:'textarea', nova:1, full:1},
 {col:'Cliente é Contabilizei',    s:'Transição contábil', t:'select', nova:1, opts:SIM_NAO},
-{col:'Cliente baixará documentos via login', s:'Transição contábil', t:'select', nova:1,
- opts:['','Sim','Não','N/A']},
 {col:'Observações de transição',  s:'Transição contábil', t:'textarea', nova:1, full:1},
 
 /* ── Jurídico e adequação societária ────────────────────────────────────── */
 {col:'Alteração contratual necessária', s:'Jurídico e adequação societária', t:'select', nova:1,
  opts:['','Sim','Não','A confirmar']},
 {col:'O que precisa ser alterado', s:'Jurídico e adequação societária', t:'textarea', nova:1, full:1},
-{col:'Jurídico enviará e-mail',   s:'Jurídico e adequação societária', t:'select', nova:1,
- opts:['','Combinado','Enviado','Pendente','N/A']},
-{col:'Prazo da minuta',           s:'Jurídico e adequação societária', t:'text', nova:1,
- dica:'padrão: até 7 dias úteis após o retorno do cliente'},
-{col:'Necessidade de alvarás hospitalares', s:'Jurídico e adequação societária', t:'select', nova:1,
- opts:['','Sim','Não','Depende']},
 {col:'Observações jurídicas',     s:'Jurídico e adequação societária', t:'textarea', nova:1, full:1},
 
-/* ── Diagnóstico de equiparação ─────────────────────────────────────────────
+/* ── Cálculo da mensalidade ─────────────────────────────────────────────────
+   Existiam na aba Registro desde 09/2026 sem linha em "Variáveis" — ou seja,
+   sem categoria, sem tipo e sem aparecer em visualização nenhuma. São a memória
+   de como o preço foi montado, e é isso que faz a conversa de reajuste ser
+   sobre número e não sobre lembrança. As duas últimas são conta, não resposta. */
+{col:'Mensalidade base (R$)',     s:'Cálculo da mensalidade', t:'money', nova:1,
+ dica:'valor de partida da tabela'},
+{col:'Sócios inclusos na base',   s:'Cálculo da mensalidade', t:'text', nova:1,
+ dica:'quantos sócios já estão no valor base'},
+{col:'R$ por sócio adicional',    s:'Cálculo da mensalidade', t:'money', nova:1},
+{col:'Funcionários inclusos na base', s:'Cálculo da mensalidade', t:'text', nova:1},
+{col:'R$ por funcionário',        s:'Cálculo da mensalidade', t:'money', nova:1},
+{col:'Memória de cálculo da mensalidade', s:'Cálculo da mensalidade', t:'textarea', nova:1, full:1,
+ dica:'como o valor foi montado'},
+{col:'Mensalidade calculada (R$)', s:'Cálculo da mensalidade', t:'money', ro:1, nova:1,
+ dica:'calculado — não editar à mão'},
+{col:'Diferença: calculada − cadastrada (R$)', s:'Cálculo da mensalidade', t:'money', ro:1, nova:1,
+ dica:'calculado — não editar à mão'},
+
+/* ── Diagnóstico de atuação — observações ───────────────────────────────────
+   Um campo livre por eixo do diagnóstico. O escore responde "quanto"; estas
+   respondem "por quê" — e é o "por quê" que sobrevive à troca de consultor. */
+{col:'Diag Obs — O que executa de fato', s:'Diagnóstico de atuação — observações', t:'textarea', nova:1, full:1},
+{col:'Diag Obs — Gastos e risco econômico', s:'Diagnóstico de atuação — observações', t:'textarea', nova:1, full:1},
+{col:'Diag Obs — Equipe e impessoalidade', s:'Diagnóstico de atuação — observações', t:'textarea', nova:1, full:1},
+{col:'Diag Obs — Onde e com que estrutura', s:'Diagnóstico de atuação — observações', t:'textarea', nova:1, full:1},
+{col:'Diag Obs — Como a receita se forma', s:'Diagnóstico de atuação — observações', t:'textarea', nova:1, full:1},
+{col:'Diag Obs — Registro documental', s:'Diagnóstico de atuação — observações', t:'textarea', nova:1, full:1},
+
+/* ── Diagnóstico de atuação — resultado ─────────────────────────────────────────────
    Estas colunas são escritas pela ficha do cliente (`registro-cliente.html`,
    grupo "Atuação empresarial"), que calcula o escore. Na ficha do Registro elas aparecem para LEITURA — editar o
    escore à mão faria a nota deixar de corresponder às respostas que a
    produziram, e é isso que a coluna "Diag Dados (JSON)" existe para impedir:
    ela é o formulário inteiro, e é dela que o diagnóstico é reaberto. */
-{col:'Diag Data',                 s:'Diagnóstico de equiparação', t:'date', ro:1, nova:1},
-{col:'Diag Consultor',            s:'Diagnóstico de equiparação', t:'text', ro:1, nova:1},
-{col:'Diag Escore Fato',          s:'Diagnóstico de equiparação', t:'text', ro:1, nova:1,
+{col:'Diag Data',                 s:'Diagnóstico de atuação — resultado', t:'date', ro:1, nova:1},
+{col:'Diag Consultor',            s:'Diagnóstico de atuação — resultado', t:'text', ro:1, nova:1},
+{col:'Diag Escore Fato',          s:'Diagnóstico de atuação — resultado', t:'text', ro:1, nova:1,
  dica:'1 a 100 — atuação empresarial de fato. 50 é o muro.'},
-{col:'Diag Classificação',        s:'Diagnóstico de equiparação', t:'text', ro:1, nova:1},
-{col:'Diag Prontidão Prova %',    s:'Diagnóstico de equiparação', t:'text', ro:1, nova:1,
+{col:'Diag Classificação',        s:'Diagnóstico de atuação — resultado', t:'text', ro:1, nova:1},
+{col:'Diag Prontidão Prova %',    s:'Diagnóstico de atuação — resultado', t:'text', ro:1, nova:1,
  dica:'o quanto está provado em documento — não entra no escore'},
-{col:'Diag Completude %',         s:'Diagnóstico de equiparação', t:'text', ro:1, nova:1},
-{col:'Diag Trava',                s:'Diagnóstico de equiparação', t:'text', ro:1, nova:1},
-{col:'Diag Pendências',           s:'Diagnóstico de equiparação', t:'textarea', ro:1, full:1, nova:1},
-{col:'Diag Recomendação',         s:'Diagnóstico de equiparação', t:'textarea', ro:1, full:1, nova:1},
-{col:'Diag Alertas',              s:'Diagnóstico de equiparação', t:'textarea', ro:1, full:1, nova:1},
-{col:'Diag Dados (JSON)',         s:'Diagnóstico de equiparação', t:'textarea', ro:1, full:1, nova:1,
+{col:'Diag Completude %',         s:'Diagnóstico de atuação — resultado', t:'text', ro:1, nova:1},
+{col:'Diag Trava',                s:'Diagnóstico de atuação — resultado', t:'text', ro:1, nova:1},
+{col:'Diag Pendências',           s:'Diagnóstico de atuação — resultado', t:'textarea', ro:1, full:1, nova:1},
+{col:'Diag Recomendação',         s:'Diagnóstico de atuação — resultado', t:'textarea', ro:1, full:1, nova:1},
+{col:'Diag Alertas',              s:'Diagnóstico de atuação — resultado', t:'textarea', ro:1, full:1, nova:1},
+{col:'Diag Dados (JSON)',         s:'Diagnóstico de atuação — resultado', t:'textarea', ro:1, full:1, nova:1,
  dica:'o formulário inteiro, para reabrir o diagnóstico. Não editar à mão.'}
 ];
 
@@ -578,6 +589,50 @@ function opcoesDe(col, padrao, vAtual, idxValidacoes) {
   return out;
 }
 
+/**
+ * PODA: o catálogo se ajusta à planilha, e não o contrário.
+ *
+ * Este arquivo diz em que seção cada coluna CONHECIDA entra. Ele nunca disse
+ * quais colunas EXISTEM — isso é da planilha. Só que, até 08/09/2026, a ficha
+ * do cliente desenhava campo para toda entrada catalogada, existisse ou não a
+ * coluna na aba Registro. Quem apagasse uma coluna na planilha continuava vendo
+ * o campo na tela: ele contava na completude (e o selo nunca chegava a 100%),
+ * aceitava digitação, e no salvar mandava para o servidor uma coluna que não
+ * existe mais. Um arquivo estático não pode ter opinião sobre isso.
+ *
+ * `podar(colunasVivas)` recebe os cabeçalhos que a planilha devolveu AGORA e
+ * descarta do catálogo tudo que não está lá. Duas exceções, e só duas:
+ *
+ *   · `nova:1` — coluna que o Apps Script ainda vai criar. Some da tela
+ *     enquanto não existir, e volta sozinha quando existir. Isso é o desenho.
+ *   · as colunas do diagnóstico, passadas em `protegidas`: elas nascem da rota
+ *     `diag_salvar` no momento em que alguém responde, então "ainda não existe"
+ *     é o estado normal delas.
+ *
+ * Sem `colunasVivas` — a rota falhou, a planilha não respondeu — nada é podado.
+ * Uma lista vazia por acidente não pode esvaziar a ficha inteira.
+ */
+function podar(colunasVivas, protegidas) {
+  if (!colunasVivas || !colunasVivas.length) return { campos: CAMPOS, ordem: ORDEM, podadas: [] };
+  var viva = {}, prot = {};
+  colunasVivas.forEach(function (c) { viva[normCol(c)] = 1; });
+  (protegidas || []).forEach(function (c) { if (c) prot[normCol(c)] = 1; });
+
+  var podadas = [];
+  var campos = CAMPOS.filter(function (c) {
+    var k = normCol(c.col);
+    if (viva[k] || c.nova || prot[k]) return true;
+    podadas.push(c.col); return false;
+  });
+  /* Seção que ficou sem nenhum campo sai da ordem: cabeçalho de seção vazia é
+     a mesma promessa quebrada, só que maior. "Outros" fica sempre, porque é
+     onde cai a coluna que a planilha tem e o catálogo ainda não conhece. */
+  var usadas = {};
+  campos.forEach(function (c) { usadas[c.s || 'Outros'] = 1; });
+  var ordem = ORDEM.filter(function (s) { return s === 'Outros' || usadas[s]; });
+  return { campos: campos, ordem: ordem, podadas: podadas };
+}
+
 w.B4U_REGISTRO_CAMPOS = {
   ordem: ORDEM,
   sobre: SOBRE,
@@ -589,7 +644,9 @@ w.B4U_REGISTRO_CAMPOS = {
   /* Fusão catálogo × validação da planilha — ver o bloco logo acima. */
   normCol: normCol,
   indexarValidacoes: indexarValidacoes,
-  opcoesDe: opcoesDe
+  opcoesDe: opcoesDe,
+  /* O catálogo se ajusta à planilha — ver o bloco logo acima. */
+  podar: podar
 };
 
 })(window);

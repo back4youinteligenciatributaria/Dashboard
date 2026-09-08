@@ -558,11 +558,11 @@ var VALIDACOES = {};
 var PORCOL = {};
 CAT.campos.forEach(function(c){ PORCOL[norm(c.col)] = c; });
 
-/* A seção "Diagnóstico de equiparação" do catálogo não vira formulário: aquelas
+/* A seção "Diagnóstico de atuação — resultado" do catálogo não vira formulário: aquelas
    colunas são o RESULTADO (escore, faixa, roteiro, o JSON que reabre tudo), e
    editá-las à mão faria a nota deixar de corresponder às respostas que a
    produziram. Elas aparecem na tela de Resultado, calculadas. */
-var SEC_CALCULADA = 'Diagnóstico de equiparação';
+var SEC_CALCULADA = 'Diagnóstico de atuação — resultado';
 var SECOES_ONBOARDING = CAT.ordem.filter(function(s){
   return s !== 'Identificação' && s !== SEC_CALCULADA && s !== 'Outros';
 });
@@ -629,6 +629,28 @@ function opcoesLimpas(lista){
     });
   });
   return out;
+}
+
+/* A PODA VEM ANTES DE TUDO: o catálogo se ajusta à planilha.
+   `CAT.campos` é uma lista escrita à mão num arquivo estático. A aba Registro
+   muda sem avisar ninguém — alguém apaga uma coluna numa terça-feira. Até
+   08/09/2026 a ficha continuava desenhando o campo da coluna apagada: ele
+   contava na completude (e o selo nunca fechava em 100%), aceitava digitação, e
+   no salvar mandava para o servidor uma coluna que não existe mais.
+   Aqui a lista viva de cabeçalhos manda, e o catálogo obedece. As perguntas do
+   diagnóstico são poupadas porque a coluna delas nasce na hora em que alguém
+   responde, pela rota `diag_salvar` — "ainda não existe" é o estado normal. */
+function podarCatalogo(colunasVivas){
+  if (!CAT.podar) return 0;                      // catálogo antigo: segue como era
+  var prot = [];
+  try { perguntas().forEach(function(p){ if (p.col) prot.push(p.col); }); } catch(e){}
+  var r = CAT.podar(colunasVivas, prot);
+  CAT.campos = r.campos; CAT.ordem = r.ordem;
+  PORCOL = {}; CAT.campos.forEach(function(c){ PORCOL[norm(c.col)] = c; });
+  SECOES_ONBOARDING = CAT.ordem.filter(function(x){
+    return x !== 'Identificação' && x !== SEC_CALCULADA && x !== 'Outros';
+  });
+  return r.podadas.length;
 }
 
 function completarCatalogo(colunasVivas, arvore){
@@ -1919,6 +1941,10 @@ function carregar(){
          meio segundo depois, com a navegação lateral pulando debaixo do cursor.
          Se a rota falhar, a ficha abre como sempre abriu — sem as 131, que é o
          estado de ontem e não um erro. */
+      /* Fora do `then` da árvore de propósito: a poda depende só dos cabeçalhos,
+         que já chegaram. Se a rota de variáveis cair, a ficha ainda não desenha
+         coluna que não existe. */
+      podarCatalogo(d.colunas);
       return jsonp(API_URL + '?tipo=variaveis&chave=' + encodeURIComponent(chaveAtual()))
         .then(function(a){ if (a && !a.erro) completarCatalogo(d.colunas, a.arvore); })
         .catch(function(){})

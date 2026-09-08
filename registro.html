@@ -1103,7 +1103,7 @@ const HINTS_RESERVA={
   'contabilidade previa':{s:'Fiscal / Contábil'},
   'data de inicio da contabilidade':{s:'Fiscal / Contábil',t:'date',role:'inicio'},
   'data de fim da contabilidade':{s:'Fiscal / Contábil',t:'date'},
-  'tem dpto pessoal':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
+  'possui funcionarios registrados':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não','Não sabe']},
   'pro labore':{s:'Departamento Pessoal'},
   '# de funcionarios':{s:'Departamento Pessoal'},
   'adiantamento salarial':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
@@ -1112,8 +1112,6 @@ const HINTS_RESERVA={
   'controle de ponto':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
   'funcionario de pessoa fisica':{s:'Departamento Pessoal',t:'select',opts:['','Sim','Não']},
   'paga aluguel':{s:'Aluguel',t:'select',opts:['','Sim','Não']},
-  'aluguel para pf':{s:'Aluguel',t:'select',opts:['','Sim','Não']},
-  'pagamento aluguel':{s:'Aluguel'},
   'valor do aluguel':{s:'Aluguel'},
   'obs aluguel':{s:'Aluguel',t:'textarea',full:true}
 };
@@ -1188,7 +1186,7 @@ function ehSoLeitura(col){return SO_LEITURA.has(norm(col));}
 const UF_FIELD={s:'Identificação',col:'UF',t:'text',req:true,max:2,up:true,role:'uf'};
 /* Reserva: se o servidor não devolver os cabeçalhos, a tela ainda tem quais campos
    pedir, em vez de abrir um formulário vazio. */
-const CAMPOS_FALLBACK=['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Tem DPTO pessoal','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Aluguel para PF?','Pagamento Aluguel','Valor do Aluguel','Obs Aluguel'];
+const CAMPOS_FALLBACK=['Razão social da empresa','CNPJ ou CPF','Nome Fantasia','Cidade','Resumo','Link Form Diagnóstico','Data de Abertura','Porte','Natureza Jurídica','Endereço','CNAEs','Registro na Junta','Número de sócios','Descrição sócios','Cadastro Municipal (número)','Regime','Fator R?','Equiparados','ISS','Livro caixa','Contabilidade prévia','Data de início da contabilidade','Data de fim da contabilidade','Possui funcionários registrados','Pró Labore','# de funcionários','Adiantamento salarial','Vale Alimentação','VALE TRANSPORTE','Controle de Ponto','Funcionário de pessoa física','Paga aluguel?','Valor do Aluguel','Obs Aluguel'];
 
 /* Colunas APOSENTADAS (chave normalizada por norm()).
    Saíram — ou estão saindo — da aba Registro. O montador de campos ignora essas
@@ -1197,12 +1195,13 @@ const CAMPOS_FALLBACK=['Razão social da empresa','CNPJ ou CPF','Nome Fantasia',
    coluna na planilha não precisa mexer aqui; quem aposenta uma coluna nova só
    acrescenta a chave nesta lista. Também ficam fora da conta do selo de
    completude, senão contariam como "campo vazio" para sempre. */
-/* Vazia de propósito, e o mecanismo fica. Tinha 'procuracao e-cac' e
-   'procuracao spe' enquanto essas colunas ainda existiam na planilha e a gente
-   precisava escondê-las do cadastro. Em 08/2026 elas foram apagadas da Registro
-   Clientes — a partir daí a lista virava exceção para coluna que não existe, que
-   é o tipo de entulho que faz alguém perder meia hora procurando por que um
-   campo não aparece. A planilha voltou a ser a fonte da verdade. */
+/* Vazia de propósito, e o mecanismo fica. Esta página monta os campos a partir
+   dos CABEÇALHOS VIVOS que o servidor devolve: coluna apagada na planilha some
+   da tela sozinha, sem ninguém editar nada aqui. A lista só serve para o caso
+   contrário — esconder do cadastro uma coluna que ainda EXISTE na planilha.
+   Na faxina de 08/09/2026 ela chegou a receber as 16 colunas removidas e foi
+   esvaziada de novo no mesmo dia: a planilha é a fonte da verdade, e uma cópia
+   da poda aqui dentro seria uma segunda verdade para manter igual. */
 const REMOVIDOS=[];
 
 /* O MOTIVO de cada coluna travada (o title do campo com 🔒) foi para a ficha:
