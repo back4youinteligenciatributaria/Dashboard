@@ -1986,9 +1986,32 @@ function desenharTela(){
          'no Registro e abra a ficha dele para valer.</div>';
   }
   H += (pn.tipo === 'cat') ? telaCatalogo(pn) : (pn.bloco.resultado ? telaResultado() : telaBloco(pn.bloco));
-  $('tela').innerHTML = H;
-  $('tela').scrollTop = 0;
+  /* A ROLAGEM SÓ VOLTA AO TOPO QUANDO A TELA MUDA — 10/09/2026. Marcar uma
+     alternativa do diagnóstico redesenha a tela (o escore, as notas e as
+     exclusivas mudam juntos), e o `scrollTop = 0` incondicional jogava a pessoa
+     para o topo a cada clique, no meio de um bloco de dez perguntas. Agora: mesma
+     tela, mesma posição; tela nova, topo. No celular quem rola é a página, e a
+     posição dela também é preservada. */
+  var tela = $('tela'), mesma = (desenharTela._aba === ABA);
+  var rol = tela.scrollTop, yPag = window.scrollY;
+  tela.innerHTML = H;
+  tela.scrollTop = mesma ? rol : 0;
+  if (mesma && window.scrollY !== yPag) window.scrollTo(window.scrollX, yPag);
+  desenharTela._aba = ABA;
 }
+/* Navegação e painel lateral também são reescritos a cada clique (soLados); os
+   dois rolam por conta própria, e sem isto voltavam ao topo — com trinta
+   subcategorias no menu, quem estava em "Cobrança" era devolvido a "Cadastro". */
+function comRolagem(id, fn){
+  var el = $(id), t = el ? el.scrollTop : 0;
+  fn();
+  if (el) el.scrollTop = t;
+}
+(function(){
+  var n = desenharNav, p = desenharPainel;
+  desenharNav    = function(){ comRolagem('nav', n); };
+  desenharPainel = function(){ comRolagem('painel', p); };
+})();
 function redesenhar(){ desenharTopo(); desenharNav(); desenharPainel(); desenharTela(); }
 function soLados(){ desenharTopo(); desenharNav(); desenharPainel(); }
 

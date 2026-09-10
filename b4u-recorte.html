@@ -921,11 +921,11 @@ function selEsc(s){ return (window.CSS && CSS.escape) ? CSS.escape(String(s)) : 
    Prazo e UMA repetição: a primeira chamada do dia acorda o Apps Script e às
    vezes estoura sozinha. */
 const JSONP_TETO = 45000, JSONP_PAUSA = 4000;
-function jsonpTentativa(url){
+function jsonpTentativa(url, ms){
   return new Promise((ok,fail)=>{
     const cb='cb_'+Math.random().toString(36).slice(2);
     const s=document.createElement('script');
-    const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},JSONP_TETO);
+    const t=setTimeout(()=>{limpa();fail(new Error('A API não respondeu.'));},ms||JSONP_TETO);
     function limpa(){clearTimeout(t);delete window[cb];s.remove();}
     window[cb]=d=>{limpa();ok(d);};
     s.onerror=()=>{limpa();fail(new Error('Não consegui alcançar a API.'));};
@@ -933,9 +933,9 @@ function jsonpTentativa(url){
     document.body.appendChild(s);
   });
 }
-function jsonp(url){
-  return jsonpTentativa(url).catch(()=>
-    new Promise(r=>setTimeout(r,JSONP_PAUSA)).then(()=>jsonpTentativa(url)));
+function jsonp(url, ms){
+  return jsonpTentativa(url, ms).catch(()=>
+    new Promise(r=>setTimeout(r,JSONP_PAUSA)).then(()=>jsonpTentativa(url, ms)));
 }
 
 /* ---------------- POST: a gravação ----------------
@@ -1050,6 +1050,44 @@ function chaveVis(){ return 'b4u.recorte.' + (telaAtual()||'?') + '.cols'; }
    "Colunas" e ela não volta. */
 function chaveNovas(){ return 'b4u.recorte.' + (telaAtual()||'?') + '.vistas'; }
 function chaveLay(){ return 'b4u.recorte.' + (telaAtual()||'?') + '.layout'; }
+/* A BASE: as colunas que o recorte tinha quando a escolha guardada foi feita.
+   Existe por causa de um defeito de 10/09/2026: editar uma visualização e
+   marcar colunas novas SALVAVA as colunas no servidor, mas a tela abria sem
+   elas. A escolha guardada no navegador (`.cols`) era a lista de ANTES, e o
+   `aplicar()` só filtrava por ela — coluna que não estava lá ficava escondida,
+   com o "1/2 colunas" como único sinal. Sem saber o que o recorte tinha antes,
+   não há como distinguir "coluna que a pessoa tirou" de "coluna que acabou de
+   entrar". A base é essa memória. */
+function chaveBase(){ return 'b4u.recorte.' + (telaAtual()||'?') + '.base'; }
+function lembrarBase(){ try{ localStorage.setItem(chaveBase(), JSON.stringify(DO_REC)); }catch(_){} }
+/** Coluna que entrou no recorte desde a última visita ENTRA na grade, na
+ *  posição dela no recorte. Coluna que a pessoa tirou e continua no recorte
+ *  continua fora — ela estava na base, então não é nova. */
+function acolherColunasNovas(){
+  let base = null;
+  try{ base = JSON.parse(localStorage.getItem(chaveBase())||'null'); }catch(_){ base = null; }
+  if (!Array.isArray(base)) {
+    /* Escolha guardada de antes de a base existir. Numa VISUALIZAÇÃO, quem manda
+       é o que foi salvo — então abre o salvo, uma vez, e daí em diante a base
+       segura. Num recorte do catálogo não há como saber o que é novo: fica
+       como está, e a base começa a valer a partir de agora. */
+    if (REC.visualizacao) { VIS = DO_REC.slice(); salvarVis(); }
+    return;
+  }
+  const antes = new Set(base.map(normCol));
+  const novas = DO_REC.filter(c => !antes.has(normCol(c)) && VIS.indexOf(c) < 0);
+  if (!novas.length) return;
+  novas.forEach(c => {
+    const i = DO_REC.indexOf(c);
+    let pos = 0;   // sem vizinha à esquerda na grade: entra na frente
+    for (let j = i - 1; j >= 0; j--) {
+      const k = VIS.indexOf(DO_REC[j]);
+      if (k > -1) { pos = k + 1; break; }
+    }
+    VIS.splice(pos, 0, c);
+  });
+  salvarVis();
+}
 function lerLayout(){
   try{
     const o = JSON.parse(localStorage.getItem(chaveLay())||'{}');
@@ -1836,11 +1874,15 @@ function abrirFiltro(col, ancora){
        do topo operam só sobre ela. Limpar os trezentos escondidos junto seria
        apagar uma escolha que a pessoa não viu acontecer. */
     const its = vals.filter(o => !t || normTxt(o.v || 'em branco').includes(t));
+    /* Mesma regra da grade: marcar uma caixa redesenha a lista, e a lista não
+       pode voltar para o primeiro valor debaixo do dedo de quem estava no 30º. */
+    const rolLista = lista.scrollTop;
     lista.innerHTML = its.length ? its.map(o =>
       '<label><input type="checkbox" data-v="' + esc(o.v) + '"' + (marcado(o.v)?' checked':'') + '>' +
       '<span class="r' + (o.v?'':' gfil-b') + '">' + (o.v ? esc(o.v) : '(em branco)') + '</span>' +
       '<span class="n">' + o.n + '</span></label>').join('')
       : '<div class="gfil-vazio">Nenhum valor com esse texto.</div>';
+    lista.scrollTop = rolLista;
     const n = vals.filter(o => marcado(o.v)).length;
     cnt.textContent = n + ' de ' + vals.length;
   }
@@ -2316,10 +2358,22 @@ function desenharGrade(){
       '<td class="fix2">'+esc(l.nome_cliente||'')+'<span data-selo="'+esc(l.id)+'"></span></td>'+
       VIS.map(c=>'<td>'+campoHTML(l.id,c,l.valores[c],'cel-in')+'</td>').join('')+
     '</tr>').join('');
+  /* A ROLAGEM SOBREVIVE AO REDESENHO — 10/09/2026. A grade é reescrita inteira
+     (innerHTML) a cada filtro, coluna marcada, ordenação. O `.grade-wrap` novo
+     nascia com a rolagem em zero: a pessoa descia até o cliente 40, marcava uma
+     caixa de seleção (coluna, filtro do funil) e era jogada de volta para o
+     primeiro cliente e para a primeira coluna. Guarda a posição do container
+     velho e devolve ao novo; o navegador limita sozinho se a tabela encolheu. */
+  const velho = document.querySelector('#conteudo .grade-wrap');
+  const rol = velho ? { t: velho.scrollTop, l: velho.scrollLeft } : null;
+  const yPag = window.scrollY;
   document.getElementById('conteudo').innerHTML = linhas.length
     ? '<div class="grade-wrap"><table class="grade'+(ALT >= 46 ? ' alto' : '')+'" style="--lh:'+ALT+'px">'+
       cg+'<thead><tr>'+th+'</tr></thead><tbody>'+tr+'</tbody></table></div>'
     : '<div class="vazio">Nenhum cliente com esses filtros.</div>';
+  const novo = document.querySelector('#conteudo .grade-wrap');
+  if (novo && rol) { novo.scrollTop = rol.t; novo.scrollLeft = rol.l; }
+  if (window.scrollY !== yPag) window.scrollTo(window.scrollX, yPag);
   linhas.forEach(l=>pintarSelo(l.id));
 }
 
@@ -2518,16 +2572,56 @@ function opcoesLimpas(lista){
   return out;
 }
 
+/* O "EDITAR" QUE NÃO ABRIA — 10/09/2026.
+   Medido no ar: a rota `variaveis` levou 60,8 s na primeira chamada (ela lê as
+   validações das 346 colunas do Registro, sem cache no servidor). O prazo do
+   JSONP era 45 s: a tela DESISTIA quinze segundos antes de a resposta chegar,
+   esperava 4 s, pedia tudo de novo — e a segunda falhou com "Não consegui
+   alcançar a API". Dois minutos de "abrindo…" e um erro no fim.
+   Três remédios, todos daqui:
+     · prazo próprio de 100 s para esta rota — desistir de uma leitura que ia
+       chegar é pagar o custo dela duas vezes;
+     · UMA leitura em voo por vez: a ficha e o construtor pedem a mesma árvore,
+       e dois cliques no botão não podem virar dois pedidos;
+     · cópia na sessionStorage por 10 min: salvar a visualização RECARREGA a
+       tela, e sem a cópia o próximo "Editar" pagava a leitura inteira de novo. */
+const ARV_TETO = 100000, ARV_VALIDADE = 10 * 60 * 1000;
+let ARV_P = null, ARV_GER = 0;
+function chaveArv(){ return 'b4u.recorte.arvore.' + (chaveAtual() || '?'); }
+function esquecerArvore(){
+  ARV = null; ARV_GER++;
+  try { sessionStorage.removeItem(chaveArv()); } catch(_){}
+}
 async function arvoreVariaveis(){
   if (ARV) return ARV;
-  const d = await jsonp(API_URL+'?tipo=variaveis&chave='+encodeURIComponent(chaveAtual()));
-  if (!d || d.erro) throw new Error((d && d.erro) || 'Não consegui ler o catálogo de colunas.');
-  (d.arvore || []).forEach(c => c.subs.forEach(s => s.colunas.forEach(x => {
-    x.opcoes = opcoesLimpas(x.opcoes);
-  })));
-  ARV = d;
-  return ARV;
+  try {
+    const g = JSON.parse(sessionStorage.getItem(chaveArv()) || 'null');
+    if (g && g.d && (Date.now() - g.em) < ARV_VALIDADE) { ARV = g.d; return ARV; }
+  } catch(_){}
+  if (ARV_P) return ARV_P;
+  const ger = ARV_GER;
+  ARV_P = (async () => {
+    const d = await jsonp(API_URL+'?tipo=variaveis&chave='+encodeURIComponent(chaveAtual()), ARV_TETO);
+    if (!d || d.erro) throw new Error((d && d.erro) || 'Não consegui ler o catálogo de colunas.');
+    (d.arvore || []).forEach(c => c.subs.forEach(s => s.colunas.forEach(x => {
+      x.opcoes = opcoesLimpas(x.opcoes);
+    })));
+    /* Alguém criou variável enquanto esta leitura voava: ela já nasceu velha. */
+    if (ger !== ARV_GER) return d;
+    ARV = d;
+    try { sessionStorage.setItem(chaveArv(), JSON.stringify({ em: Date.now(), d: d })); } catch(_){}
+    return ARV;
+  })();
+  try { return await ARV_P; } finally { ARV_P = null; }
 }
+/* Chegar perto de um botão que vai precisar da árvore já manda buscá-la. O
+   segundo e meio entre apontar e clicar não resolve 60 s, mas resolve os 11 s
+   do caso comum pela metade — e não custa nada a quem só está lendo a tela. */
+['pointerover', 'focusin'].forEach(ev => document.addEventListener(ev, e => {
+  const alvo = e.target && e.target.closest &&
+    e.target.closest('[data-vis="editar"],[data-vis="fixos"],[data-vis="criar"],[data-vis="novavar"],[data-f="novavar"]');
+  if (alvo && !ARV && !ARV_P) arvoreVariaveis().catch(() => {});
+}, { passive: true }));
 
 /** Roda `fn` avisando NO PRÓPRIO BOTÃO que está indo buscar.
  *
@@ -3072,7 +3166,7 @@ async function gravarNovaVariavel(bt){
       subcategoria:NOVAVAR.subcategoria.trim(), tipo:NOVAVAR.tipo,
       opcoes: JSON.stringify(opcoes), dica:NOVAVAR.dica
     });
-    ARV = null;                                    // a árvore mudou: releitura na próxima
+    esquecerArvore();                              // a árvore mudou: releitura na próxima
     if (window.B4UShell && B4UShell.esquecerAtalhos) B4UShell.esquecerAtalhos();
     MODAL_VAR.fechar(true);
     const el = document.getElementById('avisoErro');
@@ -3363,6 +3457,12 @@ async function visGravarEstado(est, extra){
     ordem:   JSON.stringify(est.ordem || null)
   }, extra || {}));
   if (window.B4UShell && B4UShell.esquecerAtalhos) B4UShell.esquecerAtalhos();
+  /* A pessoa ACABOU de escolher as colunas, e a ordem delas, no construtor. A
+     escolha velha guardada neste navegador não pode esconder nada disso: sem
+     apagá-la, a coluna recém-marcada abria desmarcada no seletor. */
+  try {
+    ['.cols', '.base'].forEach(suf => localStorage.removeItem('b4u.recorte.v:' + d.id + suf));
+  } catch(_){}
   if (MODAL_CRIAR) MODAL_CRIAR.fechar(true);
   location.href = '?v=' + encodeURIComponent(d.id) + '&chave=' + encodeURIComponent(chaveAtual());
 }
@@ -3505,8 +3605,10 @@ function aplicar(d){
      quem mexeu e ainda não salvou. */
   if (REC.visualizacao && !guardada) VIS = DO_REC.slice();
   else VIS = guardada ? guardada.filter(c => DO_REC.indexOf(c) > -1) : visPadrao();
+  if (guardada) acolherColunasNovas();
   if (guardada) estrearNaGrade(d.ident_na_grade || []);
   if (!guardada) salvarVis();
+  lembrarBase();
   lerLayout();
   if (REC.visualizacao) VIS_SALVA = estadoDaTela();
   pintarVisBar();
