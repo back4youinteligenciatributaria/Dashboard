@@ -269,7 +269,6 @@ var CAMPOS = [
  opts:['Procuração e-CAC','Certificado digital','Login da prefeitura']},
 {col:'Login e senha da prefeitura', s:'Equiparação — situação', t:'select', nova:1,
  opts:['','Recebido','Pendente','N/A']},
-{col:'Podemos solicitar documentos ao contador', s:'Equiparação — situação', t:'select', nova:1, opts:SIM_NAO_SEI},
 
 /* ── Tomador de serviços ────────────────────────────────────────────────── */
 {col:'Recebe NFs de prestadores', s:'Tomador de serviços', t:'select', nova:1, opts:SIM_NAO_SEI},
@@ -355,8 +354,6 @@ var CAMPOS = [
 {col:'Tipo de certificado digital', s:'Acessos', t:'select', nova:1,
  opts:['','A1 — arquivo no computador','A3 — token ou pen-drive','Não possui','Não sabe']},
 {col:'Quem está de posse do certificado', s:'Acessos', t:'text', nova:1},
-{col:'Procuração e-CAC',          s:'Acessos', t:'select', nova:1,
- opts:['','Ativa','Solicitada','Não possui','N/A']},
 {col:'Procuração SPE',            s:'Acessos', t:'select', nova:1,
  opts:['','Ativa','Solicitada','Não possui','N/A']},
 {col:'Solicitação enviada ao contador', s:'Acessos', t:'select', nova:1,
@@ -432,7 +429,6 @@ var CAMPOS = [
 {col:'Observações de controladoria', s:'Controladoria', t:'textarea', nova:1, full:1},
 
 /* ── Transição contábil ─────────────────────────────────────────────────── */
-{col:'Cliente é Contabilizei',    s:'Transição contábil', t:'select', nova:1, opts:SIM_NAO},
 {col:'Observações de transição',  s:'Transição contábil', t:'textarea', nova:1, full:1},
 
 /* ── Jurídico e adequação societária ────────────────────────────────────── */

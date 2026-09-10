@@ -234,6 +234,7 @@ textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--brand-te
 
 .tela{overflow:auto;padding:24px 26px 60px;min-width:0}
 .tela h2{font-size:var(--fs-6);margin-bottom:6px}
+.tela .olho{font-size:var(--fs-1);font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2);margin-bottom:2px}
 .sobre{font-size:var(--fs-3);color:var(--ink-2);line-height:1.5;margin:0 0 20px;padding:10px 12px;
        background:var(--surface-warm);border-left:3px solid var(--brand-euc);
        border-radius:0 var(--radius) var(--radius) 0}
@@ -525,11 +526,11 @@ function slug(s){ return norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
 
 /* JSONP: o /exec responde 302 e o fetch simples não sobrevive ao
    redirecionamento com CORS. Mesma solução das outras telas da equipe. */
-function jsonp(url){
+function jsonp(url, prazo){
   return new Promise(function(ok, fail){
     var cb = 'cb_' + Math.random().toString(36).slice(2);
     var s = document.createElement('script');
-    var t = setTimeout(function(){ limpa(); fail(new Error('A API não respondeu.')); }, 45000);
+    var t = setTimeout(function(){ limpa(); fail(new Error('A API não respondeu.')); }, prazo || 45000);
     function limpa(){ clearTimeout(t); delete window[cb]; s.remove(); }
     window[cb] = function(d){ limpa(); ok(d); };
     s.onerror = function(){ limpa(); fail(new Error('Não consegui alcançar a API.')); };
@@ -701,6 +702,172 @@ function completarCatalogo(colunasVivas, arvore){
     });
   }
   return novas.length;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A FICHA INTEIRA SAI DA ABA "VARIÁVEIS" — 10/09/2026
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Até aqui a navegação era uma costura: as seções escritas à mão no
+   `b4u-registro-campos.js` ("Empresa e societário", "Fiscal", "Acessos"…) e,
+   penduradas no fim, as colunas que o catálogo não conhecia, com o rótulo
+   "Categoria › Subcategoria" da aba. Duas taxonomias na mesma lista — e mudar
+   a categoria de uma coluna na planilha só mudava a tela para as colunas que
+   o catálogo NÃO conhecia.
+
+   Agora quem manda na organização é só a aba "Variáveis":
+     · cada CATEGORIA vira um grupo da navegação, na ordem da aba;
+     · cada SUBCATEGORIA vira um item do grupo, na ordem da aba;
+     · cada COLUNA vira um campo, com tipo, opções e dica da aba.
+   Mudou a planilha, mudou a ficha — sem tocar em código.
+
+   O catálogo escrito à mão continua servindo para o que a aba não sabe dizer:
+   `dono` (a pergunta é respondida no diagnóstico), `sistema`/`ro` (coluna que
+   a ficha não edita), `sensivel`, `max`, `req`. Ele ENRIQUECE o campo; não
+   decide mais onde ele mora nem que tipo ele é.
+
+   O DIAGNÓSTICO NÃO MUDA. A categoria da aba que contém as colunas do motor
+   ("Diag …" e as perguntas pontuadas) não vira grupo próprio: as perguntas
+   continuam respondidas nos blocos pontuados de "Atuação empresarial", com o
+   escore, a régua, o plano e o roteiro exatamente como estavam. As demais
+   subcategorias dela (observações, resultado gravado) entram no fim desse
+   grupo, só para leitura — quem escreve nelas é o salvar do diagnóstico.
+
+   COLUNA QUE A ABA NÃO CONHECE não aparece: está no Registro e não está em
+   Variáveis, não existe para a ficha. Coluna que a aba lista mas a planilha já
+   não tem também é ignorada (a poda de 08/09/2026, com a mesma regra).
+
+   SE A ROTA FALHAR, a ficha abre como abria ontem (catálogo + completar).
+   A árvore da última visita fica guardada no navegador e desenha a ficha na
+   hora; a árvore nova chega em seguida e, se a planilha mudou, a ficha se
+   reorganiza sozinha — a menos que a pessoa já esteja editando, caso em que só
+   avisa (reorganizar debaixo do cursor tira o foco do campo).
+   ═══════════════════════════════════════════════════════════════════════════ */
+var CAT_BASE   = null;     // o catálogo depois da poda, antes de reorganizar
+var ARVORE_OK  = false;    // true = a navegação saiu da aba Variáveis
+var GRUPO_DIAG = 'Atuação empresarial';
+var SEM_CAT    = 'Sem categoria';
+var ARV_CACHE  = 'b4u.ficha.arvore.v1';
+
+/* Coluna do MOTOR do diagnóstico: tudo o que começa com "Diag " é escrito pelo
+   salvar a partir das respostas (escore, faixa, pendências, observações, JSON).
+   Pelo prefixo, e não por uma lista, para que um resultado novo do motor não
+   precise ser lembrado aqui. */
+function doMotor(col){ return /^diag /.test(norm(col)); }
+
+function arvoreGuardada(){
+  try { var o = JSON.parse(localStorage.getItem(ARV_CACHE) || 'null'); return o && o.arvore; }
+  catch (e) { return null; }
+}
+function guardarArvore(a){
+  try { localStorage.setItem(ARV_CACHE, JSON.stringify({ t: Date.now(), arvore: a })); } catch (e) {}
+}
+
+function reorganizarPelaAba(vivas, arvore){
+  if (!arvore || !arvore.length) return false;
+  if (!CAT_BASE) CAT_BASE = { campos: CAT.campos.slice(), ordem: CAT.ordem.slice() };
+
+  var base = {};
+  CAT_BASE.campos.forEach(function(c){ base[norm(c.col)] = c; });
+  var vivo = {}, temVivas = !!(vivas && vivas.length);
+  (vivas || []).forEach(function(c){ var k = norm(c); if (k && !(k in vivo)) vivo[k] = c; });
+
+  /* Perguntas com coluna própria ("Diag …") são respondidas nos blocos, não
+     como campo. As `cat`/`catpct` NÃO entram aqui: a coluna delas é do cadastro
+     (tem `dono` no catálogo) e aparece como placa na subcategoria em que a aba
+     a colocou. */
+  var noBloco = {};
+  perguntas().forEach(function(p){ if (p.col && !p.cat && !p.catpct) noBloco[norm(p.col)] = 1; });
+
+  function campo(col, x, sec){
+    var b = base[norm(col)], c = {};
+    if (b) for (var p in b) c[p] = b[p];
+    c.col = col; c.s = sec;
+    if (x) {
+      var t = TIPO_ABA[x.tipo] || 'text';
+      var op = opcoesLimpas(x.opcoes);
+      if (x.tipo === 'sim/não' && !op.length) op = ['Sim', 'Não'];
+      if (t === 'select' || t === 'multi') {
+        if (op.length) c.opts = [''].concat(op);
+        /* Lista sem opção em lugar nenhum (nem na aba, nem na validação, nem no
+           catálogo) vira texto: um <select> vazio não deixaria gravar nada. */
+        else if (!(c.opts && c.opts.length > 1)) t = 'text';
+      } else delete c.opts;
+      c.t = t;
+      if (x.dica) c.dica = x.dica;
+      if (x.tipo === 'senha') c.sensivel = 1;
+      if (x.tipo === 'texto longo') c.full = 1;
+    }
+    if (doMotor(col)) c.ro = 1;
+    return c;
+  }
+
+  var campos = [], ordem = [], vistos = {}, grupos = [], doDiag = [];
+  function grupoDe(n){
+    for (var i = 0; i < grupos.length; i++) if (grupos[i].n === n) return grupos[i];
+    var g = { n: n, painéis: [] }; grupos.push(g); return g;
+  }
+
+  arvore.forEach(function(cat){
+    var nomeCat = cat.categoria || SEM_CAT, ehDiag = false;
+    (cat.subs || []).forEach(function(sub){ (sub.colunas || []).forEach(function(x){
+      if (noBloco[norm(x.coluna)] || doMotor(x.coluna)) ehDiag = true;
+    }); });
+    var paineis = [];
+    (cat.subs || []).forEach(function(sub){
+      var nomeSub = (sub.subcategoria && sub.subcategoria !== '—') ? sub.subcategoria : nomeCat;
+      var sec = nomeCat + ' › ' + nomeSub, n = 0;
+      (sub.colunas || []).forEach(function(x){
+        var k = norm(x.coluna);
+        if (!k || vistos[k]) return;
+        if (noBloco[k]) { vistos[k] = 1; return; }      // respondida nos blocos pontuados
+        if (temVivas && !vivo[k]) return;                // a aba lista, a planilha já não tem
+        vistos[k] = 1;
+        campos.push(campo(vivo[k] || x.coluna, x, sec)); n++;
+      });
+      if (!n) return;
+      ordem.push(sec);
+      paineis.push({ id: 'cat:' + sec, n: nomeSub, cat: nomeCat, tipo: 'cat', sec: sec });
+    });
+    if (!paineis.length) return;
+    if (ehDiag) doDiag = doDiag.concat(paineis.map(function(p){ p.doMotor = 1; return p; }));
+    else { var g = grupoDe(nomeCat); g.painéis = g.painéis.concat(paineis); }
+  });
+
+  /* COLUNA QUE A ABA NÃO CONHECE NÃO EXISTE PARA A FICHA (decisão do Gian,
+     10/09/2026). Se ela está no Registro e não está em Variáveis, ou se cadastra
+     lá ou se apaga da planilha — a ficha não inventa lugar para ela.
+     A única exceção é invisível: coluna com `dono` (resposta de pergunta
+     pontuada que mora numa coluna do cadastro). Ela continua na lista de campos,
+     sem seção e sem desenho, só para o salvar do diagnóstico continuar gravando
+     a resposta — senão tirar a linha dela da aba faria o escore parar de gravar
+     em silêncio. */
+  CAT_BASE.campos.forEach(function(b){
+    var k = norm(b.col);
+    if (!b.dono || vistos[k] || (temVivas && !vivo[k])) return;
+    vistos[k] = 1;
+    var c = {}; for (var p in b) c[p] = b[p]; c.s = ''; c.oculto = 1;
+    campos.push(c);
+  });
+  /* "Sem categoria" é sempre o último grupo antes do diagnóstico. */
+  grupos.sort(function(a, b){ return (a.n === SEM_CAT) - (b.n === SEM_CAT); });
+
+  if (!grupos.length) return false;                // árvore sem nada desenhável: fica o que estava
+
+  CAT.campos = campos; CAT.ordem = ordem;
+  PORCOL = {}; campos.forEach(function(c){ PORCOL[norm(c.col)] = c; });
+  SECOES_ONBOARDING = ordem.slice();
+
+  grupos.push({ n: GRUPO_DIAG, painéis: BLOCOS.map(function(b){
+    return { id: 'diag:' + b.id, n: b.n, tipo: 'diag', bloco: b };
+  }).concat(doDiag) });
+  GRUPOS = grupos;
+
+  var achou = false;
+  GRUPOS.forEach(function(g){ g.painéis.forEach(function(p){ if (p.id === ABA) achou = true; }); });
+  if (!achou) ABA = GRUPOS[0].painéis[0].id;
+  ARVORE_OK = true;
+  return true;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1551,7 +1718,7 @@ function desenharNav(){
       var st = '', cl = '';
       if (pn.tipo === 'cat') {
         var c = contaSecao(pn.sec);
-        st = c.t ? (c.n + ' de ' + c.t + ' preenchidos') : 'só leitura';
+        st = c.t ? (c.n + ' de ' + c.t + ' preenchidos') : (pn.doMotor ? 'gravado pelo diagnóstico · só leitura' : 'só leitura');
         cl = !c.t ? '' : (c.n === c.t ? ' cheio' : (c.n ? ' parcial' : ''));
       } else if (pn.bloco.resultado) {
         st = 'Leia com o cliente';
@@ -1683,10 +1850,19 @@ function campoHTML(c){
 
 function telaCatalogo(pn){
   var cps = camposDaSecao(pn.sec);
-  var H = ['<h2>' + esc(pn.n) + '</h2>'];
-  if (CAT.sobre[pn.sec]) H.push('<p class="sobre">' + esc(CAT.sobre[pn.sec]) + '</p>');
+  var H = [(pn.cat && pn.cat !== pn.n ? '<div class="olho">' + esc(pn.cat) + '</div>' : '') +
+           '<h2>' + esc(pn.n) + '</h2>'];
+  /* O texto de apoio e a relevância por produto foram escritos para as seções
+     antigas do catálogo. Com a aba mandando, casam pelo nome da subcategoria ou
+     da categoria quando o nome coincide; quando não coincide, não aparecem —
+     melhor nenhum texto do que o texto de outra seção. */
+  var sobre = CAT.sobre[pn.sec] || CAT.sobre[pn.n] || (pn.cat && CAT.sobre[pn.cat]);
+  if (sobre) H.push('<p class="sobre">' + esc(sobre) + '</p>');
+  if (pn.cat === SEM_CAT) {
+    H.push('<div class="aviso-cx a">Estas colunas estão na aba <b>Variáveis</b> sem categoria. Preencha a categoria e a subcategoria lá e elas mudam de lugar aqui.</div>');
+  }
   var prod = String(VAL['Produtos Back4you'] || '');
-  var rel = CAT.relevancia[pn.sec];
+  var rel = CAT.relevancia[pn.sec] || CAT.relevancia[pn.n] || (pn.cat && CAT.relevancia[pn.cat]);
   if (rel && !PROSPECT) {
     var casa = rel.some(function(p){ return prod.toLowerCase().indexOf(p.toLowerCase()) >= 0; });
     H.push('<div class="aviso-cx ' + (casa ? 'v' : 'a') + '">' + (casa
@@ -1804,7 +1980,7 @@ function telaResultado(){
 function desenharTela(){
   var pn = painelPorId(ABA);
   var H = '';
-  if (PROSPECT && pn.id === 'cat:Identificação') {
+  if (PROSPECT && pn === GRUPOS[0].painéis[0]) {
     H += '<div class="aviso-cx a"><b>Modo prospect.</b> Esta ficha não grava nada, nunca — não há botão de salvar. ' +
          'Conduza a reunião, veja o escore andar e IMPRIMA no fim. Se o prospect fechar, cadastre-o em "+ Novo cliente" ' +
          'no Registro e abra a ficha dele para valer.</div>';
@@ -1910,7 +2086,8 @@ document.addEventListener('change', function(e){
 function avisar(txt, cl){ var el = $('aviso'); el.textContent = txt || ''; el.className = 'aviso' + (cl ? ' ' + cl : ''); }
 
 function carregar(){
-  if (PROSPECT) { redesenhar(); return Promise.resolve(); }
+  /* Prospect não lê planilha nenhuma; usa a organização da última visita, se houver. */
+  if (PROSPECT) { try { reorganizarPelaAba(null, arvoreGuardada()); } catch (e) {} redesenhar(); return Promise.resolve(); }
   if (!chaveAtual()) {
     /* Sem chave não há painel da equipe. A porta é o index.html, e o `destino`
        é o que traz a pessoa de volta para CÁ depois do login — senão todo
@@ -1945,10 +2122,32 @@ function carregar(){
          que já chegaram. Se a rota de variáveis cair, a ficha ainda não desenha
          coluna que não existe. */
       podarCatalogo(d.colunas);
-      return jsonp(API_URL + '?tipo=variaveis&chave=' + encodeURIComponent(chaveAtual()))
-        .then(function(a){ if (a && !a.erro) completarCatalogo(d.colunas, a.arvore); })
+      /* A árvore da última visita desenha a ficha já; a nova confere em seguida
+         (ver "A FICHA INTEIRA SAI DA ABA VARIÁVEIS"). O prazo é maior que o das
+         outras rotas: `tipo=variaveis` já levou 60 s num dia de servidor lento, e
+         desistir aos 45 deixaria a ficha com a organização velha. */
+      var guardada = arvoreGuardada(), assinatura = guardada ? JSON.stringify(guardada) : '';
+      var desenhou = false, mudou = false;
+      if (guardada && reorganizarPelaAba(d.colunas, guardada)) {
+        avisar('Conferindo as categorias na planilha…'); redesenhar(); desenhou = true;
+      }
+      return jsonp(API_URL + '?tipo=variaveis&chave=' + encodeURIComponent(chaveAtual()), 100000)
+        .then(function(a){
+          if (!a || a.erro || !a.arvore) return;
+          var nova = JSON.stringify(a.arvore);
+          guardarArvore(a.arvore);
+          if (desenhou && nova === assinatura) return;            // a planilha não mudou
+          if (desenhou && SUJO) { mudou = true; return; }          // não reorganiza debaixo do cursor
+          if (reorganizarPelaAba(d.colunas, a.arvore)) { desenhou = false; return; }
+          if (!ARVORE_OK) completarCatalogo(d.colunas, a.arvore);  // árvore inútil: o jeito de ontem
+          desenhou = false;
+        })
         .catch(function(){})
-        .then(function(){ avisar(''); redesenhar(); });
+        .then(function(){
+          if (mudou) { avisar('As categorias mudaram na planilha. Salve e recarregue a página para ver a nova organização.'); return; }
+          avisar('');
+          if (!desenhou) redesenhar();
+        });
     })
     .catch(function(e){ avisar(e.message, 'erro'); redesenhar(); });
 }
