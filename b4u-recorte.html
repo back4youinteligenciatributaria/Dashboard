@@ -384,6 +384,12 @@ table.grade tbody tr:hover td{background:#FBF8F3}
 .cel-in:hover{border-color:var(--line)}
 .cel-in:focus{border-color:var(--brand-teal);background:var(--surface);outline:none}
 .cel-ro{color:var(--muted)}
+/* Caixinha e fórmula (b4u-campo.js): na ficha (modal) o botão ganha cara de
+   campo, com borda; na grade ele é o valor, e a borda só aparece no hover. */
+.b4c-cel.b4c-in{border-color:var(--line);min-height:34px;padding:4px 8px;background:var(--surface)}
+.cel-ro.b4c-fx,.cel-ro.b4c-numro{color:var(--ink)}
+table.grade td .b4c-longo{margin:3px 0}
+.mfld .b4c-numbox .in{padding-left:28px}
 
 /* ---------- O FUNIL NO CABEÇALHO ----------
    O filtro mora NA COLUNA, como no Sheets e no Excel. Enquanto ele era uma
@@ -758,6 +764,10 @@ function b4uParaPlanilha(valor,coluna){
      um Esc de painel aberto levaria a ficha inteira embora em vez de fechar a
      lista que está na cara da pessoa. -->
 <script src="b4u-filtro.js" charset="utf-8"></script>
+<!-- b4u-campo.js: o valor desenhado pelo TIPO da variável — caixinha colorida
+     nas listas, número só com algarismo, fórmula sem clique, texto longo que
+     quebra. O mesmo arquivo da ficha do cliente (11/09/2026). -->
+<script src="b4u-campo.js" charset="utf-8"></script>
 <!-- A casca do modal: véu, Esc, foco preso, aviso de "tem coisa por gravar". -->
 <script src="b4u-modal.js" charset="utf-8"></script>
 <!-- O RECADO de gravação que falhou, para quem NÃO está com a ficha aberta. -->
@@ -994,6 +1004,14 @@ let ESPELHADA = new Set();   // vem do cadastro por fórmula: nunca editável
 let SIGILOSA  = new Set();   // senha: mascarada, fora da busca e fora do log
 let DATA      = new Set();
 let LINK      = new Set();
+/* O QUE CADA COLUNA É, pela aba Variáveis (11/09/2026): tipo, opções e cores.
+   Vem no payload do recorte (`variaveis`), por coluna. `FORMULA` são as
+   calculadas — a tela desenha o resultado e não deixa nem clicar. `PEND` é o
+   valor escolhido numa caixinha e ainda não confirmado pelo servidor: sem ele,
+   um redesenho no meio da gravação mostraria a opção antiga. */
+let VARN      = new Map();   // normCol(coluna) → {tipo, opcoes, cores, dica}
+let FORMULA   = new Set();
+const PEND    = new Map();   // chaveCel(id,col) → valor
 let META      = {};          // aba, planilha_url, cabecalho_linha, ausentes…
 
 let VIS   = [];              // as colunas VISÍVEIS — a escolha desta pessoa
@@ -1178,12 +1196,48 @@ function editavel(col){
   var sec = secaoDe(col);
   return !!(sec && sec.pode_gravar);
 }
+/* A aba Variáveis sobre esta coluna, ou null (servidor antigo, coluna não
+   catalogada — aí vale a adivinhação pelo nome, como sempre foi). */
+function varDe(col){ return VARN.get(normCol(col)) || null; }
+/* AS OPÇÕES QUE A TELA OFERECE: as da aba, mais as que a validação da planilha
+   aceita e a aba não tem — a mesma fusão do servidor (_varListaEfetiva_).
+   Regra que RECUSA na planilha manda: opção que a célula barraria não aparece. */
+function opcoesDe(col){
+  const m = varDe(col), v = VALID[col];
+  let out = ((m && m.opcoes) || []).slice();
+  if (v && v.opcoes) {
+    if (v.estrito) out = out.filter(o => v.opcoes.indexOf(o) > -1);
+    v.opcoes.forEach(o => { if (out.indexOf(o) < 0) out.push(o); });
+  }
+  if (!out.length && m && m.tipo === 'sim/não') out = ['Sim', 'Não'];
+  return out;
+}
+function coresDe(col){ const m = varDe(col); return (m && m.cores) || {}; }
+function ehFormula(col){ const m = varDe(col); return FORMULA.has(normCol(col)) || !!(m && m.tipo === 'fórmula'); }
+
+/* O TIPO DE DESENHO. A aba Variáveis manda; sem ela, a validação da planilha e
+   o nome da coluna, como antes de 11/09/2026.
+     formula  calculada: só o resultado, sem clique
+     chip     lista / sim/não: caixinha colorida + menu só com as opções
+     multi    lista múltipla: várias caixinhas
+     num      número: só algarismo
+     money    dinheiro: só algarismo, R$ na frente
+     long     texto longo: quebra em até 3 linhas, abre inteiro
+     date · url · text */
 function tipoDe(col){
+  const k = normCol(col), m = varDe(col), tv = m && m.tipo;
+  if (ehFormula(col)) return 'formula';
+  if (tv === 'senha') return 'text';
+  if (tv === 'lista múltipla') return 'multi';
+  if (tv === 'lista' || tv === 'sim/não') return opcoesDe(col).length ? 'chip' : 'text';
   const v = VALID[col];
   if (v && v.multi) return 'multi';
-  if (v && v.opcoes && v.opcoes.length) return v.estrito ? 'select' : 'lista';
-  if (DATA.has(normCol(col)))     return 'date';
-  if (LINK.has(normCol(col)))     return 'url';
+  if (v && v.opcoes && v.opcoes.length) return 'chip';
+  if (tv === 'data' || DATA.has(k)) return 'date';
+  if (tv === 'link' || LINK.has(k)) return 'url';
+  if (tv === 'número')     return 'num';
+  if (tv === 'dinheiro')   return 'money';
+  if (tv === 'texto longo' || (!tv && ehLonga(col))) return 'long';
   /* SENHA NÃO É MAIS UM TIPO DE CAMPO — 02/09/2026.
      Ela era desenhada como `••••••` num <input type="password">, e navegador
      nenhum deixa COPIAR de campo de senha. O resultado é que a coluna existia
@@ -1201,7 +1255,11 @@ function tipoDe(col){
 }
 /* Coluna longa merece a largura toda da ficha. É heurística de LAYOUT, e por
    isso pode errar sem consequência — ao contrário de tudo o mais aqui. */
-function ehLonga(col){ return /observ|descri|resumo|pend|contatos|cnaes|hist/.test(normCol(col)); }
+function ehLonga(col){
+  const m = varDe(col);
+  if (m && m.tipo) return m.tipo === 'texto longo';          // a aba falou
+  return /observ|descri|resumo|pend|contatos|cnaes|hist/.test(normCol(col));
+}
 /* aaaa-mm-dd → dd/mm/aaaa. O que não casar com o formato sai como veio: uma
    célula com "a confirmar" escrito à mão não pode virar "NaN/NaN/NaN". */
 function fmtBR(iso){
@@ -1219,6 +1277,48 @@ function campoHTML(id, col, valor, classe){
   const t  = tipoDe(col);
   const at = 'data-id="'+esc(id)+'" data-col="'+esc(col)+'" class="'+classe+'"';
   const v  = esc(valor==null?'':valor);
+  const B  = window.B4UCampo;
+  const tv = (varDe(col) || {}).tipo;
+  /* o endereço da célula, para repintar só ela (`repintarCampo`) */
+  const cel = 'data-cel-id="'+esc(id)+'" data-cel-col="'+esc(col)+'" data-cls="'+classe+'"';
+
+  /* FÓRMULA: o resultado, e nada que convide ao clique. Não é "campo travado"
+     (que parece quebrado): é conta, e o ƒx diz isso. */
+  if (t==='formula') {
+    const mostra = (B && (tv==='número'||tv==='dinheiro')) ? B.num.mostrar(valor, tv) : String(valor==null?'':valor);
+    return '<span class="'+classe+' cel-ro b4c-fx" title="Calculado por fórmula na planilha — não se edita aqui">'+
+           '<i>ƒx</i><span>'+(esc(mostra)||'—')+'</span></span>';
+  }
+
+  /* LISTA: caixinha colorida. Editável = botão que abre SÓ as opções (e o
+     "+ Adicionar opção"); nunca mais texto livre numa coluna fechada. */
+  if ((t==='chip' || t==='multi') && B) {
+    const vv = PEND.has(chaveCel(id,col)) ? PEND.get(chaveCel(id,col)) : valor;
+    const html = B.chips(vv, opcoesDe(col), coresDe(col), t==='multi') || '<span class="b4c-nada">—</span>';
+    if (!ed) return '<span class="'+classe+' cel-ro b4c-cel b4c-ro" '+cel+'><span class="b4c-chips">'+html+'</span></span>';
+    return '<button type="button" class="b4c-cel'+(classe==='in'?' b4c-in':'')+'" '+cel+' data-chip="1" '+
+           'aria-haspopup="listbox" title="Escolher '+esc(col)+'"><span class="b4c-chips">'+html+'</span>'+
+           '<span class="b4c-seta" aria-hidden="true">▾</span></button>';
+  }
+
+  /* TEXTO LONGO na grade: quebra em até 3 linhas; clique abre inteiro — para
+     ler, ou para editar se a pessoa pode. Na ficha (modal) é caixa grande. */
+  if (t==='long' && B && classe !== 'in') {
+    const vv = PEND.has(chaveCel(id,col)) ? PEND.get(chaveCel(id,col)) : valor;
+    const txt = String(vv==null?'':vv);
+    return '<button type="button" class="b4c-longo'+(txt?'':' b4c-nada')+'" '+cel+' data-longo="1"'+
+           (ed?'':' data-ro="1"')+' title="'+(ed?'Clique para ler e editar':'Clique para ler inteiro')+'">'+
+           (esc(txt)||'—')+'</button>';
+  }
+
+  if ((t==='num' || t==='money') && B) {
+    const tipoN = t==='money' ? 'dinheiro' : 'número';
+    if (!ed) return '<span class="'+classe+' cel-ro b4c-numro">'+(esc(B.num.mostrar(valor, tipoN))||'—')+'</span>';
+    const mostra = B.num.mostrar(valor, tipoN).replace(/^R\$\s*/, '');
+    const inp = '<input data-id="'+esc(id)+'" data-col="'+esc(col)+'" class="'+classe+' b4c-num" type="text" '+
+                'inputmode="decimal" autocomplete="off" data-num="'+tipoN+'" value="'+esc(mostra)+'">';
+    return t==='money' ? '<span class="b4c-numbox"><span class="b4c-rs">R$</span>'+inp+'</span>' : inp;
+  }
 
   if (!ed) {
     /* Só leitura vira TEXTO, não campo desabilitado. Um input cinzento convida
@@ -1237,6 +1337,7 @@ function campoHTML(id, col, valor, classe){
        que alguém lê um vencimento. Quem edita continua vendo o calendário do
        navegador; quem só olha, vê a data como se escreve. */
     if (t==='date' && valor) return '<span class="'+classe+' cel-ro">'+esc(fmtBR(valor))+'</span>';
+    if (t==='long') return '<span class="'+classe+' cel-ro" style="white-space:pre-wrap">'+(v||'—')+'</span>';
     return '<span class="'+classe+' cel-ro">'+(v||'—')+'</span>';
   }
 
@@ -1272,7 +1373,12 @@ function campoHTML(id, col, valor, classe){
     return '<input '+at+' type="text" value="'+v+'" title="Separe por &quot; · &quot;. Opções: '+
       esc((VALID[col].opcoes||[]).join(' · '))+'">';
   }
-  if (classe === 'in' && ehLonga(col)) return '<textarea '+at+'>'+v+'</textarea>';
+  if (classe === 'in' && (t==='long' || ehLonga(col))) {
+    /* A caixa nasce do TAMANHO do texto (até ~14 linhas): texto longo que
+       abre em duas linhas com barra de rolagem não é "deixar aparecer". */
+    const linhasTxt = String(valor||'').split('\n').reduce((n,l)=>n+Math.max(1,Math.ceil(l.length/70)),0);
+    return '<textarea '+at+' rows="'+Math.min(14, Math.max(3, linhasTxt))+'">'+v+'</textarea>';
+  }
   return '<input '+at+' type="text" value="'+v+'">';
 }
 
@@ -1675,7 +1781,86 @@ function pintarSelo(id){
 document.addEventListener('change', e=>{
   const no = e.target;
   if (!no || !no.dataset || !no.dataset.col || !no.dataset.id) return;
-  marcarSujo(no.dataset.id, no.dataset.col, no.value);
+  let val = no.value;
+  /* NÚMERO: o que sai é o canônico ("1234,56"), e o que não é número NÃO sai —
+     fica vermelho na tela, com o motivo no title. Gravar "mil e duzentos" numa
+     coluna de valor é o que faz a soma do painel dar errado sem aviso. */
+  if (no.dataset.num && window.B4UCampo) {
+    const r = B4UCampo.num.paraPlanilha(val);
+    no.classList.toggle('b4c-ruim', !r.ok);
+    no.title = r.ok ? '' : 'Só número: algarismos, com vírgula para os centavos (ex.: 1.234,56).';
+    if (!r.ok) return;
+    val = r.v;
+  }
+  marcarSujo(no.dataset.id, no.dataset.col, val);
+});
+/* Enquanto digita num campo de número: só algarismo, vírgula, ponto e o sinal. */
+document.addEventListener('input', e=>{
+  const no = e.target;
+  if (!no || !no.dataset || !no.dataset.num || !window.B4UCampo) return;
+  const limpo = B4UCampo.num.limpar(no.value);
+  if (limpo !== no.value) {
+    const p = Math.max(0, (no.selectionStart||0) - (no.value.length - limpo.length));
+    no.value = limpo;
+    try { no.setSelectionRange(p, p); } catch(_){}
+  }
+  no.classList.remove('b4c-ruim');
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   A CAIXINHA E O TEXTO LONGO — clique abre o menu (b4u-campo.js)
+   Escolher grava pelo MESMO caminho de qualquer campo (`marcarSujo`): lote por
+   seção, selo, desfazer. O que muda é só o controle.
+   ══════════════════════════════════════════════════════════════════════════ */
+function repintarCampo(id, col){
+  const l = LINHAS.find(x => x.id === id); if (!l) return;
+  document.querySelectorAll('[data-cel-id="'+selEsc(id)+'"][data-cel-col="'+selEsc(col)+'"]').forEach(no => {
+    no.outerHTML = campoHTML(id, col, l.valores[col], no.getAttribute('data-cls') || 'cel-in');
+  });
+}
+function escolherValor(id, col, v){
+  PEND.set(chaveCel(id, col), v);
+  marcarSujo(id, col, v);
+  repintarCampo(id, col);
+}
+/* "+ Adicionar opção": grava a opção (e a cor) na aba Variáveis e na validação
+   da planilha, para todo mundo. A lista local se atualiza com a resposta —
+   sem esperar o próximo F5 — e o catálogo de colunas guardado na sessão é
+   esquecido, para o filtro e o construtor também verem a opção nova. */
+async function adicionarOpcao(col, opcao, hex){
+  const d = await postAcao({ acao:'variavel_opcao', coluna: col, opcao: opcao, cor: hex });
+  if (!d || d.ok === false || d.erro) throw new Error((d && d.erro) || 'Não consegui gravar a opção.');
+  const k = normCol(col);
+  const m = Object.assign({ tipo: tipoDe(col)==='multi' ? 'lista múltipla' : 'lista' }, VARN.get(k) || {});
+  m.opcoes = (d.opcoes || []).slice();
+  m.cores  = Object.assign({}, d.cores || {});
+  VARN.set(k, m);
+  if (VALID[col] && VALID[col].opcoes && VALID[col].opcoes.indexOf(d.opcao) < 0) VALID[col].opcoes.push(d.opcao);
+  try { esquecerArvore(); } catch(_){}
+  return { opcoes: opcoesDe(col), cores: coresDe(col), opcao: d.opcao };
+}
+document.addEventListener('click', e=>{
+  const bt = e.target.closest && e.target.closest('[data-chip],[data-longo]');
+  if (!bt || !window.B4UCampo) return;
+  e.preventDefault();
+  const id = bt.getAttribute('data-cel-id'), col = bt.getAttribute('data-cel-col');
+  const l = LINHAS.find(x => x.id === id); if (!l) return;
+  const k = chaveCel(id, col);
+  const atual = PEND.has(k) ? PEND.get(k) : l.valores[col];
+  const quem = (l.nome_cliente || id);
+  if (bt.hasAttribute('data-longo')) {
+    B4UCampo.abrirTexto(bt, { titulo: col + ' — ' + quem, valor: atual,
+      editavel: !bt.hasAttribute('data-ro') && editavel(col),
+      aoSalvar: v => escolherValor(id, col, v) });
+    return;
+  }
+  B4UCampo.abrir(bt, {
+    titulo: col, valor: atual, opcoes: opcoesDe(col), cores: coresDe(col),
+    multi: tipoDe(col) === 'multi',
+    podeAdicionar: editavel(col),
+    aoEscolher: v => escolherValor(id, col, v),
+    aoAdicionar: (op, hex) => adicionarOpcao(col, op, hex)
+  });
 });
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -1801,6 +1986,16 @@ function cmpVal(x, y){
    Sobre TODAS as linhas, não sobre as filtradas: uma lista que encolhe conforme
    se filtra é uma lista da qual não dá para voltar — desmarcou demais, o valor
    some do painel e não há como remarcá-lo. */
+/* O valor como a coluna o desenha: caixinha nas listas, R$ no dinheiro. É o
+   que o funil e o cartão mostram — reconhecer "PROTOCOLADO" pela cor na grade
+   e procurar por texto cinza no filtro seria a tela falando duas línguas. */
+function rotuloValor(col, v){
+  const B = window.B4UCampo, t = tipoDe(col);
+  if (B && (t === 'chip' || t === 'multi')) return B.chips(v, opcoesDe(col), coresDe(col), t === 'multi') || esc(v);
+  if (B && (t === 'num' || t === 'money')) return esc(B.num.mostrar(v, t === 'money' ? 'dinheiro' : 'número'));
+  return esc(v);
+}
+
 function valoresDaColuna(col){
   const conta = new Map();
   LINHAS.forEach(l => {
@@ -1879,7 +2074,7 @@ function abrirFiltro(col, ancora){
     const rolLista = lista.scrollTop;
     lista.innerHTML = its.length ? its.map(o =>
       '<label><input type="checkbox" data-v="' + esc(o.v) + '"' + (marcado(o.v)?' checked':'') + '>' +
-      '<span class="r' + (o.v?'':' gfil-b') + '">' + (o.v ? esc(o.v) : '(em branco)') + '</span>' +
+      '<span class="r' + (o.v?'':' gfil-b') + '">' + (o.v ? rotuloValor(col, o.v) : '(em branco)') + '</span>' +
       '<span class="n">' + o.n + '</span></label>').join('')
       : '<div class="gfil-vazio">Nenhum valor com esse texto.</div>';
     lista.scrollTop = rolLista;
@@ -2387,6 +2582,8 @@ function resumoValor(col, v){
   if (!t) return '—';
   if (LINK.has(normCol(col)))     return 'tem';
   if (DATA.has(normCol(col)))     return fmtBR(t);
+  const tp = tipoDe(col);
+  if ((tp==='num'||tp==='money') && window.B4UCampo) return B4UCampo.num.mostrar(t, tp==='money'?'dinheiro':'número');
   return t.length > 42 ? t.slice(0,40) + '…' : t;
 }
 
@@ -2398,8 +2595,12 @@ function desenharFichas(){
   const amostra = VIS.slice(0,3);
   const html = linhas.map(l=>{
     const faltam = VIS.filter(c=>!String(l.valores[c]||'').trim()).length;
-    const resumo = amostra.map(c=>
-      '<span>'+esc(c)+': <b>'+esc(resumoValor(c, l.valores[c]))+'</b></span>').join('') +
+    const resumo = amostra.map(c=>{
+      const tc = tipoDe(c), vc = l.valores[c];
+      const dentro = ((tc==='chip'||tc==='multi') && String(vc||'').trim() && window.B4UCampo)
+        ? rotuloValor(c, vc) : '<b>'+esc(resumoValor(c, vc))+'</b>';
+      return '<span>'+esc(c)+': '+dentro+'</span>';
+    }).join('') +
       (faltam ? '<span class="falta">'+faltam+' em branco</span>' : '');
     return '<button class="cli" type="button" data-abrir="'+esc(l.id)+'">'+
       '<span class="l1"><span class="id">'+esc(l.id)+'</span>'+
@@ -2891,13 +3092,24 @@ function campoValor(meta, linha, cond){
       return '<input data-f="valores" value="'+esc(marcados.join(', '))+'" ' +
              'placeholder="valores separados por vírgula">';
     }
+    const B = window.B4UCampo;
     return '<div class="copc">' + todas.map(o =>
       '<label><input type="checkbox" data-f="opc" value="'+esc(o)+'"' +
-      (marcados.indexOf(String(o)) >= 0 ? ' checked' : '') + '><span>'+esc(o)+'</span></label>'
+      (marcados.indexOf(String(o)) >= 0 ? ' checked' : '') + '><span>'+
+      (B ? B.chip(o, B.cor(opcoes, meta && meta.cores, o)) : esc(o))+'</span></label>'
     ).join('') + '</div>';
   }
 
   const valor = linha.valor;
+  if (opcoes.length && !(cond && cond.livre) && window.B4UCampo) {
+    /* Mesmo menu de caixinhas da grade, sem o "+ Adicionar": filtro escolhe
+       entre o que existe, não cria opção. */
+    const v = String(valor == null ? '' : valor);
+    const B = window.B4UCampo;
+    return '<button type="button" class="b4c-cel b4c-in" data-fval="1" style="flex:1;min-width:140px">' +
+      '<span class="b4c-chips">' + (v ? B.chip(v, B.cor(opcoes, meta && meta.cores, v)) : '<span class="b4c-nada">escolha…</span>') +
+      '</span><span class="b4c-seta">▾</span></button>';
+  }
   if (opcoes.length && !(cond && cond.livre)) {
     const todas = opcoes.slice();
     const v = String(valor == null ? '' : valor);
@@ -2958,6 +3170,16 @@ document.addEventListener('change', e => {
     if (f === 'valores'){ CRIA.linhas[i].valores = t.value.split(',').map(x=>x.trim()).filter(Boolean); return; }
     pintarConstrutor();
   }
+});
+document.addEventListener('click', e => {
+  if (!MODAL_CRIAR || !CRIA || !window.B4UCampo) return;
+  const bt = e.target.closest && e.target.closest('[data-fval]');
+  if (!bt || !MODAL_CRIAR.corpo().contains(bt)) return;
+  const linha = bt.closest('.cfiltro'); const i = +linha.getAttribute('data-i');
+  const L = CRIA.linhas[i], meta = metaDaColuna(L.coluna);
+  B4UCampo.abrir(bt, { titulo: L.coluna, valor: L.valor, opcoes: (meta && meta.opcoes) || [],
+    cores: (meta && meta.cores) || {}, podeAdicionar: false,
+    aoEscolher: v => { CRIA.linhas[i].valor = v; pintarConstrutor(); } });
 });
 document.addEventListener('input', e => {
   if (!MODAL_CRIAR || !CRIA || !MODAL_CRIAR.corpo().contains(e.target)) return;
@@ -3571,6 +3793,10 @@ function aplicar(d){
   SIGILOSA  = new Set((d.sigilosas ||[]).map(normCol));
   DATA      = new Set((d.datas     ||[]).map(normCol));
   LINK      = new Set((d.links     ||[]).map(normCol));
+  FORMULA   = new Set((d.formulas  ||[]).map(normCol));
+  VARN      = new Map(Object.keys(d.variaveis || {}).map(c => [normCol(c), d.variaveis[c]]));
+  PEND.clear();
+  if (d.paleta && window.B4UCampo) B4UCampo.setPaleta(d.paleta);
   META   = d;
 
   document.title = REC.rotulo + ' — back4you';

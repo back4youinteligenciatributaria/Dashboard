@@ -253,6 +253,11 @@ textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--brand-te
 .fld input.money{text-align:right}
 .fld .dica{font-size:var(--fs-1);color:var(--muted);margin-top:4px;line-height:1.4}
 .fld .ro{background:var(--surface-warm);border-style:dashed;color:var(--ink-2)}
+/* Caixinha (b4u-campo.js) com cara de campo, e a fórmula como resultado. */
+.fld .b4c-cel.b4c-in{border:1px solid var(--line-2);min-height:40px;padding:6px 10px;background:#fff;border-radius:var(--radius-sm)}
+.fld .b4c-cel.b4c-ro{background:var(--surface-warm);border-style:dashed}
+.fld .fxcampo{display:flex;min-height:40px;padding:6px 2px;font-weight:700}
+.fld .b4c-numbox input.b4c-num{padding-left:30px}
 .mopts{display:flex;flex-wrap:wrap;gap:6px}
 .mopt{border:1px solid var(--line-2);background:#fff;border-radius:var(--radius-pill);
       padding:5px 10px;font-size:var(--fs-2);font-weight:600;cursor:pointer}
@@ -453,6 +458,9 @@ input.senha{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spaci
 
 <script src="config.js"></script>
 <script src="b4u-registro-campos.js" charset="utf-8"></script>
+<!-- b4u-campo.js: caixinhas coloridas nas listas, número só com algarismo,
+     fórmula sem clique. O mesmo arquivo do recorte do Registro (11/09/2026). -->
+<script src="b4u-campo.js" charset="utf-8"></script>
 <script charset="utf-8">
 /* =============================================================================
    registro-cliente.html — a ficha do cliente.
@@ -602,7 +610,7 @@ function camposDaSecao(sec){ return CAT.campos.filter(function(c){ return c.s ==
 var TIPO_ABA = {
   'texto':'text', 'texto longo':'textarea', 'número':'text', 'dinheiro':'money',
   'data':'date', 'sim/não':'select', 'lista':'select', 'lista múltipla':'multi',
-  'link':'text', 'senha':'text'
+  'link':'text', 'senha':'text', 'fórmula':'text'
 };
 
 /* AS OPÇÕES CHEGAM NUMA STRING SÓ, E O SEPARADOR NEM SEMPRE É O MESMO.
@@ -797,6 +805,13 @@ function reorganizarPelaAba(vivas, arvore){
       if (x.dica) c.dica = x.dica;
       if (x.tipo === 'senha') c.sensivel = 1;
       if (x.tipo === 'texto longo') c.full = 1;
+      /* 11/09/2026: a cor gravada de cada opção, o tipo da aba (número e
+         dinheiro só aceitam algarismo), a coluna CALCULADA (não se clica) e se
+         esta pessoa pode acrescentar opção — a mesma regra de quem grava. */
+      c.cores = x.cores || {};
+      c.tipoAba = x.tipo;
+      c.podeAdd = !!x.pode_gravar;
+      if (x.formula || x.tipo === 'fórmula') { c.ro = 1; c.fx = 1; }
     }
     if (doMotor(col)) c.ro = 1;
     return c;
@@ -1799,6 +1814,45 @@ function campoHTML(c){
   var OPTS = fus ? fus.opcoes : (c.opts || []);
   var H = ['<div class="fld' + (c.full || c.t === 'multi' || c.t === 'textarea' ? ' full' : '') + '">'];
   H.push('<label for="f_' + slug(c.col) + '">' + esc(c.col) + '</label>');
+  var B = window.B4UCampo;
+  var LISTA = OPTS.filter(function(o){ return o !== ''; });
+  var ehNum = c.tipoAba === 'número' || c.tipoAba === 'dinheiro' || c.t === 'money';
+
+  /* FÓRMULA: o resultado, sem campo — não é para clicar (11/09/2026). */
+  if (c.fx && B) {
+    var mostraFx = (c.tipoAba === 'número' || c.tipoAba === 'dinheiro') ? B.num.mostrar(v, c.tipoAba) : v;
+    H.push('<div class="b4c-fx fxcampo" title="Calculado por fórmula na planilha — não se edita aqui"><i>ƒx</i><span>' +
+           (esc(mostraFx) || '—') + '</span></div>');
+    if (c.dica) H.push('<div class="dica">' + esc(c.dica) + '</div>');
+    H.push('</div>');
+    return H.join('');
+  }
+  /* LISTA: caixinha colorida; o clique abre SÓ as opções (e o "+ Adicionar
+     opção"). Nunca mais texto livre numa coluna fechada. */
+  if ((c.t === 'select' || c.t === 'multi') && B && (LISTA.length || c.podeAdd)) {
+    var chipsH = B.chips(v, LISTA, c.cores, c.t === 'multi') || '<span class="b4c-nada">—</span>';
+    if (ro) {
+      H.push('<div class="b4c-cel b4c-ro b4c-in">' + '<span class="b4c-chips">' + chipsH + '</span></div>');
+    } else {
+      H.push('<button type="button" id="f_' + slug(c.col) + '" class="b4c-cel b4c-in" data-chipcol="' + esc(c.col) + '" aria-haspopup="listbox">' +
+             '<span class="b4c-chips">' + chipsH + '</span><span class="b4c-seta" aria-hidden="true">▾</span></button>');
+    }
+    var dicaL = (fus && fus.aviso) ? ((c.dica ? c.dica + ' — ' : '') + fus.aviso) : (c.dica || '');
+    if (dicaL) H.push('<div class="dica">' + esc(dicaL) + '</div>');
+    H.push('</div>');
+    return H.join('');
+  }
+  /* NÚMERO e DINHEIRO: só algarismo; mostra em português (1.234,56). */
+  if (ehNum && !ro && B && c.t !== 'date') {
+    var tipoN = (c.tipoAba === 'dinheiro' || c.t === 'money') ? 'dinheiro' : 'número';
+    var mostraN = B.num.mostrar(v, tipoN).replace(/^R\$\s*/, '');
+    var inpN = '<input id="f_' + slug(c.col) + '" type="text" inputmode="decimal" autocomplete="off" class="b4c-num"' +
+               ' data-num="' + tipoN + '" data-col="' + esc(c.col) + '" value="' + esc(mostraN) + '">';
+    H.push(tipoN === 'dinheiro' ? '<span class="b4c-numbox"><span class="b4c-rs">R$</span>' + inpN + '</span>' : inpN);
+    if (c.dica) H.push('<div class="dica">' + esc(c.dica) + '</div>');
+    H.push('</div>');
+    return H.join('');
+  }
 
   if (ro) {
     H.push('<input id="f_' + slug(c.col) + '" class="ro" type="text" value="' + esc(v) + '" readonly title="' +
@@ -1821,7 +1875,10 @@ function campoHTML(c){
     H.push('<input class="mlivre" type="text" data-mlivre="' + esc(c.col) + '" value="' + esc(livres.join(MULTI_SEP)) +
            '" placeholder="outros, separados por ·">');
   } else if (c.t === 'textarea') {
-    H.push('<textarea id="f_' + slug(c.col) + '" data-col="' + esc(c.col) + '">' + esc(v) + '</textarea>');
+    /* A caixa nasce do tamanho do texto (até ~16 linhas): texto longo que abre
+       em três linhas com barra de rolagem não é "deixar aparecer". */
+    var nLin = v.split('\n').reduce(function(n, l){ return n + Math.max(1, Math.ceil(l.length / 90)); }, 0);
+    H.push('<textarea id="f_' + slug(c.col) + '" data-col="' + esc(c.col) + '" rows="' + Math.min(16, Math.max(3, nLin)) + '">' + esc(v) + '</textarea>');
   } else {
     /* A SENHA NÃO É MAIS MASCARADA — 02/09/2026. Aqui havia um
        <input type="password"> com um botão "mostrar". Ele resolvia o caso da
@@ -2040,6 +2097,54 @@ function marcar(k, v){
   desenharTela(); soLados(); avisar('');
 }
 
+/* A CAIXINHA (b4u-campo.js): escolher muda o VAL como qualquer campo; o
+   "+ Adicionar opção" grava a opção (com a cor) na aba Variáveis e na
+   validação da planilha, para todo mundo. */
+function campoPorCol(col){
+  for (var i = 0; i < CAT.campos.length; i++) if (CAT.campos[i].col === col) return CAT.campos[i];
+  return null;
+}
+function repintarChip(col){
+  var c = campoPorCol(col), no = document.querySelector('[data-chipcol="' + CSS.escape(col) + '"]');
+  if (!c || !no) return;
+  var fld = no.closest('.fld'); if (!fld) return;
+  var tmp = document.createElement('div'); tmp.innerHTML = campoHTML(c);
+  fld.parentNode.replaceChild(tmp.firstChild, fld);
+}
+function opcoesDoCampo(c){
+  var v = VAL[c.col] == null ? '' : String(VAL[c.col]);
+  var fus = (c.opts && CAT.opcoesDe) ? CAT.opcoesDe(c.col, c.opts, c.t === 'multi' ? '' : v, VALIDACOES) : null;
+  return (fus ? fus.opcoes : (c.opts || [])).filter(function(o){ return o !== ''; });
+}
+document.addEventListener('click', function(e){
+  var bt = e.target.closest && e.target.closest('[data-chipcol]');
+  if (!bt || !window.B4UCampo) return;
+  e.preventDefault();
+  var col = bt.getAttribute('data-chipcol'), c = campoPorCol(col);
+  if (!c) return;
+  B4UCampo.abrir(bt, {
+    titulo: col, valor: VAL[col] == null ? '' : String(VAL[col]),
+    opcoes: opcoesDoCampo(c), cores: c.cores || {}, multi: c.t === 'multi',
+    podeAdicionar: !!c.podeAdd && !PROSPECT,
+    aoEscolher: function(v){ VAL[col] = v; SUJO = true; repintarChip(col); soLados(); },
+    aoAdicionar: function(op, hex){
+      return postAcao({ acao:'variavel_opcao', coluna: col, opcao: op, cor: hex }).then(function(d){
+        c.opts = [''].concat(d.opcoes || []);
+        c.cores = d.cores || {};
+        /* A árvore guardada acompanha — senão a próxima visita acharia que "as
+           categorias mudaram na planilha" por causa da opção que eu mesmo pus. */
+        try {
+          var a = arvoreGuardada();
+          if (a) { a.forEach(function(ct){ ct.subs.forEach(function(s){ s.colunas.forEach(function(x){
+            if (norm(x.coluna) === norm(col)) { x.opcoes = d.opcoes.slice(); x.cores = d.cores; }
+          }); }); }); guardarArvore(a); }
+        } catch (eA) {}
+        return { opcoes: opcoesDoCampo(c), cores: c.cores, opcao: d.opcao };
+      });
+    }
+  });
+});
+
 document.addEventListener('click', function(e){
   var it = e.target.closest && e.target.closest('.item');
   if (it) { ABA = it.getAttribute('data-aba'); redesenhar(); return; }
@@ -2091,6 +2196,19 @@ document.addEventListener('input', function(e){
     var m = [];
     if (cxL) cxL.querySelectorAll('.mopt.on').forEach(function(b){ m.push(b.getAttribute('data-mv')); });
     VAL[colL] = m.concat(partesMulti(t.value)).join(MULTI_SEP); SUJO = true; soLados(); return;
+  }
+  if (t.hasAttribute && t.hasAttribute('data-num') && window.B4UCampo) {
+    /* Só algarismo, vírgula, ponto e o sinal. O que vai para o VAL é o
+       canônico ("1234,56"); o servidor grava NÚMERO na célula. */
+    var limpo = B4UCampo.num.limpar(t.value);
+    if (limpo !== t.value) {
+      var pos = Math.max(0, (t.selectionStart || 0) - (t.value.length - limpo.length));
+      t.value = limpo; try { t.setSelectionRange(pos, pos); } catch (eS) {}
+    }
+    var r = B4UCampo.num.paraPlanilha(t.value);
+    t.classList.toggle('b4c-ruim', !r.ok);
+    t.title = r.ok ? '' : 'Só número: algarismos, com vírgula para os centavos (ex.: 1.234,56).';
+    VAL[t.getAttribute('data-col')] = r.ok ? r.v : t.value; SUJO = true; soLados(); return;
   }
   if (t.hasAttribute && t.hasAttribute('data-col')) {
     VAL[t.getAttribute('data-col')] = t.value; SUJO = true; soLados(); return;
