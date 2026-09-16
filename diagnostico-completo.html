@@ -317,7 +317,8 @@ body.chat{overflow:hidden}
 <noscript>Ative o JavaScript para fazer o diagnóstico.</noscript>
 <script>
 /* ================= CONFIGURAÇÃO (Stefanie) =================
-   hubspot.portalId / formGuid: formulário que recebe os leads (vazio = não envia, só aparece no console).
+   planilha.url: Apps Script que grava tudo na planilha e envia o e-mail (ferramentas/apps-script).
+   hubspot.portalId / formGuid: formulário do HubSpot (opcional; vazio = não envia).
    hubspot.fields: nomes internos das propriedades no HubSpot ("" = não envia).
    whatsapp: número com DDI+DDD, só dígitos.
    pgfn: onde estão os .db da dívida ativa (tenta na ordem). nomes e cnes usam os mesmos endereços.
@@ -341,6 +342,10 @@ window.CONFIG = {
     }
   },
   whatsapp: "55XXXXXXXXXXX",
+  planilha: {
+    url: "https://script.google.com/macros/s/AKfycbz3arF4m8rfO7PzhlPFSwQbMlwECpI7pkWvh-GePyUenvUGfPydy9mhwo3OowiF1PRZ/exec", // app da Web no-reply@back4you.com.br (vazio = não envia)
+    token: "b4y-diagnostico-2026" // igual ao TOKEN do Apps Script
+  },
   relatorio: {
     urlBase: "https://painel.back4you.com.br/diagnostico-completo.html", // endereço onde este arquivo fica publicado
     mostrarNaTela: false,  // true = também oferece "Ver aqui agora" depois do envio
@@ -1170,6 +1175,122 @@ window.B4Y_PGFN = (function () {
       return { answers: { divida: "sim" }, notes: { divida: "PGFN: dívida ativa de " + H.brlK(r.total) + "." } };
     },
 
+    /* ---------- planilha: tudo o que foi pesquisado, em colunas ---------- */
+    exporta: function (a, c, R) {
+      var H = c.H, e = c.emp, g = c.pg, cn = c.cn, o = {};
+      var txt = function (h) { return String(h == null ? "" : h).replace(/<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); };
+      // potencial de cliente: sinais de oportunidade para o time comercial
+      var P = perfil(a, c), K = calcular(a, c), sinais = [], pts = 0;
+      var sinal = function (p, t) { pts += p; sinais.push(t); };
+      var brl = function (v) { return "R$ " + Math.round(v).toLocaleString("pt-BR"); };
+      if (a.pj === "pf") sinal(2, "Abrir PJ (atende só como pessoa física)");
+      pts += { "300mais": 3, "100a300": 3, "50a100": 2, "30a50": 1 }[a.fat] || 0;
+      if (K.simples) sinal(3, "Mudar regime tributário: sair do Simples (até " + brl(K.simples.hi * 12) + "/ano)");
+      else if (a.regime === "simples" && ACIMA30.indexOf(a.fat) >= 0) sinal(1, "Simular troca de regime (Simples acima de R$ 30 mil/mês)");
+      if (a.regime === "naosei") sinal(1, "Não sabe o regime tributário");
+      if (K.eq) sinal(3, "Redução de IR/CSLL em procedimentos (até " + brl(K.eq.hi * 12) + "/ano)" + (K.eq.ss ? " após ajustar a estrutura" : ""));
+      if (K.retroHi > 0) sinal(2, "Recuperar imposto pago a mais (até " + brl(K.retroHi) + ")");
+      if (K.iss) sinal(2, "ISS fixo (ISS atual até " + brl(K.iss.hi * 12) + "/ano)");
+      var abertoPg = g ? (g.cats.c || 0) + (g.cats.p || 0) + (g.cats.j || 0) + (g.cats.r || 0) : 0;
+      if (abertoPg > 0) sinal(3, "Irregularidade fiscal: dívida ativa em aberto " + brl(abertoPg));
+      else if (g && g.total > 0) sinal(1, "Dívida ativa negociada/suspensa " + brl(g.total));
+      var irreg = [];
+      if (a.divida === "sim" && !(g && g.total > 0)) irreg.push("imposto em atraso");
+      if (a.notificacao === "sim") irreg.push("notificação recebida");
+      if (a.certidao === "nao" || a.certidao === "asvezes") irreg.push("problema com certidão");
+      if (irreg.length) sinal(2, "Irregularidade fiscal: " + irreg.join(", "));
+      var cad = [];
+      if (e && e.situacao && !/ativa/i.test(e.situacao)) cad.push("CNPJ " + e.situacao.toLowerCase());
+      if (e && e.mei) cad.push("empresa como MEI");
+      if (P.faltaCnae.length) cad.push("CNAE faltando");
+      if (P.ss && P.modo === "empresarial") cad.push("sociedade simples com estrutura de empresa");
+      if (P.ltda && P.modo === "pessoal") cad.push("LTDA com atuação pessoal");
+      if (cad.length) sinal(cad.length > 1 || /CNPJ|MEI|simples/.test(cad.join()) ? 2 : 1, "Ajuste societário/cadastral: " + cad.join(", "));
+      var san = [];
+      if (cn && cn.encontrado && cn.licStatus === "vencida") san.push("licença vencida");
+      if (cn && cn.encontrado && cn.licParcial) san.push("licença parcial");
+      if (cn && !cn.encontrado && (a.local === "propria" || a.local === "ambos")) san.push("sem CNES");
+      if (P.proc && semSalaProc(cn)) san.push("CNES sem sala de procedimento");
+      if (san.length) sinal(1, "Regularizar licença/CNES: " + san.join(", "));
+      var dd = K.dist;
+      if (dd && (dd.retMes > 0 || (dd.evitavel > 0 && a.distribuicao !== "planejada"))) sinal(2, "Planejamento de lucros (Lei 15.270): até " + brl(dd.retMes || dd.retAno) + "/ano retidos");
+      if (dd && dd.aliq > 0) sinal(1, "IRPF mínimo (renda acima de R$ 600 mil/ano)");
+      if (a.prolabore && a.prolabore !== "fixo") sinal(1, "Sem pró-labore definido");
+      var fraco = ["anual", "soproblema", "nunca"].indexOf(a.conversa) >= 0 || a.acesso === "nao" || a.relatorio === "nao" || a.estrategia === "nunca" || a.lucro === "naosei";
+      if (fraco) sinal(1, "Acompanhamento fraco (controladoria/painel)");
+      var pot = pts >= 8 ? "Alto" : pts >= 4 ? "Médio" : "Baixo";
+      if (a.fat === "ate20" && pot === "Alto") pot = "Médio";
+      o["Potencial"] = pot;
+      o["Pontuação potencial"] = pts;
+      o["Sinais de oportunidade"] = sinais.join(" | ");
+      if (R) {
+        o["Rota"] = R.rota || "";
+        o["Nota"] = R.score != null ? R.score : "";
+        o["Selo"] = txt(R.badge);
+        o["Oportunidade/ano (até R$)"] = R.oportunidadeAno ? Math.round(R.oportunidadeAno) : "";
+        o["Recuperação passado (até R$)"] = R.retroAno ? Math.round(R.retroAno) : "";
+        o["Resumo"] = R.resumo || "";
+        o["Pontos de atenção"] = (R.alerts || []).map(function (x) { return txt(x.title); }).join(" | ");
+        o["Oportunidades"] = (R.opps || []).map(function (x) { return txt(x.title) + ": " + (x.estimate || []).map(function (y) { return y.label + " " + y.value; }).join(", "); }).join(" | ");
+        o["Plano de ação"] = (R.nextSteps || []).map(txt).join(" | ");
+      }
+      if (e) {
+        o["Empresa"] = e.razao; o["CNPJ"] = H.maskCnpj(e.cnpj); o["Nome fantasia"] = e.fantasia || "";
+        o["Cidade/UF"] = [e.cidade, e.uf].filter(Boolean).join("/");
+        if (!e.parcial) {
+          o["Natureza jurídica"] = e.natDesc || "";
+          o["CNAE principal"] = e.cnae ? cnaeFmt(e.cnae) + " " + (e.cnaeDesc || "") : "";
+          o["CNAEs secundários"] = (e.cnaesSec || []).map(function (x) { return cnaeFmt(x.cod); }).join(", ");
+          o["Simples (Receita)"] = e.simples === true ? "Sim" : e.simples === false ? "Não" : "";
+          o["Regime (Receita)"] = (e.regimes || []).map(function (r) { return r.ano + ": " + r.forma.toLowerCase(); }).join(" | ");
+          o["Situação cadastral"] = e.situacao || "";
+          o["Aberta em"] = H.dataBR(e.abertura);
+          o["Sócios (Receita)"] = e.socios || "";
+          o["MEI"] = e.mei ? "Sim" : "";
+        } else o["Receita"] = "não respondeu (dados da busca por nome)";
+      }
+      if (g) {
+        var ab = (g.cats.c || 0) + (g.cats.p || 0) + (g.cats.j || 0) + (g.cats.r || 0);
+        o["PGFN total (R$)"] = Math.round(g.total * 100) / 100;
+        o["PGFN inscrições"] = g.inscricoes;
+        o["PGFN em aberto (R$)"] = Math.round(ab * 100) / 100;
+        o["PGFN origens"] = Object.keys(g.origens).join(", ");
+      } else if (e) o["PGFN total (R$)"] = c.pgStatus === "erro" ? "não consultado" : "";
+      if (cn) {
+        o["CNES encontrado"] = cn.encontrado ? "Sim" : "Não";
+        if (cn.encontrado) {
+          o["CNES tipo"] = cn.tipos.map(function (t) { return t.nome; }).join(", ");
+          o["CNES unidades"] = cn.unidades; o["CNES profissionais"] = cn.prof; o["CNES médicos"] = cn.med; o["CNES enfermagem"] = cn.enf;
+          o["CNES equipamentos"] = cn.equip;
+          o["CNES licença validade"] = cn.lic ? H.dataBR(cn.lic) : "";
+          o["CNES licença status"] = ({ valida: "válida", vencendo: "vencendo", vencida: "vencida", sem_data: "sem data" })[cn.licStatus] + (cn.licParcial ? " (parcial)" : "");
+          o["CNES desativado"] = cn.desativado ? "Sim" : "";
+          o["CNES atualizado em"] = cn.atualizado ? H.dataBR(cn.atualizado) : "";
+          if (cn.v2) {
+            o["CNES salas"] = cnesSalas(cn); o["CNES médicos por vínculo"] = cnesMedicos(cn);
+            o["CNES especialidades"] = cn.especialidades.join(", "); o["CNES atende"] = cnesConv(cn);
+            o["CNES serviços"] = cn.servicos.map(function (x) { return x.nome; }).join(", ");
+            o["CNES funcionamento"] = cnesFunc(cn); o["CNES coworking"] = cn.coworking ? "Sim" : "";
+          }
+          if (cn.v3) {
+            o["ANS operadoras diretas"] = cn.planos.direto; o["ANS operadoras intercâmbio"] = cn.planos.indireto;
+            o["ANS principais operadoras"] = cn.planos.nomes.join(", "); o["ANS acreditação"] = cn.acreditacao || "";
+          }
+        }
+      }
+      // respostas do médico, com o texto da pergunta e da opção
+      var r = {};
+      D.steps.forEach(function (S) {
+        S.fields.forEach(function (f) {
+          if (f.type === "cnpj" || a[f.id] == null) return;
+          var opts = typeof f.options === "function" ? f.options(a, c) : f.options || [];
+          var lab = function (v) { var x = opts.filter(function (op) { return op[0] === v; })[0]; return x ? x[1] : v; };
+          r["R: " + f.label.replace(/\?$/, "")] = Array.isArray(a[f.id]) ? a[f.id].map(lab).join(", ") : lab(a[f.id]);
+        });
+      });
+      return { campos: o, respostas: r };
+    },
+
     applyCnes: function (r, H, e) {
       var ans = {}, notes = {};
       if (!r.encontrado) return { notes: { local: "CNES: nenhum estabelecimento cadastrado neste CNPJ." } };
@@ -1436,6 +1557,7 @@ window.B4Y_PGFN = (function () {
       });
       R.opps = opps;
       R.oportunidadeAno = K.anoHi;
+      R.retroAno = K.retroHi;
 
       // destaque
       var row = [];
@@ -1565,7 +1687,8 @@ window.B4Y_PGFN = (function () {
   var C = window.CONFIG || {};
   var D = window.DIAG;
   var app = document.getElementById("app");
-  function fresh() { return { screen: "chat", lookups: null, answers: {}, exit: null, lead: null, empresa: null, prefill: {}, prefillSet: {}, cnpjDraft: "", pgfn: null, cnes: null, R: null }; }
+  function novoId() { return "D" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase(); }
+  function fresh() { return { id: novoId(), screen: "chat", lookups: null, answers: {}, exit: null, lead: null, empresa: null, prefill: {}, prefillSet: {}, cnpjDraft: "", pgfn: null, cnes: null, R: null }; }
   var state = fresh();
 
   /* ---------- utilidades ---------- */
@@ -1584,6 +1707,7 @@ window.B4Y_PGFN = (function () {
       window.dataLayer.push(p);
       if (window.gtag) window.gtag("event", "b4y_" + ev, p);
     } catch (e) {}
+    if (EVENTOS_PLANILHA[ev] && (state.lead || state.relatorio)) registraEvento(ev, data);
   }
   function top() { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); } }
   function digits(v) { return String(v == null ? "" : v).replace(/\D/g, ""); }
@@ -1826,6 +1950,50 @@ window.B4Y_PGFN = (function () {
 
   /* ---------- HubSpot ---------- */
   function cookie(n) { var m = document.cookie.match("(^|;)\\s*" + n + "=([^;]*)"); return m ? decodeURIComponent(m[2]) : null; }
+  /* ---------- planilha (Google Apps Script) ---------- */
+  var EVENTOS_PLANILHA = { relatorio_recebido: 1, relatorio_nao_recebido: 1, cta_whatsapp: 1, relatorio_aberto: 1 };
+  function utms() {
+    var qs = new URLSearchParams(location.search), o = {};
+    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid", "fbclid", "ttclid", "li_fat_id", "msclkid"].forEach(function (k) { if (qs.get(k)) o[k] = qs.get(k); });
+    return o;
+  }
+  function postPlanilha(corpo, ms) {
+    var P = C.planilha || {};
+    if (!P.url) { console.info("[B4Y] Planilha não configurada. Dados:", corpo); return Promise.resolve({ ok: true, simulado: true }); }
+    corpo.token = P.token || "";
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || 20000);
+    return fetch(P.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(corpo), signal: ctrl ? ctrl.signal : undefined, keepalive: !!corpo.evento })
+      .then(function (r) { clearTimeout(t); return r.json(); })
+      // sem resposta legível (rede, tempo): o envio pode ter acontecido; seguimos e o médico usa "Não recebi" se preciso
+      .catch(function () { clearTimeout(t); return { ok: true, incerto: true }; });
+  }
+  function payloadRelatorio() {
+    var e = state.empresa;
+    var p = { v: 1, i: state.id, a: state.answers, x: state.exit || undefined, n: state.lead ? state.lead.nome.split(" ")[0] : "", t: Date.now() };
+    if (e) { p.c = e.cnpj; p.r = e.razao; p.f = e.fantasia; p.l = [e.cidade, e.uf].filter(Boolean).join("/"); }
+    return p;
+  }
+  function registraEnvio(R, rota, envio) {
+    var ex = D.exporta ? D.exporta(state.answers, ctx(), R) : { campos: {}, respostas: {} };
+    ex.campos["Rota"] = rota || ex.campos["Rota"] || "";
+    if (state.exit) { ex.campos["Selo"] = String(R.badge || ""); ex.campos["Saída"] = state.exit; }
+    var corpo = {
+      acao: "envio", id: state.id, material: D.id, tipo: envio.tipo, envio: envio.envio,
+      lead: state.lead, emailAnterior: envio.anterior || "",
+      campos: ex.campos, respostas: ex.respostas, fontes: state.prefillSet,
+      relatorio: payloadRelatorio(), utm: utms(),
+      pagina: location.href.split("#")[0], navegador: navigator.userAgent
+    };
+    try { submitLead(R, rota, envio); } catch (e) {}
+    return postPlanilha(corpo);
+  }
+  function registraEvento(ev, data) {
+    var id = state.relatorio ? state.relatorio.i : state.id;
+    if (!id) return;
+    postPlanilha({ acao: "evento", id: id, evento: ev, detalhe: data || {}, email: state.lead ? state.lead.email : "" }, 8000);
+  }
+
   function submitLead(R, rota, envio) {
     envio = envio || {};
     var hs = C.hubspot || {}, f = hs.fields || {};
@@ -1853,7 +2021,7 @@ window.B4Y_PGFN = (function () {
     if (f.emailAnterior && envio.anterior) fields.push({ name: f.emailAnterior, value: envio.anterior });
     var payload = { fields: fields, context: { hutk: cookie("hubspotutk") || undefined, pageUri: location.href, pageName: document.title },
       legalConsentOptions: { consent: { consentToProcess: true, text: "Aceito receber conteúdos e o contato da Back4you." } } };
-    if (!hs.portalId || !hs.formGuid) { console.info("[B4Y] HubSpot não configurado — lead não enviado. Payload:", payload, "Rota:", rota); return; }
+    if (!hs.portalId || !hs.formGuid) return;
     fetch("https://api.hsforms.com/submissions/v3/integration/submit/" + hs.portalId + "/" + hs.formGuid, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
       .then(function (r) { if (!r.ok) r.text().then(function (t) { console.warn("[B4Y] HubSpot recusou:", t); }); })
       .catch(function (err) { console.warn("[B4Y] Falha ao enviar ao HubSpot", err); });
@@ -2331,12 +2499,10 @@ window.B4Y_PGFN = (function () {
   function b64url(txt) { return btoa(unescape(encodeURIComponent(txt))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
   function de64url(t) { t = t.replace(/-/g, "+").replace(/_/g, "/"); while (t.length % 4) t += "="; return decodeURIComponent(escape(atob(t))); }
   function linkRelatorio() {
-    var e = state.empresa, rc = C.relatorio || {};
-    var p = { v: 1, a: state.answers, x: state.exit || undefined, n: state.lead ? state.lead.nome.split(" ")[0] : "", t: Date.now() };
-    if (e) { p.c = e.cnpj; p.r = e.razao; p.f = e.fantasia; p.l = [e.cidade, e.uf].filter(Boolean).join("/"); }
-    var base = rc.urlBase || location.href.split(/[?#]/)[0];
-    return base + "#r=" + b64url(JSON.stringify(p));
+    var rc = C.relatorio || {};
+    return (rc.urlBase || location.href.split(/[?#]/)[0]) + "#r=" + b64url(JSON.stringify(payloadRelatorio()));
   }
+
 
   /* ---------- fim: prévia, contato, envio por e-mail ---------- */
   function fim() {
@@ -2418,13 +2584,33 @@ window.B4Y_PGFN = (function () {
       ch.stack = [];
       app.querySelectorAll(".wm.me .undo").forEach(function (u) { u.remove(); });
       state.lead = { nome: L.nome, email: L.email, tel: L.tel };
-      var R = resultado();
-      submitLead(R, rota || R.rota, { anterior: anterior || "", envio: L.envios });
-      if (!reenvio) onLead();
-      track(reenvio ? "relatorio_reenviado" : "relatorio_enviado", { envio: L.envios, corrigido: !!anterior });
-      diz([(reenvio ? "Prontinho, enviei de novo" : "Prontinho, <b>" + esc(L.nome.split(" ")[0]) + "</b>! Enviei o <b>diagnóstico completo</b>") + " para <b>" + esc(L.email) + "</b>.",
-        "Ele chega em até <b>5 minutos</b>. Se não aparecer, olhe também o <b>spam</b> e a aba <b>Promoções</b>."]);
-      depoisDoEnvio();
+      var R = resultado(), g = ch.gen;
+      var tipo = anterior ? "correcao" : reenvio ? "reenvio" : "envio";
+      aguarda(registraEnvio(R, rota || R.rota, { anterior: anterior || "", envio: L.envios, tipo: tipo }), 900).then(function (res) {
+        if (g !== ch.gen) return;
+        if (!res || !res.ok) return falhou(res && res.erro, reenvio);
+        if (!L.jaEnviou) { L.jaEnviou = true; onLead(); }
+        track(reenvio ? "relatorio_reenviado" : "relatorio_enviado", { envio: L.envios, corrigido: !!anterior });
+        diz([(reenvio ? "Prontinho, enviei de novo" : "Prontinho, <b>" + esc(L.nome.split(" ")[0]) + "</b>! Enviei o <b>diagnóstico completo</b>") + " para <b>" + esc(L.email) + "</b>.",
+          "Ele chega em até <b>5 minutos</b>. Se não aparecer, olhe também o <b>spam</b> e a aba <b>Promoções</b>."]);
+        depoisDoEnvio();
+      });
+    }
+    function falhou(erro, reenvio) {
+      L.envios--;
+      L.falhas = (L.falhas || 0) + 1;
+      track("relatorio_erro", { erro: erro || "" });
+      if (erro === "limite" || L.falhas >= 3) return limite();
+      if (erro === "email") {
+        diz(["Esse e-mail não foi aceito. Pode conferir e digitar de novo?"]);
+        return corrigir();
+      }
+      diz(["Não consegui enviar agora. Vamos tentar de novo?"]);
+      botoes([["tentar", "Tentar de novo", "pri"], ["corrigir", "Corrigir e-mail"]], function (r) {
+        if (r === "corrigir") { eu("Corrigir e-mail"); return corrigir(); }
+        eu("Tentar de novo");
+        envia(reenvio);
+      });
     }
     function wa() {
       var R = state.R || {};
