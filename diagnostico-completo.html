@@ -319,6 +319,8 @@ body.chat{overflow:hidden}
 .wa-zap:hover{background:rgba(255,255,255,.24)}
 @media (max-width:420px){.wa-zap span{display:none}.wa-zap{padding:8px}.zap-float{width:56px;height:56px;right:14px}.zap-float svg{width:30px;height:30px}}
 
+/* widgets de fora (botão de WhatsApp da Robbu/HubSpot e pop-ups do HubSpot, carregados pelo GTM): não aparecem nesta página */
+#robbu-whatsapp-button,.hs-cta-trigger-button,#hs-web-interactives-floating-container,#hs-web-interactives-top-anchor,#hs-web-interactives-bottom-anchor,#hs-web-interactives-top-push-anchor{display:none!important}
 </style>
 <!-- Google Tag Manager -->
 <script>window.dataLayer=window.dataLayer||[];(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -1726,6 +1728,7 @@ window.B4Y_PGFN = (function () {
       window.dataLayer.push(p);
       if (window.gtag) window.gtag("event", "b4y_" + ev, p);
     } catch (e) {}
+    if (ev === "cta_whatsapp") pushDL("whatsapp", { onde: (data && data.onde) || "chat_fim", numero: C.whatsapp || "" });
     if (EVENTOS_PLANILHA[ev] && (state.lead || state.relatorio)) registraEvento(ev, data);
   }
   // eventos pedidos pelo time de GTM (nomes sem o prefixo b4y_; nenhum dado pessoal vai junto)
@@ -2009,10 +2012,25 @@ window.B4Y_PGFN = (function () {
   function cookie(n) { var m = document.cookie.match("(^|;)\\s*" + n + "=([^;]*)"); return m ? decodeURIComponent(m[2]) : null; }
   /* ---------- planilha (Google Apps Script) ---------- */
   var EVENTOS_PLANILHA = { relatorio_recebido: 1, relatorio_nao_recebido: 1, cta_whatsapp: 1, relatorio_aberto: 1 };
+  var UTM_CHAVES = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid", "fbclid", "ttclid", "li_fat_id", "msclkid"];
   function utms() {
-    var qs = new URLSearchParams(location.search), o = {};
-    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid", "fbclid", "ttclid", "li_fat_id", "msclkid"].forEach(function (k) { if (qs.get(k)) o[k] = qs.get(k); });
+    var qs = new URLSearchParams(location.search), o = {}, salvo = {};
+    try { salvo = JSON.parse(sessionStorage.getItem("b4y_utm") || "{}") || {}; } catch (e) {}
+    var temNovo = UTM_CHAVES.some(function (k) { return qs.get(k); });
+    UTM_CHAVES.forEach(function (k) { var v = temNovo ? qs.get(k) : salvo[k]; if (v) o[k] = v; });
+    if (temNovo) { try { sessionStorage.setItem("b4y_utm", JSON.stringify(o)); } catch (e) {} }
     return o;
+  }
+  // campos ocultos com as UTMs dentro do formulário da conversa (lidos pelo GTM)
+  function utmOcultos() {
+    var u = utms();
+    return ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].map(function (k) {
+      return '<input type="hidden" name="' + k + '" id="' + k + '" value="' + esc(u[k] || "") + '">';
+    }).join("");
+  }
+  function utmParams() {
+    var u = utms();
+    return { utm_source: u.utm_source || "", utm_medium: u.utm_medium || "", utm_campaign: u.utm_campaign || "" };
   }
   function postPlanilha(corpo, ms) {
     var P = C.planilha || {};
@@ -2102,7 +2120,7 @@ window.B4Y_PGFN = (function () {
       '<div class="wa-body" id="wa-body" role="log" aria-live="polite"><div class="wa-day"><span>Hoje</span></div>' +
       '<div class="wa-sec"><span>' + LOCK + " Diagnóstico gratuito. Seus dados ficam protegidos conforme a LGPD.</span></div></div>" +
       '<div class="wa-foot"><div class="wa-qr" id="wa-qr"></div>' +
-      '<form class="wa-comp" id="wa-comp" autocomplete="off"><input id="wa-in" type="text" placeholder="Escolha uma opção acima" disabled aria-label="Mensagem">' +
+      '<form class="wa-comp" id="wa-comp" autocomplete="off">' + utmOcultos() + '<input id="wa-in" type="text" placeholder="Escolha uma opção acima" disabled aria-label="Mensagem">' +
       '<button type="submit" id="wa-send" aria-label="Enviar" disabled>' + SEND + "</button></form></div></div>" +
       '<a class="zap-float" id="wa-float" target="_blank" rel="noopener" href="#" aria-label="Tirar dúvidas no WhatsApp" title="Tirar dúvidas no WhatsApp">' + ZAP + "</a>";
     limpaQR();
@@ -2674,7 +2692,7 @@ window.B4Y_PGFN = (function () {
       aguarda(registraEnvio(R, rota || R.rota, { anterior: anterior || "", envio: L.envios, tipo: tipo }), 900).then(function (res) {
         if (g !== ch.gen) return;
         if (!res || !res.ok) return falhou(res && res.erro, reenvio);
-        if (!L.jaEnviou) { L.jaEnviou = true; onLead(); pushDL("form_submit", { form_id: "diagnostico_completo", form_name: "Diagnóstico completo", rota: rota || (R && R.rota) || "", nota: R && R.score != null ? R.score : "", respostas_total: el("wa-body") ? el("wa-body").querySelectorAll(".wm.me").length : 0 }); }
+        if (!L.jaEnviou) { L.jaEnviou = true; onLead(); pushDL("form_submit", Object.assign(utmParams(), { form_id: "diagnostico_completo", form_name: "Diagnóstico completo", rota: rota || (R && R.rota) || "", nota: R && R.score != null ? R.score : "", respostas_total: el("wa-body") ? el("wa-body").querySelectorAll(".wm.me").length : 0 })); }
         track(reenvio ? "relatorio_reenviado" : "relatorio_enviado", { envio: L.envios, corrigido: !!anterior });
         diz([(reenvio ? "Prontinho, enviei de novo" : "Prontinho, <b>" + esc(curto(L.nome) || L.nome) + "</b>! Enviei o <b>diagnóstico completo</b>") + " para <b>" + esc(L.email) + "</b>.",
           "Ele chega em até <b>5 minutos</b>. Se não aparecer, olhe também o <b>spam</b> e a aba <b>Promoções</b>."]);
@@ -2784,6 +2802,7 @@ window.B4Y_PGFN = (function () {
       ch.iniciado = true;
       progresso();
       track("start");
+      pushDL("form_start", Object.assign({ form_id: "diagnostico_completo", form_name: "Diagnóstico completo" }, utmParams()));
       proximo();
     });
   }
