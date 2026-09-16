@@ -1,0 +1,93 @@
+{
+ "base": "202609",
+ "tabela": "nome",
+ "cnaes": [
+  "8610",
+  "8630",
+  "8640",
+  "8660",
+  "8690"
+ ],
+ "estabelecimentos": 782991,
+ "entradas": 2415256,
+ "partes": [
+  {
+   "arquivo": "nomes_saude_202609_parte01de13.db",
+   "de": "00",
+   "ate": "ASSISTA",
+   "mb": 16.7
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte02de13.db",
+   "de": "ASSISTANCE",
+   "ate": "CAROLIN",
+   "mb": 16.5
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte03de13.db",
+   "de": "CAROLINA",
+   "ate": "DALBELO",
+   "mb": 16.6
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte04de13.db",
+   "de": "DALBEM",
+   "ate": "ESTIMULA",
+   "mb": 16.7
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte05de13.db",
+   "de": "ESTIMULACAO",
+   "ate": "GRILLI",
+   "mb": 16.6
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte06de13.db",
+   "de": "GRILLO",
+   "ate": "JULI",
+   "mb": 16.5
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte07de13.db",
+   "de": "JULIA",
+   "ate": "MARIN",
+   "mb": 16.5
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte08de13.db",
+   "de": "MARINA",
+   "ate": "NONATHO",
+   "mb": 16.6
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte09de13.db",
+   "de": "NONATO",
+   "ate": "ORDC",
+   "mb": 16.6
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte10de13.db",
+   "de": "ORDEM",
+   "ate": "RADIOHTSL",
+   "mb": 16.7
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte11de13.db",
+   "de": "RADIOIMAGEM",
+   "ate": "SECRETA",
+   "mb": 16.5
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte12de13.db",
+   "de": "SECRETARIA",
+   "ate": "TRAUMATOLOGI",
+   "mb": 16.6
+  },
+  {
+   "arquivo": "nomes_saude_202609_parte13de13.db",
+   "de": "TRAUMATOLOGIA",
+   "ate": "ZZZ",
+   "mb": 10.1
+  }
+ ]
+}
