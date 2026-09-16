@@ -2037,14 +2037,14 @@ window.B4Y_PGFN = (function () {
 
   /* ---------- registro de quem ainda não enviou (aba "Incompletos") ---------- */
   var PARCIAL_AGORA = { start: 1, cnpj_confirmado: 1, cta_whatsapp: 1, detalhar: 1 };
-  var parcial = { timer: null, ultimo: 0, enviado: "", saiu: 0 };
+  var parcial = { timer: null, ultimo: 0, enviado: "", saiu: 0, seq: 0 };
   var ROTULO_TEXTO = { "Seu nome": "Nome (contato)", "seu@email.com": "E-mail (contato)", "(11) 99999-9999": "WhatsApp (contato)", "Nome da empresa ou CNPJ": "Qual é a sua empresa?" };
   function semTags(h) { return String(h == null ? "" : h).replace(/<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
   function agendaParcial(ja) {
     if (!ch || !ch.iniciado || state.enviado || state.relatorio || !(C.planilha || {}).url) return;
+    // salva a cada resposta (espera 1,5 s para juntar a resposta com o que o chat mostra em seguida)
     clearTimeout(parcial.timer);
-    var espera = ja ? 0 : Math.max(0, 15000 - (Date.now() - parcial.ultimo));
-    parcial.timer = setTimeout(function () { enviaParcial("andamento"); }, espera);
+    parcial.timer = setTimeout(function () { enviaParcial("andamento"); }, ja ? 0 : 1500);
   }
   function enviaParcial(motivo) {
     if (!ch || !ch.iniciado || state.enviado || state.relatorio || !(C.planilha || {}).url) return;
@@ -2067,6 +2067,7 @@ window.B4Y_PGFN = (function () {
     if (chave === parcial.enviado && (motivo !== "saiu" || Date.now() - parcial.saiu < 5000)) return;
     if (motivo === "saiu") parcial.saiu = Date.now();
     parcial.enviado = chave; parcial.ultimo = Date.now();
+    corpo.seq = ++parcial.seq;   // a planilha ignora retrato mais antigo que chegar atrasado
     postPlanilha(corpo, 8000);
   }
   // quando a pessoa sai da página ou troca de aba, registra onde parou
