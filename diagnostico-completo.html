@@ -1717,7 +1717,8 @@ window.B4Y_PGFN = (function () {
       window.dataLayer.push(p);
       if (window.gtag) window.gtag("event", "b4y_" + ev, p);
     } catch (e) {}
-    if (EVENTOS_PLANILHA[ev] && (state.lead || state.relatorio)) registraEvento(ev, data);
+    if (EVENTOS_PLANILHA[ev] && (state.lead || state.relatorio || ev === "cta_whatsapp")) registraEvento(ev, data);
+    if (PARCIAL_AGORA[ev]) agendaParcial(true);
   }
   function top() { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); } }
   function digits(v) { return String(v == null ? "" : v).replace(/\D/g, ""); }
@@ -2003,7 +2004,7 @@ window.B4Y_PGFN = (function () {
     corpo.token = P.token || "";
     var ctrl = window.AbortController ? new AbortController() : null;
     var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || 20000);
-    return fetch(P.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(corpo), signal: ctrl ? ctrl.signal : undefined, keepalive: !!corpo.evento })
+    return fetch(P.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(corpo), signal: ctrl ? ctrl.signal : undefined, keepalive: !!(corpo.evento || corpo.acao === "parcial") })
       .then(function (r) { clearTimeout(t); return r.json(); })
       // sem resposta legível (rede, tempo): o envio pode ter acontecido; seguimos e o médico usa "Não recebi" se preciso
       .catch(function () { clearTimeout(t); return { ok: true, incerto: true }; });
@@ -2026,13 +2027,51 @@ window.B4Y_PGFN = (function () {
       pagina: location.href.split("#")[0], navegador: navigator.userAgent
     };
     try { submitLead(R, rota, envio); } catch (e) {}
-    return postPlanilha(corpo);
+    return postPlanilha(corpo).then(function (r) { if (r && r.ok) state.enviado = true; return r; });
   }
   function registraEvento(ev, data) {
     var id = state.relatorio ? state.relatorio.i : state.id;
     if (!id) return;
     postPlanilha({ acao: "evento", id: id, evento: ev, detalhe: data || {}, email: state.lead ? state.lead.email : "" }, 8000);
   }
+
+  /* ---------- registro de quem ainda não enviou (aba "Incompletos") ---------- */
+  var PARCIAL_AGORA = { start: 1, cnpj_confirmado: 1, cta_whatsapp: 1, detalhar: 1 };
+  var parcial = { timer: null, ultimo: 0, enviado: "", saiu: 0 };
+  var ROTULO_TEXTO = { "Seu nome": "Nome (contato)", "seu@email.com": "E-mail (contato)", "(11) 99999-9999": "WhatsApp (contato)", "Nome da empresa ou CNPJ": "Qual é a sua empresa?" };
+  function semTags(h) { return String(h == null ? "" : h).replace(/<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
+  function agendaParcial(ja) {
+    if (!ch || !ch.iniciado || state.enviado || state.relatorio || !(C.planilha || {}).url) return;
+    clearTimeout(parcial.timer);
+    var espera = ja ? 0 : Math.max(0, 15000 - (Date.now() - parcial.ultimo));
+    parcial.timer = setTimeout(function () { enviaParcial("andamento"); }, espera);
+  }
+  function enviaParcial(motivo) {
+    if (!ch || !ch.iniciado || state.enviado || state.relatorio || !(C.planilha || {}).url) return;
+    clearTimeout(parcial.timer);
+    var ex = { campos: {}, respostas: {} };
+    try { if (D.exporta) ex = D.exporta(state.answers, ctx(), null); } catch (e) {}
+    var L = ch.lead || {};
+    var corpo = {
+      acao: "parcial", id: state.id, material: D.id, motivo: motivo,
+      etapa: el("wa-etapa") ? el("wa-etapa").textContent : "", pergunta: semTags(ch.pergunta || ""),
+      progresso: ch.pct || 0, respondidas: Object.keys(state.answers).length,
+      segundos: Math.round((Date.now() - (ch.t0 || Date.now())) / 1000),
+      correcoes: ch.correcoes || 0, buscas: (ch.buscas || []).slice(-5), semEmpresa: !!ch.semEmpresa,
+      achados: (ch.achados || []).slice(-12), dispositivo: window.innerWidth < 700 ? "celular" : "computador",
+      lead: { nome: L.nome || "", email: L.email || "", tel: L.tel || "" },
+      campos: ex.campos, respostas: ex.respostas, fontes: state.prefillSet, utm: utms(),
+      pagina: location.href.split("#")[0], navegador: navigator.userAgent
+    };
+    var chave = JSON.stringify([corpo.pergunta, corpo.respondidas, corpo.lead, corpo.correcoes, corpo.achados.length, corpo.buscas]);
+    if (chave === parcial.enviado && (motivo !== "saiu" || Date.now() - parcial.saiu < 5000)) return;
+    if (motivo === "saiu") parcial.saiu = Date.now();
+    parcial.enviado = chave; parcial.ultimo = Date.now();
+    postPlanilha(corpo, 8000);
+  }
+  // quando a pessoa sai da página ou troca de aba, registra onde parou
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") enviaParcial("saiu"); });
+  window.addEventListener("pagehide", function () { enviaParcial("saiu"); });
 
   function submitLead(R, rota, envio) {
     envio = envio || {};
@@ -2073,7 +2112,7 @@ window.B4Y_PGFN = (function () {
   var CHECK = '<svg class="ck" width="16" height="11" viewBox="0 0 16 11" aria-hidden="true"><path d="M1 5.5l3 3L10 2.5M6.5 8.5l1 1L14 2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var SEND = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5l18-8.5L3 3.5l0 6.6 12.9 1.9L3 13.9z" fill="currentColor"/></svg>';
   var ch = null;
-  function novoChat() { return { asked: {}, done: {}, seen: {}, started: {}, stack: [], fila: Promise.resolve(), gen: 0, lead: {}, node: null, modo: "base" }; }
+  function novoChat() { return { asked: {}, done: {}, seen: {}, started: {}, stack: [], fila: Promise.resolve(), gen: 0, lead: {}, node: null, modo: "base", t0: Date.now(), correcoes: 0, buscas: [], achados: [], pergunta: "" }; }
   function el(id) { return document.getElementById(id); }
   function hora() { var d = new Date(); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
   function espera(ms) { return new Promise(function (r) { setTimeout(r, RAPIDO ? 0 : REDUZ ? Math.min(ms, 150) : ms); }); }
@@ -2209,6 +2248,7 @@ window.B4Y_PGFN = (function () {
   // campo de texto (empresa, nome, e-mail, WhatsApp)
   function texto(cfg, onSend) {
     var g = ch.gen;
+    if (ROTULO_TEXTO[cfg.placeholder]) ch.pergunta = ROTULO_TEXTO[cfg.placeholder];
     return ch.fila.then(function () {
       if (g !== ch.gen) return;
       var q = el("wa-qr"), i = el("wa-in"), s = el("wa-send"), f = el("wa-comp");
@@ -2257,6 +2297,7 @@ window.B4Y_PGFN = (function () {
     if (snap) app.querySelectorAll(".wm.me .undo").forEach(function (u) { u.remove(); });
     var d = addMsg("me", esc(txt));
     if (snap) { ch.stack.push(snap); botaoCorrigir(d); }
+    agendaParcial();
     return d;
   }
   function desfaz() {
@@ -2274,6 +2315,7 @@ window.B4Y_PGFN = (function () {
     }
     ch.pct = s.pct;
     progresso(false, true);
+    ch.correcoes = (ch.correcoes || 0) + 1;
     track("corrigir");
     s.again();
   }
@@ -2313,6 +2355,7 @@ window.B4Y_PGFN = (function () {
     });
     if (novos.length) {
       diz(novos.map(achadoMsg));
+      novos.forEach(function (x) { ch.achados.push(semTags((x.tag ? x.tag + ": " : "") + x.html).slice(0, 160)); });
       track("migalha", { ids: novos.map(function (x) { return x.id || ""; }).join(",") });
     }
   }
@@ -2403,6 +2446,7 @@ window.B4Y_PGFN = (function () {
       if (nota) html += '<span class="nota' + (state.prefillSet[fd.id] ? " auto" : "") + '">' + esc(nota) + "</span>";
     }
     diz([{ html: html, campo: fd.id }]);
+    ch.pergunta = fd.type === "cnpj" ? "Qual é a sua empresa?" : fd.label;
     responde(fd);
   }
   function responde(fd) {
@@ -2450,10 +2494,12 @@ window.B4Y_PGFN = (function () {
       if (extra === "__pular") {
         eu(v, snap);
         ch.asked[fd.id] = true;
+        ch.semEmpresa = true;
         diz(["Sem problemas! Sigo só com as suas respostas."]);
         return proximo();
       }
       eu(v, snap);
+      ch.buscas.push(String(v).slice(0, 60));
       if (/[a-zà-ú]/i.test(v)) buscaNome(fd, v, g); else buscaCnpj(fd, digits(v), g);
     });
   }
@@ -2617,6 +2663,7 @@ window.B4Y_PGFN = (function () {
     }
     // confirma o e-mail antes de enviar
     function confirma() {
+      ch.pergunta = "Confirmar envio do diagnóstico";
       var s = function () {
         return botoes([["ok", "Sim, pode enviar", "pri"], ["corrigir", "Corrigir e-mail"]], function (r) {
           var snap = foto(); snap.again = s;
