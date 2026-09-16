@@ -2555,7 +2555,7 @@ window.B4Y_PGFN = (function () {
   function de64url(t) { t = t.replace(/-/g, "+").replace(/_/g, "/"); while (t.length % 4) t += "="; return decodeURIComponent(escape(atob(t))); }
   function linkRelatorio() {
     var rc = C.relatorio || {};
-    return (rc.urlBase || location.href.split(/[?#]/)[0]) + "#r/" + b64url(JSON.stringify(payloadRelatorio()));
+    return (rc.urlBase || location.href.split(/[?#]/)[0]) + "#r=" + b64url(JSON.stringify(payloadRelatorio()));
   }
 
 
@@ -2754,9 +2754,16 @@ window.B4Y_PGFN = (function () {
     });
   }
   function lerRelatorio() {
-    // "#r/…" (atual, o WhatsApp reconhece o link inteiro) ou "#r=…" (links antigos)
-    var m = /[#&]r[=\/]([A-Za-z0-9_-]+)/.exec(location.hash || "");
+    // aceita todos os formatos já usados: "#r=…", "#r/…", "#eyJ…", "?r=…" e "?eyJ…"
+    var h = location.hash || "", q = location.search || "";
+    var m = /[#&]r[=\/]([A-Za-z0-9_-]{20,})/.exec(h) || /^#(eyJ[A-Za-z0-9_-]+)/.exec(h) ||
+      /[?&]r=([A-Za-z0-9_-]{20,})/.exec(q) || /[?&](eyJ[A-Za-z0-9_-]+)/.exec(q);
     if (!m) return null;
+    // se veio na query, passa para o "#" (a parte depois do # não é enviada ao servidor nem a scripts de terceiros)
+    if (q.indexOf(m[1]) >= 0 && history.replaceState) {
+      var resto = q.replace(/[?&](r=)?eyJ[A-Za-z0-9_-]+|[?&]r=[A-Za-z0-9_-]{20,}/, "").replace(/^&/, "?");
+      try { history.replaceState(null, "", location.pathname + resto + "#r=" + m[1]); } catch (e) {}
+    }
     try { var p = JSON.parse(de64url(m[1])); return p && p.a ? p : null; } catch (e) { return null; }
   }
   function modoRelatorio(p) {
@@ -2784,7 +2791,32 @@ window.B4Y_PGFN = (function () {
   }
   var rel = lerRelatorio();
   if (rel) { modoRelatorio(rel); return; }
+  // link curto "?d=ID.CHAVE": busca os dados do diagnóstico na planilha (o link longo não cabe no WhatsApp)
+  var dCurto = /[?&]d=([A-Z0-9]{6,24}\.[A-Za-z0-9]{8,40})(?:&|$)/.exec(location.search || "");
+  if (dCurto && (C.planilha || {}).url) { abreCurto(dCurto[1]); return; }
   render();
+
+  function abreCurto(d) {
+    frame('<div class="carregando"><span class="spin"></span><p>Abrindo o seu <b>diagnóstico completo</b>…</p></div>');
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
+    fetch(C.planilha.url + "?d=" + encodeURIComponent(d), { signal: ctrl ? ctrl.signal : undefined })
+      .then(function (r) { clearTimeout(t); return r.json(); })
+      .then(function (res) {
+        if (res && res.ok && res.r && res.r.a) {
+          // guarda os dados no # para recarregar a página sem buscar de novo
+          try { history.replaceState(null, "", location.pathname + location.search + "#r=" + b64url(JSON.stringify(res.r))); } catch (e) {}
+          return modoRelatorio(res.r);
+        }
+        render();   // link inválido: começa um diagnóstico novo
+      })
+      .catch(function () {
+        clearTimeout(t);
+        frame('<div class="carregando"><p>Não consegui abrir o diagnóstico agora.</p><p class="small">Verifique a internet e tente de novo.</p>' +
+          '<div class="actions" style="justify-content:center"><button class="btn" id="denovo">Tentar de novo</button></div></div>');
+        document.getElementById("denovo").onclick = function () { abreCurto(d); };
+      });
+  }
 })();
 
 </script>
