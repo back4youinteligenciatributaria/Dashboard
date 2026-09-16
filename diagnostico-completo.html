@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+<meta name="theme-color" content="#073034">
+<title>Diagnóstico da sua PJ médica | Back4you</title>
+<meta name="description" content="Diagnóstico gratuito da sua empresa médica: impostos, cadastro na Receita, dívida ativa, lucro e acompanhamento.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Identidade do painel Back4you */
+:root{
+  --canvas:#F1E7DC; --surface:#FFFFFF; --warm:#FBF6EF;
+  --ink:#113D39; --ink-2:#3F5854; --muted:#6E6256;
+  --line:#E4D9C9; --line-2:#D6C3AC;
+  --dark:#073034; --teal:#0F8C85; --euc:#3FA680; --teal-txt:#0C756F; --teal-soft:#DCEFEC;
+  --amber:#E8892E; --amber-txt:#8A5A10; --amber-soft:#FBEBD8;
+  --red:#C0392B; --red-soft:#F8E1DD; --green:#2E9D5F; --green-soft:#E1F2E8;
+  --sans:'Montserrat',system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+b,strong{font-weight:700}
+.topbar{background:var(--dark);color:#fff;padding:12px 16px}
+.topbar .in{max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-weight:700;font-size:20px;letter-spacing:-.01em}
+.logo i{font-style:normal;color:var(--euc)}
+.topbar small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;text-align:right}
+.wrap{max-width:680px;margin:0 auto;padding:18px 16px 48px}
+.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:2px 0 6px}
+.progress>i{display:block;height:100%;background:var(--teal);transition:width .4s ease}
+.stepinfo{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:14px}
+.stepinfo b{color:var(--teal-txt)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px 18px;animation:in .3s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:26px;line-height:1.2;margin:4px 0 12px;letter-spacing:-.01em}
+h2{font-size:21px;line-height:1.25;margin:0 0 10px}
+h3{font-size:16px;margin:24px 0 10px}
+h1 b,h2 b{color:var(--teal-txt)}
+.tone-bad h2 b{color:var(--red)} .tone-warn h2 b{color:var(--amber-txt)}
+.kicker{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal-txt)}
+.lead{color:var(--ink-2);margin:0 0 14px}
+.small{font-size:12px;color:var(--muted)}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 18px}
+.pills span{background:var(--warm);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;font-weight:600}
+
+.bubble{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.bubble .av{flex:none;width:32px;height:32px;border-radius:50%;background:var(--dark);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+.bubble .msg{background:var(--warm);border:1px solid var(--line);border-radius:4px 12px 12px 12px;padding:10px 13px}
+.bubble .msg p{margin:0 0 6px}.bubble .msg p:last-child{margin:0}
+.insights{display:grid;gap:8px;margin:0 0 16px}
+.ins{border-radius:8px;padding:10px 12px;font-size:14px;border-left:4px solid var(--teal);background:var(--teal-soft)}
+.ins.warn{border-color:var(--amber);background:var(--amber-soft)}
+.ins.bad{border-color:var(--red);background:var(--red-soft)}
+.ins.good{border-color:var(--green);background:var(--green-soft)}
+.ins small{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:2px}
+.tip{border-left:3px solid var(--amber);background:var(--warm);border-radius:6px;padding:9px 12px;font-size:13px;margin:0 0 16px}
+.tip b.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--amber-txt)}
+
+.field{margin-bottom:15px}
+.field>label,.field>.lbl{display:block;font-weight:600;font-size:15px;margin-bottom:6px}
+.hint{display:block;color:var(--muted);font-size:12.5px;margin:-2px 0 6px}
+.hint.autonote{color:var(--teal-txt);font-weight:600}
+.auto{display:inline-block;font-size:10.5px;font-weight:700;color:var(--teal-txt);background:var(--teal-soft);border-radius:5px;padding:2px 7px;margin-left:6px;vertical-align:middle;letter-spacing:.02em}
+select,input[type=text],input[type=email],input[type=tel]{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line-2);border-radius:8px;background:#fff;color:var(--ink);appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:40px}
+select:focus,input:focus{outline:2px solid var(--teal);outline-offset:1px}
+.field.hide{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{display:flex;align-items:center;gap:7px;border:1px solid var(--line-2);border-radius:8px;padding:8px 11px;font-size:14px;cursor:pointer;background:#fff;user-select:none}
+.chips input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.chips label.on{border-color:var(--teal);background:var(--teal-soft);font-weight:600}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--muted);margin:6px 0 14px}
+.check input{margin-top:3px;width:18px;height:18px;accent-color:var(--teal)}
+
+.actions{display:flex;gap:10px;align-items:center;margin-top:18px}
+button,.btn{font:inherit;font-weight:700;font-size:15px;border:0;border-radius:8px;padding:13px 18px;cursor:pointer;text-decoration:none;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:var(--teal);color:#fff;flex:1}
+.btn-primary:hover{background:var(--teal-txt)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--muted);padding:13px 8px}
+.btn-outline{background:#fff;color:var(--teal-txt);border:1px solid var(--teal)}
+
+/* CNPJ */
+.cnpjbox{background:var(--warm);border:1px solid var(--line);border-radius:10px;padding:13px}
+.cnpjbox .opt{font-weight:400;color:var(--muted);font-size:13px}
+.cnpjrow{display:flex;gap:8px}
+.cnpjrow input{flex:1;min-width:0;padding:11px 10px}
+.cnpjrow .btn{padding:11px 12px;flex:none}
+.cnpjmsg{font-size:14px;margin:10px 0 0;display:flex;align-items:center;gap:8px}
+.cnpjmsg.err{color:var(--red)}
+.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--teal);border-radius:50%;display:inline-block;animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empcard{background:#fff;border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin-top:10px;display:flex;flex-direction:column;gap:2px}
+.empcard b{font-size:15px}
+.empcard.ok{border-color:var(--green)}
+.empcard .actions{margin-top:10px}
+.emp-ok{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em}
+.linkbtn{background:none;border:0;padding:6px 0 0;color:var(--teal-txt);font-size:13px;font-weight:700;text-decoration:underline;align-self:flex-start;cursor:pointer}
+.live{display:grid;gap:6px;margin-top:10px}
+.live .ins{font-size:13.5px}
+.live .ins.loading{display:flex;align-items:center;gap:8px;background:#fff;border-color:var(--line-2);color:var(--muted)}
+
+/* resultado */
+.badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:5px;margin-bottom:8px}
+.tone-ok .badge{background:var(--green-soft);color:var(--green)}
+.tone-warn .badge{background:var(--amber-soft);color:var(--amber-txt)}
+.tone-bad .badge{background:var(--red-soft);color:var(--red)}
+.empline{font-size:12.5px;color:var(--muted);margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.scorebox{display:flex;gap:16px;align-items:center;margin:14px 0}
+.gauge{flex:none;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--c,var(--teal)) calc(var(--p)*1%),var(--line) 0)}
+.gauge>div{width:72px;height:72px;border-radius:50%;background:#fff;display:grid;place-items:center;text-align:center;line-height:1}
+.gauge b{font-size:26px}.gauge small{display:block;font-size:10px;color:var(--muted)}
+.pillars{flex:1;display:grid;gap:6px}
+.pillar{font-size:12.5px}
+.pillar div{display:flex;justify-content:space-between}
+.pillar .bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:2px}
+.pillar .bar i{display:block;height:100%}
+.hl{background:var(--dark);color:#fff;border-radius:10px;padding:16px 18px;margin:14px 0 8px}
+.hl small{display:block;font-size:12px;opacity:.8;letter-spacing:.02em}
+.hl strong{display:block;font-size:30px;line-height:1.15;margin:2px 0 4px;color:#fff}
+.hl span{display:block;font-size:13.5px;opacity:.92}
+.hl .row{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.15)}
+.hl .row div{min-width:120px}
+.hl .row b{display:block;font-size:19px}
+.est{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.est div{background:var(--warm);border:1px solid var(--line);border-radius:8px;padding:11px 12px}
+.est small{display:block;color:var(--muted);font-size:11.5px}
+.est strong{display:block;font-size:17px;color:var(--teal-txt);margin-top:2px}
+@media (max-width:440px){.est{grid-template-columns:1fr}}
+.opp{border:1px solid var(--line);border-radius:10px;padding:13px 14px;margin-bottom:10px;background:#fff}
+.opp h4{margin:0 0 4px;font-size:15px}
+.opp p{margin:0 0 6px;font-size:14px;color:var(--ink-2)}
+ul.alerts{list-style:none;padding:0;margin:0}
+ul.alerts li{border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin-bottom:8px;font-size:14px;background:#fff}
+ul.alerts li>b{display:block;margin-bottom:1px}
+ul.alerts li>span.atx{display:block;color:var(--ink-2)}
+ul.alerts li.a-bad{border-left:4px solid var(--red)}
+ul.alerts li.a-warn{border-left:4px solid var(--amber)}
+ul.alerts li.a-info{border-left:4px solid var(--teal)}
+ul.alerts li.ghost{border-left:4px solid var(--line-2);background:var(--warm)}
+.blur{filter:blur(6px);user-select:none;-webkit-user-select:none;pointer-events:none}
+.lock-note{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin:2px 0 0}
+.rf{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:6px 0}
+.rf dl{margin:0}
+.rf dl div{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:13.5px}
+.rf dl div:last-child{border-bottom:0}
+.rf dt{color:var(--muted);flex:none}
+.rf dd{margin:0;text-align:right;font-weight:600}
+.rf dd.ok{color:var(--green)} .rf dd.warn{color:var(--amber-txt)} .rf dd.bad{color:var(--red)}
+.sim dl{margin:6px 0}
+.sim dl div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.sim dl div:last-child{border-bottom:0}
+.sim dt{color:var(--muted)} .sim dd{margin:0;font-weight:700;text-align:right}
+.sim .good dd{color:var(--green)} .sim .bad dd{color:var(--red)}
+ol.nsteps{margin:0;padding:0;list-style:none;counter-reset:n}
+ol.nsteps li{counter-increment:n;position:relative;padding:8px 0 8px 36px;font-size:14.5px;border-bottom:1px solid var(--line)}
+ol.nsteps li:last-child{border-bottom:0}
+ol.nsteps li:before{content:counter(n);position:absolute;left:0;top:8px;width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.cmp{width:100%;border-collapse:collapse;font-size:13.5px}
+.cmp th,.cmp td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.cmp th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cmp td:nth-child(2),.cmp td:nth-child(3){white-space:nowrap}
+.y{color:var(--green);font-weight:700}.n{color:var(--red);font-weight:700}.m{color:var(--amber-txt);font-weight:700}
+.unlock{margin-top:22px;border:2px solid var(--teal);border-radius:12px;padding:16px 14px 4px;background:linear-gradient(180deg,var(--teal-soft),#fff 120px)}
+.unlock h3{margin:0 0 4px;font-size:18px;color:var(--teal-txt)}
+ul.checks{padding:0;margin:8px 0 14px;list-style:none}
+ul.checks li{padding:5px 0 5px 26px;position:relative;font-size:14px}
+ul.checks li:before{content:"";position:absolute;left:4px;top:10px;width:11px;height:6px;border-left:2px solid var(--green);border-bottom:2px solid var(--green);transform:rotate(-45deg)}
+.cta-box{background:var(--dark);color:#fff;border-radius:12px;padding:18px;margin-top:22px}
+.cta-box p{margin:0 0 12px}
+.cta-box b{color:#fff}
+.cta-box .btn{background:var(--euc);color:#fff;width:100%}
+.disclaimer{font-size:11.5px;color:var(--muted);margin-top:14px}
+footer{text-align:center;font-size:11.5px;color:var(--muted);margin-top:20px}
+
+/* prévia do painel */
+.pn{border:1px solid var(--line-2);border-radius:12px;overflow:hidden;background:var(--canvas);margin:8px 0;position:relative}
+.pn .pn-top{background:var(--dark);color:#fff;padding:9px 12px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.pn .pn-top small{font-size:10px;font-weight:600;opacity:.8;letter-spacing:.06em;text-transform:uppercase}
+.pn .pn-head{background:#fff;padding:10px 12px;border-bottom:1px solid var(--line)}
+.pn .pn-head b{display:block;font-size:15px}
+.pn .pn-head b i{font-style:normal;color:var(--teal)}
+.pn .pn-head span{font-size:11px;color:var(--muted)}
+.pn .upd{display:inline-block;background:var(--teal-soft);color:var(--teal-txt);font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 7px;margin-top:4px}
+.pn-tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line)}
+.pn-tabs button{flex:none;font-size:12px;padding:6px 10px;border:1px solid var(--line-2);background:#fff;color:var(--ink);border-radius:6px}
+.pn-tabs button.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.pn-body{padding:10px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+.kpi.hi{background:var(--teal-soft);border-color:#bfe0dc}
+.kpi small{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2)}
+.kpi b{display:block;font-size:17px;margin:2px 0}
+.kpi span{font-size:11px;color:var(--muted)}
+.spark{display:flex;align-items:flex-end;gap:3px;height:22px;margin-top:5px}
+.spark i{flex:1;background:var(--c,#8fcfc9);border-radius:2px 2px 0 0;min-height:3px}
+.spark i.cur{background:var(--cc,var(--teal))}
+.pn-tbl{background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:8px;overflow:hidden}
+.pn-tbl .t{padding:8px 10px;background:var(--warm);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.pn-tbl .t b{display:block;font-size:17px;letter-spacing:0;text-transform:none;color:var(--ink)}
+.pn-tbl div.r{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-top:1px solid var(--line);font-size:12.5px}
+.pn-tbl div.r span{color:var(--muted);font-size:11px;display:block}
+.pn-tbl div.r em{font-style:normal;color:var(--muted);font-size:11.5px;white-space:nowrap}
+.pn-tbl div.r strong{white-space:nowrap}
+.pn-note{font-size:11px;color:var(--muted);padding:8px 10px 2px}
+.pn.locked .pn-body,.pn.locked .pn-tabs{filter:blur(4px);pointer-events:none}
+.pn .lockover{position:absolute;inset:auto 12px 14px 12px;background:#fff;border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:13px;display:flex;gap:8px;align-items:center;box-shadow:0 4px 18px rgba(7,48,52,.12)}
+
+/* busca por nome */
+.nomes{margin-top:10px;display:grid;gap:6px}
+.nomes p{margin:2px 0}
+.nome-item{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;background:#fff;border:1px solid var(--line-2);border-radius:8px;padding:9px 11px;font-weight:400;font-size:14px;color:var(--ink);width:100%}
+.nome-item b{font-size:14px}
+.nome-item:hover,.nome-item:focus{border-color:var(--teal);background:var(--teal-soft)}
+.ins .cn-det{display:block;margin-top:6px;font-size:.86em;line-height:1.5}
+
+/* ================= Conversa (estilo WhatsApp, cores Back4you) ================= */
+:root{--wa-bg:#ECE3D6;--wa-me:#D3EDE6;--wa-foot:#F5EEE5;--wa-time:#7C8B88}
+body.chat{overflow:hidden}
+.wa{max-width:560px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;background:var(--wa-bg);
+  background-image:radial-gradient(rgba(7,48,52,.05) 1.2px,transparent 1.3px),radial-gradient(rgba(15,140,133,.05) 1.2px,transparent 1.3px);
+  background-size:22px 22px,22px 22px;background-position:0 0,11px 11px;box-shadow:0 0 0 1px var(--line),0 10px 40px rgba(7,48,52,.12)}
+.wa-top{flex:none;display:flex;align-items:center;gap:11px;background:var(--dark);color:#fff;padding:10px 14px;min-height:60px}
+.wa-av{flex:none;width:40px;height:40px;border-radius:50%;background:#fff;color:var(--dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+.wa-av i{font-style:normal;color:var(--euc)}
+.wa-id{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.wa-id b{font-size:17px}
+.wa-id small{font-size:13px;opacity:.8}
+.wa-etapa{flex:none;font-size:12.5px;opacity:.85;text-align:right;max-width:40%;line-height:1.3}
+.wa-prog{flex:none;height:3px;background:rgba(7,48,52,.12)}
+.wa-prog i{display:block;height:100%;width:0;background:var(--euc);transition:width .5s ease}
+.wa-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:10px 10px 14px;-webkit-overflow-scrolling:touch}
+.wa-day,.wa-sec{text-align:center;margin:6px 0 10px}
+.wa-day span{display:inline-block;background:#fff;color:var(--muted);font-size:12.5px;font-weight:600;border-radius:7px;padding:4px 10px;box-shadow:0 1px .5px rgba(0,0,0,.08)}
+.wa-sec span{display:inline-flex;align-items:center;gap:6px;background:#FBEFC8;color:#6B5A2E;font-size:13px;border-radius:7px;padding:6px 10px;max-width:88%;line-height:1.35}
+.wm{display:flex;margin:3px 0;animation:pop .18s ease-out}
+.wm.bot{justify-content:flex-start}
+.wm.me{justify-content:flex-end;flex-direction:column;align-items:flex-end}
+.wm .wb{position:relative;max-width:84%;background:#fff;border-radius:9px;padding:8px 11px 21px;font-size:16.5px;line-height:1.45;box-shadow:0 1px .6px rgba(0,0,0,.12);overflow-wrap:anywhere}
+.wm.bot .wb{border-top-left-radius:2px}
+.wm.me .wb{background:var(--wa-me);border-top-right-radius:2px;padding-right:12px;min-width:92px}
+.wm .wb p{margin:0 0 6px}.wm .wb p:last-of-type{margin-bottom:0}
+.wm .wb .t{position:absolute;right:8px;bottom:3px;font-size:12px;color:var(--wa-time);display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.wm .wb .ck{color:#2A9AD8}
+.wm .wb .hint{display:block;font-size:14.5px;color:var(--muted);margin-top:3px}
+.wm .wb .nota{display:block;font-size:14.5px;color:var(--teal-txt);font-weight:600;margin-top:5px;background:var(--teal-soft);border-radius:6px;padding:4px 7px}
+.wm .wb small.tag{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--teal-txt);margin-bottom:2px}
+.wm .wb small.tag.ok{color:var(--green)}
+.wm .wb small.mais{display:block;font-size:13px;color:var(--muted);font-style:italic;margin-top:4px}
+.wm.achado .wb{border-left:4px solid var(--teal)}
+.wm.achado.warn .wb{border-left-color:var(--amber)} .wm.achado.warn .wb small.tag{color:var(--amber-txt)}
+.wm.achado.bad .wb{border-left-color:var(--red)} .wm.achado.bad .wb small.tag{color:var(--red)}
+.wm.achado.good .wb{border-left-color:var(--green)} .wm.achado.good .wb small.tag{color:var(--green)}
+.wm.dica .wb{background:#FFF8E8} .wm.dica .wb small.tag{color:var(--amber-txt)}
+.wm .wb .cn-det{display:block;margin-top:6px;font-size:15px;line-height:1.5;color:var(--ink-2)}
+.wm.card .wb{max-width:90%}
+.wm.wide .wb{max-width:96%;width:96%}
+.wm .emp{margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--warm);display:flex;flex-direction:column;gap:1px}
+.wm .emp span{font-size:15px}.wm .emp small{font-size:13.5px;color:var(--muted)}
+.wm .undo{background:none;border:0;padding:3px 4px;margin:1px 2px 0;font-size:13px;font-weight:600;color:var(--teal-txt);cursor:pointer;text-decoration:underline}
+.wm.typing .wb{padding:12px 14px;display:flex;gap:4px;min-width:0}
+.wm.typing i{width:7px;height:7px;border-radius:50%;background:#9AA7A4;animation:dot 1.1s infinite ease-in-out}
+.wm.typing i:nth-child(2){animation-delay:.15s}.wm.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+@keyframes pop{from{opacity:0;transform:translateY(4px) scale(.98)}to{opacity:1;transform:none}}
+/* prévia dentro da conversa */
+.previa h2{font-size:19px}
+.previa .badge{font-size:10.5px}
+.previa .scorebox{gap:10px;margin:10px 0}
+.previa h3{font-size:16px;margin:12px 0 6px}
+.previa .hl{margin:10px 0}
+.previa .hl strong{font-size:22px}
+.previa .lib{display:flex;align-items:center;gap:6px;margin:12px 0 4px;font-size:15.5px}
+.previa ul.checks{margin:0}
+/* rodapé: respostas rápidas + campo de texto */
+.wa-foot{flex:none;background:var(--wa-foot);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+.wa-qr{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;max-height:46vh;overflow-y:auto}
+.wa-qr:empty{display:none}
+.wa-qr:not(:empty){margin-bottom:8px}
+.wa-qr.lista{flex-direction:column;flex-wrap:nowrap;align-items:stretch}
+.qr{background:#fff;color:var(--teal-txt);border:1px solid #BFE0DB;border-radius:18px;padding:9px 15px;font-size:16px;font-weight:600;line-height:1.3;box-shadow:0 1px .5px rgba(0,0,0,.06)}
+.qr:hover{background:var(--teal-soft)}
+.qr.pri{background:var(--teal);color:#fff;border-color:var(--teal)}
+.qr.pri:hover{background:var(--teal-txt)}
+.qr:disabled{opacity:.45;cursor:not-allowed}
+.qr.tg.on{background:var(--teal-soft);border-color:var(--teal);color:var(--ink)}
+.qr.tg.on::before{content:"✓ ";color:var(--teal-txt)}
+.qr.env{min-width:110px}
+.qr.emp{text-align:left;border-radius:10px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;font-weight:400;color:var(--ink)}
+.qr.emp b{color:var(--ink)} .qr.emp span{font-size:15px} .qr.emp small{font-size:13.5px;color:var(--muted)}
+.qr-dica{width:100%;margin:0 0 2px;font-size:13.5px;color:var(--muted);text-align:right}
+.qr-err{width:100%;margin:0 0 2px;font-size:14px;color:var(--red);text-align:right;font-weight:600}
+.wa-comp{display:flex;gap:8px;align-items:center}
+.wa-comp input{flex:1;border-radius:22px;border:1px solid var(--line-2);padding:10px 16px;font-size:16px;background:#fff}
+.wa-comp input:disabled{background:#EFE9E1;color:var(--muted)}
+.wa-comp button{flex:none;width:46px;height:46px;border-radius:50%;padding:0;background:var(--teal);color:#fff}
+.wa-comp button:disabled{background:#B9CFCB;cursor:not-allowed}
+@media (min-width:600px){.wa{margin:14px auto;height:calc(100vh - 28px);height:calc(100dvh - 28px);border-radius:12px;overflow:hidden}}
+@media (prefers-reduced-motion:reduce){.wm{animation:none}.wm.typing i{animation:none;opacity:.7}}
+
+.carregando{text-align:center;padding:30px 10px}
+.carregando .spin{width:28px;height:28px;border-width:3px}
+.ola{margin:0 0 6px;font-size:15px}
+.wm .wb small.fonte{font-size:12.5px;color:var(--muted);font-weight:400}
+.wm .wb .small,.previa .small{font-size:14px}
+.previa .pillar span{font-size:14px}
+.previa ul.alerts li,.previa ul.checks li{font-size:15.5px}
+
+</style>
+<!-- Cole aqui o código de rastreamento (GTM / Google Ads / HubSpot) -->
+</head>
+<body>
+<div id="app"></div>
+<noscript>Ative o JavaScript para fazer o diagnóstico.</noscript>
+<script>
+/* ================= CONFIGURAÇÃO (Stefanie) =================
+   hubspot.portalId / formGuid: formulário que recebe os leads (vazio = não envia, só aparece no console).
+   hubspot.fields: nomes internos das propriedades no HubSpot ("" = não envia).
+   whatsapp: número com DDI+DDD, só dígitos.
+   pgfn: onde estão os .db da dívida ativa (tenta na ordem). nomes e cnes usam os mesmos endereços.
+   ============================================================ */
+window.CONFIG = {
+  hubspot: {
+    portalId: "",
+    formGuid: "",
+    fields: {
+      material: "b4y_material",           // "diagnostico-completo"
+      rota: "b4y_rota",                   // pre-vendas | nutrir
+      resultado: "b4y_resultado",         // selo e nota (0 a 100)
+      respostas: "b4y_respostas",         // resumo + dados da Receita/PGFN + respostas + UTMs
+      cnpj: "b4y_cnpj",                   // CNPJ confirmado
+      pgfn: "b4y_pgfn_valor",             // total na dívida ativa da União (R$)
+      oportunidade: "b4y_oportunidade_ano", // economia anual estimada (R$, teto)
+      cnes: "b4y_cnes",                   // resumo do CNES (tipo, profissionais, licença)
+      link: "b4y_link_relatorio",         // link do diagnóstico completo (vai no e-mail)
+      envio: "b4y_envio_relatorio",       // data/hora + nº do envio (muda a cada reenvio: use para reinscrever no fluxo)
+      emailAnterior: "b4y_email_anterior" // e-mail que o médico corrigiu (quando corrige)
+    }
+  },
+  whatsapp: "55XXXXXXXXXXX",
+  relatorio: {
+    urlBase: "https://painel.back4you.com.br/diagnostico-completo.html", // endereço onde este arquivo fica publicado
+    mostrarNaTela: false,  // true = também oferece "Ver aqui agora" depois do envio
+    maxEnvios: 3           // envios para o mesmo e-mail (corrigir o e-mail libera mais um)
+  },
+  privacidadeUrl: "https://back4you.com.br/politica-de-privacidade",
+  nomes: {
+    indice: "nomes_saude_indice.json"   // busca por nome: índice gerado por ferramentas/montar_busca_nomes.py (usa os mesmos endereços da PGFN)
+  },
+  cnes: {
+    indice: "cnes_indice.json"          // CNES: índice gerado por ferramentas/montar_cnes.py (usa os mesmos endereços da PGFN)
+  },
+  pgfn: {
+    bases: ["https://painel.back4you.com.br/", "https://raw.githubusercontent.com/back4youinteligenciatributaria/Dashboard/main/"],
+    arquivo: "devedores_PGFN_PJ_202606_parte{N}de09.db"
+  }
+};
+</script>
+<script>
+/* ============================================================
+   Leitor de SQLite pela internet (requisições HTTP Range).
+   Lê só as páginas necessárias de tabelas WITHOUT ROWID.
+   Usado pela dívida ativa (PGFN) e pela busca por nome.
+   ============================================================ */
+window.B4Y_SQL = (function () {
+  "use strict";
+  var files = {};
+
+  function get(url, start, len, ms) {
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || 8000);
+    return fetch(url, { headers: { Range: "bytes=" + start + "-" + (start + len - 1) }, signal: ctrl ? ctrl.signal : undefined })
+      .then(function (r) {
+        clearTimeout(t);
+        if (r.status === 206) return r.arrayBuffer().then(function (b) { return { bytes: new Uint8Array(b) }; });
+        if (r.status === 200) return r.arrayBuffer().then(function (b) { return { full: new Uint8Array(b) }; });
+        throw new Error("http_" + r.status);
+      });
+  }
+  // abre o arquivo tentando cada endereço base, na ordem
+  function abrir(bases, nome, ms) {
+    var chave = bases.join("|") + "|" + nome;
+    if (files[chave]) return files[chave];
+    var i = 0;
+    function tenta() {
+      if (i >= bases.length) return Promise.reject(new Error("indisponivel"));
+      var url = bases[i++] + nome;
+      return get(url, 0, 4096, ms).then(function (res) {
+        var b = res.full || res.bytes;
+        if (String.fromCharCode.apply(null, b.subarray(0, 15)) !== "SQLite format 3") throw new Error("nao_sqlite");
+        var ps = (b[16] << 8) | b[17]; if (ps === 1) ps = 65536;
+        var f = { url: url, ps: ps, full: res.full || null, pages: {}, pend: {}, ms: ms || 8000, raizes: {} };
+        if (!f.full && ps === 4096) f.pages[1] = b;
+        return f;
+      }).catch(function () { return tenta(); });
+    }
+    files[chave] = tenta().catch(function (e) { delete files[chave]; throw e; });
+    return files[chave];
+  }
+  function page(f, n) {
+    if (f.full) return Promise.resolve(f.full.subarray((n - 1) * f.ps, n * f.ps));
+    if (f.pages[n]) return Promise.resolve(f.pages[n]);
+    if (f.pend[n]) return f.pend[n];
+    f.pend[n] = get(f.url, (n - 1) * f.ps, f.ps, f.ms).then(function (res) {
+      delete f.pend[n];
+      if (res.full) { f.full = res.full; return f.full.subarray((n - 1) * f.ps, n * f.ps); }
+      f.pages[n] = res.bytes; return res.bytes;
+    }, function (e) { delete f.pend[n]; throw e; });
+    return f.pend[n];
+  }
+
+  /* ---------- formato ---------- */
+  function u16(b, o) { return (b[o] << 8) | b[o + 1]; }
+  function u32(b, o) { return ((b[o] << 24) >>> 0) + (b[o + 1] << 16) + (b[o + 2] << 8) + b[o + 3]; }
+  function varint(b, o) {
+    var v = 0;
+    for (var i = 0; i < 8; i++) { var x = b[o + i]; v = v * 128 + (x & 127); if (x < 128) return [v, i + 1]; }
+    return [v * 256 + b[o + 8], 9];
+  }
+  function int(b, o, n) { var v = 0; for (var i = 0; i < n; i++) v = v * 256 + b[o + i]; return b[o] & 128 ? v - Math.pow(2, 8 * n) : v; }
+  var TAM = [0, 1, 2, 3, 4, 6, 8, 8, 0, 0];
+  var dec = new TextDecoder();
+  function registro(b, o) {
+    var h = varint(b, o), fim = o + h[0], p = o + h[1], tipos = [];
+    while (p < fim) { var t = varint(b, p); tipos.push(t[0]); p += t[1]; }
+    var out = [], d = fim;
+    tipos.forEach(function (t) {
+      if (t === 0) out.push(null);
+      else if (t === 8) out.push(0);
+      else if (t === 9) out.push(1);
+      else if (t === 7) { out.push(new DataView(b.buffer, b.byteOffset + d, 8).getFloat64(0)); d += 8; }
+      else if (t < 7) { out.push(int(b, d, TAM[t])); d += TAM[t]; }
+      else { var len = (t - (t % 2 ? 13 : 12)) / 2; out.push(t % 2 ? dec.decode(b.subarray(d, d + len)) : null); d += len; }
+    });
+    return out;
+  }
+  function celulas(b, n) {
+    var h = n === 1 ? 100 : 0, tipo = b[h], qtd = u16(b, h + 3), interior = tipo === 2 || tipo === 5;
+    var ini = h + (interior ? 12 : 8), cs = [];
+    for (var i = 0; i < qtd; i++) cs.push(u16(b, ini + 2 * i));
+    return { tipo: tipo, cs: cs, direita: interior ? u32(b, h + 8) : 0 };
+  }
+  function tabela(f, n, out) {
+    return page(f, n).then(function (b) {
+      var p = celulas(b, n);
+      if (p.tipo === 13) {
+        p.cs.forEach(function (o) { var s = varint(b, o), r = varint(b, o + s[1]); out.push(registro(b, o + s[1] + r[1])); });
+        return out;
+      }
+      var filhos = p.cs.map(function (o) { return u32(b, o); }).concat([p.direita]);
+      return filhos.reduce(function (pr, c) { return pr.then(function () { return tabela(f, c, out); }); }, Promise.resolve()).then(function () { return out; });
+    });
+  }
+  function raiz(f, nomeTabela) {
+    if (f.raizes[nomeTabela]) return Promise.resolve(f.raizes[nomeTabela]);
+    return tabela(f, 1, []).then(function (linhas) {
+      var d = linhas.filter(function (l) { return l[0] === "table" && l[1] === nomeTabela; })[0];
+      if (!d) throw new Error("sem_tabela_" + nomeTabela);
+      f.raizes[nomeTabela] = d[3]; return d[3];
+    });
+  }
+  // percorre a árvore de uma tabela WITHOUT ROWID e devolve as linhas com lo <= 1ª coluna < hi
+  // (se hi for null, só a igualdade com lo). limite = para cedo quando já achou o suficiente.
+  function faixa(f, n, lo, hi, out, limite) {
+    if (out.length >= limite) return Promise.resolve(out);
+    var dentro = hi == null ? function (k) { return k === lo; } : function (k) { return k >= lo && k < hi; };
+    var passou = hi == null ? function (k) { return k > lo; } : function (k) { return k >= hi; };
+    return page(f, n).then(function (b) {
+      var p = celulas(b, n);
+      if (p.tipo === 10) {
+        for (var i = 0; i < p.cs.length && out.length < limite; i++) {
+          var s = varint(b, p.cs[i]), r = registro(b, p.cs[i] + s[1]);
+          if (dentro(r[0])) out.push(r); else if (passou(r[0])) break;
+        }
+        return out;
+      }
+      if (p.tipo !== 2) throw new Error("pagina_inesperada");
+      var ant = null, fila = [], parar = false;
+      for (var j = 0; j < p.cs.length && !parar; j++) {
+        var o = p.cs[j], filho = u32(b, o), s2 = varint(b, o + 4), rec = registro(b, o + 4 + s2[1]), k = rec[0];
+        if ((ant === null || !passou(ant)) && !(k < lo)) fila.push({ pg: filho });
+        if (dentro(k)) fila.push({ rec: rec });
+        if (passou(k)) parar = true;
+        ant = k;
+      }
+      if (!parar) fila.push({ pg: p.direita });
+      // adianta o download das próximas páginas em paralelo (até 12)
+      fila.filter(function (it) { return it.pg; }).slice(0, 12).forEach(function (it) { page(f, it.pg).catch(function () {}); });
+      return fila.reduce(function (pr, it) {
+        return pr.then(function () {
+          if (out.length >= limite) return;
+          if (it.rec) { out.push(it.rec); return; }
+          return faixa(f, it.pg, lo, hi, out, limite);
+        });
+      }, Promise.resolve()).then(function () { return out; });
+    });
+  }
+  function buscar(bases, arquivo, tabela, lo, hi, limite, ms) {
+    return abrir(bases, arquivo, ms).then(function (f) {
+      return raiz(f, tabela).then(function (r) { return faixa(f, r, lo, hi, [], limite || 1e9); });
+    });
+  }
+  return { buscar: buscar };
+})();
+
+/* ============================================================
+   Busca de empresas de saúde pelo NOME (base própria, feita com
+   ferramentas/montar_busca_nomes.py a partir dos dados abertos da Receita).
+   ============================================================ */
+window.B4Y_NOMES = (function () {
+  "use strict";
+  var STOP = ("LTDA ME EPP EIRELI SA S A SS SOCIEDADE SIMPLES LIMITADA UNIPESSOAL SLU EMPRESARIA DE DA DO DAS DOS E EM PARA COM " +
+    "SERVICOS SERVICO MEDICOS MEDICO MEDICA MEDICAS MEDICINA CLINICA CLINICAS CONSULTORIO CONSULTORIOS " +
+    "SAUDE CENTRO INSTITUTO ASSISTENCIA ATENDIMENTO ESPECIALIDADES ESPECIALIZADA ESPECIALIZADOS HOSPITALAR DR DRA DRS DRAS").split(" ");
+  var STOPSET = {}; STOP.forEach(function (w) { STOPSET[w] = 1; });
+  var idxP = null;
+
+  function norm(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim(); }
+  function prefixoDeStop(t) { return t.length < 5 && STOP.some(function (w) { return w.indexOf(t) === 0; }); }
+  function cfg() {
+    var c = (window.CONFIG && window.CONFIG.nomes) || {}, pg = (window.CONFIG && window.CONFIG.pgfn) || {};
+    return { bases: c.bases || pg.bases || ["https://painel.back4you.com.br/"], indice: c.indice || "nomes_saude_indice.json", timeout: c.timeout || 8000 };
+  }
+  function indice() {
+    if (idxP) return idxP;
+    var c = cfg(), i = 0;
+    function tenta() {
+      if (i >= c.bases.length) return Promise.reject(new Error("sem_indice"));
+      var base = c.bases[i++];
+      return fetch(base + c.indice).then(function (r) { if (!r.ok) throw new Error("http"); return r.json(); })
+        .then(function (j) { j._bases = [base].concat(c.bases.filter(function (b) { return b !== base; })); return j; })
+        .catch(function () { return tenta(); });
+    }
+    idxP = tenta().catch(function (e) { idxP = null; throw e; });
+    return idxP;
+  }
+  function erro(cod) { var e = new Error(cod); e.codigo = cod; return e; }
+
+  function buscar(q) {
+    var toks = norm(q).split(" ").filter(function (t) { return t.length >= 2; });
+    var chaves = toks.filter(function (t) { return !STOPSET[t] && !prefixoDeStop(t); }).sort(function (a, b) { return b.length - a.length; });
+    if (!chaves.length) return Promise.reject(erro("generico"));
+    if (chaves[0].length < 3) return Promise.reject(erro("curto"));
+    // busca pelas 2 palavras mais longas ao mesmo tempo: se uma delas for rara, a lista vem completa
+    var usar = chaves.filter(function (t) { return t.length >= 3; }).slice(0, 2), LIM = 1200;
+    var inicio = norm(q).split(" ")[0] || "";
+    return indice().then(function (idx) {
+      var tarefas = [];
+      usar.forEach(function (chave) {
+        var lo = chave, hi = chave + "\x7f";
+        idx.partes.filter(function (p) { return p.de < hi && p.ate >= lo; }).forEach(function (p) {
+          tarefas.push(window.B4Y_SQL.buscar(idx._bases, p.arquivo, idx.tabela || "nome", lo, hi, LIM, cfg().timeout));
+        });
+      });
+      return Promise.all(tarefas).then(function (lotes) {
+        var vistos = {}, lista = [], muitos = false;
+        lotes.forEach(function (rows) {
+          if (rows.length >= LIM) muitos = true;
+          rows.forEach(function (r) {
+            if (vistos[r[1]]) return; vistos[r[1]] = 1;
+            var nomeN = norm(r[2] + " " + r[3]), palavras = (nomeN + " " + norm(r[4])).split(" "), pontos = 0, ok = true;
+            if (inicio && (norm(r[2]).indexOf(inicio) === 0 || norm(r[3]).indexOf(inicio) === 0)) pontos += 1;
+            toks.forEach(function (t) {
+              if (palavras.indexOf(t) >= 0) pontos += 2;
+              else if (palavras.some(function (w) { return w.indexOf(t) === 0; })) pontos += 1;
+              else ok = false;
+            });
+            if (!ok) return;
+            var c = String(r[1]); while (c.length < 14) c = "0" + c;
+            lista.push({ cnpj: c, razao: r[2], fantasia: r[3], local: r[4], pontos: pontos, matriz: c.slice(8, 12) === "0001" });
+          });
+        });
+        lista.sort(function (a, b) { return (b.pontos - a.pontos) || (b.matriz - a.matriz) || (a.razao.length - b.razao.length); });
+        return { itens: lista.slice(0, 8), total: lista.length, muitos: muitos && lista.length > 8, base: idx.base };
+      });
+    });
+  }
+  return { buscar: buscar, norm: norm };
+})();
+
+/* ============================================================
+   Consulta ao CNES (Cadastro Nacional de Estabelecimentos de Saúde)
+   pelo CNPJ, na base feita com ferramentas/montar_cnes.py.
+   Junta matriz e filiais (mesma raiz de 8 dígitos).
+   ============================================================ */
+window.B4Y_CNES = (function () {
+  "use strict";
+  var idxP = null;
+  // se o índice não trouxer a tabela de tipos
+  var CAT_PADRAO = { 22: "consultorio", 36: "clinica", 4: "clinica", 39: "sadt", 5: "hospital", 7: "hospital", 15: "hospital", 62: "hospital_dia", 20: "urgencia", 21: "urgencia", 73: "urgencia" };
+  var NOME_COD = { 1: "Posto de saúde", 2: "Unidade básica de saúde", 40: "Unidade móvel", 43: "Farmácia", 60: "Cooperativa ou empresa de profissionais de saúde",
+    61: "Centro de parto normal", 70: "Centro de atenção psicossocial", 74: "Polo academia da saúde", 77: "Atenção domiciliar (home care)" };
+  var SERV = { 121: "diagnóstico por imagem", 122: "exames por métodos gráficos", 142: "endoscopia", 146: "videolaparoscopia", 148: "hospital-dia",
+    145: "laboratório clínico", 120: "anatomia patológica", 144: "coleta de exames", 131: "oftalmologia", 116: "cardiologia", 155: "ortopedia",
+    126: "fisioterapia", 132: "oncologia", 150: "cirurgia vascular", 151: "medicina nuclear", 169: "urologia", 124: "endocrinologia",
+    117: "cirurgia reparadora", 118: "cirurgia torácica", 105: "neurologia", 107: "saúde auditiva", 160: "telessaúde", 140: "urgência e emergência",
+    162: "terapia intensiva", 127: "obesidade", 133: "pneumologia", 135: "reabilitação", 110: "saúde reprodutiva", 112: "pré-natal e parto",
+    134: "práticas integrativas", 130: "doença renal crônica", 136: "suporte nutricional", 171: "cuidados paliativos", 128: "hemoterapia", 108: "saúde do trabalhador" };
+  var SERV_PROC = [142, 146, 148, 117, 118, 150], SERV_EXAME = [121, 122, 145, 120, 144, 151];
+  var ATIV = { "001": "consultas", "002": "exames e diagnóstico", "003": "terapias especiais", "004": "reabilitação", "006": "atenção domiciliar",
+    "007": "urgência", "009": "internação", "010": "assistência intermediária", "014": "telessaúde" };
+  var TURNO = { 1: "só de manhã", 2: "só à tarde", 3: "manhã e tarde", 4: "manhã, tarde e noite", 5: "turnos alternados", 6: "24 horas", 7: "só à noite" };
+  var ACENTO = { CLINICO: "clínico", CIRURGIAO: "cirurgião", FAMILIA: "família", PLASTICO: "plástico", TORACICO: "torácico", NUTROLOGO: "nutrólogo",
+    ESTETICA: "estética", MEDICO: "médico", CARDIOVASCULAR: "cardiovascular", PEDIATRICA: "pediátrica", ONCOLOGICO: "oncológico", ORTOPEDICO: "ortopédico",
+    CABECA: "cabeça", PESCOCO: "pescoço", SAUDE: "saúde", ESTRATEGIA: "estratégia", DIAGNOSTICO: "diagnóstico", TRAFEGO: "tráfego", MAO: "mão",
+    NEUROCIRURGIAO: "neurocirurgião", CIRURGICO: "cirúrgico", PEDIATRICO: "pediátrico", CLINICA: "clínica", GENETICA: "genética", OBSTETRICIA: "obstetrícia",
+    AREA: "área", METABOLOGIA: "metabologia", HEMOTERAPICA: "hemoterápica" };
+  function especialidade(d) {
+    var t = String(d || "").split(/\s+/).map(function (w) { return ACENTO[w] || w.toLowerCase(); }).join(" ");
+    if (/^médico (em|na|no) /.test(t)) return t.replace(/^médico (em|na|no) /, "");
+    if (/^médico (do|da|de) /.test(t)) return t;
+    return t.replace(/^médico /, "");
+  }
+  var NOME_CAT = { consultorio: "Consultório", clinica: "Clínica ou centro de especialidades", sadt: "Serviço de diagnóstico e terapia", hospital: "Hospital", hospital_dia: "Hospital-dia", urgencia: "Pronto atendimento" };
+
+  function cfg() {
+    var c = (window.CONFIG && window.CONFIG.cnes) || {}, pg = (window.CONFIG && window.CONFIG.pgfn) || {};
+    return { bases: c.bases || pg.bases || ["https://painel.back4you.com.br/"], indice: c.indice || "cnes_indice.json", timeout: c.timeout || 8000 };
+  }
+  function indice() {
+    if (idxP) return idxP;
+    var c = cfg(), i = 0;
+    function tenta() {
+      if (i >= c.bases.length) return Promise.reject(new Error("sem_indice"));
+      var base = c.bases[i++];
+      return fetch(base + c.indice).then(function (r) { if (!r.ok) throw new Error("http"); return r.json(); })
+        .then(function (j) { j._bases = [base].concat(c.bases.filter(function (b) { return b !== base; })); return j; })
+        .catch(function () { return tenta(); });
+    }
+    idxP = tenta().catch(function (e) { idxP = null; throw e; });
+    return idxP;
+  }
+  function data(n) { n = +n || 0; if (!n) return null; var s = String(n); return s.slice(0, 4) + "-" + s.slice(4, 6) + "-" + s.slice(6, 8); }
+  function competencia(b) { b = String(b || ""); return /^\d{6}$/.test(b) ? b.slice(4) + "/" + b.slice(0, 4) : b; }
+
+  function consultar(cnpj) {
+    var n = Number(String(cnpj).replace(/\D/g, ""));
+    var raiz = Math.floor(n / 1e6), lo = raiz * 1e6, hi = lo + 1e6;
+    return indice().then(function (idx) {
+      var partes = idx.partes.filter(function (p) { return p.de < hi && p.ate >= lo; });
+      return Promise.all(partes.map(function (p) {
+        return window.B4Y_SQL.buscar(idx._bases, p.arquivo, idx.tabela || "cnes", lo, hi, 80, cfg().timeout);
+      })).then(function (lotes) {
+        var rows = [].concat.apply([], lotes);
+        var base = { base: idx.base, competencia: competencia(idx.base), ansCompetencia: idx.ans ? competencia(idx.ans) : "" };
+        if (!rows.length) { base.encontrado = false; return base; }
+        // o CNPJ escolhido primeiro; depois as filiais com mais profissionais
+        rows.sort(function (a, b) { return (b[0] === n) - (a[0] === n) || b[5] - a[5]; });
+        var r = { encontrado: true, exato: rows[0][0] === n, cnes: rows[0][1], unidades: 0, estabelecimentos: rows.length,
+          prof: 0, med: 0, enf: 0, equip: 0, img: 0, lic: null, licTipo: 0, alvara: false, atualizado: null, desativado: true, tipos: [] };
+        var v2 = rows[0].length >= 36;
+        r.v2 = v2;
+        r.salas = { cir: 0, peq: 0, rec: 0, apoio: 0, obs: 0, cons: 0 };
+        r.vinc = { pj: 0, clt: 0, aut: 0, coop: 0, socio: 0 };
+        var atendB = 0, convB = 0, serv = [], ativ = [], esp = [];
+        r.dias = 0; r.horas = 0; r.turno = 0; r.coworking = false;
+        var v3 = rows[0].length >= 42;
+        r.v3 = v3;
+        if (v3) r.planos = { direto: 0, indireto: 0, nomes: [], desde: null, proprio: false };
+        r.acreditacao = "";
+        var desdeN = 0;
+        var licN = 0, atuN = 0, vistos = {};
+        rows.forEach(function (x) {
+          r.unidades += x[4]; r.prof += x[5]; r.med += x[6]; r.enf += x[7]; r.equip += x[8]; r.img += x[9];
+          if (x[10] > licN) { licN = x[10]; r.licTipo = x[11]; }
+          if (x[12]) r.alvara = true;
+          atuN = Math.max(atuN, x[13]);
+          if (!x[14]) r.desativado = false;
+          if (v2) {
+            ["cir", "peq", "rec", "apoio", "obs", "cons"].forEach(function (k, i) { r.salas[k] += x[16 + i] || 0; });
+            ["pj", "clt", "aut", "coop", "socio"].forEach(function (k, i) { r.vinc[k] += x[22 + i] || 0; });
+            atendB |= x[27] || 0; convB |= x[28] || 0;
+            [[x[29], serv], [x[30], ativ], [x[31], esp]].forEach(function (par) {
+              String(par[0] || "").split(",").forEach(function (c) { if (c && par[1].indexOf(c) < 0) par[1].push(c); });
+            });
+            r.dias = Math.max(r.dias, x[32] || 0); r.horas = Math.max(r.horas, x[33] || 0);
+            if (!r.turno) r.turno = x[34] || 0;
+            if (x[35]) r.coworking = true;
+          }
+          if (v3) {
+            r.planos.direto = Math.max(r.planos.direto, x[36] || 0);
+            r.planos.indireto = Math.max(r.planos.indireto, x[37] || 0);
+            String(x[38] || "").split("|").forEach(function (nm) { if (nm && r.planos.nomes.indexOf(nm) < 0 && r.planos.nomes.length < 3) r.planos.nomes.push(nm); });
+            if (x[39] && (!desdeN || x[39] < desdeN)) desdeN = x[39];
+            if (x[40]) r.planos.proprio = true;
+            if (x[41] && !r.acreditacao) r.acreditacao = x[41];
+          }
+          String(x[3] || x[2] || "").split(",").forEach(function (t) {
+            t = +t; if (!t || vistos[t]) return; vistos[t] = 1;
+            var inf = (idx.tipos || {})[t], cat = inf ? inf[1] : CAT_PADRAO[t] || "outro";
+            r.tipos.push({ cod: t, cat: cat, nome: NOME_COD[t] || NOME_CAT[cat] || (inf ? inf[0].charAt(0) + inf[0].slice(1).toLowerCase() : "Estabelecimento de saúde") });
+          });
+        });
+        r.lic = data(licN); r.atualizado = data(atuN);
+        if (v3) {
+          r.planos.desde = data(desdeN);
+          r.planos.total = r.planos.direto + r.planos.indireto;
+        }
+        if (v2) {
+          r.atend = { internacao: !!(atendB & 1), ambulatorial: !!(atendB & 2), sadt: !!(atendB & 4), urgencia: !!(atendB & 8), algum: atendB > 0 };
+          r.conv = { sus: !!(convB & 1), particular: !!(convB & 2), planos: !!(convB & 60), gratuito: !!(convB & 64), algum: convB > 0 };
+          r.servicos = serv.map(function (c) { return { cod: +c, nome: SERV[+c] || "" }; }).filter(function (x) { return x.nome; });
+          r.servProc = serv.some(function (c) { return SERV_PROC.indexOf(+c) >= 0; });
+          r.servExame = serv.some(function (c) { return SERV_EXAME.indexOf(+c) >= 0; });
+          r.atividades = ativ.map(function (c) { return { cod: c, nome: ATIV[c] || "" }; }).filter(function (x) { return x.nome; });
+          r.especialidades = esp.map(function (c) { return especialidade((idx.especialidades || {})[c]); }).filter(Boolean);
+          r.salaProc = r.salas.cir + r.salas.peq > 0;
+          r.medExternos = r.vinc.pj + r.vinc.aut + r.vinc.coop;
+          r.turnoNome = TURNO[r.turno] || "";
+          r.temAtiv = function (c) { return ativ.indexOf(c) >= 0; };
+        }
+        r.tipo = r.tipos[0] || { cod: 0, cat: "outro", nome: "Estabelecimento de saúde" };
+        var hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        if (r.lic) {
+          var d = new Date(r.lic + "T00:00:00"), dias = Math.round((d - hoje) / 864e5);
+          r.licDias = dias; r.licStatus = dias < 0 ? "vencida" : dias <= 60 ? "vencendo" : "valida";
+        } else r.licStatus = "sem_data";
+        if (r.atualizado) r.mesesSemAtualizar = Math.floor((hoje - new Date(r.atualizado + "T00:00:00")) / (30.44 * 864e5));
+        r.estrutura = r.tipos.some(function (t) { return ["clinica", "sadt", "hospital", "hospital_dia", "urgencia"].indexOf(t.cat) >= 0; });
+        r.licParcial = r.licTipo === 2;
+        for (var k in base) r[k] = base[k];
+        return r;
+      });
+    });
+  }
+  return { consultar: consultar };
+})();
+
+/* ============================================================
+   Consulta à dívida ativa da União (PGFN) direto nos arquivos .db do GitHub.
+   Lê só as páginas do SQLite necessárias (requisições HTTP Range de ~4 KB),
+   sem baixar o arquivo inteiro e sem bibliotecas externas.
+   ============================================================ */
+window.B4Y_PGFN = (function () {
+  "use strict";
+  // último CNPJ de cada parte (README do repositório, base 06/2026)
+  var FIM = [8021512000146, 14059786000127, 20466996000132, 25332946000186, 30221108000175, 34407448000146, 39806083000146, 46671135000180, 99999999000191];
+  // categoria de cada situacao_id (1..207): n negociada/parcelada, s suspensa/garantida, j na Justiça/protesto,
+  // p a caminho da Justiça, r parcelamento cancelado, c em cobrança
+  var CAT = "scnjjjscjjjjjjcnccpnscjccjcnssscpnjjjsnnnnnccjnnnsnnnjcrnnnnnnnnnnnrnnjjjsjjcjsjjpccnjjccjrrrnnnrcccjjsjssssscpcjjjssssssnnjjnjjssnnnssnnnssnnnnnnnnnnnnnnnnnnnnncpnnssrrcppnnnnnnnssnnnnncsccnssnncnnnsnnnccnp";
+  var ORIGEM = { 1: "FGTS", 2: "INSS", 3: "Tributos federais" };
+
+  function cfg() {
+    var c = (window.CONFIG && window.CONFIG.pgfn) || {};
+    return {
+      bases: c.bases || ["https://painel.back4you.com.br/", "https://raw.githubusercontent.com/back4youinteligenciatributaria/Dashboard/main/"],
+      arquivo: c.arquivo || "devedores_PGFN_PJ_202606_parte{N}de09.db",
+      timeout: c.timeout || 8000
+    };
+  }
+  function parte(n) { for (var i = 0; i < FIM.length; i++) if (n <= FIM[i]) return i + 1; return 0; }
+
+  /* ---------- consulta pública ---------- */
+  function consultar(cnpj) {
+    var n = Number(String(cnpj).replace(/\D/g, ""));
+    var k = parte(n);
+    if (!k) return Promise.reject(new Error("cnpj_fora_da_faixa"));
+    var nome = cfg().arquivo.replace("{N}", (k < 10 ? "0" : "") + k);
+    var c = cfg();
+    return window.B4Y_SQL.buscar(c.bases, nome, "divida", n, null, 1e9, c.timeout).then(function (linhas) {
+      var res = { total: 0, inscricoes: 0, origens: {}, cats: {}, linhas: linhas.length };
+      linhas.forEach(function (l) {
+        var reais = (l[4] || 0) / 100, cat = CAT.charAt((l[2] || 0) - 1) || "c", org = ORIGEM[l[1]] || "Outros";
+        res.total += reais; res.inscricoes += l[3] || 0;
+        res.origens[org] = (res.origens[org] || 0) + reais;
+        res.cats[cat] = (res.cats[cat] || 0) + reais;
+      });
+      return res;
+    });
+  }
+  return { consultar: consultar, parte: parte };
+})();
+
+</script>
+<script>
+/* ============================================================
+   DIAGNÓSTICO BACK4YOU — perguntas, ramificações e análise
+   ============================================================ */
+(function () {
+  "use strict";
+  var FAIXAS = [["ate20", "Até R$ 20 mil"], ["20a30", "De R$ 20 a 30 mil"], ["30a50", "De R$ 30 a 50 mil"], ["50a100", "De R$ 50 a 100 mil"], ["100a300", "De R$ 100 a 300 mil"], ["300mais", "Acima de R$ 300 mil"]];
+  var FAT = { ate20: [10000, 20000], "20a30": [20000, 30000], "30a50": [30000, 50000], "50a100": [50000, 100000], "100a300": [100000, 300000], "300mais": [300000, 500000] };
+  var MEIO = { ate20: 15000, "20a30": 25000, "30a50": 40000, "50a100": 75000, "100a300": 200000, "300mais": 400000 };
+  var ACIMA30 = ["30a50", "50a100", "100a300", "300mais"];
+  var MESES = { menos1: [3, 12], "1a3": [12, 36], "3a5": [36, 60], "5mais": [60, 60] };
+  var CUSTO = { ate20: 0.15, "20a40": 0.3, "40a60": 0.5, mais60: 0.65, naosei: 0.35 };
+  var NAT_SS = ["2232", "2240", "2259", "2267"];
+  var SAL_MIN = 1621; // salário mínimo 2026
+
+  var ATIV = [
+    ["consultas", "Consultas"], ["procedimentos", "Cirurgias e procedimentos"], ["exames", "Exames e diagnóstico por imagem"],
+    ["anestesia", "Anestesia"], ["plantoes", "Plantões em hospital"], ["tele", "Telemedicina"],
+    ["ensino", "Aulas, cursos ou palestras"], ["produtos", "Venda de produtos"], ["aluguel", "Aluguel de sala ou equipamento"]
+  ];
+  var ATIV_TXT = {}; ATIV.forEach(function (x) { ATIV_TXT[x[0]] = x[1]; });
+  // CNAEs compatíveis com cada atividade
+  var ATIV_CNAE = {
+    consultas: /^8630/, procedimentos: /^(8630501|8610)/, exames: /^(8630502|8640)/, anestesia: /^(8630501|8630599|8610)/,
+    plantoes: /^(8610|8630)/, tele: /^8630/, ensino: /^85/, produtos: /^(46|47)/, aluguel: /^(6810|7739)/
+  };
+  var PROC = ["procedimentos", "exames", "anestesia"];
+
+  /* ---------- contas ---------- */
+  function irCsll(R, e) {
+    var Q = 3 * R, bIR = 0.08 * e * Q + 0.32 * (1 - e) * Q, bCS = 0.12 * e * Q + 0.32 * (1 - e) * Q;
+    return (0.15 * bIR + 0.1 * Math.max(0, bIR - 60000) + 0.09 * bCS) / 3;
+  }
+  var ANEXO = {
+    III: [[180e3, .06, 0], [360e3, .112, 9360], [720e3, .135, 17640], [1.8e6, .16, 35640], [3.6e6, .21, 125640], [4.8e6, .33, 648000]],
+    V: [[180e3, .155, 0], [360e3, .18, 4500], [720e3, .195, 9900], [1.8e6, .205, 17100], [3.6e6, .23, 62100], [4.8e6, .305, 540000]]
+  };
+  function simples(R, anexo) { var r = R * 12, f = ANEXO[anexo].filter(function (x) { return r <= x[0]; })[0] || ANEXO[anexo][5]; return R * ((r * f[1] - f[2]) / r); }
+  function presumido(R, e, iss) { return irCsll(R, e) + R * 0.0365 + R * iss; }
+  function cnaeFmt(c) { c = String(c || ""); return c.length === 7 ? c.slice(0, 4) + "-" + c[4] + "/" + c.slice(5) : c; }
+  function acima(v) { var p = v >= 1e6 ? 1e5 : v >= 1e5 ? 1e4 : v >= 1e4 ? 1e3 : v >= 1e3 ? 100 : 10; return Math.floor(v / p) * p; }
+  function has(a, k, v) { return (a[k] || []).indexOf(v) >= 0; }
+
+  /* ---------- detalhes do CNES (só quando vieram na base) ---------- */
+  function lista(xs) { return xs.length > 1 ? xs.slice(0, -1).join(", ") + " e " + xs[xs.length - 1] : xs[0] || ""; }
+  function plural(n, um, varios) { return n + " " + (n === 1 ? um : varios); }
+  function cnesSalas(n) {
+    if (!n || !n.v2) return "";
+    var s = n.salas, xs = [];
+    if (s.cir) xs.push(plural(s.cir, "de cirurgia", "de cirurgia"));
+    if (s.peq) xs.push(plural(s.peq, "de pequena cirurgia", "de pequena cirurgia"));
+    if (s.rec) xs.push(plural(s.rec, "de recuperação", "de recuperação"));
+    if (s.apoio) xs.push(plural(s.apoio, "de curativo ou gesso", "de curativo ou gesso"));
+    if (s.obs) xs.push(plural(s.obs, "de observação", "de observação"));
+    if (s.cons) xs.push(plural(s.cons, "consultório", "consultórios"));
+    return lista(xs);
+  }
+  function cnesMedicos(n) {
+    if (!n || !n.v2) return "";
+    var v = n.vinc, xs = [];
+    if (v.socio) xs.push(plural(v.socio, "sócio", "sócios"));
+    if (v.pj) xs.push(v.pj + " PJ");
+    if (v.aut) xs.push(plural(v.aut, "autônomo", "autônomos"));
+    if (v.coop) xs.push(plural(v.coop, "cooperado", "cooperados"));
+    if (v.clt) xs.push(v.clt + " CLT");
+    return lista(xs);
+  }
+  function cnesConv(n) {
+    if (!n || !n.v2 || !n.conv.algum) return "";
+    var xs = [];
+    if (n.conv.particular) xs.push("particular");
+    if (n.conv.planos) xs.push("planos de saúde");
+    if (n.conv.sus) xs.push("SUS");
+    return lista(xs);
+  }
+  function ansPlanos(n) {
+    if (!n || !n.v3 || !n.planos.total) return "";
+    var p = n.planos, xs = [];
+    if (p.direto) xs.push("credenciada direto a " + plural(p.direto, "operadora", "operadoras"));
+    if (p.indireto && !p.direto) xs.push("atende " + plural(p.indireto, "operadora", "operadoras") + " por intercâmbio");
+    return xs.join(", ");
+  }
+  function cnesFunc(n) {
+    if (!n || !n.v2) return "";
+    if (n.turno === 6) return "24 horas";
+    if (n.dias) return plural(n.dias, "dia", "dias") + " por semana" + (n.horas ? ", " + n.horas + " h" : "");
+    return n.turnoNome || "";
+  }
+  // atividades que o CNES indica
+  function cnesAtiv(n) {
+    if (!n || !n.v2) return [];
+    var out = [];
+    if (n.temAtiv("001") || n.salas.cons) out.push("consultas");
+    if (n.salaProc || n.servProc) out.push("procedimentos");
+    if (n.temAtiv("002") || n.servExame || n.img > 0 || n.tipo.cat === "sadt") out.push("exames");
+    if (n.temAtiv("014") || n.servicos.some(function (x) { return x.cod === 160; })) out.push("tele");
+    return out;
+  }
+  function semSalaProc(n) { return n && n.encontrado && n.v2 && !n.desativado && !n.salaProc && !n.servProc && !n.estrutura && !n.img; }
+
+  /* ---------- leitura das respostas ---------- */
+  function perfil(a, c) {
+    var at = a.atividades || [];
+    var proc = at.some(function (x) { return PROC.indexOf(x) >= 0; });
+    var pts = 0;
+    if (a.equipe && a.equipe !== "nenhuma") pts++;
+    if (a.equipe === "4a10" || a.equipe === "mais10") pts++;
+    if (has(a, "terceiriza", "medicos") || has(a, "terceiriza", "apoio")) pts++;
+    if (a.custos && ["20a40", "40a60", "mais60"].indexOf(a.custos) >= 0) pts++;
+    if (a.local && a.local !== "terceiros") pts++;
+    if (a.quem && a.quem !== "socios") pts++;
+    var cn = c && c.cn, ce = c && c.emp;
+    if (cn && cn.encontrado && !cn.desativado) {
+      if (cn.estrutura || cn.img > 0 || cn.salaProc || cn.servProc) pts++;
+      if (cn.enf > 0 || cn.medExternos > 0 || (ce && ce.socios && cn.med > ce.socios)) pts++;
+    }
+    var pessoal = a.quem === "socios" && !has(a, "terceiriza", "medicos") && (a.equipe === "nenhuma" || a.equipe === "1a3");
+    var modo = !a.quem ? null : pessoal ? (pts >= 3 ? "misto" : "pessoal") : (pts >= 2 ? "empresarial" : "indefinido");
+    var pct = null;
+    if (proc) {
+      if (at.indexOf("consultas") < 0 && at.indexOf("plantoes") < 0 && at.indexOf("tele") < 0) pct = [0.8, 0.95];
+      else pct = a.mix === "mais70" ? [0.7, 0.9] : a.mix === "menos40" ? [0.15, 0.4] : [0.4, 0.7];
+    }
+    var emp = c && c.emp;
+    var soc = a.sociedade || "";
+    var faltaCnae = [];
+    if (emp && emp.cnae) {
+      var codes = [emp.cnae].concat((emp.cnaesSec || []).map(function (x) { return x.cod; }));
+      at.forEach(function (x) { if (ATIV_CNAE[x] && !codes.some(function (cd) { return ATIV_CNAE[x].test(cd); })) faltaCnae.push(x); });
+    }
+    return { proc: proc, pts: pts, modo: modo, pct: pct, ss: soc === "ss", ltda: soc === "ltda" || soc === "slu", faltaCnae: faltaCnae,
+      empresarial: modo === "empresarial" || modo === "misto", pessoal: modo === "pessoal" || modo === "misto" };
+  }
+  function mesesPassado(a, emp) {
+    if (emp && emp.regimes && emp.regimes.length) {
+      var n = emp.regimes.filter(function (r) { return /PRESUMIDO/.test(r.forma); }).length;
+      if (n) return [Math.min(60, n * 12), Math.min(60, n * 12)];
+    }
+    return MESES[a.tempo] || [0, 0];
+  }
+
+  /* ---------- oportunidades e simulação ---------- */
+  function calcular(a, c) {
+    var P = perfil(a, c), fr = FAT[a.fat] || [0, 0], F = MEIO[a.fat] || 0, alto = a.fat === "300mais";
+    var out = { P: P, F: F, opps: [], anoLo: 0, anoHi: 0, retroLo: 0, retroHi: 0 };
+    // A) redução de IR/CSLL (equiparação)
+    var podeEq = P.proc && P.empresarial && a.equip !== "sim";
+    if (podeEq && (a.regime === "presumido" || a.regime === "naosei")) {
+      var lo = irCsll(fr[0], 0) - irCsll(fr[0], P.pct[0]), hi = irCsll(fr[1], 0) - irCsll(fr[1], P.pct[1]);
+      if (alto) hi = lo;
+      var m = mesesPassado(a, c.emp);
+      out.eq = { lo: lo, hi: hi, ss: P.ss, m: m };
+      out.anoLo += lo * 12; out.anoHi += hi * 12;
+      if (!P.ss) { out.retroLo = lo * m[0]; out.retroHi = hi * m[1]; }
+    }
+    // B) Simples x Presumido
+    if (a.regime === "simples" && a.fat && a.fat !== "ate20") {
+      var e = podeEq && !P.ss ? P.pct : [0, 0];
+      var anHi = a.fatorr === "sim" ? "III" : "V", anLo = a.fatorr === "nao" ? "V" : "III";
+      var sHi = simples(fr[alto ? 0 : 1], anHi) - presumido(fr[alto ? 0 : 1], e[1], 0.02);
+      var sLo = Math.max(0, simples(fr[0], anLo) - presumido(fr[0], e[0], 0.05));
+      if (sHi > 0) { out.simples = { lo: sLo, hi: sHi, comEq: e[1] > 0, anexo: a.fatorr }; out.anoLo += sLo * 12; out.anoHi += sHi * 12; }
+    }
+    // C) ISS fixo
+    if (P.pessoal && a.iss !== "fixo" && a.regime !== "simples" && a.fat) {
+      out.iss = { lo: fr[0] * 0.02, hi: fr[alto ? 0 : 1] * 0.05 };
+    }
+    // D) distribuição de lucros (Lei 15.270/2025)
+    if (F) {
+      var carga = a.regime === "simples" ? simples(F, a.fatorr === "nao" ? "V" : "III") / F : a.equip === "sim" ? 0.095 : 0.1433;
+      var custo = CUSTO[a.custos] != null ? CUSTO[a.custos] : 0.35, n = +a.socios || 1;
+      var L = Math.max(0, F * (1 - carga) * (1 - custo)), pm = L / n, pa = 12 * L / n;
+      var ret = function (x) { return x > 50000 ? 0.1 * 12 * L : 0; };
+      var aliq = pa > 600000 ? Math.min(10, pa / 60000 - 10) : 0;
+      out.dist = { carga: carga, custo: custo, n: n, L: L, pm: pm, pa: pa, retAno: ret(pa), retTri: ret(3 * pm), retMes: ret(pm), aliq: aliq, irpfm: pa * aliq / 100 };
+      out.dist.evitavel = out.dist.retAno - out.dist.retMes;
+      var folha = { nenhuma: 0, "1a3": 2 * 3500, "4a10": 6 * 3800, mais10: 14 * 3800 }[a.equipe] || 0;
+      out.painel = { F: F, imp: F * carga, folha: (folha + SAL_MIN * n) * 1.21, custo: F * custo, n: n, carga: carga };
+    }
+    return out;
+  }
+
+  /* ---------- painel de exemplo ---------- */
+  var MESN = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  var MESL = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  function painel(a, c, K, H) {
+    var p = K.painel; if (!p) return null;
+    var hoje = new Date(), comp = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1), vy = hoje.getFullYear(), vm = hoje.getMonth();
+    function venc(d) { return ("0" + d).slice(-2) + "/" + ("0" + (vm + 1)).slice(-2) + "/" + vy; }
+    var fatores = [0.82, 0.93, 1.12, 0.96, 1.07, 1];
+    var meses = fatores.map(function (f, i) { var d = new Date(comp.getFullYear(), comp.getMonth() - 5 + i, 1); return { f: f, n: MESN[d.getMonth()] + "/" + String(d.getFullYear()).slice(2) }; });
+    function spark(cor) { return '<div class="spark" style="--c:' + cor + '55;--cc:' + cor + '">' + meses.map(function (m, i) { return '<i class="' + (i === 5 ? "cur" : "") + '" style="height:' + Math.round(m.f * 60) + '%"></i>'; }).join("") + "</div>"; }
+    var res = p.F - p.imp - p.custo, compTxt = MESL[comp.getMonth()] + " de " + comp.getFullYear();
+    var nome = c.emp ? H.esc(c.emp.fantasia || c.emp.razao) : "Sua clínica";
+    var guias = [];
+    if (a.regime === "simples") {
+      guias.push(["DAS (Simples Nacional)", "sobre o faturamento de " + compTxt, p.imp, venc(20)]);
+    } else {
+      var ir = irCsll(p.F, a.equip === "sim" ? 0.8 : 0);
+      guias.push(["IRPJ e CSLL", "parcela do trimestre" + (a.equip === "sim" ? ", com a base reduzida" : ""), ir, "fim do trimestre"]);
+      guias.push(["COFINS", "3% do faturamento", p.F * 0.03, venc(25)]);
+      guias.push(["PIS", "0,65% do faturamento", p.F * 0.0065, venc(25)]);
+      guias.push(["ISS", a.iss === "fixo" ? "valor fixo por profissional" : "sobre as notas do mês", a.iss === "fixo" ? null : p.F * 0.02, venc(10)]);
+    }
+    guias.push(["INSS e IRRF da folha", "pró-labore e salários", p.folha * 0.17, venc(20)]);
+    if (a.equipe && a.equipe !== "nenhuma") guias.push(["FGTS", "8% dos salários", (p.folha / 1.21 - SAL_MIN * p.n) * 0.08, venc(20)]);
+    var totalG = guias.reduce(function (s, g) { return s + (g[2] || 0); }, 0);
+    var tabG = '<div class="pn-tbl"><div class="t">Total a recolher · ' + compTxt + "<b>" + H.brl(totalG) + "</b></div>" +
+      guias.map(function (g) { return '<div class="r"><div><b>' + g[0] + "</b><span>" + g[1] + "</span></div><div style=\"text-align:right\"><strong>" + (g[2] == null ? "fixo" : H.brl(g[2])) + "</strong><br><em>" + g[3] + "</em></div></div>"; }).join("") + "</div>";
+    var socios = [];
+    var pesos = { 1: [1], 2: [0.56, 0.44], 3: [0.42, 0.33, 0.25], 4: [0.34, 0.27, 0.22, 0.17], 5: [0.3, 0.24, 0.2, 0.15, 0.11] }[Math.min(5, p.n)] || [1];
+    pesos.forEach(function (w, i) { socios.push(["Dr(a). Sócio(a) " + (i + 1), p.F * w, Math.round(40 * w * (p.F / 40000)) + 8]); });
+    var inicio = '<div class="pn-view" data-v="inicio"><div class="kpis">' +
+      '<div class="kpi hi"><small>Faturamento</small><b>' + H.brl(p.F) + "</b><span>" + meses[5].n + "</span>" + spark("#0F8C85") + "</div>" +
+      '<div class="kpi"><small>Impostos</small><b>' + H.brl(p.imp) + "</b><span>" + Math.round(p.carga * 1000) / 10 + "% do faturamento</span>" + spark("#E8892E") + "</div>" +
+      '<div class="kpi"><small>Folha e encargos</small><b>' + H.brl(p.folha) + "</b><span>com pró-labore</span>" + spark("#7B5EA7") + "</div>" +
+      '<div class="kpi"><small>Resultado</small><b>' + H.brl(res) + "</b><span>" + Math.round((res / p.F) * 100) + "% do faturamento</span>" + spark("#6E8B3D") + "</div>" +
+      "</div>" + tabG + "</div>";
+    var centros = '<div class="pn-view" data-v="centros" style="display:none"><div class="pn-tbl"><div class="t">Resultado por médico<b>' + H.brl(p.F) + "</b></div>" +
+      socios.map(function (s) { return '<div class="r"><div><b>' + s[0] + "</b><span>" + s[2] + " notas · " + Math.round((s[1] / p.F) * 100) + "% do faturamento</span></div><strong>" + H.brl(s[1]) + "</strong></div>"; }).join("") + "</div></div>";
+    var dre = '<div class="pn-view" data-v="resultado" style="display:none"><div class="pn-tbl"><div class="t">Demonstração do resultado · ' + compTxt + "<b>" + H.brl(res) + "</b></div>" +
+      [["(+) Receita bruta", p.F], ["(−) Impostos", p.imp], ["(−) Folha e encargos", p.folha], ["(−) Outras despesas", Math.max(0, p.custo - p.folha)], ["(=) Resultado", res]].map(function (r) {
+        return '<div class="r"><div><b>' + r[0] + "</b></div><div style=\"text-align:right\"><strong>" + H.brl(r[1]) + "</strong><br><em>" + Math.round((r[1] / p.F) * 1000) / 10 + "%</em></div></div>";
+      }).join("") + "</div></div>";
+    var equipe = '<div class="pn-view" data-v="equipe" style="display:none"><div class="kpis">' +
+      '<div class="kpi"><small>Folha</small><b>' + H.brl(p.folha) + "</b><span>salários e pró-labore</span></div>" +
+      '<div class="kpi"><small>Pessoas</small><b>' + ({ nenhuma: 0, "1a3": 2, "4a10": 6, mais10: 14 }[a.equipe] || 0) + " + " + p.n + "</b><span>equipe + sócios</span></div></div>" +
+      '<div class="pn-tbl"><div class="t">Guias da folha</div><div class="r"><div><b>INSS, IRRF e FGTS</b><span>calculados e enviados com antecedência</span></div><strong>' + H.brl(p.folha * 0.21) + "</strong></div></div></div>";
+    var html = '<div class="pn-top"><span>back<span style="color:#3FA680">4</span>you</span><small>exemplo</small></div>' +
+      '<div class="pn-head"><b>Painel <i>integrado</i></b><span>' + nome + '</span><br><span class="upd">atualizado hoje</span></div>' +
+      '<div class="pn-tabs"><button class="on" data-v="inicio">Início</button><button data-v="centros">Centros de custo</button><button data-v="resultado">Resultado</button><button data-v="equipe">Equipe</button></div>' +
+      '<div class="pn-body">' + inicio + centros + dre + equipe + '<p class="pn-note">Exemplo com valores estimados pelas suas respostas. No painel real, os números vêm da contabilidade da sua empresa.</p></div>';
+    return { title: "Como deveria ser: o seu painel", intro: "É assim que um cliente Back4you acompanha a empresa: <b>impostos, guias, resultado e equipe</b> num lugar só. Toque nas abas.", html: html };
+  }
+
+  /* ---------- etapas ---------- */
+  function pj(a) { return a.pj && a.pj !== "pf"; }
+  var D = {
+    id: "diagnostico-completo",
+    intro: {
+      kicker: "Diagnóstico gratuito · 5 minutos",
+      title: "Sua PJ médica está <b>no melhor formato</b>?",
+      html: '<p class="lead">Um check-up completo da sua empresa. <b>As perguntas mudam conforme as suas respostas.</b></p>' +
+        '<div class="pills"><span>Impostos e benefícios</span><span>Receita e CNES</span><span>Dívida ativa</span><span>Lucro e retiradas</span><span>Acompanhamento</span></div>' +
+        "<p>Com o CNPJ, <b>cruzamos seus dados com a Receita, a PGFN e o CNES</b> na hora. No fim, você vê <b>valores em reais</b> e uma prévia de como deveria ser o seu painel.</p>",
+      cta: "Começar diagnóstico",
+      time: "Até 9 etapas curtas, conforme o seu caso"
+    },
+    introChat: [
+      "Oi, doutor(a)! Aqui é da <b>Back4you</b>, consultoria tributária de médicos para médicos.",
+      "Vou te fazer também umas <b>perguntas rápidas</b> e, no fim, te mostro um <b>diagnóstico completo</b> da sua empresa, de ponta a ponta. <b>Sem custo escondido, sem pegadinha.</b> Completo para você.",
+      '<small class="tag">Privacidade · LGPD</small>Seus dados são tratados conforme a <b>Lei Geral de Proteção de Dados (LGPD)</b>. <a href="' +
+        ((window.CONFIG && window.CONFIG.privacidadeUrl) || "#") + '" target="_blank" rel="noopener">Política de privacidade</a>'
+    ],
+    preview: { title: "Veja o diagnóstico completo: gratuito e instantâneo!", sub: "É grátis. Leva 20 segundos.", cta: "Ver diagnóstico completo" },
+
+    steps: [
+      {
+        id: "empresa", label: "Sua empresa",
+        bot: "Vamos começar pela <b>sua empresa</b>.",
+        fields: [
+          { id: "pj", label: "Como você atende hoje?", options: [["pf", "Só como pessoa física"], ["pj", "Tenho empresa (CNPJ)"], ["ambos", "Tenho CNPJ e também atendo como PF"]] },
+          { id: "_cnpj", type: "cnpj", label: "Sua empresa", hint: "Checamos todos os cadastros na Receita Federal. Pode colocar <b>só uma parte do nome</b>.", when: pj },
+          { id: "regime", label: "Regime tributário", hint: "Se não souber, tudo bem.", when: pj, options: [["simples", "Simples Nacional"], ["presumido", "Lucro Presumido"], ["real", "Lucro Real"], ["naosei", "Não sei"]] },
+          { id: "sociedade", label: "Tipo de empresa", hint: "Veja o final do nome no cartão CNPJ.", when: pj, options: [["ltda", "LTDA"], ["slu", "Sócio único (SLU)"], ["ss", "Sociedade simples (SS)"], ["naosei", "Não sei"]] },
+          { id: "fat", label: "Faturamento médio por mês", when: pj, options: FAIXAS },
+          { id: "tempo", label: "Tempo de empresa", when: pj, options: [["menos1", "Menos de 1 ano"], ["1a3", "1 a 3 anos"], ["3a5", "3 a 5 anos"], ["5mais", "Mais de 5 anos"]] }
+        ],
+        exit: function (a) { return a.pj === "pf" ? "pf" : null; }
+      },
+      {
+        id: "rotina", label: "Seu dia a dia",
+        bot: function (a, c) { return "<p>Agora, <b>o que a empresa faz</b> no dia a dia.</p>" + (c.emp ? "<p class=\"small\">No CNPJ: " + c.H.esc(c.emp.cnaeDesc) + (c.emp.cnaesSec.length ? " + " + c.emp.cnaesSec.length + " atividade(s) secundária(s)" : "") + ".</p>" : ""); },
+        fields: [
+          { id: "atividades", type: "multi", label: "Marque tudo o que você faz", hint: "Mesmo o que não estiver no CNPJ.", options: ATIV },
+          { id: "principal", label: "O que mais gera faturamento?", when: function (a) { return (a.atividades || []).length > 1; },
+            options: function (a) { return (a.atividades || []).map(function (x) { return [x, ATIV_TXT[x]]; }); } },
+          { id: "mix", label: "Quanto do faturamento vem de procedimentos e exames?", when: function (a) { var at = a.atividades || []; return at.some(function (x) { return PROC.indexOf(x) >= 0; }) && (at.indexOf("consultas") >= 0 || at.indexOf("plantoes") >= 0 || at.indexOf("tele") >= 0); },
+            options: [["mais70", "Mais de 70%"], ["40a70", "Entre 40% e 70%"], ["menos40", "Menos de 40%"]] },
+          { id: "quem", label: "Quem faz os atendimentos?", options: [["socios", "Só os sócios, pessoalmente"], ["socios_mais", "Os sócios e outros profissionais contratados"], ["terceiros", "Principalmente profissionais contratados"]] },
+          { id: "local", label: "Onde você atende?", options: [["terceiros", "Hospitais e clínicas de terceiros"], ["propria", "Clínica ou consultório próprio"], ["ambos", "Nos dois"]] }
+        ]
+      },
+      {
+        id: "estrutura", label: "Estrutura e gastos",
+        bot: "<p>Agora, a <b>estrutura</b> por trás dos atendimentos.</p>",
+        tip: { title: "Por que perguntamos", html: "Equipe, terceirizados e custos mostram se a empresa tem <b>estrutura de empresa</b> ou se é <b>atuação pessoal</b> dos sócios. Cada caso abre um caminho de economia diferente." },
+        fields: [
+          { id: "equipe", label: "Quantos funcionários CLT a empresa tem?", options: [["nenhuma", "Nenhum"], ["1a3", "1 a 3"], ["4a10", "4 a 10"], ["mais10", "Mais de 10"]] },
+          { id: "terceiriza", type: "multi", exclusive: "nada", label: "O que a empresa contrata de fora?", options: [["medicos", "Outros médicos (PJ)"], ["apoio", "Enfermagem ou instrumentação"], ["servicos", "Limpeza, TI, marketing"], ["nada", "Nada"]] },
+          { id: "custos", label: "Quanto do faturamento vai para custos?", hint: "Aluguel, equipe, materiais, sistemas.", options: [["ate20", "Até 20%"], ["20a40", "20% a 40%"], ["40a60", "40% a 60%"], ["mais60", "Mais de 60%"], ["naosei", "Não sei"]] },
+          { id: "licenca", label: "A licença sanitária da clínica está em dia?", when: function (a) { return a.local === "propria" || a.local === "ambos"; }, options: [["sim", "Sim"], ["nao", "Não"], ["naosei", "Não sei"]] }
+        ]
+      },
+      {
+        id: "procedimentos", label: "Procedimentos e impostos",
+        when: function (a, c) { var P = perfil(a, c); return P.proc && P.empresarial && a.regime !== "real"; },
+        bot: "<p>Sua empresa tem <b>estrutura</b> e faz <b>procedimentos</b>. Isso pode reduzir bastante o IR e a CSLL.</p>",
+        tip: { title: "Você sabia?", html: "Na redução para procedimentos, a base do IR cai de <b>32% para 8%</b> e a da CSLL, de <b>32% para 12%</b>." },
+        fields: [
+          { id: "equip", label: "A empresa já paga IR e CSLL com essa redução?", hint: "Também chamada de equiparação hospitalar.", options: [["sim", "Sim"], ["nao", "Não"], ["naosei", "Não sei"]] },
+          { id: "notas", extra: true, label: "Como as notas fiscais descrevem o serviço?", options: [["detalham", "Detalham (cirurgia, exame, procedimento)"], ["generico", "Só \"serviços médicos\""], ["naosei", "Não sei"]] }
+        ]
+      },
+      {
+        id: "iss", label: "ISS",
+        when: function (a, c) { var P = perfil(a, c); return P.pessoal && a.regime !== "simples"; },
+        bot: "<p>Pelo que você contou, os atendimentos são <b>pessoais dos sócios</b>. Isso pode dar direito ao <b>ISS fixo</b>.</p>",
+        tip: { title: "Você sabia?", html: "Em muitas cidades, sociedades de médicos pagam ISS <b>fixo por profissional</b>, em vez de <b>2% a 5%</b> de cada nota." },
+        fields: [
+          { id: "mesmaprof", label: "Todos os sócios são médicos?", options: [["sim", "Sim"], ["nao", "Não"]] },
+          { id: "iss", label: "Como a empresa paga o ISS hoje?", hint: "Na nota, ISS em % é sobre o faturamento.", options: [["percentual", "Uma % de cada nota"], ["fixo", "Valor fixo por profissional"], ["naosei", "Não sei"]] }
+        ]
+      },
+      {
+        id: "simples", label: "Simples Nacional",
+        when: function (a) { return a.regime === "simples"; },
+        bot: "<p>Sua empresa está no <b>Simples</b>. Uma pergunta muda muito a conta.</p>",
+        tip: { title: "Fator R", html: "Se pró-labore e salários passam de <b>28% do faturamento</b>, a alíquota inicial cai de <b>15,5% para 6%</b>." },
+        fields: [
+          { id: "fatorr", extra: true, label: "Pró-labore + salários passam de 28% do faturamento?", hint: "É o Fator R do Simples: define se a alíquota começa em 6% ou em 15,5%.", options: [["sim", "Sim"], ["nao", "Não"], ["naosei", "Não sei"]] }
+        ]
+      },
+      {
+        id: "regularidade", label: "Regularidade",
+        bot: function (a, c) {
+          return "<p>Agora, a <b>situação fiscal</b> da empresa.</p>";
+        },
+        fields: [
+          { id: "divida", label: "Tem imposto em atraso ou dívida com a Receita?", options: [["nao", "Não"], ["sim", "Sim"], ["naosei", "Não sei"]] },
+          { id: "notificacao", label: "Recebeu notificação da Receita ou prefeitura no último ano?", options: [["nao", "Não"], ["sim", "Sim"], ["naosei", "Não sei"]] },
+          { id: "certidao", extra: true, label: "Consegue tirar certidão negativa (CND) quando precisa?", options: [["sim", "Sim, sem problema"], ["asvezes", "Às vezes dá problema"], ["nao", "Não consigo"], ["naosei", "Não sei"]] },
+          { id: "guias", label: "Quando chegam as guias de imposto?", options: [["antecedencia", "Mais de 10 dias antes"], ["poucos", "Poucos dias antes"], ["nodia", "No dia ou depois"], ["euemito", "Eu mesmo(a) emito"]] }
+        ]
+      },
+      {
+        id: "retiradas", label: "Lucro e retiradas",
+        bot: "<p>Agora, como o <b>dinheiro chega até você</b>.</p>",
+        tip: { title: "Mudou em 2026", html: "Lucro acima de <b>R$ 50 mil/mês</b> por sócio tem <b>10% de IR retido</b> (Lei 15.270/2025)." },
+        fields: [
+          { id: "socios", label: "Quantos sócios recebem lucros?", options: [["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5 ou mais"]] },
+          { id: "prolabore", label: "Tem pró-labore com valor definido?", options: [["fixo", "Sim, fixo todo mês"], ["quando", "Não, retiro quando preciso"], ["naosei", "Não sei o que é"]] },
+          { id: "distribuicao", label: "A distribuição de lucros é planejada?", options: [["planejada", "Sim, com calendário"], ["semplan", "Distribuo sem planejamento"], ["naofaco", "Não distribuo"], ["naosei", "Não sei a diferença"]] },
+          { id: "lucro", label: "Sabe quanto a empresa lucrou no mês passado?", options: [["exato", "Sei o valor exato"], ["ideia", "Tenho uma ideia"], ["naosei", "Não sei"]] }
+        ]
+      },
+      {
+        id: "acompanhamento", label: "Acompanhamento",
+        bot: "<p>Última etapa! Como a contabilidade <b>acompanha você</b>.</p>",
+        fields: [
+          { id: "conversa", label: "Com que frequência revisam os números com você?", options: [["mensal", "Todo mês"], ["trimestral", "A cada trimestre"], ["anual", "Uma vez por ano"], ["soproblema", "Só quando tem problema"], ["nunca", "Nunca"]] },
+          { id: "acesso", label: "Você vê guias, notas, impostos e folha quando quer?", options: [["painel", "Sim, num painel atualizado"], ["pedido", "Só quando peço"], ["nao", "Não tenho acesso"]] },
+          { id: "relatorio", extra: true, label: "Recebe o resultado (lucro) da empresa todo mês?", options: [["mensal", "Sim"], ["asvezes", "Às vezes"], ["nao", "Não"]] },
+          { id: "centro", extra: true, label: "Sabe o resultado por médico, serviço ou convênio?", options: [["sim", "Sim"], ["parcial", "Em parte"], ["nao", "Não"]] },
+          { id: "resposta", extra: true, label: "Pediu um ajuste ou tirou uma dúvida. Quanto tempo leva?", options: [["mesmodia", "No mesmo dia"], ["dias", "Alguns dias"], ["demora", "Demora muito"]] },
+          { id: "estrategia", label: "Já te apresentaram formas legais de pagar menos imposto?", options: [["aplicamos", "Sim, e aplicamos"], ["naoaplicamos", "Sim, mas não aplicamos"], ["nunca", "Nunca"]] },
+          { id: "reforma", extra: true, label: "Te explicaram o impacto da reforma tributária?", options: [["sim", "Sim"], ["ouvi", "Só ouvi falar"], ["nao", "Não"]] }
+        ]
+      }
+    ],
+
+    exits: {
+      pf: {
+        rota: "nutrir", cta: "Quero entender",
+        bot: "<p>Este diagnóstico é para quem já tem empresa.</p><p>Uma dica: só como pessoa física, o IR chega a <b>27,5%</b>. Deixe seu contato e mostramos como fica com uma PJ.</p>",
+        result: function () {
+          return { tone: "warn", badge: "Próximo passo: sua PJ", title: "Com uma PJ, <b>seus impostos podem cair bastante</b>",
+            html: "<p>Na pessoa física, o IR chega a <b>27,5%</b>. Com a empresa certa desde o início, a conta costuma ser bem menor.</p>",
+            strengths: ["Empresa aberta <b>no formato certo</b> para a sua atuação", "Consultoria tributária <b>de médicos para médicos</b>", "Pró-labore e lucros <b>planejados</b>"],
+            ctaText: "Quer saber <b>quanto você pagaria</b> com uma PJ?", waText: "Olá! Atendo como pessoa física e quero entender como abrir minha PJ." };
+        }
+      }
+    },
+
+    /* ---------- dados da Receita → respostas ---------- */
+    applyCnpj: function (e, H) {
+      var ans = {}, notes = {};
+      if (e.natCod === "2062") { ans.sociedade = "ltda"; notes.sociedade = "Receita: " + (e.natDesc || "Sociedade Empresária Limitada") + "."; }
+      else if (e.natCod === "2305") { ans.sociedade = "slu"; notes.sociedade = "Receita: " + e.natDesc + "."; }
+      else if (NAT_SS.indexOf(e.natCod) >= 0) { ans.sociedade = "ss"; notes.sociedade = "Receita: " + e.natDesc + "."; }
+      var ult = (e.regimes || [])[0];
+      if (e.simples === true) { ans.regime = "simples"; notes.regime = "Receita: empresa no Simples Nacional."; }
+      else if (ult && /PRESUMIDO/.test(ult.forma)) { ans.regime = "presumido"; notes.regime = "Receita: Lucro Presumido na última declaração (" + ult.ano + ")."; }
+      else if (ult && /REAL/.test(ult.forma)) { ans.regime = "real"; notes.regime = "Receita: Lucro Real na última declaração (" + ult.ano + ")."; }
+      else if (e.simples === false) notes.regime = "Receita: fora do Simples. Presumido ou Real?";
+      var n = H.anos(e.abertura);
+      if (n != null) { ans.tempo = n < 1 ? "menos1" : n < 3 ? "1a3" : n < 5 ? "3a5" : "5mais"; notes.tempo = "Aberta em " + H.dataBR(e.abertura) + "."; }
+      if (e.socios) { ans.socios = String(Math.min(5, e.socios)); notes.socios = "Receita: " + e.socios + (e.socios === 1 ? " sócio" : " sócios") + " no cadastro."; }
+      return { answers: ans, notes: notes };
+    },
+    applyPgfn: function (r, H) {
+      if (!r.total) return { answers: { divida: "nao" }, notes: { divida: "PGFN: nada na dívida ativa da União." } };
+      return { answers: { divida: "sim" }, notes: { divida: "PGFN: dívida ativa de " + H.brlK(r.total) + "." } };
+    },
+
+    applyCnes: function (r, H, e) {
+      var ans = {}, notes = {};
+      if (!r.encontrado) return { notes: { local: "CNES: nenhum estabelecimento cadastrado neste CNPJ." } };
+      if (r.coworking) notes.local = "CNES: consultório em coworking.";
+      else if (!r.desativado) {
+        ans.local = "propria";
+        notes.local = "CNES: cadastro como " + r.tipo.nome.toLowerCase() + (r.unidades > 1 ? " (" + r.unidades + " unidades)" : "") + ". Se também atende em outros lugares, marque \"Nos dois\".";
+      }
+      if (r.lic) {
+        ans.licenca = r.licStatus === "vencida" ? "nao" : "sim";
+        notes.licenca = "CNES: licença " + (r.licStatus === "vencida" ? "vencida em " : r.licStatus === "vencendo" ? "vence em " : "válida até ") + H.dataBR(r.lic) + (r.licParcial ? ", parcial (com restrições)" : "") + ".";
+      } else notes.licenca = "CNES: sem data de validade da licença.";
+      var soc = e && e.socios;
+      if (r.med && soc && r.med > soc) {
+        ans.quem = "socios_mais";
+        notes.quem = "CNES: " + r.med + " médicos cadastrados. Na Receita, " + soc + (soc === 1 ? " sócio." : " sócios.");
+      }
+      if (r.v2 && r.medExternos > 0) {
+        ans.terceiriza = ["medicos"];
+        notes.terceiriza = "CNES: " + plural(r.medExternos, "médico contratado", "médicos contratados") + " como PJ, autônomo ou cooperado. Marque o que mais houver.";
+      }
+      var at = cnesAtiv(r);
+      if (at.length) {
+        ans.atividades = at;
+        notes.atividades = "CNES: " + lista(at.map(function (x) { return { consultas: "consultas", procedimentos: "procedimentos", exames: "exames", tele: "telemedicina" }[x]; })) + ". Marque o que faltar.";
+      }
+      if (r.prof) notes.equipe = "CNES: " + r.prof + (r.prof === 1 ? " profissional de saúde cadastrado" : " profissionais de saúde cadastrados") + ". Conte também a equipe administrativa.";
+      return { answers: ans, notes: notes };
+    },
+
+    /* ---------- avisos ao vivo, logo abaixo da empresa ---------- */
+    liveCnpj: function (a, c) {
+      var e = c.emp, H = c.H, out = [];
+      if (!e) return out;
+      if (e.situacao && !/ativa/i.test(e.situacao)) out.push({ id: "rf_sit", mais: true, level: "bad", tag: "Receita", html: "CNPJ com situação <b>" + H.esc(e.situacao.toLowerCase()) + "</b>" + (e.motivo && !/sem motivo/i.test(e.motivo) ? " (" + H.esc(e.motivo.toLowerCase()) + ")" : "") + ". Isso trava notas e certidões." });
+      if (e.mei) out.push({ id: "rf_mei", mais: true, level: "bad", tag: "Receita", html: "A empresa aparece como <b>MEI</b>. Atividade médica não pode ser MEI." });
+      if (e.cnae && !/^86/.test(e.cnae)) out.push({ id: "rf_cnae", mais: true, level: "warn", tag: "Receita", html: "A atividade principal <b>não é da área da saúde</b> (" + H.esc(e.cnaeDesc) + ")." });
+      if (NAT_SS.indexOf(e.natCod) >= 0) out.push({ id: "rf_ss", level: "", tag: "Receita", html: "<b>Sociedade simples</b>. Combina com atuação pessoal dos sócios (ISS fixo). Com estrutura de empresa, pode perder benefícios." });
+      if (e.regimes && e.regimes.length) {
+        var anosP = e.regimes.filter(function (r) { return /PRESUMIDO/.test(r.forma); }).map(function (r) { return r.ano; }).sort();
+        if (anosP.length) out.push({ id: "rf_pres", level: "", tag: "Receita", html: "Lucro Presumido declarado em <b>" + anosP.join(", ") + "</b>." });
+      }
+      var g = c.pg;
+      if (g && g.total > 0) {
+        var ab = (g.cats.c || 0) + (g.cats.p || 0) + (g.cats.j || 0) + (g.cats.r || 0);
+        out.push({ id: "pgfn", mais: true, level: ab > 0 ? "bad" : "warn", tag: "Dívida ativa (PGFN)", html: "Identificamos <b>débitos na PGFN acima de " + H.brlK(acima(g.total)) + "</b>, em " + g.inscricoes + (g.inscricoes === 1 ? " inscrição" : " inscrições") +
+          (ab > 0 ? ", parte em aberto." : ", negociados ou suspensos.") + " Dá para negociar." });
+      } else if (g) {
+        out.push({ id: "pgfn0", level: "good", tag: "Dívida ativa (PGFN)", html: "<b>Nenhuma dívida ativa</b> na União. Ótimo!" });
+      }
+      var n = c.cn;
+      if (n && n.encontrado) {
+        var eq = [];
+        if (n.prof) eq.push("<b>" + n.prof + (n.prof === 1 ? " profissional" : " profissionais") + "</b>" + (n.med && n.med < n.prof ? " (" + n.med + (n.med === 1 ? " médico" : " médicos") + ")" : n.med && n.med === n.prof ? (n.med === 1 ? ", médico" : ", todos médicos") : ""));
+        if (n.equip) eq.push("<b>" + n.equip + (n.equip === 1 ? " equipamento" : " equipamentos") + "</b>");
+        var det = [];
+        var sl = cnesSalas(n), md = cnesMedicos(n), cv = cnesConv(n), fu = cnesFunc(n);
+        if (sl) det.push("<b>Salas:</b> " + sl);
+        if (md) det.push("<b>Médicos:</b> " + md + (n.especialidades.length ? " (" + H.esc(n.especialidades.slice(0, 3).join(", ")) + ")" : ""));
+        else if (n.v2 && n.especialidades.length) det.push("<b>Especialidades:</b> " + H.esc(n.especialidades.slice(0, 3).join(", ")));
+        if (cv) det.push("<b>Atende:</b> " + cv);
+        if (n.v2 && n.servicos.length) det.push("<b>Serviços:</b> " + lista(n.servicos.slice(0, 3).map(function (x) { return x.nome; })));
+        if (fu) det.push("<b>Funciona:</b> " + fu);
+        if (n.v2 && n.coworking) det.push("<b>Em coworking</b>");
+        var pl = ansPlanos(n);
+        if (pl) det.push("<b>Planos (ANS):</b> " + pl + (n.planos.nomes.length ? " (" + H.esc(n.planos.nomes.join(", ")) + ")" : ""));
+        out.push({ id: "cnes", mais: n.desativado, level: n.desativado ? "warn" : "", tag: "CNES", html: (n.desativado ? "Cadastro <b>desativado</b>. " : "") + "<b>" + H.esc(n.tipo.nome) + "</b>" +
+          (n.unidades > 1 ? " (" + n.unidades + " unidades)" : "") + (eq.length ? " com " + eq.join(" e ") : "") + "." +
+          (det.length ? '<span class="cn-det">' + det.join("<br>") + "</span>" : "") });
+        if (n.licStatus === "vencida") out.push({ id: "lic_venc", mais: true, level: "bad", tag: "Licença sanitária", html: "No CNES, a licença <b>venceu em " + H.dataBR(n.lic) + "</b>. Vale conferir e manter os prazos sob controle." });
+        else if (n.licStatus === "vencendo") out.push({ id: "lic_vence", mais: true, level: "warn", tag: "Licença sanitária", html: "No CNES, a licença <b>vence em " + H.dataBR(n.lic) + "</b>. Hora de preparar a renovação." });
+        if (n.acreditacao) out.push({ id: "acred", level: "good", tag: "Acreditação", html: "Estabelecimento <b>acreditado</b> (" + H.esc(n.acreditacao) + ")." });
+        if (n.licParcial && n.licStatus !== "vencida" && n.licStatus !== "vencendo") out.push({ id: "lic_parc", mais: true, level: "warn", tag: "Licença sanitária", html: "No CNES, a licença é <b>parcial, com restrições</b>. Vale saber o que falta para a licença total." });
+      } else if (n) {
+        out.push({ id: "cnes0", level: "", tag: "CNES", html: "Não achei <b>cadastro no CNES</b> para este CNPJ. Quem atende em espaço próprio precisa ter." });
+      }
+      return out;
+    },
+
+    /* ---------- o que já percebemos (entre as etapas) ---------- */
+    insights: function (prev, a, c) {
+      var P = perfil(a, c), out = [];
+      if (prev === "estrutura") {
+        if (P.modo === "empresarial") out.push({ level: "", tag: "Seu perfil", html: "<b>Estrutura de empresa</b>: equipe, terceiros e custos." + (P.proc ? " Com procedimentos, <b>combina com a redução de IR e CSLL</b>." : "") });
+        if (P.modo === "pessoal") out.push({ level: "", tag: "Seu perfil", html: "<b>Atuação pessoal dos sócios</b>. Esse perfil <b>combina com o ISS fixo</b>." });
+        if (P.modo === "misto") out.push({ level: "", tag: "Seu perfil", html: "Perfil <b>misto</b>: os sócios atendem pessoalmente, mas com estrutura. Vou olhar os dois caminhos." });
+      }
+      return out;
+    },
+
+    /* ---------- migalhas: achados que aparecem no meio da conversa ---------- */
+    migalhas: function (a, c) {
+      var H = c.H, P = perfil(a, c), f = c.feito || {}, out = [], cn = c.cn, CN = cn && cn.encontrado ? cn : null, g = c.pg;
+      function m(id, level, tag, html, mais) { out.push({ id: id, level: level, tag: tag, html: html, mais: mais !== false }); }
+      // empresa
+      if (f.empresa) {
+        if (a.pj === "ambos") m("pf", "warn", "Anotei", "Atender também como <b>pessoa física</b> pode custar até <b>27,5% de IR</b> nessa parte.");
+        if (a.regime === "simples" && ACIMA30.indexOf(a.fat) >= 0) m("simples30", "warn", "Anotei", "No <b>Simples acima de R$ 30 mil por mês</b>, outro regime costuma sair mais barato.");
+        if (a.regime === "naosei") m("regime", "warn", "Anotei", "Sem saber o regime, fica difícil saber <b>se você paga o imposto certo</b>.");
+      }
+      // dia a dia
+      if (f.rotina) {
+        if (P.faltaCnae.length) m("cnae", "warn", "Algo não bate", "O CNPJ <b>não tem atividade (CNAE)</b> para: " + P.faltaCnae.map(function (x) { return ATIV_TXT[x].toLowerCase(); }).join(", ") + ".");
+        if (P.proc && semSalaProc(cn)) m("sala", "warn", "Algo não bate", "Você faz procedimentos, mas o <b>CNES não mostra sala</b> de cirurgia ou de pequena cirurgia.");
+        if (CN && CN.v2 && a.quem === "socios" && CN.medExternos > 0) m("medext", "warn", "Algo não bate", "Você disse que só os sócios atendem, mas o CNES tem <b>" + plural(CN.medExternos, "médico contratado", "médicos contratados") + "</b>.");
+      }
+      // estrutura
+      if (f.estrutura) {
+        if (P.ss && P.modo === "empresarial") m("ss_emp", "bad", "Algo não bate", "<b>Sociedade simples com estrutura de empresa.</b> Esse formato pode perder a redução de IR e CSLL.");
+        if (P.ltda && P.modo === "pessoal") m("ltda_pes", "warn", "Algo não bate", "<b>LTDA com atuação pessoal.</b> Em muitas cidades, o ISS fixo é negado para LTDA.");
+        if (CN && CN.licStatus === "vencida" && a.licenca === "sim") m("lic_nb", "warn", "Algo não bate", "Você marcou a licença em dia, mas <b>no CNES ela venceu em " + H.dataBR(CN.lic) + "</b>.");
+        if (CN && CN.estrutura && P.modo === "pessoal") m("cnes_estr", "warn", "Algo não bate", "No CNES, a empresa aparece como <b>" + H.esc(CN.tipo.nome.toLowerCase()) + "</b>" + (CN.prof ? ", com " + CN.prof + " profissionais" : "") + ". Vale conferir se a atuação é só pessoal.");
+        if (cn && !cn.encontrado && (a.local === "propria" || a.local === "ambos")) m("sem_cnes", "warn", "CNES", "Você atende em espaço próprio, mas <b>não achei cadastro no CNES</b>.");
+        if (!CN && (a.licenca === "nao" || a.licenca === "naosei")) m("lic", "warn", "Anotei", "Licença sanitária <b>sem controle</b>. Ela pesa na redução de IR e CSLL.");
+      }
+      // dinheiro
+      var K = calcular(a, c);
+      if (f.procedimentos && K.eq) m("eq", "good", "Oportunidade", "Pela redução de IR e CSLL, pode haver <b>até " + H.brlK(K.eq.hi * 12) + " por ano</b>" +
+        (K.retroHi > 0 ? " e <b>até " + H.brlK(K.retroHi) + "</b> para recuperar do passado" : "") + (K.eq.ss ? ", depois de ajustar a estrutura" : "") + ".");
+      if (f.procedimentos && a.equip === "sim" && a.notas === "generico") m("notas", "warn", "Atenção", "Nota com só \"serviços médicos\" <b>enfraquece a redução</b> que você já usa.");
+      if (f.iss && K.iss) m("iss", "warn", "Oportunidade", "O ISS pode estar custando <b>até " + H.brlK(K.iss.hi * 12) + " por ano</b>. Com o seu perfil, vale avaliar o ISS fixo.");
+      if (f.iss && P.ss && a.iss === "percentual" && a.mesmaprof === "sim") m("iss_ss", "bad", "Algo não bate", "<b>Sociedade de médicos, atuação pessoal e ISS em %.</b> Esse é o perfil típico do ISS fixo.");
+      if (f.simples && K.simples) m("simples", "warn", "Oportunidade", "Fora do Simples, a conta pode cair <b>até " + H.brlK(K.simples.hi * 12) + " por ano</b>.");
+      // regularidade
+      if (f.regularidade) {
+        if (a.certidao === "nao" || a.certidao === "asvezes") m("cnd", "bad", "Atenção", "Sem certidão em dia, a empresa pode <b>perder contratos com hospitais e convênios</b>.");
+        if (a.notificacao === "sim") m("notif", "bad", "Atenção", "Notificação tem <b>prazo para responder</b>. Se passar, a multa pode chegar a <b>75%</b>.");
+        if (a.divida === "sim" && !(g && g.total > 0)) m("divida", "bad", "Anotei", "Imposto em atraso gera <b>multa e juros todo mês</b>. Dá para negociar.");
+        if (a.guias === "nodia") m("guias", "warn", "Anotei", "Guia chegando <b>no dia</b> aumenta o risco de <b>multa de até 20%</b>.");
+      }
+      // retiradas
+      if (f.retiradas) {
+        var d = K.dist;
+        if (d && d.retMes > 0) m("ret_mes", "bad", "Atenção", "Com esse lucro, há <b>IR retido todo mês</b>: cerca de " + H.brlK(d.retMes) + " por ano.");
+        else if (d && d.evitavel > 0 && a.distribuicao !== "planejada") m("ret", "warn", "Oportunidade", "Distribuindo o lucro de uma vez, <b>" + H.brlK(d.retAno) + " por ano</b> ficariam retidos na fonte. Com planejamento, dá para evitar.");
+        if (a.prolabore !== "fixo") m("prolab", "warn", "Anotei", "Retirar \"quando precisa\", sem pró-labore definido, <b>mistura as contas</b> e esconde o lucro real.");
+        if (d && d.aliq > 0) m("irpfm", "warn", "Atenção", "Com essa renda, você pode entrar no <b>IRPF mínimo</b>, de até 10%.");
+        if (a.lucro === "naosei") m("lucro", "warn", "Anotei", "Não saber o <b>lucro do mês</b> é o primeiro ponto a resolver.");
+      }
+      // acompanhamento
+      if (f.acompanhamento) {
+        var pontos = [["anual", "soproblema", "nunca"].indexOf(a.conversa) >= 0, a.acesso === "nao", a.relatorio === "nao", a.centro === "nao",
+          a.resposta === "demora", a.estrategia === "nunca" || a.estrategia === "naoaplicamos", a.reforma === "nao"].filter(Boolean).length;
+        if (pontos >= 2) m("acomp", pontos >= 4 ? "bad" : "warn", "Acompanhamento", "Achei <b>" + pontos + " pontos</b> para melhorar no acompanhamento da sua contabilidade.");
+        else if (pontos === 0) m("acomp_ok", "good", "Acompanhamento", "Seu acompanhamento está <b>bem estruturado</b>. Bom sinal!", false);
+      }
+      return out;
+    },
+
+    /* ---------- análise completa ---------- */
+    analisar: function (a, c) {
+      var H = c.H, K = calcular(a, c), P = K.P, e = c.emp, g = c.pg;
+      var al = [], pen = { imp: 0, cad: 0, reg: 0, ret: 0, ges: 0 };
+      function add(p, v, level, title, text) { if (p) pen[p] += v; if (title) al.push({ level: level, title: title, text: text }); }
+      var pgAberto = g ? (g.cats.c || 0) + (g.cats.p || 0) + (g.cats.j || 0) + (g.cats.r || 0) : 0;
+
+      // cadastro e estrutura
+      if (e && e.situacao && !/ativa/i.test(e.situacao)) add("cad", 45, "bad", "CNPJ " + H.esc(e.situacao.toLowerCase()) + " na Receita", (e.motivo && !/sem motivo/i.test(e.motivo) ? "Motivo: <b>" + H.esc(e.motivo.toLowerCase()) + "</b>. " : "") + "Trava notas e certidões. <b>Regularize antes de tudo.</b>");
+      if (e && e.mei) add("cad", 40, "bad", "Empresa como MEI", "Atividade médica <b>não pode ser MEI</b>. É preciso mudar o enquadramento.");
+      if (e && e.cnae && !/^86/.test(e.cnae)) add("cad", 15, "warn", "Atividade principal fora da saúde", "O CNAE principal é <b>" + H.esc(e.cnaeDesc) + "</b>. Isso afeta benefícios e o ISS.");
+      if (P.faltaCnae.length) add("cad", Math.min(30, 10 * P.faltaCnae.length), "warn", "CNPJ sem atividade para o que você faz", "Faltam CNAEs para: <b>" + P.faltaCnae.map(function (x) { return ATIV_TXT[x]; }).join(", ") + "</b>. Nota sem CNAE correspondente pode gerar <b>autuação</b> e travar benefícios.");
+      if (P.ss && P.modo === "empresarial") add("cad", 30, "bad", "Sociedade simples com estrutura de empresa", "Esse formato <b>perde a redução de IR e CSLL</b> e pode ter o ISS fixo questionado. Vale ajustar a estrutura.");
+      if (P.ss && a.mesmaprof === "nao") add("cad", 15, "warn", "Sociedade simples com sócios de outras profissões", "O ISS fixo costuma exigir <b>sócios da mesma profissão</b>.");
+      if (P.ltda && P.modo === "pessoal" && a.iss !== "fixo") add("cad", 5, "info", "LTDA com atuação pessoal", "Em muitas cidades, o ISS fixo é negado para LTDA. <b>Vale comparar os formatos.</b>");
+      if (a.sociedade === "naosei") add("cad", 10, "info", "Tipo de empresa desconhecido", "Está no <b>cartão CNPJ</b>, em \"natureza jurídica\".");
+      var cn = c.cn, CN = cn && cn.encontrado ? cn : null, organizado = "Mantenha tudo <b>organizado, arquivado e com prazos controlados</b>, com alguém te ajudando a gerir.";
+      if (CN && CN.licStatus === "vencida") add("cad", 20, "bad", "Licença sanitária vencida no CNES", "Validade: <b>" + H.dataBR(CN.lic) + "</b>." + (a.licenca === "sim" ? " Se já renovou, <b>atualize o CNES</b>." : "") + " A licença pesa na redução de IR e CSLL. " + organizado);
+      else if (CN && CN.licStatus === "vencendo") add("cad", 10, "warn", "Licença sanitária vence em breve", "Validade no CNES: <b>" + H.dataBR(CN.lic) + "</b>. " + organizado);
+      else if (CN && CN.licParcial) add("cad", 10, "warn", "Licença sanitária com restrições", "No CNES, a licença é <b>parcial</b>. A redução de IR e CSLL exige cumprir as normas sanitárias, então vale saber o que falta. " + organizado);
+      else if (a.licenca === "nao" || a.licenca === "naosei") add("cad", 15, "warn", "Licença sanitária sem controle", "Ela faz parte das exigências da redução de IR e CSLL. Mantenha tudo <b>organizado, arquivado e com prazos controlados</b>, com alguém te ajudando a gerir.");
+      if (cn && !cn.encontrado && (a.local === "propria" || a.local === "ambos")) add("cad", 15, "warn", "Sem cadastro no CNES", "Quem atende em espaço próprio precisa estar no <b>CNES</b>. O cadastro também ajuda a <b>comprovar a estrutura</b> da empresa.");
+      if (CN && CN.desativado) add("cad", 15, "warn", "Cadastro no CNES desativado", "Se a clínica está funcionando, <b>reative o cadastro</b>. Ele comprova a estrutura da empresa.");
+      else if (CN && CN.mesesSemAtualizar >= 12) add("cad", 5, "info", "CNES sem atualização desde " + H.dataBR(CN.atualizado).slice(3), "Equipe, equipamentos e licença <b>precisam estar em dia</b> no cadastro.");
+      if (P.proc && semSalaProc(CN)) add("cad", 10, "warn", "Procedimentos sem sala no CNES", "O CNES <b>não mostra sala</b> de cirurgia ou de pequena cirurgia. O cadastro precisa refletir a estrutura: isso ajuda a sustentar a redução de IR e CSLL.");
+      else if (CN && !CN.v2 && !CN.desativado && P.proc && P.empresarial && !CN.estrutura && CN.tipo.cat === "consultorio") add("cad", 5, "info", "No CNES, a empresa está como consultório", "Se você faz procedimentos com estrutura, o <b>cadastro deve mostrar isso</b>. Ajuda a sustentar a redução de IR e CSLL.");
+      if (CN && CN.v2 && CN.coworking && P.proc) add("cad", 5, "info", "Consultório em coworking", "Confira se a <b>licença sanitária</b> do espaço cobre os procedimentos que você faz.");
+      if (a.notas === "generico") add("cad", 15, "warn", "Notas com descrição genérica", "\"Serviços médicos\" <b>não mostra o procedimento</b>. Isso enfraquece a redução de IR e CSLL.");
+      if (a.notas === "naosei") add("cad", 5);
+      if (a.pj === "ambos") add("imp", 5, "info", "Você também atende como PF", "Na pessoa física, o IR chega a <b>27,5%</b>. Vale concentrar na empresa.");
+
+      // impostos
+      if (K.eq) add("imp", 35, "bad", K.eq.ss ? "Estrutura de empresa sem a redução de IR e CSLL" : "Imposto pago a mais em IR e CSLL", K.eq.ss ? "Com a estrutura ajustada, a redução pode valer <b>até " + H.brlK(K.eq.hi * 12) + " por ano</b>." : "Seu perfil permite a <b>base reduzida de hospital</b>, e ela não está sendo usada.");
+      if (a.equip === "naosei") add("imp", 10, "warn", "Você não sabe se usa a redução", "Dá para conferir nas <b>guias de IR e CSLL</b>. A gente olha para você.");
+      if (K.simples) add("imp", 30, "bad", "Simples pode estar custando caro", "Com o seu faturamento, <b>outro regime pode sair mais barato</b>.");
+      else if (a.regime === "simples" && ACIMA30.indexOf(a.fat) >= 0) add("imp", 15, "warn", "Simples acima de R$ 30 mil/mês", "Nessa faixa, <b>vale simular outro regime</b>.");
+      if (a.fatorr === "naosei") add("imp", 5, "info", "Fator R desconhecido", "Ele define se o Simples cobra <b>6% ou 15,5%</b> na primeira faixa.");
+      if (K.iss) add("imp", 20, "warn", "ISS pode estar alto", "Seu perfil é de <b>atuação pessoal</b>. Em muitas cidades, isso permite ISS fixo.");
+      if (a.iss === "naosei") add("imp", 5, "info", "Forma de pagar o ISS desconhecida", "Olhe uma nota: <b>ISS em %</b> é sobre o faturamento.");
+      if (a.regime === "naosei") add("imp", 15, "warn", "Regime tributário desconhecido", "É ele que define <b>quanto você paga</b>. Deveria estar claro para você.");
+      if (a.estrategia === "nunca") add("imp", 15, "bad", "Ninguém te apresentou formas de pagar menos", "Existem <b>caminhos legais</b>. Vale uma segunda opinião.");
+      if (a.estrategia === "naoaplicamos") add("imp", 10, "warn", "Apresentaram, mas não aplicaram", "Vale saber o motivo. <b>Às vezes falta um ajuste simples.</b>");
+      if (a.reforma === "nao" || a.reforma === "ouvi") add("imp", 5, "info", "Sem orientação sobre a reforma", "Ela <b>já começou em 2026</b> e muda os impostos da saúde até 2033.");
+
+      // regularidade
+      if (g && g.total > 0) add("reg", pgAberto > 0 ? 45 : 15, pgAberto > 0 ? "bad" : "warn", "Dívida ativa na União: " + H.brlK(g.total), "<b>" + g.inscricoes + " inscrições</b>" + (pgAberto > 0 ? ", " + H.brlK(pgAberto) + " em aberto" : ", negociadas ou suspensas") + ". Regularizar libera <b>certidões</b> e evita <b>bloqueios</b>. Fonte: PGFN (base 06/2026).");
+      else if (a.divida === "sim") add("reg", 35, "bad", "Imposto em atraso", "Gera <b>multa e juros todo mês</b>. Dá para negociar.");
+      if (a.divida === "naosei") add("reg", 15, "warn", "Você não sabe se há dívidas", "Isso deveria ser <b>acompanhado e informado a você</b>.");
+      if (a.notificacao === "sim") add("reg", 25, "bad", "Notificação recebida", "Tem <b>prazo para responder</b>. Se passar, a multa pode chegar a <b>75%</b>.");
+      if (a.notificacao === "naosei") add("reg", 10, "warn", "Notificações sem acompanhamento", "Muitas chegam só pela <b>caixa postal da Receita (e-CAC)</b>.");
+      if (a.certidao === "nao") add("reg", 25, "bad", "Sem certidão negativa", "Pode travar <b>contratos, convênios e financiamentos</b>.");
+      if (a.certidao === "asvezes") add("reg", 10, "warn", "Certidão com problemas", "Pendências <b>aparecem e somem</b>. Vale limpar a situação.");
+      if (a.certidao === "naosei") add("reg", 5);
+      if (CN && CN.v2 && CN.conv.sus && (["nao", "asvezes", "naosei"].indexOf(a.certidao) >= 0 || pgAberto > 0)) add("reg", 5, "warn", "Atende SUS com pendências", "Contratos com o SUS exigem <b>certidões em dia</b>.");
+      if (a.guias === "poucos" || a.guias === "nodia") add("reg", a.guias === "nodia" ? 20 : 10, "warn", "Guias em cima do prazo", "Aumenta o risco de <b>atraso, multa (até 20%) e juros</b>.");
+      if (a.guias === "euemito") add("reg", 10, "info", "Você emite as próprias guias", "Toma seu tempo e <b>aumenta o risco de erro</b>.");
+
+      // retiradas
+      var d = K.dist;
+      if (a.prolabore !== "fixo") add("ret", a.prolabore === "naosei" ? 35 : 30, "warn", "Retiradas sem pró-labore", "Tirar \"quando precisa\" <b>mistura as contas</b> e esconde o lucro real.");
+      if (d && d.retMes > 0) add("ret", 15, "bad", "Retenção de IR todo mês", "Cada sócio recebe mais de <b>R$ 50 mil/mês</b>. Vale planejar valores e datas.");
+      else if (a.distribuicao === "semplan" || a.distribuicao === "naosei") add("ret", a.distribuicao === "naosei" ? 25 : 20, "warn", "Lucro distribuído sem plano", "Passou de <b>R$ 50 mil no mês</b>, <b>10% ficam retidos</b>. Um calendário evita isso.");
+      if (a.distribuicao === "naofaco") add("ret", 10);
+      if (d && d.aliq > 0) add("ret", 10, "warn", "Você pode entrar no IRPF mínimo", "Renda acima de <b>R$ 600 mil/ano</b> tem alíquota mínima de até <b>10%</b>.");
+      if (a.lucro === "naosei") add("ret", 25, "warn", "Lucro do mês desconhecido", "É o número mais importante. <b>Deveria chegar até você todo mês.</b>");
+      if (a.lucro === "ideia") add("ret", 10);
+
+      // acompanhamento
+      var conv = { trimestral: 10, anual: 25, soproblema: 35, nunca: 45 }[a.conversa] || 0;
+      if (conv) add("ges", conv, conv >= 25 ? "warn" : "info", "Números revisados " + ({ trimestral: "só a cada trimestre", anual: "só uma vez por ano", soproblema: "só quando há problema", nunca: "nunca" })[a.conversa], "O ideal é <b>uma conversa por mês</b> sobre resultado, impostos e retiradas.");
+      if (a.acesso === "nao") add("ges", 30, "warn", "Sem acesso às suas informações", "Guias, notas, impostos e folha deveriam estar <b>num painel, a qualquer hora</b>.");
+      if (a.acesso === "pedido") add("ges", 15, "info", "Informação só quando você pede", "Com um painel, você vê <b>tudo na hora</b>.");
+      if (a.relatorio === "nao") add("ges", 25, "warn", "Sem resultado mensal", "Você deveria saber <b>quanto sobrou</b> todo mês.");
+      if (a.relatorio === "asvezes") add("ges", 10);
+      if (a.centro === "nao" && ((+a.socios || 1) > 1 || (a.atividades || []).length > 1)) add("ges", 15, "info", "Sem resultado por médico ou serviço", "Um serviço no prejuízo pode estar <b>sendo pago por outro</b>.");
+      if (a.centro === "parcial") add("ges", 5);
+      var nOps = CN && CN.v3 ? CN.planos.total : 0;
+      if (CN && ((CN.v2 && CN.conv.planos) || nOps) && a.centro !== "sim") add("ges", nOps >= 3 ? 5 : 0, "info", nOps >= 3 ? "Atende " + nOps + " operadoras de planos" : "Atende planos de saúde",
+        (nOps >= 3 ? "Com várias operadoras, <b>glosas e prazos de pagamento</b> variam. " : "") + "Com o resultado <b>por convênio</b>, você vê quem paga melhor e quem atrasa.");
+      if (a.resposta === "demora") add("ges", 25, "warn", "Ajustes e dúvidas demoram", "Decisões não podem esperar. <b>O ideal é responder no mesmo dia.</b>");
+      if (a.resposta === "dias") add("ges", 10);
+
+      function nota(v) { return Math.max(5, Math.min(100, 100 - v)); }
+      var pillars = [
+        { nome: "Impostos e benefícios", v: nota(pen.imp) }, { nome: "Cadastro e estrutura", v: nota(pen.cad) },
+        { nome: "Regularidade", v: nota(pen.reg) }, { nome: "Lucro e retiradas", v: nota(pen.ret) }, { nome: "Acompanhamento", v: nota(pen.ges) }
+      ];
+      var score = Math.round(pillars.reduce(function (s, p) { return s + p.v; }, 0) / pillars.length);
+      var ord = { bad: 0, warn: 1, info: 2 };
+      al.sort(function (x, y) { return ord[x.level] - ord[y.level]; });
+
+      var R = { score: score, pillars: pillars, alerts: al };
+      if (score >= 75) { R.tone = "ok"; R.badge = "Bem encaminhada"; R.title = "Sua empresa está <b>bem encaminhada</b>"; R.html = "<p>Ainda há ajustes que podem <b>virar economia</b>. Veja abaixo.</p>"; }
+      else if (score >= 50) { R.tone = "warn"; R.badge = "Pontos a ajustar"; R.title = "Achamos <b>" + al.length + " pontos</b> para ajustar"; R.html = "<p>A base existe. Os ajustes abaixo trazem <b>economia e segurança</b>.</p>"; }
+      else { R.tone = "bad"; R.badge = "Precisa de atenção"; R.title = "Sua empresa <b>precisa de atenção</b>"; R.html = "<p>Vários pontos aparecem juntos. <b>Vale olhar a empresa inteira</b>, com calma.</p>"; }
+
+      // oportunidades em reais
+      var fmtF = function (lo, hi, f) { return a.fat === "300mais" ? "A partir de " + f(lo) : (lo > 0 && Math.round(lo) !== Math.round(hi) ? f(lo) + " a " + f(hi) : "Até " + f(hi)); };
+      var opps = [];
+      if (K.eq) opps.push({
+        title: K.eq.ss ? "Redução de IR e CSLL (depois de ajustar a estrutura)" : "Redução de IR e CSLL para procedimentos",
+        html: "Base do IR de <b>32% para 8%</b> e da CSLL de <b>32% para 12%</b> sobre a parte de procedimentos.",
+        estimate: [{ label: "Economia por mês", value: fmtF(K.eq.lo, K.eq.hi, H.brl) }].concat(K.eq.ss ? [{ label: "Economia por ano", value: fmtF(K.eq.lo * 12, K.eq.hi * 12, H.brlK) }] : [{ label: "Pode voltar (até 5 anos)", value: fmtF(K.retroLo, K.retroHi, H.brlK) }]),
+        note: e && e.regimes && e.regimes.length ? "Passado calculado com os anos em que a empresa declarou Lucro Presumido à Receita." : "Recuperação corrigida pela Selic, respeitando o prazo de 5 anos."
+      });
+      if (K.simples) opps.push({
+        title: "Sair do Simples" + (K.simples.comEq ? " com a redução para procedimentos" : ""),
+        html: "Comparação do Simples (Anexo " + (a.fatorr === "sim" ? "III" : a.fatorr === "nao" ? "V" : "III ou V") + ") com o Lucro Presumido" + (K.simples.comEq ? " + redução" : "") + ".",
+        estimate: [{ label: "Diferença por mês", value: fmtF(K.simples.lo, K.simples.hi, H.brl) }, { label: "Por ano", value: fmtF(K.simples.lo * 12, K.simples.hi * 12, H.brlK) }],
+        note: "Depende do <b>ISS da sua cidade</b>. Não inclui INSS sobre pró-labore."
+      });
+      if (K.iss) opps.push({
+        title: "ISS fixo por profissional",
+        html: "Hoje o ISS sai de <b>2% a 5%</b> de cada nota. Com ISS fixo, vira um valor por médico." + (P.ltda ? " Para LTDA, costuma exigir <b>ajuste na estrutura</b>." : ""),
+        estimate: [{ label: "ISS pago hoje por ano", value: fmtF(K.iss.lo * 12, K.iss.hi * 12, H.brlK) }],
+        note: "Valor e regras do ISS fixo mudam de cidade para cidade."
+      });
+      R.opps = opps;
+      R.oportunidadeAno = K.anoHi;
+
+      // destaque
+      var row = [];
+      if (K.retroHi > 0) row.push({ label: "Pode voltar ao caixa", value: "até " + H.brlK(K.retroHi) });
+      if (K.iss) row.push({ label: "ISS pago hoje", value: "até " + H.brlK(K.iss.hi * 12) + "/ano" });
+      if (g && g.total > 0) row.push({ label: "Dívida ativa (PGFN)", value: H.brlK(g.total) });
+      if (K.anoHi > 0) R.highlight = { label: "Oportunidades encontradas", value: (a.fat === "300mais" ? "A partir de " + H.brlK(K.anoLo) : "Até " + H.brlK(K.anoHi)) + " por ano", sub: "em impostos que podem <b>deixar de ser pagos</b>", row: row };
+      else if (g && g.total > 0) R.highlight = { label: "Dívida ativa encontrada na PGFN", value: H.brlK(g.total), sub: "Negociar pode <b>reduzir juros e multas</b>.", row: row.filter(function (r) { return !/PGFN/.test(r.label); }) };
+      else if (K.iss) R.highlight = { label: "ISS que você paga hoje (estimado)", value: "Até " + H.brlK(K.iss.hi * 12) + " por ano", sub: "Com ISS fixo, esse valor pode <b>cair bastante</b>." };
+      else if (d && d.evitavel > 0 && a.distribuicao !== "planejada") R.highlight = { label: "Distribuindo o lucro todo mês", value: "Até " + H.brlK(d.evitavel) + " por ano", sub: "deixam de ficar <b>retidos na fonte</b>" };
+      else if (K.F) R.highlight = { label: "Sua empresa paga, por ano, cerca de", value: H.brlK(K.F * 12 * 0.1) + " a " + H.brlK(K.F * 12 * 0.17), sub: "em impostos. <b>Cada 1% a menos = " + H.brlK(K.F * 12 * 0.01) + " por ano.</b>" };
+
+      // Receita + CNES
+      var cnesRows = [];
+      if (CN) {
+        var det = [CN.prof ? CN.prof + (CN.prof === 1 ? " profissional" : " profissionais") : "", CN.equip ? CN.equip + (CN.equip === 1 ? " equipamento" : " equipamentos") : ""].filter(Boolean).join(" · ");
+        cnesRows.push(["CNES", H.esc(CN.tipo.nome) + (CN.unidades > 1 ? " · " + CN.unidades + " unidades" : "") + (CN.desativado ? " · desativado" : "") + (det ? "<br><span class=\"small\">" + det + "</span>" : ""), CN.desativado ? "warn" : "ok"]);
+        cnesRows.push(["Licença sanitária (CNES)", (CN.lic ? (CN.licStatus === "vencida" ? "Venceu em " : "Válida até ") + H.dataBR(CN.lic) : "Sem data no cadastro") + (CN.licParcial ? "<br><span class=\"small\">parcial, com restrições</span>" : ""),
+          CN.licParcial && CN.licStatus !== "vencida" ? "warn" : { vencida: "bad", vencendo: "warn", valida: "ok", sem_data: "" }[CN.licStatus]]);
+        var sl2 = cnesSalas(CN), md2 = cnesMedicos(CN), cv2 = cnesConv(CN), fu2 = cnesFunc(CN);
+        if (CN.v2) cnesRows.push(["Salas (CNES)", sl2 || "Nenhuma informada", sl2 ? (CN.salaProc ? "ok" : "") : P.proc ? "warn" : ""]);
+        if (md2 || (CN.v2 && CN.especialidades.length)) cnesRows.push(["Médicos (CNES)", (md2 || plural(CN.med, "médico", "médicos")) + (CN.especialidades.length ? "<br><span class=\"small\">" + H.esc(CN.especialidades.slice(0, 4).join(", ")) + "</span>" : ""), ""]);
+        if (cv2) cnesRows.push(["Atende (CNES)", cv2, ""]);
+        if (CN.v2 && CN.servicos.length) cnesRows.push(["Serviços (CNES)", lista(CN.servicos.slice(0, 4).map(function (x) { return x.nome; })), ""]);
+        var pl2 = ansPlanos(CN);
+        if (CN.v3) cnesRows.push(["Planos de saúde (ANS)", pl2 ? pl2.charAt(0).toUpperCase() + pl2.slice(1) + (CN.planos.nomes.length ? "<br><span class=\"small\">" + H.esc(CN.planos.nomes.join(", ")) + (CN.planos.desde ? " · desde " + H.dataBR(CN.planos.desde).slice(6) : "") + "</span>" : "") + (CN.planos.proprio ? "<br><span class=\"small\">rede própria de operadora</span>" : "") : "Nenhum vínculo ativo", ""]);
+        if (CN.acreditacao) cnesRows.push(["Acreditação (ANS)", H.esc(CN.acreditacao), "ok"]);
+        if (fu2 || CN.coworking) cnesRows.push(["Funcionamento (CNES)", [fu2, CN.coworking ? "em coworking" : ""].filter(Boolean).join(" · "), ""]);
+      } else if (cn) {
+        cnesRows.push(["CNES", "Sem cadastro", a.local === "propria" || a.local === "ambos" ? "warn" : ""]);
+      }
+      if (e && e.parcial) {
+        R.receita = [["Empresa", H.esc(e.razao), ""], ["CNPJ", H.maskCnpj(e.cnpj), ""],
+          ["Dívida ativa (PGFN)", g ? (g.total ? H.brlK(g.total) + " · " + g.inscricoes + " inscrições" : "Nenhuma") : "—", g ? (g.total ? (pgAberto > 0 ? "bad" : "warn") : "ok") : ""],
+          ["Demais dados", "A Receita não respondeu agora", "warn"]].concat(cnesRows);
+      } else if (e) {
+        var cnaeOk = !P.faltaCnae.length;
+        var natCls = P.ss && P.modo === "empresarial" ? "bad" : P.ltda && P.modo === "pessoal" ? "warn" : "ok";
+        var ult = (e.regimes || [])[0];
+        R.receita = [
+          ["Natureza jurídica", H.esc(e.natDesc || "—"), natCls],
+          ["Atividade principal", H.esc(cnaeFmt(e.cnae)) + "<br><span class=\"small\">" + H.esc(e.cnaeDesc) + "</span>", /^86/.test(e.cnae) ? "ok" : "warn"],
+          ["Atividades secundárias", String(e.cnaesSec.length), ""],
+          ["CNAEs x o que você faz", cnaeOk ? "Tudo coberto" : "Faltam: " + P.faltaCnae.map(function (x) { return ATIV_TXT[x]; }).join(", "), cnaeOk ? "ok" : "bad"],
+          ["Simples Nacional", e.simples === true ? "Sim" : e.simples === false ? "Não" : "—", ""],
+          ["Última declaração", ult ? H.esc(ult.forma.toLowerCase()) + " (" + ult.ano + ")" : "—", ""],
+          ["Situação", H.esc(e.situacao || "—") + (e.motivo && !/sem motivo/i.test(e.motivo) && !/ativa/i.test(e.situacao) ? "<br><span class=\"small\">" + H.esc(e.motivo.toLowerCase()) + "</span>" : ""), /ativa/i.test(e.situacao) ? "ok" : "bad"],
+          ["Aberta em", H.dataBR(e.abertura) || "—", ""],
+          ["Sócios no cadastro", String(e.socios || "—"), ""],
+          ["Dívida ativa (PGFN)", g ? (g.total ? H.brlK(g.total) + " · " + g.inscricoes + " inscrições" : "Nenhuma") : c.pgStatus === "erro" ? "Não consultado" : "—", g ? (g.total ? (pgAberto > 0 ? "bad" : "warn") : "ok") : ""]
+        ].concat(cnesRows);
+      }
+      if (cnesRows.length) R.receitaTitle = "O que os cadastros públicos mostram";
+
+      // simulação
+      if (d && d.L > 0) {
+        var rows = [
+          ["Lucro estimado por mês", H.brl(d.L)], ["Sócios que recebem", String(d.n) + (a.socios === "5" ? "+" : "")], ["Por sócio, por mês", H.brl(d.pm)],
+          ["Tudo de uma vez no ano", d.retAno ? H.brlK(d.retAno) + " retidos" : "Sem retenção", d.retAno ? "bad" : "good"],
+          ["A cada trimestre", d.retTri ? H.brlK(d.retTri) + " retidos" : "Sem retenção", d.retTri ? "bad" : "good"],
+          ["Todo mês", d.retMes ? H.brlK(d.retMes) + " retidos" : "Sem retenção", d.retMes ? "bad" : "good"]
+        ];
+        if (d.aliq > 0) rows.push(["IRPF mínimo por sócio (até)", H.brlK(d.irpfm) + "/ano (" + d.aliq.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%)", "bad"]);
+        R.sim = { title: "Simulação: distribuição de lucros 2026", intro: "Quanto fica <b>retido de IR</b> conforme o jeito de distribuir.", rows: rows,
+          note: "Estimativa com impostos de " + (Math.round(d.carga * 1000) / 10).toLocaleString("pt-BR") + "% e custos de " + Math.round(d.custo * 100) + "% do faturamento. A retenção é uma <b>antecipação do IR</b> e entra na declaração anual. Lucros de 2025 aprovados até 31/12/2025 ficam fora." };
+      }
+
+      R.painel = painel(a, c, K, H);
+
+      function st(v, bom, medio) { return v == null ? ["Não informado", ""] : v === bom ? ["Sim", "y"] : medio && medio.indexOf(v) >= 0 ? ["Em parte", "m"] : ["Não", "n"]; }
+      var linhas = [
+        ["Números revisados com você <b>todo mês</b>", st(a.conversa, "mensal", ["trimestral"])],
+        ["Guias, notas, impostos e folha <b>num painel</b>", st(a.acesso, "painel", ["pedido"])],
+        ["<b>Resultado (lucro)</b> todo mês", st(a.relatorio, "mensal", ["asvezes"])],
+        ["Resultado <b>por médico ou serviço</b>", st(a.centro, "sim", ["parcial"])],
+        ["Resposta <b>no mesmo dia</b>", st(a.resposta, "mesmodia", ["dias"])],
+        ["Guias com <b>10 dias de antecedência</b>", st(a.guias, "antecedencia", ["poucos"])],
+        ["Estratégia tributária <b>aplicada</b>", st(a.estrategia, "aplicamos", ["naoaplicamos"])],
+        ["Orientação sobre a <b>reforma</b>", st(a.reforma, "sim", ["ouvi"])]
+      ];
+      R.cmp = { title: "Sua contabilidade hoje x o que você deveria ter", rows: linhas.map(function (l) { return [l[0], l[1][0], l[1][1]]; }) };
+
+      var s = [];
+      if (e && e.situacao && !/ativa/i.test(e.situacao)) s.push("<b>Regularizar o CNPJ</b> na Receita");
+      if (g && pgAberto > 0) s.push("<b>Negociar a dívida ativa</b> com a PGFN");
+      if (P.ss && P.modo === "empresarial") s.push("<b>Ajustar a estrutura societária</b> ao seu modo de trabalhar");
+      if (P.faltaCnae.length) s.push("<b>Incluir os CNAEs</b> que faltam");
+      if (CN && CN.licStatus === "vencida") s.push("<b>Renovar a licença sanitária</b> e atualizar o CNES");
+      else if (CN && CN.desativado) s.push("<b>Reativar o cadastro</b> no CNES");
+      else if (CN && CN.licParcial) s.push("Resolver as <b>restrições da licença sanitária</b>");
+      if (P.proc && semSalaProc(CN)) s.push("<b>Atualizar o CNES</b> com as salas de procedimento");
+      else if (cn && !cn.encontrado && (a.local === "propria" || a.local === "ambos")) s.push("<b>Cadastrar a clínica</b> no CNES");
+      if (K.eq && !K.eq.ss) s.push("Aplicar a <b>redução de IR e CSLL</b> e pedir o que foi pago a mais");
+      if (K.simples) s.push("<b>Simular a troca de regime</b> com os seus números");
+      if (K.iss) s.push("Avaliar o <b>ISS fixo</b> na sua cidade");
+      if (a.notas === "generico") s.push("Ajustar a <b>descrição das notas</b>");
+      if (a.prolabore !== "fixo" || a.distribuicao === "semplan" || a.distribuicao === "naosei" || (d && d.retMes > 0)) s.push("Montar o <b>calendário de pró-labore e lucros</b>");
+      if (a.acesso !== "painel" || (a.relatorio && a.relatorio !== "mensal")) s.push("Ter um <b>painel com resultado mensal</b>");
+      if (!s.length) s.push("Revisar a estratégia <b>uma vez por ano</b>");
+      R.nextSteps = s;
+      R.strengths = ["Consultoria tributária <b>de médicos para médicos</b>", "<b>Painel integrado</b> com guias, notas, resultado e equipe", "<b>Reunião mensal</b> sobre os seus números", "Estratégia tributária <b>revisada todo ano</b>", "Resposta <b>no mesmo dia</b>"];
+      R.ctaText = K.anoHi > 0 ? "Quer confirmar <b>os valores exatos</b>? Analisamos suas notas e guias, sem custo." : "Quer ver <b>o seu painel de verdade</b>? Fale com a gente.";
+      R.ctaLabel = "Falar com um especialista";
+      R.waText = "Olá! Fiz o diagnóstico completo no site da Back4you (nota " + score + ") e quero conversar.";
+      R.disclaimer = "Diagnóstico indicativo, feito com as suas respostas, faixas médias e dados públicos (Receita, PGFN base 06/2026" + (cn && cn.competencia ? " e CNES " + cn.competencia : "") + (cn && cn.ansCompetencia ? ", ANS " + cn.ansCompetencia : "") + "). Valores de dívida ativa podem incluir débitos em que a empresa é corresponsável. Não é parecer contábil ou jurídico.";
+
+      var fatOk = a.fat && a.fat !== "ate20";
+      R.rota = fatOk && (score < 75 || K.anoHi > 0 || (g && g.total > 0) || K.iss) ? "pre-vendas" : "nutrir";
+      R.resumo = "nota " + score + "; perfil " + (P.modo || "?") + "; oportunidade até R$ " + Math.round(K.anoHi) + "/ano" + (K.retroHi ? "; passado até R$ " + Math.round(K.retroHi) : "") + (K.iss ? "; ISS fixo" : "") + (g && g.total ? "; PGFN R$ " + Math.round(g.total) : "") +
+        (CN ? "; CNES " + CN.tipo.cat + " " + CN.prof + " prof, licença " + CN.licStatus + (CN.licParcial ? " parcial" : "") +
+          (CN.v2 ? (CN.salaProc ? ", sala de procedimento" : ", sem sala de procedimento") + (CN.medExternos ? ", " + CN.medExternos + " médicos PJ/autônomos" : "") + (cnesConv(CN) ? ", atende " + cnesConv(CN) : "") : "") +
+          (nOps ? ", " + nOps + " operadoras (ANS)" : "") + (CN.acreditacao ? ", acreditada" : "") : cn ? "; sem CNES" : "");
+      return R;
+    }
+  };
+  window.DIAG = D;
+})();
+
+</script>
+<script>
+/* ============================================================
+   Motor do Diagnóstico Back4you em formato de conversa (WhatsApp)
+   Conteúdo e regras ficam em window.DIAG (diag.js).
+   ============================================================ */
+(function () {
+  "use strict";
+  var C = window.CONFIG || {};
+  var D = window.DIAG;
+  var app = document.getElementById("app");
+  function fresh() { return { screen: "chat", lookups: null, answers: {}, exit: null, lead: null, empresa: null, prefill: {}, prefillSet: {}, cnpjDraft: "", pgfn: null, cnes: null, R: null }; }
+  var state = fresh();
+
+  /* ---------- utilidades ---------- */
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function brl(v) { return "R$ " + Math.round(v).toLocaleString("pt-BR"); }
+  function brlK(v) {
+    var a = Math.abs(v);
+    if (a >= 1e6) return "R$ " + (v / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " mi";
+    if (a >= 1e4) return "R$ " + Math.round(v / 1e3).toLocaleString("pt-BR") + " mil";
+    return brl(v);
+  }
+  function track(ev, data) {
+    try {
+      window.dataLayer = window.dataLayer || [];
+      var p = { event: "b4y_" + ev, material: D.id }; for (var k in data || {}) p[k] = data[k];
+      window.dataLayer.push(p);
+      if (window.gtag) window.gtag("event", "b4y_" + ev, p);
+    } catch (e) {}
+  }
+  function top() { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); } }
+  function digits(v) { return String(v == null ? "" : v).replace(/\D/g, ""); }
+  function cnpjValido(v) {
+    var c = digits(v);
+    if (c.length !== 14 || /^(\d)\1+$/.test(c)) return false;
+    function dv(n) { var w = n === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2], t = 0; for (var i = 0; i < n; i++) t += +c[i] * w[i]; var r = t % 11; return r < 2 ? 0 : 11 - r; }
+    return dv(12) === +c[12] && dv(13) === +c[13];
+  }
+  function maskCnpj(v) {
+    var d = digits(v).slice(0, 14);
+    return d.replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
+  }
+  function dataBR(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? m[3] + "/" + m[2] + "/" + m[1] : ""; }
+  function anos(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); if (!m) return null; return (Date.now() - new Date(+m[1], +m[2] - 1, +m[3]).getTime()) / (365.25 * 864e5); }
+  var LOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
+  var H = { esc: esc, brl: brl, brlK: brlK, dataBR: dataBR, anos: anos, maskCnpj: maskCnpj, LOCK: LOCK,
+    empresa: function () { return state.empresa; },
+    pgfn: function () { return state.pgfn && state.pgfn.status === "ok" ? state.pgfn.res : null; },
+    pgfnStatus: function () { return state.pgfn ? state.pgfn.status : null; },
+    cnes: function () { return state.cnes && state.cnes.status === "ok" ? state.cnes.res : null; },
+    cnesStatus: function () { return state.cnes ? state.cnes.status : null; } };
+  function ctx() { return { feito: ch ? ch.done : {}, emp: state.empresa, pg: H.pgfn(), pgStatus: H.pgfnStatus(), cn: H.cnes(), cnStatus: H.cnesStatus(), H: H }; }
+
+  /* ---------- Receita (BrasilAPI → CNPJ.ws) ---------- */
+  function getJson(url, ms) {
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || 8000);
+    return fetch(url, { signal: ctrl ? ctrl.signal : undefined, headers: { Accept: "application/json" } }).then(function (r) {
+      clearTimeout(t);
+      if (r.status === 404) { var e = new Error("nao_encontrado"); e.notFound = true; throw e; }
+      if (!r.ok) throw new Error("http_" + r.status);
+      return r.json();
+    });
+  }
+  function contarSocios(q) { var n = q.filter(function (x) { return /s[óo]cio|titular/i.test(x); }).length; return n || q.length; }
+  function fromBrasilApi(j) {
+    return {
+      cnpj: digits(j.cnpj), razao: j.razao_social || "", fantasia: j.nome_fantasia || "",
+      natCod: String(j.codigo_natureza_juridica || ""), natDesc: j.natureza_juridica || "",
+      cnae: String(j.cnae_fiscal || ""), cnaeDesc: j.cnae_fiscal_descricao || "",
+      cnaesSec: (j.cnaes_secundarios || []).map(function (x) { return { cod: String(x.codigo || ""), desc: x.descricao || "" }; }).filter(function (x) { return x.cod && x.cod !== "0"; }),
+      abertura: j.data_inicio_atividade || "",
+      simples: j.opcao_pelo_simples === true ? true : j.opcao_pelo_simples === false ? false : null,
+      mei: j.opcao_pelo_mei === true,
+      situacao: j.descricao_situacao_cadastral || "", motivo: j.descricao_motivo_situacao_cadastral || "",
+      cidade: j.municipio || "", uf: j.uf || "",
+      socios: contarSocios((j.qsa || []).map(function (q) { return q.qualificacao_socio || ""; })),
+      regimes: (j.regime_tributario || []).map(function (r) { return { ano: +r.ano, forma: String(r.forma_de_tributacao || "").toUpperCase() }; }).filter(function (r) { return r.ano; }).sort(function (a, b) { return b.ano - a.ano; }),
+      porte: j.porte || "", capital: +j.capital_social || 0, fonte: "BrasilAPI"
+    };
+  }
+  function fromCnpjWs(j) {
+    var e = j.estabelecimento || {}, nat = j.natureza_juridica || {}, at = e.atividade_principal || {};
+    return {
+      cnpj: digits(e.cnpj), razao: j.razao_social || "", fantasia: e.nome_fantasia || "",
+      natCod: digits(nat.id), natDesc: nat.descricao || "", cnae: digits(at.id), cnaeDesc: at.descricao || "",
+      cnaesSec: (e.atividades_secundarias || []).map(function (x) { return { cod: digits(x.id), desc: x.descricao || "" }; }),
+      abertura: e.data_inicio_atividade || "",
+      simples: j.simples && j.simples.simples ? j.simples.simples === "Sim" : null,
+      mei: !!(j.simples && j.simples.mei === "Sim"),
+      situacao: e.situacao_cadastral || "", motivo: (e.motivo_situacao_cadastral || {}).descricao || "",
+      cidade: (e.cidade || {}).nome || "", uf: (e.estado || {}).sigla || "",
+      socios: contarSocios((j.socios || []).map(function (q) { return (q.qualificacao_socio || {}).descricao || ""; })),
+      regimes: [], porte: (j.porte || {}).descricao || "", capital: +j.capital_social || 0, fonte: "CNPJ.ws"
+    };
+  }
+  function consultarCnpj(c) {
+    return getJson("https://brasilapi.com.br/api/cnpj/v1/" + c).then(fromBrasilApi).catch(function (err) {
+      if (err.notFound) throw err;
+      return getJson("https://publica.cnpj.ws/cnpj/" + c).then(fromCnpjWs);
+    });
+  }
+
+  /* ---------- moldura ---------- */
+  function visibleSteps() { var a = state.answers, c = ctx(); return D.steps.filter(function (s) { return !s.when || s.when(a, c); }); }
+  function frame(inner, prog) {
+    var bar = "";
+    if (prog) bar = '<div class="progress"><i style="width:' + prog.pct + '%"></i></div><div class="stepinfo"><span><b>' + esc(prog.label) + "</b></span><span>" + esc(prog.right) + "</span></div>";
+    app.innerHTML =
+      '<div class="topbar"><div class="in"><div class="logo">back<i>4</i>you</div><small>Consultoria tributária<br>de médicos para médicos</small></div></div>' +
+      '<div class="wrap">' + bar + '<main class="card">' + inner + "</main>" +
+      "<footer>Back4you · Conteúdo informativo. Não substitui uma análise individual.</footer></div>";
+  }
+  function bubble(html) { return '<div class="bubble"><div class="av">B4Y</div><div class="msg">' + html + "</div></div>"; }
+  function insCard(x) { return '<div class="ins ' + (x.level || "") + '">' + (x.tag ? "<small>" + esc(x.tag) + "</small>" : "") + x.html + "</div>"; }
+
+  function aplicaPrefill(pre, forca, fonte) {
+    pre = pre || {};
+    Object.keys(pre.answers || {}).forEach(function (k) {
+      if (forca || state.answers[k] === undefined || state.prefillSet[k]) { state.answers[k] = pre.answers[k]; state.prefillSet[k] = fonte || "Da Receita"; }
+    });
+    Object.keys(pre.notes || {}).forEach(function (k) { state.prefill[k] = pre.notes[k]; });
+  }
+  function iniciaPgfn(e) {
+    if (!window.B4Y_PGFN) return Promise.resolve();
+    var alvo = e.cnpj;
+    state.pgfn = { status: "loading", cnpj: alvo };
+    return window.B4Y_PGFN.consultar(alvo).then(function (res) {
+      if (!state.pgfn || state.pgfn.cnpj !== alvo) return;
+      state.pgfn = { status: "ok", cnpj: alvo, res: res };
+      track("pgfn", { encontrada: res.total > 0 });
+      if (D.applyPgfn) aplicaPrefill(D.applyPgfn(res, H), false, "Da PGFN");
+    }).catch(function () {
+      if (!state.pgfn || state.pgfn.cnpj !== alvo) return;
+      state.pgfn = { status: "erro", cnpj: alvo };
+    }).then(atualizaAoVivo);
+  }
+  function iniciaCnes(e) {
+    if (!window.B4Y_CNES) return Promise.resolve();
+    var alvo = e.cnpj;
+    state.cnes = { status: "loading", cnpj: alvo };
+    return window.B4Y_CNES.consultar(alvo).then(function (res) {
+      if (!state.cnes || state.cnes.cnpj !== alvo) return;
+      state.cnes = { status: "ok", cnpj: alvo, res: res };
+      track("cnes", { encontrado: !!res.encontrado, licenca: res.licStatus || "" });
+      if (D.applyCnes) aplicaPrefill(D.applyCnes(res, H, state.empresa), false, "Do CNES");
+    }).catch(function () {
+      if (!state.cnes || state.cnes.cnpj !== alvo) return;
+      state.cnes = { status: "erro", cnpj: alvo };
+    }).then(atualizaAoVivo);
+  }
+  // na conversa, os achados das consultas entram quando a próxima pergunta é feita
+  function atualizaAoVivo() {}
+  function confirmaEmpresa(e) {
+    state.empresa = e; state.prefill = {}; state.prefillSet = {};
+    if (D.applyCnpj) aplicaPrefill(D.applyCnpj(e, H), true);
+    track("cnpj_confirmado", { cnae: e.cnae, parcial: !!e.parcial });
+    state.lookups = Promise.all([iniciaPgfn(e), iniciaCnes(e)]);
+  }
+  // empresa mínima, vinda só da base de nomes (quando a Receita não responde)
+  function empresaDaLista(it) {
+    var loc = (it.local || "").split("/");
+    return { cnpj: it.cnpj, razao: it.razao, fantasia: it.fantasia || "", natCod: "", natDesc: "", cnae: "", cnaeDesc: "", cnaesSec: [], abertura: "",
+      simples: null, mei: false, situacao: "", motivo: "", cidade: loc[0] || "", uf: loc[1] || "", socios: 0, regimes: [], porte: "", capital: 0, parcial: true };
+  }
+  /* ---------- blocos do resultado ---------- */
+  function empLine() { var e = state.empresa; return e ? '<p class="empline">Diagnóstico de <b>' + esc(e.razao) + "</b> · " + esc(maskCnpj(e.cnpj)) + "</p>" : ""; }
+  function head(R, preview) {
+    var html = '<div class="tone-' + R.tone + '">' + (preview ? '<span class="small">Prévia do seu diagnóstico</span><br>' : "") +
+      '<span class="badge">' + esc(R.badge) + "</span><h2>" + R.title + "</h2>" + (R.html || "");
+    if (R.score != null) {
+      var cor = R.score >= 70 ? "var(--green)" : R.score >= 45 ? "var(--amber)" : "var(--red)";
+      html += '<div class="scorebox"><div class="gauge" style="--p:' + R.score + ";--c:" + cor + '"><div><div><b>' + R.score + "</b><small>de 100</small></div></div></div>" +
+        '<div class="pillars">' + R.pillars.map(function (p) {
+          var c = p.v >= 70 ? "var(--green)" : p.v >= 45 ? "var(--amber)" : "var(--red)";
+          return '<div class="pillar"><div><span>' + esc(p.nome) + "</span><b>" + p.v + '</b></div><div class="bar"><i style="width:' + p.v + "%;background:" + c + '"></i></div></div>';
+        }).join("") + "</div></div>";
+    }
+    if (R.highlight) {
+      var x = R.highlight;
+      html += '<div class="hl"><small>' + esc(x.label) + "</small><strong>" + esc(x.value) + "</strong>" + (x.sub ? "<span>" + x.sub + "</span>" : "") +
+        (x.row && x.row.length ? '<div class="row">' + x.row.map(function (r) { return "<div><small>" + esc(r.label) + "</small><b>" + esc(r.value) + "</b></div>"; }).join("") + "</div>" : "") + "</div>";
+    }
+    return html + "</div>";
+  }
+  function receitaBox(R) {
+    if (!R.receita) return "";
+    return "<h3>" + esc(R.receitaTitle || "O que a Receita mostra") + '</h3><div class="rf"><dl>' + R.receita.map(function (r) {
+      return "<div><dt>" + esc(r[0]) + '</dt><dd class="' + (r[2] || "") + '">' + r[1] + "</dd></div>";
+    }).join("") + "</dl></div>";
+  }
+  function alertsBox(R, preview) {
+    var al = R.alerts || [];
+    if (!al.length) return "";
+    var show = preview ? (al.length >= 3 ? 2 : al.length === 2 ? 1 : 0) : al.length;
+    var html = "<h3>" + (preview ? al.length + (al.length === 1 ? " ponto de atenção" : " pontos de atenção") : "O que merece atenção") + '</h3><ul class="alerts">';
+    al.slice(0, show).forEach(function (a) { html += '<li class="a-' + a.level + '"><b>' + a.title + '</b><span class="atx">' + a.text + "</span></li>"; });
+    if (preview) {
+      if (al.length === 1) html += '<li class="a-' + al[0].level + '"><b>' + al[0].title + '</b><span class="atx blur">Explicação e recomendação no diagnóstico completo.</span></li>';
+      var hid = al.length === 1 ? 0 : al.length - show;
+      for (var i = 0; i < Math.min(hid, 3); i++) html += '<li class="ghost" aria-hidden="true"><b class="blur">Ponto de atenção bloqueado</b><span class="atx blur">Explicação e recomendação no diagnóstico completo.</span></li>';
+      html += "</ul>" + (hid ? '<p class="lock-note">' + LOCK + " + " + hid + (hid === 1 ? " ponto bloqueado" : " pontos bloqueados") + "</p>" : "");
+      return html;
+    }
+    return html + "</ul>";
+  }
+  function oppsBox(R, preview) {
+    if (!R.opps || !R.opps.length) return "";
+    return "<h3>Oportunidades em reais</h3>" + R.opps.map(function (o) {
+      return '<div class="opp"><h4>' + o.title + "</h4><p>" + o.html + "</p>" +
+        (o.estimate ? '<div class="est">' + o.estimate.map(function (e) {
+          return "<div><small>" + esc(e.label) + "</small><strong>" + (preview ? '<span class="blur">R$ 00.000</span>' : esc(e.value)) + "</strong></div>";
+        }).join("") + "</div>" : "") + (o.note && !preview ? '<p class="small">' + o.note + "</p>" : "") +
+        (preview && o.estimate ? '<p class="lock-note">' + LOCK + " Valores no diagnóstico completo</p>" : "") + "</div>";
+    }).join("");
+  }
+  function simBox(R, preview) {
+    var S = R.sim; if (!S) return "";
+    if (preview) return "<h3>" + esc(S.title) + '</h3><div class="opp"><p class="lock-note">' + LOCK + " Simulação completa no diagnóstico</p></div>";
+    return "<h3>" + esc(S.title) + '</h3><div class="opp sim">' + (S.intro ? "<p>" + S.intro + "</p>" : "") + "<dl>" +
+      S.rows.map(function (r) { return '<div class="' + (r[2] || "") + '"><dt>' + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") +
+      "</dl>" + (S.note ? '<p class="small">' + S.note + "</p>" : "") + "</div>";
+  }
+  function painelBox(R, preview) {
+    if (!R.painel) return "";
+    return "<h3>" + esc(R.painel.title) + '</h3><p class="small">' + R.painel.intro + "</p>" +
+      '<div class="pn' + (preview ? " locked" : "") + '">' + R.painel.html +
+      (preview ? '<div class="lockover">' + LOCK + " <span>Veja o <b>seu painel</b> com os seus números no diagnóstico completo.</span></div>" : "") + "</div>";
+  }
+  function cmpBox(R) {
+    if (!R.cmp) return "";
+    return "<h3>" + esc(R.cmp.title) + '</h3><table class="cmp"><thead><tr><th>O que você deveria ter</th><th>Hoje</th><th>Back4you</th></tr></thead><tbody>' +
+      R.cmp.rows.map(function (r) { return "<tr><td>" + r[0] + '</td><td class="' + r[2] + '">' + r[1] + '</td><td class="y">✓</td></tr>'; }).join("") + "</tbody></table>";
+  }
+  function bindPainel() {
+    app.querySelectorAll(".pn").forEach(function (pn) {
+      pn.querySelectorAll(".pn-tabs button").forEach(function (b) {
+        b.onclick = function () {
+          pn.querySelectorAll(".pn-tabs button").forEach(function (x) { x.classList.toggle("on", x === b); });
+          pn.querySelectorAll(".pn-view").forEach(function (v) { v.style.display = v.getAttribute("data-v") === b.getAttribute("data-v") ? "" : "none"; });
+          track("painel_aba", { aba: b.getAttribute("data-v") });
+        };
+      });
+    });
+  }
+
+  function renderResult() {
+    var R = state.R;
+    var wa = "https://wa.me/" + (C.whatsapp || "") + "?text=" + encodeURIComponent((R.waText || "Olá! Fiz o diagnóstico no site da Back4you e quero conversar.") + (state.lead ? " (" + state.lead.nome.split(" ")[0] + ")" : ""));
+    var p = state.relatorio;
+    var ola = p ? '<p class="ola">' + (p.n ? "Olá, <b>" + esc(p.n) + "</b>! " : "") + "Aqui está o seu diagnóstico completo" + (p.t ? ", feito em " + esc(new Date(p.t).toLocaleDateString("pt-BR")) : "") + ".</p>" : "";
+    var html = ola + empLine() + head(R, false) + receitaBox(R) + oppsBox(R, false) + alertsBox(R, false) + simBox(R, false) + painelBox(R, false) + cmpBox(R);
+    if (R.nextSteps && R.nextSteps.length) html += '<h3>Seu plano de ação</h3><ol class="nsteps">' + R.nextSteps.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ol>";
+    if (R.strengths && R.strengths.length) html += '<h3>Com a Back4you</h3><ul class="checks">' + R.strengths.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ul>";
+    html += '<div class="cta-box"><p>' + (R.ctaText || "Quer ver isso com os seus números reais?") + '</p><a class="btn" id="cta1" target="_blank" rel="noopener" href="' + wa + '">' + esc(R.ctaLabel || "Falar com um especialista") + "</a></div>";
+    html += '<p class="disclaimer">' + (R.disclaimer || "Resultado indicativo, feito só com as suas respostas. Não é parecer contábil ou jurídico.") + "</p>";
+    html += '<div class="actions">' + (ch && ch.node ? '<button class="btn btn-ghost" id="conversa">← Ver a conversa</button>' : "") + '<button class="btn btn-ghost" id="redo">↺ Refazer</button></div>';
+    frame(html, { pct: 100, label: "Diagnóstico completo", right: "" });
+    bindPainel();
+    document.getElementById("cta1").onclick = function () { track("cta_whatsapp"); };
+    document.getElementById("redo").onclick = function () {
+      if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+      state = fresh(); render(); top();
+    };
+    var vc = document.getElementById("conversa");
+    if (vc) vc.onclick = voltaConversa;
+  }
+
+  /* ---------- HubSpot ---------- */
+  function cookie(n) { var m = document.cookie.match("(^|;)\\s*" + n + "=([^;]*)"); return m ? decodeURIComponent(m[2]) : null; }
+  function submitLead(R, rota, envio) {
+    envio = envio || {};
+    var hs = C.hubspot || {}, f = hs.fields || {};
+    var respostas = Object.keys(state.answers).map(function (k) { var v = state.answers[k]; return k + ": " + (Array.isArray(v) ? v.join("+") : v); }).join(" | ");
+    var e = state.empresa, pg = H.pgfn(), cn = H.cnes();
+    if (cn) respostas = "cnes: " + (cn.encontrado ? cn.tipo.nome + ", " + cn.unidades + " unidade(s), " + cn.prof + " profissionais (" + cn.med + " médicos), licença " + (cn.lic || "sem data") + " (" + cn.licStatus + (cn.licParcial ? ", parcial" : "") + ")" +
+      (cn.v2 ? ", sala de procedimento: " + (cn.salaProc ? "sim" : "não") + ", médicos PJ/autônomos/cooperados: " + cn.medExternos + ", atende: " + [cn.conv.particular ? "particular" : "", cn.conv.planos ? "planos" : "", cn.conv.sus ? "SUS" : ""].filter(Boolean).join("+") + (cn.coworking ? ", coworking" : "") : "") +
+      (cn.v3 ? ", planos (ANS): " + cn.planos.direto + " direto + " + cn.planos.indireto + " intercâmbio" + (cn.planos.nomes.length ? " [" + cn.planos.nomes.join(", ") + "]" : "") + (cn.acreditacao ? ", acreditação: " + cn.acreditacao : "") : "") : "sem cadastro") + " | " + respostas;
+    if (pg) respostas = "pgfn: " + (pg.total ? "R$ " + pg.total.toFixed(2) + " em " + pg.inscricoes + " inscrições (" + Object.keys(pg.origens).join(", ") + ")" : "nada") + " | " + respostas;
+    if (e) respostas = "empresa: " + e.razao + " (" + e.cnpj + ") | natureza: " + e.natDesc + " | cnae: " + e.cnae + " | simples: " + (e.simples == null ? "?" : e.simples ? "sim" : "não") + " | " + respostas;
+    if (R && R.resumo) respostas = "resumo: " + R.resumo + " || " + respostas;
+    var qs = new URLSearchParams(location.search);
+    var utm = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid", "fbclid", "ttclid", "li_fat_id", "msclkid"].map(function (k) { return qs.get(k) ? k + "=" + qs.get(k) : null; }).filter(Boolean).join("&");
+    var fields = [{ name: "firstname", value: state.lead.nome }, { name: "email", value: state.lead.email }, { name: "phone", value: state.lead.tel }];
+    if (f.material) fields.push({ name: f.material, value: D.id });
+    if (f.rota) fields.push({ name: f.rota, value: rota });
+    if (f.resultado && R) fields.push({ name: f.resultado, value: (R.badge || "") + (R.score != null ? " (" + R.score + "/100)" : "") });
+    if (f.respostas) fields.push({ name: f.respostas, value: respostas + (utm ? " || " + utm : "") });
+    if (f.cnpj && e) fields.push({ name: f.cnpj, value: e.cnpj });
+    if (f.cnes && cn) fields.push({ name: f.cnes, value: cn.encontrado ? cn.tipo.nome + " · " + cn.prof + " prof. · licença " + ({ valida: "válida", vencendo: "vencendo", vencida: "vencida", sem_data: "sem data" })[cn.licStatus] : "sem cadastro" });
+    if (f.pgfn && pg) fields.push({ name: f.pgfn, value: pg.total.toFixed(2) });
+    if (f.oportunidade && R && R.oportunidadeAno != null) fields.push({ name: f.oportunidade, value: Math.round(R.oportunidadeAno) });
+    if (f.link) fields.push({ name: f.link, value: linkRelatorio() });
+    if (f.envio) fields.push({ name: f.envio, value: new Date().toISOString() + " #" + (envio.envio || 1) });
+    if (f.emailAnterior && envio.anterior) fields.push({ name: f.emailAnterior, value: envio.anterior });
+    var payload = { fields: fields, context: { hutk: cookie("hubspotutk") || undefined, pageUri: location.href, pageName: document.title },
+      legalConsentOptions: { consent: { consentToProcess: true, text: "Aceito receber conteúdos e o contato da Back4you." } } };
+    if (!hs.portalId || !hs.formGuid) { console.info("[B4Y] HubSpot não configurado — lead não enviado. Payload:", payload, "Rota:", rota); return; }
+    fetch("https://api.hsforms.com/submissions/v3/integration/submit/" + hs.portalId + "/" + hs.formGuid, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      .then(function (r) { if (!r.ok) r.text().then(function (t) { console.warn("[B4Y] HubSpot recusou:", t); }); })
+      .catch(function (err) { console.warn("[B4Y] Falha ao enviar ao HubSpot", err); });
+  }
+
+  /* ================= CONVERSA (estilo WhatsApp) ================= */
+  var RAPIDO = /[?&]rapido=1/.test(location.search) || !!window.B4Y_RAPIDO;
+  var REDUZ = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var CHECK = '<svg class="ck" width="16" height="11" viewBox="0 0 16 11" aria-hidden="true"><path d="M1 5.5l3 3L10 2.5M6.5 8.5l1 1L14 2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var SEND = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5l18-8.5L3 3.5l0 6.6 12.9 1.9L3 13.9z" fill="currentColor"/></svg>';
+  var ch = null;
+  function novoChat() { return { asked: {}, done: {}, seen: {}, started: {}, stack: [], fila: Promise.resolve(), gen: 0, lead: {}, node: null, modo: "base" }; }
+  function el(id) { return document.getElementById(id); }
+  function hora() { var d = new Date(); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
+  function espera(ms) { return new Promise(function (r) { setTimeout(r, RAPIDO ? 0 : REDUZ ? Math.min(ms, 150) : ms); }); }
+
+  function montaChat() {
+    app.innerHTML = '<div class="wa" id="wa">' +
+      '<header class="wa-top"><div class="wa-av" aria-hidden="true">b<i>4</i>y</div><div class="wa-id"><b>Back4you</b><small id="wa-st">online</small></div><div class="wa-etapa" id="wa-etapa"></div></header>' +
+      '<div class="wa-prog"><i id="wa-prog"></i></div>' +
+      '<div class="wa-body" id="wa-body" role="log" aria-live="polite"><div class="wa-day"><span>Hoje</span></div>' +
+      '<div class="wa-sec"><span>' + LOCK + " Diagnóstico gratuito. Seus dados ficam protegidos conforme a LGPD.</span></div></div>" +
+      '<div class="wa-foot"><div class="wa-qr" id="wa-qr"></div>' +
+      '<form class="wa-comp" id="wa-comp" autocomplete="off"><input id="wa-in" type="text" placeholder="Escolha uma opção acima" disabled aria-label="Mensagem">' +
+      '<button type="submit" id="wa-send" aria-label="Enviar" disabled>' + SEND + "</button></form></div></div>";
+    limpaQR();
+  }
+  function rolar() { var b = el("wa-body"); if (b) b.scrollTop = b.scrollHeight; }
+  function addMsg(quem, html, cls) {
+    var b = el("wa-body"); if (!b) return null;
+    var d = document.createElement("div");
+    d.className = "wm " + quem + (cls ? " " + cls : "");
+    d.innerHTML = '<div class="wb">' + html + '<span class="t">' + hora() + (quem === "me" ? CHECK : "") + "</span></div>";
+    b.appendChild(d); rolar();
+    return d;
+  }
+  function digitando(on) {
+    var b = el("wa-body"), st = el("wa-st"), t = el("wa-typing");
+    if (!b) return;
+    if (on && !t) { t = document.createElement("div"); t.id = "wa-typing"; t.className = "wm bot typing"; t.innerHTML = '<div class="wb" aria-label="Back4you está digitando"><i></i><i></i><i></i></div>'; b.appendChild(t); rolar(); }
+    if (!on && t) t.remove();
+    if (st) st.textContent = on ? "digitando…" : "online";
+  }
+  // mensagens da Back4you, uma depois da outra, com o "digitando…" antes de cada uma
+  function diz(itens) {
+    var g = ch.gen;
+    itens = (itens || []).filter(Boolean);
+    ch.fila = ch.fila.then(function () {
+      return itens.reduce(function (p, it) {
+        return p.then(function () {
+          if (g !== ch.gen) return;
+          if (typeof it === "string") it = { html: it };
+          var n = it.html.replace(/<[^>]+>/g, "").length;
+          digitando(true);
+          return espera(it.ms != null ? it.ms : Math.min(1800, 580 + n * 10)).then(function () {
+            if (g !== ch.gen) return;
+            digitando(false);
+            var d = addMsg("bot", it.html, it.cls);
+            if (d && it.campo) d.setAttribute("data-campo", it.campo);
+          });
+        });
+      }, Promise.resolve());
+    }).catch(function () {});
+    return ch.fila;
+  }
+  // mostra o "digitando…" enquanto uma consulta roda
+  function aguarda(p, min) {
+    var g = ch.gen;
+    var r = ch.fila.then(function () {
+      if (g === ch.gen) digitando(true);
+      return Promise.all([p.then(function (x) { return { ok: x }; }, function (e) { return { err: e }; }), espera(min || 900)]);
+    }).then(function (res) {
+      if (g === ch.gen) digitando(false);
+      if (res[0].err) throw res[0].err;
+      return res[0].ok;
+    });
+    ch.fila = r.catch(function () {});
+    return r;
+  }
+
+  /* ---------- área de resposta ---------- */
+  function limpaQR() {
+    var q = el("wa-qr"), i = el("wa-in"), s = el("wa-send"), f = el("wa-comp");
+    if (!q) return;
+    q.innerHTML = ""; q.className = "wa-qr";
+    i.disabled = true; i.value = ""; i.type = "text"; i.placeholder = "Escolha uma opção acima"; i.oninput = null;
+    s.disabled = true;
+    f.onsubmit = function (e) { e.preventDefault(); };
+  }
+  function botoes(lista, onPick, opts) {
+    var g = ch.gen;
+    return ch.fila.then(function () {
+      if (g !== ch.gen) return;
+      var q = el("wa-qr");
+      q.className = "wa-qr" + (opts && opts.lista ? " lista" : "");
+      q.innerHTML = lista.map(function (o, i) { return '<button type="button" class="qr ' + (o[2] || "") + '" data-i="' + i + '">' + o[1] + "</button>"; }).join("");
+      q.querySelectorAll("button").forEach(function (b) {
+        b.onclick = function () { var o = lista[+b.getAttribute("data-i")]; limpaQR(); onPick(o[0], o); };
+      });
+      rolar();
+    });
+  }
+  function multiplos(fd, opts, sel, onDone) {
+    var g = ch.gen, cur = (sel || []).slice();
+    return ch.fila.then(function () {
+      if (g !== ch.gen) return;
+      var q = el("wa-qr");
+      q.className = "wa-qr multi";
+      q.innerHTML = '<p class="qr-dica">Toque em tudo o que vale e depois em <b>Enviar</b>.</p>' +
+        opts.map(function (o, i) { return '<button type="button" class="qr tg' + (cur.indexOf(o[0]) >= 0 ? " on" : "") + '" aria-pressed="' + (cur.indexOf(o[0]) >= 0) + '" data-i="' + i + '">' + esc(o[1]) + "</button>"; }).join("") +
+        '<button type="button" class="qr pri env" id="qr-env"' + (cur.length ? "" : " disabled") + ">Enviar</button>";
+      var env = el("qr-env");
+      function pinta() {
+        q.querySelectorAll(".tg").forEach(function (b) { var on = cur.indexOf(opts[+b.getAttribute("data-i")][0]) >= 0; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+        env.disabled = !cur.length;
+      }
+      q.querySelectorAll(".tg").forEach(function (b) {
+        b.onclick = function () {
+          var v = opts[+b.getAttribute("data-i")][0];
+          if (cur.indexOf(v) >= 0) cur = cur.filter(function (x) { return x !== v; });
+          else if (fd.exclusive && v === fd.exclusive) cur = [v];
+          else { cur = cur.filter(function (x) { return x !== fd.exclusive; }); cur.push(v); }
+          pinta();
+        };
+      });
+      env.onclick = function () { if (!cur.length) return; var v = cur.slice(); limpaQR(); onDone(v); };
+      rolar();
+    });
+  }
+  // campo de texto (empresa, nome, e-mail, WhatsApp)
+  function texto(cfg, onSend) {
+    var g = ch.gen;
+    return ch.fila.then(function () {
+      if (g !== ch.gen) return;
+      var q = el("wa-qr"), i = el("wa-in"), s = el("wa-send"), f = el("wa-comp");
+      q.className = "wa-qr";
+      q.innerHTML = (cfg.extras || []).map(function (o, k) { return '<button type="button" class="qr" data-k="' + k + '">' + o[1] + "</button>"; }).join("");
+      q.querySelectorAll("button").forEach(function (b) { b.onclick = function () { var o = cfg.extras[+b.getAttribute("data-k")]; limpaQR(); onSend(o[1], o[0]); }; });
+      i.disabled = false; i.type = cfg.type || "text"; i.placeholder = cfg.placeholder || "Digite aqui"; i.value = cfg.valor || "";
+      s.disabled = !i.value;
+      i.setAttribute("inputmode", cfg.inputmode || (cfg.type === "tel" ? "tel" : cfg.type === "email" ? "email" : "text"));
+      i.oninput = function () { if (cfg.mascara) i.value = cfg.mascara(i.value); s.disabled = !i.value.trim(); var e = el("qr-err"); if (e) e.remove(); };
+      f.onsubmit = function (e) {
+        e.preventDefault();
+        var v = i.value.trim(); if (!v) return;
+        var erro = cfg.valida && cfg.valida(v);
+        if (erro) {
+          var x = el("qr-err");
+          if (!x) { x = document.createElement("p"); x.id = "qr-err"; x.className = "qr-err"; q.insertBefore(x, q.firstChild); }
+          x.textContent = erro; return;
+        }
+        limpaQR(); onSend(v, null);
+      };
+      try { if (window.innerWidth > 700) i.focus(); } catch (e) {}
+      rolar();
+    });
+  }
+  function mascaraTel(v) {
+    var d = digits(v).slice(0, 11), o = d;
+    if (d.length > 2) o = "(" + d.slice(0, 2) + ") " + d.slice(2);
+    if (d.length > 7) o = "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(d.length - 4);
+    return o;
+  }
+
+  /* ---------- respostas do médico e "corrigir" ---------- */
+  function foto() {
+    return { answers: JSON.parse(JSON.stringify(state.answers)), prefill: Object.assign({}, state.prefill), prefillSet: Object.assign({}, state.prefillSet),
+      empresa: state.empresa, pgfn: state.pgfn, cnes: state.cnes, lookups: state.lookups, exit: state.exit,
+      asked: Object.assign({}, ch.asked), done: Object.assign({}, ch.done), seen: Object.assign({}, ch.seen), started: Object.assign({}, ch.started),
+      lead: Object.assign({}, ch.lead), modo: ch.modo, pct: ch.pct, n: el("wa-body").children.length };
+  }
+  function botaoCorrigir(d) {
+    var u = document.createElement("button");
+    u.type = "button"; u.className = "undo"; u.textContent = "corrigir"; u.onclick = desfaz;
+    d.appendChild(u);
+  }
+  function eu(txt, snap) {
+    if (snap) app.querySelectorAll(".wm.me .undo").forEach(function (u) { u.remove(); });
+    var d = addMsg("me", esc(txt));
+    if (snap) { ch.stack.push(snap); botaoCorrigir(d); }
+    return d;
+  }
+  function desfaz() {
+    var s = ch.stack.pop(); if (!s) return;
+    ch.gen++; ch.fila = Promise.resolve(); digitando(false);
+    state.answers = s.answers; state.prefill = s.prefill; state.prefillSet = s.prefillSet;
+    state.empresa = s.empresa; state.pgfn = s.pgfn; state.cnes = s.cnes; state.lookups = s.lookups; state.exit = s.exit;
+    ch.asked = s.asked; ch.done = s.done; ch.seen = s.seen; ch.started = s.started; ch.lead = s.lead; ch.modo = s.modo;
+    var b = el("wa-body");
+    while (b.children.length > s.n) b.lastChild.remove();
+    limpaQR();
+    if (ch.stack.length) {
+      var ms = b.querySelectorAll(".wm.me"), last = ms[ms.length - 1];
+      if (last && !last.querySelector(".undo")) botaoCorrigir(last);
+    }
+    ch.pct = s.pct;
+    progresso(false, true);
+    track("corrigir");
+    s.again();
+  }
+
+  /* ---------- andamento ---------- */
+  // barra "adiantada": anda rápido no começo para parecer que já está quase no fim
+  function progresso(fim, voltar) {
+    var vis = visibleSteps(), a = state.answers, c = ctx(), total = 0, feitas = 0;
+    vis.forEach(function (S) {
+      S.fields.forEach(function (f) {
+        if (f.extra || f.type === "cnpj" || (f.when && !f.when(a, c))) return;
+        total++;
+        if (ch.asked[f.id]) feitas++;
+      });
+    });
+    var x = total ? feitas / total : 0;
+    var pct = fim ? 100 : ch.iniciado ? Math.round(15 + 83 * (1 - Math.pow(1 - x, 2.4))) : 4;
+    if (!voltar && !fim) pct = Math.max(pct, ch.pct || 0);
+    ch.pct = pct;
+    var atual = vis.filter(function (s) { return !ch.done[s.id]; })[0];
+    var p = el("wa-prog"), e = el("wa-etapa");
+    if (p) p.style.width = pct + "%";
+    if (e) e.textContent = fim ? "Diagnóstico pronto" : ch.iniciado && atual ? atual.label : "";
+  }
+  function achadoMsg(x) {
+    return { html: (x.tag ? '<small class="tag">' + esc(x.tag) + "</small>" : "") + x.html +
+      (x.mais ? '<small class="mais">Mais detalhes no fim do diagnóstico completo.</small>' : ""), cls: "achado " + (x.level || "") };
+  }
+  function postaMigalhas() {
+    var a = state.answers, c = ctx(), itens = [];
+    if (state.empresa && D.liveCnpj) itens = itens.concat(D.liveCnpj(a, c));
+    if (D.migalhas) itens = itens.concat(D.migalhas(a, c));
+    var novos = itens.filter(function (x) {
+      var id = x.id || x.tag + ":" + x.html;
+      if (ch.seen[id]) return false;
+      ch.seen[id] = 1; return true;
+    });
+    if (novos.length) {
+      diz(novos.map(achadoMsg));
+      track("migalha", { ids: novos.map(function (x) { return x.id || ""; }).join(",") });
+    }
+  }
+  // respostas que vêm de cadastro oficial não são perguntadas
+  var FONTE_OFICIAL = { "Da Receita": 1, "Da PGFN": 1 };
+  function jaSabemos(f) { return FONTE_OFICIAL[state.prefillSet[f.id]] && state.answers[f.id] != null; }
+  function pendentes(a, c, S, extras) {
+    return S.fields.filter(function (f) { return !ch.asked[f.id] && !!f.extra === extras && (!f.when || f.when(a, c)); });
+  }
+  function anotaOficiais(S, a, c) {
+    var notas = [];
+    pendentes(a, c, S, false).concat(pendentes(a, c, S, true)).forEach(function (f) {
+      if (f.type === "cnpj" || !jaSabemos(f)) return;
+      ch.asked[f.id] = true;
+      var opts = typeof f.options === "function" ? f.options(a, c) : f.options;
+      var fonte = state.prefillSet[f.id] === "Da PGFN" ? "PGFN" : "Receita";
+      var rot = f.id === "divida" && fonte === "PGFN" ? (a[f.id] === "sim" ? "Dívida ativa na União: <b>sim</b>" : "Dívida ativa na União: <b>nenhuma</b>") : f.label.replace(/\?$/, "") + ": <b>" + esc(rotulo(opts, a[f.id])) + "</b>";
+      notas.push(rot + ' <small class="fonte">(' + fonte + ")</small>");
+    });
+    if (notas.length) diz([{ html: '<small class="tag">Já anotei dos cadastros</small>' + notas.join("<br>"), cls: "achado info" }]);
+  }
+  function proximo() {
+    if (ch.modo === "extras") return proximoExtra();
+    var vis = visibleSteps();
+    for (var i = 0; i < vis.length; i++) {
+      var S = vis[i];
+      if (ch.done[S.id]) continue;
+      var a = state.answers, c = ctx();
+      anotaOficiais(S, a, c);
+      var fila = pendentes(a, c, S, false);
+      if (fila.length && !ch.started[S.id]) {
+        ch.started[S.id] = true;
+        progresso();
+        track("etapa", { etapa: S.id });
+        var tip = typeof S.tip === "function" ? S.tip(a, c) : S.tip;
+        diz([typeof S.bot === "function" ? S.bot(a, c) : S.bot,
+          tip ? { html: '<small class="tag">' + esc(tip.title || "Você sabia?") + "</small>" + tip.html, cls: "dica" } : null]);
+      }
+      if (fila.length) return pergunta(fila[0]);
+      ch.done[S.id] = true;
+      var ex = S.exit && S.exit(state.answers, ctx());
+      if (ex) return saida(ex);
+      postaMigalhas();
+      var ins = D.insights ? D.insights(S.id, state.answers, ctx()) : [];
+      if (ins.length) diz(ins.map(achadoMsg));
+      return proximo();
+    }
+    return oferecerDetalhes();
+  }
+  function extrasPendentes() {
+    var a = state.answers, c = ctx(), out = [];
+    visibleSteps().forEach(function (S) { pendentes(a, c, S, true).forEach(function (f) { if (!jaSabemos(f)) out.push(f); }); });
+    return out;
+  }
+  function oferecerDetalhes() {
+    var ex = extrasPendentes();
+    if (!ex.length || ch.modo === "fim") return fim();
+    progresso(true);
+    diz(["Já tenho o suficiente para o seu diagnóstico.",
+      "Quer <b>detalhar mais " + ex.length + " informações</b> antes de receber o diagnóstico completo, ou já quer receber com o que temos?<span class=\"hint\">Com os detalhes, o diagnóstico fica mais preciso. Leva menos de 1 minuto.</span>"]);
+    var s = function () {
+      return botoes([["ja", "Já quero receber", "pri"], ["mais", "Detalhar mais"]], function (v) {
+        var snap = foto(); snap.again = s;
+        eu(v === "ja" ? "Já quero receber" : "Detalhar mais", snap);
+        track("detalhar", { escolha: v, perguntas: ex.length });
+        ch.modo = v === "ja" ? "fim" : "extras";
+        if (v === "ja") return fim();
+        diz(["Ótimo! São perguntas rápidas."]);
+        proximo();
+      });
+    };
+    s();
+  }
+  function proximoExtra() {
+    var ex = extrasPendentes();
+    if (ex.length) return pergunta(ex[0]);
+    ch.modo = "fim";
+    postaMigalhas();
+    fim();
+  }
+  function rotulo(opts, v) { var o = opts.filter(function (x) { return x[0] === v; })[0]; return o ? o[1] : v; }
+  function pergunta(fd) {
+    var html;
+    if (fd.type === "cnpj") html = "<b>Qual é a sua empresa?</b>" + (fd.hint ? '<span class="hint">' + fd.hint + "</span>" : "");
+    else {
+      html = "<b>" + fd.label + "</b>" + (fd.hint ? '<span class="hint">' + fd.hint + "</span>" : "");
+      var nota = state.prefill[fd.id];
+      if (nota) html += '<span class="nota' + (state.prefillSet[fd.id] ? " auto" : "") + '">' + esc(nota) + "</span>";
+    }
+    diz([{ html: html, campo: fd.id }]);
+    responde(fd);
+  }
+  function responde(fd) {
+    if (fd.type === "cnpj") return perguntaEmpresa(fd);
+    var opts = typeof fd.options === "function" ? fd.options(state.answers, ctx()) : fd.options;
+    var auto = state.prefillSet[fd.id], atual = state.answers[fd.id];
+    function registra(v, txt) {
+      var snap = foto(); snap.again = function () { responde(fd); };
+      state.answers[fd.id] = v;
+      ch.asked[fd.id] = true;
+      eu(txt, snap);
+      progresso();
+      track("resposta", { campo: fd.id });
+      postaMigalhas();
+      proximo();
+    }
+    if (fd.type === "multi") {
+      return multiplos(fd, opts, auto ? atual : [], function (vals) {
+        if (auto && JSON.stringify(vals.slice().sort()) !== JSON.stringify((atual || []).slice().sort())) delete state.prefillSet[fd.id];
+        registra(vals, vals.map(function (v) { return rotulo(opts, v); }).join(", "));
+      });
+    }
+    var todas = opts.map(function (o) { return [o[0], esc(o[1])]; });
+    function escolhe(v) { if (v !== atual) delete state.prefillSet[fd.id]; registra(v, rotulo(opts, v)); }
+    if (auto && atual && opts.some(function (o) { return o[0] === atual; })) {
+      return botoes([[atual, "✓ " + esc(rotulo(opts, atual)), "pri"], ["__outra", "Outra resposta"]], function (v) {
+        if (v === "__outra") return botoes(todas, escolhe);
+        escolhe(v);
+      });
+    }
+    botoes(todas, escolhe);
+  }
+
+  /* ---------- empresa (nome ou CNPJ) ---------- */
+  function cartaoEmpresa(e) {
+    var linha = [maskCnpj(e.cnpj), [e.cidade, e.uf].filter(Boolean).join("/"), e.abertura ? "aberta em " + dataBR(e.abertura) : "", e.situacao].filter(Boolean).map(esc).join(" · ");
+    return '<div class="emp"><b>' + esc(e.razao) + "</b>" + (e.fantasia ? "<span>" + esc(e.fantasia) + "</span>" : "") +
+      "<small>" + linha + "</small>" + (e.cnaeDesc ? "<small>" + esc(e.cnaeDesc) + "</small>" : "") + "</div>";
+  }
+  function perguntaEmpresa(fd) {
+    texto({ placeholder: "Nome da empresa ou CNPJ", extras: [["__pular", "Prefiro não informar"]],
+      mascara: function (v) { return /[a-zà-ú]/i.test(v) ? v : maskCnpj(v); } }, function (v, extra) {
+      var snap = foto(); snap.again = function () { responde(fd); };
+      var g = ch.gen;
+      if (extra === "__pular") {
+        eu(v, snap);
+        ch.asked[fd.id] = true;
+        diz(["Sem problemas! Sigo só com as suas respostas."]);
+        return proximo();
+      }
+      eu(v, snap);
+      if (/[a-zà-ú]/i.test(v)) buscaNome(fd, v, g); else buscaCnpj(fd, digits(v), g);
+    });
+  }
+  function buscaCnpj(fd, c, g) {
+    if (!cnpjValido(c)) { diz(["Esse CNPJ não parece válido. Confere os números?"]); return responde(fd); }
+    track("cnpj_busca");
+    aguarda(consultarCnpj(c)).then(function (e) {
+      if (g !== ch.gen) return;
+      diz([{ html: "Encontrei esta empresa:" + cartaoEmpresa(e), cls: "card" }]);
+      botoes([["sim", "É a minha empresa", "pri"], ["nao", "Não é"]], function (v) {
+        if (v === "nao") { eu("Não é"); diz(["Sem problemas. Confere o CNPJ ou digite parte do nome."]); return responde(fd); }
+        eu("É a minha empresa");
+        confirma(fd, e, g);
+      });
+    }, function (err) {
+      if (g !== ch.gen) return;
+      diz([err && err.notFound ? "Não encontrei esse CNPJ na Receita. Confere os números?" : "A Receita não respondeu agora. Tenta de novo ou toque em <b>Prefiro não informar</b>."]);
+      responde(fd);
+    });
+  }
+  function buscaNome(fd, q, g) {
+    if (!window.B4Y_NOMES) { diz(["Por aqui, só consigo buscar pelo <b>CNPJ</b>. Pode digitar?"]); return responde(fd); }
+    track("nome_busca");
+    aguarda(window.B4Y_NOMES.buscar(q)).then(function (r) {
+      if (g !== ch.gen) return;
+      if (!r.itens.length) { diz(["Não achei empresa de saúde com esse nome. Tenta outra parte do nome ou o <b>CNPJ</b>."]); return responde(fd); }
+      diz([(r.itens.length === 1 ? "Achei esta. É a sua?" : "Achei estas. É alguma delas?") +
+        (r.muitos || r.total > r.itens.length ? '<span class="hint">Tem muitas com esse nome. Se a sua não estiver aqui, digite mais do nome (ou a cidade) ou o CNPJ.</span>' : "")]);
+      var lista = r.itens.map(function (it, i) {
+        return [i, "<b>" + esc(it.razao) + "</b>" + (it.fantasia ? "<span>" + esc(it.fantasia) + "</span>" : "") + "<small>" + esc(maskCnpj(it.cnpj)) + (it.local ? " · " + esc(it.local) : "") + "</small>", "emp"];
+      }).concat([["__nenhuma", "Nenhuma delas"]]);
+      botoes(lista, function (v) {
+        if (v === "__nenhuma") { eu("Nenhuma delas"); diz(["Tudo bem. Digite outra parte do nome ou o CNPJ."]); return responde(fd); }
+        var it = r.itens[v];
+        eu(it.fantasia || it.razao);
+        track("nome_escolhido");
+        aguarda(consultarCnpj(it.cnpj)).then(function (e) { confirma(fd, e, g); }, function () { if (g === ch.gen) confirma(fd, empresaDaLista(it), g); });
+      }, { lista: true });
+    }, function (e) {
+      if (g !== ch.gen) return;
+      var t = { generico: "Me passa uma parte <b>mais específica</b> do nome (sem \"clínica\", \"médicos\", \"ltda\").", curto: "Digite pelo menos <b>3 letras</b> de uma palavra do nome." }[e && e.codigo];
+      diz([t || "A busca por nome não está disponível agora. Pode digitar o <b>CNPJ</b>?"]);
+      responde(fd);
+    });
+  }
+  function confirma(fd, e, g) {
+    if (g !== ch.gen) return;
+    confirmaEmpresa(e);
+    ch.asked[fd.id] = true;
+    diz([{ html: '<small class="tag ok">Empresa confirmada</small>' + cartaoEmpresa(e), cls: "card" },
+      "Um instante: estou verificando os <b>dados públicos</b>…"]);
+    aguarda(state.lookups, 900).then(function () {
+      if (g !== ch.gen) return;
+      postaMigalhas();
+      proximo();
+    }, function () { if (g === ch.gen) { postaMigalhas(); proximo(); } });
+  }
+
+  /* ---------- fim: prévia, contato e resultado ---------- */
+  function previaHtml(R) {
+    var P = D.preview, inclui = [];
+    if (R.opps && R.opps.length) inclui.push("Os valores de cada oportunidade");
+    if (R.alerts && R.alerts.length) inclui.push("Os " + R.alerts.length + " pontos de atenção explicados");
+    if (R.sim) inclui.push("A simulação da distribuição de lucros");
+    if (R.painel) inclui.push("A prévia do seu painel com os seus números");
+    inclui.push("Seu plano de ação");
+    return '<div class="previa">' + head(R, true) + alertsBox(R, true) +
+      '<p class="lib">' + LOCK + " <b>" + esc(P.title) + "</b></p><p class=\"small\">Inclui:</p><ul class=\"checks\">" + inclui.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></div>";
+  }
+  /* ---------- e-mail: checagens ---------- */
+  var DOMINIOS = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "yahoo.com.br", "icloud.com", "live.com", "uol.com.br", "bol.com.br", "terra.com.br", "msn.com", "hotmail.com.br", "outlook.com.br"];
+  var DESCARTAVEIS = /(^|\.)(mailinator|yopmail|guerrillamail|10minutemail|temp-?mail|trashmail|sharklasers|getnada|dispostable|mailnesia|maildrop|throwawaymail|fakeinbox)\./i;
+  var FALSOS = /^(teste|test|email|exemplo|example|asd|aaa|abc|xxx|naotenho|nao)\.(com|com\.br|br)$/i;
+  function distancia(a, b) {
+    var m = [], i, j;
+    for (i = 0; i <= a.length; i++) m[i] = [i];
+    for (j = 0; j <= b.length; j++) m[0][j] = j;
+    for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++)
+      m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return m[a.length][b.length];
+  }
+  function emailInvalido(v) {
+    v = v.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(v)) return "Confere o e-mail? O relatório vai para ele.";
+    var dom = v.split("@")[1];
+    if (DESCARTAVEIS.test(dom + ".") || FALSOS.test(dom)) return "Use um e-mail que você acessa: o relatório vai para ele.";
+    return null;
+  }
+  function sugestaoEmail(v) {
+    var p = v.trim().toLowerCase().split("@"), dom = p[1] || "";
+    if (DOMINIOS.indexOf(dom) >= 0) return null;
+    var melhor = null, dm = 3;
+    DOMINIOS.forEach(function (d) { var x = distancia(dom, d); if (x < dm) { dm = x; melhor = d; } });
+    return melhor && dm <= 2 ? p[0] + "@" + melhor : null;
+  }
+
+  /* ---------- link do relatório (vai no e-mail) ---------- */
+  function b64url(txt) { return btoa(unescape(encodeURIComponent(txt))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function de64url(t) { t = t.replace(/-/g, "+").replace(/_/g, "/"); while (t.length % 4) t += "="; return decodeURIComponent(escape(atob(t))); }
+  function linkRelatorio() {
+    var e = state.empresa, rc = C.relatorio || {};
+    var p = { v: 1, a: state.answers, x: state.exit || undefined, n: state.lead ? state.lead.nome.split(" ")[0] : "", t: Date.now() };
+    if (e) { p.c = e.cnpj; p.r = e.razao; p.f = e.fantasia; p.l = [e.cidade, e.uf].filter(Boolean).join("/"); }
+    var base = rc.urlBase || location.href.split(/[?#]/)[0];
+    return base + "#r=" + b64url(JSON.stringify(p));
+  }
+
+  /* ---------- fim: prévia, contato, envio por e-mail ---------- */
+  function fim() {
+    progresso(true);
+    var R = state.R = D.analisar(state.answers, ctx());
+    track("preview", { nota: R.score });
+    diz(["<b>Pronto!</b> Terminei a análise da sua empresa.",
+      { html: previaHtml(R), cls: "card wide", ms: 1200 },
+      "O <b>diagnóstico completo</b>, com valores, simulação e o seu painel, eu mando por <b>e-mail</b>. Me passa seu contato? Leva 20 segundos."]);
+    pedeContato(function () { return R; }, function () { track("lead", { rota: R.rota, nota: R.score }); });
+  }
+  function saida(ex) {
+    var X = D.exits[ex];
+    state.exit = ex;
+    progresso(true);
+    diz([X.bot]);
+    pedeContato(function () { return (state.R = X.result(state.answers, ctx())); }, function () { track("lead", { rota: X.rota }); }, X.rota);
+  }
+  function pedeContato(resultado, onLead, rota) {
+    var L = ch.lead, rc = C.relatorio || {}, maxEnvios = rc.maxEnvios || 3;
+    function nomeTexto() {
+      return texto({ placeholder: "Seu nome", valida: function (v) { return v.length > 1 ? null : "Digite seu nome."; } }, function (v) {
+        var snap = foto(); snap.again = nomeTexto;
+        L.nome = v; eu(v, snap);
+        diz(["Prazer, <b>" + esc(L.nome.split(" ")[0]) + "</b>! Qual é o seu melhor <b>e-mail</b>?<span class=\"hint\">É para ele que eu mando o diagnóstico completo.</span>"]);
+        email(tel);
+      });
+    }
+    // pede o e-mail, sugere correção de digitação e segue para "depois"
+    function email(depois, atual) {
+      var s = function () {
+        return texto({ type: "email", placeholder: "seu@email.com", valor: atual, valida: emailInvalido }, function (v) {
+          v = v.trim().toLowerCase();
+          var snap = foto(); snap.again = s;
+          eu(v, snap);
+          var sug = sugestaoEmail(v);
+          if (!sug) { L.email = v; return depois(); }
+          diz(["Você quis dizer <b>" + esc(sug) + "</b>?"]);
+          botoes([["sim", "Sim, " + esc(sug), "pri"], ["nao", "Não, está certo"]], function (r) {
+            eu(r === "sim" ? "Sim" : "Não, está certo");
+            L.email = r === "sim" ? sug : v;
+            depois();
+          });
+        });
+      };
+      s();
+    }
+    function tel() {
+      var s = function () {
+        return texto({ type: "tel", placeholder: "(11) 99999-9999", mascara: mascaraTel, valida: function (v) { return digits(v).length >= 10 ? null : "Digite o número com DDD."; } }, function (v) {
+          var snap = foto(); snap.again = s;
+          L.tel = digits(v); eu(v, snap); confirma();
+        });
+      };
+      diz(["E o seu <b>WhatsApp</b>, com DDD?"]);
+      s();
+    }
+    // confirma o e-mail antes de enviar
+    function confirma() {
+      var s = function () {
+        return botoes([["ok", "Sim, pode enviar", "pri"], ["corrigir", "Corrigir e-mail"]], function (r) {
+          var snap = foto(); snap.again = s;
+          if (r === "corrigir") {
+            eu("Corrigir e-mail", snap);
+            diz(["Sem problemas. Qual é o e-mail certo?"]);
+            return email(confirmaDeNovo, L.email);
+          }
+          eu("Sim, pode enviar", snap);
+          envia(false);
+        });
+      };
+      diz(['Vou enviar o diagnóstico completo para <b>' + esc(L.email) + '</b>. Está certo? Ao confirmar, você aceita receber o relatório e o nosso contato. <a href="' + esc(C.privacidadeUrl || "#") + '" target="_blank" rel="noopener">Política de privacidade</a>']);
+      s();
+    }
+    function confirmaDeNovo() { confirma(); }
+    function envia(reenvio, anterior) {
+      L.envios = (L.envios || 0) + 1;
+      // o envio não se desfaz: some o "corrigir" das mensagens anteriores
+      ch.stack = [];
+      app.querySelectorAll(".wm.me .undo").forEach(function (u) { u.remove(); });
+      state.lead = { nome: L.nome, email: L.email, tel: L.tel };
+      var R = resultado();
+      submitLead(R, rota || R.rota, { anterior: anterior || "", envio: L.envios });
+      if (!reenvio) onLead();
+      track(reenvio ? "relatorio_reenviado" : "relatorio_enviado", { envio: L.envios, corrigido: !!anterior });
+      diz([(reenvio ? "Prontinho, enviei de novo" : "Prontinho, <b>" + esc(L.nome.split(" ")[0]) + "</b>! Enviei o <b>diagnóstico completo</b>") + " para <b>" + esc(L.email) + "</b>.",
+        "Ele chega em até <b>5 minutos</b>. Se não aparecer, olhe também o <b>spam</b> e a aba <b>Promoções</b>."]);
+      depoisDoEnvio();
+    }
+    function wa() {
+      var R = state.R || {};
+      return "https://wa.me/" + (C.whatsapp || "") + "?text=" + encodeURIComponent((R.waText || "Olá! Fiz o diagnóstico no site da Back4you e quero conversar.") + " (" + L.nome.split(" ")[0] + ")");
+    }
+    function depoisDoEnvio() {
+      var ops = [["recebi", "Recebi ✓", "pri"], ["nao", "Não recebi"], ["corrigir", "O e-mail está errado"]];
+      if (rc.mostrarNaTela) ops.push(["tela", "Ver aqui agora"]);
+      botoes(ops, function (r) {
+        if (r === "recebi") {
+          eu("Recebi");
+          track("relatorio_recebido");
+          diz(["Ótimo! Qualquer dúvida sobre o diagnóstico, é só me chamar no WhatsApp."]);
+          return fimConversa();
+        }
+        if (r === "tela") { eu("Ver aqui agora"); return abreResultado(); }
+        if (r === "corrigir") {
+          eu("O e-mail está errado");
+          return corrigir();
+        }
+        eu("Não recebi");
+        track("relatorio_nao_recebido", { envio: L.envios });
+        diz(["Poxa! Confere comigo: o e-mail é <b>" + esc(L.email) + "</b>?"]);
+        botoes([["reenviar", "Está certo, reenviar", "pri"], ["corrigir", "Não, corrigir e-mail"]], function (x) {
+          if (x === "corrigir") { eu("Corrigir e-mail"); return corrigir(); }
+          eu("Está certo, reenviar");
+          if (L.envios >= maxEnvios) return limite();
+          envia(true);
+        });
+      });
+    }
+    function corrigir() {
+      if (L.envios >= maxEnvios + 1) return limite();
+      var anterior = L.email;
+      diz(["Qual é o e-mail certo?"]);
+      email(function () {
+        if (L.email === anterior) { diz(["Esse é o mesmo e-mail de antes. Vou reenviar para ele."]); return envia(true); }
+        track("email_corrigido");
+        envia(true, anterior);
+      }, anterior);
+    }
+    function limite() {
+      diz(["Já enviei algumas vezes e parece que não está chegando. Me chama no <b>WhatsApp</b> que eu te mando por lá."]);
+      fimConversa();
+    }
+    function fimConversa() {
+      botoes([["wa", "Falar no WhatsApp", "pri"], ["corrigir", "Corrigir e-mail"]], function (r) {
+        if (r === "wa") { track("cta_whatsapp"); window.open(wa(), "_blank", "noopener"); return fimConversa(); }
+        eu("Corrigir e-mail"); corrigir();
+      });
+    }
+    diz(["Como posso te chamar?"]);
+    nomeTexto();
+  }
+  function abreResultado() {
+    var w = el("wa");
+    if (w) { ch.node = w; w.remove(); }
+    document.body.classList.remove("chat");
+    state.screen = "result";
+    render(); top();
+  }
+  function voltaConversa() {
+    if (!ch || !ch.node) return;
+    document.body.classList.add("chat");
+    app.innerHTML = ""; app.appendChild(ch.node);
+    state.screen = "chat";
+    rolar();
+  }
+
+  /* ---------- início ---------- */
+  function iniciaChat() {
+    ch = novoChat();
+    state.screen = "chat";
+    document.body.classList.add("chat");
+    montaChat();
+    progresso();
+    var I = D.intro, g = ch.gen;
+    diz((D.introChat || [I.title]).map(function (t, i) { return { html: t, ms: i ? null : 700 }; }));
+    botoes([["go", esc(I.cta), "pri"]], function () {
+      if (g !== ch.gen) return;
+      eu("Vamos lá!");
+      ch.iniciado = true;
+      progresso();
+      track("start");
+      proximo();
+    });
+  }
+  function lerRelatorio() {
+    var m = /[#&]r=([A-Za-z0-9_-]+)/.exec(location.hash || "");
+    if (!m) return null;
+    try { var p = JSON.parse(de64url(m[1])); return p && p.a ? p : null; } catch (e) { return null; }
+  }
+  function modoRelatorio(p) {
+    document.body.classList.remove("chat");
+    state.answers = p.a; state.exit = p.x || null; state.lead = { nome: p.n || "", email: "", tel: "" };
+    state.relatorio = p;
+    frame('<div class="carregando"><span class="spin"></span><p>Carregando o seu <b>diagnóstico completo</b>…</p><p class="small">Estamos consultando de novo a Receita, a dívida ativa e o CNES.</p></div>');
+    var emp = p.c ? consultarCnpj(p.c).catch(function () {
+      return empresaDaLista({ cnpj: p.c, razao: p.r || "", fantasia: p.f || "", local: p.l || "" });
+    }) : Promise.resolve(null);
+    emp.then(function (e) {
+      if (!e) return;
+      state.empresa = e;
+      return Promise.all([iniciaPgfn(e), iniciaCnes(e)]);
+    }).catch(function () {}).then(function () {
+      state.R = state.exit ? D.exits[state.exit].result(state.answers, ctx()) : D.analisar(state.answers, ctx());
+      state.screen = "result";
+      renderResult(); top();
+      track("relatorio_aberto", { dias: p.t ? Math.floor((Date.now() - p.t) / 864e5) : null });
+    });
+  }
+  function render() {
+    if (state.screen === "result") renderResult();
+    else iniciaChat();
+  }
+  var rel = lerRelatorio();
+  if (rel) { modoRelatorio(rel); return; }
+  render();
+})();
+
+</script>
+</body>
+</html>
