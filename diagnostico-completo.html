@@ -1047,9 +1047,9 @@ window.B4Y_PGFN = (function () {
       },
       {
         id: "rotina", label: "Seu dia a dia",
-        bot: function (a, c) { return "<p>Agora, <b>o que a empresa faz</b> no dia a dia.</p>" + (c.emp ? "<p class=\"small\">No CNPJ: " + c.H.esc(c.emp.cnaeDesc) + (c.emp.cnaesSec.length ? " + " + c.emp.cnaesSec.length + " atividade(s) secundária(s)" : "") + ".</p>" : ""); },
+        bot: "<p>Agora, <b>o que a empresa faz</b> no dia a dia.</p>",
         fields: [
-          { id: "atividades", type: "multi", label: "Marque tudo o que você faz", hint: "Mesmo o que não estiver no CNPJ.", options: ATIV },
+          { id: "atividades", type: "multi", label: "Marque tudo o que você faz", options: ATIV },
           { id: "principal", label: "O que mais gera faturamento?", when: function (a) { return (a.atividades || []).length > 1; },
             options: function (a) { return (a.atividades || []).map(function (x) { return [x, ATIV_TXT[x]]; }); } },
           { id: "mix", label: "Quanto do faturamento vem de procedimentos e exames?", when: function (a) { var at = a.atividades || []; return at.some(function (x) { return PROC.indexOf(x) >= 0; }) && (at.indexOf("consultas") >= 0 || at.indexOf("plantoes") >= 0 || at.indexOf("tele") >= 0); },
@@ -1194,9 +1194,7 @@ window.B4Y_PGFN = (function () {
       var at = cnesAtiv(r);
       if (at.length) {
         ans.atividades = at;
-        notes.atividades = "CNES: " + lista(at.map(function (x) { return { consultas: "consultas", procedimentos: "procedimentos", exames: "exames", tele: "telemedicina" }[x]; })) + ". Marque o que faltar.";
       }
-      if (r.prof) notes.equipe = "CNES: " + r.prof + (r.prof === 1 ? " profissional de saúde cadastrado" : " profissionais de saúde cadastrados") + ". Conte também a equipe administrativa.";
       return { answers: ans, notes: notes };
     },
 
