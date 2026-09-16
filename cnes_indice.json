@@ -1,0 +1,171 @@
+{
+ "base": "202608",
+ "tabela": "cnes",
+ "cnpjs": 347252,
+ "partes": [
+  {
+   "arquivo": "cnes_202608_parte01de01.db",
+   "de": 421707,
+   "ate": 98714876000102,
+   "mb": 12.5
+  }
+ ],
+ "tipos": {
+  "1": [
+   "POSTO DE SAUDE",
+   "outro"
+  ],
+  "2": [
+   "CENTRO DE SAUDE/UNIDADE BASICA",
+   "outro"
+  ],
+  "4": [
+   "POLICLINICA",
+   "clinica"
+  ],
+  "5": [
+   "HOSPITAL GERAL",
+   "hospital"
+  ],
+  "7": [
+   "HOSPITAL ESPECIALIZADO",
+   "hospital"
+  ],
+  "15": [
+   "UNIDADE MISTA",
+   "hospital"
+  ],
+  "20": [
+   "PRONTO SOCORRO GERAL",
+   "urgencia"
+  ],
+  "21": [
+   "PRONTO SOCORRO ESPECIALIZADO",
+   "urgencia"
+  ],
+  "22": [
+   "CONSULTORIO ISOLADO",
+   "consultorio"
+  ],
+  "32": [
+   "UNIDADE MOVEL FLUVIAL",
+   "outro"
+  ],
+  "36": [
+   "CLINICA/CENTRO DE ESPECIALIDADE",
+   "clinica"
+  ],
+  "39": [
+   "UNIDADE DE APOIO DIAGNOSE E TERAPIA (SADT ISOLADO)",
+   "sadt"
+  ],
+  "40": [
+   "UNIDADE MOVEL TERRESTRE",
+   "outro"
+  ],
+  "42": [
+   "UNIDADE MOVEL DE NIVEL PRE-HOSPITALAR NA AREA DE URGENCIA",
+   "hospital"
+  ],
+  "43": [
+   "FARMACIA",
+   "outro"
+  ],
+  "50": [
+   "UNIDADE DE VIGILANCIA EM SAUDE",
+   "outro"
+  ],
+  "60": [
+   "COOPERATIVA OU EMPRESA DE CESSAO DE TRABALHADORES NA SAUDE",
+   "outro"
+  ],
+  "61": [
+   "CENTRO DE PARTO NORMAL - ISOLADO",
+   "outro"
+  ],
+  "62": [
+   "HOSPITAL/DIA - ISOLADO",
+   "hospital_dia"
+  ],
+  "64": [
+   "CENTRAL DE REGULACAO DE SERVICOS DE SAUDE",
+   "outro"
+  ],
+  "67": [
+   "LABORATORIO CENTRAL DE SAUDE PUBLICA LACEN",
+   "sadt"
+  ],
+  "68": [
+   "CENTRAL DE GESTAO EM SAUDE",
+   "outro"
+  ],
+  "69": [
+   "CENTRO DE ATENCAO HEMOTERAPIA E OU HEMATOLOGICA",
+   "outro"
+  ],
+  "70": [
+   "CENTRO DE ATENCAO PSICOSSOCIAL",
+   "outro"
+  ],
+  "71": [
+   "CENTRO DE APOIO A SAUDE DA FAMILIA",
+   "outro"
+  ],
+  "72": [
+   "UNIDADE DE ATENCAO A SAUDE INDIGENA",
+   "outro"
+  ],
+  "73": [
+   "PRONTO ATENDIMENTO",
+   "urgencia"
+  ],
+  "74": [
+   "POLO ACADEMIA DA SAUDE",
+   "outro"
+  ],
+  "75": [
+   "TELESSAUDE",
+   "outro"
+  ],
+  "76": [
+   "CENTRAL DE REGULACAO MEDICA DAS URGENCIAS",
+   "outro"
+  ],
+  "77": [
+   "SERVICO DE ATENCAO DOMICILIAR ISOLADO(HOME CARE)",
+   "outro"
+  ],
+  "78": [
+   "UNIDADE DE ATENCAO EM REGIME RESIDENCIAL",
+   "outro"
+  ],
+  "79": [
+   "OFICINA ORTOPEDICA",
+   "outro"
+  ],
+  "80": [
+   "LABORATORIO DE SAUDE PUBLICA",
+   "sadt"
+  ],
+  "81": [
+   "CENTRAL DE REGULACAO DO ACESSO",
+   "outro"
+  ],
+  "82": [
+   "CENTRAL DE NOTIFICACAO,CAPTACAO E DISTRIB DE ORGAOS ESTADUAL",
+   "outro"
+  ],
+  "83": [
+   "POLO DE PREVENCAO DE DOENCAS E AGRAVOS E PROMOCAO DA SAUDE",
+   "outro"
+  ],
+  "84": [
+   "CENTRAL DE ABASTECIMENTO",
+   "outro"
+  ],
+  "85": [
+   "CENTRO DE IMUNIZACAO",
+   "outro"
+  ]
+ }
+}
