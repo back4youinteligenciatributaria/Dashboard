@@ -319,21 +319,10 @@ body.chat{overflow:hidden}
 .wa-zap:hover{background:rgba(255,255,255,.24)}
 @media (max-width:420px){.wa-zap span{display:none}.wa-zap{padding:8px}.zap-float{width:56px;height:56px;right:14px}.zap-float svg{width:30px;height:30px}}
 
-/* widgets de fora (botão de WhatsApp da Robbu/HubSpot e pop-ups do HubSpot, carregados pelo GTM): não aparecem nesta página */
-#robbu-whatsapp-button,.hs-cta-trigger-button,#hs-web-interactives-floating-container,#hs-web-interactives-top-anchor,#hs-web-interactives-bottom-anchor,#hs-web-interactives-top-push-anchor{display:none!important}
 </style>
-<!-- Google Tag Manager -->
-<script>window.dataLayer=window.dataLayer||[];(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-K386HWVB');</script>
-<!-- End Google Tag Manager -->
+<!-- Cole aqui o código de rastreamento (GTM / Google Ads / HubSpot) -->
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K386HWVB" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
 <div id="app"></div>
 <noscript>Ative o JavaScript para fazer o diagnóstico.</noscript>
 <script>
@@ -1728,16 +1717,7 @@ window.B4Y_PGFN = (function () {
       window.dataLayer.push(p);
       if (window.gtag) window.gtag("event", "b4y_" + ev, p);
     } catch (e) {}
-    if (ev === "cta_whatsapp") pushDL("whatsapp", { onde: (data && data.onde) || "chat_fim", numero: C.whatsapp || "" });
     if (EVENTOS_PLANILHA[ev] && (state.lead || state.relatorio)) registraEvento(ev, data);
-  }
-  // eventos pedidos pelo time de GTM (nomes sem o prefixo b4y_; nenhum dado pessoal vai junto)
-  function pushDL(ev, data) {
-    try {
-      window.dataLayer = window.dataLayer || [];
-      var p = { event: ev, material: D.id, diagnostico_id: state.id }; for (var k in data || {}) p[k] = data[k];
-      window.dataLayer.push(p);
-    } catch (e) {}
   }
   function top() { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); } }
   function digits(v) { return String(v == null ? "" : v).replace(/\D/g, ""); }
@@ -2012,25 +1992,10 @@ window.B4Y_PGFN = (function () {
   function cookie(n) { var m = document.cookie.match("(^|;)\\s*" + n + "=([^;]*)"); return m ? decodeURIComponent(m[2]) : null; }
   /* ---------- planilha (Google Apps Script) ---------- */
   var EVENTOS_PLANILHA = { relatorio_recebido: 1, relatorio_nao_recebido: 1, cta_whatsapp: 1, relatorio_aberto: 1 };
-  var UTM_CHAVES = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid", "fbclid", "ttclid", "li_fat_id", "msclkid"];
   function utms() {
-    var qs = new URLSearchParams(location.search), o = {}, salvo = {};
-    try { salvo = JSON.parse(sessionStorage.getItem("b4y_utm") || "{}") || {}; } catch (e) {}
-    var temNovo = UTM_CHAVES.some(function (k) { return qs.get(k); });
-    UTM_CHAVES.forEach(function (k) { var v = temNovo ? qs.get(k) : salvo[k]; if (v) o[k] = v; });
-    if (temNovo) { try { sessionStorage.setItem("b4y_utm", JSON.stringify(o)); } catch (e) {} }
+    var qs = new URLSearchParams(location.search), o = {};
+    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid", "fbclid", "ttclid", "li_fat_id", "msclkid"].forEach(function (k) { if (qs.get(k)) o[k] = qs.get(k); });
     return o;
-  }
-  // campos ocultos com as UTMs dentro do formulário da conversa (lidos pelo GTM)
-  function utmOcultos() {
-    var u = utms();
-    return ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].map(function (k) {
-      return '<input type="hidden" name="' + k + '" id="' + k + '" value="' + esc(u[k] || "") + '">';
-    }).join("");
-  }
-  function utmParams() {
-    var u = utms();
-    return { utm_source: u.utm_source || "", utm_medium: u.utm_medium || "", utm_campaign: u.utm_campaign || "" };
   }
   function postPlanilha(corpo, ms) {
     var P = C.planilha || {};
@@ -2120,7 +2085,7 @@ window.B4Y_PGFN = (function () {
       '<div class="wa-body" id="wa-body" role="log" aria-live="polite"><div class="wa-day"><span>Hoje</span></div>' +
       '<div class="wa-sec"><span>' + LOCK + " Diagnóstico gratuito. Seus dados ficam protegidos conforme a LGPD.</span></div></div>" +
       '<div class="wa-foot"><div class="wa-qr" id="wa-qr"></div>' +
-      '<form class="wa-comp" id="wa-comp" autocomplete="off">' + utmOcultos() + '<input id="wa-in" type="text" placeholder="Escolha uma opção acima" disabled aria-label="Mensagem">' +
+      '<form class="wa-comp" id="wa-comp" autocomplete="off"><input id="wa-in" type="text" placeholder="Escolha uma opção acima" disabled aria-label="Mensagem">' +
       '<button type="submit" id="wa-send" aria-label="Enviar" disabled>' + SEND + "</button></form></div></div>" +
       '<a class="zap-float" id="wa-float" target="_blank" rel="noopener" href="#" aria-label="Tirar dúvidas no WhatsApp" title="Tirar dúvidas no WhatsApp">' + ZAP + "</a>";
     limpaQR();
@@ -2281,7 +2246,7 @@ window.B4Y_PGFN = (function () {
     return { answers: JSON.parse(JSON.stringify(state.answers)), prefill: Object.assign({}, state.prefill), prefillSet: Object.assign({}, state.prefillSet),
       empresa: state.empresa, pgfn: state.pgfn, cnes: state.cnes, lookups: state.lookups, exit: state.exit,
       asked: Object.assign({}, ch.asked), done: Object.assign({}, ch.done), seen: Object.assign({}, ch.seen), started: Object.assign({}, ch.started),
-      lead: Object.assign({}, ch.lead), modo: ch.modo, pct: ch.pct, n: el("wa-body").children.length, etapa: ch.etapa, campo: ch.campo };
+      lead: Object.assign({}, ch.lead), modo: ch.modo, pct: ch.pct, n: el("wa-body").children.length };
   }
   function botaoCorrigir(d) {
     var u = document.createElement("button");
@@ -2292,9 +2257,6 @@ window.B4Y_PGFN = (function () {
     if (snap) app.querySelectorAll(".wm.me .undo").forEach(function (u) { u.remove(); });
     var d = addMsg("me", esc(txt));
     if (snap) { ch.stack.push(snap); botaoCorrigir(d); }
-    var n = el("wa-body") ? el("wa-body").querySelectorAll(".wm.me").length : 0;
-    pushDL("diagnostico_r" + n, { resposta_numero: n, etapa: ch.etapa || "", campo: ch.campo || "", refeita: !!ch.refeita });
-    ch.refeita = false;
     return d;
   }
   function desfaz() {
@@ -2303,7 +2265,6 @@ window.B4Y_PGFN = (function () {
     state.answers = s.answers; state.prefill = s.prefill; state.prefillSet = s.prefillSet;
     state.empresa = s.empresa; state.pgfn = s.pgfn; state.cnes = s.cnes; state.lookups = s.lookups; state.exit = s.exit;
     ch.asked = s.asked; ch.done = s.done; ch.seen = s.seen; ch.started = s.started; ch.lead = s.lead; ch.modo = s.modo;
-    ch.etapa = s.etapa; ch.campo = s.campo; ch.refeita = true;
     var b = el("wa-body");
     while (b.children.length > s.n) b.lastChild.remove();
     limpaQR();
@@ -2390,7 +2351,7 @@ window.B4Y_PGFN = (function () {
         diz([typeof S.bot === "function" ? S.bot(a, c) : S.bot,
           tip ? { html: '<small class="tag">' + esc(tip.title || "Você sabia?") + "</small>" + tip.html, cls: "dica" } : null]);
       }
-      if (fila.length) { ch.etapa = S.id; return pergunta(fila[0]); }
+      if (fila.length) return pergunta(fila[0]);
       ch.done[S.id] = true;
       var ex = S.exit && S.exit(state.answers, ctx());
       if (ex) return saida(ex);
@@ -2413,7 +2374,6 @@ window.B4Y_PGFN = (function () {
     diz(["Já tenho o suficiente para o seu diagnóstico.",
       "Quer <b>detalhar mais " + ex.length + " informações</b> antes de receber o diagnóstico completo, ou já quer receber com o que temos?<span class=\"hint\">Com os detalhes, o diagnóstico fica mais preciso. Leva menos de 1 minuto.</span>"]);
     var s = function () {
-      ch.etapa = "detalhes"; ch.campo = "detalhar";
       return botoes([["ja", "Já quero receber", "pri"], ["mais", "Detalhar mais"]], function (v) {
         var snap = foto(); snap.again = s;
         eu(v === "ja" ? "Já quero receber" : "Detalhar mais", snap);
@@ -2428,7 +2388,7 @@ window.B4Y_PGFN = (function () {
   }
   function proximoExtra() {
     var ex = extrasPendentes();
-    if (ex.length) { ch.etapa = "detalhes"; return pergunta(ex[0]); }
+    if (ex.length) return pergunta(ex[0]);
     ch.modo = "fim";
     postaMigalhas();
     fim();
@@ -2446,7 +2406,6 @@ window.B4Y_PGFN = (function () {
     responde(fd);
   }
   function responde(fd) {
-    ch.campo = fd.id;
     if (fd.type === "cnpj") return perguntaEmpresa(fd);
     var opts = typeof fd.options === "function" ? fd.options(state.answers, ctx()) : fd.options;
     var auto = state.prefillSet[fd.id], atual = state.answers[fd.id];
@@ -2504,7 +2463,6 @@ window.B4Y_PGFN = (function () {
     aguarda(consultarCnpj(c)).then(function (e) {
       if (g !== ch.gen) return;
       diz([{ html: "Encontrei esta empresa:" + cartaoEmpresa(e), cls: "card" }]);
-      ch.campo = "empresa_confirmacao";
       botoes([["sim", "É a minha empresa", "pri"], ["nao", "Não é"]], function (v) {
         if (v === "nao") { eu("Não é"); diz(["Sem problemas. Confere o CNPJ ou digite parte do nome."]); return responde(fd); }
         eu("É a minha empresa");
@@ -2527,7 +2485,6 @@ window.B4Y_PGFN = (function () {
       var lista = r.itens.map(function (it, i) {
         return [i, "<b>" + esc(it.razao) + "</b>" + (it.fantasia ? "<span>" + esc(it.fantasia) + "</span>" : "") + "<small>" + esc(maskCnpj(it.cnpj)) + (it.local ? " · " + esc(it.local) : "") + "</small>", "emp"];
       }).concat([["__nenhuma", "Nenhuma delas"]]);
-      ch.campo = "empresa_escolha";
       botoes(lista, function (v) {
         if (v === "__nenhuma") { eu("Nenhuma delas"); diz(["Tudo bem. Digite outra parte do nome ou o CNPJ."]); return responde(fd); }
         var it = r.itens[v];
@@ -2598,7 +2555,7 @@ window.B4Y_PGFN = (function () {
   function de64url(t) { t = t.replace(/-/g, "+").replace(/_/g, "/"); while (t.length % 4) t += "="; return decodeURIComponent(escape(atob(t))); }
   function linkRelatorio() {
     var rc = C.relatorio || {};
-    return (rc.urlBase || location.href.split(/[?#]/)[0]) + "#r=" + b64url(JSON.stringify(payloadRelatorio()));
+    return (rc.urlBase || location.href.split(/[?#]/)[0]) + "#r/" + b64url(JSON.stringify(payloadRelatorio()));
   }
 
 
@@ -2622,7 +2579,6 @@ window.B4Y_PGFN = (function () {
   function pedeContato(resultado, onLead, rota) {
     var L = ch.lead, rc = C.relatorio || {}, maxEnvios = rc.maxEnvios || 3;
     function nomeTexto() {
-      ch.etapa = "contato"; ch.campo = "nome";
       return texto({ placeholder: "Seu nome", valida: function (v) { return v.length > 1 ? null : "Digite seu nome."; } }, function (v) {
         var snap = foto(); snap.again = nomeTexto;
         L.nome = v; eu(v, snap);
@@ -2633,7 +2589,6 @@ window.B4Y_PGFN = (function () {
     // pede o e-mail, sugere correção de digitação e segue para "depois"
     function email(depois, atual) {
       var s = function () {
-        ch.etapa = "contato"; ch.campo = "email";
         return texto({ type: "email", placeholder: "seu@email.com", valor: atual, valida: emailInvalido }, function (v) {
           v = v.trim().toLowerCase();
           var snap = foto(); snap.again = s;
@@ -2641,7 +2596,6 @@ window.B4Y_PGFN = (function () {
           var sug = sugestaoEmail(v);
           if (!sug) { L.email = v; return depois(); }
           diz(["Você quis dizer <b>" + esc(sug) + "</b>?"]);
-          ch.campo = "email_sugestao";
           botoes([["sim", "Sim, " + esc(sug), "pri"], ["nao", "Não, está certo"]], function (r) {
             eu(r === "sim" ? "Sim" : "Não, está certo");
             L.email = r === "sim" ? sug : v;
@@ -2653,7 +2607,6 @@ window.B4Y_PGFN = (function () {
     }
     function tel() {
       var s = function () {
-        ch.etapa = "contato"; ch.campo = "whatsapp";
         return texto({ type: "tel", placeholder: "(11) 99999-9999", mascara: mascaraTel, valida: function (v) { return digits(v).length >= 10 ? null : "Digite o número com DDD."; } }, function (v) {
           var snap = foto(); snap.again = s;
           L.tel = digits(v); eu(v, snap); confirma();
@@ -2665,7 +2618,6 @@ window.B4Y_PGFN = (function () {
     // confirma o e-mail antes de enviar
     function confirma() {
       var s = function () {
-        ch.etapa = "contato"; ch.campo = "confirmacao_email";
         return botoes([["ok", "Sim, pode enviar", "pri"], ["corrigir", "Corrigir e-mail"]], function (r) {
           var snap = foto(); snap.again = s;
           if (r === "corrigir") {
@@ -2692,7 +2644,7 @@ window.B4Y_PGFN = (function () {
       aguarda(registraEnvio(R, rota || R.rota, { anterior: anterior || "", envio: L.envios, tipo: tipo }), 900).then(function (res) {
         if (g !== ch.gen) return;
         if (!res || !res.ok) return falhou(res && res.erro, reenvio);
-        if (!L.jaEnviou) { L.jaEnviou = true; onLead(); pushDL("form_submit", Object.assign(utmParams(), { form_id: "diagnostico_completo", form_name: "Diagnóstico completo", rota: rota || (R && R.rota) || "", nota: R && R.score != null ? R.score : "", respostas_total: el("wa-body") ? el("wa-body").querySelectorAll(".wm.me").length : 0 })); }
+        if (!L.jaEnviou) { L.jaEnviou = true; onLead(); }
         track(reenvio ? "relatorio_reenviado" : "relatorio_enviado", { envio: L.envios, corrigido: !!anterior });
         diz([(reenvio ? "Prontinho, enviei de novo" : "Prontinho, <b>" + esc(curto(L.nome) || L.nome) + "</b>! Enviei o <b>diagnóstico completo</b>") + " para <b>" + esc(L.email) + "</b>.",
           "Ele chega em até <b>5 minutos</b>. Se não aparecer, olhe também o <b>spam</b> e a aba <b>Promoções</b>."]);
@@ -2709,7 +2661,6 @@ window.B4Y_PGFN = (function () {
         return corrigir();
       }
       diz(["Não consegui enviar agora. Vamos tentar de novo?"]);
-      ch.etapa = "envio"; ch.campo = "tentar_de_novo";
       botoes([["tentar", "Tentar de novo", "pri"], ["corrigir", "Corrigir e-mail"]], function (r) {
         if (r === "corrigir") { eu("Corrigir e-mail"); return corrigir(); }
         eu("Tentar de novo");
@@ -2723,7 +2674,6 @@ window.B4Y_PGFN = (function () {
     function depoisDoEnvio() {
       var ops = [["recebi", "Recebi ✓", "pri"], ["nao", "Não recebi"], ["corrigir", "O e-mail está errado"]];
       if (rc.mostrarNaTela) ops.push(["tela", "Ver aqui agora"]);
-      ch.etapa = "envio"; ch.campo = "recebimento";
       botoes(ops, function (r) {
         if (r === "recebi") {
           eu("Recebi");
@@ -2762,7 +2712,6 @@ window.B4Y_PGFN = (function () {
       fimConversa();
     }
     function fimConversa() {
-      ch.etapa = "envio"; ch.campo = "fim";
       botoes([["wa", "Falar no WhatsApp", "pri"], ["corrigir", "Corrigir e-mail"]], function (r) {
         if (r === "wa") { track("cta_whatsapp"); window.open(wa(), "_blank", "noopener"); return fimConversa(); }
         eu("Corrigir e-mail"); corrigir();
@@ -2795,19 +2744,18 @@ window.B4Y_PGFN = (function () {
     progresso();
     var I = D.intro, g = ch.gen;
     diz((D.introChat || [I.title]).map(function (t, i) { return { html: t, ms: i ? null : 700 }; }));
-    ch.etapa = "inicio"; ch.campo = "inicio";
     botoes([["go", esc(I.cta), "pri"]], function () {
       if (g !== ch.gen) return;
       eu("Vamos lá!");
       ch.iniciado = true;
       progresso();
       track("start");
-      pushDL("form_start", Object.assign({ form_id: "diagnostico_completo", form_name: "Diagnóstico completo" }, utmParams()));
       proximo();
     });
   }
   function lerRelatorio() {
-    var m = /[#&]r=([A-Za-z0-9_-]+)/.exec(location.hash || "");
+    // "#r/…" (atual, o WhatsApp reconhece o link inteiro) ou "#r=…" (links antigos)
+    var m = /[#&]r[=\/]([A-Za-z0-9_-]+)/.exec(location.hash || "");
     if (!m) return null;
     try { var p = JSON.parse(de64url(m[1])); return p && p.a ? p : null; } catch (e) { return null; }
   }
