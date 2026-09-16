@@ -2494,10 +2494,25 @@ window.B4Y_PGFN = (function () {
       var g = ch.gen;
       if (extra === "__pular") {
         eu(v, snap);
-        ch.asked[fd.id] = true;
-        ch.semEmpresa = true;
-        diz(["Sem problemas! Sigo só com as suas respostas."]);
-        return proximo();
+        var segue = function () {
+          ch.asked[fd.id] = true;
+          ch.semEmpresa = true;
+          diz(["Sem problemas! Sigo só com as suas respostas."]);
+          proximo();
+        };
+        if (ch.insistiu) return segue();
+        // na primeira recusa, mostra o que ele ganha informando a empresa
+        ch.insistiu = true;
+        track("empresa_recusa");
+        diz(["Com o nome da empresa eu já <b>adianto vários dados públicos</b>: cadastro, dívida ativa, CNES e planos de saúde. Assim você responde <b>menos perguntas</b>.",
+          "É só digitar <b>uma parte do nome</b> que eu pesquiso sozinho."]);
+        return botoes([["informar", "Vou informar", "pri"], ["seguir", "Seguir sem informar"]], function (r) {
+          if (r === "seguir") { eu("Seguir sem informar"); track("empresa_sem"); return segue(); }
+          eu("Vou informar");
+          track("empresa_aceitou");
+          diz(["Ótimo! Digite o <b>nome</b> (ou parte dele) ou o <b>CNPJ</b>."]);
+          responde(fd);
+        });
       }
       eu(v, snap);
       ch.buscas.push(String(v).slice(0, 60));
