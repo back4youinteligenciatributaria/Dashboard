@@ -308,6 +308,16 @@ body.chat{overflow:hidden}
 .wm .wb .small,.previa .small{font-size:14px}
 .previa .pillar span{font-size:14px}
 .previa ul.alerts li,.previa ul.checks li{font-size:15.5px}
+/* WhatsApp: CTAs, botão flutuante e atalho no chat */
+.cta-box .btn.cta-wa{display:flex;align-items:center;justify-content:center;gap:8px}
+.cta-box + .cta-box{margin-top:12px}
+.zap-float{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:50;width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#25D366;color:#fff;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.25);transition:transform .15s,bottom .15s}
+.zap-float svg{width:34px;height:34px}
+.zap-float:hover{transform:scale(1.07)}
+.actions{margin-bottom:72px}
+.wa-zap{flex:none;display:flex;align-items:center;gap:5px;color:#fff;text-decoration:none;font-size:13px;font-weight:600;background:rgba(255,255,255,.14);border-radius:999px;padding:7px 11px}
+.wa-zap:hover{background:rgba(255,255,255,.24)}
+@media (max-width:420px){.wa-zap span{display:none}.wa-zap{padding:8px}.zap-float{width:56px;height:56px;right:14px}.zap-float svg{width:30px;height:30px}}
 
 </style>
 <!-- Cole aqui o código de rastreamento (GTM / Google Ads / HubSpot) -->
@@ -341,7 +351,7 @@ window.CONFIG = {
       emailAnterior: "b4y_email_anterior" // e-mail que o médico corrigiu (quando corrige)
     }
   },
-  whatsapp: "55XXXXXXXXXXX",
+  whatsapp: "5512981723773",
   planilha: {
     url: "https://script.google.com/macros/s/AKfycbz3arF4m8rfO7PzhlPFSwQbMlwECpI7pkWvh-GePyUenvUGfPydy9mhwo3OowiF1PRZ/exec", // app da Web no-reply@back4you.com.br (vazio = não envia)
     token: "b4y-diagnostico-2026" // igual ao TOKEN do Apps Script
@@ -1660,8 +1670,8 @@ window.B4Y_PGFN = (function () {
       R.nextSteps = s;
       R.strengths = ["Consultoria tributária <b>de médicos para médicos</b>", "<b>Painel integrado</b> com guias, notas, resultado e equipe", "<b>Reunião mensal</b> sobre os seus números", "Estratégia tributária <b>revisada todo ano</b>", "Resposta <b>no mesmo dia</b>"];
       R.ctaText = K.anoHi > 0 ? "Quer confirmar <b>os valores exatos</b>? Analisamos suas notas e guias, sem custo." : "Quer ver <b>o seu painel de verdade</b>? Fale com a gente.";
-      R.ctaLabel = "Falar com um especialista";
-      R.waText = "Olá! Fiz o diagnóstico completo no site da Back4you (nota " + score + ") e quero conversar.";
+      R.ctaLabel = "Tirar dúvidas com especialista";
+      R.waText = "Olá! Fiz o diagnóstico completo da minha clínica no site da Back4you e gostaria de tirar algumas dúvidas.";
       R.disclaimer = "Diagnóstico indicativo, feito com as suas respostas, faixas médias e dados públicos (Receita, PGFN base 06/2026" + (cn && cn.competencia ? " e CNES " + cn.competencia : "") + (cn && cn.ansCompetencia ? ", ANS " + cn.ansCompetencia : "") + "). Valores de dívida ativa podem incluir débitos em que a empresa é corresponsável. Não é parecer contábil ou jurídico.";
 
       var fatOk = a.fat && a.fat !== "ate20";
@@ -1926,20 +1936,50 @@ window.B4Y_PGFN = (function () {
     });
   }
 
+  // "(Dr. Nome)": se o médico já escreveu "Dr."/"Dra.", mantém o que ele usou
+  function cap(w) { return w ? w.charAt(0).toLocaleUpperCase("pt-BR") + w.slice(1) : w; }
+  function assinatura(nome) {
+    var p = String(nome || "").trim().split(/\s+/).filter(Boolean).map(cap);
+    if (!p.length) return "";
+    if (/^dra?\.?$/i.test(p[0])) return p[1] ? (/^dra\.?$/i.test(p[0]) ? "Dra. " : "Dr. ") + p[1] : "";
+    return "Dr. " + p[0];
+  }
+  // "Dra Ana Souza" -> "Dra. Ana"; "Gian Paradisi" -> "Gian"
+  function curto(nome) {
+    var p = String(nome || "").trim().split(/\s+/).filter(Boolean).map(cap);
+    if (!p.length) return "";
+    if (/^dra?\.?$/i.test(p[0])) return p[1] ? (/^dra\.?$/i.test(p[0]) ? "Dra. " : "Dr. ") + p[1] : "";
+    return p[0];
+  }
+  var WA_ANTES = "Olá! Estava fazendo o diagnóstico completo da minha clínica no site da Back4you e não finalizei ainda, mas gostaria de tirar algumas dúvidas!";
+  function linkWhats(R, nome, texto) {
+    var ass = assinatura(nome);
+    var txt = (texto || (R && R.waText) || "Olá! Fiz o diagnóstico completo da minha clínica no site da Back4you e gostaria de tirar algumas dúvidas.") + (ass ? " (" + ass + ")" : "");
+    return "https://wa.me/" + (C.whatsapp || "") + "?text=" + encodeURIComponent(txt);
+  }
+  var ZAP = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 3C6.9 3 3 6.6 3 11c0 2.1.9 4 2.4 5.4L4.6 21l4.3-1.9c1 .3 2 .4 3.1.4 5.1 0 9-3.6 9-8.1S17.1 3 12 3zm-4 9.3a1.3 1.3 0 110-2.6 1.3 1.3 0 010 2.6zm4 0a1.3 1.3 0 110-2.6 1.3 1.3 0 010 2.6zm4 0a1.3 1.3 0 110-2.6 1.3 1.3 0 010 2.6z"/></svg>';
+  function ctaBox(R, wa, onde, texto) {
+    return '<div class="cta-box"><p>' + texto + '</p><a class="btn cta-wa" data-onde="' + onde + '" target="_blank" rel="noopener" href="' + wa + '">' + ZAP + " " + esc(R.ctaLabel || "Tirar dúvidas com especialista") + "</a></div>";
+  }
   function renderResult() {
     var R = state.R;
-    var wa = "https://wa.me/" + (C.whatsapp || "") + "?text=" + encodeURIComponent((R.waText || "Olá! Fiz o diagnóstico no site da Back4you e quero conversar.") + (state.lead ? " (" + state.lead.nome.split(" ")[0] + ")" : ""));
+    var wa = linkWhats(R, state.lead && state.lead.nome);
     var p = state.relatorio;
-    var ola = p ? '<p class="ola">' + (p.n ? "Olá, <b>" + esc(p.n) + "</b>! " : "") + "Aqui está o seu diagnóstico completo" + (p.t ? ", feito em " + esc(new Date(p.t).toLocaleDateString("pt-BR")) : "") + ".</p>" : "";
-    var html = ola + empLine() + head(R, false) + receitaBox(R) + oppsBox(R, false) + alertsBox(R, false) + simBox(R, false) + painelBox(R, false) + cmpBox(R);
+    var ola = p ? '<p class="ola">' + (curto(p.n) ? "Olá, <b>" + esc(curto(p.n)) + "</b>! " : "") + "Aqui está o seu diagnóstico completo" + (p.t ? ", feito em " + esc(new Date(p.t).toLocaleDateString("pt-BR")) : "") + ".</p>" : "";
+    var html = ola + empLine() + head(R, false) +
+      ctaBox(R, wa, "topo", "Ficou com alguma dúvida sobre o resultado? <b>Fale direto com um especialista.</b>") +
+      receitaBox(R) + oppsBox(R, false) + alertsBox(R, false) +
+      ctaBox(R, wa, "meio", "Quer entender <b>o que fazer primeiro</b>? A gente te explica, sem compromisso.") +
+      simBox(R, false) + painelBox(R, false) + cmpBox(R);
     if (R.nextSteps && R.nextSteps.length) html += '<h3>Seu plano de ação</h3><ol class="nsteps">' + R.nextSteps.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ol>";
     if (R.strengths && R.strengths.length) html += '<h3>Com a Back4you</h3><ul class="checks">' + R.strengths.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ul>";
-    html += '<div class="cta-box"><p>' + (R.ctaText || "Quer ver isso com os seus números reais?") + '</p><a class="btn" id="cta1" target="_blank" rel="noopener" href="' + wa + '">' + esc(R.ctaLabel || "Falar com um especialista") + "</a></div>";
+    html += ctaBox(R, wa, "fim", R.ctaText || "Quer ver isso com os seus números reais?").replace('class="btn cta-wa"', 'class="btn cta-wa" id="cta1"');
     html += '<p class="disclaimer">' + (R.disclaimer || "Resultado indicativo, feito só com as suas respostas. Não é parecer contábil ou jurídico.") + "</p>";
     html += '<div class="actions">' + (ch && ch.node ? '<button class="btn btn-ghost" id="conversa">← Ver a conversa</button>' : "") + '<button class="btn btn-ghost" id="redo">↺ Refazer</button></div>';
+    html += '<a class="zap-float cta-wa" data-onde="flutuante" target="_blank" rel="noopener" href="' + wa + '" aria-label="Tirar dúvidas com especialista no WhatsApp" title="Tirar dúvidas no WhatsApp">' + ZAP + "</a>";
     frame(html, { pct: 100, label: "Diagnóstico completo", right: "" });
     bindPainel();
-    document.getElementById("cta1").onclick = function () { track("cta_whatsapp"); };
+    document.querySelectorAll(".cta-wa").forEach(function (a) { a.onclick = function () { track("cta_whatsapp", { onde: a.getAttribute("data-onde") }); }; });
     document.getElementById("redo").onclick = function () {
       if (location.hash) history.replaceState(null, "", location.pathname + location.search);
       state = fresh(); render(); top();
@@ -1970,7 +2010,7 @@ window.B4Y_PGFN = (function () {
   }
   function payloadRelatorio() {
     var e = state.empresa;
-    var p = { v: 1, i: state.id, a: state.answers, x: state.exit || undefined, n: state.lead ? state.lead.nome.split(" ")[0] : "", t: Date.now() };
+    var p = { v: 1, i: state.id, a: state.answers, x: state.exit || undefined, n: state.lead ? curto(state.lead.nome) : "", t: Date.now() };
     if (e) { p.c = e.cnpj; p.r = e.razao; p.f = e.fantasia; p.l = [e.cidade, e.uf].filter(Boolean).join("/"); }
     return p;
   }
@@ -2040,14 +2080,29 @@ window.B4Y_PGFN = (function () {
 
   function montaChat() {
     app.innerHTML = '<div class="wa" id="wa">' +
-      '<header class="wa-top"><div class="wa-av" aria-hidden="true">b<i>4</i>y</div><div class="wa-id"><b>Back4you</b><small id="wa-st">online</small></div><div class="wa-etapa" id="wa-etapa"></div></header>' +
+      '<header class="wa-top"><div class="wa-av" aria-hidden="true">b<i>4</i>y</div><div class="wa-id"><b>Back4you</b><small id="wa-st">online</small></div><div class="wa-etapa" id="wa-etapa"></div><a class="wa-zap" id="wa-zap" target="_blank" rel="noopener" href="#" aria-label="Tirar dúvidas no WhatsApp">' + ZAP + '<span>Dúvidas?</span></a></header>' +
       '<div class="wa-prog"><i id="wa-prog"></i></div>' +
       '<div class="wa-body" id="wa-body" role="log" aria-live="polite"><div class="wa-day"><span>Hoje</span></div>' +
       '<div class="wa-sec"><span>' + LOCK + " Diagnóstico gratuito. Seus dados ficam protegidos conforme a LGPD.</span></div></div>" +
       '<div class="wa-foot"><div class="wa-qr" id="wa-qr"></div>' +
       '<form class="wa-comp" id="wa-comp" autocomplete="off"><input id="wa-in" type="text" placeholder="Escolha uma opção acima" disabled aria-label="Mensagem">' +
-      '<button type="submit" id="wa-send" aria-label="Enviar" disabled>' + SEND + "</button></form></div></div>";
+      '<button type="submit" id="wa-send" aria-label="Enviar" disabled>' + SEND + "</button></form></div></div>" +
+      '<a class="zap-float" id="wa-float" target="_blank" rel="noopener" href="#" aria-label="Tirar dúvidas no WhatsApp" title="Tirar dúvidas no WhatsApp">' + ZAP + "</a>";
     limpaQR();
+    [["wa-zap", "chat_topo"], ["wa-float", "chat_flutuante"]].forEach(function (x) {
+      var z = el(x[0]);
+      // antes de terminar: texto de "não finalizei"; com o diagnóstico pronto: o texto do resultado
+      z.href = linkWhats(null, "", WA_ANTES);
+      z.onclick = function () {
+        z.href = linkWhats(state.R, ch && ch.lead && ch.lead.nome, state.R ? null : WA_ANTES);
+        track("cta_whatsapp", { onde: x[1] });
+      };
+    });
+    // o balão flutua logo acima da caixa de resposta, que muda de altura
+    var foot = document.querySelector(".wa-foot"), fl = el("wa-float");
+    var sobe = function () { if (fl && foot) fl.style.bottom = (foot.offsetHeight + 14) + "px"; };
+    sobe();
+    if (window.ResizeObserver) new ResizeObserver(sobe).observe(foot); else window.addEventListener("resize", sobe);
   }
   function rolar() { var b = el("wa-body"); if (b) b.scrollTop = b.scrollHeight; }
   function addMsg(quem, html, cls) {
@@ -2527,7 +2582,7 @@ window.B4Y_PGFN = (function () {
       return texto({ placeholder: "Seu nome", valida: function (v) { return v.length > 1 ? null : "Digite seu nome."; } }, function (v) {
         var snap = foto(); snap.again = nomeTexto;
         L.nome = v; eu(v, snap);
-        diz(["Prazer, <b>" + esc(L.nome.split(" ")[0]) + "</b>! Qual é o seu melhor <b>e-mail</b>?<span class=\"hint\">É para ele que eu mando o diagnóstico completo.</span>"]);
+        diz(["Prazer, <b>" + esc(curto(L.nome) || L.nome) + "</b>! Qual é o seu melhor <b>e-mail</b>?<span class=\"hint\">É para ele que eu mando o diagnóstico completo.</span>"]);
         email(tel);
       });
     }
@@ -2591,7 +2646,7 @@ window.B4Y_PGFN = (function () {
         if (!res || !res.ok) return falhou(res && res.erro, reenvio);
         if (!L.jaEnviou) { L.jaEnviou = true; onLead(); }
         track(reenvio ? "relatorio_reenviado" : "relatorio_enviado", { envio: L.envios, corrigido: !!anterior });
-        diz([(reenvio ? "Prontinho, enviei de novo" : "Prontinho, <b>" + esc(L.nome.split(" ")[0]) + "</b>! Enviei o <b>diagnóstico completo</b>") + " para <b>" + esc(L.email) + "</b>.",
+        diz([(reenvio ? "Prontinho, enviei de novo" : "Prontinho, <b>" + esc(curto(L.nome) || L.nome) + "</b>! Enviei o <b>diagnóstico completo</b>") + " para <b>" + esc(L.email) + "</b>.",
           "Ele chega em até <b>5 minutos</b>. Se não aparecer, olhe também o <b>spam</b> e a aba <b>Promoções</b>."]);
         depoisDoEnvio();
       });
@@ -2614,7 +2669,7 @@ window.B4Y_PGFN = (function () {
     }
     function wa() {
       var R = state.R || {};
-      return "https://wa.me/" + (C.whatsapp || "") + "?text=" + encodeURIComponent((R.waText || "Olá! Fiz o diagnóstico no site da Back4you e quero conversar.") + " (" + L.nome.split(" ")[0] + ")");
+      return linkWhats(R, L.nome);
     }
     function depoisDoEnvio() {
       var ops = [["recebi", "Recebi ✓", "pri"], ["nao", "Não recebi"], ["corrigir", "O e-mail está errado"]];
