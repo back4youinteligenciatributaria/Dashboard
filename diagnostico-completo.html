@@ -1708,8 +1708,18 @@ window.B4Y_PGFN = (function () {
   var D = window.DIAG;
   var app = document.getElementById("app");
   function novoId() { return "D" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase(); }
-  function fresh() { return { id: novoId(), screen: "chat", lookups: null, answers: {}, exit: null, lead: null, empresa: null, prefill: {}, prefillSet: {}, cnpjDraft: "", pgfn: null, cnes: null, R: null }; }
-  var state = fresh();
+  // o mesmo ID vale enquanto a aba estiver aberta (recarregar não cria outra visita); depois do envio, um novo diagnóstico ganha ID novo
+  var SESSAO = "b4y_diag_sessao";
+  function lerSessao() { try { return JSON.parse(sessionStorage.getItem(SESSAO) || "null"); } catch (e) { return null; } }
+  function gravaSessao(o) { try { sessionStorage.setItem(SESSAO, JSON.stringify(o)); } catch (e) {} }
+  function idDaSessao(reusar) {
+    var s = reusar ? lerSessao() : null;
+    if (s && s.id && !s.enviado) { s.recarregou = true; return s; }
+    s = { id: novoId() }; gravaSessao(s); return s;
+  }
+  var sessao = idDaSessao(true);
+  function fresh(reusar) { if (!reusar) sessao = idDaSessao(false); return { id: sessao.id, screen: "chat", lookups: null, answers: {}, exit: null, lead: null, empresa: null, prefill: {}, prefillSet: {}, cnpjDraft: "", pgfn: null, cnes: null, R: null }; }
+  var state = fresh(true);
 
   /* ---------- utilidades ---------- */
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -2003,10 +2013,24 @@ window.B4Y_PGFN = (function () {
   function cookie(n) { var m = document.cookie.match("(^|;)\\s*" + n + "=([^;]*)"); return m ? decodeURIComponent(m[2]) : null; }
   /* ---------- planilha (Google Apps Script) ---------- */
   var EVENTOS_PLANILHA = { relatorio_recebido: 1, relatorio_nao_recebido: 1, cta_whatsapp: 1, relatorio_aberto: 1 };
+  // origem da visita: utm, IDs de clique e os parâmetros hsa_* do Google Ads (grupo, anúncio, palavra-chave)
   function utms() {
     var qs = new URLSearchParams(location.search), o = {};
-    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid", "fbclid", "ttclid", "li_fat_id", "msclkid"].forEach(function (k) { if (qs.get(k)) o[k] = qs.get(k); });
+    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id", "gclid", "gbraid", "wbraid", "fbclid", "ttclid", "li_fat_id", "msclkid",
+      "hsa_acc", "hsa_cam", "hsa_grp", "hsa_ad", "hsa_src", "hsa_tgt", "hsa_kw", "hsa_mt", "hsa_net", "hsa_ver"].forEach(function (k) {
+      var vs = qs.getAll(k).filter(Boolean);
+      if (!vs.length) return;
+      // parâmetro repetido no link do anúncio: na campanha fica o nome mais completo; no resto, o primeiro
+      o[k] = k === "utm_campaign" ? vs.reduce(function (a, b) { return b.length > a.length ? b : a; }) : vs[0];
+    });
     return o;
+  }
+  var ROBO = /bot|crawl|spider|slurp|facebookexternalhit|headlesschrome|lighthouse|pagespeed|preview/i;
+  function registraVisita() {
+    if (ROBO.test(navigator.userAgent || "") || !(C.planilha || {}).url) return;
+    postPlanilha({ acao: "visita", id: state.id, material: D.id, recarregou: !!sessao.recarregou, utm: utms(),
+      referrer: String(document.referrer || "").slice(0, 300), dispositivo: window.innerWidth < 700 ? "celular" : "computador",
+      pagina: location.href.split("#")[0], navegador: navigator.userAgent }, 8000);
   }
   function postPlanilha(corpo, ms) {
     var P = C.planilha || {};
@@ -2037,7 +2061,10 @@ window.B4Y_PGFN = (function () {
       pagina: location.href.split("#")[0], navegador: navigator.userAgent
     };
     try { submitLead(R, rota, envio); } catch (e) {}
-    return postPlanilha(corpo).then(function (r) { if (r && r.ok) state.enviado = true; return r; });
+    return postPlanilha(corpo).then(function (r) {
+      if (r && r.ok) { state.enviado = true; if (sessao.id === state.id) { sessao.enviado = true; gravaSessao(sessao); } }
+      return r;
+    });
   }
   function registraEvento(ev, data) {
     var id = state.relatorio ? state.relatorio.i : state.id;
@@ -2067,7 +2094,7 @@ window.B4Y_PGFN = (function () {
       etapa: el("wa-etapa") ? el("wa-etapa").textContent : "", pergunta: semTags(ch.pergunta || ""),
       progresso: ch.pct || 0, respondidas: Object.keys(state.answers).length,
       segundos: Math.round((Date.now() - (ch.t0 || Date.now())) / 1000),
-      correcoes: ch.correcoes || 0, buscas: (ch.buscas || []).slice(-5), semEmpresa: !!ch.semEmpresa,
+      correcoes: ch.correcoes || 0, foraSaude: ch.foraSaude || 0, buscas: (ch.buscas || []).slice(-5), semEmpresa: !!ch.semEmpresa,
       achados: (ch.achados || []).slice(-12), dispositivo: window.innerWidth < 700 ? "celular" : "computador",
       lead: { nome: L.nome || "", email: L.email || "", tel: L.tel || "" },
       campos: ex.campos, respostas: ex.respostas, fontes: state.prefillSet, utm: utms(),
@@ -2546,7 +2573,7 @@ window.B4Y_PGFN = (function () {
       });
     }, function (err) {
       if (g !== ch.gen) return;
-      if (err && err.foraSaude) track("cnpj_fora_saude");
+      if (err && err.foraSaude) { ch.foraSaude = (ch.foraSaude || 0) + 1; track("cnpj_fora_saude"); agendaParcial(true); }
       diz([err && (err.notFound || err.foraSaude) ? naoAchei : "A Receita não respondeu agora. Tenta de novo ou toque em <b>Prefiro não informar</b>."]);
       responde(fd);
     });
@@ -2882,6 +2909,7 @@ window.B4Y_PGFN = (function () {
   // link curto "?d=ID.CHAVE": busca os dados do diagnóstico na planilha (o link longo não cabe no WhatsApp)
   var dCurto = /[?&]d=([A-Z0-9]{6,24}\.[A-Za-z0-9]{8,40})(?:&|$)/.exec(location.search || "");
   if (dCurto && (C.planilha || {}).url) { abreCurto(dCurto[1]); return; }
+  registraVisita();
   render();
 
   function abreCurto(d) {
