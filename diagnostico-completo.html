@@ -319,6 +319,16 @@ body.chat{overflow:hidden}
 .wa-zap:hover{background:rgba(255,255,255,.24)}
 @media (max-width:420px){.wa-zap span{display:none}.wa-zap{padding:8px}.zap-float{width:56px;height:56px;right:14px}.zap-float svg{width:30px;height:30px}}
 
+/* cabeçalho do chat: nome + "Assessoria tributária para médicos" */
+.wa-nome{display:flex;align-items:baseline;gap:8px;min-width:0}
+.wa-nome small{font-size:12px;opacity:.75;white-space:nowrap}
+.wa-tag{font-size:13px;line-height:1.25;color:#CFEDE3;margin-top:1px;white-space:nowrap}
+.wa-tag b{color:#fff;text-transform:uppercase;letter-spacing:.02em}
+@media (max-width:600px){.wa-etapa{display:none}}
+@media (max-width:480px){.wa-tag{font-size:12.5px}.wa-zap span{display:none}.wa-zap{padding:8px}}
+@media (max-width:375px){.wa-tag{font-size:11.5px}.wa-top{gap:8px;padding:10px 10px}}
+@media (max-width:330px){.wa-tag{white-space:normal}}
+
 </style>
 <!-- Cole aqui o código de rastreamento (GTM / Google Ads / HubSpot) -->
 </head>
@@ -2120,7 +2130,7 @@ window.B4Y_PGFN = (function () {
 
   function montaChat() {
     app.innerHTML = '<div class="wa" id="wa">' +
-      '<header class="wa-top"><div class="wa-av" aria-hidden="true">b<i>4</i>y</div><div class="wa-id"><b>Back4you</b><small id="wa-st">online</small></div><div class="wa-etapa" id="wa-etapa"></div><a class="wa-zap" id="wa-zap" target="_blank" rel="noopener" href="#" aria-label="Tirar dúvidas no WhatsApp">' + ZAP + '<span>Dúvidas?</span></a></header>' +
+      '<header class="wa-top"><div class="wa-av" aria-hidden="true">b<i>4</i>y</div><div class="wa-id"><span class="wa-nome"><b>Back4you</b><small id="wa-st">online</small></span><span class="wa-tag">Assessoria tributária para <b>médicos</b></span></div><div class="wa-etapa" id="wa-etapa"></div><a class="wa-zap" id="wa-zap" target="_blank" rel="noopener" href="#" aria-label="Tirar dúvidas no WhatsApp">' + ZAP + '<span>Dúvidas?</span></a></header>' +
       '<div class="wa-prog"><i id="wa-prog"></i></div>' +
       '<div class="wa-body" id="wa-body" role="log" aria-live="polite"><div class="wa-day"><span>Hoje</span></div>' +
       '<div class="wa-sec"><span>' + LOCK + " Diagnóstico gratuito. Seus dados ficam protegidos conforme a LGPD.</span></div></div>" +
@@ -2522,7 +2532,11 @@ window.B4Y_PGFN = (function () {
   function buscaCnpj(fd, c, g) {
     if (!cnpjValido(c)) { diz(["Esse CNPJ não parece válido. Confere os números?"]); return responde(fd); }
     track("cnpj_busca");
-    aguarda(consultarCnpj(c)).then(function (e) {
+    var naoAchei = "Não encontrei uma <b>empresa da área da saúde</b> com esse CNPJ. Confere os números ou digite parte do nome.";
+    aguarda(consultarCnpj(c).then(function (e) {
+      // só mostra dados de empresa da saúde (CNAE 86/87 ou cadastro no CNES); outras ficam em sigilo
+      return ehSaude(e).then(function (ok) { if (!ok) throw { foraSaude: true }; return e; });
+    })).then(function (e) {
       if (g !== ch.gen) return;
       diz([{ html: "Encontrei esta empresa:" + cartaoEmpresa(e), cls: "card" }]);
       botoes([["sim", "É a minha empresa", "pri"], ["nao", "Não é"]], function (v) {
@@ -2532,9 +2546,20 @@ window.B4Y_PGFN = (function () {
       });
     }, function (err) {
       if (g !== ch.gen) return;
-      diz([err && err.notFound ? "Não encontrei esse CNPJ na Receita. Confere os números?" : "A Receita não respondeu agora. Tenta de novo ou toque em <b>Prefiro não informar</b>."]);
+      if (err && err.foraSaude) track("cnpj_fora_saude");
+      diz([err && (err.notFound || err.foraSaude) ? naoAchei : "A Receita não respondeu agora. Tenta de novo ou toque em <b>Prefiro não informar</b>."]);
       responde(fd);
     });
+  }
+  // empresa da saúde: atividade (CNAE) 86 ou 87, principal ou secundária; senão, cadastro no CNES
+  function ehSaude(e) {
+    var codes = [e.cnae].concat((e.cnaesSec || []).map(function (x) { return x.cod; }));
+    var cnaeOk = codes.some(function (c) { var d = String(c || "").replace(/\D/g, ""); if (!d) return false; while (d.length < 7) d = "0" + d; return /^8[67]/.test(d); });
+    if (cnaeOk || !window.B4Y_CNES) return Promise.resolve(cnaeOk);
+    return Promise.race([
+      window.B4Y_CNES.consultar(e.cnpj).then(function (r) { return !!(r && r.encontrado); }, function () { return false; }),
+      new Promise(function (ok) { setTimeout(function () { ok(false); }, 8000); })
+    ]);
   }
   function buscaNome(fd, q, g) {
     if (!window.B4Y_NOMES) { diz(["Por aqui, só consigo buscar pelo <b>CNPJ</b>. Pode digitar?"]); return responde(fd); }
