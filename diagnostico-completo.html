@@ -1061,8 +1061,8 @@ window.B4Y_PGFN = (function () {
         id: "empresa", label: "Sua empresa",
         bot: "Vamos começar pela <b>sua empresa</b>.",
         fields: [
-          { id: "pj", label: "Como você atende hoje?", options: [["pf", "Só como pessoa física"], ["pj", "Tenho empresa (CNPJ)"], ["ambos", "Tenho CNPJ e também atendo como PF"]] },
-          { id: "_cnpj", type: "cnpj", label: "Sua empresa", hint: "Checamos todos os cadastros na Receita Federal. Pode colocar <b>só uma parte do nome</b>.", when: pj },
+          { id: "_cnpj", type: "cnpj", label: "Sua empresa", hint: "Pode ser <b>só uma parte do nome</b>. Com isso eu já consulto Receita, dívida ativa e CNES — e você <b>responde menos perguntas</b>." },
+          { id: "pj", label: "E como você atende hoje?", options: [["pj", "Só pela empresa"], ["ambos", "Pela empresa e também como pessoa física"], ["pf", "Só como pessoa física"]] },
           { id: "regime", label: "Regime tributário", hint: "Se não souber, tudo bem.", when: pj, options: [["simples", "Simples Nacional"], ["presumido", "Lucro Presumido"], ["real", "Lucro Real"], ["naosei", "Não sei"]] },
           { id: "sociedade", label: "Tipo de empresa", hint: "Veja o final do nome no cartão CNPJ.", when: pj, options: [["ltda", "LTDA"], ["slu", "Sócio único (SLU)"], ["ss", "Sociedade simples (SS)"], ["naosei", "Não sei"]] },
           { id: "fat", label: "Faturamento médio por mês", when: pj, options: FAIXAS },
@@ -2075,7 +2075,7 @@ window.B4Y_PGFN = (function () {
   /* ---------- registro de quem ainda não enviou (aba "Incompletos") ---------- */
   var PARCIAL_AGORA = { start: 1, cnpj_confirmado: 1, cta_whatsapp: 1, detalhar: 1 };
   var parcial = { timer: null, ultimo: 0, enviado: "", saiu: 0, seq: 0 };
-  var ROTULO_TEXTO = { "Seu nome": "Nome (contato)", "seu@email.com": "E-mail (contato)", "(11) 99999-9999": "WhatsApp (contato)", "Nome da empresa ou CNPJ": "Qual é a sua empresa?" };
+  var ROTULO_TEXTO = { "Seu nome": "Nome (contato)", "seu@email.com": "E-mail (contato)", "(11) 99999-9999": "WhatsApp (contato)", "Nome da empresa ou CNPJ": "Qual é a sua empresa?", "Ex.: Clínica Vida ou o CNPJ": "Qual é a sua empresa?" };
   function semTags(h) { return String(h == null ? "" : h).replace(/<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
   function agendaParcial(ja) {
     if (!ch || !ch.iniciado || state.enviado || state.relatorio || !(C.planilha || {}).url) return;
@@ -2296,6 +2296,7 @@ window.B4Y_PGFN = (function () {
       i.disabled = false; i.type = cfg.type || "text"; i.placeholder = cfg.placeholder || "Digite aqui"; i.value = cfg.valor || "";
       s.disabled = !i.value;
       i.setAttribute("inputmode", cfg.inputmode || (cfg.type === "tel" ? "tel" : cfg.type === "email" ? "email" : "text"));
+      i.setAttribute("enterkeyhint", cfg.enterkeyhint || "send");
       i.oninput = function () { if (cfg.mascara) i.value = cfg.mascara(i.value); s.disabled = !i.value.trim(); var e = el("qr-err"); if (e) e.remove(); };
       f.onsubmit = function (e) {
         e.preventDefault();
@@ -2525,10 +2526,22 @@ window.B4Y_PGFN = (function () {
       "<small>" + linha + "</small>" + (e.cnaeDesc ? "<small>" + esc(e.cnaeDesc) + "</small>" : "") + "</div>";
   }
   function perguntaEmpresa(fd) {
-    texto({ placeholder: "Nome da empresa ou CNPJ", extras: [["__pular", "Prefiro não informar"]],
+    texto({ placeholder: "Ex.: Clínica Vida ou o CNPJ", enterkeyhint: "search",
+      extras: [["__semcnpj", "Ainda não tenho CNPJ"], ["__pular", "Prefiro não informar"]],
       mascara: function (v) { return /[a-zà-ú]/i.test(v) ? v : maskCnpj(v); } }, function (v, extra) {
       var snap = foto(); snap.again = function () { responde(fd); };
       var g = ch.gen;
+      if (extra === "__semcnpj") {
+        eu(v, snap);
+        track("empresa_sem_cnpj");
+        ch.asked[fd.id] = true;
+        ch.asked.pj = true;
+        ch.semEmpresa = true;
+        state.answers.pj = "pf";
+        progresso();
+        postaMigalhas();
+        return proximo();
+      }
       if (extra === "__pular") {
         eu(v, snap);
         var segue = function () {
@@ -2541,8 +2554,8 @@ window.B4Y_PGFN = (function () {
         // na primeira recusa, mostra o que ele ganha informando a empresa
         ch.insistiu = true;
         track("empresa_recusa");
-        diz(["Com o nome da empresa eu já <b>adianto vários dados públicos</b>: cadastro, dívida ativa, CNES e planos de saúde. Assim você responde <b>menos perguntas</b>.",
-          "É só digitar <b>uma parte do nome</b> que eu pesquiso sozinho."]);
+        diz(["Tudo o que eu consulto é <b>dado público</b>: cadastro na Receita, dívida ativa, CNES e planos de saúde. Nada é alterado e nada é compartilhado.",
+          "Sem isso o diagnóstico fica bem mais raso — e você responde <b>mais perguntas</b>. Basta uma parte do nome."]);
         return botoes([["informar", "Vou informar", "pri"], ["seguir", "Seguir sem informar"]], function (r) {
           if (r === "seguir") { eu("Seguir sem informar"); track("empresa_sem"); return segue(); }
           eu("Vou informar");
